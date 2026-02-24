@@ -1,9 +1,9 @@
 
 # Manual Técnico y Operativo - SuitOrg
 > **Identidad Principal:** SuitOrg (Powered by EVASOL Engine)
-> **Última Versión Estable**: v5.2.5 (LEAD SYNC & TIMESTAMPS)
-> **Estado del Sistema**: Operativo con sincronización de columnas y hora.
-> **Total de Líneas Consolidadas**: ~9,450 (Auditado 2026-02-15).
+> **Última Versión Estable**: v5.4.0 (FACTORY & IDENTITY)
+> **Estado del Sistema**: Operativo con Fábrica de Negocios e IA Onboarding.
+> **Total de Líneas Consolidadas**: ~9,934 (Auditado 2026-02-23).
 
 ## 0. Resumen Ejecutivo (TL;DR) - Para gente con prisa ⚡
 1.  **¿Qué es?** Un potente "Food Hub" multi-inquilino especializado en el sector alimenticio (Restaurantes, Snacks, Comida Rápida).
@@ -165,6 +165,11 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 
 ---
 
+- **v5.3.6** (2026-02-22): **"Brand Hierarchy & Identity Reset"**.
+    - **Branding:** Soporte para `es_principal` y `modo_sitio` (WHITE/HYBRID/HUB).
+    - **UX:** Neutralización automática de Shell al entrar al Hub (Orbit).
+    - **SEO:** Refinamiento de jerarquía H2/H3 para secciones administrativas.
+
 - **v5.2.5** (2026-02-15): **"Lead Sync & Timestamps"**.
     - **Leads:** Sincronización oficial de columnas `fecha`, `nom_negocio` y `dir_comercial`.
     - **Traceability:** Implementación de timestamp completo (Fecha + Hora) en todos los registros.
@@ -292,6 +297,7 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
     - **NUEVO**: La lógica de Upsert debe verificar por ID y no depender del estado "vacío" de la tabla.
     - Botón de soporte en landing.
 - **v3.3.5:** Implementación del módulo de Atención al Cliente (`Atencion_Cliente`). Integración de notificaciones por correo y cierre inteligente de chat IA tras reporteo.
+- **v5.4.0:** Lanzamiento de Fábrica de Negocios (Onboarding) con autogeneración de identidad visual y corporativa (IA).
 - **v3.3.4:** Optimización de Workflows e implementación del Orquestador inteligente. Unificación de flujos en `/integridad-total` y blindaje `/multi-inquilino` en reparaciones.
 - **v3.3.3:** Fix de renderizado HTML en el chat de agentes IA. Actualización de auditoría de líneas.
 - **v3.3.1:** Footer Dinámico y Enlaces de Redes Sociales con manejo de "en construcción". Integración de Pilares y Políticas.
@@ -299,7 +305,7 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 - **v3.2.1:** Fix de persistencia en Barra de Estado y visibilidad global (siempre on).
 - **v3.2.0:** Implementación de RBAC Granular. Niveles 7 (Jr) y 8 (Sr) para Leads/Proyectos. Módulo `mantenimiento` habilitado para Nivel 9 o por ID.
 - **v3.1.9:** Protección de God Tools mediante contendor oculto por nivel.
-- **v3.1.3:** Synchronized Search, Sort, and UI Polish. Audit lines updated to v3.1.3.
+- **v3.1.3:** Synchronized Search, Sort, and UI Polish. Audit lines updated to v5.4.0.
 - **v3.1.2:** Implementación de búsqueda dinámica, ordenamiento de leads por nombre y pulido estético de tablas CRUD.
 - **v2.8.1:** Integración del **Modo DIARIO** de créditos. Gestión de acceso persistente y control de fecha de último ingreso por usuario.
 - **v2.8.0:** Implementación de "Temperatura de Negocio" (Flujo Dinámico) por empresa (`id_empresa`) y Consola de Sistema.
@@ -310,12 +316,12 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 
 | Archivo / Carpeta | Líneas |
 | :--- | :--- |
-| index.html | 1627 | Estructura base PWA / Modales |
-| style.css | 3236 | UI/UX Premium & Micro-animaciones |
-| js/modules/ | 4008 | Lógica de Negocio (Core, UI, POS, AI) |
-| app.js | 71 | Router y Orquestación Inicial |
-| backend_schema.gs | 484 | Engine Server-side (GAS) |
-| **TOTAL** | **9450** | Líneas de producción |
+| index.html | 1629 | Estructura base PWA / Modales |
+| style.css | 3490 | UI/UX Premium & Micro-animaciones |
+| js/modules/ | 4283 | Lógica de Negocio (Core, UI, POS, AI) |
+| app.js | 70 | Router y Orquestación Inicial |
+| backend_schema.gs | 462 | Engine Server-side (GAS) |
+| **TOTAL** | **9934** | Líneas de producción |
 
 ---
 *Manual generado automáticamente por Antigravity AI.*

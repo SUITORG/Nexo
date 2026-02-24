@@ -20,6 +20,17 @@ app.router = {
             window.location.hash = '#home';
             return;
         }
+
+        // IDENTITY PROTECTION: Block Hub in WHITE Mode (v5.3.3)
+        if (hash === '#orbit') {
+            const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+            const mode = (company?.modo_sitio || "HUB").toString().toUpperCase();
+            if (mode === 'WHITE') {
+                console.warn("🛡️ Acceso denegado: Hub desactivado para este sitio (MODO WHITE).");
+                window.location.hash = '#home';
+                return;
+            }
+        }
         // LÓGICA DE VISIBILIDAD POR HASH
         const viewMap = {
             '#home': 'view-home',

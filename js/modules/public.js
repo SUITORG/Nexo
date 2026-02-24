@@ -241,8 +241,12 @@ app.public = {
             }
 
             if (menuPublic) {
+                const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
+                const showHubLink = siteMode !== "WHITE";
+                const hubHtml = showHubLink ? `<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>` : '';
+
                 menuPublic.innerHTML = `
-                    <li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>
+                    ${hubHtml}
                     <li><a href="#home">Inicio</a></li>
                     <li>
                         <a href="#food-app-area" class="btn-express-nav-special" style="background: var(--accent-color); color: #000; padding: 5px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 5px; text-decoration: none;">
@@ -259,8 +263,12 @@ app.public = {
             app.public.renderFoodMenu();
         } else {
             if (menuPublic) {
+                const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
+                const showHubLink = siteMode !== "WHITE";
+                const hubHtml = showHubLink ? `<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>` : '';
+
                 menuPublic.innerHTML = `
-                    <li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>
+                    ${hubHtml}
                     <li><a href="#home">Inicio</a></li>
                     ${showForm ? `<li><a href="#contact">Contacto</a></li>` : ''}
                     <li><a class="nav-login-btn" href="#login"><i class="fas fa-user-lock"></i> Staff</a></li>
@@ -289,6 +297,17 @@ app.public = {
         if (industrialSeo) {
             industrialSeo.classList.remove('hidden');
             industrialSeo.style.display = 'block';
+        }
+
+        // --- SUITORG ONBOARDING INJECTION (v5.3.9) ---
+        const onboardSection = document.getElementById('suit-onboarding-section');
+        if (onboardSection) {
+            if (urlId === 'SUITORG') {
+                onboardSection.classList.remove('hidden');
+                app.public.renderSuitOnboarding();
+            } else {
+                onboardSection.classList.add('hidden');
+            }
         }
 
         // Forzar visibilidad de la sección Home en el router si el hash es correcto
@@ -444,6 +463,14 @@ app.public = {
     },
 
     renderOrbit: () => {
+        // --- Hub Identity Reset (v5.3.1) ---
+        document.title = "SuitOrg | Orbit Hub";
+        const hTitle = document.getElementById('header-title');
+        const hLogo = document.getElementById('header-logo');
+        if (hTitle) hTitle.innerText = "SuitOrg";
+        if (hLogo) hLogo.src = "https://docs.google.com/uc?export=view&id=1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv";
+        document.documentElement.style.setProperty('--primary-color', '#004d40'); // SuitOrg Teal base
+
         const container = document.getElementById('orbit-bubbles');
         if (!container) return;
         container.innerHTML = '';
@@ -463,22 +490,37 @@ app.public = {
 
         companies.forEach((co) => {
             const isPriority = co.id_empresa === priorityId;
-            const size = isPriority ? 250 : 136;
+            const isEvasol = (co.id_empresa === 'EVASOL' || co.nomempresa.toUpperCase().includes('EVASOL'));
+
+            // --- EVASOL HIERARCHY (v5.3.9) ---
+            // Stándar 180px para simetría, 220px para el motor (Evasol)
+            const size = isEvasol ? 220 : 180;
             const radius = size / 2;
 
             const bubbleEl = document.createElement('div');
             bubbleEl.className = `enterprise-bubble ${isPriority ? 'priority' : 'shaded'}`;
             const themeColor = co.color_tema || '#00d2ff';
-            const gradient = `radial-gradient(circle at 30% 30%, ${themeColor}, #000)`;
+            const gradient = isEvasol
+                ? `radial-gradient(circle at 30% 30%, ${themeColor}, #000, #001a14)`
+                : `radial-gradient(circle at 30% 30%, ${themeColor}, #000)`;
 
-            bubbleEl.style.cssText = `width:${size}px; height:${size}px; --accent-color:${themeColor}; background:${gradient}; position:absolute; animation:none; transform:none; transition:none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);`;
+            const evasolStyles = isEvasol ? `
+                box-shadow: 0 0 50px rgba(0, 255, 157, 0.4), inset 0 0 20px rgba(255,255,255,0.1); 
+                border: 2px solid rgba(0, 255, 157, 0.6); 
+                z-index: 50;
+            ` : 'box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);';
+
+            bubbleEl.style.cssText = `width:${size}px; height:${size}px; --accent-color:${themeColor}; background:${gradient}; position:absolute; animation:none; transform:none; transition:none; ${evasolStyles}`;
 
 
             const bubbleImg = co.logo_url || co.url_logo || co.foto_agente || '';
+            const logoFilter = isEvasol ? 'filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)) brightness(1.2) contrast(1.1);' : 'filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) brightness(1.1);';
+
             bubbleEl.innerHTML = `
                 <img src="${bubbleImg ? app.utils.fixDriveUrl(bubbleImg) : ''}" class="bubble-logo" 
+                     style="width: ${isEvasol ? '85%' : '75%'}; ${logoFilter}"
                      onerror="this.src='https://docs.google.com/uc?export=view&id=1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv'">
-                <span class="bubble-name" style="font-size:${isPriority ? '0.95rem' : '0.75rem'}">${co.nomempresa}</span>
+                <span class="bubble-name" style="font-size:${isEvasol ? '1rem' : '0.85rem'}; font-weight: 800;">${co.nomempresa}</span>
             `;
 
             bubbleEl.onclick = () => app.switchCompany(co.id_empresa);
@@ -597,6 +639,8 @@ app.public = {
 
         const showForm = company.formulario === 'TRUE' || company.formulario === true;
 
+        const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
+
         container.innerHTML = `
             <div class="footer-links-sub">
                 <a class="btn-link" onclick="app.public.showLocation()">Ubicación</a>
@@ -605,6 +649,7 @@ app.public = {
                 <a class="btn-link" onclick="app.public.showAboutUs()">Nosotros</a>
                 <a class="btn-link" onclick="app.public.showPolicies()">Políticas</a>
                 ${showForm ? `<a class="btn-link" onclick="window.location.hash='#contact'">Contáctanos</a>` : ''}
+                ${siteMode === 'HYBRID' ? `<a class="btn-link" onclick="window.location.hash='#orbit'" style="opacity:0.4; font-size:0.6rem !important;">• Hub</a>` : ''}
             </div>
 
             <div class="footer-social">
@@ -772,6 +817,197 @@ app.public = {
                 e.preventDefault();
                 if (app.events && app.events._handlePublicLead) app.events._handlePublicLead(e);
             };
+        }
+    },
+
+    renderSuitOnboarding: () => {
+        const container = document.getElementById('onboarding-form-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <form id="onboarding-form" class="minimalist-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group" title="El nombre comercial que tus clientes recordarán.">
+                    <label><i class="fas fa-store"></i> Nombre del Negocio *</label>
+                    <input type="text" id="onb-name" required placeholder="Ej: Mi Cafetería Gourmet">
+                </div>
+                <div class="form-group" title="Define las reglas y diseño inicial de tu sitio.">
+                    <label><i class="fas fa-tags"></i> Tipo de Negocio</label>
+                    <select id="onb-type" onchange="app.public.autoFillOnboarding(this.value)">
+                        <option value="">Selecciona una categoría...</option>
+                        <option value="Food/Snacks">Food (Restaurantes, Cafés, Bebidas)</option>
+                        <option value="Servicios">Servicios (Consultoría, Limpieza, Talleres)</option>
+                        <option value="Industrial/Proyectos">Industrial (Construcción, Fábricas, Ingeniería)</option>
+                    </select>
+                </div>
+                <div class="form-group" title="Usado para que tus clientes te contacten con un clic.">
+                    <label><i class="fab fa-whatsapp"></i> WhatsApp Comercial *</label>
+                    <input type="tel" id="onb-phone" required placeholder="528114400000">
+                </div>
+                <div class="form-group" title="La frase que define tu marca en el encabezado.">
+                    <label><i class="fas fa-quote-left"></i> Slogan</label>
+                    <input type="text" id="onb-slogan" placeholder="Ej: Calidad que se nota">
+                </div>
+
+                <!-- NEW FIELDS (v5.4.0) -->
+                <div class="form-group" title="El color principal de tu sitio web.">
+                    <label><i class="fas fa-palette"></i> Color de Marca</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="color" id="onb-color" value="#004d40" style="width: 50px; height: 40px; border: none; padding: 0; cursor: pointer; border-radius: 8px;">
+                        <span style="font-size: 0.8rem; opacity: 0.6;">Elige tu color</span>
+                    </div>
+                </div>
+                <div class="form-group" title="Link de tu logotipo (puedes pegarlo aquí).">
+                    <label><i class="fas fa-image"></i> URL del Logotipo</label>
+                    <input type="text" id="onb-logo" placeholder="https://ejemplo.com/mi-logo.png">
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;" title="Aparecerá en el pie de página y mapa.">
+                    <label><i class="fas fa-map-marker-alt"></i> Dirección Física</label>
+                    <input type="text" id="onb-address" placeholder="Ej: Av. Principal 123, Monterrey">
+                </div>
+                
+                <div id="onb-advanced" class="form-row" style="grid-column: span 2; display: none; flex-direction: column; gap: 15px; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed #ddd;">
+                    <p style="font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--primary-color);">INTELIGENCIA DE MARCA (Auto-rellenada):</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-size: 0.75rem; opacity: 0.6;">Misión Sugerida</label>
+                            <textarea id="onb-mision" style="height: 50px; font-size: 0.75rem; width: 100%;"></textarea>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; opacity: 0.6;">Visión Sugerida</label>
+                            <textarea id="onb-vision" style="height: 50px; font-size: 0.75rem; width: 100%;"></textarea>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; opacity: 0.6;">Valores</label>
+                            <textarea id="onb-valores" style="height: 40px; font-size: 0.75rem; width: 100%;"></textarea>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; opacity: 0.6;">Impacto Social</label>
+                            <textarea id="onb-impacto" style="height: 40px; font-size: 0.75rem; width: 100%;"></textarea>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 0.75rem; opacity: 0.6;">Políticas de Servicio</label>
+                            <textarea id="onb-politicas" style="height: 40px; font-size: 0.75rem; width: 100%;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2; margin-top: 10px;">
+                    <button type="submit" class="btn-primary w-100" style="height: 55px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+                        <i class="fas fa-rocket"></i> GENERAR MI SITIO WEB GRATIS
+                    </button>
+                    <p style="font-size: 0.75rem; text-align: center; margin-top: 10px; opacity: 0.5;">
+                        * Al registrarte aceptas un periodo de prueba de 20 días. Sitio quedará en borrador hasta activación manual.
+                    </p>
+                </div>
+            </form>
+            <div id="onb-success" class="hidden" style="text-align: center; padding: 40px;">
+                <i class="fas fa-check-circle fa-4x" style="color: #2ecc71; margin-bottom: 20px;"></i>
+                <h3 style="font-size: 1.8rem; margin-bottom: 10px;">¡Borrador Creado con Éxito!</h3>
+                <p id="onb-msg-final" style="margin-bottom: 30px;">Tu sitio está listo para previsualización.</p>
+                <div style="display: flex; gap:15px; justify-content: center;">
+                    <button id="btn-see-site" class="btn-primary" style="padding: 12px 30px; border-radius: 50px;">VER MI PÁGINA</button>
+                    <a id="btn-wa-activate" class="btn-support" target="_blank" style="padding: 12px 30px; border-radius: 50px; background: #25D366; text-decoration: none; color: white; display: flex; align-items: center; gap: 8px;">
+                         <i class="fab fa-whatsapp"></i> CONTACTAR A ACTIVACIÓN
+                    </a>
+                </div>
+            </div>
+        `;
+
+        const form = document.getElementById('onboarding-form');
+        if (form) {
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                await app.public.submitOnboarding(e);
+            };
+        }
+    },
+
+    autoFillOnboarding: (type) => {
+        const adv = document.getElementById('onb-advanced');
+        const fields = {
+            m: document.getElementById('onb-mision'),
+            v: document.getElementById('onb-vision'),
+            val: document.getElementById('onb-valores'),
+            imp: document.getElementById('onb-impacto'),
+            pol: document.getElementById('onb-politicas')
+        };
+        if (!adv || !fields.m) return;
+
+        adv.style.display = type ? 'flex' : 'none';
+
+        const templates = {
+            'Food/Snacks': {
+                m: "Cocinamos con pasión para regalar momentos inolvidables a través del sabor.",
+                v: "Ser la opción favorita de comida en la ciudad, reconocida por frescura y calidad.",
+                val: "Sabor, Higiene, Pasión, Servicio.",
+                imp: "Apoyar a productores locales y fomentar la alimentación consciente.",
+                pol: "Garantía de sabor o cambio de platillo. Entrega puntual."
+            },
+            'Servicios': {
+                m: "Brindar soluciones profesionales que simplifiquen la vida y multipliquen los resultados de nuestros clientes.",
+                v: "Ser líderes regionales en consultoría, basados en la confianza y la innovación constante.",
+                val: "Integridad, Excelencia, Innovación, Enfoque al cliente.",
+                imp: "Impulsar el crecimiento económico de negocios locales.",
+                pol: "Atención personalizada 24/7. Satisfacción garantizada."
+            },
+            'Industrial/Proyectos': {
+                m: "Construir hoy la infraestructura del mañana con los más altos estándares de ingeniería y seguridad.",
+                v: "Ser el aliado estratégico indispensable para grandes obras y desarrollos industriales.",
+                val: "Seguridad, Precisión, Durabilidad, Cumplimiento.",
+                imp: "Crear empleos seguros y desarrollo urbano sostenible.",
+                pol: "Certificación de calidad en cada etapa. Garantía de obra."
+            }
+        };
+
+        if (templates[type]) {
+            fields.m.value = templates[type].m;
+            fields.v.value = templates[type].v;
+            fields.val.value = templates[type].val;
+            fields.imp.value = templates[type].imp;
+            fields.pol.value = templates[type].pol;
+        }
+    },
+
+    submitOnboarding: async (e) => {
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CREANDO ECOSISTEMA...';
+
+        const bizData = {
+            nomempresa: document.getElementById('onb-name').value,
+            tipo_negocio: document.getElementById('onb-type').value,
+            telefonoWhatsapp: document.getElementById('onb-phone').value,
+            slogan: document.getElementById('onb-slogan').value,
+            direccion: document.getElementById('onb-address').value,
+            color_tema: document.getElementById('onb-color').value,
+            logourl: document.getElementById('onb-logo').value,
+            mision: document.getElementById('onb-mision').value,
+            vision: document.getElementById('onb-vision').value,
+            valores: document.getElementById('onb-valores').value,
+            impacto: document.getElementById('onb-impacto').value,
+            politicas: document.getElementById('onb-politicas').value
+        };
+
+        const result = await app.postData({ action: 'createBusiness', business: bizData });
+
+        if (result && result.success) {
+            document.getElementById('onboarding-form').classList.add('hidden');
+            const success = document.getElementById('onb-success');
+            success.classList.remove('hidden');
+
+            const btnSee = document.getElementById('btn-see-site');
+            const btnWa = document.getElementById('btn-wa-activate');
+
+            if (btnSee) btnSee.onclick = () => { window.location.href = `?co=${result.newBusinessId}#home`; };
+            if (btnWa) {
+                const waMsg = `¡Hola SuitOrg! Acabo de registrar mi negocio [${bizData.nomempresa}] con ID [${result.newBusinessId}]. Me gustaría activarlo oficialmente.`;
+                btnWa.href = `https://wa.me/528129552094?text=${encodeURIComponent(waMsg)}`;
+            }
+        } else {
+            alert("Error al crear el borrador. Intente de nuevo.");
+            btn.disabled = false;
+            btn.innerText = 'GENERAR MI SITIO WEB GRATIS';
         }
     }
 };

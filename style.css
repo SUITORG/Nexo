@@ -981,9 +981,10 @@ body.menu-open {
 
 .bubble-name {
     color: white;
-    font-weight: bold;
-    font-size: 1.2rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    font-weight: 800;
+    font-size: 0.85rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    padding: 0 10px;
 }
 
 @keyframes float-main {
@@ -3446,15 +3447,18 @@ body.menu-open {
 }
 
 .footer-links-sub .btn-link:nth-child(6) {
-    /* Contáctanos - Cyan Cromo Líquido */
-    background-image: linear-gradient(to bottom, #00ffff 0%, #ffffff 50%, #00ffff 100%) !important;
-    filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.5));
-}
-
-.footer-links-sub .btn-link:nth-child(6) {
-    /* Contáctanos - Turquesa Cromo */
-    background: linear-gradient(to bottom, #ffffff 0%, #7ef3f0 40%, #3c87d6 60%, #ffffff 100%) !important;
-    filter: drop-shadow(0 2px 4px rgba(126, 243, 240, 0.4));
+    /* Contáctanos - Botón CTA Neón Legible */
+    background: linear-gradient(135deg, #00d2ff, #3a7bd5) !important;
+    -webkit-background-clip: padding-box !important;
+    background-clip: padding-box !important;
+    -webkit-text-fill-color: #ffffff !important;
+    color: #ffffff !important;
+    padding: 8px 20px !important;
+    border-radius: 50px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4) !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
 }
 
 .social-mini {

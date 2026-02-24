@@ -4,7 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: '5.2.5', // v5.2.5: Full Timestamp & Column Sync.
+    version: '5.4.0', // v5.4.0: Identity Onboarding & Brand Intelligence.
 
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
@@ -139,8 +139,39 @@ const app = {
             if (loader) loader.remove();
 
             if (loaded) {
+                // --- ULTRA DEBUG MODE (v5.3.5) ---
+                console.log("🔍 [DATA_CHECK] Estructura de Config_Empresas:");
+                console.table(app.data.Config_Empresas.slice(0, 2)); // Solo ver los primeros 2
+                if (app.data.Config_Empresas[0]) {
+                    console.log("📄 LLAVES DETECTADAS EN EXCEL:", Object.keys(app.data.Config_Empresas[0]).join(', '));
+                }
+
+                // Determine Principal Context
+                const mainBiz = (app.data.Config_Empresas || []).find(c => {
+                    const isPri = c.es_principal || c.esprincipal || c.Es_Principal || c.esPrincipal;
+                    return String(isPri).toUpperCase() === 'TRUE' || isPri === true || isPri === 1;
+                });
+
                 let company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
-                const isHubMode = window.location.hash === '#orbit' || (!window.location.hash && !coParam);
+                const hasUrlParam = !!coParam;
+
+                // If it's the first visit follow the "Main Biz" rule (v5.3.7)
+                if (!hasUrlParam && mainBiz) {
+                    const currentHash = window.location.hash;
+                    // Solo redireccionamos si no hay hash o si estamos en el hub por defecto
+                    if (!currentHash || currentHash === "" || currentHash === "#orbit") {
+                        const mode = (mainBiz.modo_sitio || 'HUB').toString().toUpperCase();
+                        if (mode !== 'HUB') {
+                            console.log("🚀 Redirección Automática a Empresa Principal:", mainBiz.id_empresa);
+                            app.state.companyId = mainBiz.id_empresa;
+                            company = mainBiz;
+                            window.location.hash = '#home';
+                        }
+                    }
+                }
+
+                // Standard Resolution
+                const isHubMode = window.location.hash === '#orbit' || (!window.location.hash && !hasUrlParam && !mainBiz);
 
                 if (isHubMode) {
                     console.log("🌌 Hub Mode Active - Rendering Orbit");
@@ -148,14 +179,12 @@ const app = {
                     window.location.hash = '#orbit';
                     if (app.ui.renderOrbit) app.ui.renderOrbit();
                     company = null;
-                } else if (!company && coParam) {
-                    // Si hay un parámetro pero no se encontró en la data cargada, 
-                    // NO caemos a la empresa por defecto para evitar cross-login.
-                    // Solo mantenemos el ID del estado para que Auth pueda intentarlo.
-                    console.warn(`[V5.2.6] Identity Lock: Company ${coParam} not yet in cache, preserving ID.`);
+                } else if (!company && hasUrlParam) {
+                    // Logic for manual links
+                    console.warn(`[V5.3.2] Identity Lock: Company ${coParam} not yet in cache, preserving ID.`);
                     app.state.companyId = coParam.trim().toUpperCase();
-                } else if (!company && !coParam) {
-                    // Solo si no hay parámetro alguno, caemos a la primera empresa
+                } else if (!company && !hasUrlParam) {
+                    // Fallback unchanged if no main biz and no param
                     company = app.data.Config_Empresas[0];
                     if (company) app.state.companyId = company.id_empresa;
                 }

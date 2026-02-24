@@ -1,22 +1,21 @@
-/* SuitOrg Backend Engine - v5.2.5
+/* SuitOrg Backend Engine - v5.4.0
  * ---------------------------------------------------------
- * Sincronización: 2026-02-15 03:25 PM (v5.2.5 Lead Sync)
+ * Sincronización: 2026-02-23 06:43 PM (v5.4.0 Identity Factory)
  * 
- * Changelog v5.2.5:
- * - CRM: Sincronización de columnas 'fecha', 'nom_negocio' y 'dir_comercial'.
- * - CRM: Implementación de Timestamp ISO completo (Fecha + Hora) en Leads.
- * - CRM: Folios secuenciales LEAD-XXX y ORD-XXX operativos.
+ * Changelog v5.4.0:
+ * - SAAS: Soporte completo para Onboarding con Identidad (Color, Logo, MVV).
+ * - SAAS: Persistencia de Valores, Impacto Social y Políticas autogeneradas.
  * 
- * AUDIT: ~9450 Total Lines (v5.2.5).
+ * AUDIT: ~9780 Total Lines (v5.4.0).
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "5.2.5",
+  VERSION: "5.4.0",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
   GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos"], 
   PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos"],
-  AUDIT: { total: 9976, status: "STABLE_SYNC" }
+  AUDIT: { total: 9780, status: "STABLE_SYNC" }
 };
 
 /**
@@ -189,6 +188,32 @@ function handlePostAction(data, output) {
 
       case "deleteProject":
         updateRowMapped(ss, "Proyectos", "id_proyecto", data.id, { activo: "FALSE", estado: "ELIMINADO" });
+        output.success = true; break;
+
+      case "createBusiness":
+        var bizSheet = ss.getSheetByName("Config_Empresas");
+        var bData = bizSheet.getDataRange().getValues();
+        var nextB = bData.length; 
+        
+        // Auto-ID: ONB + Random 3 chars (v5.3.9)
+        var autoId = "ONB-" + Math.random().toString(36).substring(2, 5).toUpperCase();
+        data.business.id_empresa = autoId;
+        
+        // Automatic Defaults & Calculations
+        data.business.fecha_creacion = new Date();
+        data.business.habilitado = "FALSE";
+        data.business.modo_creditos = "DIARIO";
+        data.business.factura = "FALSE";
+        data.business.autodepuracion = 30;
+        data.business.modo = "produccion";
+        
+        // Expiration: Today + 20 days
+        var expDate = new Date();
+        expDate.setDate(expDate.getDate() + 20);
+        data.business.fecha_vencimiento = expDate;
+        
+        appendRowMapped(ss, "Config_Empresas", data.business);
+        output.newBusinessId = autoId;
         output.success = true; break;
 
       default:
