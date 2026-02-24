@@ -1,9 +1,9 @@
 
 # Manual Técnico y Operativo - SuitOrg
 > **Identidad Principal:** SuitOrg (Powered by EVASOL Engine)
-> **Última Versión Estable**: v5.5.0 (REPORT ENGINE)
-> **Estado del Sistema**: Operativo con Motor de Reportes Dinámicos (Excel Driven).
-> **Total de Líneas Consolidadas**: ~10,012 (Auditado 2026-02-23).
+> **Última Versión Estable**: v5.7.0 (BI MATRIX)
+> **Estado del Sistema**: Operativo con Motor de Inteligencia de Negocios Dinámico.
+> **Total de Líneas Consolidadas**: ~10,135 (Auditado 2026-02-24).
 
 ## 0. Resumen Ejecutivo (TL;DR) - Para gente con prisa ⚡
 1.  **¿Qué es?** Un potente "Food Hub" multi-inquilino especializado en el sector alimenticio (Restaurantes, Snacks, Comida Rápida).
@@ -297,6 +297,7 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
     - **NUEVO**: La lógica de Upsert debe verificar por ID y no depender del estado "vacío" de la tabla.
     - Botón de soporte en landing.
 - **v3.3.5:** Implementación del módulo de Atención al Cliente (`Atencion_Cliente`). Integración de notificaciones por correo y cierre inteligente de chat IA tras reporteo.
+- **v5.7.0:** Suit BI Matrix. Dashboard dinámico basado en configuración de metadatos desde Excel.
 - **v5.5.0:** Motor de Reportes Dinámicos. Permite crear reportes desde Google Sheets sin tocar código.
 - **v5.4.0:** Lanzamiento de Fábrica de Negocios (Onboarding) con autogeneración de identidad visual y corporativa (IA).
 - **v3.3.4:** Optimización de Workflows e implementación del Orquestador inteligente. Unificación de flujos en `/integridad-total` y blindaje `/multi-inquilino` en reparaciones.
@@ -319,10 +320,10 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 | :--- | :--- |
 | index.html | 1629 | Estructura base PWA / Modales |
 | style.css | 3490 | UI/UX Premium & Micro-animaciones |
-| js/modules/ | 4371 | Lógica de Negocio (Core, UI, POS, AI, Reports) |
+| js/modules/ | 4494 | Lógica de Negocio (Core, BI, CRM, POS) |
 | app.js | 70 | Router y Orquestación Inicial |
 | backend_schema.gs | 462 | Engine Server-side (GAS) |
-| **TOTAL** | **10012** | Líneas de producción |
+| **TOTAL** | **10135** | Líneas de producción |
 
 ---
 *Manual generado automáticamente por Antigravity AI.*

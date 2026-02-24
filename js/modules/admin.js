@@ -427,20 +427,123 @@ app.admin = {
         alert(`Función de exportación a ${format} iniciada.`);
     },
 
-    renderBusinessDashboard: () => {
-        const companyId = app.state.companyId;
-        const projectIds = (app.data.Proyectos || []).filter(p => app.utils.getCoId(p) === companyId).map(p => p.id_proyecto);
-        const payments = (app.data.Pagos || app.data.Proyectos_Pagos || []).filter(p => projectIds.includes(p.id_proyecto));
+    renderBusinessDashboard: async () => {
+        const grid = document.getElementById('dynamic-dashboard-grid');
+        if (!grid) return;
 
-        // Mock data for charts (Last 7 days)
-        const labels = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
-        const values = [1200, 1900, 1500, 2100, 2800, 3500, 2400];
+        const bizType = app.state.userCompany?.tipo_negocio || 'GLOBAL';
+        const widgets = (app.data.Config_Dashboard || []).filter(w => {
+            return w.giro === 'GLOBAL' || w.giro === bizType;
+        }).sort((a, b) => (parseInt(a.orden) || 0) - (parseInt(b.orden) || 0));
 
-        app.admin._renderDailySalesChart({ labels, values });
-        app.admin._renderPaymentMethodsChart({ labels: ['Efectivo', 'Tarjeta', 'Transf'], values: [60, 25, 15] });
-        app.admin._renderMonthlyTrendChart({ labels: ['Ene', 'Feb', 'Mar', 'Abr'], values: [45000, 52000, 48000, 61000] });
+        if (widgets.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; opacity:0.5;">
+                <i class="fas fa-th fa-3x" style="margin-bottom:15px;"></i>
+                <p>No hay widgets configurados para este giro de negocio.</p>
+            </div>`;
+            return;
+        }
 
-        app.ui.updateConsole("BIZ_DASHBOARD_READY");
+        grid.innerHTML = ''; // Clear
+
+        for (const w of widgets) {
+            const widgetEl = document.createElement('div');
+            widgetEl.className = 'chart-container card glass';
+            widgetEl.style.padding = '20px';
+
+            if (w.tipo === 'KPI') {
+                const value = app.admin.BI_Engine.calculate(w);
+                widgetEl.innerHTML = `
+                    <h3 style="font-size: 0.8rem; text-transform: uppercase; margin-bottom: 15px; color: #888;">
+                        <i class="fas ${w.icono || 'fa-chart-line'}"></i> ${w.titulo}
+                    </h3>
+                    <div style="font-size: 2rem; font-weight: 700; color: ${w.color || 'var(--primary-color)'};">
+                        ${w.operacion === 'SUM' ? '$' : ''}${value.toLocaleString()}
+                    </div>
+                `;
+            } else {
+                const canvasId = `chart-${w.id_widget}`;
+                widgetEl.innerHTML = `
+                    <h3 style="font-size: 0.8rem; text-transform: uppercase; margin-bottom: 15px; color: #888;">
+                        <i class="fas ${w.icono || 'fa-chart-pie'}"></i> ${w.titulo}
+                    </h3>
+                    <div style="height: 250px; position:relative;">
+                        <canvas id="${canvasId}"></canvas>
+                    </div>
+                `;
+                grid.appendChild(widgetEl);
+                // Render Chart with delay to ensure DOM is ready
+                setTimeout(() => app.admin.BI_Engine.renderChart(w, canvasId), 100);
+                continue;
+            }
+            grid.appendChild(widgetEl);
+        }
+
+        app.ui.updateConsole("BI_MATRIX_SYNC_COMPLETE");
+    },
+
+    BI_Engine: {
+        calculate: (w) => {
+            const data = (app.data[w.tabla_origen] || []).filter(row => {
+                return (row.id_empresa === app.state.companyId) && (row.activo !== false && row.activo !== "FALSE");
+            });
+
+            if (w.operacion === 'SUM') {
+                return data.reduce((acc, row) => acc + (parseFloat(row[w.metrica]) || 0), 0);
+            } else if (w.operacion === 'COUNT') {
+                return data.length;
+            } else if (w.operacion === 'AVG') {
+                if (data.length === 0) return 0;
+                return data.reduce((acc, row) => acc + (parseFloat(row[w.metrica]) || 0), 0) / data.length;
+            }
+            return 0;
+        },
+
+        renderChart: (w, canvasId) => {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if (!ctx) return;
+
+            const rawData = (app.data[w.tabla_origen] || []).filter(row => {
+                return (row.id_empresa === app.state.companyId) && (row.activo !== false && row.activo !== "FALSE");
+            });
+
+            // Grouping by dimension
+            const groups = {};
+            rawData.forEach(row => {
+                let dim = row[w.dimension] || 'Otros';
+                if (w.dimension.includes('fecha')) dim = new Date(dim).toLocaleDateString();
+
+                const val = parseFloat(row[w.metrica]) || 1;
+                groups[dim] = (groups[dim] || 0) + (w.operacion === 'SUM' ? val : 1);
+            });
+
+            const labels = Object.keys(groups);
+            const values = Object.values(groups);
+
+            const chartConfig = {
+                type: w.tipo.toLowerCase() === 'pie' ? 'doughnut' : 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: w.titulo,
+                        data: values,
+                        backgroundColor: w.tipo.toLowerCase() === 'pie'
+                            ? ['#3498db', '#e74c3c', '#f1c40f', '#2ecc71', '#9b59b6', '#34495e']
+                            : (w.color || '#3498db'),
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: w.tipo.toLowerCase() === 'pie', position: 'bottom' }
+                    }
+                }
+            };
+
+            new Chart(ctx, chartConfig);
+        }
     },
 
     // --- CRM / LEADS ---

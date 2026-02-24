@@ -684,28 +684,28 @@
                         </div>
                     </div>
                 </div>
-                <div class="dashboard-grid"
-                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
-                    <div class="chart-container card glass" style="padding: 20px;">
-                        <h3 style="font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; color: #888;"><i
-                                class="fas fa-chart-bar"></i> Ventas Diarias (7d)</h3>
-                        <div style="height: 250px;">
-                            <canvas id="chart-sales-daily"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-container card glass" style="padding: 20px;">
-                        <h3 style="font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; color: #888;"><i
-                                class="fas fa-chart-pie"></i> Mezcla de Pagos</h3>
-                        <div style="height: 250px; display: flex; justify-content: center;">
-                            <canvas id="chart-payment-methods"></canvas>
-                        </div>
-                    </div>
+                <div id="dynamic-dashboard-grid" class="dashboard-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                    <!-- Los widgets dinámicos de Config_Dashboard se inyectarán aquí -->
                 </div>
-                <div class="card glass" style="margin-top: 20px; padding: 20px;">
-                    <h3 style="font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; color: #888;"><i
-                            class="fas fa-chart-line"></i> Tendencia de Ingresos Mensuales</h3>
-                    <div style="height: 300px;">
-                        <canvas id="chart-monthly-trend"></canvas>
+
+                <div id="static-dashboard-placeholder" class="hidden">
+                    <div class="dashboard-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                        <div class="chart-container card glass" style="padding: 20px;">
+                            <h3 style="font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; color: #888;">
+                                <i class="fas fa-chart-bar"></i> Ventas Diarias (7d)</h3>
+                            <div style="height: 250px;">
+                                <canvas id="chart-sales-daily"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container card glass" style="padding: 20px;">
+                            <h3 style="font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; color: #888;">
+                                <i class="fas fa-chart-pie"></i> Mezcla de Pagos</h3>
+                            <div style="height: 250px; display: flex; justify-content: center;">
+                                <canvas id="chart-payment-methods"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

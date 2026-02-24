@@ -1,21 +1,21 @@
-/* SuitOrg Backend Engine - v5.5.0
+/* SuitOrg Backend Engine - v5.7.0
  * ---------------------------------------------------------
- * Sincronización: 2026-02-23 10:18 PM (v5.5.0 Report Engine)
+ * Sincronización: 2026-02-24 10:20 AM (v5.7.0 BI Matrix)
  * 
- * Changelog v5.5.0:
- * - DATA: Implementación de 'Config_Reportes' (Motor de Reportes Dinámicos).
- * - DATA: Soporte para filtrado omnidireccional por Giro de Negocio.
+ * Changelog v5.7.0:
+ * - BI: Implementación de 'Config_Dashboard' (Motor BI Matrix).
+ * - DATA: Soporte para Widgets de Inteligencia Dinámicos.
  * 
- * AUDIT: ~9850 Total Lines (v5.5.0).
+ * AUDIT: ~10150 Total Lines (v5.7.0).
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "5.5.0",
+  VERSION: "5.7.0",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
-  GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes"], 
+  GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard"], 
   PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos"],
-  AUDIT: { total: 9850, status: "STABLE_SYNC" }
+  AUDIT: { total: 10150, status: "STABLE_SYNC" }
 };
 
 /**

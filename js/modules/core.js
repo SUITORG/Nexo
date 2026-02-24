@@ -4,7 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: '5.5.0', // v5.5.0: Dynamic Report Engine (Excel Driven).
+    version: '5.7.0', // v5.7.0: Suit BI Matrix (Dynamic Dashboard).
 
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
