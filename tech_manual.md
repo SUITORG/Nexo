@@ -1,9 +1,9 @@
 
 # Manual Técnico y Operativo - SuitOrg
 > **Identidad Principal:** SuitOrg (Powered by EVASOL Engine)
-> **Última Versión Estable**: v5.7.0 (BI MATRIX)
-> **Estado del Sistema**: Operativo con Motor de Inteligencia de Negocios Dinámico.
-> **Total de Líneas Consolidadas**: ~10,135 (Auditado 2026-02-24).
+> **Última Versión Estable**: v5.8.9 (Responsive & WA Hierarchy)
+> **Estado del Sistema**: Operativo con Soporte Multi-canal y Optimización de Hub.
+> **Total de Líneas Consolidadas**: ~11,150 (Auditado 2026-03-01).
 
 ## 0. Resumen Ejecutivo (TL;DR) - Para gente con prisa ⚡
 1.  **¿Qué es?** Un potente "Food Hub" multi-inquilino especializado en el sector alimenticio (Restaurantes, Snacks, Comida Rápida).
@@ -307,6 +307,8 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 - **v3.2.1:** Fix de persistencia en Barra de Estado y visibilidad global (siempre on).
 - **v3.2.0:** Implementación de RBAC Granular. Niveles 7 (Jr) y 8 (Sr) para Leads/Proyectos. Módulo `mantenimiento` habilitado para Nivel 9 o por ID.
 - **v3.1.9:** Protección de God Tools mediante contendor oculto por nivel.
+- **v5.8.9:** Optimización responsiva del Orbit Hub (-60% móvil) y lógica jerárquica de contacto WhatsApp (SEO Proxy). Elevación de Project Ranking a Invariante de Seguridad.
+- **v5.8.7:** Chat Persistence & WA Summary.
 - **v3.1.3:** Synchronized Search, Sort, and UI Polish. Audit lines updated to v5.4.0.
 - **v3.1.2:** Implementación de búsqueda dinámica, ordenamiento de leads por nombre y pulido estético de tablas CRUD.
 - **v2.8.1:** Integración del **Modo DIARIO** de créditos. Gestión de acceso persistente y control de fecha de último ingreso por usuario.
@@ -318,12 +320,12 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 
 | Archivo / Carpeta | Líneas |
 | :--- | :--- |
-| index.html | 1629 | Estructura base PWA / Modales |
-| style.css | 3490 | UI/UX Premium & Micro-animaciones |
-| js/modules/ | 4494 | Lógica de Negocio (Core, BI, CRM, POS) |
-| app.js | 70 | Router y Orquestación Inicial |
-| backend_schema.gs | 462 | Engine Server-side (GAS) |
-| **TOTAL** | **10135** | Líneas de producción |
+| index.html | 1683 | Estructura base PWA / Modales |
+| style.css | 4100 | UI/UX Premium & Micro-animaciones |
+| js/modules/ | 4610 | Lógica de Negocio (Core, BI, CRM, POS) |
+| app.js | 72 | Router y Orquestación Inicial |
+| backend_schema.gs | 673 | Engine Server-side (GAS) |
+| **TOTAL** | **11150** | Líneas de producción |
 
 ---
 *Manual generado automáticamente por Antigravity AI.*

@@ -53,17 +53,17 @@ app.agents = {
                 return;
             }
             const idleSeconds = (Date.now() - app.state._lastChatActivity) / 1000;
-            if (idleSeconds > 45) { // 45 seconds of idle in chat = auto close
+            if (idleSeconds > 180) { // 180 seconds (3 min) of idle in chat = auto close
                 if (app.state.currentAgent) {
-                    app.agents.addMessageToUI('ai', `Hola, soy tu ${app.state.currentAgent.nombre}. ¿En qué puedo apoyarte hoy?`);
+                    app.agents.addMessageToUI('ai', `Sesión pausada por inactividad. Estaré aquí si necesitas algo más.`);
                     app.agents.closeChat();
                 }
             }
-        }, 5000); // Changed from 300 to 5000 to match original interval
+        }, 10000); // 10s check interval 
     },
     closeChat: () => {
         document.getElementById('ai-chat-modal').classList.add('hidden');
-        app.state.currentAgent = null;
+        // app.state.currentAgent = null; // Mantenemos el agente cargado para persistencia de sesión
     },
     handleFileUpload: async (input) => {
         if (input.files && input.files[0]) {
@@ -85,15 +85,41 @@ app.agents = {
             const data = await res.json();
             if (data.success) {
                 const models = data.models || [];
-                // Pick the best available: 2.5 > 2.0 > 1.5 > first
-                const best = models.find(m => m.includes('2.5-flash')) ||
-                    models.find(m => m.includes('2.0-flash')) ||
-                    models.find(m => m.includes('1.5-flash')) ||
-                    models[0];
-                app.state._aiModel = best;
-                localStorage.setItem('evasol_ai_model', best);
-                alert(`✅ Diagnóstico Exitoso.\n\nModelos detectados:\n${models.join('\n')}\n\nSeleccionado para uso: ${best}\n\nConfiguración guardada permanentemente.`);
-                app.ui.updateConsole("AI_READY");
+                let best = null;
+                app.ui.updateConsole(`SCANNING ${models.length} MODELS...`);
+
+                // Stress Test: Intentar hablar con cada uno
+                for (let m of models) {
+                    if (!m.includes('flash') && !m.includes('pro')) continue; // Ignorar embeddings o experimentales
+                    app.ui.updateConsole(`TRYING: ${m}...`);
+                    try {
+                        const testRes = await fetch(app.apiUrl, {
+                            method: 'POST',
+                            headers: { "Content-Type": "text/plain" },
+                            body: JSON.stringify({
+                                action: 'askGemini',
+                                message: 'ping',
+                                model: m,
+                                token: app.apiToken
+                            })
+                        });
+                        const testData = await testRes.json();
+                        if (testData.success && !testData.error) {
+                            best = m;
+                            break; // Encontramos el ganador
+                        }
+                    } catch (e) { console.warn(`Model ${m} failed test.`); }
+                }
+
+                if (best) {
+                    app.state._aiModel = best;
+                    localStorage.setItem('evasol_ai_model', best);
+                    alert(`✅ DIAGNÓSTICO MAESTRO FINALIZADO.\n\nEl modelo "${best}" es 100% compatible con tu cuenta de Google.\n\nConfiguración activada y guardada.`);
+                    app.ui.updateConsole("AI_READY");
+                } else {
+                    alert("❌ Error: Se detectaron modelos pero ninguno respondió al test. Revisa tu GEMINI_API_KEY o cuotas en Google Console.");
+                    app.ui.updateConsole("AI_FAIL", true);
+                }
             } else {
                 alert("❌ Error de Diagnóstico: " + data.error);
                 app.ui.updateConsole("AI_FAIL", true);
@@ -136,6 +162,40 @@ app.agents = {
             if (data.success) {
                 app.agents.addMessageToUI('ai', data.answer);
                 app.state.chatHistory.push({ role: 'model', content: data.answer });
+
+                // Inyectar botón de WhatsApp dinámico con jerarquía de contacto (v5.8.9)
+                if (app.state.chatHistory.length >= 4) {
+                    const currentId = (app.state.companyId || "").trim().toUpperCase();
+                    const company = app.data.Config_Empresas.find(c => (c.id_empresa || "").toUpperCase() === currentId);
+
+                    if (company) {
+                        let targetPhone = "";
+                        const useStandard = (company.usa_features_estandar === "TRUE" || company.usa_features_estandar === true);
+
+                        // Jerarquía Nivel 1: SEO (Solo si usa features estándar)
+                        if (useStandard) {
+                            const seoItem = (app.data.Config_SEO || []).find(s => (s.id_empresa || "").toUpperCase() === currentId && s.wa_directo);
+                            if (seoItem) targetPhone = seoItem.wa_directo;
+                        }
+
+                        // Jerarquía Nivel 2: Fallback a Teléfono de Empresa
+                        if (!targetPhone) targetPhone = company.telefonowhatsapp || "8129552094"; // Fallback final de emergencia
+
+                        // Limpieza y Formateo Internacional (v5.8.9)
+                        let cleanPhone = targetPhone.toString().replace(/\D/g, '');
+                        if (cleanPhone.length === 10) cleanPhone = "52" + cleanPhone; // Auto-fix para México si falta prefijo
+
+                        const lastFive = app.state.chatHistory.slice(-5).map(h => h.content).join(' | ');
+                        const waText = encodeURIComponent(`Hola ${company.nomempresa}, estuve hablando con su IA sobre: "${lastFive.substring(0, 100)}...". Me gustaría hablar con un experto.`);
+
+                        const waBtn = `<div style="margin-top:10px; text-align:center;">
+                            <a href="https://wa.me/${cleanPhone}?text=${waText}" target="_blank" class="btn-primary" style="background:#25d366; font-size:0.8rem; padding:5px 10px; text-decoration:none; display:inline-block; border-radius:15px; border:none; color:white; font-weight:bold; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);">
+                            <i class="fab fa-whatsapp"></i> Hablar con un Experto de ${company.nomempresa}
+                            </a>
+                        </div>`;
+                        app.agents.addMessageToUI('ai', waBtn);
+                    }
+                }
             } else {
                 let fullError = data.error || "No se pudo conectar con la IA.";
                 if (data.detail) fullError += "\n\nDetalle técnico: " + data.detail;

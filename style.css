@@ -4076,3 +4076,16 @@ body.menu-open {
     flex-direction: column;
     justify-content: center;
 }
+
+/* --- PERSONAL BRAND STYLES (v5.7.6) --- */
+.personal-brand-logo {
+    border-radius: 50% !important;
+    border: 3px solid var(--primary-color) !important;
+    object-fit: cover !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.personal-brand-header {
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.5px;
+}

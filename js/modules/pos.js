@@ -170,6 +170,12 @@ app.pos = {
         document.getElementById('pos-cust-address').value = '';
         const nEl = document.getElementById('pos-cust-notes');
         if (nEl) nEl.value = '';
+        // Clear Cash Control (v5.7.1)
+        const cashIn = document.getElementById('pos-cash-input');
+        if (cashIn) cashIn.value = '';
+        const cashCh = document.getElementById('pos-cash-change');
+        if (cashCh) cashCh.innerText = '$0.00';
+
         // Ensure folio is also cleared here just in case
         const pFolio = document.getElementById('pos-pay-folio');
         if (pFolio) pFolio.value = '';
@@ -290,7 +296,9 @@ app.pos = {
                 concepto: `Venta POS - ${name}`,
                 metodo_pago: method,
                 folio: confirmNum || "CAJA",
-                referencia: isStaffSale ? "STAFF" : "CLIENTE-URL"
+                referencia: isStaffSale ? "STAFF" : "CLIENTE-URL",
+                pago_con: document.getElementById('pos-cash-input')?.value || 0,
+                cambio: (document.getElementById('pos-cash-change')?.innerText || "$0.00").replace('$', '')
             },
             stockUpdates: stockUpdates
         };
@@ -605,9 +613,10 @@ app.pos = {
         if (orderIndex > -1) {
             previousStatus = app.data.Proyectos[orderIndex].status || ""; // Guardar para rollback si falla
 
-            app.data.Proyectos[orderIndex].status = newStatus;
-            app.data.Proyectos[orderIndex].estado = newStatus;
-            app.data.Proyectos[orderIndex].estatus = newStatus; // Normalize just in case
+            const s = newStatus;
+            app.data.Proyectos[orderIndex].status = s;
+            app.data.Proyectos[orderIndex].estado = s;
+            app.data.Proyectos[orderIndex].estatus = s; // Normalize local state too
 
             // Persistent Cache Update (v4.6.5)
             const localCache = JSON.parse(localStorage.getItem('suit_status_cache') || '{}');
@@ -1154,5 +1163,20 @@ app.pos = {
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
         }, 600);
+    },
+
+    // --- CASH CONTROL LOGIC (v5.7.1) ---
+    updateStaffChange: () => {
+        const input = document.getElementById('pos-cash-input');
+        const display = document.getElementById('pos-cash-change');
+        const totalEl = document.getElementById('ticket-total');
+        if (!input || !display || !totalEl) return;
+
+        const total = parseFloat(totalEl.innerText.replace('$', '')) || 0;
+        const paid = parseFloat(input.value) || 0;
+        const change = Math.max(0, paid - total);
+
+        display.innerText = `$${change.toFixed(2)}`;
+        display.style.color = paid >= total ? '#27ae60' : '#e74c3c';
     }
 };

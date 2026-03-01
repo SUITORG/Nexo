@@ -125,16 +125,19 @@ Si la categoría no es clara, primero haz preguntas de aclaración antes de toca
 
 ---
 
-## 2.2 Invariantes de UI (Inicio y POS/Express)
+## 2.2 Invariantes de UI (Reglas de Oro Inmutables)
 
-Estas reglas NO pueden violarse sin una instrucción explícita del usuario.
+Estas reglas NO pueden violarse sin una instrucción explícita del usuario. Cada cambio debe validar estos tres pilares:
 
 - **Inicio (Landing SEO)**:
-  - Debe existir el contenedor principal `#seo-matrix-section` (o el ID definido por el proyecto).
-  - Este contenedor debe seguir mostrando la matriz SEO y ser responsivo.
+  - Debe existir el contenedor principal `#seo-matrix-section`.
+  - Debe seguir mostrando la matriz SEO y ser responsivo.
 - **POS/Express (Pedido Express)**:
   - Debe existir el contenedor principal `#pos-express-section`.
-  - Debe seguir leyendo y mostrando productos desde la tabla `Catalogo` (o fuente de datos equivalente).
+  - Debe seguir leyendo y mostrando productos desde la tabla `Catalogo`.
+- **Project Ranking (Seguimiento de Avance)**:
+  - Debe existir la vista `#view-projects` y su tabla `#projects-table-body`.
+  - Debe calcular y mostrar correctamente la "temperatura" (avance %) basada en `Config_Flujo_Proyecto`.
 
 **Procedimiento ante riesgo de violación:**
 - El agente debe:
@@ -186,9 +189,10 @@ Una vez completada la acción principal (y solo después de `APROBADO`):
      `Puntaje: 10/10 - Cumple con estética BK-Style y multi-inquilino.`
    - **Alerta de Versión**: Indicar si hubo incremento en versión del sistema (Frontend) o `backend_schema.gs` (Backend).
    - **Análisis de consumo de créditos**: Indicar cuántos archivos fueron leídos y si se respetó el límite de 3 archivos.
-   - **Estado de secciones críticas**:
+   - **Estado de secciones críticas (Invariantes)**:
      - `Inicio (SEO): [OK/ERROR]`
      - `POS/Express (Catalogo): [OK/ERROR]`
+      - `Project Ranking (Avance): [OK/ERROR]`
    - **Archivos modificados**: Lista explícita.
    - **Archivos críticos NO modificados**: Resaltar que no fueron tocados.
    - **Sugerencias de Mejora**: 2–3 acciones proactivas para el usuario.

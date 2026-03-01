@@ -17,7 +17,7 @@ app.listen(PORT, () => {
 -------------------------------
 URL: http://localhost:${PORT}
 Directory: ${__dirname}
-Version: 4.4.8 (Stable Sync)
+Version: 5.7.1 (Stable Sync)
 -------------------------------
 Presiona Ctrl+C para detener.
     `);

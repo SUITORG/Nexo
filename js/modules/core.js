@@ -4,7 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: '5.7.0', // v5.7.0: Suit BI Matrix (Dynamic Dashboard).
+    version: '5.8.9', // v5.8.9: Responsive Orbit & Dynamic WA Hierarchy.
 
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',

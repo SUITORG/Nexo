@@ -221,8 +221,16 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [ ] **Sugerencia B (Infraestructura QA):** Implementar un script de validación (Node.js) que verifique la integridad de los selectores HTML críticos (Totales, Botones, Inputs) contra las reglas definidas en los workflows para detectar discrepancias antes del despliegue.
 - [x] **v5.2.1: Contacto B2B Dinámico:** Inyección de campos de facturación según flags de empresa (RFC, Negocio).
 - [x] **v5.2.2: Inteligencia CRM y Robustez:** Niveles CRM automáticos (1 y 2) y detección mejorada de facturación.
-- [ ] **v5.2.3: Semáforo de POS:** Alertas visuales para pedidos con más de 15 minutos en el mismo estado.
+- [x] **v5.2.3: Semáforo de POS:** Alertas visuales para pedidos con más de 15 minutos en el mismo estado.
+- [ ] **v5.9.0: Smart Memory & Human Handoff (WhatsApp Bridge)**: 
+    - [ ] **Skill Handoff**: Generación de resumen detallado de la conversación para el operador humano.
+    - [ ] **IA Instruction**: Nueva lógica en `Prompts_IA` para detectar solicitudes de ayuda humana y redirigir a WhatsApp con contexto.
+    - [ ] **Chat Logging**: Registro persistente de interacciones en tabla `Logs_Chat`.
+- [ ] **v5.8.0: Módulo Blog & Accesibilidad (A11y)**: Gestión de artículos largos, soporte para lectores de pantalla y modo de alto contraste para proyectos sociales.
+- [x] **v5.7.6: Personal Brand & Circular UI**: Soporte para identidades individuales, fotos de perfil redondas y estilos humanizados.
+- [x] **v5.7.5: SEO Identity & Dynamic Colors**: Identidad visual por ficha SEO (color, whatsapp y mail directo) con lógica de fallback.
+- [x] **v5.7.3: Seguimiento de Proyectos (EVASOL Master Flow)**: Gestión de avances (%), bitácora con hora exacta y multi-inquilino.
 - [x] **v5.2.4: Smart ID & Project Traceability**: Identidad por teléfono, folios secuenciales `LEAD-XXX`/`ORD-XXX` y timestamps ISO.
 - [x] **v5.2.5: Lead Sync & Timestamps**: Sincronización de columnas `fecha`, `nom_negocio`, `dir_comercial` y timestamps con hora.
 ---
-*Última actualización: 2026-02-22 | Versión: v5.3.6 (BRAND HIERARCHY)*
+*Última actualización: 2026-02-28 | Versión: v5.7.6 (PERSONAL BRAND SYNC)*

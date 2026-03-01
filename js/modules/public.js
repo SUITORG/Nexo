@@ -204,8 +204,8 @@ app.public = {
         const showForm = company.formulario === 'TRUE' || company.formulario === true;
 
         if (isFood) {
-            // Prioridad: foto_agente reemplaza al fondo (Hero) si existe, según solicitud del usuario.
-            const bgUrl = company.foto_agente || company.hero_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80';
+            // Prioridad: foto_agente -> logo_url -> Default (v5.7.7)
+            const bgUrl = company.foto_agente || company.logo_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80';
 
             // Ajustamos el gradiente para asegurar legibilidad del texto sobre cualquier foto
             heroBanner.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.85)), url('${app.utils.fixDriveUrl(bgUrl)}')`;
@@ -233,8 +233,10 @@ app.public = {
 
             if (actions) {
                 const showSupport = company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true;
+                // v5.8.1: Selector de Agente Dinámico por Empresa
+                const agentId = (urlId === 'EVASOL') ? 'EVASOL_SR_ENG' : 'AGT-001';
                 actions.innerHTML = showSupport ? `
-                    <button class="btn-support" onclick="app.agents.select('AGT-001')">
+                    <button class="btn-support" onclick="app.agents.select('${agentId}')">
                         <i class="fas fa-headset"></i> Atención y Soporte
                     </button>
                 ` : '';
@@ -275,7 +277,7 @@ app.public = {
                 `;
             }
 
-            const heroUrl = company.hero_url || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80';
+            const heroUrl = company.foto_agente || company.logo_url || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80';
             heroBanner.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('${app.utils.fixDriveUrl(heroUrl)}')`;
             heroBanner.style.backgroundAttachment = 'fixed';
             if (heroBanner) heroBanner.classList.remove('reduced');
@@ -285,9 +287,11 @@ app.public = {
             if (subEl) subEl.innerText = company.mensaje1 || company.descripcion || "Eficiencia y Calidad.";
             if (actions) {
                 const showSupport = company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true;
+                // v5.8.1: Selector de Agente Dinámico por Empresa
+                const agentId = (urlId === 'EVASOL') ? 'EVASOL_SR_ENG' : 'AGT-001';
                 actions.innerHTML = `
                     <button class="btn-primary" onclick="window.location.hash='#contact'">Cotizar Ahora</button>
-                    ${showSupport ? `<button class="btn-support" onclick="app.agents.select('AGT-001')"><i class="fas fa-headset"></i> Atención y Soporte</button>` : ''}
+                    ${showSupport ? `<button class="btn-support" onclick="app.agents.select('${agentId}')"><i class="fas fa-headset"></i> Atención y Soporte</button>` : ''}
                 `;
             }
             if (standardFeatures) standardFeatures.classList.remove('hidden');
@@ -358,26 +362,37 @@ app.public = {
             const card = document.createElement('div');
             card.className = 'feature-card seo-card-premium';
 
+            // Lógica de Identidad Dinámica (v5.7.5)
+            const brandColor = item.hex_color || 'var(--primary-color)';
+            const waNumber = item.wa_directo || company.telefonowhatsapp || '';
+            const mail = item.mail_directo || company.email || '';
+
             const hasPhoto = item.foto_url || item.url_foto || item.imagen_url;
-            const bgStyle = hasPhoto ? `background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.8)), url('${app.utils.fixDriveUrl(hasPhoto)}'); background-size: cover; background-position: center; color: white; border: none;` : '';
+            const bgStyle = hasPhoto ? `background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.85)), url('${app.utils.fixDriveUrl(hasPhoto)}'); background-size: cover; background-position: center; border: none;` : `border: 2px solid ${brandColor}; box-shadow: 0 4px 15px ${brandColor}22;`;
 
             const keywords = (item.keywords_coma || "").split(',').map(k => k.trim()).filter(k => k);
-            const keywordHtml = keywords.map(k => `<span class="seo-tag" style="${hasPhoto ? 'background:rgba(255,255,255,0.2); color:white; border-color:rgba(255,255,255,0.3);' : ''}">${k}</span>`).join('');
+            const keywordHtml = keywords.map(k => `<span class="seo-tag" style="border-color:${brandColor}; color:${hasPhoto ? 'white' : brandColor}; background:${hasPhoto ? 'rgba(255,255,255,0.1)' : brandColor + '11'}">${k}</span>`).join('');
 
             card.style.cssText = bgStyle;
+            card.onclick = () => {
+                if (waNumber) window.open(`https://wa.me/${waNumber.toString().replace(/\D/g, '')}?text=Hola! Vengo del Hub de EVASOL y me interesa: ${item.titulo}`, '_blank');
+            };
+
             card.innerHTML = `
-                <div class="seo-card-inner">
+                <div class="seo-card-inner" style="position:relative;">
                     <div class="seo-card-header">
-                        <div class="seo-icon" style="${hasPhoto ? 'background:rgba(255,255,255,0.2); border:none;' : ''}">
+                        <div class="seo-icon" style="background:${brandColor}; color:white; box-shadow: 0 0 15px ${brandColor}66;">
                             <i class="${item.icono || 'fas fa-shield-alt'}"></i>
                         </div>
                         <div class="seo-title-group">
-                            <h4 style="${hasPhoto ? 'color:white; text-shadow:0 2px 4px rgba(0,0,0,0.5);' : ''}">${item.titulo}</h4>
-                            <small style="${hasPhoto ? 'color:rgba(255,255,255,0.8);' : ''}">${item.division || item.categoria || 'Servicio'}</small>
+                            <h4 style="${hasPhoto ? 'color:white; text-shadow:0 2px 4px rgba(0,0,0,0.5);' : 'color:var(--primary-color);'}">${item.titulo}</h4>
+                            <small style="color:${hasPhoto ? 'rgba(255,255,255,0.8)' : '#888'};">${item.division || item.categoria || 'Servicio EVASOL'}</small>
                         </div>
                     </div>
-                    <p class="seo-desc" style="${hasPhoto ? 'color:rgba(255,255,255,0.9); font-size:0.8rem; margin:10px 0;' : 'display:none;'}">${item.descripcion || ''}</p>
+                    <p class="seo-desc" style="${hasPhoto ? 'color:rgba(255,255,255,0.9);' : 'color:#555;'} font-size:0.85rem; margin:15px 0;">${item.descripcion || ''}</p>
                     <div class="seo-tags">${keywordHtml}</div>
+                    
+                    ${waNumber ? `<div style="position:absolute; bottom:15px; right:15px; color:${brandColor}; font-size:1.2rem; filter:drop-shadow(0 0 5px white);"><i class="fab fa-whatsapp"></i></div>` : ''}
                 </div>
             `;
             grid.appendChild(card);
@@ -488,13 +503,18 @@ app.public = {
 
         if (app.public._orbitRAF) cancelAnimationFrame(app.public._orbitRAF);
 
+        const screenW = window.innerWidth;
+        let scaleFactor = 1.0;
+        if (screenW < 768) scaleFactor = 0.4; // Móvil: -60%
+        else if (screenW < 1024) scaleFactor = 0.6; // Tablet: -40%
+
         companies.forEach((co) => {
             const isPriority = co.id_empresa === priorityId;
             const isEvasol = (co.id_empresa === 'EVASOL' || co.nomempresa.toUpperCase().includes('EVASOL'));
 
-            // --- EVASOL HIERARCHY (v5.3.9) ---
-            // Stándar 180px para simetría, 220px para el motor (Evasol)
-            const size = isEvasol ? 220 : 180;
+            // --- RESPONSIVE SCALING (v5.8.8) ---
+            const baseSize = isEvasol ? 220 : 180;
+            const size = baseSize * scaleFactor;
             const radius = size / 2;
 
             const bubbleEl = document.createElement('div');
@@ -505,22 +525,25 @@ app.public = {
                 : `radial-gradient(circle at 30% 30%, ${themeColor}, #000)`;
 
             const evasolStyles = isEvasol ? `
-                box-shadow: 0 0 50px rgba(0, 255, 157, 0.4), inset 0 0 20px rgba(255,255,255,0.1); 
-                border: 2px solid rgba(0, 255, 157, 0.6); 
+                box-shadow: 0 0 ${50 * scaleFactor}px rgba(0, 255, 157, 0.4), inset 0 0 ${20 * scaleFactor}px rgba(255,255,255,0.1); 
+                border: ${2 * scaleFactor}px solid rgba(0, 255, 157, 0.6); 
                 z-index: 50;
-            ` : 'box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);';
+            ` : `box-shadow: 0 ${10 * scaleFactor}px ${30 * scaleFactor}px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);`;
 
             bubbleEl.style.cssText = `width:${size}px; height:${size}px; --accent-color:${themeColor}; background:${gradient}; position:absolute; animation:none; transform:none; transition:none; ${evasolStyles}`;
 
 
             const bubbleImg = co.logo_url || co.url_logo || co.foto_agente || '';
-            const logoFilter = isEvasol ? 'filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)) brightness(1.2) contrast(1.1);' : 'filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) brightness(1.1);';
+            const logoFilter = isEvasol ? `filter: drop-shadow(0 0 ${15 * scaleFactor}px rgba(255,255,255,0.8)) brightness(1.2) contrast(1.1);` : `filter: drop-shadow(0 0 ${10 * scaleFactor}px rgba(255, 255, 255, 0.4)) brightness(1.1);`;
+
+            const baseFont = isEvasol ? 1.0 : 0.85;
+            const nameFontSize = Math.max(baseFont * scaleFactor, 0.6);
 
             bubbleEl.innerHTML = `
                 <img src="${bubbleImg ? app.utils.fixDriveUrl(bubbleImg) : ''}" class="bubble-logo" 
                      style="width: ${isEvasol ? '85%' : '75%'}; ${logoFilter}"
                      onerror="this.src='https://docs.google.com/uc?export=view&id=1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv'">
-                <span class="bubble-name" style="font-size:${isEvasol ? '1rem' : '0.85rem'}; font-weight: 800;">${co.nomempresa}</span>
+                <span class="bubble-name" style="font-size:${nameFontSize}rem; font-weight: 800;">${co.nomempresa}</span>
             `;
 
             bubbleEl.onclick = () => app.switchCompany(co.id_empresa);

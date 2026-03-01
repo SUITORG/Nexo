@@ -70,11 +70,20 @@ app.ui = {
         document.title = `${company.nomempresa} | ${isFood ? 'Suit.Bite' : 'Suit.Org'}`;
         document.getElementById('header-title').innerText = company.nomempresa;
 
-        const logo = company.logo_url || company.url_logo;
-        if (logo) {
-            const fixed = app.utils.fixDriveUrl(logo);
+        const logoValue = company.logo_url || company.url_logo;
+        if (logoValue) {
+            const fixed = app.utils.fixDriveUrl(logoValue);
             const el = document.getElementById('header-logo');
-            if (el) { el.src = fixed; document.getElementById('logo-container')?.classList.remove('hidden'); }
+            if (el) {
+                el.src = fixed;
+                document.getElementById('logo-container')?.classList.remove('hidden');
+                // Detección Marca Personal (Circular) v5.7.6
+                if (bizId.includes('ROBERTO')) {
+                    el.classList.add('personal-brand-logo');
+                } else {
+                    el.classList.remove('personal-brand-logo');
+                }
+            }
         }
 
         if (company.color_tema) document.documentElement.style.setProperty('--primary-color', company.color_tema);

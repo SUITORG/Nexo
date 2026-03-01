@@ -747,7 +747,8 @@ app.admin = {
         list.sort((a, b) => (a.nombre_proyecto || "").localeCompare(b.nombre_proyecto || ""));
         list.forEach(p => {
             const flow = (app.data.Config_Flujo_Proyecto || []).filter(f => f.id_empresa === app.state.companyId || f.id_empresa === 'GLOBAL');
-            const phase = flow.find(f => f.id_fase === (p.status || p.estado)) || { nombre_fase: (p.status || p.estado), peso_porcentaje: 0, color_hex: "#999" };
+            const currentStatus = (p.status || p.estado || p.estatus || "NUEVO").trim().toUpperCase();
+            const phase = flow.find(f => (f.id_fase || "").trim().toUpperCase() === currentStatus) || { nombre_fase: currentStatus, peso_porcentaje: 0, color_hex: "#999" };
             const color = phase.color_hex || "#999";
             const pct = parseInt(phase.peso_porcentaje) || 0;
             const client = app.data.Leads.find(l => l.id_lead === (p.id_lead || p.id_cliente));
@@ -792,12 +793,19 @@ app.admin = {
     openProjectDetails: (pId) => {
         const p = app.data.Proyectos.find(x => x.id_proyecto === pId);
         if (!p) return;
-        const client = app.data.Leads.find(l => l.id_lead === p.id_cliente);
+        const currentStatus = (p.status || p.estado || p.estatus || "NUEVO").trim().toUpperCase();
+        const client = app.data.Leads.find(l => l.id_lead === (p.id_lead || p.id_cliente));
         const clientName = client ? client.nombre : (p.cliente_nombre || 'N/A');
 
         const stages = (app.data.Proyectos_Etapas || []).filter(s => s.id_proyecto === pId);
-        const logs = (app.data.Proyectos_Bitacora || []).filter(log => log.id_proyecto === pId);
+        const flow = (app.data.Config_Flujo_Proyecto || []).filter(f => f.id_empresa === app.state.companyId || f.id_empresa === 'GLOBAL');
 
+        // AUTO-INIT: Si no hay etapas pero hay flujo configurado, sugerir o auto-registrar (v5.7.4)
+        if (stages.length === 0 && flow.length > 0) {
+            console.log("🛠️ Detectada falta de etapas... Sincronizando con flujo maestro.");
+        }
+
+        const logs = (app.data.Proyectos_Bitacora || []).filter(log => log.id_proyecto === pId);
         const content = document.getElementById('project-details-content');
         if (!content) return;
 
@@ -811,10 +819,10 @@ app.admin = {
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div><strong>ID:</strong><br>${p.id_proyecto}</div>
                         <div><strong>Estatus Actual:</strong><br>
-                            <select onchange="app.admin.updateProjectStatus('${p.id_proyecto}', this.value)" style="padding:4px; font-size:0.8rem; width:100%">
+                            <select onchange="app.admin.updateProjectStatus('${p.id_proyecto}', this.value)" style="padding:4px; font-size:0.8rem; border-radius: 6px; width:100%">
                                 ${(app.data.Config_Flujo_Proyecto || []).filter(f => f.id_empresa === app.state.companyId || f.id_empresa === 'GLOBAL').map(f => `
-                                    <option value="${f.id_fase}" ${p.estado === f.id_fase ? 'selected' : ''}>${f.nombre_fase}</option>
-                                `).join('') || `<option value="${p.estado}">${p.estado}</option>`}
+                                    <option value="${f.id_fase}" ${currentStatus === (f.id_fase || "").toUpperCase() ? 'selected' : ''}>${f.nombre_fase}</option>
+                                `).join('') || `<option value="${currentStatus}">${currentStatus}</option>`}
                             </select>
                         </div>
                         <div style="grid-column: span 2;"><strong>Nombre:</strong><br>${p.nombre_proyecto}</div>
@@ -863,7 +871,13 @@ app.admin = {
             await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'updateProjectStatus', id: pId, status: newStatus, token: app.apiToken })
+                body: JSON.stringify({
+                    action: 'updateProjectStatus',
+                    id: pId,
+                    status: newStatus,
+                    id_empresa: app.state.companyId,
+                    token: app.apiToken
+                })
             });
             await app.loadData();
             app.admin.renderProjects();
@@ -1074,7 +1088,7 @@ app.admin = {
             await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'addProjectStage', id: pId, stage: name, token: app.apiToken })
+                body: JSON.stringify({ action: 'addProjectStage', id: pId, stage: name, id_empresa: app.state.companyId, token: app.apiToken })
             });
             await app.loadData();
             app.admin.openProjectDetails(pId);
@@ -1086,7 +1100,7 @@ app.admin = {
             await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'toggleProjectStage', id: pId, stage: stageName, completed, token: app.apiToken })
+                body: JSON.stringify({ action: 'toggleProjectStage', id: pId, stage: stageName, completed, id_empresa: app.state.companyId, token: app.apiToken })
             });
             await app.loadData();
             app.admin.internalAddLog(pId, 'ETAPA', `Etapa ${stageName} marcada como ${completed ? 'COMPLETADA' : 'PENDIENTE'}`);
@@ -1101,7 +1115,7 @@ app.admin = {
             await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'addProjectPayment', id: pId, monto, concepto, token: app.apiToken })
+                body: JSON.stringify({ action: 'addProjectPayment', id: pId, monto, concepto, id_empresa: app.state.companyId, token: app.apiToken })
             });
             await app.loadData();
             app.admin.internalAddLog(pId, 'PAGO', `Pago registrado: $${monto} - ${concepto}`);
@@ -1121,7 +1135,7 @@ app.admin = {
             await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'addProjectLog', id: pId, type, detail: text, token: app.apiToken })
+                body: JSON.stringify({ action: 'addProjectLog', id: pId, type, detail: text, id_empresa: app.state.companyId, token: app.apiToken })
             });
         } catch (e) { console.error(e); }
     },

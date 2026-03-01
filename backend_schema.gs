@@ -1,21 +1,22 @@
-/* SuitOrg Backend Engine - v5.7.0
+/* SuitOrg Backend Engine - v5.8.9
  * ---------------------------------------------------------
- * Sincronización: 2026-02-24 10:20 AM (v5.7.0 BI Matrix)
+ * Sincronización: 2026-03-01 04:30 PM (v5.8.9 Responsive & WA Proxy Fix)
  * 
- * Changelog v5.7.0:
- * - BI: Implementación de 'Config_Dashboard' (Motor BI Matrix).
- * - DATA: Soporte para Widgets de Inteligencia Dinámicos.
+ * Changelog v5.8.9:
+ * - UI: Orbit Hub Scaling (Móvil -60%, Tablet -40%).
+ * - WA: Jerarquía dinámica de contacto (SEO -> Empresa) con auto-fix prefijo 52.
+ * - SEC: Project Ranking elevado a Invariante de Orquestador.
  * 
- * AUDIT: ~10150 Total Lines (v5.7.0).
+ * AUDIT: ~11150 Total Lines (v5.8.9).
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "5.7.0",
+  VERSION: "5.8.9",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
-  GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard"], 
+  GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto"], 
   PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos"],
-  AUDIT: { total: 10150, status: "STABLE_SYNC" }
+  AUDIT: { total: 11115, status: "STABLE_SYNC" }
 };
 
 /**
@@ -95,8 +96,17 @@ function handlePostAction(data, output) {
         break;
 
       case "listAiModels":
-        output.models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro-vision"];
-        output.success = true; break;
+        var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+        if (!apiKey) { output.error = "API_KEY_MISSING"; break; }
+        try {
+          var res = UrlFetchApp.fetch("https://generativelanguage.googleapis.com/v1/models?key=" + apiKey);
+          var dataModels = JSON.parse(res.getContentText());
+          output.models = dataModels.models.map(function(m) { return m.name.replace("models/", ""); });
+          output.success = true;
+        } catch (e) {
+          output.error = "ERROR_FETCHING_MODELS: " + e.message;
+        }
+        break;
 
       case "createLead": 
         var leadSheet = ss.getSheetByName("Leads");
@@ -162,11 +172,21 @@ function handlePostAction(data, output) {
         output.success = true; break;
 
       case "updateProjectStatus":
+        var now = new Date();
         updateRowMapped(ss, "Proyectos", "id_proyecto", data.id, { 
           status: data.status, 
           estado: data.status,
           estatus: data.status,
-          fecha_estatus: new Date() 
+          fecha_estatus: now 
+        });
+        
+        // AUTO-LOG: Registro automático en Bitácora con Hora Exacta
+        appendRowMapped(ss, "Proyectos_Bitacora", {
+          id_empresa: data.id_empresa || "",
+          id_proyecto: data.id,
+          tipo: "SISTEMA",
+          detalle: "Cambio de fase a: " + data.status + " (Registrado a las " + Utilities.formatDate(now, "GMT-6", "HH:mm:ss") + ")",
+          fecha_hora: now
         });
         output.success = true; break;
 
@@ -183,6 +203,13 @@ function handlePostAction(data, output) {
         data.project.fecha_inicio = new Date();
         data.project.fecha_estatus = new Date();
         data.project.activo = "TRUE";
+        
+        // Normalización v5.7.1
+        var st = data.project.status || data.project.estado || data.project.estatus || "NUEVO";
+        data.project.status = st;
+        data.project.estado = st;
+        data.project.estatus = st;
+
         appendRowMapped(ss, "Proyectos", data.project);
         output.success = true; break;
 
@@ -216,6 +243,48 @@ function handlePostAction(data, output) {
         output.newBusinessId = autoId;
         output.success = true; break;
 
+      case "addProjectStage":
+        appendRowMapped(ss, "Proyectos_Etapas", {
+          id_empresa: data.id_empresa || "",
+          id_proyecto: data.id,
+          nombre_etapa: data.stage,
+          completada: "FALSE",
+          fecha_creacion: new Date()
+        });
+        output.success = true; break;
+
+      case "toggleProjectStage":
+        // Búsqueda específica por Proyecto + Etapa (Aislamiento total)
+        updateRowMappedExtended(ss, "Proyectos_Etapas", { id_proyecto: data.id, nombre_etapa: data.stage }, { 
+          completada: data.completed ? "TRUE" : "FALSE",
+          fecha_actualizacion: new Date()
+        });
+        output.success = true; break;
+
+      case "addProjectPayment":
+        var payId = "PAY-" + Math.floor(Math.random() * 100000);
+        var pData = {
+          id_pago: payId,
+          id_proyecto: data.id,
+          id_empresa: data.id_empresa || "",
+          monto: data.monto,
+          concepto: data.concepto,
+          fecha_pago: new Date()
+        };
+        appendRowMapped(ss, "Proyectos_Pagos", pData);
+        appendRowMapped(ss, "Pagos", pData);
+        output.success = true; break;
+
+      case "addProjectLog":
+        appendRowMapped(ss, "Proyectos_Bitacora", {
+          id_empresa: data.id_empresa || "",
+          id_proyecto: data.id,
+          tipo: data.type,
+          detalle: data.detail,
+          fecha_hora: new Date()
+        });
+        output.success = true; break;
+
       default:
         output.error = "Acción no implementada en " + CONFIG.VERSION + ": " + action;
     }
@@ -239,20 +308,25 @@ function runGeminiInference(data, output) {
   const history = data.history || [];
   const userMsg = data.message || data.prompt || "";
 
-  // Convert history to Gemini Format
-  const contents = history.map(h => ({
-    role: (h.role === 'user' ? 'user' : 'model'),
-    parts: [{ text: h.content }]
-  }));
+  const contents = [];
+  // Inyectar el system prompt como el primer mensaje del historial para máxima compatibilidad en v1
+  contents.push({ role: "user", parts: [{ text: "INSTRUCCIONES DEL SISTEMA (IMPORTANTE):\n" + systemPrompt }] });
+  contents.push({ role: "model", parts: [{ text: "Entendido. Aplicaré estas instrucciones para el resto de la conversación." }] });
+
+  history.forEach(h => {
+    contents.push({
+      role: (h.role === 'user' ? 'user' : 'model'),
+      parts: [{ text: h.content }]
+    });
+  });
   contents.push({ role: "user", parts: [{ text: userMsg }] });
 
   const payload = {
     contents: contents,
-    system_instruction: { parts: [{ text: systemPrompt }] },
     generationConfig: { temperature: 0.7, maxOutputTokens: 1500 }
   };
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
   
   try {
     const res = UrlFetchApp.fetch(url, {
@@ -331,7 +405,60 @@ function initializeDatabase(ss, output) {
     const headers = cat.getRange(1, 1, 1, cat.getLastColumn()).getValues()[0];
     if (headers.indexOf("id_empresa") === -1) cat.insertColumnAfter(1).getRange(1, 2).setValue("id_empresa");
   }
+
+  // Semilla Marca Personal: Roberto Villarreal (v5.7.6)
+  ensureSeed(ss, "Config_Empresas", "id_empresa", "ROBERTO_V", {
+    id_empresa: "ROBERTO_V",
+    nomempresa: "Roberto Villarreal",
+    tipo_negocio: "Consultoría / Inclusión",
+    slogan: "Transformando obstáculos en oportunidades",
+    descripcion: "Especialista en inclusión social y director de Inclusión Siglo 21.",
+    color_tema: "#1A237E",
+    usa_features_estandar: "FALSE",
+    habilitado: "TRUE",
+    modo: "PROD"
+  });
+
+  // Semillas Flujo Maestro EVASOL (v5.7.3)
+  const flujoEvasol = [
+    { id_empresa: "EVASOL", id_fase: "LVT", nombre_fase: "Levantamiento", peso_porcentaje: 10, orden: 1, color_hex: "#90A4AE", descripcion: "Inspección técnica en sitio." },
+    { id_empresa: "EVASOL", id_fase: "VST", nombre_fase: "Visita Validación", peso_porcentaje: 20, orden: 2, color_hex: "#4DD0E1", descripcion: "Confirmación de viabilidad y medidas." },
+    { id_empresa: "EVASOL", id_fase: "ANT", nombre_fase: "Pago Anticipo", peso_porcentaje: 40, orden: 3, color_hex: "#FFD54F", descripcion: "Entrada de capital inicial." },
+    { id_empresa: "EVASOL", id_fase: "IMP", nombre_fase: "Implementación", peso_porcentaje: 70, orden: 4, color_hex: "#64B5F6", descripcion: "Fase de instalación y montaje." },
+    { id_empresa: "EVASOL", id_fase: "PAG", nombre_fase: "Pago Parcial", peso_porcentaje: 85, orden: 5, color_hex: "#FFB74D", descripcion: "Cobro intermedio tras avance." },
+    { id_empresa: "EVASOL", id_fase: "TER", nombre_fase: "Terminado", peso_porcentaje: 95, orden: 6, color_hex: "#81C784", descripcion: "Obra finalizada al 100%." },
+    { id_empresa: "EVASOL", id_fase: "FAC", nombre_fase: "Facturado", peso_porcentaje: 98, orden: 7, color_hex: "#F06292", descripcion: "Documentación fiscal emitida." },
+    { id_empresa: "EVASOL", id_fase: "CER", nombre_fase: "Cierre", peso_porcentaje: 100, orden: 8, color_hex: "#004D40", descripcion: "Proyecto cerrado y entregado." },
+    { id_empresa: "EVASOL", id_fase: "CAN", nombre_fase: "Cancelado", peso_porcentaje: 0, orden: 9, color_hex: "#E57373", descripcion: "Proyecto abortado o rechazado." }
+  ];
+
+  const flowSheet = ss.getSheetByName("Config_Flujo_Proyecto");
+  if (flowSheet) {
+    flujoEvasol.forEach(f => ensureSeed(ss, "Config_Flujo_Proyecto", "id_fase", f.id_fase, f));
+  }
   
+
+  // Asegurar tabla Proyectos_Etapas
+  const stageSheet = ss.getSheetByName("Proyectos_Etapas");
+  if (!stageSheet) {
+    const s = ss.insertSheet("Proyectos_Etapas");
+    s.appendRow(["id_empresa", "id_proyecto", "nombre_etapa", "completada", "fecha_creacion", "fecha_actualizacion"]);
+  } else {
+    // Si ya existe pero falta id_empresa, lo inyectamos (Migración Quirúrgica v5.7.2)
+    const headers = stageSheet.getRange(1, 1, 1, stageSheet.getLastColumn()).getValues()[0];
+    if (headers.indexOf("id_empresa") === -1) {
+      stageSheet.insertColumnBefore(1).getRange(1, 1).setValue("id_empresa");
+    }
+  }
+
+  // Asegurar tabla Proyectos_Bitacora & Pagos (Headers)
+  ["Proyectos_Bitacora", "Proyectos_Pagos"].forEach(tn => {
+    const sh = ss.getSheetByName(tn);
+    if (sh) {
+       const h = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+       if (h.indexOf("id_empresa") === -1) sh.insertColumnBefore(1).getRange(1, 1).setValue("id_empresa");
+    }
+  });
 
   output.info = "Database structure verified and seeds restored.";
   
@@ -460,6 +587,34 @@ function updateRowMapped(ss, sheetName, idCol, idVal, dataObj) {
   }
 }
 
+/**
+ * 🔍 ACTUALIZACIÓN POR MULTIPLE CRITERIO (v5.7.2)
+ */
+function updateRowMappedExtended(ss, sheetName, filters, dataObj) {
+  var sheet = ss.getSheetByName(sheetName);
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0].map(h => String(h).toLowerCase().trim().replace(/\s+/g, '_'));
+  var rowI = -1;
+
+  for (var i = 1; i < data.length; i++) {
+    var match = true;
+    for (var key in filters) {
+      var colIdx = headers.indexOf(key.toLowerCase());
+      if (colIdx === -1 || String(data[i][colIdx]).trim().toUpperCase() !== String(filters[key]).trim().toUpperCase()) {
+        match = false; break;
+      }
+    }
+    if (match) { rowI = i + 1; break; }
+  }
+
+  if (rowI !== -1) {
+    for (var k in dataObj) {
+      var cIdx = headers.indexOf(k.toLowerCase().trim().replace(/\s+/g, '_'));
+      if (cIdx !== -1) sheet.getRange(rowI, cIdx + 1).setValue(dataObj[k]);
+    }
+  }
+}
+
 function processTransaction(ss, data, output) {
   var leadId = data.lead.id_lead;
   if (!leadId) {
@@ -486,6 +641,13 @@ function processTransaction(ss, data, output) {
   data.project.id_lead = leadId;
   data.project.fecha_inicio = new Date();
   data.project.fecha_estatus = new Date();
+  
+  // Normalización de Estados (v5.7.1)
+  var mainStatus = data.project.status || data.project.estado || data.project.estatus || "PEDIDO-RECIBIDO";
+  data.project.status = mainStatus;
+  data.project.estado = mainStatus;
+  data.project.estatus = mainStatus;
+
   appendRowMapped(ss, "Proyectos", data.project);
   
   if (data.payment) {
@@ -493,6 +655,8 @@ function processTransaction(ss, data, output) {
     data.payment.id_pago = "PAY-" + nextNum;
     data.payment.id_proyecto = projId;
     data.payment.fecha_pago = new Date();
+    
+    // El objeto payment ya debe traer pago_con y cambio desde el POS (v5.7.1)
     appendRowMapped(ss, "Proyectos_Pagos", data.payment);
     appendRowMapped(ss, "Pagos", data.payment); // Restaurada Integridad de Tabla Principal (v4.8.6)
   }
