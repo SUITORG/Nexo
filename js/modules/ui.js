@@ -135,6 +135,44 @@ app.ui = {
     exportReport: (fmt) => app.admin.exportReport(fmt),
     renderBusinessDashboard: () => app.admin.renderBusinessDashboard(),
 
+    renderReservations: () => {
+        const container = document.getElementById('view-reservations');
+        if (!container) return;
+        const data = app.data.Reservaciones || [];
+        const coId = app.state.companyId;
+
+        container.innerHTML = `
+            <div class="admin-header">
+                <h2><i class="fas fa-calendar-alt"></i> Control de Citas</h2>
+                <p>Gestiona las reservaciones del sitio web.</p>
+            </div>
+            <div class="table-container shadow-premium">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Cliente</th>
+                            <th>WhatsApp</th>
+                            <th>Servicio</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.filter(r => r.id_empresa === coId).map(r => `
+                            <tr>
+                                <td><b>${r.fecha_cita.replace('T', ' ')}</b></td>
+                                <td>${r.nombre_cliente}</td>
+                                <td><a href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a></td>
+                                <td><span class="badge-accent">${r.servicio}</span></td>
+                                <td><span class="status-pill ${r.status.toLowerCase()}">${r.status}</span></td>
+                            </tr>
+                        `).join('') || '<tr><td colspan="5">No hay citas registradas.</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    },
+
     // --- PUBLIC BRIDGE ---
     renderOrbit: () => app.public.renderOrbit(),
     renderPillars: (c) => app.public.renderPillars(c),

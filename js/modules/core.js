@@ -4,7 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: '5.8.9', // v5.8.9: Responsive Orbit & Dynamic WA Hierarchy.
+    version: '6.1.0', // v6.1.0: Calendar & Reservations Engine.
 
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',

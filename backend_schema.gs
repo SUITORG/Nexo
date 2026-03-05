@@ -12,11 +12,11 @@
  */
 
 const CONFIG = {
-  VERSION: "5.8.9",
+  VERSION: "6.1.0",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
   GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto"], 
-  PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos"],
-  AUDIT: { total: 11115, status: "STABLE_SYNC" }
+  PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos", "Reservaciones"],
+  AUDIT: { total: 10252, status: "STABLE_SYNC" }
 };
 
 /**
@@ -283,6 +283,50 @@ function handlePostAction(data, output) {
           detalle: data.detail,
           fecha_hora: new Date()
         });
+        output.success = true; break;
+
+      case "createReservation":
+        var reservation = data.reservation;
+        var bizSheet = ss.getSheetByName("Config_Empresas");
+        var bizData = getSheetData(ss, "Config_Empresas");
+        var biz = bizData.find(b => b.id_empresa === reservation.id_empresa);
+        
+        if (!biz) throw new Error("Empresa no encontrada");
+        
+        // 1. Garantizar Calendario (v6.1.0)
+        var calId = biz.id_calendario_google;
+        if (!calId || calId === "") {
+          try {
+            var newCal = CalendarApp.createCalendar("Reservas: " + biz.nomempresa);
+            calId = newCal.getId();
+            updateRowMapped(ss, "Config_Empresas", "id_empresa", biz.id_empresa, { id_calendario_google: calId });
+          } catch (calErr) {
+            console.error("Error creating calendar: " + calErr.message);
+          }
+        }
+        
+        // 2. Crear Evento en Google Calendar (si calId existe)
+        if (calId) {
+          try {
+            var cal = CalendarApp.getCalendarById(calId);
+            var startTime = new Date(reservation.fecha_cita);
+            var endTime = new Date(startTime.getTime() + (60 * 60 * 1000)); // 1 hora default
+            cal.createEvent(
+              "Reserva: " + reservation.nombre_cliente,
+              startTime,
+              endTime,
+              {
+                description: "Servicio: " + reservation.servicio + "\nWA: " + reservation.whatsapp,
+                location: biz.direccion || ""
+              }
+            );
+          } catch (e) { console.error("Calendar event error: " + e.message); }
+        }
+        
+        // 3. Guardar en Hoja de cálculo
+        reservation.id = "RES-" + Date.now();
+        reservation.status = "PENDIENTE";
+        appendRowMapped(ss, "Reservaciones", reservation);
         output.success = true; break;
 
       default:

@@ -11,6 +11,7 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
 ## 🏗️ Arquitectura de Software (v5.7.0 BI Matrix)
+- [x] **v6.1.0: Calendar & Reservations Engine**: Integración nativa con Google Calendar API, creación automática de calendarios por negocio y módulo de gestión de citas.
 - [x] **v5.7.0: Suit BI Matrix (Dynamic Dashboard)**: Motor de métricas e indicadores (KPIs) administrables desde Excel. Procesamiento de datos en tiempo real (SUM, COUNT, AVG) y generación de gráficas dinámicas.
 - [x] **v5.5.0: Dynamic Report Engine (Excel Driven)**: Motor de reportes administrable desde Google Sheets. Soporte para columnas dinámicas, labels e iconos personalizados sin tocar código.
 - [x] **v5.4.0: Identity Onboarding & Brand Intelligence**: Fábrica de Negocios de Suit.Org con autogenerativa de Misión, Visión, Valores e Identidad Visual (Color/Logo). Resalte de EVASOL en Órbita.
@@ -233,4 +234,4 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v5.2.4: Smart ID & Project Traceability**: Identidad por teléfono, folios secuenciales `LEAD-XXX`/`ORD-XXX` y timestamps ISO.
 - [x] **v5.2.5: Lead Sync & Timestamps**: Sincronización de columnas `fecha`, `nom_negocio`, `dir_comercial` y timestamps con hora.
 ---
-*Última actualización: 2026-02-28 | Versión: v5.7.6 (PERSONAL BRAND SYNC)*
+*Última actualización: 2026-03-05 | Versión: v6.1.0 (RESERVATIONS SYNC)*

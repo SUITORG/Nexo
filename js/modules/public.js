@@ -274,13 +274,14 @@ app.public = {
 
             if (actions) {
                 const showSupport = company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true;
-                // v5.8.1: Selector de Agente Dinámico por Empresa
+                const showRes = company.usa_reservaciones === 'TRUE' || company.usa_reservaciones === true;
                 const agentId = (urlId === 'EVASOL') ? 'EVASOL_SR_ENG' : 'AGT-001';
-                actions.innerHTML = showSupport ? `
-                    <button class="btn-support" onclick="app.agents.select('${agentId}')">
-                        <i class="fas fa-headset"></i> Atención y Soporte
-                    </button>
-                ` : '';
+
+                let btns = '';
+                if (showSupport) btns += `<button class="btn-support" onclick="app.agents.select('${agentId}')"><i class="fas fa-headset"></i> Atención e IA</button>`;
+                if (showRes) btns += `<button class="btn-primary" onclick="app.public.showReservationModal()"><i class="fas fa-calendar-check"></i> Reservar Cita</button>`;
+
+                actions.innerHTML = btns;
             }
 
             if (menuPublic) {
@@ -328,11 +329,12 @@ app.public = {
             if (subEl) subEl.innerText = company.mensaje1 || company.descripcion || "Eficiencia y Calidad.";
             if (actions) {
                 const showSupport = company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true;
-                // v5.8.1: Selector de Agente Dinámico por Empresa
+                const showRes = company.usa_reservaciones === 'TRUE' || company.usa_reservaciones === true;
                 const agentId = (urlId === 'EVASOL') ? 'EVASOL_SR_ENG' : 'AGT-001';
                 actions.innerHTML = `
                     <button class="btn-primary" onclick="window.location.hash='#contact'">Cotizar Ahora</button>
-                    ${showSupport ? `<button class="btn-support" onclick="app.agents.select('${agentId}')"><i class="fas fa-headset"></i> Atención y Soporte</button>` : ''}
+                    ${showRes ? `<button class="btn-accent" onclick="app.public.showReservationModal()" style="background:#5c6bc0; color:white;"><i class="fas fa-calendar-alt"></i> Reservar</button>` : ''}
+                    ${showSupport ? `<button class="btn-support" onclick="app.agents.select('${agentId}')"><i class="fas fa-headset"></i> Soporte IA</button>` : ''}
                 `;
             }
             if (standardFeatures) standardFeatures.classList.remove('hidden');
@@ -412,6 +414,92 @@ app.public = {
                 <span style="font-size: 0.5rem; font-weight: 800; color: #333; letter-spacing: 0.5px;">SITIO OFICIAL</span>
             `;
             qrTarget.appendChild(qrContainer);
+        }
+    },
+
+    showReservationModal: () => {
+        const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+        let overlay = document.getElementById('reservation-modal');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'reservation-modal';
+            overlay.className = 'modal-overlay';
+            overlay.style.zIndex = "1000";
+            document.body.appendChild(overlay);
+        }
+
+        overlay.innerHTML = `
+            <div class="modal-content" style="max-width:400px; padding:30px; border-radius:30px;">
+                <h2 style="color:var(--primary-color); margin-bottom:10px;"><i class="fas fa-calendar-star"></i> Nueva Reserva</h2>
+                <p style="font-size:0.9rem; color:#666; margin-bottom:20px;">Agenda tu cita con ${company.nomempresa} hoy mismo.</p>
+                
+                <form id="res-form" style="display:flex; flex-direction:column; gap:15px; text-align:left;">
+                    <div class="form-group">
+                        <label style="font-size:0.8rem; font-weight:bold; color:#555;">Día y Hora</label>
+                        <input type="datetime-local" id="res-date" required style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.8rem; font-weight:bold; color:#555;">Tu Nombre</label>
+                        <input type="text" id="res-name" placeholder="¿Cómo te llamas?" required style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.8rem; font-weight:bold; color:#555;">WhatsApp</label>
+                        <input type="tel" id="res-wa" placeholder="Para confirmación" required style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.8rem; font-weight:bold; color:#555;">Servicio / Motivo</label>
+                        <select id="res-service" style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
+                            <option>Información General</option>
+                            <option>Cotización</option>
+                            <option>Soporte Técnico</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('reservation-modal').classList.add('hidden')" style="flex:1;">Cancelar</button>
+                        <button type="submit" class="btn-primary" style="flex:2;">Confirmar Cita</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        overlay.classList.remove('hidden');
+        document.getElementById('res-form').onsubmit = (e) => {
+            e.preventDefault();
+            app.public.submitReservation();
+        };
+    },
+
+    submitReservation: async () => {
+        const btn = document.querySelector('#res-form button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = "Procesando...";
+        btn.disabled = true;
+
+        const data = {
+            action: "createReservation",
+            reservation: {
+                id_empresa: app.state.companyId,
+                fecha_cita: document.getElementById('res-date').value,
+                nombre_cliente: document.getElementById('res-name').value,
+                whatsapp: document.getElementById('res-wa').value,
+                servicio: document.getElementById('res-service').value
+            }
+        };
+
+        try {
+            const res = await app.utils.apiPost(data);
+            if (res.success) {
+                alert("¡Cita agendada con éxito! Te contactaremos por WhatsApp.");
+                document.getElementById('reservation-modal').classList.add('hidden');
+            } else {
+                throw new Error(res.error || "Error desconocido");
+            }
+        } catch (err) {
+            alert("Error al reservar: " + err.message);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
     },
 

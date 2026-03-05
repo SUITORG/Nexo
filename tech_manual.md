@@ -1,7 +1,7 @@
 
 # Manual Técnico y Operativo - SuitOrg
 > **Identidad Principal:** SuitOrg (Powered by EVASOL Engine)
-> **Última Versión Estable**: v5.8.9 (Responsive & WA Hierarchy)
+> **Última Versión Estable**: v6.0.7 (Dynamic Identity & QR Parametrization)
 > **Estado del Sistema**: Operativo con Soporte Multi-canal y Optimización de Hub.
 > **Total de Líneas Consolidadas**: ~11,150 (Auditado 2026-03-01).
 
@@ -72,6 +72,11 @@ El sistema soporta dos modos de gestión de políticas configurables en `Config_
 - **Flujo 100% Error-Free:** El proceso de cierre de venta es crítico. Debe ser una transacción atómica que registre la Orden, actualice el Lead y descuente el Stock simultáneamente.
 - **Transparencia en Caja:** Las operaciones de POS deben ser claras, auditadas y generar folios únicos para evitar discrepancias.
 
+### G. Identidad Dinámica y Localización (v6.0.7)
+- **Nomenclatura de Origen:** En el contexto público, se prioriza el término **"Sitio"** sobre "Hub" para mensajes de contacto, mejorando la comprensión del usuario final.
+- **Parametrización Visual (QR):** La visibilidad del código QR oficial en el Banner/Hero está controlada por el campo `usa_qr_sitio` en `Config_Empresas`.
+- **Branding Proxy:** Los enlaces de WhatsApp y códigos QR en la Matriz SEO heredan automáticamente el nombre y el color de tema del inquilino, eliminando menciones estáticas a la empresa matriz.
+
 ### G. Glosario de Módulos (IDs Técnicos)
 Para que el sistema active correctamente el menú y el Dashboard, se deben usar exactamente estos identificadores en la columna `modulos_visibles` de la tabla `Config_Roles` o `Usuarios`:
 
@@ -81,6 +86,7 @@ Para que el sistema active correctamente el menú y el Dashboard, se deben usar 
 | `staff-pos` | Venta (POS) / Caja | Interfaz de cobro directo para personal de ventas. |
 | `pos` | Monitor de Pedidos | Control de estatus de órdenes (Nuevos, Cocina, Listos). |
 | `projects` | Proyectos | Tabla de gestión de avance y temperatura de negocio. |
+| `reservations` | Citas | Control de reservaciones vinculadas a Google Calendar. |
 | `leads` | Gestión de Leads | Registro y seguimiento de clientes potenciales. |
 | `BACKEND_MISSING_SEEDS` | Nuevos agentes o roles no se creaban si la tabla ya existía pero estaba incompleta. | Implementar lógica de "Upsert" en la inicialización para verificar registros uno por uno en lugar de solo tablas vacías. | ✅ Resuelto | 20 min |
 | `SEED_LOGIC_INDEX_FAIL` | La verificación de seeds fallaba por depender de índices fijos o nombres de tabla incorrectos. | Refactorizar a función `ensureSeed` que busca dinámicamente el encabezado 'id' para insertar con precisión. | ✅ Resuelto | 15 min |
@@ -104,7 +110,7 @@ Para que el sistema active correctamente el menú y el Dashboard, se deben usar 
 
 | Tabla | Descripción |
 | :--- | :--- |
-| **Config_Empresas** | Parámetros generales, políticas, colores, modo de créditos y Feature Toggles (`usa_features_estandar`). |
+| **Config_Empresas** | Parámetros generales, políticas, colores, modo de créditos y Feature Toggles (`usa_features_estandar`, `usa_qr_sitio`). |
 | **Config_Roles** | Definición de jerarquías, módulos visibles y vigencia por rol. |
 | **Config_Flujo_Proyecto** | Definición de etapas comerciales con pesos porcentuales y colores. |
 | **Usuarios** | Credenciales, roles, créditos y fechas límite. |
@@ -165,6 +171,20 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 
 ---
 
+- **v6.1.0** (2026-03-05): **"Calendar & Reservations Engine"**.
+    - **Backend:** Integración nativa con Google Calendar API. Creación automática de calendarios por empresa.
+    - **UI Pública:** Formulario de reservación dinámico y botón condicional en Hero.
+    - **Staff UI:** Módulo de 'Citas' para gestión administrativa de reservas.
+    - **Database:** Nueva tabla `Reservaciones` y parámetro `usa_reservaciones` en `Config_Empresas`.
+
+- **v6.0.7** (2026-03-05): **"Dynamic Identity & QR Engine"**.
+    - **SEO Matrix:** Eliminación de menciones estáticas "EVASOL". Enlaces y QR ahora heredan el nombre de la empresa actual.
+    - **Localization:** Cambio de terminología "Hub" por "Sitio" por "Sitio" en mensajes de WhatsApp para mayor claridad UX.
+    - **Branding:** Integración de Código QR dinámico en Banner/Hero (incluyendo Marca Personal) vinculado al `color_tema`.
+    - **Config:** Parametrización de visibilidad del QR mediante la columna `usa_qr_sitio` en la tabla `Config_Empresas`.
+
+- **v5.8.9:** Optimización responsiva del Orbit Hub (-60% móvil) y lógica jerárquica de contacto WhatsApp (SEO Proxy). Elevación de Project Ranking a Invariante de Seguridad.
+- **v5.8.7:** Chat Persistence & WA Summary.
 - **v5.3.6** (2026-02-22): **"Brand Hierarchy & Identity Reset"**.
     - **Branding:** Soporte para `es_principal` y `modo_sitio` (WHITE/HYBRID/HUB).
     - **UX:** Neutralización automática de Shell al entrar al Hub (Orbit).

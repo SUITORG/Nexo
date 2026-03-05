@@ -3,6 +3,13 @@
  * Responsabilidad: Manejo de navegación por Hash, protección de rutas (RBAC).
  */
 app.router = {
+    // Glosario Técnico:
+    // - **v6.1.0** (2026-03-05): **"Calendar & Reservations Engine"**.
+    //     - **Backend:** Integración nativa con Google Calendar API. Creación automática de calendarios por empresa.
+    //     - **UI Pública:** Formulario de reservación dinámico y botón condicional en Hero.
+    //     - **Staff UI:** Módulo de 'Citas' para gestión administrativa de reservas.
+    //     - **Database:** Nueva tabla `Reservaciones` y parámetro `usa_reservaciones` en `Config_Empresas`.
+    // - **v6.0.7** (2026-03-05): **"Dynamic Identity & QR Engine"**.
     init: () => {
         window.addEventListener('hashchange', app.router.handleRoute);
         app.router.handleRoute(); // Carga inicial
@@ -14,7 +21,7 @@ app.router = {
         // Ocultar todas las secciones antes de mostrar la activa
         document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
         // PROTECCIÓN DE RUTAS (RBAC Lite)
-        const protectedRoutes = ['#dashboard', '#leads', '#projects', '#catalog', '#agents', '#knowledge', '#pos', '#staff-pos', '#reports'];
+        const protectedRoutes = ['#dashboard', '#leads', '#projects', '#reservations', '#catalog', '#agents', '#knowledge', '#pos', '#staff-pos', '#reports'];
         if (protectedRoutes.includes(hash) && !app.state.currentUser) {
             console.warn("🛡️ Acceso denegado: Usuario no autenticado.");
             window.location.hash = '#home';
@@ -44,6 +51,7 @@ app.router = {
             '#catalog': 'view-catalog',
             '#orbit': 'view-orbit',
             '#knowledge': 'view-knowledge',
+            '#reservations': 'view-reservations',
             '#staff-pos': 'view-staff-pos',
             '#pos': 'view-pos',
             '#reports': 'view-reports'
@@ -85,6 +93,7 @@ app.router = {
         if (hash === '#projects' && app.ui.renderProjects) app.ui.renderProjects();
         if (hash === '#catalog' && app.ui.renderCatalog) app.ui.renderCatalog();
         if (hash === '#knowledge' && app.ui.renderKnowledge) app.ui.renderKnowledge();
+        if (hash === '#reservations' && app.ui.renderReservations) app.ui.renderReservations();
         if (hash === '#staff-pos' && app.ui.renderStaffPOS) app.ui.renderStaffPOS();
         if (hash === '#pos' && app.ui.renderPOS) {
             const user = app.state.currentUser;
