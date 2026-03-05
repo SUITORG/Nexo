@@ -196,9 +196,50 @@ app.public = {
         }
 
         // Forzar visibilidad y reset de clases (v5.0.3 Security Fix)
+        const isPersonal = bizType.toUpperCase().includes('MARCA PERSONAL');
+        const viewHome = document.getElementById('view-home');
+        if (viewHome) {
+            viewHome.classList.toggle('is-personal-brand', isPersonal && window.innerWidth > 768);
+        }
+
         if (heroBanner) {
             heroBanner.classList.remove('hidden');
             heroBanner.style.display = 'block';
+        }
+
+        // --- RENDER PERSONAL BRAND HERO (v5.9.0) ---
+        const personalNode = document.getElementById('hero-personal-node');
+        if (personalNode && isPersonal && window.innerWidth > 768) {
+            const photo = company.foto_agente || company.logo_url || '';
+            const slogan = company.slogan || "Tu éxito, simplificado.";
+            const desc = company.descripcion || "Ayudo a profesionales a escalar su impacto y libertad.";
+
+            personalNode.innerHTML = `
+                <div class="personal-left">
+                    <img src="${app.utils.fixDriveUrl(photo)}" alt="${company.nomempresa}">
+                </div>
+                <div class="personal-right">
+                    <h1>${slogan}</h1>
+                    <p>${desc}</p>
+                    <div class="personal-checks">
+                        <div class="check-item"><i class="fas fa-check-circle"></i> Mayor Libertad</div>
+                        <div class="check-item"><i class="fas fa-check-circle"></i> Más Ingresos</div>
+                        <div class="check-item"><i class="fas fa-check-circle"></i> Autoridad Digital</div>
+                        <div class="check-item"><i class="fas fa-check-circle"></i> Sistema Probado</div>
+                    </div>
+                    <form class="personal-cta-box" onsubmit="event.preventDefault(); window.location.hash='#contact';">
+                        <input type="email" placeholder="Tu correo electrónico..." required>
+                        <button type="submit">¡EMPEZAR!</button>
+                    </form>
+                </div>
+                <div class="as-seen-bar">
+                    <span style="font-size: 0.8rem; font-weight: 800; color: #000; margin-right: 20px;">AS SEEN IN:</span>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Forbes_logo.svg/1280px-Forbes_logo.svg.png" style="height: 18px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Entrepreneur_magazine_logo.svg/1280px-Entrepreneur_magazine_logo.svg.png" style="height: 18px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/CNBC_logo.svg/1280px-CNBC_logo.svg.png" style="height: 25px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Inc._magazine_logo.svg/1280px-Inc._magazine_logo.svg.png" style="height: 25px;">
+                </div>
+            `;
         }
 
         const showForm = company.formulario === 'TRUE' || company.formulario === true;
@@ -325,6 +366,53 @@ app.public = {
         monLinks.forEach(link => {
             link.parentElement.style.display = isFood ? 'block' : 'none';
         });
+
+        // --- QR CODE INJECTION (v6.0.7) ---
+        const existingQr = document.getElementById('hero-qr-dynamic');
+        if (existingQr) existingQr.remove();
+
+        const qrTarget = isPersonal ? personalNode : heroBanner;
+        const themeColor = company.color_tema || 'var(--primary-color)';
+        const showQrFlag = company.usa_qr_sitio === 'TRUE' || company.usa_qr_sitio === true || company.usa_qr_sitio === "1";
+
+        if (qrTarget && showQrFlag) {
+            const siteUrl = window.location.origin + window.location.pathname + "?co=" + urlId + "#home";
+            const qrContainer = document.createElement('div');
+            qrContainer.id = 'hero-qr-dynamic';
+            qrContainer.className = 'hero-qr-float';
+            qrContainer.style.cssText = `
+                position: absolute; 
+                bottom: 20px; 
+                left: 20px; 
+                background: rgba(255,255,255,0.9); 
+                padding: 8px; 
+                border-radius: 12px; 
+                box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                gap: 5px; 
+                z-index: 100; 
+                backdrop-filter: blur(5px);
+                border: 2px solid ${themeColor};
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            `;
+            qrContainer.setAttribute('title', 'Click para copiar enlace del sitio');
+            qrContainer.onclick = () => {
+                navigator.clipboard.writeText(siteUrl);
+                if (app.ui.runConsoleSim) app.ui.runConsoleSim("URL COPIADA: " + urlId);
+                else alert("Enlace copiado: " + siteUrl);
+            };
+
+            qrContainer.innerHTML = `
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(siteUrl)}" 
+                     style="width: 65px; height: 65px; display: block; image-rendering: pixelated; border-radius: 4px;"
+                     alt="QR SITIO">
+                <span style="font-size: 0.5rem; font-weight: 800; color: #333; letter-spacing: 0.5px;">SITIO OFICIAL</span>
+            `;
+            qrTarget.appendChild(qrContainer);
+        }
     },
 
     renderSEO: () => {
@@ -374,25 +462,43 @@ app.public = {
             const keywordHtml = keywords.map(k => `<span class="seo-tag" style="border-color:${brandColor}; color:${hasPhoto ? 'white' : brandColor}; background:${hasPhoto ? 'rgba(255,255,255,0.1)' : brandColor + '11'}">${k}</span>`).join('');
 
             card.style.cssText = bgStyle;
-            card.onclick = () => {
-                if (waNumber) window.open(`https://wa.me/${waNumber.toString().replace(/\D/g, '')}?text=Hola! Vengo del Hub de EVASOL y me interesa: ${item.titulo}`, '_blank');
-            };
+
 
             card.innerHTML = `
                 <div class="seo-card-inner" style="position:relative;">
-                    <div class="seo-card-header">
-                        <div class="seo-icon" style="background:${brandColor}; color:white; box-shadow: 0 0 15px ${brandColor}66;">
-                            <i class="${item.icono || 'fas fa-shield-alt'}"></i>
+                    <div class="seo-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:15px;">
+                        <!-- IZQUIERDA: ICONOS DE CONTACTO + QR (v6.0.2 Prueba) -->
+                        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px; z-index:10; margin-top:5px;">
+                            <div style="display:flex; gap:8px;">
+                                ${mail ? `<a href="mailto:${mail}" class="seo-action-icon" title="Enviar Correo" onclick="event.stopPropagation();"><i class="fas fa-envelope" style="color: white !important;"></i></a>` : ''}
+                                ${waNumber ? `<a href="https://wa.me/${waNumber.toString().replace(/\D/g, '')}?text=Hola! Vengo del sitio de ${company.nomempresa} y me interesa: ${item.titulo}" target="_blank" class="seo-action-icon" title="WhatsApp Directo" onclick="event.stopPropagation();"><i class="fab fa-whatsapp" style="color: #25D366 !important;"></i></a>` : ''}
+                            </div>
+                            
+                            <!-- QR CODE Lateral -->
+                            ${waNumber ? `
+                                <div class="seo-qr-container" style="background:white; padding:4px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.3); border:2px solid ${brandColor}; cursor:pointer;" title="Escanea para contacto directo" onclick="event.stopPropagation(); window.open('https://wa.me/${waNumber.toString().replace(/\D/g, '')}', '_blank')">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://wa.me/' + waNumber.toString().replace(/\D/g, '') + '?text=Hola! Deseo informacion de: ' + item.titulo)}" 
+                                         alt="QR Contacto" style="width:60px; height:60px; display:block; image-rendering: pixelated;"
+                                         onerror="this.src='https://qrickit.com/api/qr?d=${encodeURIComponent('https://wa.me/' + waNumber.toString().replace(/\D/g, '') + '?text=Hola! Deseo informacion de: ' + item.titulo)}&addtext=${encodeURIComponent(company.nomempresa)}&txtcolor=444444'">
+                                </div>
+                            ` : ''}
                         </div>
-                        <div class="seo-title-group">
-                            <h4 style="${hasPhoto ? 'color:white; text-shadow:0 2px 4px rgba(0,0,0,0.5);' : 'color:var(--primary-color);'}">${item.titulo}</h4>
-                            <small style="color:${hasPhoto ? 'rgba(255,255,255,0.8)' : '#888'};">${item.division || item.categoria || 'Servicio EVASOL'}</small>
+
+                        <!-- CENTRO: TITULO (Limpio) -->
+                        <div class="seo-title-group" style="flex:1; text-align:center; padding:0 15px; display:flex; flex-direction:column; align-items:center;">
+                            <h4 style="color:${brandColor}; ${hasPhoto ? 'text-shadow:0 0 10px rgba(0,0,0,0.8), 0 0 5px white;' : ''} font-weight:800; margin:0; font-size:1.1rem; line-height:1.2;">
+                                ${item.titulo}
+                            </h4>
+                            <small style="color:${hasPhoto ? 'rgba(255,255,255,0.8)' : '#888'}; display:block; margin-top:5px;">${item.division || item.categoria || 'Servicio ' + company.nomempresa}</small>
+                        </div>
+
+                        <!-- DERECHA: ICONO DE CONFIG_SEO -->
+                        <div class="seo-config-icon" style="background:${brandColor}; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 15px ${brandColor}88; flex-shrink:0;">
+                            <i class="${item.icono || 'fas fa-shield-alt'}" style="color:white !important; font-size:1rem !important;"></i>
                         </div>
                     </div>
                     <p class="seo-desc" style="${hasPhoto ? 'color:rgba(255,255,255,0.9);' : 'color:#555;'} font-size:0.85rem; margin:15px 0;">${item.descripcion || ''}</p>
                     <div class="seo-tags">${keywordHtml}</div>
-                    
-                    ${waNumber ? `<div style="position:absolute; bottom:15px; right:15px; color:${brandColor}; font-size:1.2rem; filter:drop-shadow(0 0 5px white);"><i class="fab fa-whatsapp"></i></div>` : ''}
                 </div>
             `;
             grid.appendChild(card);
@@ -492,8 +598,12 @@ app.public = {
         const companies = (app.data.Config_Empresas || []).filter(co => {
             const isHabil = (co.habilitado === 'TRUE' || co.habilitado === true || co.habilitado === "1");
             const isProd = (co.modo === 'PROD');
-            // El ID prioritario (actual) siempre se muestra, el resto debe cumplir el filtro
             return isHabil && isProd;
+        }).sort((a, b) => {
+            const aPri = (a.es_principal === 'TRUE' || a.es_principal === true || a.es_principal === "1") ? 1 : 0;
+            const bPri = (b.es_principal === 'TRUE' || b.es_principal === true || b.es_principal === "1") ? 1 : 0;
+            if (aPri !== bPri) return bPri - aPri; // Principales primero
+            return (a.nomempresa || "").localeCompare(b.nomempresa || "");
         });
         const priorityId = app.state.companyId;
 
