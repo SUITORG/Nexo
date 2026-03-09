@@ -159,9 +159,9 @@ const app = {
                 const hasUrlParam = !!coParam;
 
                 // If it's the first visit follow the "Main Biz" rule (v5.3.7)
+                // REFUERZO v6.2.7: El parámetro 'co' manda sobre cualquier otra lógica de inicio
                 if (!hasUrlParam && mainBiz) {
                     const currentHash = window.location.hash;
-                    // Solo redireccionamos si no hay hash o si estamos en el hub por defecto
                     if (!currentHash || currentHash === "" || currentHash === "#orbit") {
                         const mode = (mainBiz.modo_sitio || 'HUB').toString().toUpperCase();
                         if (mode !== 'HUB') {
@@ -174,7 +174,7 @@ const app = {
                 }
 
                 // Standard Resolution
-                const isHubMode = window.location.hash === '#orbit' || (!window.location.hash && !hasUrlParam && !mainBiz);
+                const isHubMode = (window.location.hash === '#orbit' || (!window.location.hash && !hasUrlParam && !mainBiz)) && !hasUrlParam;
 
                 if (isHubMode) {
                     console.log("🌌 Hub Mode Active - Rendering Orbit");
