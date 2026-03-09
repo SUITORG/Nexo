@@ -211,15 +211,24 @@ app.public = {
         const personalNode = document.getElementById('hero-personal-node');
         if (personalNode && isPersonal && window.innerWidth > 768) {
             const photo = company.foto_agente || company.logo_url || '';
-            const slogan = company.slogan || "Tu éxito, simplificado.";
+            const slogan = company.slogan || "";
+            const msg1 = company.mensaje1 || "";
+            const msg2 = company.mensaje2 || "";
             const desc = company.descripcion || "Ayudo a profesionales a escalar su impacto y libertad.";
 
             personalNode.innerHTML = `
                 <div class="personal-left">
-                    <img src="${app.utils.fixDriveUrl(photo)}" alt="${company.nomempresa}">
+                    <div class="photo-wrapper" style="position:relative; display:flex;">
+                        <img src="${app.utils.fixDriveUrl(photo)}" alt="${company.nomempresa}">
+                        <div class="personal-photo-overlay">
+                            ${slogan ? `<div class="overlay-slogan">${slogan}</div>` : ''}
+                            ${msg1 ? `<div class="overlay-msg1">${msg1}</div>` : ''}
+                            ${msg2 ? `<div class="overlay-msg2">${msg2}</div>` : ''}
+                        </div>
+                    </div>
                 </div>
                 <div class="personal-right">
-                    <h1>${slogan}</h1>
+                    <h1>${slogan || company.nomempresa}</h1>
                     <p>${desc}</p>
                     <div class="personal-checks">
                         <div class="check-item"><i class="fas fa-check-circle"></i> Mayor Libertad</div>
@@ -286,8 +295,12 @@ app.public = {
 
             if (menuPublic) {
                 const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
-                const showHubLink = siteMode !== "WHITE";
-                const hubHtml = showHubLink ? `<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>` : '';
+                const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
+                const showHubLink = siteMode !== "WHITE" && !isIsolated && app.state.cameFromOrbit;
+
+                // Camuflaje Sutil (v6.1.5): Beige pero FUNCIONAL
+                const hubStyle = showHubLink ? "" : "color: #f5f5dc !important; opacity: 0.7;";
+                const hubHtml = `<li><a href="#orbit" style="${hubStyle}"><i class="fas fa-planet-ring"></i> Hub</a></li>`;
 
                 menuPublic.innerHTML = `
                     ${hubHtml}
@@ -308,8 +321,15 @@ app.public = {
         } else {
             if (menuPublic) {
                 const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
-                const showHubLink = siteMode !== "WHITE";
-                const hubHtml = showHubLink ? `<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>` : '';
+                const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
+                const showFullHub = siteMode !== "WHITE" && !isIsolated && app.state.cameFromOrbit;
+
+                let hubHtml = '';
+                if (siteMode !== "WHITE") {
+                    // Camuflaje Sutil (v6.1.5): Beige pero FUNCIONAL
+                    const hubStyle = showFullHub ? "" : "color: #f5f5dc !important; opacity: 0.7;";
+                    hubHtml = `<li><a href="#orbit" style="${hubStyle}"><i class="fas fa-planet-ring"></i> Hub</a></li>`;
+                }
 
                 menuPublic.innerHTML = `
                     ${hubHtml}
@@ -415,6 +435,162 @@ app.public = {
             `;
             qrTarget.appendChild(qrContainer);
         }
+
+        // --- DYNAMIC CONTENT ENGINE (v6.2.0) ---
+        app.public.renderDynamicContent();
+    },
+
+    renderDynamicContent: () => {
+        const urlId = String(app.state.companyId || "").trim().toUpperCase();
+        const pages = app.data.Config_Paginas || [];
+        console.log(`[DEBUG_CONTENT] Búsqueda: Co ${urlId}, Hash: ${window.location.hash || '#home'}, Páginas: ${pages.length}`);
+
+        // Buscar página por empresa y contexto
+        const rawHash = window.location.hash.replace('#', '') || 'home';
+        const hash = rawHash.trim().toLowerCase();
+
+        const pageData = pages.find(p => {
+            const coMatch = String(p.id_empresa || "").trim().toUpperCase() === urlId;
+            const pgMatch = String(p.id_pagina || "").trim().toLowerCase() === hash;
+            return coMatch && pgMatch;
+        });
+
+        console.log(`[DEBUG_RENDER] Resultado: ${pageData ? 'ENCONTRADA' : 'NO_ENCONTRADA'}`);
+
+        const section = document.getElementById('dynamic-story-section');
+        const heroBanner = document.getElementById('hero-banner-main');
+        if (!section) return;
+
+        if (!pageData) {
+            section.classList.add('hidden');
+            section.style.display = 'none';
+            if (heroBanner && hash === 'home') heroBanner.style.display = 'block';
+            return;
+        }
+
+        const company = app.data.Config_Empresas.find(c => c.id_empresa === urlId) || {};
+
+        // --- OCULTAR HERO ESTÁNDAR SI ES SUBPÁGINA (v6.2.0) ---
+        if (heroBanner && hash !== 'home') {
+            heroBanner.style.display = 'none';
+        }
+
+        try {
+            const meta = typeof pageData.meta_json === 'string' ? JSON.parse(pageData.meta_json) : pageData.meta_json;
+            const schema = typeof pageData.schema_json === 'string' ? JSON.parse(pageData.schema_json) : pageData.schema_json;
+            const content = typeof pageData.contenido_json === 'string' ? JSON.parse(pageData.contenido_json) : pageData.contenido_json;
+
+            // 1. Inyectar Meta (v6.2.0)
+            if (meta && meta.title) document.title = meta.title;
+            if (meta && meta.description) {
+                let metaDesc = document.querySelector('meta[name="description"]');
+                if (metaDesc) metaDesc.setAttribute('content', meta.description);
+            }
+
+            // 2. Inyectar Schema (v6.2.0) - REFUERZO SEGURIDAD v6.2.4
+            if (schema) {
+                let scriptId = `schema-${urlId}-${hash}`;
+                let existing = document.getElementById(scriptId);
+                if (existing) existing.remove(); // Evitar duplicados al navegar
+
+                try {
+                    const script = document.createElement('script');
+                    script.id = scriptId;
+                    script.type = 'application/ld+json';
+                    // Limpieza básica de caracteres que rompen JSON si vinieran de Excel
+                    const cleanSchema = typeof schema === 'string' ? JSON.parse(schema) : schema;
+                    script.text = JSON.stringify(cleanSchema);
+                    document.head.appendChild(script);
+                } catch (e) {
+                    console.warn("[SEO_SCHEMA] Error inyectando Schema:", e);
+                }
+            }
+
+            // 3. Renderizar Contenido Visual
+            if (content) {
+                console.log("[DEBUG_RENDER] Pintando contenido dinámico v6.2.2...");
+                section.classList.remove('hidden');
+                section.style.display = 'grid'; // Force Grid
+                section.style.visibility = 'visible';
+                section.style.opacity = '1';
+                section.style.border = '1px solid rgba(0,0,0,0.05)'; // Borde sutil de control
+
+                const h2 = document.getElementById('story-h2');
+                const h3 = document.getElementById('story-h3');
+                const body = document.getElementById('story-content');
+                const actions = document.getElementById('story-actions');
+                const img = document.getElementById('story-img');
+                const imgContainer = document.querySelector('.story-image-container');
+
+                // Imagen de acompañamiento
+                if (img) {
+                    const fallback = company.foto_Agente || company.foto_agente || company.logo_url;
+                    const finalImg = app.utils.fixDriveUrl(content.imagen_url || fallback);
+                    if (finalImg) {
+                        img.src = finalImg;
+                        img.style.display = 'block';
+                        if (imgContainer) imgContainer.style.display = 'block';
+                        section.style.gridTemplateColumns = '1fr 1fr';
+                    } else {
+                        img.style.display = 'none';
+                        if (imgContainer) imgContainer.style.display = 'none';
+                        section.style.gridTemplateColumns = '1fr'; // Full width if no image
+                    }
+                }
+
+                if (h2) {
+                    h2.innerHTML = content.H1 || content.H2_1 || content.H2_3 || "Sin Título";
+                    h2.style.color = "#111"; // Negro intenso
+                    h2.style.display = 'block';
+                }
+
+                if (h3) {
+                    // Subtítulo: Prioriza H3_1 pero acepta H2_1 o H2_3 si no se usaron en el título
+                    let sub = content.H3_1 || "";
+                    if (!sub && content.H2_1 && content.H2_1 !== h2.innerText) sub = content.H2_1;
+                    if (!sub && content.H2_3 && content.H2_3 !== h2.innerText) sub = content.H2_3;
+
+                    h3.innerHTML = sub;
+                    h3.style.color = "#d32f2f"; // Rojo SuitOrg para destacar
+                    h3.style.display = h3.innerHTML ? 'block' : 'none';
+                }
+
+                if (body) {
+                    body.style.color = "#333";
+                    body.style.display = 'block';
+
+                    // AGRUPACIÓN INTELIGENTE DE PÁRRAFOS (v6.2.4)
+                    let paragraphs = [];
+                    if (content.p_intro) paragraphs.push(content.p_intro);
+                    if (content.p_mision) paragraphs.push(`<strong>Nuestra Misión:</strong> ${content.p_mision}`);
+                    if (content.p_problema) paragraphs.push(content.p_problema);
+                    if (content.p_que_es) paragraphs.push(content.p_que_es);
+
+                    body.innerHTML = paragraphs.join('<br><br>') || "Cargando narrativa...";
+                }
+
+                if (actions) {
+                    actions.innerHTML = "";
+                    const themeColor = company.color_tema || '#004d40';
+                    const ctaText = content.cta_texto || 'Saber Más';
+                    actions.innerHTML += `<button class="btn-primary" onclick="window.location.hash='#contact'" style="padding:15px 35px; border-radius:50px; background:${themeColor}; cursor:pointer; border:none; color:white; font-weight:bold;">${ctaText}</button>`;
+
+                    const wa = content.whatsapp_url || `https://wa.me/${company.telefonowhatsapp}`;
+                    if (wa && wa.includes('wa.me')) {
+                        const secondaryText = content.cta_secundario || 'WhatsApp';
+                        actions.innerHTML += `<button class="btn-secondary" onclick="window.open('${wa}', '_blank')" style="padding:15px 35px; border-radius:50px; background:white; color:#333; border:1px solid #ddd; cursor:pointer;">${secondaryText}</button>`;
+                    }
+                }
+            } else {
+                section.classList.add('hidden');
+                section.style.display = 'none';
+            }
+
+        } catch (e) {
+            console.error("[DYNAMIC_CONTENT] Error parsing JSON:", e);
+            section.classList.add('hidden');
+            section.style.display = 'none';
+        }
     },
 
     showReservationModal: () => {
@@ -488,7 +664,12 @@ app.public = {
         };
 
         try {
-            const res = await app.utils.apiPost(data);
+            const response = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(data)
+            });
+            const res = await response.json();
             if (res.success) {
                 alert("¡Cita agendada con éxito! Te contactaremos por WhatsApp.");
                 document.getElementById('reservation-modal').classList.add('hidden');
@@ -686,6 +867,8 @@ app.public = {
         const companies = (app.data.Config_Empresas || []).filter(co => {
             const isHabil = (co.habilitado === 'TRUE' || co.habilitado === true || co.habilitado === "1");
             const isProd = (co.modo === 'PROD');
+            // Nota: En la Órbita se ven todos los activos/producción. El aislamiento (is_isolated)
+            // solo afecta la salida del sitio hacia el Hub una vez dentro.
             return isHabil && isProd;
         }).sort((a, b) => {
             const aPri = (a.es_principal === 'TRUE' || a.es_principal === true || a.es_principal === "1") ? 1 : 0;
@@ -904,7 +1087,7 @@ app.public = {
         if (!grid) return;
         const imgs = (app.data.Config_Galeria || []).filter(img => img.id_empresa === app.state.companyId);
         if (imgs.length === 0) {
-            grid.innerHTML = '<p class="empty-msg">Próximamente fotos exclusivas.</p>';
+            grid.innerHTML = '';
             return;
         }
         grid.innerHTML = imgs.map(img => `
@@ -942,10 +1125,12 @@ app.public = {
             return;
         }
 
+        const isInsurance = (company.tipo_negocio || "").toString().toUpperCase().includes('SEGUROS') || (company.tipo_negocio || "").toString().toUpperCase().includes('FINANZAS');
+
         container.innerHTML = `
             <div class="form-container">
-                <h2>Contáctanos</h2>
-                <p>Déjanos tus datos y un asesor se comunicará contigo.</p>
+                <h2>${isInsurance ? 'Solicitud de Asesoría' : 'Contáctanos'}</h2>
+                <p>${isInsurance ? 'Personaliza tu protección. Un experto de TopLux Finance te contactará.' : 'Déjanos tus datos y un asesor se comunicará contigo.'}</p>
                 <form id="public-lead-form">
                     <div class="form-group">
                         <label>Teléfono / WhatsApp *</label>
@@ -955,6 +1140,25 @@ app.public = {
                         <label>Nombre Completo *</label>
                         <input type="text" id="lead-name" required>
                     </div>
+
+                    ${isInsurance ? `
+                    <div class="form-group">
+                        <label>¿Qué deseas proteger? *</label>
+                        <select id="lead-subtype" required onchange="app.public.toggleInsuranceFields(this.value)" style="width:100%; padding:12px; border-radius:12px; border:1px solid #ddd;">
+                            <option value="">Selecciona una opción...</option>
+                            <option value="GMM">Gastos Médicos Mayores (Salud)</option>
+                            <option value="PPR">Plan Personal de Retiro (PPR)</option>
+                            <option value="AUTO">Seguro de Auto / Flotilla</option>
+                            <option value="VIDA">Seguro de Vida / Invalidez</option>
+                            <option value="NEGOCIO">Seguro PyME / Empresarial</option>
+                        </select>
+                    </div>
+                    <!-- Campos Dinámicos de Seguros (v6.1.7) -->
+                    <div id="insurance-dynamic-fields" style="margin-top:20px; border-left:4px solid var(--primary-color); padding-left:15px;" class="hidden">
+                        <!-- Inyectado por toggleInsuranceFields -->
+                    </div>
+                    ` : ''}
+
                     <div class="form-group">
                         <label>Correo Electrónico</label>
                         <input type="email" id="lead-email">
@@ -986,7 +1190,7 @@ app.public = {
 
                     <div id="contact-msg" class="success-msg hidden" style="margin-bottom:15px; text-align:center; color:var(--primary-color); font-weight:bold;"></div>
                     <button type="submit" class="btn-primary w-100" id="btn-submit-contact">
-                        Enviar Información <i class="fas fa-paper-plane" style="margin-left:8px;"></i>
+                        ${isInsurance ? 'Solicitar Cotización Virtual' : 'Enviar Información'} <i class="fas fa-paper-plane" style="margin-left:8px;"></i>
                     </button>
                 </form>
             </div>
@@ -1036,9 +1240,72 @@ app.public = {
         if (publicLeadForm) {
             publicLeadForm.onsubmit = async (e) => {
                 e.preventDefault();
+
+                // --- Lógica de Captura Dinámica de Seguros (v6.1.7) ---
+                if (isInsurance) {
+                    const subtypeEl = document.getElementById('lead-subtype');
+                    const dynamicFields = document.getElementById('insurance-dynamic-fields');
+                    if (subtypeEl && dynamicFields) {
+                        const subtype = subtypeEl.value;
+                        const inputs = dynamicFields.querySelectorAll('input, select, textarea');
+                        let bodyDetails = `[SOLICITUD ${subtype}] \n`;
+                        inputs.forEach(input => {
+                            const label = input.previousElementSibling ? input.previousElementSibling.innerText : input.name;
+                            bodyDetails += `${label}: ${input.value} \n`;
+                        });
+
+                        // Inyectamos los valores en campos ocultos o variables temporales para el handler
+                        app.state._currentLeadSubtype = subtype;
+                        app.state._currentLeadBody = bodyDetails;
+                    }
+                }
+
                 if (app.events && app.events._handlePublicLead) app.events._handlePublicLead(e);
             };
         }
+    },
+
+    // --- Auxiliar para Seguros (v6.1.7) ---
+    toggleInsuranceFields: (type) => {
+        const container = document.getElementById('insurance-dynamic-fields');
+        if (!container) return;
+
+        if (!type) {
+            container.classList.add('hidden');
+            container.innerHTML = '';
+            return;
+        }
+
+        container.classList.remove('hidden');
+        let html = '';
+
+        switch (type) {
+            case 'GMM':
+                html = `
+                    <div class="form-group"><label>Edad del titular *</label><input type="number" id="ins-edad" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
+                    <div class="form-group"><label>¿Fuma? *</label><select id="ins-fuma" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"><option value="NO">No</option><option value="SI">Sí</option></select></div>
+                    <div class="form-group"><label>Padecimientos o enfermedades preexistentes</label><textarea id="ins-padece" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee; height:60px;"></textarea></div>
+                `;
+                break;
+            case 'PPR':
+                html = `
+                    <div class="form-group"><label>Edad Actual *</label><input type="number" id="ins-edad-actual" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
+                    <div class="form-group"><label>Edad deseada de retiro *</label><input type="number" id="ins-edad-retiro" required value="65" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
+                    <div class="form-group"><label>Presupuesto mensual estimado para ahorro</label><input type="text" id="ins-ahorro" placeholder="$2,000 - $5,000" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
+                `;
+                break;
+            case 'AUTO':
+                html = `
+                    <div class="form-group"><label>Marca y Modelo del Auto *</label><input type="text" id="ins-auto" required placeholder="Ej: BMW X3 2023" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
+                    <div class="form-group"><label>Código Postal de circulación *</label><input type="text" id="ins-cp" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
+                    <div class="form-group"><label>Uso del vehículo</label><select id="ins-uso" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"><option value="PARTICULAR">Particular</option><option value="PLATAFORMA">Plataforma (Uber/Didi)</option><option value="CARGA">Carga/Reparto</option></select></div>
+                `;
+                break;
+            default:
+                html = `<div class="form-group"><label>Describe brevemente tu necesidad *</label><textarea id="ins-desc" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee; height:80px;"></textarea></div>`;
+        }
+
+        container.innerHTML = `<h4 style="font-size:0.75rem; color:#888; text-transform:uppercase; margin-bottom:15px;">Información para ${type}</h4> ${html}`;
     },
 
     renderSuitOnboarding: () => {
@@ -1057,6 +1324,7 @@ app.public = {
                         <option value="">Selecciona una categoría...</option>
                         <option value="Food/Snacks">Food (Restaurantes, Cafés, Bebidas)</option>
                         <option value="Servicios">Servicios (Consultoría, Limpieza, Talleres)</option>
+                        <option value="Hospedaje">Hospedaje (Hoteles, AirBnb, Cabañas)</option>
                         <option value="Industrial/Proyectos">Industrial (Construcción, Fábricas, Ingeniería)</option>
                     </select>
                 </div>
@@ -1067,6 +1335,10 @@ app.public = {
                 <div class="form-group" title="La frase que define tu marca en el encabezado.">
                     <label><i class="fas fa-quote-left"></i> Slogan</label>
                     <input type="text" id="onb-slogan" placeholder="Ej: Calidad que se nota">
+                </div>
+                <div class="form-group" title="Correo para contacto oficial.">
+                    <label><i class="fas fa-envelope"></i> Correo Empresarial *</label>
+                    <input type="email" id="onb-email" required placeholder="contacto@minegocio.com">
                 </div>
 
                 <!-- NEW FIELDS (v5.4.0) -->
@@ -1178,6 +1450,13 @@ app.public = {
                 val: "Seguridad, Precisión, Durabilidad, Cumplimiento.",
                 imp: "Crear empleos seguros y desarrollo urbano sostenible.",
                 pol: "Certificación de calidad en cada etapa. Garantía de obra."
+            },
+            'Hospedaje': {
+                m: "Ofrecer un refugio de confort y descanso que haga sentir a nuestros huéspedes como en casa.",
+                v: "Ser el referente de hospitalidad y calidez, brindando experiencias memorables de alojamiento.",
+                val: "Hospitalidad, Calidez, Limpieza, Confianza.",
+                imp: "Promover el turismo local responsable y la cultura de la región.",
+                pol: "Check-in flexible bajo disponibilidad. Estándares de higiene rigurosos."
             }
         };
 
@@ -1196,9 +1475,11 @@ app.public = {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CREANDO ECOSISTEMA...';
 
         const bizData = {
+            id_empresa: document.getElementById('onb-name').value.trim().toUpperCase(),
             nomempresa: document.getElementById('onb-name').value,
             tipo_negocio: document.getElementById('onb-type').value,
-            telefonoWhatsapp: document.getElementById('onb-phone').value,
+            telefonowhatsapp: document.getElementById('onb-phone').value,
+            correoempresarial: document.getElementById('onb-email').value,
             slogan: document.getElementById('onb-slogan').value,
             direccion: document.getElementById('onb-address').value,
             color_tema: document.getElementById('onb-color').value,
@@ -1207,10 +1488,20 @@ app.public = {
             vision: document.getElementById('onb-vision').value,
             valores: document.getElementById('onb-valores').value,
             impacto: document.getElementById('onb-impacto').value,
-            politicas: document.getElementById('onb-politicas').value
+            politicas: document.getElementById('onb-politicas').value,
+            modo: 'PROD',
+            formulario: 'TRUE',
+            usa_soporte_ia: 'FALSE',
+            usa_qr_sitio: 'FALSE',
+            usa_reservaciones: 'FALSE'
         };
 
-        const result = await app.postData({ action: 'createBusiness', business: bizData });
+        const response = await fetch(app.apiUrl, {
+            method: 'POST',
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: 'createBusiness', business: bizData, token: app.apiToken })
+        });
+        const result = await response.json();
 
         if (result && result.success) {
             document.getElementById('onboarding-form').classList.add('hidden');
@@ -1220,15 +1511,141 @@ app.public = {
             const btnSee = document.getElementById('btn-see-site');
             const btnWa = document.getElementById('btn-wa-activate');
 
-            if (btnSee) btnSee.onclick = () => { window.location.href = `?co=${result.newBusinessId}#home`; };
+            if (btnSee) {
+                btnSee.innerHTML = `<i class="fab fa-whatsapp"></i> CONTACTAR A PERSONAL SUIT.ORG`;
+                const waMsg = `¡Hola! Acabo de registrar mi negocio [${bizData.nomempresa}] con ID [${result.newBusinessId}]. Me gustaría continuar con la configuración.`;
+                btnSee.onclick = () => { window.open(`https://wa.me/528129552094?text=${encodeURIComponent(waMsg)}`, '_blank'); };
+                btnSee.style.background = "#25D366";
+            }
             if (btnWa) {
-                const waMsg = `¡Hola SuitOrg! Acabo de registrar mi negocio [${bizData.nomempresa}] con ID [${result.newBusinessId}]. Me gustaría activarlo oficialmente.`;
-                btnWa.href = `https://wa.me/528129552094?text=${encodeURIComponent(waMsg)}`;
+                btnWa.classList.add('hidden');
             }
         } else {
             alert("Error al crear el borrador. Intente de nuevo.");
             btn.disabled = false;
             btn.innerText = 'GENERAR MI SITIO WEB GRATIS';
         }
+    }
+};
+
+/**
+ * 🔐 CLIENT VAULT MODULE (v6.1.7)
+ * Manejo de documentos sensibles en Google Drive
+ */
+app.vault = {
+    refresh: async () => {
+        const grid = document.getElementById('vault-files-grid');
+        if (!grid) return;
+        if (!app.state.currentUser || !app.state.companyId) {
+            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Inicia sesión para ver tus documentos.</p>';
+            return;
+        }
+
+        // Validar si el cliente tiene acceso (Nivel 1 o superior)
+        if (app.state.currentUser.nivel_acceso < 1) {
+            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:red;">Acceso Restringido.</p>';
+            return;
+        }
+
+        // --- DINÁMICA DE REQUISITOS (v6.1.8) ---
+        const vaultUploadArea = document.getElementById('vault-upload-area');
+        if (vaultUploadArea && !document.getElementById('vault-requirements')) {
+            const userLead = (app.data.Leads || []).find(l => l.email === app.state.currentUser.email);
+            const subtype = userLead ? (userLead.subtipo_negocio || '').toUpperCase() : '';
+
+            let reqs = ['INE (Escaneada por ambos lados)', 'Comprobante de Domicilio (Vigente)'];
+            if (subtype.includes('GMM')) reqs.push('Informe Médico actual', 'Historial clínico');
+            if (subtype.includes('AUTO')) reqs.push('Factura del auto', 'Póliza anterior (si aplica)');
+            if (subtype.includes('PPR')) reqs.push('CURP', 'Constancia de situación fiscal');
+
+            const reqHtml = `
+                <div id="vault-requirements" style="background: #fdfae7; border: 1px solid #f1e05a; padding: 15px; border-radius: 12px; margin-bottom: 25px; text-align: left;">
+                    <h5 style="margin:0 0 10px 0; color:#85702a;"><i class="fas fa-list-check"></i> Documentos pendientes para tu solicitud ${subtype}:</h5>
+                    <ul style="margin:0; padding-left:20px; font-size:0.8rem; color:#555;">
+                        ${reqs.map(r => `<li>${r}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            vaultUploadArea.insertAdjacentHTML('beforebegin', reqHtml);
+        }
+
+        grid.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Consultando Bóveda...</p>';
+
+        try {
+            const res = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({
+                    action: 'getCustomerDocs',
+                    leadName: app.state.currentUser.nombre,
+                    token: app.apiToken
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.files && data.files.length > 0) {
+                grid.innerHTML = data.files.map(f => `
+                    <div class="file-card" style="padding:15px; border:1px solid #eee; border-radius:12px; text-align:center; transition:0.3s; background:white;">
+                        <i class="fas ${app.vault.getFileIcon(f.tipo)} fa-2x" style="color:var(--primary-color); margin-bottom:10px;"></i>
+                        <h4 style="font-size:0.75rem; margin:0; word-break:break-all; color:#333;">${f.nombre}</h4>
+                        <a href="${f.url}" target="_blank" style="display:inline-block; margin-top:10px; font-size:0.7rem; color:var(--primary-color); text-decoration:none; font-weight:bold;">ABRIR</a>
+                    </div>
+                `).join('');
+            } else {
+                grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:20px;">No hay documentos cargados aún.</p>';
+            }
+        } catch (e) {
+            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:red;">Error de conexión.</p>';
+        }
+    },
+
+    getFileIcon: (mime) => {
+        if (!mime) return 'fa-file-alt';
+        const m = mime.toLowerCase();
+        if (m.includes('image')) return 'fa-file-image';
+        if (m.includes('pdf')) return 'fa-file-pdf';
+        if (m.includes('word') || m.includes('officedocument')) return 'fa-file-word';
+        return 'fa-file-alt';
+    },
+
+    handleFiles: async (files) => {
+        const status = document.getElementById('vault-status');
+        if (!files || !files.length) return;
+
+        status.classList.remove('hidden');
+        status.style.background = '#e3f2fd';
+        status.style.display = 'block';
+        status.innerText = `Subiendo ${files.length} archivos...`;
+
+        for (let file of files) {
+            try {
+                const base64 = await app.ui.fileToBase64(file);
+                const res = await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({
+                        action: 'uploadToVault',
+                        lead: {
+                            nombre: app.state.currentUser.nombre,
+                            id_lead: app.state.currentUser.id_lead || 'N/A'
+                        },
+                        fileName: file.name,
+                        fileType: file.type,
+                        fileData: base64,
+                        token: app.apiToken
+                    })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+            } catch (e) {
+                status.style.background = '#ffebee';
+                status.innerText = `Error: ${e.message}`;
+                return;
+            }
+        }
+
+        status.style.background = '#e8f5e9';
+        status.innerText = "¡Archivos enviados a revisión!";
+        setTimeout(() => status.classList.add('hidden'), 3500);
+        app.vault.refresh();
     }
 };

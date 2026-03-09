@@ -150,6 +150,8 @@ app.agents = {
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify({
                     action: 'askGemini',
+                    id_empresa: app.state.companyId || 'SYSTEM',
+                    usuario: app.state.currentUser ? app.state.currentUser.nombre : 'Visitante',
                     agentId: app.state.currentAgent.id_agente,
                     promptBase: app.state.currentAgent.prompt_base,
                     history: app.state.chatHistory,

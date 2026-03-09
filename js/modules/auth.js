@@ -140,7 +140,8 @@ app.auth = {
 
             const isExplicitlyAllowed = modulesArray.includes(targetBase);
             const isCorePage = targetBase === "dashboard" || targetBase === "home";
-            let isAllowed = isAdmin || isExplicitlyAllowed || isCorePage;
+            const isVault = targetBase === "vault";
+            let isAllowed = isAdmin || isExplicitlyAllowed || isCorePage || (isVault && level >= 1);
 
             if (isDelivery) {
                 isAllowed = (targetBase === "pos");

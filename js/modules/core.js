@@ -4,7 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: '6.1.0', // v6.1.0: Calendar & Reservations Engine.
+    version: '6.2.1', // v6.2.1: Multi-Engine db_engine support.
 
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
@@ -22,11 +22,14 @@ const app = {
         Logs: [],
         Prompts_IA: [],
         Config_SEO: [],
-        Cuotas_Pagos: []
+        Cuotas_Pagos: [],
+        Config_Paginas: []
     },
     state: {
         currentUser: null,
         companyId: null,
+        dbEngine: 'GSHEETS', // Valor por defecto.
+        cameFromOrbit: false,
         isFood: false,
         lastActivity: Date.now(),
         currentAgent: null,
@@ -189,7 +192,10 @@ const app = {
                     if (company) app.state.companyId = company.id_empresa;
                 }
 
-                if (company && app.ui.applyTheme) app.ui.applyTheme(company);
+                if (company) {
+                    app.state.dbEngine = company.db_engine || company.dbengine || 'GSHEETS';
+                    if (app.ui.applyTheme) app.ui.applyTheme(company);
+                }
                 if (app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
                 app.checkBackendVersion();
             } else {

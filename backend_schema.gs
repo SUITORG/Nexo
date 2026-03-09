@@ -1,21 +1,22 @@
-/* SuitOrg Backend Engine - v5.8.9
+/* SuitOrg Backend Engine - v6.2.1
  * ---------------------------------------------------------
- * Sincronización: 2026-03-01 04:30 PM (v5.8.9 Responsive & WA Proxy Fix)
+ * Sincronización: 2026-03-09 6:15 AM (v6.2.1 Multi-Engine & Content Logic)
  * 
- * Changelog v5.8.9:
- * - UI: Orbit Hub Scaling (Móvil -60%, Tablet -40%).
- * - WA: Jerarquía dinámica de contacto (SEO -> Empresa) con auto-fix prefijo 52.
- * - SEC: Project Ranking elevado a Invariante de Orquestador.
+ * Changelog v6.2.1:
+ * - CORE: Soporte para 'db_engine' en Config_Empresas (GSHEETS enabled).
+ * - FIX: Cierre de bloques en inicialización para evitar errores de sintaxis.
+ * - CONTENT: Motor de páginas dinámicas Config_Paginas v6.2.0 integrado.
  * 
- * AUDIT: ~11150 Total Lines (v5.8.9).
+ * AUDIT: ~840 Lines (v6.2.1 STABLE).
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "6.1.0",
+  VERSION: "6.2.1",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
-  GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto"], 
-  PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos", "Reservaciones"],
+  DRIVE_ROOT_ID: "1UUtr70qr96_hpbwbgcRg-h14sHLvJVin", // Carpeta Maestra TopLux Finance
+  GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto", "Config_Galeria", "Config_Paginas"], 
+  PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos", "Reservaciones", "Config_Galeria"],
   AUDIT: { total: 10252, status: "STABLE_SYNC" }
 };
 
@@ -95,6 +96,60 @@ function handlePostAction(data, output) {
         runGeminiInference(data, output);
         break;
 
+      case "syncDrive":
+        if (typeof DriveManager !== 'undefined') {
+          var resInit = DriveManager.initTopLuxDrive();
+          output.success = resInit.success;
+          output.message = resInit.message || resInit.error;
+        } else { output.error = "DRIVE_MANAGER_MISSING"; }
+        break;
+
+      case "createClientVault":
+        if (typeof DriveManager !== 'undefined') {
+          var resVault = DriveManager.crearCarpetaCliente(data.lead);
+          output.success = resVault.success;
+          output.folderId = resVault.folderId;
+        } else { output.error = "DRIVE_MANAGER_MISSING"; }
+        break;
+
+      case "getCustomerDocs":
+        var root = DriveApp.getFolderById(CONFIG.DRIVE_ROOT_ID);
+        var containers = root.getFoldersByName("01_EXPEDIENTES_CLIENTES");
+        var leadFolderId = null;
+        if (containers.hasNext()) {
+          var container = containers.next();
+          var itLead = container.getFolders();
+          while (itLead.hasNext()) {
+              var f = itLead.next();
+              if (f.getName().toUpperCase().includes(data.leadName.toUpperCase())) {
+                  leadFolderId = f.getId();
+                  break;
+              }
+          }
+        }
+        if (leadFolderId && typeof DriveManager !== 'undefined') {
+          output.files = DriveManager.obtenerDocumentosCliente(leadFolderId);
+          output.success = true;
+        } else { 
+          output.success = true; // No error, just empty
+          output.files = []; 
+        }
+        break;
+
+      case "uploadToVault":
+        if (typeof DriveManager !== 'undefined') {
+          var vRes = DriveManager.crearCarpetaCliente(data.lead);
+          if (vRes.success) {
+            var fVault = DriveApp.getFolderById(vRes.folderId);
+            var b64Data = data.fileData.split(',')[1];
+            var dec = Utilities.base64Decode(b64Data);
+            var blob = Utilities.newBlob(dec, data.fileType, data.fileName);
+            fVault.createFile(blob);
+            output.success = true;
+          } else { output.error = vRes.error; }
+        } else { output.error = "DRIVE_MANAGER_MISSING"; }
+        break;
+
       case "listAiModels":
         var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
         if (!apiKey) { output.error = "API_KEY_MISSING"; break; }
@@ -115,7 +170,15 @@ function handlePostAction(data, output) {
         var newId = "LEAD-" + nextL;
         data.lead.id_lead = newId;
         appendRowMapped(ss, "Leads", data.lead);
+        
+        // GATILLO TOPLUX: Auto-creación de Bóveda (v6.1.8)
+        var token = null;
+        if (String(data.lead.id_empresa).toUpperCase().includes("TOPLUX")) {
+          token = autoCreateUser(ss, data.lead);
+        }
+
         output.newId = newId;
+        output.vaultToken = token;
         output.success = true; break;
 
       case "updateLead":
@@ -222,9 +285,9 @@ function handlePostAction(data, output) {
         var bData = bizSheet.getDataRange().getValues();
         var nextB = bData.length; 
         
-        // Auto-ID: ONB + Random 3 chars (v5.3.9)
-        var autoId = "ONB-" + Math.random().toString(36).substring(2, 5).toUpperCase();
-        data.business.id_empresa = autoId;
+        // Usar ID enviado o generar uno si falta (v6.1.1)
+        var finalId = data.business.id_empresa || ("ONB-" + Math.random().toString(36).substring(2, 5).toUpperCase());
+        data.business.id_empresa = finalId;
         
         // Automatic Defaults & Calculations
         data.business.fecha_creacion = new Date();
@@ -232,7 +295,9 @@ function handlePostAction(data, output) {
         data.business.modo_creditos = "DIARIO";
         data.business.factura = "FALSE";
         data.business.autodepuracion = 30;
-        data.business.modo = "produccion";
+        
+        // Respetar modo enviado (e.g. 'PROD') o default 'produccion'
+        data.business.modo = data.business.modo || "produccion";
         
         // Expiration: Today + 20 days
         var expDate = new Date();
@@ -240,7 +305,7 @@ function handlePostAction(data, output) {
         data.business.fecha_vencimiento = expDate;
         
         appendRowMapped(ss, "Config_Empresas", data.business);
-        output.newBusinessId = autoId;
+        output.newBusinessId = finalId;
         output.success = true; break;
 
       case "addProjectStage":
@@ -347,6 +412,7 @@ function runGeminiInference(data, output) {
     output.success = true; return;
   }
 
+  const ss = SpreadsheetApp.openById(CONFIG.DB_ID);
   const model = data.model || "gemini-1.5-flash";
   const systemPrompt = data.promptBase || "Eres un asistente servicial de SuitOrg.";
   const history = data.history || [];
@@ -460,7 +526,8 @@ function initializeDatabase(ss, output) {
     color_tema: "#1A237E",
     usa_features_estandar: "FALSE",
     habilitado: "TRUE",
-    modo: "PROD"
+    modo: "PROD",
+    db_engine: "GSHEETS"
   });
 
   // Semillas Flujo Maestro EVASOL (v5.7.3)
@@ -503,6 +570,22 @@ function initializeDatabase(ss, output) {
        if (h.indexOf("id_empresa") === -1) sh.insertColumnBefore(1).getRange(1, 1).setValue("id_empresa");
     }
   });
+
+  // Asegurar tabla Config_Paginas (v6.2.0)
+  const pagesSheet = ss.getSheetByName("Config_Paginas");
+  if (!pagesSheet) {
+    const s = ss.insertSheet("Config_Paginas");
+    s.appendRow(["id_empresa", "id_pagina", "meta_json", "schema_json", "contenido_json"]);
+  }
+
+  // Asegurar columna db_engine en Config_Empresas (v6.2.1)
+  const empSheet = ss.getSheetByName("Config_Empresas");
+  if (empSheet) {
+    const headers = empSheet.getRange(1, 1, 1, empSheet.getLastColumn()).getValues()[0];
+    if (headers.indexOf("db_engine") === -1) {
+       empSheet.insertColumnAfter(empSheet.getLastColumn()).getRange(1, empSheet.getLastColumn()+1).setValue("db_engine");
+    }
+  }
 
   output.info = "Database structure verified and seeds restored.";
   
@@ -714,4 +797,41 @@ function processTransaction(ss, data, output) {
 
   output.newOrderId = projId;
   output.success = true;
+}
+
+/**
+ * 🔑 GENERADOR DE LLAVES DE ACCESO (v6.1.8)
+ */
+function generateVaultToken() {
+  var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  var res = "TX-";
+  for (var i = 0; i < 4; i++) {
+    res += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return res;
+}
+
+/**
+ * 🤖 AUTO-CREACIÓN DE USUARIO PARA BÓVEDA
+ */
+function autoCreateUser(ss, lead) {
+  try {
+    var token = generateVaultToken();
+    var newUser = {
+      id_empresa: lead.id_empresa || "TOPLUXF",
+      nombre: lead.nombre,
+      email: lead.correo || lead.email,
+      username: lead.correo || lead.email,
+      password: token,
+      nivel_acceso: 1,
+      id_rol: "CLIENTE",
+      activo: "TRUE",
+      fecha_creacion: new Date()
+    };
+    appendRowMapped(ss, "Usuarios", newUser);
+    return token;
+  } catch(e) {
+    console.error("Error auto-creating user: " + e.message);
+    return null;
+  }
 }

@@ -388,8 +388,12 @@ app.events = {
             rfc: elRfc ? elRfc.value : '',
             nom_negocio: elBiz ? elBiz.value : '',
             dir_comercial: elBillDir ? elBillDir.value : '',
-            asunto: 'Contacto Web',
-            body: '',
+
+            // --- Integración Dinámica Seguros (v6.1.7) ---
+            asunto: app.state._currentLeadSubtype ? `Cotización ${app.state._currentLeadSubtype}` : 'Contacto Web',
+            body: app.state._currentLeadBody || '',
+            subtipo_negocio: app.state._currentLeadSubtype || '',
+
             origen: existingLead ? (existingLead.origen || "Web") : "Web",
             estado: existingLead ? (existingLead.estado || "NUEVO") : "NUEVO",
             estatus: existingLead ? (existingLead.estado || "NUEVO") : "NUEVO",
@@ -398,6 +402,10 @@ app.events = {
             fecha_creacion: existingLead ? (existingLead.fecha_creacion) : ((app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString()),
             fecha_actualizacion: (app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString()
         };
+
+        // Limpiar estados temporales después de la captura
+        app.state._currentLeadSubtype = null;
+        app.state._currentLeadBody = null;
 
         const action = existingLead ? 'updateLead' : 'createLead';
 
@@ -422,8 +430,38 @@ app.events = {
                 }
 
                 app.ui.renderLeads();
-                alert(existingLead ? "¡Datos actualizados! Gracias por tu preferencia." : "¡Gracias! Pronto nos contactaremos.");
-                form.reset();
+
+                // --- LÓGICA DE BÓVEDA TOPLUX (v6.1.8) ---
+                if (result.vaultToken) {
+                    const company = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase());
+                    const msgArea = document.getElementById('contact-msg') || { innerText: '', classList: { remove: () => { }, add: () => { } } };
+
+                    const successHtml = `
+                        <div style="background: #e8f5e9; border: 2px solid #2e7d32; border-radius: 20px; padding: 25px; margin-top: 20px; text-align: left; animation: slideUp 0.5s ease;">
+                            <h3 style="color: #2e7d32; margin-top: 0;"><i class="fas fa-shield-check"></i> ¡Registro Seguro Exitoso!</h3>
+                            <p style="font-size: 0.9rem; color: #333;">Para procesar tu solicitud de <b>${finalLead.subtipo_negocio || 'Seguro'}</b>, hemos creado tu Bóveda Privada.</p>
+                            
+                            <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #ccc; margin: 15px 0;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #666;">Tu Llave de Acceso:</p>
+                                <h2 style="margin: 5px 0; letter-spacing: 5px; color: var(--primary-color);">${result.vaultToken}</h2>
+                                <p style="margin: 0; font-size: 0.8rem; color: #666;">Usuario: ${finalLead.email}</p>
+                            </div>
+
+                            <p style="font-size: 0.85rem; color: #555;">Accede ahora para subir tu documentación (INE, Comprobantes, etc.) de forma protegida.</p>
+                            
+                            <button onclick="app.auth.showLogin(); document.getElementById('login-user').value='${finalLead.email}'; document.getElementById('login-pass').value='${result.vaultToken}';" 
+                                    class="btn-primary" style="width: 100%; padding: 15px; background: #2e7d32; border: none; font-weight: bold;">
+                                <i class="fas fa-unlock-alt"></i> ENTRAR A MI BÓVEDA
+                            </button>
+                        </div>
+                    `;
+
+                    const formContainer = form.parentElement;
+                    formContainer.innerHTML = successHtml;
+                } else {
+                    alert(existingLead ? "¡Datos actualizados! Gracias por tu preferencia." : "¡Gracias! Pronto nos contactaremos.");
+                    form.reset();
+                }
             }
         } catch (err) {
             console.error(err);

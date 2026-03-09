@@ -158,15 +158,18 @@ app.ui = {
                         </tr>
                     </thead>
                     <tbody>
-                        ${data.filter(r => r.id_empresa === coId).map(r => `
-                            <tr>
-                                <td><b>${r.fecha_cita.replace('T', ' ')}</b></td>
-                                <td>${r.nombre_cliente}</td>
-                                <td><a href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a></td>
-                                <td><span class="badge-accent">${r.servicio}</span></td>
-                                <td><span class="status-pill ${r.status.toLowerCase()}">${r.status}</span></td>
-                            </tr>
-                        `).join('') || '<tr><td colspan="5">No hay citas registradas.</td></tr>'}
+                        ${data.filter(r => r.id_empresa === coId).map(r => {
+            const fecha = r.fecha_cita ? r.fecha_cita.toString().replace('T', ' ') : 'Pendiente';
+            return `
+                                <tr>
+                                    <td><b>${fecha}</b></td>
+                                    <td>${r.nombre_cliente || 'N/A'}</td>
+                                    <td><a href="https://wa.me/${r.whatsapp || ''}" target="_blank">${r.whatsapp || 'Sin Tel'}</a></td>
+                                    <td><span class="badge-accent">${r.servicio || 'General'}</span></td>
+                                    <td><span class="status-pill ${(r.status || 'PENDIENTE').toLowerCase()}">${r.status || 'PENDIENTE'}</span></td>
+                                </tr>
+                            `;
+        }).join('') || '<tr><td colspan="5">No hay citas registradas.</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -196,6 +199,28 @@ app.ui = {
     setPublicPaymentMethod: (m) => app.pos.setPublicPaymentMethod(m),
     setPosPaymentMethod: (m) => app.pos.setPosPaymentMethod(m),
     toggleMobileTicket: (s) => app.public.toggleMobileTicket(s),
+
+    syncTopLuxDrive: async () => {
+        app.ui.updateConsole("DRIVE_SYNCING...");
+        try {
+            const res = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({ action: 'syncDrive', token: app.apiToken })
+            });
+            const data = await res.json();
+            if (data.success) {
+                app.ui.updateConsole("DRIVE_OK");
+                alert("✅ Estructura de Google Drive sincronizada correctamente.");
+            } else {
+                app.ui.updateConsole("DRIVE_FAIL", true);
+                alert("❌ Error: " + data.message);
+            }
+        } catch (e) {
+            app.ui.updateConsole("DRIVE_CONN_ERR", true);
+            alert("Error de conexión al sincronizar Drive.");
+        }
+    },
 
     refreshData: async (v) => {
         app.ui.updateConsole(`SYNC_${v || 'ALL'}`);

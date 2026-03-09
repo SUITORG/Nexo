@@ -14,24 +14,29 @@ app.router = {
         window.addEventListener('hashchange', app.router.handleRoute);
         app.router.handleRoute(); // Carga inicial
     },
+    navigate: (hash) => {
+        window.location.hash = hash;
+    },
     handleRoute: () => {
         const hash = window.location.hash || '#orbit';
 
         console.log(`🧭 Ruta detectada: ${hash}`);
+        if (hash === '#orbit') app.state.cameFromOrbit = true;
         // Ocultar todas las secciones antes de mostrar la activa
         document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
         // PROTECCIÓN DE RUTAS (RBAC Lite)
-        const protectedRoutes = ['#dashboard', '#leads', '#projects', '#reservations', '#catalog', '#agents', '#knowledge', '#pos', '#staff-pos', '#reports'];
+        const protectedRoutes = ['#dashboard', '#leads', '#projects', '#reservations', '#catalog', '#agents', '#knowledge', '#pos', '#staff-pos', '#reports', '#vault'];
         if (protectedRoutes.includes(hash) && !app.state.currentUser) {
             console.warn("🛡️ Acceso denegado: Usuario no autenticado.");
             window.location.hash = '#home';
             return;
         }
 
-        // IDENTITY PROTECTION: Block Hub in WHITE Mode (v5.3.3)
+        // IDENTITY PROTECTION: Block Hub in WHITE Mode (v6.1.5)
         if (hash === '#orbit') {
             const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
             const mode = (company?.modo_sitio || "HUB").toString().toUpperCase();
+
             if (mode === 'WHITE') {
                 console.warn("🛡️ Acceso denegado: Hub desactivado para este sitio (MODO WHITE).");
                 window.location.hash = '#home';
@@ -54,12 +59,27 @@ app.router = {
             '#reservations': 'view-reservations',
             '#staff-pos': 'view-staff-pos',
             '#pos': 'view-pos',
-            '#reports': 'view-reports'
+            '#reports': 'view-reports',
+            '#vault': 'view-vault'
         };
         const targetId = viewMap[hash];
         if (targetId) {
             const el = document.getElementById(targetId);
             if (el) el.classList.remove('hidden');
+        } else {
+            // --- DETECCION DE PAGINAS DINAMICAS (v6.2.0) ---
+            const cleanHash = hash.replace('#', '').toLowerCase();
+            const isDynamic = (app.data.Config_Paginas || []).some(p =>
+                String(p.id_pagina).toLowerCase() === cleanHash &&
+                String(p.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase()
+            );
+
+            if (isDynamic) {
+                const el = document.getElementById('view-home');
+                if (el) el.classList.remove('hidden');
+                // Forzar renderizado de home con contexto dinámico
+                if (app.ui.renderHome) app.ui.renderHome();
+            }
         }
 
         // LÓGICA ESPECÍFICA POR VISTA
@@ -108,6 +128,7 @@ app.router = {
         }
         if (hash === '#contact' && app.ui.renderContact) app.ui.renderContact();
         if (hash === '#reports' && app.ui.handleReportTypeChange) app.ui.handleReportTypeChange();
+        if (hash === '#vault' && app.vault?.refresh) app.vault.refresh();
 
         // Control del botón flotante de WhatsApp
         const waFloat = document.getElementById('whatsapp-float');

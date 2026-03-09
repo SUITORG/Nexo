@@ -10,7 +10,12 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
-## 🏗️ Arquitectura de Software (v5.7.0 BI Matrix)
+## 🏗️ Arquitectura de Software (v6.2.1 Multi-Engine)
+- [x] **v6.2.1: Multi-Engine db_engine support**: Soporte para `db_engine` en Config_Empresas (GSHEETS enabled) y preparación para migración a bases de datos profesionales (Supabase/Neon).
+- [x] **v6.2.0: Dynamic Content Engine (Narrativa IA)**: Motor de páginas dinámicas en Config_Paginas con inyección automática de SEO (Schema.org) y narrativa personalizada por cliente.
+- [x] **v6.1.8: Private Drive Vaults & Secure Access**: Integración de Bóveda Segura con Google Drive API, generación automática de tokens (TX-XXXX) y auto-creación de usuarios desde Leads financieros.
+- [ ] **v6.3.0: Suit Shortlinks & Friendly URLs**: Implementar capa de abstracción para enlaces internos (#hash) y externos, permitiendo el uso de "Alias" amigables y compactos.
+- [x] **v6.1.5: AI Billing, Isolation & Navigation Mastery**: Reparación de telemetría de tokens (Logs), soporte para `is_isolated` con acceso sutil (Beige UI) y visibilidad global en Órbita.
 - [x] **v6.1.0: Calendar & Reservations Engine**: Integración nativa con Google Calendar API, creación automática de calendarios por negocio y módulo de gestión de citas.
 - [x] **v5.7.0: Suit BI Matrix (Dynamic Dashboard)**: Motor de métricas e indicadores (KPIs) administrables desde Excel. Procesamiento de datos en tiempo real (SUM, COUNT, AVG) y generación de gráficas dinámicas.
 - [x] **v5.5.0: Dynamic Report Engine (Excel Driven)**: Motor de reportes administrable desde Google Sheets. Soporte para columnas dinámicas, labels e iconos personalizados sin tocar código.
@@ -234,4 +239,4 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v5.2.4: Smart ID & Project Traceability**: Identidad por teléfono, folios secuenciales `LEAD-XXX`/`ORD-XXX` y timestamps ISO.
 - [x] **v5.2.5: Lead Sync & Timestamps**: Sincronización de columnas `fecha`, `nom_negocio`, `dir_comercial` y timestamps con hora.
 ---
-*Última actualización: 2026-03-05 | Versión: v6.1.0 (RESERVATIONS SYNC)*
+*Última actualización: 2026-03-06 | Versión: v6.1.5 (AI BILLING & ISOLATION)*

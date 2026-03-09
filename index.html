@@ -90,6 +90,9 @@
                 <li><a href="#staff-pos">Venta (POS)</a></li>
                 <li><a href="#knowledge">Conocimiento</a></li>
                 <li><a href="#reports" id="nav-reports"><i class="fas fa-chart-line"></i> Reportes</a></li>
+                <li class="nav-item-mod" data-mod="vault" onclick="app.router.navigate('#vault'); app.vault.refresh();">
+                    <i class="fas fa-user-shield"></i> <span>Bóveda</span>
+                </li>
                 <li class="nav-item role-admin hidden"><a href="#quotas" onclick="app.ui.showView('view-quotas')"><i
                             class="fas fa-credit-card"></i> Cuotas</a></li>
                 <li class="nav-item"><a href="#logout" onclick="app.auth.logout()"><i class="fas fa-sign-out-alt"></i>
@@ -136,6 +139,40 @@
 
                 <div class="solutions-grid seo-grid">
                     <!-- Dynamically populated from Config_SEO table -->
+                </div>
+            </div>
+
+            <!-- SECTION: DYNAMIC STORY & NARRATIVE (v6.2.0) -->
+            <div id="dynamic-story-section" class="view-home-section hidden"
+                style="padding: 60px 5%; margin: 40px auto; max-width: 1200px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; border-radius: 30px; background: white; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.05);">
+                <div class="story-image-container"
+                    style="position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1);">
+                    <img id="story-img" src="" alt="Historia"
+                        style="width: 100%; height: auto; display: block; filter: saturate(1.2);">
+                    <div
+                        style="position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(0deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);">
+                    </div>
+                </div>
+                <div class="story-text-container" style="padding-right: 20px;">
+                    <h2 id="story-h2"
+                        style="font-size: 2.5rem; margin-bottom: 15px; color: var(--primary-color); line-height: 1.1;">
+                    </h2>
+                    <h3 id="story-h3" style="font-size: 1.2rem; color: #666; margin-bottom: 25px; font-weight: 500;">
+                    </h3>
+                    <div id="story-content"
+                        style="font-size: 1rem; line-height: 1.6; color: #444; margin-bottom: 30px;"></div>
+                    <div id="story-actions" style="display: flex; gap: 15px;">
+                        <!-- Botones inyectados dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: GALLERY (v6.1.6) -->
+            <div id="company-gallery-section" class="about-section"
+                style="margin-top: 40px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 50px;">
+                <div class="view-home-section company-gallery" style="text-align: center; margin-top: 50px;">
+                    <h2 style="color: var(--primary-color);">Galería</h2>
+                    <div id="company-gallery-grid" class="gallery-grid"></div>
                 </div>
             </div>
 
@@ -238,6 +275,9 @@
                         <button id="btn-dash-agents" class="btn-primary" onclick="app.ui.openAgentsModal()"
                             style="background: linear-gradient(45deg, #d4af37, #f7d794); color:#000;">🤖 Agentes
                             AI</button>
+                        <button id="btn-init-drive" class="btn-primary" onclick="app.ui.syncTopLuxDrive()"
+                            style="background: #4285F4; border:none;"><i class="fab fa-google-drive"></i> Sincronizar
+                            Drive</button>
                     </div>
                 </div>
                 <!-- Maintenance Admin Buttons -->
@@ -282,6 +322,13 @@
                     <p>Realizar ventas directas en mostrador.</p>
                     <button class="btn-primary w-100" onclick="window.location.hash='#staff-pos'">Abrir
                         Caja</button>
+                </div>
+                <div class="feature-card" onclick="window.location.hash='#reservations'">
+                    <i class="fas fa-calendar-check" style="background:#f3e5f5; color:#7b1fa2;"></i>
+                    <h3>Citas</h3>
+                    <p>Gestión administrativa de reservaciones.</p>
+                    <button class="btn-primary w-100" onclick="window.location.hash='#reservations'">Ver
+                        Calendario</button>
                 </div>
             </div>
         </section>
@@ -380,6 +427,10 @@
                     </tbody>
                 </table>
             </div>
+        </section>
+        <!-- SECTION: RESERVATIONS (Staff Only) -->
+        <section id="view-reservations" class="view-section hidden">
+            <!-- Rendered via app.ui.renderReservations() -->
         </section>
         <!-- SECTION: KNOWLEDGE BASE (Staff Only) -->
         <section id="view-knowledge" class="view-section hidden">
@@ -917,6 +968,49 @@
                 </button>
             </div>
         </section>
+
+        <!-- SECTION: VAULT (Private Files) -->
+        <section id="view-vault" class="view-section hidden" style="padding-top:20px;">
+            <div class="section-header">
+                <h3><i class="fas fa-user-shield"></i> Mi Bóveda Segura</h3>
+                <p style="font-size:0.8rem; opacity:0.7;">Tus documentos privados y expedientes digitales en un solo
+                    lugar.</p>
+            </div>
+
+            <div class="vault-container glass"
+                style="margin-top:20px; padding:30px; border-radius:24px; min-height:400px;">
+                <!-- Drag and Drop Area -->
+                <div id="vault-upload-area"
+                    style="border: 2px dashed var(--primary-color); border-radius: 20px; padding: 40px; text-align: center; background: rgba(0, 210, 255, 0.02); margin-bottom: 30px; cursor: pointer; transition: 0.3s;"
+                    onmouseover="this.style.background='rgba(0, 210, 255, 0.05)'"
+                    onmouseout="this.style.background='rgba(0, 210, 255, 0.02)'"
+                    onclick="document.getElementById('vault-file-input').click()">
+
+                    <i class="fas fa-cloud-upload-alt fa-3x"
+                        style="color:var(--primary-color); margin-bottom:15px;"></i>
+                    <h4 style="margin:0;">Arrastra tus archivos aquí</h4>
+                    <p style="font-size:0.8rem; opacity:0.6; margin:10px 0;">O haz clic para seleccionar (PDF, Imágenes,
+                        DOCX)</p>
+                    <input type="file" id="vault-file-input" multiple class="hidden"
+                        onchange="app.vault.handleFiles(this.files)">
+                </div>
+
+                <div id="vault-status" class="hidden"
+                    style="padding:15px; border-radius:12px; margin-bottom:20px; text-align:center; font-size:0.85rem; font-weight:bold;">
+                </div>
+
+                <div class="vault-files-section">
+                    <h5
+                        style="margin-bottom:15px; color:var(--primary-color); text-transform:uppercase; letter-spacing:1px; font-size:0.75rem;">
+                        <i class="fas fa-folder-open"></i> Mis Documentos Cargados
+                    </h5>
+                    <div id="vault-files-grid"
+                        style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:20px;">
+                        <!-- Files injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
         <!-- MODAL: CHECKOUT (PFM) -->
         <div id="checkout-modal" class="modal-overlay hidden">
             <div class="modal-content minimalist-form" style="max-width: 500px;">
@@ -1450,17 +1544,17 @@
             </div>
         </div>
     </div>
-    <script src="js/modules/config.js?v=5.8.9"></script>
-    <script src="js/modules/core.js?v=5.8.9"></script>
-    <script src="js/modules/auth.js?v=5.8.9"></script>
-    <script src="js/modules/public.js?v=5.8.9"></script>
-    <script src="js/modules/events.js?v=5.8.9"></script>
-    <script src="js/modules/ui.js?v=5.8.9"></script>
-    <script src="js/modules/agents.js?v=5.8.9"></script>
-    <script src="js/modules/admin.js?v=5.8.9"></script>
-    <script src="js/modules/router.js?v=5.8.9"></script>
-    <script src="js/modules/pos.js?v=5.8.9"></script>
-    <script src="app.js?v=5.8.9"></script>
+    <script src="js/modules/config.js?v=6.2.1"></script>
+    <script src="js/modules/core.js?v=6.2.1"></script>
+    <script src="js/modules/auth.js?v=6.2.1"></script>
+    <script src="js/modules/public.js?v=6.2.1"></script>
+    <script src="js/modules/events.js?v=6.2.1"></script>
+    <script src="js/modules/ui.js?v=6.2.1"></script>
+    <script src="js/modules/agents.js?v=6.2.1"></script>
+    <script src="js/modules/admin.js?v=6.2.1"></script>
+    <script src="js/modules/router.js?v=6.2.1"></script>
+    <script src="js/modules/pos.js?v=6.2.1"></script>
+    <script src="app.js?v=6.2.1"></script>
     <!-- MODAL: KNOWLEDGE UPLOAD (Manual) -->
     <div id="knowledge-modal" class="modal-overlay hidden">
         <div class="modal-content minimalist-form" style="max-width: 500px;">

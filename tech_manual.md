@@ -1,9 +1,8 @@
-
 # Manual Técnico y Operativo - SuitOrg
 > **Identidad Principal:** SuitOrg (Powered by EVASOL Engine)
-> **Última Versión Estable**: v6.0.7 (Dynamic Identity & QR Parametrization)
-> **Estado del Sistema**: Operativo con Soporte Multi-canal y Optimización de Hub.
-> **Total de Líneas Consolidadas**: ~11,150 (Auditado 2026-03-01).
+> **Última Versión Estable**: v6.2.1 (Multi-Engine & Dynamic Content)
+> **Estado del Sistema**: Operativo con Soporte de Contenido Dinámico y Multi-Inquilino.
+> **Total de Líneas Consolidadas**: ~11,480 (Auditado 2026-03-09).
 
 ## 0. Resumen Ejecutivo (TL;DR) - Para gente con prisa ⚡
 1.  **¿Qué es?** Un potente "Food Hub" multi-inquilino especializado en el sector alimenticio (Restaurantes, Snacks, Comida Rápida).
@@ -170,6 +169,18 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
     *   `DATE_STR=$(date +%d%m%y); zip -r "SUIT_${DATE_STR}_WSL.zip" . -x "*/node_modules/*" "*/.git/*" "*.zip" "*/.agent/*"`
 
 ---
+
+- **v6.2.0** (2026-03-08): **"Dynamic Content Engine (Narrativa IA)"**.
+    - **Backend:** Creación de tabla `Config_Paginas` para almacenamiento de JSON estructurado (Meta, Schema, Contenido).
+    - **SEO:** Inyección automática de `JSON-LD (Schema.org)` dinámico según el contexto de la página (ONG, Museo).
+    - **UX:** Implementación de subpáginas dinámicas inteligentes (ej: `#museo`) que ocultan el hero-banner estándar y muestran narrativa personalizada.
+    - **Parametrización:** Las empresas ahora pueden administrar su Hero, H1, H2 y botones de acción desde celdas de Excel.
+
+- **v6.1.8** (2026-03-08): **"Secure Drive Vault & Private Token"**.
+    - **Drive:** Integración con Google Drive API para creación automática de jerarquía de carpetas (Identidad, Solicitudes, Médicos).
+    - **Auth:** Generación de `Vault Tokens` (TX-XXXX) para acceso seguro de clientes financieros (TopLux Finance).
+    - **CRM:** Auto-creación de usuarios con nivel 1 y tokens como credenciales desde el flujo de Leads.
+    - **UI:** Nueva sección "Mi Bóveda Segura" con soporte para Drag & Drop y visualización de expedientes.
 
 - **v6.1.0** (2026-03-05): **"Calendar & Reservations Engine"**.
     - **Backend:** Integración nativa con Google Calendar API. Creación automática de calendarios por empresa.
@@ -338,14 +349,14 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 
 ## 8. Estadísticas del Proyecto (Auditoría de Código)
 
-| Archivo / Carpeta | Líneas |
-| :--- | :--- |
-| index.html | 1683 | Estructura base PWA / Modales |
-| style.css | 4100 | UI/UX Premium & Micro-animaciones |
-| js/modules/ | 4610 | Lógica de Negocio (Core, BI, CRM, POS) |
+| Archivo / Carpeta | Líneas | Comentario |
+| :--- | :--- | :--- |
+| index.html | 1736 | Estructura base / Bóveda v6.1.8 |
+| style.css | 3732 | UI/UX Premium (Refactorización) |
+| js/modules/ | 5119 | Lógica Documental & Vault Engine |
 | app.js | 72 | Router y Orquestación Inicial |
-| backend_schema.gs | 673 | Engine Server-side (GAS) |
-| **TOTAL** | **11150** | Líneas de producción |
+| backend_schema.gs | 749 | Drive & Secure Token Engine |
+| **TOTAL** | **11350** | Producción v6.1.8 Estándar |
 
 ---
 *Manual generado automáticamente por Antigravity AI.*
