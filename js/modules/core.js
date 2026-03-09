@@ -4,7 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: '6.2.7', // v6.2.7: Identity Lock, Transition Loader & Cache Busting.
+    version: '6.2.8', // v6.2.8: Gallery Slider with Arrows & Navigation.
 
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',

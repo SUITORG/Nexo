@@ -1,9 +1,9 @@
-# 🏗️ Backend Schema Documentation (SuitOrg v6.2.7)
+# 🏗️ Backend Schema Documentation (SuitOrg v6.2.8)
 
 ## 📌 Resumen Técnico
 Este documento define la estructura y el comportamiento del motor de backend de **SuitOrg**, operando sobre **Google Apps Script (GAS)** y utilizando **Google Sheets** como base de datos relacional multi-inquilino.
 
-**Versión Actual:** 6.2.7 (Dynamic Content Engine, Identity Lock & Cache Busting)
+**Versión Actual:** 6.2.8 (Gallery Navigation, Slider & Transition UI)
 <b>Última Actualización:</b> 2026-03-09
 
 ---

@@ -24,6 +24,16 @@ app.ui = {
         if (panelList) app.ui.toggleLogs(true);
     },
 
+    scrollGallery: (direction) => {
+        const grid = document.getElementById('company-gallery-grid');
+        if (!grid) return;
+        const scrollAmount = grid.clientWidth * 0.8;
+        grid.scrollBy({
+            left: direction * scrollAmount,
+            behavior: 'smooth'
+        });
+    },
+
     toggleLogs: (onlyUpdate = false) => {
         let panel = document.getElementById('sys-log-panel');
         if (!panel) return; // Se crea en index.html o dinámicamente si falatara

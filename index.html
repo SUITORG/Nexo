@@ -193,12 +193,20 @@
                 </div>
             </div>
 
-            <!-- SECTION: GALLERY (v6.1.6) -->
+            <!-- SECTION: GALLERY (v6.2.8) -->
             <div id="company-gallery-section" class="about-section"
                 style="margin-top: 40px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 50px;">
                 <div class="view-home-section company-gallery" style="text-align: center; margin-top: 50px;">
                     <h2 style="color: var(--primary-color);">Galería</h2>
-                    <div id="company-gallery-grid" class="gallery-grid"></div>
+                    <div class="gallery-wrapper" style="position: relative; max-width: 1200px; margin: 0 auto;">
+                        <button class="gallery-arrow prev" onclick="app.ui.scrollGallery(-1)" aria-label="Anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div id="company-gallery-grid" class="gallery-grid"></div>
+                        <button class="gallery-arrow next" onclick="app.ui.scrollGallery(1)" aria-label="Siguiente">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
