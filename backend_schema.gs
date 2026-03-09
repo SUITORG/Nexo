@@ -1,18 +1,19 @@
-/* SuitOrg Backend Engine - v6.2.1
+/* SuitOrg Backend Engine - v6.2.7
  * ---------------------------------------------------------
- * Sincronización: 2026-03-09 6:15 AM (v6.2.1 Multi-Engine & Content Logic)
+ * Sincronización: 2026-03-09 9:40 AM (v6.2.7 Identity Lock & Cache Busting)
  * 
- * Changelog v6.2.1:
- * - CORE: Soporte para 'db_engine' en Config_Empresas (GSHEETS enabled).
- * - FIX: Cierre de bloques en inicialización para evitar errores de sintaxis.
- * - CONTENT: Motor de páginas dinámicas Config_Paginas v6.2.0 integrado.
+ * Changelog v6.2.7:
+ * - CONTENT: Soporte para mensajes dinámicos (Marca Personal) mensaje1 y mensaje2.
+ * - CACHE: Implementado cache busting v6.2.7 en todo el ecosistema.
+ * - UI: Implementado Loader de Transición 'Orbit' para cambio de inquilinos.
+ * - STABILITY: Refuerzo de validación en Config_Paginas para JSON robusto.
  * 
- * AUDIT: ~840 Lines (v6.2.1 STABLE).
+ * AUDIT: ~840 Lines (v6.2.7 STABLE).
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "6.2.1",
+  VERSION: "6.2.7",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
   DRIVE_ROOT_ID: "1UUtr70qr96_hpbwbgcRg-h14sHLvJVin", // Carpeta Maestra TopLux Finance
   GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto", "Config_Galeria", "Config_Paginas"], 
