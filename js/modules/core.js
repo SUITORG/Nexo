@@ -4,7 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: '6.2.1', // v6.2.1: Multi-Engine db_engine support.
+    version: '6.2.7', // v6.2.7: Identity Lock, Transition Loader & Cache Busting.
 
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
@@ -266,11 +266,26 @@ const app = {
         }
     },
     switchCompany: async (newId) => {
-        console.log(`🔄 Cambiando a inquilino: ${newId}`);
+        // 1. Mostrar Loader de Transición
+        const loader = document.getElementById('transition-loader');
+        if (loader) {
+            loader.classList.remove('hidden');
+            const msg = document.getElementById('loader-msg');
+            if (msg) msg.innerText = `Accediendo a ${newId}...`;
+        }
 
-        // 1. Limpieza Agresiva de UI
+        // 2. Limpieza Agresiva de UI
         const menu = document.getElementById('menu-public');
         if (menu) menu.innerHTML = '';
+
+        // Limpiar secciones de contenido dinámico previas
+        ['story-h2', 'story-h3', 'story-content', 'story-img'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.tagName === 'IMG') el.src = '';
+                else el.innerHTML = '';
+            }
+        });
 
         const orbitView = document.getElementById('view-orbit');
         if (orbitView) orbitView.classList.add('hidden');
@@ -287,6 +302,11 @@ const app = {
             if (app.router && app.router.handleRoute) app.router.handleRoute();
 
             if (app.ui.updateConsole) app.ui.updateConsole(`TENANT_SWITCH: ${newId}`);
+        }
+
+        // 3. Ocultar Loader
+        if (loader) {
+            setTimeout(() => loader.classList.add('hidden'), 800);
         }
     }
 };

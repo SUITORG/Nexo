@@ -1,10 +1,10 @@
-# 🏗️ Backend Schema Documentation (SuitOrg v6.2.0)
+# 🏗️ Backend Schema Documentation (SuitOrg v6.2.7)
 
 ## 📌 Resumen Técnico
 Este documento define la estructura y el comportamiento del motor de backend de **SuitOrg**, operando sobre **Google Apps Script (GAS)** y utilizando **Google Sheets** como base de datos relacional multi-inquilino.
 
-**Versión Actual:** 6.2.0 (Dynamic Content Engine & SEO Injection)
-<b>Última Actualización:</b> 2026-03-08
+**Versión Actual:** 6.2.7 (Dynamic Content Engine, Identity Lock & Cache Busting)
+<b>Última Actualización:</b> 2026-03-09
 
 ---
 
@@ -12,8 +12,8 @@ Este documento define la estructura y el comportamiento del motor de backend de 
 
 ### 1. Tablas Globales (`GLOBAL_TABLES`)
 Tablas compartidas entre todas las empresas para configuración del Hub y autenticación.
-*   **Config_Empresas**: Metadata de inquilinos, colores, temas, políticas de créditos, `DRIVE_ROOT_ID` y `db_engine` (**v6.2.1**).
-*   **Config_Paginas**: **v6.2.0**: Motor de contenido dinámico. Almacena JSON de Meta, Schema y Narrativa.
+*   **Config_Empresas**: Metadata de inquilinos, colores, temas. **v6.2.7**: Soporte para `mensaje1`, `mensaje2` (Marca Personal) y `DRIVE_ROOT_ID`.
+*   **Config_Paginas**: **v6.2.7**: Motor de contenido dinámico robusto. Almacena JSON de Meta, Schema y Narrativa con limpieza automática de caracteres especiales.
 *   **Config_Galeria**: Gestión de imágenes, logos y visuales por empresa.
 *   **Config_Roles**: Definición de permisos RBAC y módulos visibles.
 *   **Usuarios**: Credenciales, niveles de acceso y saldos de créditos. **v6.1.8**: Soporta login mediante Token de Bóveda.

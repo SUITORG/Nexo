@@ -31,7 +31,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body> <!-- TRANSITION LOADER (v6.2.7) -->
+    <div id="transition-loader" class="modal-overlay hidden"
+        style="z-index: 9999; background: rgba(255,255,255,0.9); backdrop-filter: blur(15px);">
+        <div style="text-align: center;">
+            <div class="orbit-spinner" style="margin: 0 auto 20px;">
+                <div class="orbit"></div>
+                <div class="orbit"></div>
+                <div class="orbit"></div>
+            </div>
+            <h2 style="color: var(--primary-color); font-weight: 900; letter-spacing: -1px; margin-bottom: 5px;">
+                Cargando Ecosistema...</h2>
+            <p id="loader-msg" style="opacity: 0.6; font-size: 0.9rem;">Sincronizando identidad inteligente</p>
+        </div>
+    </div>
+
     <!-- Backend Version Indicator -->
     <!-- estandar-barra-st (System Info) -->
     <div id="status-bar" class="status-bar">
