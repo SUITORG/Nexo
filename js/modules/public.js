@@ -485,6 +485,18 @@ app.public = {
             if (meta && meta.description) {
                 let metaDesc = document.querySelector('meta[name="description"]');
                 if (metaDesc) metaDesc.setAttribute('content', meta.description);
+
+                // INYECCIÓN OPEN GRAPH DINÁMICA v6.2.6 (PARA ROBOTS QUE LEEN JS)
+                let ogTitle = document.querySelector('meta[property="og:title"]');
+                let ogDesc = document.querySelector('meta[property="og:description"]');
+                let ogImg = document.querySelector('meta[property="og:image"]');
+
+                if (ogTitle && meta.title) ogTitle.setAttribute('content', meta.title);
+                if (ogDesc && meta.description) ogDesc.setAttribute('content', meta.description);
+                if (ogImg) {
+                    const sceneImg = content.imagen_url || company.foto_Agente || company.logo_url;
+                    ogImg.setAttribute('content', app.utils.fixDriveUrl(sceneImg));
+                }
             }
 
             // 2. Inyectar Schema (v6.2.0) - REFUERZO SEGURIDAD v6.2.4
