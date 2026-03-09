@@ -18,7 +18,9 @@ app.router = {
         window.location.hash = hash;
     },
     handleRoute: () => {
-        const hash = window.location.hash || '#orbit';
+        // --- EVOLUCIÓN v6.2.5: SI HAY EMPRESA, EL INICIO ES #HOME (NO ORBIT) ---
+        let defaultHash = (app.state.companyId) ? '#home' : '#orbit';
+        const hash = window.location.hash || defaultHash;
 
         console.log(`🧭 Ruta detectada: ${hash}`);
         if (hash === '#orbit') app.state.cameFromOrbit = true;
