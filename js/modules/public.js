@@ -169,440 +169,211 @@ app.public = {
 
     // --- RENDERERS ---
     renderHome: (companyData) => {
-        const urlId = (app.state.companyId || "").toString().trim().toUpperCase();
-        const company = companyData || app.data.Config_Empresas.find(c => c.id_empresa === urlId);
+        const rawId = (app.state.companyId || "").toString().trim().toUpperCase();
+        const urlId = rawId; // ID Técnico (ej: ROBERTO_V)
+        
+        const company = companyData || app.data.Config_Empresas.find(c => {
+            const cId = String(c.id_empresa || "").toUpperCase();
+            const cAlias = String(c.alias_seo || "").toUpperCase();
+            return cId === urlId || cAlias === urlId || cId.replace(/_/g, "") === urlId.replace(/_/g, "");
+        });
 
-        if (!company) return console.error("[RENDER_HOME] No company data found for ID:", urlId);
+        if (!company) return console.error("[RENDER_HOME] No company data found for ID:", rawId);
 
-        // Autodetectar modo comida (v5.0.3 Fix: UI restoration)
-        const keywords = ['Alimentos', 'Comida', 'Restaurante', 'Snack', 'Food', 'PFM', 'PMP', 'HMP'];
-        const bizType = (company.tipo_negocio || "").toString();
-        const bizId = urlId;
-        const isFood = keywords.some(k => bizType.includes(k) || bizId.includes(k));
+        // --- DYNAMIC CONTENT ENGINE (v6.5.2) ---
+        const rawHash = window.location.hash.replace('#', '') || 'home';
+        const hash = rawHash.trim().toLowerCase();
+        
+        const pageData = (app.data.Config_Paginas || []).find(p => {
+            const pCoId = String(p.id_empresa || "").toUpperCase();
+            const pPgId = String(p.id_pagina || "").trim().toLowerCase();
+            // Comparación robusta (soporta ROBERTOV y ROBERTO_V)
+            return (pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "")) && pPgId === hash;
+        });
+
+        // Si es una sub-página dinámica (no home)
+        if (pageData && hash !== 'home') {
+            const heroBanner = document.getElementById('hero-banner-main');
+            const personalNode = document.getElementById('hero-personal-node');
+            if (heroBanner) heroBanner.style.display = 'none';
+            if (personalNode) personalNode.style.display = 'none';
+            
+            // Forzar visibilidad de la sección home ya que el contenido dinámico vive dentro
+            const viewHome = document.getElementById('view-home');
+            if (viewHome) {
+                viewHome.classList.remove('hidden');
+                viewHome.style.display = 'block';
+            }
+
+            app.public.renderDynamicContent(pageData);
+            return; 
+        }
+
+        // Renderizado HOME Estándar (PFM/PMP/Industrial)
+        const bizType = (company.tipo_negocio || "").toString().toUpperCase();
+        const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
+        const isPersonal = bizType.includes("MARCA PERSONAL");
         app.state.isFood = isFood;
 
         const sloganEl = document.getElementById('hero-slogan');
         const subEl = document.getElementById('hero-sub');
         const heroBanner = document.getElementById('hero-banner-main');
-        const actions = document.getElementById('hero-actions-container');
-        const standardFeatures = document.getElementById('standard-features-grid');
-        const industrialSeo = document.getElementById('seo-matrix-section');
-        const foodAreaSpec = document.getElementById('food-app-area');
-        const foodTitle = document.getElementById('food-menu-title');
-        const foodSubtitle = document.getElementById('food-menu-subtitle');
-        const menuPublic = document.getElementById('menu-public');
-        if (menuPublic) {
-            menuPublic.classList.remove('hub-active');
-        }
-
-        // Forzar visibilidad y reset de clases (v5.0.3 Security Fix)
-        const isPersonal = bizType.toUpperCase().includes('MARCA PERSONAL');
-        const viewHome = document.getElementById('view-home');
-        if (viewHome) {
-            viewHome.classList.toggle('is-personal-brand', isPersonal && window.innerWidth > 768);
-        }
-
-        if (heroBanner) {
-            heroBanner.classList.remove('hidden');
-            heroBanner.style.display = 'block';
-        }
-
-        // --- RENDER PERSONAL BRAND HERO (v5.9.0) ---
         const personalNode = document.getElementById('hero-personal-node');
-        if (personalNode && isPersonal && window.innerWidth > 768) {
-            const photo = company.foto_agente || company.logo_url || '';
-            const slogan = company.slogan || "";
-            const msg1 = company.mensaje1 || "";
-            const msg2 = company.mensaje2 || "";
-            const desc = company.descripcion || "Ayudo a profesionales a escalar su impacto y libertad.";
+        const actions = document.getElementById('hero-actions-container');
+        const menuPublic = document.getElementById('menu-public');
 
-            personalNode.innerHTML = `
-                <div class="personal-left">
-                    <div class="photo-wrapper" style="position:relative; display:flex;">
-                        <img src="${app.utils.fixDriveUrl(photo)}" alt="${company.nomempresa}">
-                        <div class="personal-photo-overlay">
-                            ${slogan ? `<div class="overlay-slogan">${slogan}</div>` : ''}
-                            ${msg1 ? `<div class="overlay-msg1">${msg1}</div>` : ''}
-                            ${msg2 ? `<div class="overlay-msg2">${msg2}</div>` : ''}
+        // --- LÓGICA DE IDENTIDAD (v6.6.0) ---
+        if (isPersonal) {
+            document.body.classList.add('is-personal-brand');
+            if (personalNode) {
+                personalNode.innerHTML = `
+                    <div class="ui-container" style="min-height:92vh; display:flex; align-items:center; padding-top:100px; padding-bottom:100px; background:var(--personal-bg);">
+                        <div class="ui-grid" style="align-items:center; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+                            <!-- LADO IZQUIERDO: FOTO + QR IZQUIERDO -->
+                            <div class="personal-left ui-overlay-container" style="position:relative; width:100%; max-width:620px; justify-self: center; border-radius:32px; box-shadow:0 40px 80px rgba(0,0,0,0.22); overflow:hidden;">
+                                <img src="${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}" alt="${company.nomempresa}" style="width:100%; display:block; border-radius:32px; transition: transform 0.5s ease;">
+                                <div class="ui-overlay-full" style="padding: 40px; display:flex; flex-direction:column; justify-content:space-between;">
+                                    <!-- SUPERIOR IZQUIERDA: NOMBRE EMPRESA -->
+                                    <div class="ui-text-premium" style="align-self:flex-start; font-size:var(--font-size-small); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding-left:14px; letter-spacing:1px; background:rgba(0,0,0,0.4); padding-right:10px; border-radius:0 20px 20px 0;">${company.nomempresa}</div>
+                                    
+                                    <!-- CENTRO: MENSAJE 1 -->
+                                    <div class="ui-text-premium" style="align-self:center; text-align:center; font-size:var(--font-size-h2); line-height:1.1; width:90%;">${company.mensaje1 || ''}</div>
+                                    
+                                    <!-- INFERIOR DERECHA: MENSAJE 2 (Restored) -->
+                                    <div class="ui-text-premium" style="align-self:flex-end; text-align:right; font-size:var(--font-size-h3); color:var(--accent-color, #ffd700); opacity:1; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.8));">${company.mensaje2 || ''}</div>
+                                </div>
+                                <!-- QR OFICIAL IZQUIERDO (v6.6.1) -->
+                                <div class="banner-qr-official" style="position:absolute; bottom:20px; left:20px; background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; pointer-events:auto; cursor:help; box-shadow:0 15px 35px rgba(0,0,0,0.3); z-index:20; border: 1px solid rgba(0,0,0,0.05);">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname)}" style="width:45px; height:45px; image-rendering:pixelated;">
+                                    <span style="font-size:0.5rem; color:#000; font-weight:900; text-transform:uppercase; margin-top:5px; letter-spacing:0.5px;">${company.nomempresa}</span>
+                                </div>
+                            </div>
+                            <!-- LADO DERECHO: SLOGAN + CONFIG_PAGINAS -->
+                            <div class="personal-right" style="display:flex; flex-direction:column; gap:var(--ui-gap); text-align:left; max-width: 650px; justify-self: start;">
+                                <h1 class="ui-text-premium" style="font-size:var(--font-size-h1); color: #111; line-height:1; margin:0; letter-spacing:-1px;">${company.slogan || company.nomempresa}</h1>
+                                
+                                ${pageData ? `
+                                    <div class="personal-dynamic-content" style="display:flex; flex-direction:column; gap:15px;">
+                                        ${pageData.subtitulo ? `<h2 style="font-size:var(--font-size-h3); color:var(--primary-color); margin:0;">${pageData.subtitulo}</h2>` : ''}
+                                        <div style="font-size:var(--font-size-body); line-height:1.8; color:#333; opacity:0.9;">
+                                            ${pageData.contenido || company.descripcion || ''}
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <p style="font-size:var(--font-size-body); line-height:1.8; color:#333; margin:0; opacity:0.9;">${company.descripcion || 'Especialista en soluciones integrales.'}</p>
+                                `}
+
+                                <div class="hero-actions" style="display:flex; gap:20px; margin-top:15px;">
+                                    <button class="btn-primary" style="padding: 20px 45px; border-radius: 50px; font-weight:800; font-size:1.1rem; box-shadow: 0 15px 30px var(--primary-color)44;" onclick="window.location.hash='#contact'">Agendar Consulta</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="personal-right">
-                    <h1>${slogan || company.nomempresa}</h1>
-                    <p>${desc}</p>
-                    <div class="personal-checks">
-                        <div class="check-item"><i class="fas fa-check-circle"></i> Mayor Libertad</div>
-                        <div class="check-item"><i class="fas fa-check-circle"></i> Más Ingresos</div>
-                        <div class="check-item"><i class="fas fa-check-circle"></i> Autoridad Digital</div>
-                        <div class="check-item"><i class="fas fa-check-circle"></i> Sistema Probado</div>
-                    </div>
-                    <form class="personal-cta-box" onsubmit="event.preventDefault(); window.location.hash='#contact';">
-                        <input type="email" placeholder="Tu correo electrónico..." required>
-                        <button type="submit">¡EMPEZAR!</button>
-                    </form>
-                </div>
-                <div class="as-seen-bar">
-                    <span style="font-size: 0.8rem; font-weight: 800; color: #000; margin-right: 20px;">AS SEEN IN:</span>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Forbes_logo.svg/1280px-Forbes_logo.svg.png" style="height: 18px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Entrepreneur_magazine_logo.svg/1280px-Entrepreneur_magazine_logo.svg.png" style="height: 18px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/CNBC_logo.svg/1280px-CNBC_logo.svg.png" style="height: 25px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Inc._magazine_logo.svg/1280px-Inc._magazine_logo.svg.png" style="height: 25px;">
-                </div>
-            `;
-        }
-
-        const showForm = company.formulario === 'TRUE' || company.formulario === true;
-
-        if (isFood) {
-            // Prioridad: foto_agente -> logo_url -> Default (v5.7.7)
-            const bgUrl = company.foto_agente || company.logo_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80';
-
-            // Ajustamos el gradiente para asegurar legibilidad del texto sobre cualquier foto
-            heroBanner.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.85)), url('${app.utils.fixDriveUrl(bgUrl)}')`;
-            heroBanner.style.backgroundAttachment = 'scroll';
-            heroBanner.style.backgroundPosition = 'center center';
-            heroBanner.style.backgroundSize = 'cover';
-            heroBanner.style.backgroundRepeat = 'no-repeat';
-            heroBanner.style.display = 'block';
-
-            const sloganText = company.slogan || "Sabor Premium";
-            const subText = company.mensaje1 || company.descripcion || "Excelencia en cada platillo.";
-            const extraText = company.mensaje2 || "";
-            const extraEl = document.getElementById('hero-extra-msg');
-
-            if (sloganEl) sloganEl.innerText = sloganText;
-            if (subEl) subEl.innerText = subText;
-            if (extraEl) {
-                extraEl.innerText = extraText;
-                extraEl.classList.toggle('hidden', !extraText);
-            }
-            if (heroBanner) heroBanner.classList.add('reduced');
-
-            if (foodTitle) foodTitle.innerText = sloganText;
-            if (foodSubtitle) foodSubtitle.innerText = subText;
-
-            if (actions) {
-                const showSupport = company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true;
-                const showRes = company.usa_reservaciones === 'TRUE' || company.usa_reservaciones === true;
-                const agentId = (urlId === 'EVASOL') ? 'EVASOL_SR_ENG' : 'AGT-001';
-
-                let btns = '';
-                if (showSupport) btns += `<button class="btn-support" onclick="app.agents.select('${agentId}')"><i class="fas fa-headset"></i> Atención e IA</button>`;
-                if (showRes) btns += `<button class="btn-primary" onclick="app.public.showReservationModal()"><i class="fas fa-calendar-check"></i> Reservar Cita</button>`;
-
-                actions.innerHTML = btns;
-            }
-
-            if (menuPublic) {
-                const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
-                const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
-                const showHubLink = siteMode !== "WHITE" && !isIsolated && app.state.cameFromOrbit;
-
-                // Camuflaje Sutil (v6.1.5): Beige pero FUNCIONAL
-                const hubStyle = showHubLink ? "" : "color: #f5f5dc !important; opacity: 0.7;";
-                const hubHtml = `<li><a href="#orbit" style="${hubStyle}"><i class="fas fa-planet-ring"></i> Hub</a></li>`;
-
-                menuPublic.innerHTML = `
-                    ${hubHtml}
-                    <li><a href="#home">Inicio</a></li>
-                    <li>
-                        <a href="#food-app-area" class="btn-express-nav-special" style="background: var(--accent-color); color: #000; padding: 5px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 5px; text-decoration: none;">
-                            <i class="fas fa-utensils"></i> Pedido Express
-                        </a>
-                    </li>
-                    ${showForm ? `<li><a href="#contact">Contacto</a></li>` : ''}
-                    <li><a class="nav-login-btn" href="#login"><i class="fas fa-user-lock"></i> Staff</a></li>
                 `;
+                personalNode.style.display = 'block';
             }
-
-            // v5.0.3: No ocultar la landing (standardFeatures) para food businesses si el usuario quiere mantenerla.
-            if (standardFeatures) standardFeatures.classList.remove('hidden');
-            app.public.renderFoodMenu();
+            if (heroBanner) heroBanner.style.display = 'none';
         } else {
-            if (menuPublic) {
-                const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
-                const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
-                const showFullHub = siteMode !== "WHITE" && !isIsolated && app.state.cameFromOrbit;
+            document.body.classList.remove('is-personal-brand');
+            if (personalNode) personalNode.style.display = 'none';
+            if (heroBanner) {
+                heroBanner.classList.remove('hidden');
+                heroBanner.style.display = 'block';
+                const bgUrl = company.foto_agente || company.logo_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836';
+                heroBanner.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('${app.utils.fixDriveUrl(bgUrl)}')`;
+                heroBanner.style.backgroundSize = 'cover';
 
-                let hubHtml = '';
-                if (siteMode !== "WHITE") {
-                    // Camuflaje Sutil (v6.1.5): Beige pero FUNCIONAL
-                    const hubStyle = showFullHub ? "" : "color: #f5f5dc !important; opacity: 0.7;";
-                    hubHtml = `<li><a href="#orbit" style="${hubStyle}"><i class="fas fa-planet-ring"></i> Hub</a></li>`;
+                // Inyectar QR Oficial + NomEmpresa en Banner Estándar
+                if (!heroBanner.querySelector('.banner-qr-official')) {
+                    const qrBox = document.createElement('div');
+                    qrBox.className = 'banner-qr-official';
+                    qrBox.style.cssText = "position:absolute; bottom:30px; left:30px; background:white; padding:8px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:4px; box-shadow:0 10px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid #eee;";
+                    qrBox.innerHTML = `
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname)}" style="width:65px; height:65px; image-rendering:pixelated;">
+                        <span style="color:black; font-size:0.6rem; font-weight:900; text-transform:uppercase; letter-spacing:0.5px;">${company.nomempresa}</span>
+                    `;
+                    heroBanner.appendChild(qrBox);
                 }
-
-                menuPublic.innerHTML = `
-                    ${hubHtml}
-                    <li><a href="#home">Inicio</a></li>
-                    ${showForm ? `<li><a href="#contact">Contacto</a></li>` : ''}
-                    <li><a class="nav-login-btn" href="#login"><i class="fas fa-user-lock"></i> Staff</a></li>
-                `;
             }
-
-            const heroUrl = company.foto_agente || company.logo_url || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80';
-            heroBanner.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('${app.utils.fixDriveUrl(heroUrl)}')`;
-            heroBanner.style.backgroundAttachment = 'fixed';
-            if (heroBanner) heroBanner.classList.remove('reduced');
-            const extraEl = document.getElementById('hero-extra-msg');
-            if (extraEl) extraEl.classList.add('hidden');
-            if (sloganEl) sloganEl.innerText = company.slogan || "Soluciones Industriales";
-            if (subEl) subEl.innerText = company.mensaje1 || company.descripcion || "Eficiencia y Calidad.";
-            if (actions) {
-                const showSupport = company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true;
-                const showRes = company.usa_reservaciones === 'TRUE' || company.usa_reservaciones === true;
-                const agentId = (urlId === 'EVASOL') ? 'EVASOL_SR_ENG' : 'AGT-001';
-                actions.innerHTML = `
-                    <button class="btn-primary" onclick="window.location.hash='#contact'">Cotizar Ahora</button>
-                    ${showRes ? `<button class="btn-accent" onclick="app.public.showReservationModal()" style="background:#5c6bc0; color:white;"><i class="fas fa-calendar-alt"></i> Reservar</button>` : ''}
-                    ${showSupport ? `<button class="btn-support" onclick="app.agents.select('${agentId}')"><i class="fas fa-headset"></i> Soporte IA</button>` : ''}
-                `;
-            }
-            if (standardFeatures) standardFeatures.classList.remove('hidden');
         }
 
-        // Asegurar visibilidad de secciones críticas (v5.0.3)
-        if (industrialSeo) {
-            industrialSeo.classList.remove('hidden');
-            industrialSeo.style.display = 'block';
+        if (sloganEl) sloganEl.innerText = company.slogan || company.nomempresa;
+        if (subEl) subEl.innerText = company.mensaje1 || company.descripcion || "Bienvenido.";
+        
+        if (actions && !isPersonal) {
+            actions.innerHTML = isFood ? 
+                `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
+                `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar</button>`;
         }
 
-        // --- SUITORG ONBOARDING INJECTION (v5.3.9) ---
-        const onboardSection = document.getElementById('suit-onboarding-section');
-        if (onboardSection) {
-            if (urlId === 'SUITORG') {
-                onboardSection.classList.remove('hidden');
-                app.public.renderSuitOnboarding();
+        if (menuPublic) {
+            const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
+            menuPublic.innerHTML = `
+                ${!isIsolated ? '<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>' : ''}
+                <li><a href="#home">Inicio</a></li>
+                ${isFood ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
+                ${company.formulario ? `<li><a href="#contact">Contacto</a></li>` : ''}
+                <li><a href="#login"><i class="fas fa-user-lock"></i> Staff</a></li>
+            `;
+        }
+
+        // Renderizar Matriz SEO (v6.6.0)
+        if (app.public.renderSEO) app.public.renderSEO();
+
+        // AJUSTE DE ESPACIOS INTELIGENTES (v6.6.1)
+        const storySection = document.getElementById('dynamic-story-section');
+        const gallerySection = document.getElementById('company-gallery-section');
+        if (gallerySection) {
+            // Si la sección de historia está oculta, pegamos la galería a la matriz SEO
+            if (!storySection || storySection.classList.contains('hidden')) {
+                gallerySection.style.marginTop = "var(--ui-gap, 32px)";
+                gallerySection.style.borderTop = "none";
+                gallerySection.style.paddingTop = "0";
             } else {
-                onboardSection.classList.add('hidden');
+                gallerySection.style.marginTop = "var(--ui-section-margin, 100px)";
             }
         }
-
-        // Forzar visibilidad de la sección Home en el router si el hash es correcto
-        const homeSection = document.getElementById('view-home');
-        if (homeSection && window.location.hash === '#home') {
-            homeSection.classList.remove('hidden');
-        }
-
-        // Hide monitor for non-food
-        const monLinks = document.querySelectorAll('.nav-monitor-link');
-        monLinks.forEach(link => {
-            link.parentElement.style.display = isFood ? 'block' : 'none';
-        });
-
-        // --- QR CODE INJECTION (v6.0.7) ---
-        const existingQr = document.getElementById('hero-qr-dynamic');
-        if (existingQr) existingQr.remove();
-
-        const qrTarget = isPersonal ? personalNode : heroBanner;
-        const themeColor = company.color_tema || 'var(--primary-color)';
-        const showQrFlag = company.usa_qr_sitio === 'TRUE' || company.usa_qr_sitio === true || company.usa_qr_sitio === "1";
-
-        if (qrTarget && showQrFlag) {
-            const siteUrl = window.location.origin + window.location.pathname + "?co=" + urlId + "#home";
-            const qrContainer = document.createElement('div');
-            qrContainer.id = 'hero-qr-dynamic';
-            qrContainer.className = 'hero-qr-float';
-            qrContainer.style.cssText = `
-                position: absolute; 
-                bottom: 20px; 
-                left: 20px; 
-                background: rgba(255,255,255,0.9); 
-                padding: 8px; 
-                border-radius: 12px; 
-                box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                gap: 5px; 
-                z-index: 100; 
-                backdrop-filter: blur(5px);
-                border: 2px solid ${themeColor};
-                cursor: pointer;
-                transition: transform 0.3s ease;
-            `;
-            qrContainer.setAttribute('title', 'Click para copiar enlace del sitio');
-            qrContainer.onclick = () => {
-                navigator.clipboard.writeText(siteUrl);
-                if (app.ui.runConsoleSim) app.ui.runConsoleSim("URL COPIADA: " + urlId);
-                else alert("Enlace copiado: " + siteUrl);
-            };
-
-            qrContainer.innerHTML = `
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(siteUrl)}" 
-                     style="width: 65px; height: 65px; display: block; image-rendering: pixelated; border-radius: 4px;"
-                     alt="QR SITIO">
-                <span style="font-size: 0.5rem; font-weight: 800; color: #333; letter-spacing: 0.5px;">SITIO OFICIAL</span>
-            `;
-            qrTarget.appendChild(qrContainer);
-        }
-
-        // --- DYNAMIC CONTENT ENGINE (v6.2.0) ---
-        app.public.renderDynamicContent();
     },
 
-    renderDynamicContent: () => {
-        const urlId = String(app.state.companyId || "").trim().toUpperCase();
-        const pages = app.data.Config_Paginas || [];
-        console.log(`[DEBUG_CONTENT] Búsqueda: Co ${urlId}, Hash: ${window.location.hash || '#home'}, Páginas: ${pages.length}`);
-
-        // Buscar página por empresa y contexto
-        const rawHash = window.location.hash.replace('#', '') || 'home';
-        const hash = rawHash.trim().toLowerCase();
-
-        const pageData = pages.find(p => {
-            const coMatch = String(p.id_empresa || "").trim().toUpperCase() === urlId;
-            const pgMatch = String(p.id_pagina || "").trim().toLowerCase() === hash;
-            return coMatch && pgMatch;
-        });
-
-        console.log(`[DEBUG_RENDER] Resultado: ${pageData ? 'ENCONTRADA' : 'NO_ENCONTRADA'}`);
-
+    renderDynamicContent: (pageData) => {
         const section = document.getElementById('dynamic-story-section');
-        const heroBanner = document.getElementById('hero-banner-main');
-        if (!section) return;
-
-        if (!pageData) {
-            section.classList.add('hidden');
-            section.style.display = 'none';
-            if (heroBanner && hash === 'home') heroBanner.style.display = 'block';
-            return;
-        }
-
-        const company = app.data.Config_Empresas.find(c => c.id_empresa === urlId) || {};
-
-        // --- OCULTAR HERO ESTÁNDAR SI ES SUBPÁGINA (v6.2.0) ---
-        if (heroBanner && hash !== 'home') {
-            heroBanner.style.display = 'none';
-        }
+        if (!section || !pageData) return;
 
         try {
-            const meta = typeof pageData.meta_json === 'string' ? JSON.parse(pageData.meta_json) : pageData.meta_json;
-            const schema = typeof pageData.schema_json === 'string' ? JSON.parse(pageData.schema_json) : pageData.schema_json;
-            const content = typeof pageData.contenido_json === 'string' ? JSON.parse(pageData.contenido_json) : pageData.contenido_json;
+            // Mapeo Inteligente de Campos (v6.5.2)
+            const rawContent = typeof pageData.contenido_json === 'string' ? JSON.parse(pageData.contenido_json) : pageData.contenido_json;
+            const content = {};
+            // Normalizar a minúsculas para búsqueda fácil
+            Object.keys(rawContent).forEach(k => content[k.toLowerCase()] = rawContent[k]);
 
-            // 1. Inyectar Meta (v6.2.0)
-            if (meta && meta.title) document.title = meta.title;
-            if (meta && meta.description) {
-                let metaDesc = document.querySelector('meta[name="description"]');
-                if (metaDesc) metaDesc.setAttribute('content', meta.description);
+            const h2 = document.getElementById('story-h2');
+            const h3 = document.getElementById('story-h3');
+            const body = document.getElementById('story-content');
+            const img = document.getElementById('story-img');
+            const imgContainer = document.querySelector('.story-image-container');
 
-                // INYECCIÓN OPEN GRAPH DINÁMICA v6.2.6 (PARA ROBOTS QUE LEEN JS)
-                let ogTitle = document.querySelector('meta[property="og:title"]');
-                let ogDesc = document.querySelector('meta[property="og:description"]');
-                let ogImg = document.querySelector('meta[property="og:image"]');
-
-                if (ogTitle && meta.title) ogTitle.setAttribute('content', meta.title);
-                if (ogDesc && meta.description) ogDesc.setAttribute('content', meta.description);
-                if (ogImg) {
-                    const sceneImg = content.imagen_url || company.foto_Agente || company.logo_url;
-                    ogImg.setAttribute('content', app.utils.fixDriveUrl(sceneImg));
-                }
+            if (h2) h2.innerHTML = content.h1 || content.titulo || "Información";
+            if (h3) h3.innerHTML = content.h2_1 || content.subtitulo || "";
+            
+            if (body) {
+                let txt = content.p_intro || content.texto || content.descripcion || "";
+                if (content.p_mision) txt += `<br><br><strong>Misión:</strong> ${content.p_mision}`;
+                body.innerHTML = txt || "Contenido disponible próximamente.";
             }
 
-            // 2. Inyectar Schema (v6.2.0) - REFUERZO SEGURIDAD v6.2.4
-            if (schema) {
-                let scriptId = `schema-${urlId}-${hash}`;
-                let existing = document.getElementById(scriptId);
-                if (existing) existing.remove(); // Evitar duplicados al navegar
-
-                try {
-                    const script = document.createElement('script');
-                    script.id = scriptId;
-                    script.type = 'application/ld+json';
-                    // Limpieza básica de caracteres que rompen JSON si vinieran de Excel
-                    const cleanSchema = typeof schema === 'string' ? JSON.parse(schema) : schema;
-                    script.text = JSON.stringify(cleanSchema);
-                    document.head.appendChild(script);
-                } catch (e) {
-                    console.warn("[SEO_SCHEMA] Error inyectando Schema:", e);
-                }
+            if (img) {
+                const finalImg = app.utils.fixDriveUrl(content.imagen_url || pageData.foto_url);
+                img.src = finalImg;
+                if (imgContainer) imgContainer.style.display = finalImg ? 'block' : 'none';
+                section.style.gridTemplateColumns = finalImg ? '1fr 1fr' : '1fr';
             }
 
-            // 3. Renderizar Contenido Visual
-            if (content) {
-                console.log("[DEBUG_RENDER] Pintando contenido dinámico v6.2.2...");
-                section.classList.remove('hidden');
-                section.style.display = 'grid'; // Force Grid
-                section.style.visibility = 'visible';
-                section.style.opacity = '1';
-                section.style.border = '1px solid rgba(0,0,0,0.05)'; // Borde sutil de control
+            section.classList.remove('hidden');
+            section.style.display = 'grid';
+            section.style.visibility = 'visible';
+            section.style.opacity = '1';
 
-                const h2 = document.getElementById('story-h2');
-                const h3 = document.getElementById('story-h3');
-                const body = document.getElementById('story-content');
-                const actions = document.getElementById('story-actions');
-                const img = document.getElementById('story-img');
-                const imgContainer = document.querySelector('.story-image-container');
-
-                // Imagen de acompañamiento
-                if (img) {
-                    const fallback = company.foto_Agente || company.foto_agente || company.logo_url;
-                    const finalImg = app.utils.fixDriveUrl(content.imagen_url || fallback);
-                    if (finalImg) {
-                        img.src = finalImg;
-                        img.style.display = 'block';
-                        if (imgContainer) imgContainer.style.display = 'block';
-                        section.style.gridTemplateColumns = '1fr 1fr';
-                    } else {
-                        img.style.display = 'none';
-                        if (imgContainer) imgContainer.style.display = 'none';
-                        section.style.gridTemplateColumns = '1fr'; // Full width if no image
-                    }
-                }
-
-                if (h2) {
-                    h2.innerHTML = content.H1 || content.H2_1 || content.H2_3 || "Sin Título";
-                    h2.style.color = "#111"; // Negro intenso
-                    h2.style.display = 'block';
-                }
-
-                if (h3) {
-                    // Subtítulo: Prioriza H3_1 pero acepta H2_1 o H2_3 si no se usaron en el título
-                    let sub = content.H3_1 || "";
-                    if (!sub && content.H2_1 && content.H2_1 !== h2.innerText) sub = content.H2_1;
-                    if (!sub && content.H2_3 && content.H2_3 !== h2.innerText) sub = content.H2_3;
-
-                    h3.innerHTML = sub;
-                    h3.style.color = "#d32f2f"; // Rojo SuitOrg para destacar
-                    h3.style.display = h3.innerHTML ? 'block' : 'none';
-                }
-
-                if (body) {
-                    body.style.color = "#333";
-                    body.style.display = 'block';
-
-                    // AGRUPACIÓN INTELIGENTE DE PÁRRAFOS (v6.2.4)
-                    let paragraphs = [];
-                    if (content.p_intro) paragraphs.push(content.p_intro);
-                    if (content.p_mision) paragraphs.push(`<strong>Nuestra Misión:</strong> ${content.p_mision}`);
-                    if (content.p_problema) paragraphs.push(content.p_problema);
-                    if (content.p_que_es) paragraphs.push(content.p_que_es);
-
-                    body.innerHTML = paragraphs.join('<br><br>') || "Cargando narrativa...";
-                }
-
-                if (actions) {
-                    actions.innerHTML = "";
-                    const themeColor = company.color_tema || '#004d40';
-                    const ctaText = content.cta_texto || 'Saber Más';
-                    actions.innerHTML += `<button class="btn-primary" onclick="window.location.hash='#contact'" style="padding:15px 35px; border-radius:50px; background:${themeColor}; cursor:pointer; border:none; color:white; font-weight:bold;">${ctaText}</button>`;
-
-                    const wa = content.whatsapp_url || `https://wa.me/${company.telefonowhatsapp}`;
-                    if (wa && wa.includes('wa.me')) {
-                        const secondaryText = content.cta_secundario || 'WhatsApp';
-                        actions.innerHTML += `<button class="btn-secondary" onclick="window.open('${wa}', '_blank')" style="padding:15px 35px; border-radius:50px; background:white; color:#333; border:1px solid #ddd; cursor:pointer;">${secondaryText}</button>`;
-                    }
-                }
-            } else {
-                section.classList.add('hidden');
-                section.style.display = 'none';
-            }
-
-        } catch (e) {
-            console.error("[DYNAMIC_CONTENT] Error parsing JSON:", e);
-            section.classList.add('hidden');
-            section.style.display = 'none';
-        }
+        } catch (e) { console.error("[RENDER_DYNAMIC] Error:", e); }
     },
 
     showReservationModal: () => {
@@ -719,10 +490,13 @@ app.public = {
 
         let grid = container.querySelector('.seo-grid');
         if (!grid) {
-            container.innerHTML += `<div class="seo-grid"></div>`;
+            container.innerHTML += `<div class="seo-grid ui-grid" style="margin-top: var(--ui-section-margin); padding-bottom: var(--ui-section-margin);"></div>`;
             grid = container.querySelector('.seo-grid');
         } else {
             grid.innerHTML = '';
+            grid.className = "seo-grid ui-grid";
+            grid.style.marginTop = "var(--ui-section-margin)";
+            grid.style.paddingBottom = "var(--ui-section-margin)";
         }
 
         seoData.sort((a, b) => (parseInt(a.orden) || 99) - (parseInt(b.orden) || 99));
@@ -731,7 +505,6 @@ app.public = {
             const card = document.createElement('div');
             card.className = 'feature-card seo-card-premium';
 
-            // Lógica de Identidad Dinámica (v5.7.5)
             const brandColor = item.hex_color || 'var(--primary-color)';
             const waNumber = item.wa_directo || company.telefonowhatsapp || '';
             const mail = item.mail_directo || company.email || '';
@@ -744,42 +517,45 @@ app.public = {
 
             card.style.cssText = bgStyle;
 
-
             card.innerHTML = `
-                <div class="seo-card-inner" style="position:relative;">
-                    <div class="seo-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:15px;">
-                        <!-- IZQUIERDA: ICONOS DE CONTACTO + QR (v6.0.2 Prueba) -->
-                        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px; z-index:10; margin-top:5px;">
-                            <div style="display:flex; gap:8px;">
-                                ${mail ? `<a href="mailto:${mail}" class="seo-action-icon" title="Enviar Correo" onclick="event.stopPropagation();"><i class="fas fa-envelope" style="color: white !important;"></i></a>` : ''}
-                                ${waNumber ? `<a href="https://wa.me/${waNumber.toString().replace(/\D/g, '')}?text=Hola! Vengo del sitio de ${company.nomempresa} y me interesa: ${item.titulo}" target="_blank" class="seo-action-icon" title="WhatsApp Directo" onclick="event.stopPropagation();"><i class="fab fa-whatsapp" style="color: #25D366 !important;"></i></a>` : ''}
-                            </div>
-                            
-                            <!-- QR CODE Lateral -->
+                <div class="seo-card-inner" style="position:relative; height:100%; min-height:520px; display:flex; flex-direction:column; padding:30px; box-sizing:border-box;">
+                    <div class="seo-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:20px; gap:15px;">
+                        
+                        <!-- LADO IZQUIERDO: QR + ICONOS (v6.6.3 Restored) -->
+                        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:12px; z-index:10;">
                             ${waNumber ? `
-                                <div class="seo-qr-container" style="background:white; padding:4px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.3); border:2px solid ${brandColor}; cursor:pointer;" title="Escanea para contacto directo" onclick="event.stopPropagation(); window.open('https://wa.me/${waNumber.toString().replace(/\D/g, '')}', '_blank')">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://wa.me/' + waNumber.toString().replace(/\D/g, '') + '?text=Hola! Deseo informacion de: ' + item.titulo)}" 
-                                         alt="QR Contacto" style="width:60px; height:60px; display:block; image-rendering: pixelated;"
-                                         onerror="this.src='https://qrickit.com/api/qr?d=${encodeURIComponent('https://wa.me/' + waNumber.toString().replace(/\D/g, '') + '?text=Hola! Deseo informacion de: ' + item.titulo)}&addtext=${encodeURIComponent(company.nomempresa)}&txtcolor=444444'">
+                                <div class="seo-qr-container" style="background:white; padding:5px; border-radius:10px; box-shadow:0 8px 15px rgba(0,0,0,0.25); border:2px solid ${brandColor}; cursor:pointer;" onclick="event.stopPropagation(); window.open('https://wa.me/${waNumber.toString().replace(/\D/g, '')}?text=Hola! Me interesa informacion de: ${item.titulo}', '_blank')">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://wa.me/' + waNumber.toString().replace(/\D/g, '') + '?text=Hola! Me interesa informacion de: ' + item.titulo)}" 
+                                         alt="QR Contacto" style="width:60px; height:60px; display:block; image-rendering:pixelated;">
                                 </div>
                             ` : ''}
+                            
+                            <div style="display:flex; gap:10px; padding-left:5px;">
+                                ${mail ? `<a href="mailto:${mail}" class="seo-action-icon" title="Enviar Correo" onclick="event.stopPropagation();" style="font-size:1.2rem; color: ${hasPhoto ? 'white' : brandColor} !important;"><i class="fas fa-envelope"></i></a>` : ''}
+                                ${waNumber ? `<a href="https://wa.me/${waNumber.toString().replace(/\D/g, '')}?text=Hola! Me interesa informacion de: ${item.titulo}" target="_blank" class="seo-action-icon" title="WhatsApp Directo" onclick="event.stopPropagation();" style="font-size:1.2rem; color:#25D366 !important;"><i class="fab fa-whatsapp"></i></a>` : ''}
+                            </div>
                         </div>
 
-                        <!-- CENTRO: TITULO (Limpio) -->
-                        <div class="seo-title-group" style="flex:1; text-align:center; padding:0 15px; display:flex; flex-direction:column; align-items:center;">
-                            <h4 style="color:${brandColor}; ${hasPhoto ? 'text-shadow:0 0 10px rgba(0,0,0,0.8), 0 0 5px white;' : ''} font-weight:800; margin:0; font-size:1.1rem; line-height:1.2;">
-                                ${item.titulo}
-                            </h4>
-                            <small style="color:${hasPhoto ? 'rgba(255,255,255,0.8)' : '#888'}; display:block; margin-top:5px;">${item.division || item.categoria || 'Servicio ' + company.nomempresa}</small>
-                        </div>
-
-                        <!-- DERECHA: ICONO DE CONFIG_SEO -->
-                        <div class="seo-config-icon" style="background:${brandColor}; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 15px ${brandColor}88; flex-shrink:0;">
-                            <i class="${item.icono || 'fas fa-shield-alt'}" style="color:white !important; font-size:1rem !important;"></i>
+                        <!-- LADO DERECHO: TITULOS E ICONO DE TIPO -->
+                        <div style="flex:1; text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+                            <div style="background:${brandColor}; color:white; width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 15px rgba(0,0,0,0.2);">
+                                <i class="${item.icono || 'fas fa-star'}" style="font-size:1.2rem; color:white !important;"></i>
+                            </div>
+                            <div style="text-align:right;">
+                                <h4 style="color:${brandColor}; ${hasPhoto ? 'text-shadow:0 2px 4px rgba(0,0,0,0.8); color:white;' : ''} font-weight:900; margin:0; font-size:1.5rem; line-height:1.1;">
+                                    ${item.titulo}
+                                </h4>
+                                <small style="color:${hasPhoto ? 'rgba(255,255,255,0.9)' : '#888'}; font-size:0.85rem; display:block; margin-top:5px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">${item.division || item.categoria || ''}</small>
+                            </div>
                         </div>
                     </div>
-                    <p class="seo-desc" style="${hasPhoto ? 'color:rgba(255,255,255,0.9);' : 'color:#555;'} font-size:0.85rem; margin:15px 0;">${item.descripcion || ''}</p>
-                    <div class="seo-tags">${keywordHtml}</div>
+                    
+                    <p style="font-size:1rem; color:${hasPhoto ? 'white' : '#444'}; margin:20px 0; text-align:left; flex-grow:1; line-height:1.7; opacity:0.95;">${item.descripcion || ''}</p>
+                    
+                    <!-- KEYWORDS CENTRADAS (v6.6.4 Fixed) -->
+                    <div class="seo-tags" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:auto; padding-top:15px; border-top:1px solid ${hasPhoto ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};">
+                        ${keywordHtml}
+                    </div>
                 </div>
             `;
             grid.appendChild(card);
@@ -1095,18 +871,53 @@ app.public = {
     },
 
     renderGallery: () => {
+        const section = document.getElementById('company-gallery-section');
         const grid = document.getElementById('company-gallery-grid');
-        if (!grid) return;
-        const imgs = (app.data.Config_Galeria || []).filter(img => img.id_empresa === app.state.companyId);
+        if (!grid || !section) return;
+        
+        const imgs = (app.data.Config_Galeria || []).filter(img => 
+            String(img.id_empresa || "").trim().toUpperCase() === String(app.state.companyId || "").trim().toUpperCase()
+        );
+
         if (imgs.length === 0) {
-            grid.innerHTML = '';
+            section.classList.add('hidden');
+            section.style.display = 'none';
             return;
         }
+
+        section.classList.remove('hidden');
+        section.style.display = 'block';
+
+        // Estructura Horizonte Total (v6.6.8 - Breaking the Grid)
+        // Limpiamos estilos inyectados previos si existen
+        const oldStyle = document.getElementById('ui-gallery-breakout');
+        if (oldStyle) oldStyle.remove();
+
+        // Aplicamos nuevas clases de style.css
+        const wrapper = section.querySelector('.gallery-wrapper');
+        if (wrapper) {
+            wrapper.className = "gallery-breakout-container";
+        }
+
+        grid.className = "gallery-horizon-grid";
+        grid.style = ""; // Limpiar estilos inline previos
+        
         grid.innerHTML = imgs.map(img => `
-            <div class="gallery-item">
-                <img src="${app.utils.fixDriveUrl(img.url_imagen || img.imagen_url)}" alt="${img.titulo}" class="gallery-img">
-                <div class="gallery-info"><h4>${img.titulo || 'Item'}</h4></div>
+            <div class="gallery-item-huge">
+                <img src="${app.utils.fixDriveUrl(img.url_imagen || img.imagen_url)}" 
+                     alt="${img.titulo}" 
+                     class="gallery-img">
+                <div class="ui-overlay-full" style="justify-content:flex-end; padding:30px; background:linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.85)); pointer-events:none;">
+                    <div class="ui-text-premium" style="font-size:1.2rem; border-left:5px solid var(--accent-color, #ffd700); padding-left:18px; line-height:1;">
+                        ${img.titulo || 'Proyecto'}
+                    </div>
+                </div>
             </div>`).join('');
+
+        const prevBtn = section.querySelector('.gallery-arrow.prev');
+        const nextBtn = section.querySelector('.gallery-arrow.next');
+        if (prevBtn) prevBtn.className = "gallery-huge-btn prev";
+        if (nextBtn) nextBtn.className = "gallery-huge-btn next";
     },
 
     toggleMobileTicket: (show) => {

@@ -50,9 +50,14 @@ const app = {
         fixDriveUrl: (url) => {
             if (!url) return "";
             const sUrl = url.toString().trim();
+            // 1. Detectar si es una URL de Drive estándar
             const idMatch = sUrl.match(/\/d\/([^\/?#]+)/) || sUrl.match(/[?&]id=([^&?#]+)/) || sUrl.match(/\/file\/d\/([^\/?#]+)/);
             if (idMatch && idMatch[1] && (sUrl.includes('google.com') || sUrl.includes('drive.google.com'))) {
                 return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+            }
+            // 2. Si no es URL pero parece un ID de Drive (aprox 33 chars y sin puntos/slashes)
+            if (!sUrl.includes('/') && !sUrl.includes('.') && sUrl.length > 20) {
+                return `https://lh3.googleusercontent.com/d/${sUrl}`;
             }
             return sUrl;
         },
@@ -141,6 +146,20 @@ const app = {
             const loader = document.getElementById('loading-overlay');
             if (loader) loader.remove();
 
+            // --- ESPERA DE MÓDULOS (v6.5.3 Blindaje Total) ---
+            // Aseguramos que public.js y otros módulos se hayan inyectado correctamente en el objeto app
+            let modulesReady = false;
+            let retries = 0;
+            while (!modulesReady && retries < 10) {
+                if (app.public && app.public.renderHome && app.ui && app.ui.applyTheme) {
+                    modulesReady = true;
+                } else {
+                    console.warn(`⏳ Esperando módulos... Intento ${retries + 1}/10`);
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    retries++;
+                }
+            }
+            
             if (loaded) {
                 // --- ULTRA DEBUG MODE (v5.3.5) ---
                 console.log("🔍 [DATA_CHECK] Estructura de Config_Empresas:");
@@ -155,7 +174,19 @@ const app = {
                     return String(isPri).toUpperCase() === 'TRUE' || isPri === true || isPri === 1;
                 });
 
-                let company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+                // --- REDIRECCIONADOR MAESTRO (v6.3.0) ---
+                // Intentar buscar por id_empresa O por alias_seo
+                let company = app.data.Config_Empresas.find(c =>
+                    String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase() ||
+                    (c.alias_seo && String(c.alias_seo).toLowerCase() === String(app.state.companyId).toLowerCase())
+                );
+
+                // Si se encontró por alias, normalizar el state.companyId al ID técnico
+                if (company && company.alias_seo && String(company.alias_seo).toLowerCase() === String(app.state.companyId).toLowerCase()) {
+                    console.log(`🔗 Redirección Maestro: [${app.state.companyId}] -> [${company.id_empresa}]`);
+                    app.state.companyId = company.id_empresa;
+                }
+
                 const hasUrlParam = !!coParam;
 
                 // If it's the first visit follow the "Main Biz" rule (v5.3.7)
@@ -180,7 +211,7 @@ const app = {
                     console.log("🌌 Hub Mode Active - Rendering Orbit");
                     app.state.companyId = null;
                     window.location.hash = '#orbit';
-                    if (app.ui.renderOrbit) app.ui.renderOrbit();
+                    if (app.ui && app.ui.renderOrbit) app.ui.renderOrbit();
                     company = null;
                 } else if (!company && hasUrlParam) {
                     // Logic for manual links
@@ -194,9 +225,16 @@ const app = {
 
                 if (company) {
                     app.state.dbEngine = company.db_engine || company.dbengine || 'GSHEETS';
-                    if (app.ui.applyTheme) app.ui.applyTheme(company);
+                    if (app.ui && app.ui.applyTheme) app.ui.applyTheme(company);
                 }
-                if (app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
+
+                // --- RE-ENRUTADO POST-CARGA (v6.5.2) ---
+                if (app.router && app.router.handleRoute) {
+                    console.log("🔄 Re-sincronizando ruta tras carga de datos...");
+                    app.router.handleRoute();
+                }
+
+                if (app.ui && app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
                 app.checkBackendVersion();
             } else {
                 console.error("[INIT_FAILED] DATA_LOAD_FAILED");

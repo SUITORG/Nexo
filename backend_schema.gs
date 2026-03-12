@@ -1,4 +1,4 @@
-/* SuitOrg Backend Engine - v6.2.8
+/* SuitOrg Backend Engine - v6.3.0
  * ---------------------------------------------------------
  * Sincronización: 2026-03-09 9:45 AM (v6.2.8 Gallery Slider & Navigation)
  * 
@@ -7,12 +7,12 @@
  * - UX: Transición de scroll suave en grid de imágenes.
  * - DOCS: Sincronización total con backend_schema.md.
  * 
- * AUDIT: ~840 Lines (v6.2.8 STABLE).
+ * AUDIT: ~840 Lines (v6.3.0 STABLE).
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "6.2.8",
+  VERSION: "6.3.0",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
   DRIVE_ROOT_ID: "1UUtr70qr96_hpbwbgcRg-h14sHLvJVin", // Carpeta Maestra TopLux Finance
   GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto", "Config_Galeria", "Config_Paginas"], 

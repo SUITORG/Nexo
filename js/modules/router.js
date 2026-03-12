@@ -12,7 +12,7 @@ app.router = {
     // - **v6.0.7** (2026-03-05): **"Dynamic Identity & QR Engine"**.
     init: () => {
         window.addEventListener('hashchange', app.router.handleRoute);
-        app.router.handleRoute(); // Carga inicial
+        // La carga inicial handleRoute() ahora se dispara desde core.js tras cargar datos
     },
     navigate: (hash) => {
         window.location.hash = hash;
@@ -69,18 +69,21 @@ app.router = {
             const el = document.getElementById(targetId);
             if (el) el.classList.remove('hidden');
         } else {
-            // --- DETECCION DE PAGINAS DINAMICAS (v6.2.0) ---
+            // --- DETECCION DE PAGINAS DINAMICAS (v6.5.2) ---
             const cleanHash = hash.replace('#', '').toLowerCase();
-            const isDynamic = (app.data.Config_Paginas || []).some(p =>
-                String(p.id_pagina).toLowerCase() === cleanHash &&
-                String(p.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase()
-            );
+            const rawId = String(app.state.companyId || "").trim().toUpperCase();
+            const urlId = rawId.replace(/_/g, ""); // Normalizar ID para búsqueda
 
+            const isDynamic = (app.data.Config_Paginas || []).some(p => {
+                const pCoId = String(p.id_empresa || "").toUpperCase().replace(/_/g, "");
+                const pPgId = String(p.id_pagina || "").trim().toLowerCase();
+                return pPgId === cleanHash && pCoId === urlId;
+            });
             if (isDynamic) {
+                console.log("📍 Página Dinámica Detectada:", cleanHash);
                 const el = document.getElementById('view-home');
                 if (el) el.classList.remove('hidden');
-                // Forzar renderizado de home con contexto dinámico
-                if (app.ui.renderHome) app.ui.renderHome();
+                if (app.ui && app.ui.renderHome) app.ui.renderHome();
             }
         }
 
@@ -90,7 +93,7 @@ app.router = {
             if (foodArea) foodArea.style.display = 'none';
 
             const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
-            if (company && app.ui.renderHome) app.ui.renderHome(company);
+            if (company && app.ui && app.ui.renderHome) app.ui.renderHome(company);
 
             // Force re-render of SEO matrix when returning to Home
             if (app.ui.renderSEO) {
@@ -104,20 +107,20 @@ app.router = {
             if (app.ui.renderFoodMenu) app.ui.renderFoodMenu();
         }
 
-        if (hash === '#orbit' && app.ui.renderOrbit) {
+        if (hash === '#orbit' && app.ui && app.ui.renderOrbit) {
             app.ui.renderOrbit();
         }
-        if (hash === '#pillars' && app.ui.renderPillars) {
+        if (hash === '#pillars' && app.ui && app.ui.renderPillars) {
             const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
             if (company) app.ui.renderPillars(company);
         }
-        if (hash === '#leads' && app.ui.renderLeads) app.ui.renderLeads();
-        if (hash === '#projects' && app.ui.renderProjects) app.ui.renderProjects();
-        if (hash === '#catalog' && app.ui.renderCatalog) app.ui.renderCatalog();
-        if (hash === '#knowledge' && app.ui.renderKnowledge) app.ui.renderKnowledge();
-        if (hash === '#reservations' && app.ui.renderReservations) app.ui.renderReservations();
-        if (hash === '#staff-pos' && app.ui.renderStaffPOS) app.ui.renderStaffPOS();
-        if (hash === '#pos' && app.ui.renderPOS) {
+        if (hash === '#leads' && app.ui && app.ui.renderLeads) app.ui.renderLeads();
+        if (hash === '#projects' && app.ui && app.ui.renderProjects) app.ui.renderProjects();
+        if (hash === '#catalog' && app.ui && app.ui.renderCatalog) app.ui.renderCatalog();
+        if (hash === '#knowledge' && app.ui && app.ui.renderKnowledge) app.ui.renderKnowledge();
+        if (hash === '#reservations' && app.ui && app.ui.renderReservations) app.ui.renderReservations();
+        if (hash === '#staff-pos' && app.ui && app.ui.renderStaffPOS) app.ui.renderStaffPOS();
+        if (hash === '#pos' && app.ui && app.ui.renderPOS) {
             const user = app.state.currentUser;
             const userRole = (user?.id_rol || user?.rol || "").toString().trim().toUpperCase();
             const deliveryKeywords = ['DELIVERY', 'REPARTIDOR', 'CHOFER', 'DRIVER', 'MOTO', 'RIDER'];
@@ -128,8 +131,8 @@ app.router = {
             }
             app.ui.renderPOS();
         }
-        if (hash === '#contact' && app.ui.renderContact) app.ui.renderContact();
-        if (hash === '#reports' && app.ui.handleReportTypeChange) app.ui.handleReportTypeChange();
+        if (hash === '#contact' && app.ui && app.ui.renderContact) app.ui.renderContact();
+        if (hash === '#reports' && app.ui && app.ui.handleReportTypeChange) app.ui.handleReportTypeChange();
         if (hash === '#vault' && app.vault?.refresh) app.vault.refresh();
 
         // Control del botón flotante de WhatsApp

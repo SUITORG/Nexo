@@ -79,3 +79,17 @@
 2. **Standard de Feedback:** Se añadió el **Estándar #11** a la memoria del sistema para obligar a que todo fallo de acceso sea descriptivo y no genérico.
 
 **Estado:** ✅ SOLUCIONADO
+
+## [2026-03-11] - Error de Carga Modular (Race Condition)
+**Problema:**
+Error crítico en el arranque: `Cannot read properties of undefined (reading 'renderHome')`. El sistema falla al iniciar localmente o bajo condiciones de red lenta.
+
+**Causa Raíz:**
+El orquestador (`core.js`) inicia el flujo de pintado (`applyTheme`) antes de que el navegador termine de cargar y registrar los módulos secundarios (`public.js`). 
+
+**Solución Implementada:**
+1. **Queue Boot (v6.5.3):** Se añadió en `core.js` un ciclo de espera (poll) que retarda el arranque hasta 1.5 segundos si detecta que los módulos críticos no están presentes.
+2. **Guarismo de UI:** Se añadieron guardas `if (app.public)` en `ui.js` para evitar colisiones fatales.
+3. **Optimización Local:** Se documentó que el protocolo `file:///` es incompatible y se forzó el uso de `localhost:3000`.
+
+**Estado:** ✅ SOLUCIONADO

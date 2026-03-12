@@ -11,6 +11,7 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
 ## 🏗️ Arquitectura de Software (v6.2.1 Multi-Engine)
+- [x] **v6.6.0: RESPONSIVE-UI Standard Adoption**: Implementación de framework de diseño fluido basado en `clamp()`, `ui-grid` y `standard documentation`. Consolidación de QRs dinámicos y layouts premium para Marca Personal.
 - [x] **v6.2.1: Multi-Engine db_engine support**: Soporte para `db_engine` en Config_Empresas (GSHEETS enabled) y preparación para migración a bases de datos profesionales (Supabase/Neon).
 - [x] **v6.2.0: Dynamic Content Engine (Narrativa IA)**: Motor de páginas dinámicas en Config_Paginas con inyección automática de SEO (Schema.org) y narrativa personalizada por cliente.
 - [x] **v6.1.8: Private Drive Vaults & Secure Access**: Integración de Bóveda Segura con Google Drive API, generación automática de tokens (TX-XXXX) y auto-creación de usuarios desde Leads financieros.
@@ -238,5 +239,10 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v5.7.3: Seguimiento de Proyectos (EVASOL Master Flow)**: Gestión de avances (%), bitácora con hora exacta y multi-inquilino.
 - [x] **v5.2.4: Smart ID & Project Traceability**: Identidad por teléfono, folios secuenciales `LEAD-XXX`/`ORD-XXX` y timestamps ISO.
 - [x] **v5.2.5: Lead Sync & Timestamps**: Sincronización de columnas `fecha`, `nom_negocio`, `dir_comercial` y timestamps con hora.
+- [x] **v6.2.8: Gallery Slider & Navigation**: Implementación de slider horizontal con flechas, navegación táctil y loader de transición ("Orbit Spinner").
+- [x] **v6.3.0: SEO Shortlinks & Redirector Maestro**: Implementada capa de redirección por `alias_seo` para permitir URLs amigables (ej: `/roberto`). Limpieza de campos obsoletos (`galleryimages`).
+- [x] **v6.5.0: Dynamic Sub-Pages Engine**: Motor de contenido basado en hash (`#museo`, `#servicios`) que permite crear secciones ilimitadas desde `Config_Paginas` con renderizado automático de H1, H2 e Imágenes.
+- [ ] **v6.3.1: SEO Indexing Audit (Google/Meta)**: Verificar por qué los enlaces dinámicos (ej: `ROBERTO_V`) no son indexados correctamente. Pendiente revisar el 12 de marzo.
+- [ ] **v6.4.0: Discovery & Visitor Seeding**: Implementar persistencia de visitas (`LocalStorage/Cookies`) por negocio para telemetría de retención y reconocimiento de clientes recurrentes.
 ---
-*Última actualización: 2026-03-06 | Versión: v6.1.5 (AI BILLING & ISOLATION)*
+*Última actualización: 2026-03-11 | Versión: v6.5.0 (DYNAMIC SUB-PAGES ENGINE)*

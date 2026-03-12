@@ -100,6 +100,7 @@ Si la categoría no es clara, primero haz preguntas de aclaración antes de toca
 5. **Implementar** (solo tras `APROBADO`):
    - Usar `/estandar-crud` para módulos de datos.
    - Usar `/estandar-landing` para estructura visual (Header, Body, Footer).
+   - **Usar `RESPONSIVE-UI` (OBLIGATORIO)** para componentes de diseño, tipografía fluida y layouts responsivos.
 6. **Limpieza Automatizada**: Aplicar `/reglas-negocio` (Foco Staff) si la función implica estados de login.
 7. **Control de Créditos**:
    - Llama a `/reglas-negocio` (Políticas de Créditos) antes de cualquier análisis que incluya más de 3 archivos.

@@ -1,0 +1,139 @@
+/* 
+   RESPONSIVE-UI.css - v1.0
+   Basado en RESPONSIVE-UI STANDARD
+   Propósito: Sistema de diseño fluido y responsivo para Marca Personal y Proyectos.
+*/
+
+:root {
+    /* 1. BREAKPOINTS (Reference) */
+    --bp-mobile: 320px;
+    --bp-tablet: 768px;
+    --bp-laptop: 1024px;
+    --bp-desktop: 1440px;
+
+    /* 2. SPACING SYSTEM (Fluid) */
+    --ui-gap: clamp(16px, 3vw, 32px);
+    --ui-padding-inline: clamp(16px, 4vw, 64px);
+    --ui-section-margin: clamp(40px, 8vw, 100px);
+
+    /* 3. FLUID TYPOGRAPHY */
+    --font-size-h1: clamp(2.5rem, 8vw, 4.5rem);
+    --font-size-h2: clamp(1.8rem, 5vw, 3rem);
+    --font-size-h3: clamp(1.4rem, 4vw, 2rem);
+    --font-size-body: clamp(0.95rem, 1.5vw, 1.1rem);
+    --font-size-small: clamp(0.7rem, 1vw, 0.85rem);
+
+    /* 4. OVERLAY DESIGN TOKENS */
+    --overlay-gradient: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.85) 100%);
+    --overlay-text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    --glass-effect: blur(10px) saturate(180%);
+}
+
+/* --- BASE LAYOUT --- */
+.ui-container {
+    padding-inline: var(--ui-padding-inline);
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.ui-grid {
+    display: grid;
+    gap: var(--ui-gap);
+    grid-template-columns: 1fr; /* Mobile Default */
+}
+
+@media (min-width: 768px) {
+    .ui-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+    .seo-grid.ui-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (min-width: 1440px) {
+    .ui-grid.ui-grid-xl { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* --- PREMIUM OVERLAYS --- */
+.ui-overlay-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+}
+
+.ui-overlay-full {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--overlay-gradient);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(20px, 4vw, 40px);
+    color: white;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.ui-text-premium {
+    text-shadow: var(--overlay-text-shadow);
+    font-weight: 800;
+}
+
+/* --- DYNAMIC CAROUSEL / SLIDER --- */
+.ui-carousel-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.ui-carousel-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: var(--ui-gap);
+    padding: var(--ui-gap) var(--ui-padding-inline);
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+
+.ui-carousel-grid::-webkit-scrollbar { display: none; }
+
+.ui-carousel-item {
+    flex: 0 0 85%; /* Mobile */
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@media (min-width: 768px) {
+    .ui-carousel-item { flex: 0 0 45%; }
+}
+
+@media (min-width: 1024px) {
+    .ui-carousel-item { flex: 0 0 32%; }
+}
+
+.ui-carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    z-index: 10;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.ui-carousel-btn.prev { left: 15px; }
+.ui-carousel-btn.next { right: 15px; }
+
+.ui-carousel-btn:hover {
+    background: var(--primary-color, #000);
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+}

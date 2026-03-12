@@ -27,7 +27,9 @@ app.ui = {
     scrollGallery: (direction) => {
         const grid = document.getElementById('company-gallery-grid');
         if (!grid) return;
-        const scrollAmount = grid.clientWidth * 0.8;
+        // Detectar el ancho de la primera tarjeta disponible (o la clase huge)
+        const item = grid.querySelector('.gallery-item-huge') || grid.children[0];
+        const scrollAmount = item ? (item.offsetWidth + 20) : grid.clientWidth * 0.8;
         grid.scrollBy({
             left: direction * scrollAmount,
             behavior: 'smooth'
@@ -98,11 +100,13 @@ app.ui = {
 
         if (company.color_tema) document.documentElement.style.setProperty('--primary-color', company.color_tema);
 
-        // Delegate Public Rendering
-        app.public.renderHome(company);
-        app.public.renderGallery();
-        app.public.renderSEO();
-        app.public.renderFooter(company);
+        // Delegate Public Rendering (v6.5.3 Secured)
+        if (app.public) {
+            if (app.public.renderHome) app.public.renderHome(company);
+            if (app.public.renderGallery) app.public.renderGallery();
+            if (app.public.renderSEO) app.public.renderSEO();
+            if (app.public.renderFooter) app.public.renderFooter(company);
+        }
     },
 
     // --- BRIDGES (Compatibility with Router/App) ---

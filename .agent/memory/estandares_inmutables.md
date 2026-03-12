@@ -110,3 +110,11 @@ Este archivo es la **Única Fuente de Verdad** para el orquestador (IA). Estas r
 - **Reinicio por Inactividad**: Todo usuario no identificado (Visitante) que permanezca inactivo por más de **5 minutos (300s)** en cualquier sección diferente al Hub, debe ser redirigido automáticamente a `#orbit` con una recarga de limpieza (`location.reload()`) para garantizar que el siguiente usuario encuentre un estado limpio.
 - **Transparencia de Total**: Al limpiar el carrito (`clearCart`) o si este está vacío, el total visual de la aplicación **DEBE** marcar estrictamente `$0.00`, ignorando cualquier cargo por envío configurado, para evitar confusión en el usuario.
 
+## 18. Estándar RESPONSIVE-UI (v1.0.0)
+- **Principio**: Todo desarrollo visual debe regirse por el archivo `RESPONSIVE-UI.css`.
+- **Mandatos**:
+    - **Tipografía**: Usar exclusivamente variables `clamp()` (ej. `--font-size-h1`) para asegurar legibilidad sin overrides manuales constantes.
+    - **Layout**: Priorizar `.ui-grid` sobre floats o posiciones absolutas.
+    - **Overlays**: Usar `.ui-overlay-full` con gradientes de contraste para asegurar que el texto sea legible sobre cualquier imagen (especialmente en Marca Personal).
+    - **Responsividad**: Las flechas de carrusel/galería deben ubicarse en los bordes absolutos de la pantalla para facilitar la interacción táctil y en PC.
+- **Inmutabilidad**: Queda prohibido hardcodear anchos fijos en píxeles (ej: `width: 450px`) para componentes principales; siempre usar porcentajes, `vw` o `clamp`.
