@@ -1,8 +1,8 @@
 # Manual Técnico y Operativo - SuitOrg
 > **Identidad Principal:** SuitOrg (Powered by EVASOL Engine)
-> **Última Versión Estable**: v14.1.0 (Multi-Tenant & Pareto Marketing)
-> **Estado del Sistema**: Operativo con Soporte de Bóvedas Pareto e Identidad Dual.
-> **Total de Líneas Consolidadas**: ~13,735 (Auditado 2026-03-13).
+- **Última Versión Estable**: v14.1.0 (PROD - Multi-Tenant)
+- **Estado del Sistema**: Operativo con Identidad v1.6.0 (CMARJAV).
+- **Total de Líneas Consolidadas**: ~13,691 (Auditado 2026-03-13).
 
 ## 0. Resumen Ejecutivo (TL;DR) - Para gente con prisa ⚡
 1.  **¿Qué es?** Un potente "Food Hub" multi-inquilino especializado en el sector alimenticio (Restaurantes, Snacks, Comida Rápida).
@@ -365,8 +365,8 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 | style.css | 3764 | UI/UX Premium (Refactorización) |
 | js/modules/ | 7205 | Lógica Documental & Vault Engine |
 | app.js | 70 | Router y Orquestación Inicial |
-| backend_schema.gs | 771 | Multi-Tenant & Pareto Engine |
-| **TOTAL** | **13603** | Producción v14.1.0 Estándar |
+| backend_schema.gs | 859 | Multi-Tenant & SaaS Core |
+| **TOTAL** | **13691** | Producción v14.1.0 Estándar |
 
 ---
 *Manual generado automáticamente por Antigravity AI.*

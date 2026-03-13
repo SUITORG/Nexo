@@ -1,24 +1,33 @@
-/* SuitOrg Backend Engine - v6.3.0
+/* SuitOrg Backend Engine - v14.1.0
  * ---------------------------------------------------------
- * Sincronización: 2026-03-13 06:45 AM (v14.1.0 Multi-Tenant & Pareto Marketing)
+ * Sincronización: 2026-03-13 09:45 AM (v14.1.0 Multi-Tenant & SaaS Core)
  * 
- * Changelog v6.2.8:
- * - UI: Implementación de Navegación Manual (Flechas) en Galería.
- * - UX: Transición de scroll suave en grid de imágenes.
- * - DOCS: Sincronización total con backend_schema.md.
- * 
- * AUDIT: ~840 Lines (v6.3.0 STABLE).
+ * Changelog v14.1.0:
+ * - IDENTITY: Lanzamiento de CMARJAV con mensajes de Autoridad Familiar.
+ * - AUDIT: ~850 Lines (v14.1.0 STABLE).
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "6.3.0",
+  VERSION: "14.1.0",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
   DRIVE_ROOT_ID: "1UUtr70qr96_hpbwbgcRg-h14sHLvJVin", // Carpeta Maestra TopLux Finance
   GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto", "Config_Galeria", "Config_Paginas"], 
   PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos", "Reservaciones", "Config_Galeria"],
-  AUDIT: { total: 10252, status: "STABLE_SYNC" }
+  AUDIT: { total: 13735, status: "STABLE_SYNC" }
 };
+
+/**
+ * ⚡ DISPARADOR MANUAL (Usa este para el hito final)
+ * Selecciona esta función en el menú de arriba y dale a EJECUTAR.
+ */
+function ejecutarConfiguracionManual() {
+  var ss = SpreadsheetApp.openById(CONFIG.DB_ID);
+  var output = { info: "" };
+  console.log("🚀 Iniciando configuración de Pensión Inteligente v14.1.0...");
+  initializeDatabase(ss, output);
+  console.log("✅ Resultado: " + output.info);
+}
 
 /**
  * 🚀 ORQUESTADOR PRINCIPAL (GET)
