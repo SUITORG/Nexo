@@ -187,32 +187,28 @@ app.public = {
         const pageData = (app.data.Config_Paginas || []).find(p => {
             const pCoId = String(p.id_empresa || "").toUpperCase();
             const pPgId = String(p.id_pagina || "").trim().toLowerCase();
-            // Comparación robusta (soporta ROBERTOV y ROBERTO_V)
             return (pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "")) && pPgId === hash;
         });
-
-        // Si es una sub-página dinámica (no home)
-        if (pageData && hash !== 'home') {
-            const heroBanner = document.getElementById('hero-banner-main');
-            const personalNode = document.getElementById('hero-personal-node');
-            if (heroBanner) heroBanner.style.display = 'none';
-            if (personalNode) personalNode.style.display = 'none';
-            
-            // Forzar visibilidad de la sección home ya que el contenido dinámico vive dentro
-            const viewHome = document.getElementById('view-home');
-            if (viewHome) {
-                viewHome.classList.remove('hidden');
-                viewHome.style.display = 'block';
-            }
-
-            app.public.renderDynamicContent(pageData);
-            return; 
-        }
 
         // Renderizado HOME Estándar (PFM/PMP/Industrial)
         const bizType = (company.tipo_negocio || "").toString().toUpperCase();
         const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
         const isPersonal = bizType.includes("MARCA PERSONAL");
+
+        // --- AJUSTE NAVEGACIÓN DINÁMICA (v8.1.0) ---
+        // Si es una sub-página y NO es Marca Personal, usamos el motor estándar
+        if (pageData && hash !== 'home' && !isPersonal) {
+            const heroBanner = document.getElementById('hero-banner-main');
+            const personalNode = document.getElementById('hero-personal-node');
+            if (heroBanner) heroBanner.style.display = 'none';
+            if (personalNode) personalNode.style.display = 'none';
+            
+            const viewHome = document.getElementById('view-home');
+            if (viewHome) { viewHome.classList.remove('hidden'); viewHome.style.display = 'block'; }
+            app.public.renderDynamicContent(pageData);
+            return; 
+        }
+
         app.state.isFood = isFood;
 
         const sloganEl = document.getElementById('hero-slogan');
@@ -226,45 +222,142 @@ app.public = {
         if (isPersonal) {
             document.body.classList.add('is-personal-brand');
             if (personalNode) {
+                personalNode.style.background = company.color_tema || company.colortema || '#034c3c';
                 personalNode.innerHTML = `
-                    <div class="ui-container" style="min-height:92vh; display:flex; align-items:center; padding-top:100px; padding-bottom:100px; background:var(--personal-bg);">
-                        <div class="ui-grid" style="align-items:center; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
-                            <!-- LADO IZQUIERDO: FOTO + QR IZQUIERDO -->
-                            <div class="personal-left ui-overlay-container" style="position:relative; width:100%; max-width:620px; justify-self: center; border-radius:32px; box-shadow:0 40px 80px rgba(0,0,0,0.22); overflow:hidden;">
-                                <img src="${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}" alt="${company.nomempresa}" style="width:100%; display:block; border-radius:32px; transition: transform 0.5s ease;">
-                                <div class="ui-overlay-full" style="padding: 40px; display:flex; flex-direction:column; justify-content:space-between;">
-                                    <!-- SUPERIOR IZQUIERDA: NOMBRE EMPRESA -->
-                                    <div class="ui-text-premium" style="align-self:flex-start; font-size:var(--font-size-small); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding-left:14px; letter-spacing:1px; background:rgba(0,0,0,0.4); padding-right:10px; border-radius:0 20px 20px 0;">${company.nomempresa}</div>
+                    <div class="ui-container" style="min-height:100vh; max-width:none; display:flex; align-items:center; padding-top:60px; padding-bottom:60px; background:transparent; transition: background 0.5s ease;">
+                            <!-- PARTE 1: IDENTIDAD (v11.0.1 - Corregido) -->
+                            <div class="personal-section-1" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px;">
+                                <div class="personal-left ui-overlay-container" style="position:relative; width:100%; max-width:98%; height:800px; border-radius:48px; box-shadow:0 60px 120px rgba(0,0,0,0.6); overflow:hidden; background:#111; display:flex;">
+                                    <img src="${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}" alt="${company.nomempresa}" style="position:absolute; inset:0; width:100%; height:100%; object-fit: cover; transition: transform 0.5s ease;">
                                     
-                                    <!-- CENTRO: MENSAJE 1 -->
-                                    <div class="ui-text-premium" style="align-self:center; text-align:center; font-size:var(--font-size-h2); line-height:1.1; width:90%;">${company.mensaje1 || ''}</div>
-                                    
-                                    <!-- INFERIOR DERECHA: MENSAJE 2 (Restored) -->
-                                    <div class="ui-text-premium" style="align-self:flex-end; text-align:right; font-size:var(--font-size-h3); color:var(--accent-color, #ffd700); opacity:1; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.8));">${company.mensaje2 || ''}</div>
-                                </div>
-                                <!-- QR OFICIAL IZQUIERDO (v6.6.1) -->
-                                <div class="banner-qr-official" style="position:absolute; bottom:20px; left:20px; background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; pointer-events:auto; cursor:help; box-shadow:0 15px 35px rgba(0,0,0,0.3); z-index:20; border: 1px solid rgba(0,0,0,0.05);">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname)}" style="width:45px; height:45px; image-rendering:pixelated;">
-                                    <span style="font-size:0.5rem; color:#000; font-weight:900; text-transform:uppercase; margin-top:5px; letter-spacing:0.5px;">${company.nomempresa}</span>
-                                </div>
-                            </div>
-                            <!-- LADO DERECHO: SLOGAN + CONFIG_PAGINAS -->
-                            <div class="personal-right" style="display:flex; flex-direction:column; gap:var(--ui-gap); text-align:left; max-width: 650px; justify-self: start;">
-                                <h1 class="ui-text-premium" style="font-size:var(--font-size-h1); color: #111; line-height:1; margin:0; letter-spacing:-1px;">${company.slogan || company.nomempresa}</h1>
-                                
-                                ${pageData ? `
-                                    <div class="personal-dynamic-content" style="display:flex; flex-direction:column; gap:15px;">
-                                        ${pageData.subtitulo ? `<h2 style="font-size:var(--font-size-h3); color:var(--primary-color); margin:0;">${pageData.subtitulo}</h2>` : ''}
-                                        <div style="font-size:var(--font-size-body); line-height:1.8; color:#333; opacity:0.9;">
-                                            ${pageData.contenido || company.descripcion || ''}
+                                    <div style="position:absolute; inset:0; background:linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.7) 100%); pointer-events:none;"></div>
+
+                                    <div class="ui-overlay-full" style="padding: 40px; display:flex; flex-direction:column; justify-content:space-between; z-index:5; width:100%;">
+                                        <div class="ui-text-premium" style="align-self:flex-start; font-size:var(--font-size-small); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding:10px 15px; letter-spacing:2px; background:transparent; color:white; font-weight:800; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">
+                                            ${company.slogan || company.nomempresa}
+                                        </div>
+                                        <div class="ui-text-premium" style="align-self:center; text-align:center; font-size:clamp(1.2rem, 3.5vw, 2.2rem); line-height:1.1; width:95%; text-shadow: 0 4px 20px rgba(0,0,0,0.9); font-weight:900;">
+                                            ${company.mensaje1 || ''}
+                                        </div>
+                                        <div class="ui-text-premium" style="align-self:flex-end; text-align:right; font-size:1.5rem; color:var(--accent-color, #ffd700); text-shadow:0 2px 15px rgba(0,0,0,0.9); font-weight:700; margin-bottom: 30px;">
+                                            ${company.mensaje2 || ''}
                                         </div>
                                     </div>
-                                ` : `
-                                    <p style="font-size:var(--font-size-body); line-height:1.8; color:#333; margin:0; opacity:0.9;">${company.descripcion || 'Especialista en soluciones integrales.'}</p>
-                                `}
 
-                                <div class="hero-actions" style="display:flex; gap:20px; margin-top:15px;">
-                                    <button class="btn-primary" style="padding: 20px 45px; border-radius: 50px; font-weight:800; font-size:1.1rem; box-shadow: 0 15px 30px var(--primary-color)44;" onclick="window.location.hash='#contact'">Agendar Consulta</button>
+                                    <div class="banner-qr-official" style="position:absolute; bottom:30px; left:30px; background:white; padding:12px; border-radius:20px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 20px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid rgba(255,255,255,0.2);">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.origin + window.location.pathname)}" style="width:50px; height:50px; image-rendering:pixelated;">
+                                        <span style="font-size:0.55rem; color:#000; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${company.nomempresa}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PARTE 2: NAVEGACIÓN DINÁMICA + VISOR JSON (v11.0.0 - Unificación Cromática) -->
+                            <div class="personal-section-2" style="flex:1; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px;">
+                                <!-- TARJETA PREMIUM CON COLOR TEMA -->
+                                <div class="personal-content-viewer" 
+                                     style="width:100%; max-width:98%; height:800px; background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${app.utils.fixDriveUrl(company.logo_url || company.foto_agente)}') center center / cover no-repeat; background-color: ${company.color_tema || '#034c3c'}; padding:55px; border-radius:48px; z-index:15; display:flex; flex-direction:column; gap:30px; box-shadow:0 60px 120px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); transition: all 0.5s ease; color: white;">
+                                    
+                                    <!-- MOTOR DE BOTONES DINÁMICO (Ahora dentro de la tarjeta) -->
+                                    <div class="personal-pages-nav" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-start; margin-bottom:10px; width:100%;">
+                                        ${(app.data.Config_Paginas || [])
+                                            .filter(p => {
+                                                const pCoId = String(p.id_empresa || "").toUpperCase();
+                                                return pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
+                                            })
+                                            .map(p => `
+                                                <button class="btn-page-dynamic" 
+                                                        style="padding:8px 18px; border-radius:50px; border:1px solid ${pageData && pageData.id_pagina === p.id_pagina ? 'var(--accent-color, #ffd700)' : '#eee'}; background:${pageData && pageData.id_pagina === p.id_pagina ? 'var(--accent-color, #ffd700)' : '#f9f9f9'}; color:${pageData && pageData.id_pagina === p.id_pagina ? '#000' : '#666'}; font-weight:800; cursor:pointer; transition:all 0.3s ease; font-size:0.75rem; text-transform:uppercase;"
+                                                        onclick="window.location.hash='#${p.id_pagina}'">
+                                                    ${p.id_pagina.replace(/_/g, ' ')}
+                                                </button>
+                                            `).join('')}
+                                    </div>
+
+                                    ${(() => {
+                                        let jsonData = {};
+                                        try {
+                                            jsonData = pageData && pageData.contenido_json ? JSON.parse(pageData.contenido_json) : {};
+                                            if (jsonData.hero) { jsonData = { ...jsonData, ...jsonData.hero }; }
+                                        } catch(e) { console.warn("Error parseando JSON", e); }
+
+                                        if (pageData) {
+                                            const displayTitle = jsonData.H1 || jsonData.h1 || jsonData.Titulo || jsonData.titulo || pageData.subtitulo || 'Sin Título';
+                                            const displaySub = jsonData.Subtitulo || jsonData.subtitulo || (pageData.meta_json ? JSON.parse(pageData.meta_json).title : '') || '';
+                                            const displayBody = jsonData.Contenido || jsonData.contenido || jsonData.body || pageData.contenido || '';
+
+                                            return `
+                                                <div class="dynamic-entry" style="animation: fadeIn 0.5s ease;">
+                                                    <h2 style="font-size:2.4rem; color:#034c3c; margin:0; font-weight:900; line-height:1.1; letter-spacing:-1px;">
+                                                        ${displayTitle}
+                                                    </h2>
+                                                    ${displaySub ? `<h3 style="font-size:1.2rem; color:#666; margin:15px 0 0 0; font-weight:500;">${displaySub}</h3>` : ''}
+                                                    <div style="font-size:1.1rem; line-height:1.7; color:#333; margin-top:25px; opacity:0.9;">
+                                                        ${displayBody}
+                                                    </div>
+                                                </div>
+                                            `;
+                                        } else {
+                                            return `
+                                                <h2 style="font-size:2.2rem; color:#034c3c; margin:0; font-weight:900;">${company.nomempresa}</h2>
+                                                <p style="font-size:1.1rem; line-height:1.7; color:#444; margin-top:20px;">${company.descripcion || 'Seleccione una opción para conocer más sobre nuestra labor.'}</p>
+                                            `;
+                                        }
+                                    })()}
+                                    
+                                    <div style="margin-top:auto; padding-top:10px;">
+                                        <button class="btn-primary" 
+                                                style="width:100%; padding: 20px; border-radius: 50px; font-weight:900; background:#034c3c; color:white; border:none; cursor:pointer;" 
+                                                onclick="window.location.hash='#contact'">
+                                            MÁS INFORMACIÓN
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PARTE 3: GALERÍA DINÁMICA (v11.0.0 - Anchura Máxima) -->
+                            <div class="personal-section-3" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px;">
+                                <div class="personal-gallery-card" style="position:relative; width:100%; max-width:98%; height:800px; border-radius:48px; box-shadow:0 60px 120px rgba(0,0,0,0.6); overflow:hidden; background:#111; display:flex;">
+                                    ${(() => {
+                                        const gallery = (app.data.Config_Galeria || []).filter(g => {
+                                            const gCoId = String(g.id_empresa || "").toUpperCase();
+                                            return gCoId === urlId || gCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
+                                        });
+
+                                        if (gallery.length > 0) {
+                                            return `
+                                                <div id="personal-carousel" style="position:absolute; inset:0; display:flex; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); width: ${gallery.length * 100}%;">
+                                                    ${gallery.map(img => `
+                                                        <div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(img.foto_url || img.url)}') center center / cover no-repeat;"></div>
+                                                    `).join('')}
+                                                </div>
+                                                <!-- Indicadores de Galería -->
+                                                <div style="position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10;">
+                                                    ${gallery.map((_, i) => `<div class="carousel-dot" data-index="${i}" style="width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.4); transition:0.3s;"></div>`).join('')}
+                                                </div>
+                                                <script>
+                                                    ((total) => {
+                                                        let current = 0;
+                                                        const el = document.getElementById('personal-carousel');
+                                                        const dots = document.querySelectorAll('.carousel-dot');
+                                                        if(!el) return;
+                                                        setInterval(() => {
+                                                            current = (current + 1) % total;
+                                                            el.style.transform = \`translateX(-\${(current * 100) / total}%)\`;
+                                                            dots.forEach((d, i) => d.style.background = i === current ? '#ffd700' : 'rgba(255,255,255,0.4)');
+                                                        }, 4000);
+                                                    })(${gallery.length});
+                                                </script>
+                                            `;
+                                        } else {
+                                            return `<div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}') center center / cover no-repeat;"></div>`;
+                                        }
+                                    })()}
+                                    
+                                    <!-- Overlay de Galería -->
+                                    <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 40%); pointer-events:none;"></div>
+                                    <div style="position:absolute; bottom:30px; right:30px; color:white; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:2px; opacity:0.8; z-index:10;">
+                                        <i class="fas fa-camera-retro" style="margin-right:8px;"></i> Galería Privada
+                                    </div>
                                 </div>
                             </div>
                         </div>
