@@ -266,89 +266,41 @@ const app = {
     loadData: async () => {
         try {
             const fetchId = app.state.companyId || "SuitOrg";
-            
-            // 1. CARGA DE CONFIGURACIÓN MAESTRA (Siempre desde Google Sheets)
-            const masterUrl = `${app.apiUrl}?action=getAll&id_empresa=${fetchId}&token=${app.apiToken}`;
-            const masterRes = await fetch(masterUrl);
-            const masterData = await masterRes.json();
-            
-            if (masterData.status === 'ERROR' || masterData.error) throw new Error(masterData.message || masterData.error);
-            
-            // Sanitizar datos maestros
-            const sanitizedMaster = JSON.parse(JSON.stringify(masterData), (key, value) =>
+            const url = `${app.apiUrl}?action=getAll&id_empresa=${fetchId}&token=${app.apiToken}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP Error! Status: ${response.status}`);
+            const data = await response.json();
+            if (data.status === 'ERROR' || data.error) throw new Error(data.message || data.error);
+
+            const sanitizedData = JSON.parse(JSON.stringify(data), (key, value) =>
                 typeof value === 'string' ? app.utils.sanitizeString(value) : value
             );
 
-            // 2. DETECTAR MOTOR DE DATOS
-            const currentBiz = (sanitizedMaster.Config_Empresas || []).find(c => 
-                String(c.id_empresa).toUpperCase() === String(fetchId).toUpperCase()
-            ) || sanitizedMaster.Config_Empresas[0];
-
-            const dbEngine = (currentBiz?.db_engine || currentBiz?.dbengine || 'GSHEETS').toUpperCase();
-            console.log(`[DB_ENGINE] Motor Detectado: ${dbEngine} para ${fetchId}`);
-
-            let finalData = sanitizedMaster;
-
-            // 3. CARGA EXTENDIDA DESDE SUPABASE (Si aplica)
-            if (dbEngine === 'SUPABASE') {
-                const supabaseData = await app.loadFromSupabase(fetchId);
-                // Combinar: Config_Empresas siempre viene de Google, el resto se puede sobreescribir
-                finalData = { ...sanitizedMaster, ...supabaseData };
-                finalData.Config_Empresas = sanitizedMaster.Config_Empresas; // Prioridad GSheets para el core
-            }
-
-            // 4. PERSISTENCIA Y CACHÉ (Proyectos)
             let localCache = JSON.parse(localStorage.getItem('suit_status_cache') || '{}');
-            if (finalData.Proyectos && localCache) {
+            if (sanitizedData.Proyectos && localCache) {
                 const now = Date.now();
-                finalData.Proyectos.forEach(p => {
+                sanitizedData.Proyectos.forEach(p => {
                     const id = (p.id_proyecto || "").toString().trim().toUpperCase();
                     const cached = localCache[id];
                     if (cached) {
-                        const age = now - cached.ts;
+                        const localTs = cached.ts;
+                        const age = now - localTs;
                         const serverTs = p.fecha_estatus ? new Date(p.fecha_estatus).getTime() : 0;
-                        if (age < 120000 || (serverTs && serverTs < cached.ts)) {
-                            if (p.status !== cached.status) p.status = p.estado = p.estatus = cached.status;
+                        if (age < 120000 || (serverTs && serverTs < localTs)) {
+                            if (p.status !== cached.status) {
+                                p.status = cached.status;
+                                p.estado = cached.status;
+                                p.estatus = cached.status;
+                            }
                         }
                     }
                 });
             }
-
-            app.data = finalData;
+            app.data = sanitizedData;
             return true;
         } catch (e) {
             console.error("[DATA_LOAD_CRITICAL]", e);
             return false;
-        }
-    },
-    loadFromSupabase: async (coId) => {
-        const SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
-        
-        console.log(`⚡ [SUPABASE] Cargando datos para ${coId}...`);
-        const tables = ['Catalogo', 'Leads', 'Proyectos', 'Config_Galeria', 'Config_Paginas'];
-        const results = {};
-
-        try {
-            await Promise.all(tables.map(async (table) => {
-                const url = `${SB_URL}/rest/v1/${table}?id_empresa=eq.${coId}&select=*`;
-                const res = await fetch(url, {
-                    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
-                });
-                if (res.ok) {
-                    const raw = await res.json();
-                    results[table] = JSON.parse(JSON.stringify(raw), (key, value) =>
-                        typeof value === 'string' ? app.utils.sanitizeString(value) : value
-                    );
-                } else {
-                    console.warn(`⚠️ [SUPABASE] Error en tabla ${table}: ${res.statusText}`);
-                    results[table] = [];
-                }
-            }));
-            return results;
-        } catch (err) {
-            console.error("❌ [SUPABASE_FAIL]", err);
-            return {};
         }
     },
     switchCompany: async (newId) => {
@@ -393,36 +345,6 @@ const app = {
         // 3. Ocultar Loader
         if (loader) {
             setTimeout(() => loader.classList.add('hidden'), 800);
-        }
-    },
-    createAgentTask: async (taskType, params) => {
-        const SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
-        
-        try {
-            const res = await fetch(`${SB_URL}/rest/v1/Agent_Tasks`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SB_KEY,
-                    'Authorization': `Bearer ${SB_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=representation'
-                },
-                body: JSON.stringify({
-                    id_empresa: app.state.companyId,
-                    task_type: taskType,
-                    parameters: params,
-                    status: 'PENDING'
-                })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                return data[0]?.id;
-            }
-            return null;
-        } catch (e) {
-            console.error("❌ [AGENT_TASK_FAIL]", e);
-            return null;
         }
     }
 };

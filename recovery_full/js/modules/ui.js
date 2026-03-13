@@ -24,30 +24,14 @@ app.ui = {
         if (panelList) app.ui.toggleLogs(true);
     },
 
-    scrollGallery: (direction) => app.ui.scrollGalleryBySlot(direction, (window.innerWidth <= 600 ? 1 : (window.innerWidth <= 1024 ? 2 : 4))),
-
-    scrollGalleryBySlot: (direction, visibleSlots) => {
+    scrollGallery: (direction) => {
         const grid = document.getElementById('company-gallery-grid');
         if (!grid) return;
-        
-        const slots = grid.querySelectorAll('.gallery-slot');
-        if (slots.length === 0) return;
-
-        const slotWidth = slots[0].offsetWidth;
-        const currentScroll = grid.scrollLeft;
-        const maxScroll = grid.scrollWidth - grid.clientWidth;
-
-        let targetScroll = currentScroll + (direction * slotWidth);
-
-        // Lógica de loop infinito por slot
-        if (targetScroll > maxScroll + 10) {
-            targetScroll = 0;
-        } else if (targetScroll < -10) {
-            targetScroll = maxScroll;
-        }
-
-        grid.scrollTo({
-            left: targetScroll,
+        // Detectar el ancho de la primera tarjeta disponible (o la clase huge)
+        const item = grid.querySelector('.gallery-item-huge') || grid.children[0];
+        const scrollAmount = item ? (item.offsetWidth + 20) : grid.clientWidth * 0.8;
+        grid.scrollBy({
+            left: direction * scrollAmount,
             behavior: 'smooth'
         });
     },
@@ -85,80 +69,6 @@ app.ui = {
 
         const versionEl = document.getElementById('gs-version-text');
         if (versionEl) versionEl.innerText = `V: ${app.version}`;
-
-        // --- BOTÓN AGENT BROWSER MANUAL (v14.0.3) ---
-        app.ui.renderAgentAuditButton();
-    },
-
-    renderAgentAuditButton: () => {
-        const statusBar = document.querySelector('.sb-right');
-        if (!statusBar) return;
-
-        // Eliminar botón previo si existe
-        const oldBtn = document.getElementById('sb-ia-audit-btn');
-        if (oldBtn) oldBtn.remove();
-
-        const biz = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase());
-        const isAgentEnabled = (biz?.agent_enabled || "").toString().toUpperCase() === 'TRUE';
-        const isAdmin = app.state.currentUser && app.state.currentUser.nivel_acceso >= 10;
-
-        // Solo mostrar si está habilitado en base de datos y el usuario es ADMIN/DIOS
-        if (isAgentEnabled && isAdmin) {
-            const btn = document.createElement('span');
-            btn.id = 'sb-ia-audit-btn';
-            btn.style.cssText = `
-                background: var(--primary-color, #034c3c);
-                padding: 2px 8px;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 0.65rem;
-                font-weight: bold;
-                margin-right: 10px;
-                border: 1px solid rgba(255,255,255,0.2);
-                transition: 0.3s;
-                color: #00e676;
-            `;
-            btn.innerHTML = `<i class="fa-solid fa-robot"></i> AUDIT IA`;
-            btn.title = "Lanzar auditoría visual con Agente IA";
-            btn.onclick = () => app.ui.triggerAgentAudit();
-            
-            statusBar.insertBefore(btn, statusBar.firstChild);
-        }
-    },
-
-    triggerAgentAudit: async () => {
-        const btn = document.getElementById('sb-ia-audit-btn');
-        if (!btn) return;
-
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ENVIANDO...`;
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.7';
-
-        const taskId = await app.createAgentTask('VISION_AUDIT', { url: window.location.href });
-
-        if (taskId) {
-            btn.innerHTML = `<i class="fa-solid fa-fire"></i> LANZADO!`;
-            btn.style.background = "#00e676";
-            btn.style.color = "#000";
-            app.ui.updateConsole("AGENT_TASK_CREATED: " + taskId);
-            setTimeout(() => {
-                btn.innerHTML = originalHtml;
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-                btn.style.background = '';
-                btn.style.color = '#00e676';
-            }, 3000);
-        } else {
-            btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ERROR`;
-            btn.style.background = "#f44";
-            setTimeout(() => {
-                btn.innerHTML = originalHtml;
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-                btn.style.background = '';
-            }, 3000);
-        }
     },
 
     applyTheme: (company) => {

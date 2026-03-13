@@ -16,8 +16,6 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v6.2.0: Dynamic Content Engine (Narrativa IA)**: Motor de páginas dinámicas en Config_Paginas con inyección automática de SEO (Schema.org) y narrativa personalizada por cliente.
 - [x] **v6.1.8: Private Drive Vaults & Secure Access**: Integración de Bóveda Segura con Google Drive API, generación automática de tokens (TX-XXXX) y auto-creación de usuarios desde Leads financieros.
 - [ ] **v6.3.0: Suit Shortlinks & Friendly URLs**: Implementar capa de abstracción para enlaces internos (#hash) y externos, permitiendo el uso de "Alias" amigables y compactos.
-- [ ] **Agent Browser Implementation**: Integración de navegación autónoma para validación visual automática y auditoría de flujos UX críticos.
-- [ ] **Remotion Video Engine**: Implementación de motor de generación de video programático para publicidad dinámica basada en datos del catálogo.
 - [x] **v6.1.5: AI Billing, Isolation & Navigation Mastery**: Reparación de telemetría de tokens (Logs), soporte para `is_isolated` con acceso sutil (Beige UI) y visibilidad global en Órbita.
 - [x] **v6.1.0: Calendar & Reservations Engine**: Integración nativa con Google Calendar API, creación automática de calendarios por negocio y módulo de gestión de citas.
 - [x] **v5.7.0: Suit BI Matrix (Dynamic Dashboard)**: Motor de métricas e indicadores (KPIs) administrables desde Excel. Procesamiento de datos en tiempo real (SUM, COUNT, AVG) y generación de gráficas dinámicas.
@@ -244,15 +242,7 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v6.2.8: Gallery Slider & Navigation**: Implementación de slider horizontal con flechas, navegación táctil y loader de transición ("Orbit Spinner").
 - [x] **v6.3.0: SEO Shortlinks & Redirector Maestro**: Implementada capa de redirección por `alias_seo` para permitir URLs amigables (ej: `/roberto`). Limpieza de campos obsoletos (`galleryimages`).
 - [x] **v6.5.0: Dynamic Sub-Pages Engine**: Motor de contenido basado en hash (`#museo`, `#servicios`) que permite crear secciones ilimitadas desde `Config_Paginas` con renderizado automático de H1, H2 e Imágenes.
-- [x] **v13.0.0: Hybrid Data Engine (GSheets + Supabase)**: Implementación de arquitectura multi-motor con carga selectiva. Configuración dinámica vía `db_engine` para potenciar catálogos pesados y leads con el músculo de Supabase manteniendo el cerebro en Google Sheets.
-- [x] **v12.0.0: Total Responsive Personal Brand (v12.0.0)**: Adaptación multidispositivo para layouts de trípticos. Implementación de apilamiento vertical (<1024px), preservación de estética premium de 800px y persistencia dinámica de QRs por negocio.
-- [x] **v13.0.8: Hero Banner Pro & Matrix Gallery**: Rediseño total de la identidad visual estándar. Hero Banner con fondo sólido `color_tema` y foto completa sin recorte (`object-fit: contain`). Galería Matrix Dinámica con proporciones inteligentes (20%/33%/50%/75%) y carrusel infinito de 5 segundos.
-- [ ] **Agent Browser Implementation (v14.0.0)**:
-    - [ ] **Fase A: Node.js Bridge**: Configurar entorno de Playwright para navegación autónoma y auditoría visual.
-    - [ ] **Fase B: Supabase Agent Queue**: Tabla de tareas para que el Agente IA reciba órdenes del sitio web.
-    - [ ] **Fase C: Auditoría Visual UX**: El agente validará que colores, textos y layouts no se empalmen en tiempo real.
-- [ ] **Remotion Video Engine**: Implementación de motor de generación de video programático para publicidad dinámica basada en datos del catálogo.
-- [x] **v6.3.1: SEO Indexing Audit (Google/Meta)**: Verificar por qué los enlaces dinámicos (ej: `ROBERTO_V`) no son indexados correctamente. Auditoría realizada y optimizada via Sitemap dinámico.
+- [ ] **v6.3.1: SEO Indexing Audit (Google/Meta)**: Verificar por qué los enlaces dinámicos (ej: `ROBERTO_V`) no son indexados correctamente. Pendiente revisar el 12 de marzo.
 - [ ] **v6.4.0: Discovery & Visitor Seeding**: Implementar persistencia de visitas (`LocalStorage/Cookies`) por negocio para telemetría de retención y reconocimiento de clientes recurrentes.
 ---
-*Última actualización: 2026-03-12 | Versión: v13.0.8 (MATRIX STABLE)*
+*Última actualización: 2026-03-11 | Versión: v6.5.0 (DYNAMIC SUB-PAGES ENGINE)*

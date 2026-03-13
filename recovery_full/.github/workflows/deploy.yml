@@ -1,0 +1,43 @@
+name: Deploy to GitHub Pages Securely
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Secure Config File
+        run: |
+          mkdir -p js/modules
+          echo "const SUIT_CONFIG = {" > js/modules/config.js
+          echo "    apiUrl: '${{ secrets.API_URL }}'," >> js/modules/config.js
+          echo "    apiToken: '${{ secrets.API_TOKEN }}'" >> js/modules/config.js
+          echo "};" >> js/modules/config.js
+        shell: bash
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,32 @@
+User-agent: *
+# 1. PERMITIR el acceso a las Landing Pages de los negocios
+Allow: /
+
+# 2. BLOQUEAR el rastro de carpetas del sistema (Ahorra ejecución de GAS)
+Disallow: /.agent/
+Disallow: /scripts/
+Disallow: /node_modules/
+Disallow: /js/modules/
+
+# 3. BLOQUEAR archivos técnicos y de configuración
+Disallow: /backend_schema.gs
+Disallow: /appsscript.json
+Disallow: /mock_data.json
+Disallow: /.env.example
+
+# 4. PREVENCIÓN para áreas de Staff (Protección de rutas hash)
+Disallow: /#dashboard
+Disallow: /#pos
+Disallow: /#staff-pos
+Disallow: /#leads
+Disallow: /#projects
+Disallow: /#catalog
+Disallow: /#reports
+
+# 5. LIMPIEZA de parámetros basura (Evita contenido duplicado)
+Disallow: /*?fbclid=
+Disallow: /*?gclid=
+Disallow: /*?utm_*
+
+# 6. MAPA DEL SITIO
+Sitemap: https://suitorg.com/sitemap.xml

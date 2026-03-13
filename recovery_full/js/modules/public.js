@@ -187,28 +187,32 @@ app.public = {
         const pageData = (app.data.Config_Paginas || []).find(p => {
             const pCoId = String(p.id_empresa || "").toUpperCase();
             const pPgId = String(p.id_pagina || "").trim().toLowerCase();
+            // Comparación robusta (soporta ROBERTOV y ROBERTO_V)
             return (pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "")) && pPgId === hash;
         });
 
-        // Renderizado HOME Estándar (PFM/PMP/Industrial)
-        const bizType = (company.tipo_negocio || "").toString().toUpperCase();
-        const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
-        const isPersonal = bizType.includes("MARCA PERSONAL");
-
-        // --- AJUSTE NAVEGACIÓN DINÁMICA (v8.1.0) ---
-        // Si es una sub-página y NO es Marca Personal, usamos el motor estándar
-        if (pageData && hash !== 'home' && !isPersonal) {
+        // Si es una sub-página dinámica (no home)
+        if (pageData && hash !== 'home') {
             const heroBanner = document.getElementById('hero-banner-main');
             const personalNode = document.getElementById('hero-personal-node');
             if (heroBanner) heroBanner.style.display = 'none';
             if (personalNode) personalNode.style.display = 'none';
             
+            // Forzar visibilidad de la sección home ya que el contenido dinámico vive dentro
             const viewHome = document.getElementById('view-home');
-            if (viewHome) { viewHome.classList.remove('hidden'); viewHome.style.display = 'block'; }
+            if (viewHome) {
+                viewHome.classList.remove('hidden');
+                viewHome.style.display = 'block';
+            }
+
             app.public.renderDynamicContent(pageData);
             return; 
         }
 
+        // Renderizado HOME Estándar (PFM/PMP/Industrial)
+        const bizType = (company.tipo_negocio || "").toString().toUpperCase();
+        const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
+        const isPersonal = bizType.includes("MARCA PERSONAL");
         app.state.isFood = isFood;
 
         const sloganEl = document.getElementById('hero-slogan');
@@ -222,192 +226,45 @@ app.public = {
         if (isPersonal) {
             document.body.classList.add('is-personal-brand');
             if (personalNode) {
-                personalNode.style.background = company.color_tema || company.colortema || '#034c3c';
                 personalNode.innerHTML = `
-                    <style>
-                        .personal-responsive-container {
-                            display: flex;
-                            align-items: center;
-                            min-height: 100vh;
-                            width: 100%;
-                            max-width: none;
-                            padding: 60px 20px;
-                            transition: background 0.5s ease;
-                        }
-                        .personal-section {
-                            flex: 1;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            justify-content: center;
-                            padding: 10px;
-                            width: 33.33%;
-                        }
-                        .personal-card-base {
-                            position: relative;
-                            width: 100%;
-                            max-width: 98%;
-                            height: 800px;
-                            border-radius: 48px;
-                            box-shadow: 0 60px 120px rgba(0,0,0,0.6);
-                            overflow: hidden;
-                            display: flex;
-                        }
-                        @media (max-width: 1024px) {
-                            .personal-responsive-container {
-                                flex-direction: column;
-                                padding-top: 120px;
-                                gap: 60px;
-                            }
-                            .personal-section {
-                                width: 100%;
-                                flex: none;
-                            }
-                            .personal-card-base {
-                                max-width: 95%;
-                                height: 750px; /* Ligero ajuste para móviles */
-                            }
-                        }
-                    </style>
-                    <div class="personal-responsive-container">
-                            <!-- PARTE 1: IDENTIDAD (v12.0.0 - Responsive) -->
-                            <div class="personal-section">
-                                <div class="personal-left ui-overlay-container personal-card-base" style="background:#111;">
-                                    <img src="${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}" alt="${company.nomempresa}" style="position:absolute; inset:0; width:100%; height:100%; object-fit: cover; transition: transform 0.5s ease;">
+                    <div class="ui-container" style="min-height:92vh; display:flex; align-items:center; padding-top:100px; padding-bottom:100px; background:var(--personal-bg);">
+                        <div class="ui-grid" style="align-items:center; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+                            <!-- LADO IZQUIERDO: FOTO + QR IZQUIERDO -->
+                            <div class="personal-left ui-overlay-container" style="position:relative; width:100%; max-width:620px; justify-self: center; border-radius:32px; box-shadow:0 40px 80px rgba(0,0,0,0.22); overflow:hidden;">
+                                <img src="${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}" alt="${company.nomempresa}" style="width:100%; display:block; border-radius:32px; transition: transform 0.5s ease;">
+                                <div class="ui-overlay-full" style="padding: 40px; display:flex; flex-direction:column; justify-content:space-between;">
+                                    <!-- SUPERIOR IZQUIERDA: NOMBRE EMPRESA -->
+                                    <div class="ui-text-premium" style="align-self:flex-start; font-size:var(--font-size-small); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding-left:14px; letter-spacing:1px; background:rgba(0,0,0,0.4); padding-right:10px; border-radius:0 20px 20px 0;">${company.nomempresa}</div>
                                     
-                                    <div style="position:absolute; inset:0; background:linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.7) 100%); pointer-events:none;"></div>
-
-                                    <div class="ui-overlay-full" style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none;">
-                                        <!-- SUPERIOR IZQUIERDA: SLOGAN -->
-                                        <div class="ui-text-premium" style="position:absolute; top:40px; left:40px; text-align:left; font-size:var(--font-size-small, 0.75rem); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding:10px 15px; letter-spacing:3px; background:rgba(0,0,0,0.4); border-radius:0 10px 10px 0; color:white; font-weight:800; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">
-                                            ${company.slogan || company.nomempresa}
-                                        </div>
-
-                                        <!-- CENTRO: MENSAJE 1 -->
-                                        <div class="ui-text-premium" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; font-size:clamp(1.5rem, 5vw, 3rem); line-height:1; width:90%; text-shadow: 0 4px 30px rgba(0,0,0,1); font-weight:900; letter-spacing:-1px; color:white;">
-                                            ${company.mensaje1 || ''}
-                                        </div>
-
-                                        <!-- INFERIOR DERECHA: MENSAJE 2 -->
-                                        <div class="ui-text-premium" style="position:absolute; bottom:40px; right:40px; text-align:right; font-size:1.8rem; color:var(--accent-color, #ffd700); text-shadow:0 4px 20px rgba(0,0,0,1); font-weight:800;">
-                                            ${company.mensaje2 || ''}
-                                        </div>
-                                    </div>
-
-                                    <div class="banner-qr-official" style="position:absolute; bottom:30px; left:30px; background:white; padding:12px; border-radius:20px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 20px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid rgba(255,255,255,0.2);">
-                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:50px; height:50px; image-rendering:pixelated;">
-                                        <span style="font-size:0.55rem; color:#000; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${company.nomempresa}</span>
-                                    </div>
+                                    <!-- CENTRO: MENSAJE 1 -->
+                                    <div class="ui-text-premium" style="align-self:center; text-align:center; font-size:var(--font-size-h2); line-height:1.1; width:90%;">${company.mensaje1 || ''}</div>
+                                    
+                                    <!-- INFERIOR DERECHA: MENSAJE 2 (Restored) -->
+                                    <div class="ui-text-premium" style="align-self:flex-end; text-align:right; font-size:var(--font-size-h3); color:var(--accent-color, #ffd700); opacity:1; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.8));">${company.mensaje2 || ''}</div>
+                                </div>
+                                <!-- QR OFICIAL IZQUIERDO (v6.6.1) -->
+                                <div class="banner-qr-official" style="position:absolute; bottom:20px; left:20px; background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; pointer-events:auto; cursor:help; box-shadow:0 15px 35px rgba(0,0,0,0.3); z-index:20; border: 1px solid rgba(0,0,0,0.05);">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname)}" style="width:45px; height:45px; image-rendering:pixelated;">
+                                    <span style="font-size:0.5rem; color:#000; font-weight:900; text-transform:uppercase; margin-top:5px; letter-spacing:0.5px;">${company.nomempresa}</span>
                                 </div>
                             </div>
-
-                            <!-- PARTE 2: NAVEGACIÓN DINÁMICA + VISOR JSON (v12.0.0 - Responsive) -->
-                            <div class="personal-section">
-                                <!-- TARJETA PREMIUM CON COLOR TEMA -->
-                                <div class="personal-content-viewer personal-card-base" 
-                                     style="background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${app.utils.fixDriveUrl(company.logo_url || company.foto_agente)}') center center / cover no-repeat; background-color: ${company.color_tema || '#034c3c'}; padding:45px; z-index:15; flex-direction:column; gap:30px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.5s ease; color: white;">
-                                    
-                                    <!-- MOTOR DE BOTONES DINÁMICO (Ahora dentro de la tarjeta) -->
-                                    <div class="personal-pages-nav" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-start; margin-bottom:10px; width:100%;">
-                                        ${(app.data.Config_Paginas || [])
-                                            .filter(p => {
-                                                const pCoId = String(p.id_empresa || "").toUpperCase();
-                                                return pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
-                                            })
-                                            .map(p => `
-                                                <button class="btn-page-dynamic" 
-                                                        style="padding:8px 18px; border-radius:50px; border:1px solid ${pageData && pageData.id_pagina === p.id_pagina ? 'var(--accent-color, #ffd700)' : '#eee'}; background:${pageData && pageData.id_pagina === p.id_pagina ? 'var(--accent-color, #ffd700)' : '#f9f9f9'}; color:${pageData && pageData.id_pagina === p.id_pagina ? '#000' : '#666'}; font-weight:800; cursor:pointer; transition:all 0.3s ease; font-size:0.75rem; text-transform:uppercase;"
-                                                        onclick="window.location.hash='#${p.id_pagina}'">
-                                                    ${p.id_pagina.replace(/_/g, ' ')}
-                                                </button>
-                                            `).join('')}
+                            <!-- LADO DERECHO: SLOGAN + CONFIG_PAGINAS -->
+                            <div class="personal-right" style="display:flex; flex-direction:column; gap:var(--ui-gap); text-align:left; max-width: 650px; justify-self: start;">
+                                <h1 class="ui-text-premium" style="font-size:var(--font-size-h1); color: #111; line-height:1; margin:0; letter-spacing:-1px;">${company.slogan || company.nomempresa}</h1>
+                                
+                                ${pageData ? `
+                                    <div class="personal-dynamic-content" style="display:flex; flex-direction:column; gap:15px;">
+                                        ${pageData.subtitulo ? `<h2 style="font-size:var(--font-size-h3); color:var(--primary-color); margin:0;">${pageData.subtitulo}</h2>` : ''}
+                                        <div style="font-size:var(--font-size-body); line-height:1.8; color:#333; opacity:0.9;">
+                                            ${pageData.contenido || company.descripcion || ''}
+                                        </div>
                                     </div>
+                                ` : `
+                                    <p style="font-size:var(--font-size-body); line-height:1.8; color:#333; margin:0; opacity:0.9;">${company.descripcion || 'Especialista en soluciones integrales.'}</p>
+                                `}
 
-                                    ${(() => {
-                                        let jsonData = {};
-                                        try {
-                                            jsonData = pageData && pageData.contenido_json ? JSON.parse(pageData.contenido_json) : {};
-                                            if (jsonData.hero) { jsonData = { ...jsonData, ...jsonData.hero }; }
-                                        } catch(e) { console.warn("Error parseando JSON", e); }
-
-                                        if (pageData) {
-                                            const displayTitle = jsonData.H1 || jsonData.h1 || jsonData.Titulo || jsonData.titulo || pageData.subtitulo || 'Sin Título';
-                                            const displaySub = jsonData.Subtitulo || jsonData.subtitulo || (pageData.meta_json ? JSON.parse(pageData.meta_json).title : '') || '';
-                                            const displayBody = jsonData.Contenido || jsonData.contenido || jsonData.body || pageData.contenido || '';
-
-                                            return `
-                                                <div class="dynamic-entry" style="animation: fadeIn 0.5s ease;">
-                                                    <h2 style="font-size:2.4rem; color:#034c3c; margin:0; font-weight:900; line-height:1.1; letter-spacing:-1px;">
-                                                        ${displayTitle}
-                                                    </h2>
-                                                    ${displaySub ? `<h3 style="font-size:1.2rem; color:#666; margin:15px 0 0 0; font-weight:500;">${displaySub}</h3>` : ''}
-                                                    <div style="font-size:1.1rem; line-height:1.7; color:#333; margin-top:25px; opacity:0.9;">
-                                                        ${displayBody}
-                                                    </div>
-                                                </div>
-                                            `;
-                                        } else {
-                                            return `
-                                                <h2 style="font-size:2.2rem; color:#034c3c; margin:0; font-weight:900;">${company.nomempresa}</h2>
-                                                <p style="font-size:1.1rem; line-height:1.7; color:#444; margin-top:20px;">${company.descripcion || 'Seleccione una opción para conocer más sobre nuestra labor.'}</p>
-                                            `;
-                                        }
-                                    })()}
-                                    
-                                    <div style="margin-top:auto; padding-top:10px;">
-                                        <button class="btn-primary" 
-                                                style="width:100%; padding: 20px; border-radius: 50px; font-weight:900; background:#034c3c; color:white; border:none; cursor:pointer;" 
-                                                onclick="window.location.hash='#contact'">
-                                            MÁS INFORMACIÓN
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- PARTE 3: GALERÍA DINÁMICA (v12.0.0 - Responsive) -->
-                            <div class="personal-section">
-                                <div class="personal-gallery-card personal-card-base" style="background:#111;">
-                                    ${(() => {
-                                        const gallery = (app.data.Config_Galeria || []).filter(g => {
-                                            const gCoId = String(g.id_empresa || "").toUpperCase();
-                                            return gCoId === urlId || gCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
-                                        });
-
-                                        if (gallery.length > 0) {
-                                            return `
-                                                <div id="personal-carousel" style="position:absolute; inset:0; display:flex; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); width: ${gallery.length * 100}%;">
-                                                    ${gallery.map(img => `
-                                                        <div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(img.foto_url || img.url)}') center center / cover no-repeat;"></div>
-                                                    `).join('')}
-                                                </div>
-                                                <!-- Indicadores de Galería -->
-                                                <div style="position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10;">
-                                                    ${gallery.map((_, i) => `<div class="carousel-dot" data-index="${i}" style="width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.4); transition:0.3s;"></div>`).join('')}
-                                                </div>
-                                                <script>
-                                                    ((total) => {
-                                                        let current = 0;
-                                                        const el = document.getElementById('personal-carousel');
-                                                        const dots = document.querySelectorAll('.carousel-dot');
-                                                        if(!el) return;
-                                                        setInterval(() => {
-                                                            current = (current + 1) % total;
-                                                            el.style.transform = \`translateX(-\${(current * 100) / total}%)\`;
-                                                            dots.forEach((d, i) => d.style.background = i === current ? '#ffd700' : 'rgba(255,255,255,0.4)');
-                                                        }, 4000);
-                                                    })(${gallery.length});
-                                                </script>
-                                            `;
-                                        } else {
-                                            return `<div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}') center center / cover no-repeat;"></div>`;
-                                        }
-                                    })()}
-                                    
-                                    <!-- Overlay de Galería -->
-                                    <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 40%); pointer-events:none;"></div>
-                                    <div style="position:absolute; bottom:30px; right:30px; color:white; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:2px; opacity:0.8; z-index:10;">
-                                        <i class="fas fa-camera-retro" style="margin-right:8px;"></i> Galería Privada
-                                    </div>
+                                <div class="hero-actions" style="display:flex; gap:20px; margin-top:15px;">
+                                    <button class="btn-primary" style="padding: 20px 45px; border-radius: 50px; font-weight:800; font-size:1.1rem; box-shadow: 0 15px 30px var(--primary-color)44;" onclick="window.location.hash='#contact'">Agendar Consulta</button>
                                 </div>
                             </div>
                         </div>
@@ -421,65 +278,29 @@ app.public = {
             if (personalNode) personalNode.style.display = 'none';
             if (heroBanner) {
                 heroBanner.classList.remove('hidden');
-                heroBanner.style.display = 'flex';
-                heroBanner.style.flexDirection = 'column';
-                heroBanner.style.justifyContent = 'center';
-                heroBanner.style.alignItems = 'center';
-                heroBanner.style.padding = '0';
-                heroBanner.style.minHeight = '80vh';
-                heroBanner.style.backgroundImage = 'none';
-                heroBanner.style.backgroundColor = company.color_tema || company.colortema || '#034c3c';
-                heroBanner.style.position = 'relative';
-                heroBanner.style.overflow = 'hidden';
+                heroBanner.style.display = 'block';
+                const bgUrl = company.foto_agente || company.logo_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836';
+                heroBanner.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('${app.utils.fixDriveUrl(bgUrl)}')`;
+                heroBanner.style.backgroundSize = 'cover';
 
-                const photoUrl = app.utils.fixDriveUrl(company.foto_agente || company.logo_url);
-                
-                heroBanner.innerHTML = `
-                    <!-- Capa de Foto Completa (v12.5.1) -->
-                    <div style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center; z-index:1;">
-                        <img src="${photoUrl}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;">
-                    </div>
-
-                    <!-- Overlay Premium -->
-                    <div style="position:absolute; inset:0; background:radial-gradient(circle, transparent 10%, rgba(0,0,0,0.5) 100%); z-index:2; pointer-events:none;"></div>
-
-                    <!-- COORDENADAS DE IDENTIDAD UNIVERSAL -->
-                    <div style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none; padding: 40px;">
-                        <!-- SUPERIOR IZQUIERDA: SLOGAN -->
-                        <div style="position:absolute; top:40px; left:40px; font-size:var(--font-size-small, 0.75rem); text-transform:uppercase; letter-spacing:3px; font-weight:800; text-shadow:0 2px 15px rgba(0,0,0,0.8); color:white; border-left:4px solid ${company.color_tema}; padding-left:15px;">
-                            ${company.slogan || ''}
-                        </div>
-
-                        <!-- CENTRO: MENSAJE 1 -->
-                        <h1 style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:clamp(1.8rem, 6vw, 4rem); font-weight:900; text-align:center; width:90%; text-shadow:0 10px 40px rgba(0,0,0,0.8); color:white; margin:0;">
-                            ${company.mensaje1 || company.nomempresa}
-                        </h1>
-
-                        <!-- INFERIOR DERECHA: MENSAJE 2 -->
-                        <div style="position:absolute; bottom:40px; right:40px; font-size:clamp(1.2rem, 3vw, 2.5rem); font-weight:800; color:${company.color_tema}; text-shadow:0 4px 20px rgba(0,0,0,0.9);">
-                            ${company.mensaje2 || ''}
-                        </div>
-                    </div>
-
-                    <!-- ACCIONES: BOTÓN DE CONTACTO (CENTRO ABAJO) -->
-                    <div style="position:absolute; bottom:120px; left:50%; transform:translateX(-50%); z-index:10;">
-                        <button class="btn-primary" style="padding:15px 45px; border-radius:50px; font-weight:900; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:none; cursor:pointer;" onclick="window.location.hash='#contact'">
-                            CONTACTAR AHORA
-                        </button>
-                    </div>
-
-                    <!-- QR Dinámico (Protected Mode) -->
-                    <div class="banner-qr-official" style="position:absolute; bottom:30px; left:30px; background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 20px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid #eee; opacity:0.8;">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:45px; height:45px; image-rendering:pixelated;">
-                    </div>
-                `;
+                // Inyectar QR Oficial + NomEmpresa en Banner Estándar
+                if (!heroBanner.querySelector('.banner-qr-official')) {
+                    const qrBox = document.createElement('div');
+                    qrBox.className = 'banner-qr-official';
+                    qrBox.style.cssText = "position:absolute; bottom:30px; left:30px; background:white; padding:8px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:4px; box-shadow:0 10px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid #eee;";
+                    qrBox.innerHTML = `
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname)}" style="width:65px; height:65px; image-rendering:pixelated;">
+                        <span style="color:black; font-size:0.6rem; font-weight:900; text-transform:uppercase; letter-spacing:0.5px;">${company.nomempresa}</span>
+                    `;
+                    heroBanner.appendChild(qrBox);
+                }
             }
         }
 
-        if (sloganEl && !heroBanner.innerHTML.includes('hero-actions-dynamic')) sloganEl.innerText = company.slogan || company.nomempresa;
-        if (subEl && !heroBanner.innerHTML.includes('hero-actions-dynamic')) subEl.innerText = company.mensaje1 || company.descripcion || "Bienvenido.";
+        if (sloganEl) sloganEl.innerText = company.slogan || company.nomempresa;
+        if (subEl) subEl.innerText = company.mensaje1 || company.descripcion || "Bienvenido.";
         
-        if (actions && !isPersonal && !heroBanner.innerHTML.includes('hero-actions-dynamic')) {
+        if (actions && !isPersonal) {
             actions.innerHTML = isFood ? 
                 `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
                 `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar</button>`;
@@ -1054,12 +875,8 @@ app.public = {
         const grid = document.getElementById('company-gallery-grid');
         if (!grid || !section) return;
         
-        const urlId = (app.state.companyId || "").toString().trim().toUpperCase();
-        const company = app.data.Config_Empresas.find(c => c.id_empresa === urlId);
-        if (!company) return;
-
         const imgs = (app.data.Config_Galeria || []).filter(img => 
-            String(img.id_empresa || "").trim().toUpperCase() === urlId
+            String(img.id_empresa || "").trim().toUpperCase() === String(app.state.companyId || "").trim().toUpperCase()
         );
 
         if (imgs.length === 0) {
@@ -1071,98 +888,36 @@ app.public = {
         section.classList.remove('hidden');
         section.style.display = 'block';
 
-        const tema = company.color_tema || company.colortema || '#034c3c';
-        section.style.background = tema;
-        section.style.borderTop = "none";
+        // Estructura Horizonte Total (v6.6.8 - Breaking the Grid)
+        // Limpiamos estilos inyectados previos si existen
+        const oldStyle = document.getElementById('ui-gallery-breakout');
+        if (oldStyle) oldStyle.remove();
 
-        // Asegurar que el contenedor expansivo también tenga el color tema (v13.2.5)
-        const breakout = section.querySelector('.gallery-breakout-container');
-        if (breakout) {
-            breakout.style.background = tema;
+        // Aplicamos nuevas clases de style.css
+        const wrapper = section.querySelector('.gallery-wrapper');
+        if (wrapper) {
+            wrapper.className = "gallery-breakout-container";
         }
 
-        // Determinar capacidad de slots según la cantidad de fotos (Máximo 4 por fila en PC)
-        const pcSlots = Math.min(4, imgs.length);
-        const slotWidth = 100 / pcSlots;
-
-        // Renderizado de Tarjetas con Regla del 90%
+        grid.className = "gallery-horizon-grid";
+        grid.style = ""; // Limpiar estilos inline previos
+        
         grid.innerHTML = imgs.map(img => `
-            <div class="gallery-slot" style="flex: 0 0 ${slotWidth}%; min-width: ${slotWidth}%; display: flex; justify-content: center; align-items: center; padding: 10px 0;">
-                <div class="gallery-card-premium" style="width: 90%; position: relative; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); background: white; aspect-ratio: 16/10;">
-                    <img src="${app.utils.fixDriveUrl(img.url_imagen || img.imagen_url)}" 
-                         alt="${img.titulo}" 
-                         style="width:100%; height:100%; object-fit:cover; display: block; transition: transform 0.5s ease;">
-                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); text-align: center;">
-                        <span style="color: white; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                            ${img.titulo || ''}
-                        </span>
+            <div class="gallery-item-huge">
+                <img src="${app.utils.fixDriveUrl(img.url_imagen || img.imagen_url)}" 
+                     alt="${img.titulo}" 
+                     class="gallery-img">
+                <div class="ui-overlay-full" style="justify-content:flex-end; padding:30px; background:linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.85)); pointer-events:none;">
+                    <div class="ui-text-premium" style="font-size:1.2rem; border-left:5px solid var(--accent-color, #ffd700); padding-left:18px; line-height:1;">
+                        ${img.titulo || 'Proyecto'}
                     </div>
                 </div>
             </div>`).join('');
 
-        // Media Queries de Precisión y Estilizado de Flechas (v13.2.1)
-        const galleryStyle = document.getElementById('ui-gallery-precision-css') || document.createElement('style');
-        galleryStyle.id = 'ui-gallery-precision-css';
-        galleryStyle.innerHTML = `
-            .gallery-breakout-container { width: 100vw !important; position: relative !important; left: 50% !important; margin-left: -50vw !important; overflow: hidden !important; padding: 40px 0 !important; display: flex; align-items: center; justify-content: center; }
-            #company-gallery-grid { display: flex !important; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important; scroll-behavior: smooth !important; overflow-x: hidden !important; width: 100% !important; padding: 0 50px !important; }
-            
-            /* FLECHAS POSICIONADAS EN EL ÁREA DE GALERÍA */
-            .gallery-huge-btn { 
-                position: absolute !important; top: 50% !important; transform: translateY(-50%) !important; 
-                width: 50px !important; height: 50px !important; border-radius: 50% !important; 
-                background: white !important; color: var(--primary-color) !important; 
-                display: flex !important; align-items: center !important; justify-content: center !important; 
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important; border: none !important; 
-                cursor: pointer !important; z-index: 1000 !important; transition: 0.3s !important;
-                visibility: visible !important; opacity: 1 !important;
-            }
-            .gallery-huge-btn.prev { left: 20px !important; }
-            .gallery-huge-btn.next { right: 20px !important; }
-            .gallery-huge-btn:hover { background: var(--primary-color) !important; color: white !important; scale: 1.1; }
-
-            @media (max-width: 1024px) {
-                .gallery-slot { flex: 0 0 50% !important; min-width: 50% !important; }
-            }
-            @media (max-width: 600px) {
-                .gallery-slot { flex: 0 0 100% !important; min-width: 100% !important; }
-                .gallery-card-premium { width: 85% !important; }
-                .gallery-huge-btn { width: 40px !important; height: 40px !important; }
-            }
-            .gallery-card-premium:hover img { transform: scale(1.05); }
-        `;
-        if (!document.getElementById('ui-gallery-precision-css')) document.head.appendChild(galleryStyle);
-
-        // --- LÓGICA DE CARRUSEL (v13.1.0) ---
-        const isMobile = window.innerWidth <= 600;
-        const isTablet = window.innerWidth <= 1024 && window.innerWidth > 600;
-        const visibleSlots = isMobile ? 1 : (isTablet ? 2 : pcSlots);
-
-        if (imgs.length > visibleSlots) {
-             if (app.state.galleryTimer) clearInterval(app.state.galleryTimer);
-             app.state.galleryTimer = setInterval(() => {
-                 app.ui.scrollGalleryBySlot(1, visibleSlots);
-             }, 5000);
-        }
-
-        // Re-mapear botones de navegación
-        const prevBtn = section.querySelector('.gallery-arrow.prev') || section.querySelector('.gallery-huge-btn.prev');
-        const nextBtn = section.querySelector('.gallery-arrow.next') || section.querySelector('.gallery-huge-btn.next');
-        
-        if (prevBtn) {
-            prevBtn.className = "gallery-huge-btn prev";
-            prevBtn.onclick = () => { 
-                app.ui.scrollGalleryBySlot(-1, visibleSlots); 
-                if(app.state.galleryTimer) clearInterval(app.state.galleryTimer); 
-            };
-        }
-        if (nextBtn) {
-            nextBtn.className = "gallery-huge-btn next";
-            nextBtn.onclick = () => { 
-                app.ui.scrollGalleryBySlot(1, visibleSlots); 
-                if(app.state.galleryTimer) clearInterval(app.state.galleryTimer); 
-            };
-        }
+        const prevBtn = section.querySelector('.gallery-arrow.prev');
+        const nextBtn = section.querySelector('.gallery-arrow.next');
+        if (prevBtn) prevBtn.className = "gallery-huge-btn prev";
+        if (nextBtn) nextBtn.className = "gallery-huge-btn next";
     },
 
     toggleMobileTicket: (show) => {

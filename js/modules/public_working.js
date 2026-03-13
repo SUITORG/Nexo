@@ -1,6 +1,6 @@
-/**
+﻿/**
  * EVASOL - PUBLIC MODULE (v4.6.7)
- * Responsabilidad: Vistas públicas, Landing Page, SEO, Menú y Órbita.
+ * Responsabilidad: Vistas p├║blicas, Landing Page, SEO, Men├║ y ├ôrbita.
  */
 app.public = {
     // --- INFO MODALS ---
@@ -23,7 +23,7 @@ app.public = {
                 <div style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
                     <div class="about-item">
                         <h4 style="color: var(--primary-color); margin-bottom: 5px;"><i class="fas fa-info-circle"></i> Acerca de</h4>
-                        <p style="font-size: 0.9rem; line-height: 1.4;">${company.descripcion || 'Información no disponible.'}</p>
+                        <p style="font-size: 0.9rem; line-height: 1.4;">${company.descripcion || 'Informaci├│n no disponible.'}</p>
                     </div>
                     <div class="about-item">
                         <h4 style="color: var(--primary-color); margin-bottom: 5px;"><i class="fab fa-whatsapp"></i> WhatsApp</h4>
@@ -47,16 +47,16 @@ app.public = {
             content.innerHTML = `
                 <div style="max-height: 400px; overflow-y: auto; padding-right: 15px;">
                     <section style="margin-bottom: 20px;">
-                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">1. PROTECCIÓN DE DATOS</h4>
+                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">1. PROTECCI├ôN DE DATOS</h4>
                         <p style="font-size: 0.85rem; color: #666; line-height: 1.4;">${company?.nomempresa || 'La empresa'} garantiza que sus datos personales son tratados bajo estrictas medidas de seguridad.</p>
                     </section>
                     <section style="margin-bottom: 20px;">
-                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">2. TÉRMINOS COMERCIALES</h4>
+                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">2. T├ëRMINOS COMERCIALES</h4>
                         <p style="font-size: 0.85rem; color: #666; line-height: 1.4;">Toda orden genera un compromiso de servicio. Precios incluyen impuestos.</p>
                     </section>
                     <section>
-                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">3. POLÍTICAS PERSONALIZADAS</h4>
-                        <p style="font-size: 0.85rem; color: #444; line-height: 1.4; white-space: pre-wrap;">${company?.politicas || 'Políticas base del sistema activas.'}</p>
+                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">3. POL├ìTICAS PERSONALIZADAS</h4>
+                        <p style="font-size: 0.85rem; color: #444; line-height: 1.4; white-space: pre-wrap;">${company?.politicas || 'Pol├¡ticas base del sistema activas.'}</p>
                     </section>
                 </div>`;
         }
@@ -81,7 +81,7 @@ app.public = {
                     <div style="text-align:left; display:flex; flex-direction:column; gap:15px;">
                         <div style="background:#f9f9f9; padding:15px; border-radius:10px; border-left:4px solid var(--primary-color);">
                             <p style="margin:0; font-style:italic; font-size:0.9rem;">"Excelente servicio y calidad en los productos. Altamente recomendados."</p>
-                            <small style="display:block; margin-top:5px; color:#888;">- Juan Pérez</small>
+                            <small style="display:block; margin-top:5px; color:#888;">- Juan P├®rez</small>
                         </div>
                     </div>
                 </div>`;
@@ -97,13 +97,13 @@ app.public = {
         const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
         const content = document.getElementById('location-content');
         if (content && company) {
-            const address = company.direccion || "Dirección no disponible.";
+            const address = company.direccion || "Direcci├│n no disponible.";
             const mapUrl = company.ubicacion_url || "";
 
             let mapIframe = `<div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); height:250px; display:flex; align-items:center; justify-content:center; border-radius:12px; margin-bottom:20px; color:#adb5bd; flex-direction:column; border: 1px solid #dee2e6;">
                                 <i class="fas fa-map-marked-alt fa-3x" style="margin-bottom:15px; color: var(--accent-color);"></i>
                                 <p style="font-weight:700; color:#495057;">Mapa Interactivo</p>
-                                <p style="font-size:0.8rem; padding: 0 40px; text-align: center; line-height: 1.4;">Para ver el mapa interactivo aquí, usa el enlace de "Insertar Mapa" (Embed) de Google Maps.</p>
+                                <p style="font-size:0.8rem; padding: 0 40px; text-align: center; line-height: 1.4;">Para ver el mapa interactivo aqu├¡, usa el enlace de "Insertar Mapa" (Embed) de Google Maps.</p>
                              </div>`;
 
             if (mapUrl.includes('google.com/maps/embed') || mapUrl.includes('https://www.google.com/maps/embed')) {
@@ -116,7 +116,7 @@ app.public = {
             content.innerHTML = `
                 <div style="text-align: center;">
                     ${mapIframe}
-                    <h3 style="color:var(--primary-color); margin-bottom:5px;">Visítanos en:</h3>
+                    <h3 style="color:var(--primary-color); margin-bottom:5px;">Vis├¡tanos en:</h3>
                     <p style="font-size:1.1rem; color:#444; margin-bottom:20px; line-height: 1.5;">${address}</p>
                     <a href="${mapUrl}" target="_blank" class="btn-primary" style="display:inline-block; text-decoration:none; padding:12px 25px; font-size:1rem; border-radius: 50px;">
                         <i class="fas fa-map-marker-alt"></i> Abrir en Google Maps
@@ -170,7 +170,7 @@ app.public = {
     // --- RENDERERS ---
     renderHome: (companyData) => {
         const rawId = (app.state.companyId || "").toString().trim().toUpperCase();
-        const urlId = rawId; // ID Técnico (ej: ROBERTO_V)
+        const urlId = rawId; // ID T├®cnico (ej: ROBERTO_V)
         
         const company = companyData || app.data.Config_Empresas.find(c => {
             const cId = String(c.id_empresa || "").toUpperCase();
@@ -187,28 +187,32 @@ app.public = {
         const pageData = (app.data.Config_Paginas || []).find(p => {
             const pCoId = String(p.id_empresa || "").toUpperCase();
             const pPgId = String(p.id_pagina || "").trim().toLowerCase();
+            // Comparaci├│n robusta (soporta ROBERTOV y ROBERTO_V)
             return (pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "")) && pPgId === hash;
         });
 
-        // Renderizado HOME Estándar (PFM/PMP/Industrial)
-        const bizType = (company.tipo_negocio || "").toString().toUpperCase();
-        const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
-        const isPersonal = bizType.includes("MARCA PERSONAL");
-
-        // --- AJUSTE NAVEGACIÓN DINÁMICA (v8.1.0) ---
-        // Si es una sub-página y NO es Marca Personal, usamos el motor estándar
-        if (pageData && hash !== 'home' && !isPersonal) {
+        // Si es una sub-p├ígina din├ímica (no home)
+        if (pageData && hash !== 'home') {
             const heroBanner = document.getElementById('hero-banner-main');
             const personalNode = document.getElementById('hero-personal-node');
             if (heroBanner) heroBanner.style.display = 'none';
             if (personalNode) personalNode.style.display = 'none';
             
+            // Forzar visibilidad de la secci├│n home ya que el contenido din├ímico vive dentro
             const viewHome = document.getElementById('view-home');
-            if (viewHome) { viewHome.classList.remove('hidden'); viewHome.style.display = 'block'; }
+            if (viewHome) {
+                viewHome.classList.remove('hidden');
+                viewHome.style.display = 'block';
+            }
+
             app.public.renderDynamicContent(pageData);
             return; 
         }
 
+        // Renderizado HOME Est├índar (PFM/PMP/Industrial)
+        const bizType = (company.tipo_negocio || "").toString().toUpperCase();
+        const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
+        const isPersonal = bizType.includes("MARCA PERSONAL");
         app.state.isFood = isFood;
 
         const sloganEl = document.getElementById('hero-slogan');
@@ -218,196 +222,49 @@ app.public = {
         const actions = document.getElementById('hero-actions-container');
         const menuPublic = document.getElementById('menu-public');
 
-        // --- LÓGICA DE IDENTIDAD (v6.6.0) ---
+        // --- L├ôGICA DE IDENTIDAD (v6.6.0) ---
         if (isPersonal) {
             document.body.classList.add('is-personal-brand');
             if (personalNode) {
-                personalNode.style.background = company.color_tema || company.colortema || '#034c3c';
                 personalNode.innerHTML = `
-                    <style>
-                        .personal-responsive-container {
-                            display: flex;
-                            align-items: center;
-                            min-height: 100vh;
-                            width: 100%;
-                            max-width: none;
-                            padding: 60px 20px;
-                            transition: background 0.5s ease;
-                        }
-                        .personal-section {
-                            flex: 1;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            justify-content: center;
-                            padding: 10px;
-                            width: 33.33%;
-                        }
-                        .personal-card-base {
-                            position: relative;
-                            width: 100%;
-                            max-width: 98%;
-                            height: 800px;
-                            border-radius: 48px;
-                            box-shadow: 0 60px 120px rgba(0,0,0,0.6);
-                            overflow: hidden;
-                            display: flex;
-                        }
-                        @media (max-width: 1024px) {
-                            .personal-responsive-container {
-                                flex-direction: column;
-                                padding-top: 120px;
-                                gap: 60px;
-                            }
-                            .personal-section {
-                                width: 100%;
-                                flex: none;
-                            }
-                            .personal-card-base {
-                                max-width: 95%;
-                                height: 750px; /* Ligero ajuste para móviles */
-                            }
-                        }
-                    </style>
-                    <div class="personal-responsive-container">
-                            <!-- PARTE 1: IDENTIDAD (v12.0.0 - Responsive) -->
-                            <div class="personal-section">
-                                <div class="personal-left ui-overlay-container personal-card-base" style="background:#111;">
-                                    <img src="${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}" alt="${company.nomempresa}" style="position:absolute; inset:0; width:100%; height:100%; object-fit: cover; transition: transform 0.5s ease;">
+                    <div class="ui-container" style="min-height:92vh; display:flex; align-items:center; padding-top:100px; padding-bottom:100px; background:var(--personal-bg);">
+                        <div class="ui-grid" style="align-items:center; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+                            <!-- LADO IZQUIERDO: FOTO + QR IZQUIERDO -->
+                            <div class="personal-left ui-overlay-container" style="position:relative; width:100%; max-width:620px; justify-self: center; border-radius:32px; box-shadow:0 40px 80px rgba(0,0,0,0.22); overflow:hidden;">
+                                <img src="${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}" alt="${company.nomempresa}" style="width:100%; display:block; border-radius:32px; transition: transform 0.5s ease;">
+                                <div class="ui-overlay-full" style="padding: 40px; display:flex; flex-direction:column; justify-content:space-between;">
+                                    <!-- SUPERIOR IZQUIERDA: NOMBRE EMPRESA -->
+                                    <div class="ui-text-premium" style="align-self:flex-start; font-size:var(--font-size-small); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding-left:14px; letter-spacing:1px; background:rgba(0,0,0,0.4); padding-right:10px; border-radius:0 20px 20px 0;">${company.nomempresa}</div>
                                     
-                                    <div style="position:absolute; inset:0; background:linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.7) 100%); pointer-events:none;"></div>
-
-                                    <div class="ui-overlay-full" style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none;">
-                                        <!-- SUPERIOR IZQUIERDA: SLOGAN -->
-                                        <div class="ui-text-premium" style="position:absolute; top:40px; left:40px; text-align:left; font-size:var(--font-size-small, 0.75rem); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding:10px 15px; letter-spacing:3px; background:rgba(0,0,0,0.4); border-radius:0 10px 10px 0; color:white; font-weight:800; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">
-                                            ${company.slogan || company.nomempresa}
-                                        </div>
-
-                                        <!-- CENTRO: MENSAJE 1 -->
-                                        <div class="ui-text-premium" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; font-size:clamp(1.5rem, 5vw, 3rem); line-height:1; width:90%; text-shadow: 0 4px 30px rgba(0,0,0,1); font-weight:900; letter-spacing:-1px; color:white;">
-                                            ${company.mensaje1 || ''}
-                                        </div>
-
-                                        <!-- INFERIOR DERECHA: MENSAJE 2 -->
-                                        <div class="ui-text-premium" style="position:absolute; bottom:40px; right:40px; text-align:right; font-size:1.8rem; color:var(--accent-color, #ffd700); text-shadow:0 4px 20px rgba(0,0,0,1); font-weight:800;">
-                                            ${company.mensaje2 || ''}
-                                        </div>
-                                    </div>
-
-                                    <div class="banner-qr-official" style="position:absolute; bottom:30px; left:30px; background:white; padding:12px; border-radius:20px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 20px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid rgba(255,255,255,0.2);">
-                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:50px; height:50px; image-rendering:pixelated;">
-                                        <span style="font-size:0.55rem; color:#000; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${company.nomempresa}</span>
-                                    </div>
+                                    <!-- CENTRO: MENSAJE 1 -->
+                                    <div class="ui-text-premium" style="align-self:center; text-align:center; font-size:var(--font-size-h2); line-height:1.1; width:90%;">${company.mensaje1 || ''}</div>
+                                    
+                                    <!-- INFERIOR DERECHA: MENSAJE 2 (Restored) -->
+                                    <div class="ui-text-premium" style="align-self:flex-end; text-align:right; font-size:var(--font-size-h3); color:var(--accent-color, #ffd700); opacity:1; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.8));">${company.mensaje2 || ''}</div>
+                                </div>
+                                <!-- QR OFICIAL IZQUIERDO (v6.6.1) -->
+                                <div class="banner-qr-official" style="position:absolute; bottom:20px; left:20px; background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; pointer-events:auto; cursor:help; box-shadow:0 15px 35px rgba(0,0,0,0.3); z-index:20; border: 1px solid rgba(0,0,0,0.05);">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname)}" style="width:45px; height:45px; image-rendering:pixelated;">
+                                    <span style="font-size:0.5rem; color:#000; font-weight:900; text-transform:uppercase; margin-top:5px; letter-spacing:0.5px;">${company.nomempresa}</span>
                                 </div>
                             </div>
-
-                            <!-- PARTE 2: NAVEGACIÓN DINÁMICA + VISOR JSON (v12.0.0 - Responsive) -->
-                            <div class="personal-section">
-                                <!-- TARJETA PREMIUM CON COLOR TEMA -->
-                                <div class="personal-content-viewer personal-card-base" 
-                                     style="background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${app.utils.fixDriveUrl(company.logo_url || company.foto_agente)}') center center / cover no-repeat; background-color: ${company.color_tema || '#034c3c'}; padding:45px; z-index:15; flex-direction:column; gap:30px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.5s ease; color: white;">
-                                    
-                                    <!-- MOTOR DE BOTONES DINÁMICO (Ahora dentro de la tarjeta) -->
-                                    <div class="personal-pages-nav" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-start; margin-bottom:10px; width:100%;">
-                                        ${(app.data.Config_Paginas || [])
-                                            .filter(p => {
-                                                const pCoId = String(p.id_empresa || "").toUpperCase();
-                                                return pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
-                                            })
-                                            .map(p => `
-                                                <button class="btn-page-dynamic" 
-                                                        style="padding:8px 18px; border-radius:50px; border:1px solid ${pageData && pageData.id_pagina === p.id_pagina ? 'var(--accent-color, #ffd700)' : '#eee'}; background:${pageData && pageData.id_pagina === p.id_pagina ? 'var(--accent-color, #ffd700)' : '#f9f9f9'}; color:${pageData && pageData.id_pagina === p.id_pagina ? '#000' : '#666'}; font-weight:800; cursor:pointer; transition:all 0.3s ease; font-size:0.75rem; text-transform:uppercase;"
-                                                        onclick="window.location.hash='#${p.id_pagina}'">
-                                                    ${p.id_pagina.replace(/_/g, ' ')}
-                                                </button>
-                                            `).join('')}
+                            <!-- LADO DERECHO: SLOGAN + CONFIG_PAGINAS -->
+                            <div class="personal-right" style="display:flex; flex-direction:column; gap:var(--ui-gap); text-align:left; max-width: 650px; justify-self: start;">
+                                <h1 class="ui-text-premium" style="font-size:var(--font-size-h1); color: #111; line-height:1; margin:0; letter-spacing:-1px;">${company.slogan || company.nomempresa}</h1>
+                                
+                                ${pageData ? `
+                                    <div class="personal-dynamic-content" style="display:flex; flex-direction:column; gap:15px;">
+                                        ${pageData.subtitulo ? `<h2 style="font-size:var(--font-size-h3); color:var(--primary-color); margin:0;">${pageData.subtitulo}</h2>` : ''}
+                                        <div style="font-size:var(--font-size-body); line-height:1.8; color:#333; opacity:0.9;">
+                                            ${pageData.contenido || company.descripcion || ''}
+                                        </div>
                                     </div>
+                                ` : `
+                                    <p style="font-size:var(--font-size-body); line-height:1.8; color:#333; margin:0; opacity:0.9;">${company.descripcion || 'Especialista en soluciones integrales.'}</p>
+                                `}
 
-                                    ${(() => {
-                                        let jsonData = {};
-                                        try {
-                                            jsonData = pageData && pageData.contenido_json ? JSON.parse(pageData.contenido_json) : {};
-                                            if (jsonData.hero) { jsonData = { ...jsonData, ...jsonData.hero }; }
-                                        } catch(e) { console.warn("Error parseando JSON", e); }
-
-                                        if (pageData) {
-                                            const displayTitle = jsonData.H1 || jsonData.h1 || jsonData.Titulo || jsonData.titulo || pageData.subtitulo || 'Sin Título';
-                                            const displaySub = jsonData.Subtitulo || jsonData.subtitulo || (pageData.meta_json ? JSON.parse(pageData.meta_json).title : '') || '';
-                                            const displayBody = jsonData.Contenido || jsonData.contenido || jsonData.body || pageData.contenido || '';
-
-                                            return `
-                                                <div class="dynamic-entry" style="animation: fadeIn 0.5s ease;">
-                                                    <h2 style="font-size:2.4rem; color:#034c3c; margin:0; font-weight:900; line-height:1.1; letter-spacing:-1px;">
-                                                        ${displayTitle}
-                                                    </h2>
-                                                    ${displaySub ? `<h3 style="font-size:1.2rem; color:#666; margin:15px 0 0 0; font-weight:500;">${displaySub}</h3>` : ''}
-                                                    <div style="font-size:1.1rem; line-height:1.7; color:#333; margin-top:25px; opacity:0.9;">
-                                                        ${displayBody}
-                                                    </div>
-                                                </div>
-                                            `;
-                                        } else {
-                                            return `
-                                                <h2 style="font-size:2.2rem; color:#034c3c; margin:0; font-weight:900;">${company.nomempresa}</h2>
-                                                <p style="font-size:1.1rem; line-height:1.7; color:#444; margin-top:20px;">${company.descripcion || 'Seleccione una opción para conocer más sobre nuestra labor.'}</p>
-                                            `;
-                                        }
-                                    })()}
-                                    
-                                    <div style="margin-top:auto; padding-top:10px;">
-                                        <button class="btn-primary" 
-                                                style="width:100%; padding: 20px; border-radius: 50px; font-weight:900; background:#034c3c; color:white; border:none; cursor:pointer;" 
-                                                onclick="window.location.hash='#contact'">
-                                            MÁS INFORMACIÓN
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- PARTE 3: GALERÍA DINÁMICA (v12.0.0 - Responsive) -->
-                            <div class="personal-section">
-                                <div class="personal-gallery-card personal-card-base" style="background:#111;">
-                                    ${(() => {
-                                        const gallery = (app.data.Config_Galeria || []).filter(g => {
-                                            const gCoId = String(g.id_empresa || "").toUpperCase();
-                                            return gCoId === urlId || gCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
-                                        });
-
-                                        if (gallery.length > 0) {
-                                            return `
-                                                <div id="personal-carousel" style="position:absolute; inset:0; display:flex; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); width: ${gallery.length * 100}%;">
-                                                    ${gallery.map(img => `
-                                                        <div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(img.foto_url || img.url)}') center center / cover no-repeat;"></div>
-                                                    `).join('')}
-                                                </div>
-                                                <!-- Indicadores de Galería -->
-                                                <div style="position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10;">
-                                                    ${gallery.map((_, i) => `<div class="carousel-dot" data-index="${i}" style="width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.4); transition:0.3s;"></div>`).join('')}
-                                                </div>
-                                                <script>
-                                                    ((total) => {
-                                                        let current = 0;
-                                                        const el = document.getElementById('personal-carousel');
-                                                        const dots = document.querySelectorAll('.carousel-dot');
-                                                        if(!el) return;
-                                                        setInterval(() => {
-                                                            current = (current + 1) % total;
-                                                            el.style.transform = \`translateX(-\${(current * 100) / total}%)\`;
-                                                            dots.forEach((d, i) => d.style.background = i === current ? '#ffd700' : 'rgba(255,255,255,0.4)');
-                                                        }, 4000);
-                                                    })(${gallery.length});
-                                                </script>
-                                            `;
-                                        } else {
-                                            return `<div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}') center center / cover no-repeat;"></div>`;
-                                        }
-                                    })()}
-                                    
-                                    <!-- Overlay de Galería -->
-                                    <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 40%); pointer-events:none;"></div>
-                                    <div style="position:absolute; bottom:30px; right:30px; color:white; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:2px; opacity:0.8; z-index:10;">
-                                        <i class="fas fa-camera-retro" style="margin-right:8px;"></i> Galería Privada
-                                    </div>
+                                <div class="hero-actions" style="display:flex; gap:20px; margin-top:15px;">
+                                    <button class="btn-primary" style="padding: 20px 45px; border-radius: 50px; font-weight:800; font-size:1.1rem; box-shadow: 0 15px 30px var(--primary-color)44;" onclick="window.location.hash='#contact'">Agendar Consulta</button>
                                 </div>
                             </div>
                         </div>
@@ -421,67 +278,31 @@ app.public = {
             if (personalNode) personalNode.style.display = 'none';
             if (heroBanner) {
                 heroBanner.classList.remove('hidden');
-                heroBanner.style.display = 'flex';
-                heroBanner.style.flexDirection = 'column';
-                heroBanner.style.justifyContent = 'center';
-                heroBanner.style.alignItems = 'center';
-                heroBanner.style.padding = '0';
-                heroBanner.style.minHeight = '80vh';
-                heroBanner.style.backgroundImage = 'none';
-                heroBanner.style.backgroundColor = company.color_tema || company.colortema || '#034c3c';
-                heroBanner.style.position = 'relative';
-                heroBanner.style.overflow = 'hidden';
+                heroBanner.style.display = 'block';
+                const bgUrl = company.foto_agente || company.logo_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836';
+                heroBanner.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('${app.utils.fixDriveUrl(bgUrl)}')`;
+                heroBanner.style.backgroundSize = 'cover';
 
-                const photoUrl = app.utils.fixDriveUrl(company.foto_agente || company.logo_url);
-                
-                heroBanner.innerHTML = `
-                    <!-- Capa de Foto Completa (v12.5.1) -->
-                    <div style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center; z-index:1;">
-                        <img src="${photoUrl}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;">
-                    </div>
-
-                    <!-- Overlay Premium -->
-                    <div style="position:absolute; inset:0; background:radial-gradient(circle, transparent 10%, rgba(0,0,0,0.5) 100%); z-index:2; pointer-events:none;"></div>
-
-                    <!-- COORDENADAS DE IDENTIDAD UNIVERSAL -->
-                    <div style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none; padding: 40px;">
-                        <!-- SUPERIOR IZQUIERDA: SLOGAN -->
-                        <div style="position:absolute; top:40px; left:40px; font-size:var(--font-size-small, 0.75rem); text-transform:uppercase; letter-spacing:3px; font-weight:800; text-shadow:0 2px 15px rgba(0,0,0,0.8); color:white; border-left:4px solid ${company.color_tema}; padding-left:15px;">
-                            ${company.slogan || ''}
-                        </div>
-
-                        <!-- CENTRO: MENSAJE 1 -->
-                        <h1 style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:clamp(1.8rem, 6vw, 4rem); font-weight:900; text-align:center; width:90%; text-shadow:0 10px 40px rgba(0,0,0,0.8); color:white; margin:0;">
-                            ${company.mensaje1 || company.nomempresa}
-                        </h1>
-
-                        <!-- INFERIOR DERECHA: MENSAJE 2 -->
-                        <div style="position:absolute; bottom:40px; right:40px; font-size:clamp(1.2rem, 3vw, 2.5rem); font-weight:800; color:${company.color_tema}; text-shadow:0 4px 20px rgba(0,0,0,0.9);">
-                            ${company.mensaje2 || ''}
-                        </div>
-                    </div>
-
-                    <!-- ACCIONES: BOTÓN DE CONTACTO (CENTRO ABAJO) -->
-                    <div style="position:absolute; bottom:120px; left:50%; transform:translateX(-50%); z-index:10;">
-                        <button class="btn-primary" style="padding:15px 45px; border-radius:50px; font-weight:900; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:none; cursor:pointer;" onclick="window.location.hash='#contact'">
-                            CONTACTAR AHORA
-                        </button>
-                    </div>
-
-                    <!-- QR Dinámico (Protected Mode) -->
-                    <div class="banner-qr-official" style="position:absolute; bottom:30px; left:30px; background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 20px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid #eee; opacity:0.8;">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:45px; height:45px; image-rendering:pixelated;">
-                    </div>
-                `;
+                // Inyectar QR Oficial + NomEmpresa en Banner Est├índar
+                if (!heroBanner.querySelector('.banner-qr-official')) {
+                    const qrBox = document.createElement('div');
+                    qrBox.className = 'banner-qr-official';
+                    qrBox.style.cssText = "position:absolute; bottom:30px; left:30px; background:white; padding:8px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:4px; box-shadow:0 10px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid #eee;";
+                    qrBox.innerHTML = `
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname)}" style="width:65px; height:65px; image-rendering:pixelated;">
+                        <span style="color:black; font-size:0.6rem; font-weight:900; text-transform:uppercase; letter-spacing:0.5px;">${company.nomempresa}</span>
+                    `;
+                    heroBanner.appendChild(qrBox);
+                }
             }
         }
 
-        if (sloganEl && !heroBanner.innerHTML.includes('hero-actions-dynamic')) sloganEl.innerText = company.slogan || company.nomempresa;
-        if (subEl && !heroBanner.innerHTML.includes('hero-actions-dynamic')) subEl.innerText = company.mensaje1 || company.descripcion || "Bienvenido.";
+        if (sloganEl) sloganEl.innerText = company.slogan || company.nomempresa;
+        if (subEl) subEl.innerText = company.mensaje1 || company.descripcion || "Bienvenido.";
         
-        if (actions && !isPersonal && !heroBanner.innerHTML.includes('hero-actions-dynamic')) {
+        if (actions && !isPersonal) {
             actions.innerHTML = isFood ? 
-                `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
+                `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Men├║ Digital</button>` :
                 `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar</button>`;
         }
 
@@ -503,7 +324,7 @@ app.public = {
         const storySection = document.getElementById('dynamic-story-section');
         const gallerySection = document.getElementById('company-gallery-section');
         if (gallerySection) {
-            // Si la sección de historia está oculta, pegamos la galería a la matriz SEO
+            // Si la secci├│n de historia est├í oculta, pegamos la galer├¡a a la matriz SEO
             if (!storySection || storySection.classList.contains('hidden')) {
                 gallerySection.style.marginTop = "var(--ui-gap, 32px)";
                 gallerySection.style.borderTop = "none";
@@ -522,7 +343,7 @@ app.public = {
             // Mapeo Inteligente de Campos (v6.5.2)
             const rawContent = typeof pageData.contenido_json === 'string' ? JSON.parse(pageData.contenido_json) : pageData.contenido_json;
             const content = {};
-            // Normalizar a minúsculas para búsqueda fácil
+            // Normalizar a min├║sculas para b├║squeda f├ícil
             Object.keys(rawContent).forEach(k => content[k.toLowerCase()] = rawContent[k]);
 
             const h2 = document.getElementById('story-h2');
@@ -531,13 +352,13 @@ app.public = {
             const img = document.getElementById('story-img');
             const imgContainer = document.querySelector('.story-image-container');
 
-            if (h2) h2.innerHTML = content.h1 || content.titulo || "Información";
+            if (h2) h2.innerHTML = content.h1 || content.titulo || "Informaci├│n";
             if (h3) h3.innerHTML = content.h2_1 || content.subtitulo || "";
             
             if (body) {
                 let txt = content.p_intro || content.texto || content.descripcion || "";
-                if (content.p_mision) txt += `<br><br><strong>Misión:</strong> ${content.p_mision}`;
-                body.innerHTML = txt || "Contenido disponible próximamente.";
+                if (content.p_mision) txt += `<br><br><strong>Misi├│n:</strong> ${content.p_mision}`;
+                body.innerHTML = txt || "Contenido disponible pr├│ximamente.";
             }
 
             if (img) {
@@ -573,23 +394,23 @@ app.public = {
                 
                 <form id="res-form" style="display:flex; flex-direction:column; gap:15px; text-align:left;">
                     <div class="form-group">
-                        <label style="font-size:0.8rem; font-weight:bold; color:#555;">Día y Hora</label>
+                        <label style="font-size:0.8rem; font-weight:bold; color:#555;">D├¡a y Hora</label>
                         <input type="datetime-local" id="res-date" required style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
                     </div>
                     <div class="form-group">
                         <label style="font-size:0.8rem; font-weight:bold; color:#555;">Tu Nombre</label>
-                        <input type="text" id="res-name" placeholder="¿Cómo te llamas?" required style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
+                        <input type="text" id="res-name" placeholder="┬┐C├│mo te llamas?" required style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
                     </div>
                     <div class="form-group">
                         <label style="font-size:0.8rem; font-weight:bold; color:#555;">WhatsApp</label>
-                        <input type="tel" id="res-wa" placeholder="Para confirmación" required style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
+                        <input type="tel" id="res-wa" placeholder="Para confirmaci├│n" required style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
                     </div>
                     <div class="form-group">
                         <label style="font-size:0.8rem; font-weight:bold; color:#555;">Servicio / Motivo</label>
                         <select id="res-service" style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:15px;">
-                            <option>Información General</option>
-                            <option>Cotización</option>
-                            <option>Soporte Técnico</option>
+                            <option>Informaci├│n General</option>
+                            <option>Cotizaci├│n</option>
+                            <option>Soporte T├®cnico</option>
                         </select>
                     </div>
                     
@@ -633,7 +454,7 @@ app.public = {
             });
             const res = await response.json();
             if (res.success) {
-                alert("¡Cita agendada con éxito! Te contactaremos por WhatsApp.");
+                alert("┬íCita agendada con ├®xito! Te contactaremos por WhatsApp.");
                 document.getElementById('reservation-modal').classList.add('hidden');
             } else {
                 throw new Error(res.error || "Error desconocido");
@@ -834,7 +655,7 @@ app.public = {
         const companies = (app.data.Config_Empresas || []).filter(co => {
             const isHabil = (co.habilitado === 'TRUE' || co.habilitado === true || co.habilitado === "1");
             const isProd = (co.modo === 'PROD');
-            // Nota: En la Órbita se ven todos los activos/producción. El aislamiento (is_isolated)
+            // Nota: En la ├ôrbita se ven todos los activos/producci├│n. El aislamiento (is_isolated)
             // solo afecta la salida del sitio hacia el Hub una vez dentro.
             return isHabil && isProd;
         }).sort((a, b) => {
@@ -853,7 +674,7 @@ app.public = {
 
         const screenW = window.innerWidth;
         let scaleFactor = 1.0;
-        if (screenW < 768) scaleFactor = 0.4; // Móvil: -60%
+        if (screenW < 768) scaleFactor = 0.4; // M├│vil: -60%
         else if (screenW < 1024) scaleFactor = 0.6; // Tablet: -40%
 
         companies.forEach((co) => {
@@ -908,7 +729,7 @@ app.public = {
             });
         });
 
-        // --- ACTUALIZACIÓN MENÚ HUB (Inyectar Inquilinos) ---
+        // --- ACTUALIZACI├ôN MEN├Ü HUB (Inyectar Inquilinos) ---
         const menuPublic = document.getElementById('menu-public');
         if (menuPublic) {
             menuPublic.classList.add('hub-active');
@@ -1014,13 +835,13 @@ app.public = {
 
         container.innerHTML = `
             <div class="footer-links-sub">
-                <a class="btn-link" onclick="app.public.showLocation()">Ubicación</a>
+                <a class="btn-link" onclick="app.public.showLocation()">Ubicaci├│n</a>
                 <a class="btn-link" onclick="app.public.showReviews()">Opiniones</a>
                 <a class="btn-link" onclick="window.location.hash='#pillars'">Pilares</a>
                 <a class="btn-link" onclick="app.public.showAboutUs()">Nosotros</a>
-                <a class="btn-link" onclick="app.public.showPolicies()">Políticas</a>
-                ${showForm ? `<a class="btn-link" onclick="window.location.hash='#contact'">Contáctanos</a>` : ''}
-                ${siteMode === 'HYBRID' ? `<a class="btn-link" onclick="window.location.hash='#orbit'" style="opacity:0.4; font-size:0.6rem !important;">• Hub</a>` : ''}
+                <a class="btn-link" onclick="app.public.showPolicies()">Pol├¡ticas</a>
+                ${showForm ? `<a class="btn-link" onclick="window.location.hash='#contact'">Cont├íctanos</a>` : ''}
+                ${siteMode === 'HYBRID' ? `<a class="btn-link" onclick="window.location.hash='#orbit'" style="opacity:0.4; font-size:0.6rem !important;">ÔÇó Hub</a>` : ''}
             </div>
 
             <div class="footer-social">
@@ -1036,8 +857,8 @@ app.public = {
         const container = document.getElementById('pillars-container');
         if (!container) return;
         const pillars = [
-            { title: 'MISIÓN', text: company.mision, icon: 'fa-bullseye' },
-            { title: 'VISIÓN', text: company.vision, icon: 'fa-eye' },
+            { title: 'MISI├ôN', text: company.mision, icon: 'fa-bullseye' },
+            { title: 'VISI├ôN', text: company.vision, icon: 'fa-eye' },
             { title: 'VALORES', text: company.valores, icon: 'fa-handshake' },
             { title: 'IMPACTO', text: company.impacto, icon: 'fa-chart-line' }
         ];
@@ -1054,12 +875,8 @@ app.public = {
         const grid = document.getElementById('company-gallery-grid');
         if (!grid || !section) return;
         
-        const urlId = (app.state.companyId || "").toString().trim().toUpperCase();
-        const company = app.data.Config_Empresas.find(c => c.id_empresa === urlId);
-        if (!company) return;
-
         const imgs = (app.data.Config_Galeria || []).filter(img => 
-            String(img.id_empresa || "").trim().toUpperCase() === urlId
+            String(img.id_empresa || "").trim().toUpperCase() === String(app.state.companyId || "").trim().toUpperCase()
         );
 
         if (imgs.length === 0) {
@@ -1071,98 +888,36 @@ app.public = {
         section.classList.remove('hidden');
         section.style.display = 'block';
 
-        const tema = company.color_tema || company.colortema || '#034c3c';
-        section.style.background = tema;
-        section.style.borderTop = "none";
+        // Estructura Horizonte Total (v6.6.8 - Breaking the Grid)
+        // Limpiamos estilos inyectados previos si existen
+        const oldStyle = document.getElementById('ui-gallery-breakout');
+        if (oldStyle) oldStyle.remove();
 
-        // Asegurar que el contenedor expansivo también tenga el color tema (v13.2.5)
-        const breakout = section.querySelector('.gallery-breakout-container');
-        if (breakout) {
-            breakout.style.background = tema;
+        // Aplicamos nuevas clases de style.css
+        const wrapper = section.querySelector('.gallery-wrapper');
+        if (wrapper) {
+            wrapper.className = "gallery-breakout-container";
         }
 
-        // Determinar capacidad de slots según la cantidad de fotos (Máximo 4 por fila en PC)
-        const pcSlots = Math.min(4, imgs.length);
-        const slotWidth = 100 / pcSlots;
-
-        // Renderizado de Tarjetas con Regla del 90%
+        grid.className = "gallery-horizon-grid";
+        grid.style = ""; // Limpiar estilos inline previos
+        
         grid.innerHTML = imgs.map(img => `
-            <div class="gallery-slot" style="flex: 0 0 ${slotWidth}%; min-width: ${slotWidth}%; display: flex; justify-content: center; align-items: center; padding: 10px 0;">
-                <div class="gallery-card-premium" style="width: 90%; position: relative; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); background: white; aspect-ratio: 16/10;">
-                    <img src="${app.utils.fixDriveUrl(img.url_imagen || img.imagen_url)}" 
-                         alt="${img.titulo}" 
-                         style="width:100%; height:100%; object-fit:cover; display: block; transition: transform 0.5s ease;">
-                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); text-align: center;">
-                        <span style="color: white; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                            ${img.titulo || ''}
-                        </span>
+            <div class="gallery-item-huge">
+                <img src="${app.utils.fixDriveUrl(img.url_imagen || img.imagen_url)}" 
+                     alt="${img.titulo}" 
+                     class="gallery-img">
+                <div class="ui-overlay-full" style="justify-content:flex-end; padding:30px; background:linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.85)); pointer-events:none;">
+                    <div class="ui-text-premium" style="font-size:1.2rem; border-left:5px solid var(--accent-color, #ffd700); padding-left:18px; line-height:1;">
+                        ${img.titulo || 'Proyecto'}
                     </div>
                 </div>
             </div>`).join('');
 
-        // Media Queries de Precisión y Estilizado de Flechas (v13.2.1)
-        const galleryStyle = document.getElementById('ui-gallery-precision-css') || document.createElement('style');
-        galleryStyle.id = 'ui-gallery-precision-css';
-        galleryStyle.innerHTML = `
-            .gallery-breakout-container { width: 100vw !important; position: relative !important; left: 50% !important; margin-left: -50vw !important; overflow: hidden !important; padding: 40px 0 !important; display: flex; align-items: center; justify-content: center; }
-            #company-gallery-grid { display: flex !important; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important; scroll-behavior: smooth !important; overflow-x: hidden !important; width: 100% !important; padding: 0 50px !important; }
-            
-            /* FLECHAS POSICIONADAS EN EL ÁREA DE GALERÍA */
-            .gallery-huge-btn { 
-                position: absolute !important; top: 50% !important; transform: translateY(-50%) !important; 
-                width: 50px !important; height: 50px !important; border-radius: 50% !important; 
-                background: white !important; color: var(--primary-color) !important; 
-                display: flex !important; align-items: center !important; justify-content: center !important; 
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important; border: none !important; 
-                cursor: pointer !important; z-index: 1000 !important; transition: 0.3s !important;
-                visibility: visible !important; opacity: 1 !important;
-            }
-            .gallery-huge-btn.prev { left: 20px !important; }
-            .gallery-huge-btn.next { right: 20px !important; }
-            .gallery-huge-btn:hover { background: var(--primary-color) !important; color: white !important; scale: 1.1; }
-
-            @media (max-width: 1024px) {
-                .gallery-slot { flex: 0 0 50% !important; min-width: 50% !important; }
-            }
-            @media (max-width: 600px) {
-                .gallery-slot { flex: 0 0 100% !important; min-width: 100% !important; }
-                .gallery-card-premium { width: 85% !important; }
-                .gallery-huge-btn { width: 40px !important; height: 40px !important; }
-            }
-            .gallery-card-premium:hover img { transform: scale(1.05); }
-        `;
-        if (!document.getElementById('ui-gallery-precision-css')) document.head.appendChild(galleryStyle);
-
-        // --- LÓGICA DE CARRUSEL (v13.1.0) ---
-        const isMobile = window.innerWidth <= 600;
-        const isTablet = window.innerWidth <= 1024 && window.innerWidth > 600;
-        const visibleSlots = isMobile ? 1 : (isTablet ? 2 : pcSlots);
-
-        if (imgs.length > visibleSlots) {
-             if (app.state.galleryTimer) clearInterval(app.state.galleryTimer);
-             app.state.galleryTimer = setInterval(() => {
-                 app.ui.scrollGalleryBySlot(1, visibleSlots);
-             }, 5000);
-        }
-
-        // Re-mapear botones de navegación
-        const prevBtn = section.querySelector('.gallery-arrow.prev') || section.querySelector('.gallery-huge-btn.prev');
-        const nextBtn = section.querySelector('.gallery-arrow.next') || section.querySelector('.gallery-huge-btn.next');
-        
-        if (prevBtn) {
-            prevBtn.className = "gallery-huge-btn prev";
-            prevBtn.onclick = () => { 
-                app.ui.scrollGalleryBySlot(-1, visibleSlots); 
-                if(app.state.galleryTimer) clearInterval(app.state.galleryTimer); 
-            };
-        }
-        if (nextBtn) {
-            nextBtn.className = "gallery-huge-btn next";
-            nextBtn.onclick = () => { 
-                app.ui.scrollGalleryBySlot(1, visibleSlots); 
-                if(app.state.galleryTimer) clearInterval(app.state.galleryTimer); 
-            };
-        }
+        const prevBtn = section.querySelector('.gallery-arrow.prev');
+        const nextBtn = section.querySelector('.gallery-arrow.next');
+        if (prevBtn) prevBtn.className = "gallery-huge-btn prev";
+        if (nextBtn) nextBtn.className = "gallery-huge-btn next";
     },
 
     toggleMobileTicket: (show) => {
@@ -1187,7 +942,7 @@ app.public = {
             container.innerHTML = `<div class="form-container" style="text-align:center; padding:50px;">
                 <i class="fas fa-comment-slash fa-3x" style="color:#ccc; margin-bottom:20px;"></i>
                 <h2>Contacto Desactivado</h2>
-                <p>Por el momento este negocio no recibe solicitudes vía formulario.</p>
+                <p>Por el momento este negocio no recibe solicitudes v├¡a formulario.</p>
                 <button class="btn-primary" onclick="window.location.hash='#home'">Volver al Inicio</button>
             </div>`;
             return;
@@ -1197,11 +952,11 @@ app.public = {
 
         container.innerHTML = `
             <div class="form-container">
-                <h2>${isInsurance ? 'Solicitud de Asesoría' : 'Contáctanos'}</h2>
-                <p>${isInsurance ? 'Personaliza tu protección. Un experto de TopLux Finance te contactará.' : 'Déjanos tus datos y un asesor se comunicará contigo.'}</p>
+                <h2>${isInsurance ? 'Solicitud de Asesor├¡a' : 'Cont├íctanos'}</h2>
+                <p>${isInsurance ? 'Personaliza tu protecci├│n. Un experto de TopLux Finance te contactar├í.' : 'D├®janos tus datos y un asesor se comunicar├í contigo.'}</p>
                 <form id="public-lead-form">
                     <div class="form-group">
-                        <label>Teléfono / WhatsApp *</label>
+                        <label>Tel├®fono / WhatsApp *</label>
                         <input type="tel" id="lead-phone" required placeholder="Ej: 521...">
                     </div>
                     <div class="form-group">
@@ -1211,35 +966,35 @@ app.public = {
 
                     ${isInsurance ? `
                     <div class="form-group">
-                        <label>¿Qué deseas proteger? *</label>
+                        <label>┬┐Qu├® deseas proteger? *</label>
                         <select id="lead-subtype" required onchange="app.public.toggleInsuranceFields(this.value)" style="width:100%; padding:12px; border-radius:12px; border:1px solid #ddd;">
-                            <option value="">Selecciona una opción...</option>
-                            <option value="GMM">Gastos Médicos Mayores (Salud)</option>
+                            <option value="">Selecciona una opci├│n...</option>
+                            <option value="GMM">Gastos M├®dicos Mayores (Salud)</option>
                             <option value="PPR">Plan Personal de Retiro (PPR)</option>
                             <option value="AUTO">Seguro de Auto / Flotilla</option>
                             <option value="VIDA">Seguro de Vida / Invalidez</option>
                             <option value="NEGOCIO">Seguro PyME / Empresarial</option>
                         </select>
                     </div>
-                    <!-- Campos Dinámicos de Seguros (v6.1.7) -->
+                    <!-- Campos Din├ímicos de Seguros (v6.1.7) -->
                     <div id="insurance-dynamic-fields" style="margin-top:20px; border-left:4px solid var(--primary-color); padding-left:15px;" class="hidden">
                         <!-- Inyectado por toggleInsuranceFields -->
                     </div>
                     ` : ''}
 
                     <div class="form-group">
-                        <label>Correo Electrónico</label>
+                        <label>Correo Electr├│nico</label>
                         <input type="email" id="lead-email">
                     </div>
                     <div class="form-group">
-                        <label>Dirección *</label>
-                        <input type="text" id="lead-address" required placeholder="Calle, Número, Colonia..." autocomplete="off">
+                        <label>Direcci├│n *</label>
+                        <input type="text" id="lead-address" required placeholder="Calle, N├║mero, Colonia..." autocomplete="off">
                     </div>
                     
                     ${finalBilling ? `
                     <div id="billing-fields" style="background: rgba(0, 210, 255, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--primary-color); margin: 20px 0;">
                         <h4 style="margin-top:0; color:var(--primary-color); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;">
-                            <i class="fas fa-file-invoice"></i> Datos de Facturación (Opcional)
+                            <i class="fas fa-file-invoice"></i> Datos de Facturaci├│n (Opcional)
                         </h4>
                         <div class="form-group">
                             <label>RFC / Tax ID</label>
@@ -1250,21 +1005,21 @@ app.public = {
                             <input type="text" id="lead-business" placeholder="Nombre Comercial o Fiscal">
                         </div>
                         <div class="form-group">
-                            <label>Dirección Comercial</label>
-                            <input type="text" id="lead-billing-address" placeholder="Calle, Número, CP, Ciudad">
+                            <label>Direcci├│n Comercial</label>
+                            <input type="text" id="lead-billing-address" placeholder="Calle, N├║mero, CP, Ciudad">
                         </div>
                     </div>
                     ` : ''}
 
                     <div id="contact-msg" class="success-msg hidden" style="margin-bottom:15px; text-align:center; color:var(--primary-color); font-weight:bold;"></div>
                     <button type="submit" class="btn-primary w-100" id="btn-submit-contact">
-                        ${isInsurance ? 'Solicitar Cotización Virtual' : 'Enviar Información'} <i class="fas fa-paper-plane" style="margin-left:8px;"></i>
+                        ${isInsurance ? 'Solicitar Cotizaci├│n Virtual' : 'Enviar Informaci├│n'} <i class="fas fa-paper-plane" style="margin-left:8px;"></i>
                     </button>
                 </form>
             </div>
         `;
 
-        // --- Lógica de Auto-rellenado (v5.2.4) ---
+        // --- L├│gica de Auto-rellenado (v5.2.4) ---
         const elPhone = document.getElementById('lead-phone');
         if (elPhone) {
             elPhone.addEventListener('blur', () => {
@@ -1295,7 +1050,7 @@ app.public = {
                     // Notificar visualmente
                     const msg = document.getElementById('contact-msg');
                     if (msg) {
-                        msg.innerText = "¡Bienvenido de nuevo! Hemos cargado tus datos.";
+                        msg.innerText = "┬íBienvenido de nuevo! Hemos cargado tus datos.";
                         msg.classList.remove('hidden');
                         setTimeout(() => msg.classList.add('hidden'), 3000);
                     }
@@ -1303,13 +1058,13 @@ app.public = {
             });
         }
 
-        // Re-bind el evento ya que el DOM del form cambió
+        // Re-bind el evento ya que el DOM del form cambi├│
         const publicLeadForm = document.getElementById('public-lead-form');
         if (publicLeadForm) {
             publicLeadForm.onsubmit = async (e) => {
                 e.preventDefault();
 
-                // --- Lógica de Captura Dinámica de Seguros (v6.1.7) ---
+                // --- L├│gica de Captura Din├ímica de Seguros (v6.1.7) ---
                 if (isInsurance) {
                     const subtypeEl = document.getElementById('lead-subtype');
                     const dynamicFields = document.getElementById('insurance-dynamic-fields');
@@ -1351,7 +1106,7 @@ app.public = {
             case 'GMM':
                 html = `
                     <div class="form-group"><label>Edad del titular *</label><input type="number" id="ins-edad" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
-                    <div class="form-group"><label>¿Fuma? *</label><select id="ins-fuma" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"><option value="NO">No</option><option value="SI">Sí</option></select></div>
+                    <div class="form-group"><label>┬┐Fuma? *</label><select id="ins-fuma" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"><option value="NO">No</option><option value="SI">S├¡</option></select></div>
                     <div class="form-group"><label>Padecimientos o enfermedades preexistentes</label><textarea id="ins-padece" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee; height:60px;"></textarea></div>
                 `;
                 break;
@@ -1365,15 +1120,15 @@ app.public = {
             case 'AUTO':
                 html = `
                     <div class="form-group"><label>Marca y Modelo del Auto *</label><input type="text" id="ins-auto" required placeholder="Ej: BMW X3 2023" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
-                    <div class="form-group"><label>Código Postal de circulación *</label><input type="text" id="ins-cp" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
-                    <div class="form-group"><label>Uso del vehículo</label><select id="ins-uso" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"><option value="PARTICULAR">Particular</option><option value="PLATAFORMA">Plataforma (Uber/Didi)</option><option value="CARGA">Carga/Reparto</option></select></div>
+                    <div class="form-group"><label>C├│digo Postal de circulaci├│n *</label><input type="text" id="ins-cp" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"></div>
+                    <div class="form-group"><label>Uso del veh├¡culo</label><select id="ins-uso" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;"><option value="PARTICULAR">Particular</option><option value="PLATAFORMA">Plataforma (Uber/Didi)</option><option value="CARGA">Carga/Reparto</option></select></div>
                 `;
                 break;
             default:
                 html = `<div class="form-group"><label>Describe brevemente tu necesidad *</label><textarea id="ins-desc" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee; height:80px;"></textarea></div>`;
         }
 
-        container.innerHTML = `<h4 style="font-size:0.75rem; color:#888; text-transform:uppercase; margin-bottom:15px;">Información para ${type}</h4> ${html}`;
+        container.innerHTML = `<h4 style="font-size:0.75rem; color:#888; text-transform:uppercase; margin-bottom:15px;">Informaci├│n para ${type}</h4> ${html}`;
     },
 
     renderSuitOnboarding: () => {
@@ -1382,18 +1137,18 @@ app.public = {
 
         container.innerHTML = `
             <form id="onboarding-form" class="minimalist-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div class="form-group" title="El nombre comercial que tus clientes recordarán.">
+                <div class="form-group" title="El nombre comercial que tus clientes recordar├ín.">
                     <label><i class="fas fa-store"></i> Nombre del Negocio *</label>
-                    <input type="text" id="onb-name" required placeholder="Ej: Mi Cafetería Gourmet">
+                    <input type="text" id="onb-name" required placeholder="Ej: Mi Cafeter├¡a Gourmet">
                 </div>
-                <div class="form-group" title="Define las reglas y diseño inicial de tu sitio.">
+                <div class="form-group" title="Define las reglas y dise├▒o inicial de tu sitio.">
                     <label><i class="fas fa-tags"></i> Tipo de Negocio</label>
                     <select id="onb-type" onchange="app.public.autoFillOnboarding(this.value)">
-                        <option value="">Selecciona una categoría...</option>
-                        <option value="Food/Snacks">Food (Restaurantes, Cafés, Bebidas)</option>
-                        <option value="Servicios">Servicios (Consultoría, Limpieza, Talleres)</option>
-                        <option value="Hospedaje">Hospedaje (Hoteles, AirBnb, Cabañas)</option>
-                        <option value="Industrial/Proyectos">Industrial (Construcción, Fábricas, Ingeniería)</option>
+                        <option value="">Selecciona una categor├¡a...</option>
+                        <option value="Food/Snacks">Food (Restaurantes, Caf├®s, Bebidas)</option>
+                        <option value="Servicios">Servicios (Consultor├¡a, Limpieza, Talleres)</option>
+                        <option value="Hospedaje">Hospedaje (Hoteles, AirBnb, Caba├▒as)</option>
+                        <option value="Industrial/Proyectos">Industrial (Construcci├│n, F├íbricas, Ingenier├¡a)</option>
                     </select>
                 </div>
                 <div class="form-group" title="Usado para que tus clientes te contacten con un clic.">
@@ -1417,13 +1172,13 @@ app.public = {
                         <span style="font-size: 0.8rem; opacity: 0.6;">Elige tu color</span>
                     </div>
                 </div>
-                <div class="form-group" title="Link de tu logotipo (puedes pegarlo aquí).">
+                <div class="form-group" title="Link de tu logotipo (puedes pegarlo aqu├¡).">
                     <label><i class="fas fa-image"></i> URL del Logotipo</label>
                     <input type="text" id="onb-logo" placeholder="https://ejemplo.com/mi-logo.png">
                 </div>
 
-                <div class="form-group" style="grid-column: span 2;" title="Aparecerá en el pie de página y mapa.">
-                    <label><i class="fas fa-map-marker-alt"></i> Dirección Física</label>
+                <div class="form-group" style="grid-column: span 2;" title="Aparecer├í en el pie de p├ígina y mapa.">
+                    <label><i class="fas fa-map-marker-alt"></i> Direcci├│n F├¡sica</label>
                     <input type="text" id="onb-address" placeholder="Ej: Av. Principal 123, Monterrey">
                 </div>
                 
@@ -1431,11 +1186,11 @@ app.public = {
                     <p style="font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--primary-color);">INTELIGENCIA DE MARCA (Auto-rellenada):</p>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
-                            <label style="font-size: 0.75rem; opacity: 0.6;">Misión Sugerida</label>
+                            <label style="font-size: 0.75rem; opacity: 0.6;">Misi├│n Sugerida</label>
                             <textarea id="onb-mision" style="height: 50px; font-size: 0.75rem; width: 100%;"></textarea>
                         </div>
                         <div>
-                            <label style="font-size: 0.75rem; opacity: 0.6;">Visión Sugerida</label>
+                            <label style="font-size: 0.75rem; opacity: 0.6;">Visi├│n Sugerida</label>
                             <textarea id="onb-vision" style="height: 50px; font-size: 0.75rem; width: 100%;"></textarea>
                         </div>
                         <div>
@@ -1447,7 +1202,7 @@ app.public = {
                             <textarea id="onb-impacto" style="height: 40px; font-size: 0.75rem; width: 100%;"></textarea>
                         </div>
                         <div style="grid-column: span 2;">
-                            <label style="font-size: 0.75rem; opacity: 0.6;">Políticas de Servicio</label>
+                            <label style="font-size: 0.75rem; opacity: 0.6;">Pol├¡ticas de Servicio</label>
                             <textarea id="onb-politicas" style="height: 40px; font-size: 0.75rem; width: 100%;"></textarea>
                         </div>
                     </div>
@@ -1458,18 +1213,18 @@ app.public = {
                         <i class="fas fa-rocket"></i> GENERAR MI SITIO WEB GRATIS
                     </button>
                     <p style="font-size: 0.75rem; text-align: center; margin-top: 10px; opacity: 0.5;">
-                        * Al registrarte aceptas un periodo de prueba de 20 días. Sitio quedará en borrador hasta activación manual.
+                        * Al registrarte aceptas un periodo de prueba de 20 d├¡as. Sitio quedar├í en borrador hasta activaci├│n manual.
                     </p>
                 </div>
             </form>
             <div id="onb-success" class="hidden" style="text-align: center; padding: 40px;">
                 <i class="fas fa-check-circle fa-4x" style="color: #2ecc71; margin-bottom: 20px;"></i>
-                <h3 style="font-size: 1.8rem; margin-bottom: 10px;">¡Borrador Creado con Éxito!</h3>
-                <p id="onb-msg-final" style="margin-bottom: 30px;">Tu sitio está listo para previsualización.</p>
+                <h3 style="font-size: 1.8rem; margin-bottom: 10px;">┬íBorrador Creado con ├ëxito!</h3>
+                <p id="onb-msg-final" style="margin-bottom: 30px;">Tu sitio est├í listo para previsualizaci├│n.</p>
                 <div style="display: flex; gap:15px; justify-content: center;">
-                    <button id="btn-see-site" class="btn-primary" style="padding: 12px 30px; border-radius: 50px;">VER MI PÁGINA</button>
+                    <button id="btn-see-site" class="btn-primary" style="padding: 12px 30px; border-radius: 50px;">VER MI P├üGINA</button>
                     <a id="btn-wa-activate" class="btn-support" target="_blank" style="padding: 12px 30px; border-radius: 50px; background: #25D366; text-decoration: none; color: white; display: flex; align-items: center; gap: 8px;">
-                         <i class="fab fa-whatsapp"></i> CONTACTAR A ACTIVACIÓN
+                         <i class="fab fa-whatsapp"></i> CONTACTAR A ACTIVACI├ôN
                     </a>
                 </div>
             </div>
@@ -1499,32 +1254,32 @@ app.public = {
 
         const templates = {
             'Food/Snacks': {
-                m: "Cocinamos con pasión para regalar momentos inolvidables a través del sabor.",
-                v: "Ser la opción favorita de comida en la ciudad, reconocida por frescura y calidad.",
-                val: "Sabor, Higiene, Pasión, Servicio.",
-                imp: "Apoyar a productores locales y fomentar la alimentación consciente.",
-                pol: "Garantía de sabor o cambio de platillo. Entrega puntual."
+                m: "Cocinamos con pasi├│n para regalar momentos inolvidables a trav├®s del sabor.",
+                v: "Ser la opci├│n favorita de comida en la ciudad, reconocida por frescura y calidad.",
+                val: "Sabor, Higiene, Pasi├│n, Servicio.",
+                imp: "Apoyar a productores locales y fomentar la alimentaci├│n consciente.",
+                pol: "Garant├¡a de sabor o cambio de platillo. Entrega puntual."
             },
             'Servicios': {
                 m: "Brindar soluciones profesionales que simplifiquen la vida y multipliquen los resultados de nuestros clientes.",
-                v: "Ser líderes regionales en consultoría, basados en la confianza y la innovación constante.",
-                val: "Integridad, Excelencia, Innovación, Enfoque al cliente.",
-                imp: "Impulsar el crecimiento económico de negocios locales.",
-                pol: "Atención personalizada 24/7. Satisfacción garantizada."
+                v: "Ser l├¡deres regionales en consultor├¡a, basados en la confianza y la innovaci├│n constante.",
+                val: "Integridad, Excelencia, Innovaci├│n, Enfoque al cliente.",
+                imp: "Impulsar el crecimiento econ├│mico de negocios locales.",
+                pol: "Atenci├│n personalizada 24/7. Satisfacci├│n garantizada."
             },
             'Industrial/Proyectos': {
-                m: "Construir hoy la infraestructura del mañana con los más altos estándares de ingeniería y seguridad.",
-                v: "Ser el aliado estratégico indispensable para grandes obras y desarrollos industriales.",
-                val: "Seguridad, Precisión, Durabilidad, Cumplimiento.",
+                m: "Construir hoy la infraestructura del ma├▒ana con los m├ís altos est├índares de ingenier├¡a y seguridad.",
+                v: "Ser el aliado estrat├®gico indispensable para grandes obras y desarrollos industriales.",
+                val: "Seguridad, Precisi├│n, Durabilidad, Cumplimiento.",
                 imp: "Crear empleos seguros y desarrollo urbano sostenible.",
-                pol: "Certificación de calidad en cada etapa. Garantía de obra."
+                pol: "Certificaci├│n de calidad en cada etapa. Garant├¡a de obra."
             },
             'Hospedaje': {
-                m: "Ofrecer un refugio de confort y descanso que haga sentir a nuestros huéspedes como en casa.",
+                m: "Ofrecer un refugio de confort y descanso que haga sentir a nuestros hu├®spedes como en casa.",
                 v: "Ser el referente de hospitalidad y calidez, brindando experiencias memorables de alojamiento.",
                 val: "Hospitalidad, Calidez, Limpieza, Confianza.",
-                imp: "Promover el turismo local responsable y la cultura de la región.",
-                pol: "Check-in flexible bajo disponibilidad. Estándares de higiene rigurosos."
+                imp: "Promover el turismo local responsable y la cultura de la regi├│n.",
+                pol: "Check-in flexible bajo disponibilidad. Est├índares de higiene rigurosos."
             }
         };
 
@@ -1581,7 +1336,7 @@ app.public = {
 
             if (btnSee) {
                 btnSee.innerHTML = `<i class="fab fa-whatsapp"></i> CONTACTAR A PERSONAL SUIT.ORG`;
-                const waMsg = `¡Hola! Acabo de registrar mi negocio [${bizData.nomempresa}] con ID [${result.newBusinessId}]. Me gustaría continuar con la configuración.`;
+                const waMsg = `┬íHola! Acabo de registrar mi negocio [${bizData.nomempresa}] con ID [${result.newBusinessId}]. Me gustar├¡a continuar con la configuraci├│n.`;
                 btnSee.onclick = () => { window.open(`https://wa.me/528129552094?text=${encodeURIComponent(waMsg)}`, '_blank'); };
                 btnSee.style.background = "#25D366";
             }
@@ -1597,7 +1352,7 @@ app.public = {
 };
 
 /**
- * 🔐 CLIENT VAULT MODULE (v6.1.7)
+ * ­ƒöÉ CLIENT VAULT MODULE (v6.1.7)
  * Manejo de documentos sensibles en Google Drive
  */
 app.vault = {
@@ -1605,7 +1360,7 @@ app.vault = {
         const grid = document.getElementById('vault-files-grid');
         if (!grid) return;
         if (!app.state.currentUser || !app.state.companyId) {
-            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Inicia sesión para ver tus documentos.</p>';
+            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Inicia sesi├│n para ver tus documentos.</p>';
             return;
         }
 
@@ -1615,16 +1370,16 @@ app.vault = {
             return;
         }
 
-        // --- DINÁMICA DE REQUISITOS (v6.1.8) ---
+        // --- DIN├üMICA DE REQUISITOS (v6.1.8) ---
         const vaultUploadArea = document.getElementById('vault-upload-area');
         if (vaultUploadArea && !document.getElementById('vault-requirements')) {
             const userLead = (app.data.Leads || []).find(l => l.email === app.state.currentUser.email);
             const subtype = userLead ? (userLead.subtipo_negocio || '').toUpperCase() : '';
 
             let reqs = ['INE (Escaneada por ambos lados)', 'Comprobante de Domicilio (Vigente)'];
-            if (subtype.includes('GMM')) reqs.push('Informe Médico actual', 'Historial clínico');
-            if (subtype.includes('AUTO')) reqs.push('Factura del auto', 'Póliza anterior (si aplica)');
-            if (subtype.includes('PPR')) reqs.push('CURP', 'Constancia de situación fiscal');
+            if (subtype.includes('GMM')) reqs.push('Informe M├®dico actual', 'Historial cl├¡nico');
+            if (subtype.includes('AUTO')) reqs.push('Factura del auto', 'P├│liza anterior (si aplica)');
+            if (subtype.includes('PPR')) reqs.push('CURP', 'Constancia de situaci├│n fiscal');
 
             const reqHtml = `
                 <div id="vault-requirements" style="background: #fdfae7; border: 1px solid #f1e05a; padding: 15px; border-radius: 12px; margin-bottom: 25px; text-align: left;">
@@ -1637,7 +1392,7 @@ app.vault = {
             vaultUploadArea.insertAdjacentHTML('beforebegin', reqHtml);
         }
 
-        grid.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Consultando Bóveda...</p>';
+        grid.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Consultando B├│veda...</p>';
 
         try {
             const res = await fetch(app.apiUrl, {
@@ -1659,10 +1414,10 @@ app.vault = {
                     </div>
                 `).join('');
             } else {
-                grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:20px;">No hay documentos cargados aún.</p>';
+                grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:20px;">No hay documentos cargados a├║n.</p>';
             }
         } catch (e) {
-            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:red;">Error de conexión.</p>';
+            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:red;">Error de conexi├│n.</p>';
         }
     },
 
@@ -1712,7 +1467,7 @@ app.vault = {
         }
 
         status.style.background = '#e8f5e9';
-        status.innerText = "¡Archivos enviados a revisión!";
+        status.innerText = "┬íArchivos enviados a revisi├│n!";
         setTimeout(() => status.classList.add('hidden'), 3500);
         app.vault.refresh();
     }

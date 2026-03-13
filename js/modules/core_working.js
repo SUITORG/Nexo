@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 
  * Responsabilidad: Estado global, carga de datos y utilidades base.
  */
@@ -50,7 +50,7 @@ const app = {
         fixDriveUrl: (url) => {
             if (!url) return "";
             const sUrl = url.toString().trim();
-            // 1. Detectar si es una URL de Drive estándar
+            // 1. Detectar si es una URL de Drive est├índar
             const idMatch = sUrl.match(/\/d\/([^\/?#]+)/) || sUrl.match(/[?&]id=([^&?#]+)/) || sUrl.match(/\/file\/d\/([^\/?#]+)/);
             if (idMatch && idMatch[1] && (sUrl.includes('google.com') || sUrl.includes('drive.google.com'))) {
                 return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
@@ -105,27 +105,27 @@ const app = {
         sanitizeString: (str) => {
             if (typeof str !== 'string') return str;
             return str
-                .replace(/ñƒ³/g, "ó").replace(/ñƒâ€œ/g, "Ó").replace(/ñƒ¡/g, "á")
-                .replace(/ñƒ©/g, "é").replace(/ñƒ­/g, "í").replace(/ñƒº/g, "ú")
-                .replace(/ñƒâ€°/g, "É").replace(/ñ‚©/g, "©").replace(/ñ‚¡/g, "¡")
-                .replace(/ñƒ/g, "ñ").replace(/ñš/g, "Ú")
-                .replace(/Ã¡/g, "á").replace(/Ã©/g, "é").replace(/Ã\xad/g, "í")
-                .replace(/Ã³/g, "ó").replace(/Ãº/g, "ú").replace(/Ã±/g, "ñ")
+                .replace(/├▒ãÆ┬│/g, "├│").replace(/├▒ãÆ├óÔé¼┼ô/g, "├ô").replace(/├▒ãÆ┬í/g, "├í")
+                .replace(/├▒ãÆ┬®/g, "├®").replace(/├▒ãÆ┬¡/g, "├¡").replace(/├▒ãÆ┬║/g, "├║")
+                .replace(/├▒ãÆ├óÔé¼┬░/g, "├ë").replace(/├▒ÔÇÜ┬®/g, "┬®").replace(/├▒ÔÇÜ┬í/g, "┬í")
+                .replace(/├▒ãÆ/g, "├▒").replace(/├▒┼í/g, "├Ü")
+                .replace(/├â┬í/g, "├í").replace(/├â┬®/g, "├®").replace(/├â\xad/g, "├¡")
+                .replace(/├â┬│/g, "├│").replace(/├â┬║/g, "├║").replace(/├â┬▒/g, "├▒")
                 .trim();
         },
         // --- MAESTRO DEL TIEMPO (v5.2.0 Inmortal) ---
         getTimestamp: () => {
-            // Formato ISO 8601 para registros de precisión
+            // Formato ISO 8601 para registros de precisi├│n
             return new Date().toISOString();
         },
         getDate: () => {
-            // Formato estándar YYYY-MM-DD para campos base
+            // Formato est├índar YYYY-MM-DD para campos base
             return new Date().toLocaleDateString('en-CA');
         }
     },
     init: async () => {
         try {
-            console.log("🚀 Iniciando Orquestador EVASOL...");
+            console.log("­ƒÜÇ Iniciando Orquestador EVASOL...");
 
             // 1. Inicializar Router Primero (Seguridad de Enrutado)
             if (app.router && app.router.init) app.router.init();
@@ -146,15 +146,15 @@ const app = {
             const loader = document.getElementById('loading-overlay');
             if (loader) loader.remove();
 
-            // --- ESPERA DE MÓDULOS (v6.5.3 Blindaje Total) ---
-            // Aseguramos que public.js y otros módulos se hayan inyectado correctamente en el objeto app
+            // --- ESPERA DE M├ôDULOS (v6.5.3 Blindaje Total) ---
+            // Aseguramos que public.js y otros m├│dulos se hayan inyectado correctamente en el objeto app
             let modulesReady = false;
             let retries = 0;
             while (!modulesReady && retries < 10) {
                 if (app.public && app.public.renderHome && app.ui && app.ui.applyTheme) {
                     modulesReady = true;
                 } else {
-                    console.warn(`⏳ Esperando módulos... Intento ${retries + 1}/10`);
+                    console.warn(`ÔÅ│ Esperando m├│dulos... Intento ${retries + 1}/10`);
                     await new Promise(resolve => setTimeout(resolve, 150));
                     retries++;
                 }
@@ -162,10 +162,10 @@ const app = {
             
             if (loaded) {
                 // --- ULTRA DEBUG MODE (v5.3.5) ---
-                console.log("🔍 [DATA_CHECK] Estructura de Config_Empresas:");
+                console.log("­ƒöì [DATA_CHECK] Estructura de Config_Empresas:");
                 console.table(app.data.Config_Empresas.slice(0, 2)); // Solo ver los primeros 2
                 if (app.data.Config_Empresas[0]) {
-                    console.log("📄 LLAVES DETECTADAS EN EXCEL:", Object.keys(app.data.Config_Empresas[0]).join(', '));
+                    console.log("­ƒôä LLAVES DETECTADAS EN EXCEL:", Object.keys(app.data.Config_Empresas[0]).join(', '));
                 }
 
                 // Determine Principal Context
@@ -181,22 +181,22 @@ const app = {
                     (c.alias_seo && String(c.alias_seo).toLowerCase() === String(app.state.companyId).toLowerCase())
                 );
 
-                // Si se encontró por alias, normalizar el state.companyId al ID técnico
+                // Si se encontr├│ por alias, normalizar el state.companyId al ID t├®cnico
                 if (company && company.alias_seo && String(company.alias_seo).toLowerCase() === String(app.state.companyId).toLowerCase()) {
-                    console.log(`🔗 Redirección Maestro: [${app.state.companyId}] -> [${company.id_empresa}]`);
+                    console.log(`­ƒöù Redirecci├│n Maestro: [${app.state.companyId}] -> [${company.id_empresa}]`);
                     app.state.companyId = company.id_empresa;
                 }
 
                 const hasUrlParam = !!coParam;
 
                 // If it's the first visit follow the "Main Biz" rule (v5.3.7)
-                // REFUERZO v6.2.7: El parámetro 'co' manda sobre cualquier otra lógica de inicio
+                // REFUERZO v6.2.7: El par├ímetro 'co' manda sobre cualquier otra l├│gica de inicio
                 if (!hasUrlParam && mainBiz) {
                     const currentHash = window.location.hash;
                     if (!currentHash || currentHash === "" || currentHash === "#orbit") {
                         const mode = (mainBiz.modo_sitio || 'HUB').toString().toUpperCase();
                         if (mode !== 'HUB') {
-                            console.log("🚀 Redirección Automática a Empresa Principal:", mainBiz.id_empresa);
+                            console.log("­ƒÜÇ Redirecci├│n Autom├ítica a Empresa Principal:", mainBiz.id_empresa);
                             app.state.companyId = mainBiz.id_empresa;
                             company = mainBiz;
                             window.location.hash = '#home';
@@ -208,7 +208,7 @@ const app = {
                 const isHubMode = (window.location.hash === '#orbit' || (!window.location.hash && !hasUrlParam && !mainBiz)) && !hasUrlParam;
 
                 if (isHubMode) {
-                    console.log("🌌 Hub Mode Active - Rendering Orbit");
+                    console.log("­ƒîî Hub Mode Active - Rendering Orbit");
                     app.state.companyId = null;
                     window.location.hash = '#orbit';
                     if (app.ui && app.ui.renderOrbit) app.ui.renderOrbit();
@@ -230,7 +230,7 @@ const app = {
 
                 // --- RE-ENRUTADO POST-CARGA (v6.5.2) ---
                 if (app.router && app.router.handleRoute) {
-                    console.log("🔄 Re-sincronizando ruta tras carga de datos...");
+                    console.log("­ƒöä Re-sincronizando ruta tras carga de datos...");
                     app.router.handleRoute();
                 }
 
@@ -238,11 +238,11 @@ const app = {
                 app.checkBackendVersion();
             } else {
                 console.error("[INIT_FAILED] DATA_LOAD_FAILED");
-                alert(`Error de conexión con la base de datos.`);
+                alert(`Error de conexi├│n con la base de datos.`);
             }
         } catch (err) {
             console.error("CRITICAL_INIT_ERROR:", err);
-            alert("Error crítico en el arranque: " + err.message);
+            alert("Error cr├¡tico en el arranque: " + err.message);
         }
     },
     checkBackendVersion: async () => {
@@ -266,93 +266,45 @@ const app = {
     loadData: async () => {
         try {
             const fetchId = app.state.companyId || "SuitOrg";
-            
-            // 1. CARGA DE CONFIGURACIÓN MAESTRA (Siempre desde Google Sheets)
-            const masterUrl = `${app.apiUrl}?action=getAll&id_empresa=${fetchId}&token=${app.apiToken}`;
-            const masterRes = await fetch(masterUrl);
-            const masterData = await masterRes.json();
-            
-            if (masterData.status === 'ERROR' || masterData.error) throw new Error(masterData.message || masterData.error);
-            
-            // Sanitizar datos maestros
-            const sanitizedMaster = JSON.parse(JSON.stringify(masterData), (key, value) =>
+            const url = `${app.apiUrl}?action=getAll&id_empresa=${fetchId}&token=${app.apiToken}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP Error! Status: ${response.status}`);
+            const data = await response.json();
+            if (data.status === 'ERROR' || data.error) throw new Error(data.message || data.error);
+
+            const sanitizedData = JSON.parse(JSON.stringify(data), (key, value) =>
                 typeof value === 'string' ? app.utils.sanitizeString(value) : value
             );
 
-            // 2. DETECTAR MOTOR DE DATOS
-            const currentBiz = (sanitizedMaster.Config_Empresas || []).find(c => 
-                String(c.id_empresa).toUpperCase() === String(fetchId).toUpperCase()
-            ) || sanitizedMaster.Config_Empresas[0];
-
-            const dbEngine = (currentBiz?.db_engine || currentBiz?.dbengine || 'GSHEETS').toUpperCase();
-            console.log(`[DB_ENGINE] Motor Detectado: ${dbEngine} para ${fetchId}`);
-
-            let finalData = sanitizedMaster;
-
-            // 3. CARGA EXTENDIDA DESDE SUPABASE (Si aplica)
-            if (dbEngine === 'SUPABASE') {
-                const supabaseData = await app.loadFromSupabase(fetchId);
-                // Combinar: Config_Empresas siempre viene de Google, el resto se puede sobreescribir
-                finalData = { ...sanitizedMaster, ...supabaseData };
-                finalData.Config_Empresas = sanitizedMaster.Config_Empresas; // Prioridad GSheets para el core
-            }
-
-            // 4. PERSISTENCIA Y CACHÉ (Proyectos)
             let localCache = JSON.parse(localStorage.getItem('suit_status_cache') || '{}');
-            if (finalData.Proyectos && localCache) {
+            if (sanitizedData.Proyectos && localCache) {
                 const now = Date.now();
-                finalData.Proyectos.forEach(p => {
+                sanitizedData.Proyectos.forEach(p => {
                     const id = (p.id_proyecto || "").toString().trim().toUpperCase();
                     const cached = localCache[id];
                     if (cached) {
-                        const age = now - cached.ts;
+                        const localTs = cached.ts;
+                        const age = now - localTs;
                         const serverTs = p.fecha_estatus ? new Date(p.fecha_estatus).getTime() : 0;
-                        if (age < 120000 || (serverTs && serverTs < cached.ts)) {
-                            if (p.status !== cached.status) p.status = p.estado = p.estatus = cached.status;
+                        if (age < 120000 || (serverTs && serverTs < localTs)) {
+                            if (p.status !== cached.status) {
+                                p.status = cached.status;
+                                p.estado = cached.status;
+                                p.estatus = cached.status;
+                            }
                         }
                     }
                 });
             }
-
-            app.data = finalData;
+            app.data = sanitizedData;
             return true;
         } catch (e) {
             console.error("[DATA_LOAD_CRITICAL]", e);
             return false;
         }
     },
-    loadFromSupabase: async (coId) => {
-        const SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
-        
-        console.log(`⚡ [SUPABASE] Cargando datos para ${coId}...`);
-        const tables = ['Catalogo', 'Leads', 'Proyectos', 'Config_Galeria', 'Config_Paginas'];
-        const results = {};
-
-        try {
-            await Promise.all(tables.map(async (table) => {
-                const url = `${SB_URL}/rest/v1/${table}?id_empresa=eq.${coId}&select=*`;
-                const res = await fetch(url, {
-                    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
-                });
-                if (res.ok) {
-                    const raw = await res.json();
-                    results[table] = JSON.parse(JSON.stringify(raw), (key, value) =>
-                        typeof value === 'string' ? app.utils.sanitizeString(value) : value
-                    );
-                } else {
-                    console.warn(`⚠️ [SUPABASE] Error en tabla ${table}: ${res.statusText}`);
-                    results[table] = [];
-                }
-            }));
-            return results;
-        } catch (err) {
-            console.error("❌ [SUPABASE_FAIL]", err);
-            return {};
-        }
-    },
     switchCompany: async (newId) => {
-        // 1. Mostrar Loader de Transición
+        // 1. Mostrar Loader de Transici├│n
         const loader = document.getElementById('transition-loader');
         if (loader) {
             loader.classList.remove('hidden');
@@ -364,7 +316,7 @@ const app = {
         const menu = document.getElementById('menu-public');
         if (menu) menu.innerHTML = '';
 
-        // Limpiar secciones de contenido dinámico previas
+        // Limpiar secciones de contenido din├ímico previas
         ['story-h2', 'story-h3', 'story-content', 'story-img'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -393,36 +345,6 @@ const app = {
         // 3. Ocultar Loader
         if (loader) {
             setTimeout(() => loader.classList.add('hidden'), 800);
-        }
-    },
-    createAgentTask: async (taskType, params) => {
-        const SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
-        
-        try {
-            const res = await fetch(`${SB_URL}/rest/v1/Agent_Tasks`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SB_KEY,
-                    'Authorization': `Bearer ${SB_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=representation'
-                },
-                body: JSON.stringify({
-                    id_empresa: app.state.companyId,
-                    task_type: taskType,
-                    parameters: params,
-                    status: 'PENDING'
-                })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                return data[0]?.id;
-            }
-            return null;
-        } catch (e) {
-            console.error("❌ [AGENT_TASK_FAIL]", e);
-            return null;
         }
     }
 };

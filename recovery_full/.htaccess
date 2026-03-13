@@ -1,0 +1,20 @@
+# ----------------------------------------------------------------------
+# SUITORG MASTER REDIRECTOR (v6.3.0)
+# ----------------------------------------------------------------------
+
+RewriteEngine On
+RewriteBase /
+
+# 1. No redirigir si el archivo o carpeta existe físicamente (CSS, JS, Imágenes)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 2. Redirección Maestra de Alias
+# Toma cualquier palabra (ej: /lamachaca) y la pasa como parámetro 'co'
+# Manteniendo el contenido en index.html de forma invisible
+RewriteRule ^([a-zA-Z0-9_-]+)$ index.html?co=$1 [QSA,L]
+
+# 3. Opcional: Forzar HTTPS (Recomendado para SEO)
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
