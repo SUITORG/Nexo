@@ -1,6 +1,6 @@
 /* SuitOrg Backend Engine - v6.3.0
  * ---------------------------------------------------------
- * Sincronización: 2026-03-09 9:45 AM (v6.2.8 Gallery Slider & Navigation)
+ * Sincronización: 2026-03-13 06:45 AM (v14.1.0 Multi-Tenant & Pareto Marketing)
  * 
  * Changelog v6.2.8:
  * - UI: Implementación de Navegación Manual (Flechas) en Galería.
@@ -518,12 +518,14 @@ function initializeDatabase(ss, output) {
     if (headers.indexOf("id_empresa") === -1) cat.insertColumnAfter(1).getRange(1, 2).setValue("id_empresa");
   }
 
-  // Semilla: Pensión Inteligente - CMARJAV (v1.4.1)
+  // Semilla: Pensión Inteligente - CMARJAV (v1.6.0)
   ensureSeed(ss, "Config_Empresas", "id_empresa", "CMARJAV", {
     id_empresa: "CMARJAV",
     nomempresa: "Pensión Inteligente",
     tipo_negocio: "Consultoría / Préstamos",
-    slogan: "Tu Retiro, nuestra estrategia inteligente",
+    slogan: "CMARJAV | Consultoría Familiar",
+    mensaje1: "MAXIMIZA TU PENSIÓN IMSS SIN PAGAR POR ADELANTADO",
+    mensaje2: "Préstamos Inmediatos para Jubilados y Pensionados",
     descripcion: "Especialistas en Modalidad 40 y financiamiento para pensionados.",
     color_tema: "#001f3f", // Azul Marino Marina
     accent_color: "#FFD700", // Oro

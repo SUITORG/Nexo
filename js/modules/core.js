@@ -4,8 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: '6.2.8', // v6.2.8: Gallery Slider with Arrows & Navigation.
-
+    version: "14.1.0", // v14.1.0
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
     apiToken: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiToken : '',
