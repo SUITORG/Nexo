@@ -98,7 +98,9 @@ function handlePostAction(data, output) {
 
       case "syncDrive":
         if (typeof DriveManager !== 'undefined') {
-          var resInit = DriveManager.initTopLuxDrive();
+          // Detectar empresa para inicializar la estructura correcta (v1.4.2)
+          var coId = data.id_empresa || empresaSolicitante || "GLOBAL";
+          var resInit = DriveManager.initDriveStructure(coId);
           output.success = resInit.success;
           output.message = resInit.message || resInit.error;
         } else { output.error = "DRIVE_MANAGER_MISSING"; }
@@ -516,19 +518,24 @@ function initializeDatabase(ss, output) {
     if (headers.indexOf("id_empresa") === -1) cat.insertColumnAfter(1).getRange(1, 2).setValue("id_empresa");
   }
 
-  // Semilla Marca Personal: Roberto Villarreal (v5.7.6)
-  ensureSeed(ss, "Config_Empresas", "id_empresa", "ROBERTO_V", {
-    id_empresa: "ROBERTO_V",
-    nomempresa: "Roberto Villarreal",
-    tipo_negocio: "Consultoría / Inclusión",
-    slogan: "Transformando obstáculos en oportunidades",
-    descripcion: "Especialista en inclusión social y director de Inclusión Siglo 21.",
-    color_tema: "#1A237E",
+  // Semilla: Pensión Inteligente - CMARJAV (v1.4.1)
+  ensureSeed(ss, "Config_Empresas", "id_empresa", "CMARJAV", {
+    id_empresa: "CMARJAV",
+    nomempresa: "Pensión Inteligente",
+    tipo_negocio: "Consultoría / Préstamos",
+    slogan: "Tu Retiro, nuestra estrategia inteligente",
+    descripcion: "Especialistas en Modalidad 40 y financiamiento para pensionados.",
+    color_tema: "#001f3f", // Azul Marino Marina
+    accent_color: "#FFD700", // Oro
     usa_features_estandar: "FALSE",
     habilitado: "TRUE",
     modo: "PROD",
-    db_engine: "GSHEETS"
+    db_engine: "GSHEETS",
+    autodepuracion: 60,
+    usa_reservaciones: "TRUE"
   });
+
+  // Semilla Marca Personal: Roberto Villarreal (v5.7.6)
 
   // Semillas Flujo Maestro EVASOL (v5.7.3)
   const flujoEvasol = [

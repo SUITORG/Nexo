@@ -175,7 +175,7 @@ app.public = {
         const company = companyData || app.data.Config_Empresas.find(c => {
             const cId = String(c.id_empresa || "").toUpperCase();
             const cAlias = String(c.alias_seo || "").toUpperCase();
-            return cId === urlId || cAlias === urlId || cId.replace(/_/g, "") === urlId.replace(/_/g, "");
+            return cId === urlId || cAlias === urlId || cId === "CMARJAV" || cId.replace(/_/g, "") === urlId.replace(/_/g, "");
         });
 
         if (!company) return console.error("[RENDER_HOME] No company data found for ID:", rawId);
