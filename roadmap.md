@@ -10,7 +10,8 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
-## 🏗️ Arquitectura de Software (v6.2.1 Multi-Engine)
+- [x] **v14.1.0: Multi-Tenant Business & Pareto Vault**: Lanzamiento de **Pensión Inteligente (CMARJAV)**. Implementación de Bóveda Digital con jerarquía Pareto (El Quién, Cómo, Qué) y despacho dinámico de carpetas en Google Drive. Consolidación de branding Marina/Oro.
+- [x] **v14.0.3: Gallery Precision & Identity Coordinates**: Reubicación de Galería (Grid 4x1) bajo SEO y anclaje de Slogan/M1/M2 mediante coordenadas absolutas.
 - [x] **v6.6.0: RESPONSIVE-UI Standard Adoption**: Implementación de framework de diseño fluido basado en `clamp()`, `ui-grid` y `standard documentation`. Consolidación de QRs dinámicos y layouts premium para Marca Personal.
 - [x] **v6.2.1: Multi-Engine db_engine support**: Soporte para `db_engine` en Config_Empresas (GSHEETS enabled) y preparación para migración a bases de datos profesionales (Supabase/Neon).
 - [x] **v6.2.0: Dynamic Content Engine (Narrativa IA)**: Motor de páginas dinámicas en Config_Paginas con inyección automática de SEO (Schema.org) y narrativa personalizada por cliente.

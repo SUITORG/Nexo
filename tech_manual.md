@@ -1,8 +1,8 @@
 # Manual Técnico y Operativo - SuitOrg
 > **Identidad Principal:** SuitOrg (Powered by EVASOL Engine)
-> **Última Versión Estable**: v6.2.1 (Multi-Engine & Dynamic Content)
-> **Estado del Sistema**: Operativo con Soporte de Contenido Dinámico y Multi-Inquilino.
-> **Total de Líneas Consolidadas**: ~11,480 (Auditado 2026-03-09).
+> **Última Versión Estable**: v14.1.0 (Multi-Tenant & Pareto Marketing)
+> **Estado del Sistema**: Operativo con Soporte de Bóvedas Pareto e Identidad Dual.
+> **Total de Líneas Consolidadas**: ~13,735 (Auditado 2026-03-13).
 
 ## 0. Resumen Ejecutivo (TL;DR) - Para gente con prisa ⚡
 1.  **¿Qué es?** Un potente "Food Hub" multi-inquilino especializado en el sector alimenticio (Restaurantes, Snacks, Comida Rápida).
@@ -169,6 +169,16 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
     *   `DATE_STR=$(date +%d%m%y); zip -r "SUIT_${DATE_STR}_WSL.zip" . -x "*/node_modules/*" "*/.git/*" "*.zip" "*/.agent/*"`
 
 ---
+
+- **v14.1.0** (2026-03-13): **"Multi-Tenant Business & Pareto Vault"**.
+    - **Pensión Inteligente:** Lanzamiento oficial de CMARJAV con branding Marina/Oro.
+    - **Drive:** Implementación de despacho dinámico en `DriveManager.gs` para soporte de múltiples estructuras de negocio.
+    - **Marketing:** Integración de la jerarquía Pareto (El Quién, Cómo, Qué) en la Bóveda Digital.
+    - **Backend:** Actualización de lógica de Post-Action para soporte multi-inquilino granular.
+
+- **v14.0.3** (2026-03-12): **"Gallery Precision & Identity Coordinates"**.
+    - **UI:** Rediseño de galería 4x1 con 10% de aire y fondo de marca.
+    - **Identity:** Anclaje de 3 puntos (Slogan, M1, M2) mediante posicionamiento absoluto sobre la foto del agente.
 
 - **v6.2.0** (2026-03-08): **"Dynamic Content Engine (Narrativa IA)"**.
     - **Backend:** Creación de tabla `Config_Paginas` para almacenamiento de JSON estructurado (Meta, Schema, Contenido).
@@ -351,12 +361,12 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 
 | Archivo / Carpeta | Líneas | Comentario |
 | :--- | :--- | :--- |
-| index.html | 1736 | Estructura base / Bóveda v6.1.8 |
-| style.css | 3732 | UI/UX Premium (Refactorización) |
-| js/modules/ | 5119 | Lógica Documental & Vault Engine |
-| app.js | 72 | Router y Orquestación Inicial |
-| backend_schema.gs | 749 | Drive & Secure Token Engine |
-| **TOTAL** | **11350** | Producción v6.1.8 Estándar |
+| index.html | 1793 | Estructura base / Bóveda v14.1.0 |
+| style.css | 3764 | UI/UX Premium (Refactorización) |
+| js/modules/ | 7205 | Lógica Documental & Vault Engine |
+| app.js | 70 | Router y Orquestación Inicial |
+| backend_schema.gs | 771 | Multi-Tenant & Pareto Engine |
+| **TOTAL** | **13603** | Producción v14.1.0 Estándar |
 
 ---
 *Manual generado automáticamente por Antigravity AI.*
