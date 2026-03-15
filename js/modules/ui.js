@@ -326,6 +326,37 @@ app.ui = {
         }
     },
 
+    syncSupabase: async () => {
+        app.ui.updateConsole("SUPABASE_SYNCING...");
+        const btn = document.getElementById('btn-sync-supabase');
+        if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+        
+        try {
+            const res = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({ action: 'syncSupabase', id_empresa: app.state.companyId, token: app.apiToken })
+            });
+            const data = await res.json();
+            if (data.success) {
+                app.ui.updateConsole("SUPABASE_OK");
+                let msg = "✅ Sincronización a Supabase completada.\n\nResultados:\n";
+                for (const [table, status] of Object.entries(data.results || {})) {
+                    msg += `- ${table}: ${status}\n`;
+                }
+                alert(msg);
+            } else {
+                app.ui.updateConsole("SUPABASE_FAIL", true);
+                alert("❌ Error al sincronizar: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            app.ui.updateConsole("SUPABASE_CONN_ERR", true);
+            alert("Error de red al conectar con Google Apps Script para la sincronización.");
+        } finally {
+            if(btn) btn.innerHTML = '<i class="fas fa-database"></i> Sincronizar Supabase';
+        }
+    },
+
     refreshData: async (v) => {
         app.ui.updateConsole(`SYNC_${v || 'ALL'}`);
         await app.loadData();

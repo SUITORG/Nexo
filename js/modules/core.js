@@ -294,6 +294,7 @@ const app = {
                 // Combinar: Config_Empresas siempre viene de Google, el resto se puede sobreescribir
                 finalData = { ...sanitizedMaster, ...supabaseData };
                 finalData.Config_Empresas = sanitizedMaster.Config_Empresas; // Prioridad GSheets para el core
+                finalData.Usuarios = sanitizedMaster.Usuarios; // Prioridad GSheets para seguridad y nuevos perfiles
             }
 
             // 4. PERSISTENCIA Y CACHÉ (Proyectos)

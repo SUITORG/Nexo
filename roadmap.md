@@ -10,6 +10,7 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
+- [ ] **Sincronización Total de Supabase**: Entrar a la URL `?id=CMARJAV#orbit`, hacer login con el perfil de `admin` (SUDO) y ejecutar la sincronización para abatir los errores de caché rápida.
 - [x] **v14.1.0: Multi-Tenant Business & Pareto Vault**: Lanzamiento de **Pensión Inteligente (CMARJAV)**. Implementación de Bóveda Digital con jerarquía Pareto (El Quién, Cómo, Qué) y despacho dinámico de carpetas en Google Drive. Consolidación de branding Marina/Oro.
 - [x] **v14.0.3: Gallery Precision & Identity Coordinates**: Reubicación de Galería (Grid 4x1) bajo SEO y anclaje de Slogan/M1/M2 mediante coordenadas absolutas.
 - [x] **v6.6.0: RESPONSIVE-UI Standard Adoption**: Implementación de framework de diseño fluido basado en `clamp()`, `ui-grid` y `standard documentation`. Consolidación de QRs dinámicos y layouts premium para Marca Personal.
@@ -161,8 +162,10 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **Validar WhatsApp OTS:** Confirmado envío de folio y OTP.
 - [x] **Congelar Lógica POS/OTS:** Módulos marcados como inmutables y documentados en Estándar #17.
 
+- [x] **v14.11.0: Protocolo de Estabilidad Antigravity (Mantenimiento)**: Documentado el manejo de actualizaciones del motor de IA para evitar cierres accidentales y desinstalaciones. (No pulsar 'Restart to Update' durante sesiones críticas, usar instalación manual si falla).
+
 ---
-*Última actualización: 2026-02-09 | Versión: v4.8.8 (STAFF-PREMIUM)*
+*Última actualización: 2026-03-15 | Versión: v14.11.0 (STABILITY PROTOCOL)*
 
 ## v4.6.0 - Flujo Delivery de 3 Pasos (TESTING)
 - [x] **Estado Intermedio**: Implementado estado `EN-CAMINO`.

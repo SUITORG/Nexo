@@ -1,5 +1,5 @@
 /**
- * EVASOL - PUBLIC MODULE (v4.6.7)
+ * EVASOL - PUBLIC MODULE (v4.10.0)
  * Responsabilidad: Vistas públicas, Landing Page, SEO, Menú y Órbita.
  */
 app.public = {
@@ -171,7 +171,7 @@ app.public = {
     renderHome: (companyData) => {
         const rawId = (app.state.companyId || "").toString().trim().toUpperCase();
         const urlId = rawId; // ID Técnico (ej: ROBERTO_V)
-        
+
         const company = companyData || app.data.Config_Empresas.find(c => {
             const cId = String(c.id_empresa || "").toUpperCase();
             const cAlias = String(c.alias_seo || "").toUpperCase();
@@ -183,7 +183,7 @@ app.public = {
         // --- DYNAMIC CONTENT ENGINE (v6.5.2) ---
         const rawHash = window.location.hash.replace('#', '') || 'home';
         const hash = rawHash.trim().toLowerCase();
-        
+
         const pageData = (app.data.Config_Paginas || []).find(p => {
             const pCoId = String(p.id_empresa || "").toUpperCase();
             const pPgId = String(p.id_pagina || "").trim().toLowerCase();
@@ -195,26 +195,51 @@ app.public = {
         const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
         const isPersonal = bizType.includes("MARCA PERSONAL");
 
-        // --- AJUSTE NAVEGACIÓN DINÁMICA (v8.1.0) ---
-        // Si es una sub-página y NO es Marca Personal, usamos el motor estándar
-        if (pageData && hash !== 'home' && !isPersonal) {
-            const heroBanner = document.getElementById('hero-banner-main');
-            const personalNode = document.getElementById('hero-personal-node');
-            if (heroBanner) heroBanner.style.display = 'none';
-            if (personalNode) personalNode.style.display = 'none';
-            
-            const viewHome = document.getElementById('view-home');
-            if (viewHome) { viewHome.classList.remove('hidden'); viewHome.style.display = 'block'; }
-            app.public.renderDynamicContent(pageData);
-            return; 
+        // --- COREOGRAFÍA DINÁMICA DE CAPAS (v14.7.0) ---
+        const viewHome = document.getElementById('view-home');
+        const storySection = document.getElementById('dynamic-story-section');
+        const seoSection = document.getElementById('seo-matrix-section');
+        const heroBanner = document.getElementById('hero-banner-main');
+        const personalNode = document.getElementById('hero-personal-node');
+
+        if (viewHome && storySection && seoSection) {
+            const activeBanner = isPersonal ? personalNode : heroBanner;
+            const inactiveBanner = isPersonal ? heroBanner : personalNode;
+
+            if (pageData && hash !== 'home') {
+                // MODO SUB-PÁGINA: [Contenido] -> [SEO] -> [Banner]
+                viewHome.insertBefore(storySection, seoSection);
+                if (activeBanner) {
+                    viewHome.appendChild(activeBanner); // Mover al final absoluto
+                    activeBanner.style.display = isPersonal ? 'block' : 'flex';
+                    activeBanner.style.minHeight = "60vh"; // Ajuste para cierre fluido
+                }
+                if (inactiveBanner) inactiveBanner.style.display = 'none';
+                storySection.style.marginTop = "80px";
+                app.public.renderDynamicContent(pageData);
+            } else {
+                // MODO INICIO: [Banner] -> [SEO] -> [Contenido]
+                if (activeBanner) {
+                    viewHome.insertBefore(activeBanner, seoSection);
+                    activeBanner.style.display = isPersonal ? 'block' : 'flex';
+                    activeBanner.style.minHeight = isPersonal ? "" : "80vh";
+                }
+                if (inactiveBanner) inactiveBanner.style.display = 'none';
+                viewHome.appendChild(storySection); // Contenido al final
+                storySection.style.marginTop = "40px";
+            }
+        }
+
+        // Si es una sub-página, nos aseguramos que la sección esté visible pero continuamos para renderizar SEO
+        if (pageData && hash !== 'home' && viewHome) {
+            viewHome.classList.remove('hidden');
+            viewHome.style.display = 'block';
         }
 
         app.state.isFood = isFood;
 
         const sloganEl = document.getElementById('hero-slogan');
         const subEl = document.getElementById('hero-sub');
-        const heroBanner = document.getElementById('hero-banner-main');
-        const personalNode = document.getElementById('hero-personal-node');
         const actions = document.getElementById('hero-actions-container');
         const menuPublic = document.getElementById('menu-public');
 
@@ -310,11 +335,11 @@ app.public = {
                                     <!-- MOTOR DE BOTONES DINÁMICO (Ahora dentro de la tarjeta) -->
                                     <div class="personal-pages-nav" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-start; margin-bottom:10px; width:100%;">
                                         ${(app.data.Config_Paginas || [])
-                                            .filter(p => {
-                                                const pCoId = String(p.id_empresa || "").toUpperCase();
-                                                return pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
-                                            })
-                                            .map(p => `
+                        .filter(p => {
+                            const pCoId = String(p.id_empresa || "").toUpperCase();
+                            return pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
+                        })
+                        .map(p => `
                                                 <button class="btn-page-dynamic" 
                                                         style="padding:8px 18px; border-radius:50px; border:1px solid ${pageData && pageData.id_pagina === p.id_pagina ? 'var(--accent-color, #ffd700)' : '#eee'}; background:${pageData && pageData.id_pagina === p.id_pagina ? 'var(--accent-color, #ffd700)' : '#f9f9f9'}; color:${pageData && pageData.id_pagina === p.id_pagina ? '#000' : '#666'}; font-weight:800; cursor:pointer; transition:all 0.3s ease; font-size:0.75rem; text-transform:uppercase;"
                                                         onclick="window.location.hash='#${p.id_pagina}'">
@@ -324,20 +349,20 @@ app.public = {
                                     </div>
 
                                     ${(() => {
-                                        let jsonData = {};
-                                        try {
-                                            jsonData = pageData && pageData.contenido_json ? JSON.parse(pageData.contenido_json) : {};
-                                            if (jsonData.hero) { jsonData = { ...jsonData, ...jsonData.hero }; }
-                                        } catch(e) { console.warn("Error parseando JSON", e); }
+                        let jsonData = {};
+                        try {
+                            jsonData = pageData && pageData.contenido_json ? JSON.parse(pageData.contenido_json) : {};
+                            if (jsonData.hero) { jsonData = { ...jsonData, ...jsonData.hero }; }
+                        } catch (e) { console.warn("Error parseando JSON", e); }
 
-                                        if (pageData) {
-                                            const displayTitle = jsonData.H1 || jsonData.h1 || jsonData.Titulo || jsonData.titulo || pageData.subtitulo || 'Sin Título';
-                                            const displaySub = jsonData.Subtitulo || jsonData.subtitulo || (pageData.meta_json ? JSON.parse(pageData.meta_json).title : '') || '';
-                                            const displayBody = jsonData.Contenido || jsonData.contenido || jsonData.body || pageData.contenido || '';
+                        if (pageData) {
+                            const displayTitle = jsonData.H1 || jsonData.h1 || jsonData.Titulo || jsonData.titulo || pageData.subtitulo || 'Sin Título';
+                            const displaySub = jsonData.Subtitulo || jsonData.subtitulo || (pageData.meta_json ? JSON.parse(pageData.meta_json).title : '') || '';
+                            const displayBody = jsonData.Contenido || jsonData.contenido || jsonData.body || pageData.contenido || '';
 
-                                            return `
+                            return `
                                                 <div class="dynamic-entry" style="animation: fadeIn 0.5s ease;">
-                                                    <h2 style="font-size:2.4rem; color:#034c3c; margin:0; font-weight:900; line-height:1.1; letter-spacing:-1px;">
+                                                    <h2 style="font-size:2.4rem; color:${company.color_tema || '#034c3c'}; margin:0; font-weight:900; line-height:1.1; letter-spacing:-1px;">
                                                         ${displayTitle}
                                                     </h2>
                                                     ${displaySub ? `<h3 style="font-size:1.2rem; color:#666; margin:15px 0 0 0; font-weight:500;">${displaySub}</h3>` : ''}
@@ -346,17 +371,17 @@ app.public = {
                                                     </div>
                                                 </div>
                                             `;
-                                        } else {
-                                            return `
-                                                <h2 style="font-size:2.2rem; color:#034c3c; margin:0; font-weight:900;">${company.nomempresa}</h2>
+                        } else {
+                            return `
+                                                <h2 style="font-size:2.2rem; color:${company.color_tema || '#034c3c'}; margin:0; font-weight:900;">${company.nomempresa}</h2>
                                                 <p style="font-size:1.1rem; line-height:1.7; color:#444; margin-top:20px;">${company.descripcion || 'Seleccione una opción para conocer más sobre nuestra labor.'}</p>
                                             `;
-                                        }
-                                    })()}
+                        }
+                    })()}
                                     
                                     <div style="margin-top:auto; padding-top:10px;">
                                         <button class="btn-primary" 
-                                                style="width:100%; padding: 20px; border-radius: 50px; font-weight:900; background:#034c3c; color:white; border:none; cursor:pointer;" 
+                                                style="width:100%; padding: 20px; border-radius: 50px; font-weight:900; background:${company.color_tema || '#034c3c'}; color:white; border:none; cursor:pointer;" 
                                                 onclick="window.location.hash='#contact'">
                                             MÁS INFORMACIÓN
                                         </button>
@@ -368,13 +393,13 @@ app.public = {
                             <div class="personal-section">
                                 <div class="personal-gallery-card personal-card-base" style="background:#111;">
                                     ${(() => {
-                                        const gallery = (app.data.Config_Galeria || []).filter(g => {
-                                            const gCoId = String(g.id_empresa || "").toUpperCase();
-                                            return gCoId === urlId || gCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
-                                        });
+                        const gallery = (app.data.Config_Galeria || []).filter(g => {
+                            const gCoId = String(g.id_empresa || "").toUpperCase();
+                            return gCoId === urlId || gCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
+                        });
 
-                                        if (gallery.length > 0) {
-                                            return `
+                        if (gallery.length > 0) {
+                            return `
                                                 <div id="personal-carousel" style="position:absolute; inset:0; display:flex; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); width: ${gallery.length * 100}%;">
                                                     ${gallery.map(img => `
                                                         <div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(img.foto_url || img.url)}') center center / cover no-repeat;"></div>
@@ -398,10 +423,10 @@ app.public = {
                                                     })(${gallery.length});
                                                 </script>
                                             `;
-                                        } else {
-                                            return `<div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}') center center / cover no-repeat;"></div>`;
-                                        }
-                                    })()}
+                        } else {
+                            return `<div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}') center center / cover no-repeat;"></div>`;
+                        }
+                    })()}
                                     
                                     <!-- Overlay de Galería -->
                                     <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 40%); pointer-events:none;"></div>
@@ -433,7 +458,7 @@ app.public = {
                 heroBanner.style.overflow = 'hidden';
 
                 const photoUrl = app.utils.fixDriveUrl(company.foto_agente || company.logo_url);
-                
+
                 heroBanner.innerHTML = `
                     <!-- Capa de Foto Completa (v12.5.1) -->
                     <div style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center; z-index:1;">
@@ -445,32 +470,37 @@ app.public = {
 
                     <!-- COORDENADAS DE IDENTIDAD UNIVERSAL -->
                     <div style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none; padding: 40px;">
-                        <!-- SUPERIOR IZQUIERDA: SLOGAN -->
-                        <div style="position:absolute; top:40px; left:40px; font-size:var(--font-size-small, 0.75rem); text-transform:uppercase; letter-spacing:3px; font-weight:800; text-shadow:0 2px 15px rgba(0,0,0,0.8); color:white; border-left:4px solid ${company.color_tema}; padding-left:15px;">
+                        <!-- SUPERIOR IZQUIERDA: SLOGAN (Part 1/3) -->
+                        <div style="position:absolute; top:40px; left:40px; width:30%; font-size:var(--font-size-small, 0.7rem); text-transform:uppercase; letter-spacing:2px; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,0.8); color:white; border-left:4px solid ${company.color_tema}; padding-left:15px; line-height:1.2;">
                             ${company.slogan || ''}
                         </div>
 
-                        <!-- CENTRO: MENSAJE 1 -->
-                        <h1 style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:clamp(1.8rem, 6vw, 4rem); font-weight:900; text-align:center; width:90%; text-shadow:0 10px 40px rgba(0,0,0,0.8); color:white; margin:0;">
+                        <!-- CENTRO: MENSAJE 1 (Part 2/3) -->
+                        <h1 style="position:absolute; top:45%; left:50%; transform:translate(-50%, -50%); font-size:clamp(1.4rem, 4vw, 2.8rem); font-weight:900; text-align:center; width:35%; text-shadow:0 10px 30px rgba(0,0,0,0.8); color:white; margin:0; line-height:1.1;">
                             ${company.mensaje1 || company.nomempresa}
                         </h1>
 
-                        <!-- INFERIOR DERECHA: MENSAJE 2 -->
-                        <div style="position:absolute; bottom:40px; right:40px; font-size:clamp(1.2rem, 3vw, 2.5rem); font-weight:800; color:${company.color_tema}; text-shadow:0 4px 20px rgba(0,0,0,0.9);">
+                        <!-- INFERIOR DERECHA: MENSAJE 2 (Part 3/3) -->
+                        <div style="position:absolute; bottom:40px; right:40px; width:30%; text-align:right; font-size:clamp(1rem, 2.5vw, 1.8rem); font-weight:800; color:#FFFFFF; text-shadow:0 4px 15px rgba(0,0,0,1); line-height:1.2;">
                             ${company.mensaje2 || ''}
                         </div>
                     </div>
 
-                    <!-- ACCIONES: BOTÓN DE CONTACTO (CENTRO ABAJO) -->
-                    <div style="position:absolute; bottom:120px; left:50%; transform:translateX(-50%); z-index:10;">
+                    <!-- ACCIONES: BOTONES CÁPSULA (PIE DE BANNER v4.10.0) -->
+                    <div style="position:absolute; bottom:40px; left:50%; transform:translateX(-50%); z-index:10; display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
                         <button class="btn-primary" style="padding:15px 45px; border-radius:50px; font-weight:900; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:none; cursor:pointer;" onclick="window.location.hash='#contact'">
                             CONTACTAR AHORA
                         </button>
+                        ${(company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) ? `
+                        <button class="btn-primary" style="padding:15px 45px; border-radius:50px; font-weight:900; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-CMARJAV-IMSS')">
+                            <i class="fas fa-robot"></i> CONSULTAR AI
+                        </button>` : ''}
                     </div>
 
                     <!-- QR Dinámico (Protected Mode) -->
                     <div class="banner-qr-official" style="position:absolute; bottom:30px; left:30px; background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 20px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid #eee; opacity:0.8;">
                         <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:45px; height:45px; image-rendering:pixelated;">
+                        <span style="font-size:0.55rem; color:#000; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${company.nomempresa}</span>
                     </div>
                 `;
             }
@@ -478,21 +508,41 @@ app.public = {
 
         if (sloganEl && !heroBanner.innerHTML.includes('hero-actions-dynamic')) sloganEl.innerText = company.slogan || company.nomempresa;
         if (subEl && !heroBanner.innerHTML.includes('hero-actions-dynamic')) subEl.innerText = company.mensaje1 || company.descripcion || "Bienvenido.";
-        
+
         if (actions && !isPersonal && !heroBanner.innerHTML.includes('hero-actions-dynamic')) {
-            actions.innerHTML = isFood ? 
+            let btns = isFood ?
                 `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
-                `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar</button>`;
+                `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar Ahora</button>`;
+
+            if (company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) {
+                btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('AGT-CMARJAV-IMSS')"><i class="fas fa-robot"></i> Consultar AI</button>`;
+            }
+            actions.innerHTML = btns;
         }
 
         if (menuPublic) {
             const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
+
+            // --- MOTOR DE MENÚ DINÁMICO (v8.2.0) ---
+            const dynamicPages = (app.data.Config_Paginas || []).filter(p => {
+                const pCoId = String(p.id_empresa || "").toUpperCase();
+                const pPgId = String(p.id_pagina || "").trim().toLowerCase();
+                return (pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "")) && pPgId !== 'home';
+            });
+
+            let dynamicLinksHtml = '';
+            dynamicPages.forEach(p => {
+                const label = p.id_pagina.charAt(0).toUpperCase() + p.id_pagina.slice(1);
+                dynamicLinksHtml += `<li><a href="#${p.id_pagina}">${label}</a></li>`;
+            });
+
             menuPublic.innerHTML = `
                 ${!isIsolated ? '<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>' : ''}
                 <li><a href="#home">Inicio</a></li>
+                ${dynamicLinksHtml}
                 ${isFood ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
                 ${company.formulario ? `<li><a href="#contact">Contacto</a></li>` : ''}
-                <li><a href="#login"><i class="fas fa-user-lock"></i> Staff</a></li>
+                <li><a href="#login" class="nav-login-btn"><i class="fas fa-user-lock"></i> Staff</a></li>
             `;
         }
 
@@ -500,7 +550,6 @@ app.public = {
         if (app.public.renderSEO) app.public.renderSEO();
 
         // AJUSTE DE ESPACIOS INTELIGENTES (v6.6.1)
-        const storySection = document.getElementById('dynamic-story-section');
         const gallerySection = document.getElementById('company-gallery-section');
         if (gallerySection) {
             // Si la sección de historia está oculta, pegamos la galería a la matriz SEO
@@ -533,7 +582,7 @@ app.public = {
 
             if (h2) h2.innerHTML = content.h1 || content.titulo || "Información";
             if (h3) h3.innerHTML = content.h2_1 || content.subtitulo || "";
-            
+
             if (body) {
                 let txt = content.p_intro || content.texto || content.descripcion || "";
                 if (content.p_mision) txt += `<br><br><strong>Misión:</strong> ${content.p_mision}`;
@@ -1053,12 +1102,12 @@ app.public = {
         const section = document.getElementById('company-gallery-section');
         const grid = document.getElementById('company-gallery-grid');
         if (!grid || !section) return;
-        
+
         const urlId = (app.state.companyId || "").toString().trim().toUpperCase();
         const company = app.data.Config_Empresas.find(c => c.id_empresa === urlId);
         if (!company) return;
 
-        const imgs = (app.data.Config_Galeria || []).filter(img => 
+        const imgs = (app.data.Config_Galeria || []).filter(img =>
             String(img.id_empresa || "").trim().toUpperCase() === urlId
         );
 
@@ -1139,28 +1188,28 @@ app.public = {
         const visibleSlots = isMobile ? 1 : (isTablet ? 2 : pcSlots);
 
         if (imgs.length > visibleSlots) {
-             if (app.state.galleryTimer) clearInterval(app.state.galleryTimer);
-             app.state.galleryTimer = setInterval(() => {
-                 app.ui.scrollGalleryBySlot(1, visibleSlots);
-             }, 5000);
+            if (app.state.galleryTimer) clearInterval(app.state.galleryTimer);
+            app.state.galleryTimer = setInterval(() => {
+                app.ui.scrollGalleryBySlot(1, visibleSlots);
+            }, 5000);
         }
 
         // Re-mapear botones de navegación
         const prevBtn = section.querySelector('.gallery-arrow.prev') || section.querySelector('.gallery-huge-btn.prev');
         const nextBtn = section.querySelector('.gallery-arrow.next') || section.querySelector('.gallery-huge-btn.next');
-        
+
         if (prevBtn) {
             prevBtn.className = "gallery-huge-btn prev";
-            prevBtn.onclick = () => { 
-                app.ui.scrollGalleryBySlot(-1, visibleSlots); 
-                if(app.state.galleryTimer) clearInterval(app.state.galleryTimer); 
+            prevBtn.onclick = () => {
+                app.ui.scrollGalleryBySlot(-1, visibleSlots);
+                if (app.state.galleryTimer) clearInterval(app.state.galleryTimer);
             };
         }
         if (nextBtn) {
             nextBtn.className = "gallery-huge-btn next";
-            nextBtn.onclick = () => { 
-                app.ui.scrollGalleryBySlot(1, visibleSlots); 
-                if(app.state.galleryTimer) clearInterval(app.state.galleryTimer); 
+            nextBtn.onclick = () => {
+                app.ui.scrollGalleryBySlot(1, visibleSlots);
+                if (app.state.galleryTimer) clearInterval(app.state.galleryTimer);
             };
         }
     },
