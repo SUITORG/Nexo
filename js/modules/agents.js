@@ -1,4 +1,12 @@
 app.agents = {
+    getVisitorId: () => {
+        let vid = localStorage.getItem('suit_visitor_id');
+        if (!vid) {
+            vid = 'VISIT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            localStorage.setItem('suit_visitor_id', vid);
+        }
+        return vid;
+    },
     run: (agentName) => {
         const box = document.getElementById('agent-output-box');
         const output = document.getElementById('agent-response');
@@ -60,7 +68,59 @@ app.agents = {
                 }
             }
         }, 10000); // 10s check interval 
+
+        // Inyectar Memoria de Supabase (UNIVERSAL v4.16.0)
+        const isSupabase = (app.state.dbEngine || "").toUpperCase() === 'SUPABASE';
+        if (isSupabase && SUIT_CONFIG.sbUrl) {
+            const vid = app.agents.getVisitorId();
+            app.agents.fetchMemory(vid).then(memory => {
+                if (memory && memory.ultimo_resumen) {
+                    setTimeout(() => {
+                        app.agents.addMessageToUI('ai', `¡Hola de nuevo! Veo que en nuestra última plática nos quedamos en: <i>"${memory.ultimo_resumen}"</i>. ¿Cómo va todo con eso?`);
+                        app.state.chatHistory.push({ role: 'model', content: `Reconocimiento: El cliente regresó. Resumen anterior: ${memory.ultimo_resumen}` });
+                    }, 1000);
+                }
+            });
+        }
     },
+
+    fetchMemory: async (vid) => {
+        try {
+            const url = `${SUIT_CONFIG.sbUrl}/rest/v1/paper_memoria_leads?id_visitante=eq.${vid}&select=*`;
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    "apikey": SUIT_CONFIG.sbKey,
+                    "Authorization": "Bearer " + SUIT_CONFIG.sbKey
+                }
+            });
+            const data = await res.json();
+            return data && data.length > 0 ? data[0] : null;
+        } catch (e) { console.error("Memory fetch failed:", e); return null; }
+    },
+
+    saveMemory: async (vid, resumen, dataObj = {}) => {
+        try {
+            const url = `${SUIT_CONFIG.sbUrl}/rest/v1/paper_memoria_leads`;
+            const payload = {
+                id_visitante: vid,
+                ultimo_resumen: resumen,
+                fecha_actualizacion: new Date().toISOString(),
+                ...dataObj
+            };
+            await fetch(url, {
+                method: 'POST',
+                headers: {
+                    "apikey": SUIT_CONFIG.sbKey,
+                    "Authorization": "Bearer " + SUIT_CONFIG.sbKey,
+                    "Content-Type": "application/json",
+                    "Prefer": "resolution=merge-duplicates"
+                },
+                body: JSON.stringify(payload)
+            });
+        } catch (e) { console.error("Memory save failed:", e); }
+    },
+
     closeChat: () => {
         document.getElementById('ai-chat-modal').classList.add('hidden');
         // app.state.currentAgent = null; // Mantenemos el agente cargado para persistencia de sesión
@@ -197,6 +257,14 @@ app.agents = {
                         </div>`;
                         app.agents.addMessageToUI('ai', waBtn);
                     }
+                }
+
+                // --- Sincronización de Memoria DYNAMICA (v4.16.0) ---
+                if ((app.state.dbEngine || "").toUpperCase() === 'SUPABASE') {
+                    const vid = app.agents.getVisitorId();
+                    const lastMsgs = app.state.chatHistory.slice(-2).map(h => h.content).join(' ');
+                    // Disparamos el guardado de forma asíncrona (no bloqueante)
+                    app.agents.saveMemory(vid, lastMsgs.substring(0, 200));
                 }
             } else {
                 let fullError = data.error || "No se pudo conectar con la IA.";

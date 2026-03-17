@@ -10,8 +10,13 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
-- [ ] **Sincronización Total de Supabase**: Entrar a la URL `?id=CMARJAV#orbit`, hacer login con el perfil de `admin` (SUDO) y ejecutar la sincronización para abatir los errores de caché rápida.
-- [x] **v14.1.0: Multi-Tenant Business & Pareto Vault**: Lanzamiento de **Pensión Inteligente (CMARJAV)**. Implementación de Bóveda Digital con jerarquía Pareto (El Quién, Cómo, Qué) y despacho dinámico de carpetas en Google Drive. Consolidación de branding Marina/Oro.
+- [ ] **Sincronización Total de Supabase**: Entrar a la URL `?id=PAPER#orbit`, hacer login con el perfil de `admin` (SUDO) y ejecutar la sincronización para abatir los errores de caché rápida.
+- [X] **v15.5.0: Universal Visibility & Project Protection**: Refuerzo anti-invisibilidad de SEO. Sincronización de Meta-Tags, Títulos y Seguimiento de Proyectos (Etapas/Bitácora) a Supabase. Tiempos de carga optimizados para robots de Google y Facebook.
+- [X] **v15.4.0: Martha Padrón Trust-First Flow**: Implementación de diálogo de confianza (Saludo -> Identidad -> Referido) y captura extendida de expediente (NSS, CURP, RFC, Referido) para auditorías patrimoniales.
+- [x] **v15.3.0: Hybrid Data Engine Universal**: Desacoplamiento de la lógica de Memoria e Interfaz del ID fijo 'PAPER'. Ahora el sistema es agnóstico: cualquier negocio con `db_engine = SUPABASE` en Sheets activa automáticamente la Auditoría Patrimonial y la Memoria de IA.
+- [x] **v15.2.0: PA PER Smart Memory & Dynamic Forms**: Implementación de Prompt Avanzado de 6 pasos y aseguramiento de campos de auditoría (Edad/Semanas) en la tabla Leads.
+- [x] **v15.0.0: PA PER Rebranding & Smart Memory (Supabase)**: Migración oficial de CMARJAV a **PA PER (Patrimonio Personal)**. Implementación de tablas de memoria semántica (`paper_memoria_leads`) y logs granulares (`paper_logs_ia`) en Supabase para seguimiento inteligente de prospectos.
+- [x] **v14.1.0: Multi-Tenant Business & Pareto Vault**: Lanzamiento original de CMARJAV (Ahora PA PER). Implementación de Bóveda Digital con jerarquía Pareto (El Quién, Cómo, Qué) y despacho dinámico de carpetas en Google Drive. Consolidación de branding Marina/Oro.
 - [x] **v14.0.3: Gallery Precision & Identity Coordinates**: Reubicación de Galería (Grid 4x1) bajo SEO y anclaje de Slogan/M1/M2 mediante coordenadas absolutas.
 - [x] **v6.6.0: RESPONSIVE-UI Standard Adoption**: Implementación de framework de diseño fluido basado en `clamp()`, `ui-grid` y `standard documentation`. Consolidación de QRs dinámicos y layouts premium para Marca Personal.
 - [x] **v6.2.1: Multi-Engine db_engine support**: Soporte para `db_engine` en Config_Empresas (GSHEETS enabled) y preparación para migración a bases de datos profesionales (Supabase/Neon).
@@ -165,7 +170,7 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v14.11.0: Protocolo de Estabilidad Antigravity (Mantenimiento)**: Documentado el manejo de actualizaciones del motor de IA para evitar cierres accidentales y desinstalaciones. (No pulsar 'Restart to Update' durante sesiones críticas, usar instalación manual si falla).
 
 ---
-*Última actualización: 2026-03-15 | Versión: v14.11.0 (STABILITY PROTOCOL)*
+*Última actualización: 2026-03-15 | Versión: v15.0.0 (PA PER MASTER RELEASE)*
 
 ## v4.6.0 - Flujo Delivery de 3 Pasos (TESTING)
 - [x] **Estado Intermedio**: Implementado estado `EN-CAMINO`.

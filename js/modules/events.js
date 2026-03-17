@@ -1,7 +1,6 @@
 /**
- * MANTENIMIENTO: MODULO DE EVENTOS (v1.0.0)
- * Este archivo centraliza todas las escuchas de eventos (DOM Binding)
- * para limpiar el archivo ui.js y facilitar el mantenimiento.
+ * EVASOL - EVENTS MODULE (v4.18.0)
+ * Responsabilidad: Manejo de clics, formularios, dom y disparadores.
  */
 
 app.events = {
@@ -377,10 +376,28 @@ app.events = {
 
         const hasBilling = elRfc && elRfc.value.trim() !== "" && elBiz && elBiz.value.trim() !== "" && elBillDir && elBillDir.value.trim() !== "";
 
+        const isPaper = (app.state.dbEngine || "").toUpperCase() === 'SUPABASE';
+        const elLastName = document.getElementById('lead-lastname');
+        const elAge = document.getElementById('lead-age');
+        const elWeeks = document.getElementById('lead-weeks');
+        const elNss = document.getElementById('lead-nss');
+        const elCurp = document.getElementById('lead-curp');
+        const elCallTime = document.getElementById('lead-call-time');
+        const elReferral = document.getElementById('lead-referral');
+        const referralChoice = document.querySelector('input[name="referral-choice"]:checked');
+        const referralValue = referralChoice && referralChoice.value === 'SI' ? (elReferral ? elReferral.value : 'SI') : 'NO';
+
         const finalLead = {
             id_lead: existingLead ? existingLead.id_lead : null, // El servidor asignará LEAD-xxx
             id_empresa: app.state.companyId,
             nombre: toTitleCase(document.getElementById('lead-name').value),
+            apellido: elLastName ? toTitleCase(elLastName.value) : '',
+            edad: elAge ? parseInt(elAge.value) : null,
+            semanas_cotizadas: elWeeks ? parseInt(elWeeks.value) : null,
+            nss: elNss ? elNss.value : '',
+            curp: elCurp ? elCurp.value : '',
+            referido_por: referralValue,
+            hora_llamada: elCallTime ? elCallTime.value : '',
             telefono: phone,
             email: document.getElementById('lead-email').value,
             direccion: document.getElementById('lead-address').value,
@@ -390,14 +407,14 @@ app.events = {
             dir_comercial: elBillDir ? elBillDir.value : '',
 
             // --- Integración Dinámica Seguros (v6.1.7) ---
-            asunto: app.state._currentLeadSubtype ? `Cotización ${app.state._currentLeadSubtype}` : 'Contacto Web',
-            body: app.state._currentLeadBody || '',
-            subtipo_negocio: app.state._currentLeadSubtype || '',
+            asunto: isPaper ? `Solicitud Auditoría - ${document.getElementById('lead-subtype').value}` : (app.state._currentLeadSubtype ? `Cotización ${app.state._currentLeadSubtype}` : 'Contacto Web'),
+            body: isPaper ? `Edad: ${elAge?.value} | Semanas: ${elWeeks?.value} | NSS: ${elNss?.value} | CURP: ${elCurp?.value} | RFC: ${elRfc?.value} | Referido: ${referralValue}` : (app.state._currentLeadBody || ''),
+            subtipo_negocio: isPaper ? document.getElementById('lead-subtype').value : (app.state._currentLeadSubtype || ''),
 
             origen: existingLead ? (existingLead.origen || "Web") : "Web",
             estado: existingLead ? (existingLead.estado || "NUEVO") : "NUEVO",
             estatus: existingLead ? (existingLead.estado || "NUEVO") : "NUEVO",
-            nivel_crm: hasBilling ? 2 : 1, // 2: Datos completos, 1: Datos básicos
+            nivel_crm: (hasBilling || isPaper) ? 2 : 1, // 2: Datos completos, 1: Datos básicos
             fecha: existingLead ? (existingLead.fecha || existingLead.fecha_creacion) : ((app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString()),
             fecha_creacion: existingLead ? (existingLead.fecha_creacion) : ((app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString()),
             fecha_actualizacion: (app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString()

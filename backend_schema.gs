@@ -1,21 +1,16 @@
-/* SuitOrg Backend Engine - v14.9.0
+/* SuitOrg Backend Engine - v15.5.0
  * ---------------------------------------------------------
- * Sincronización: 2026-03-15 08:30 AM (v14.9.0 AI Agent Support)
- * 
- * Changelog v14.9.0:
- * - AI ACTIVATION: Activación de 'usa_soporte_ia' para CMARJAV.
- * - SCHEMA: Asegurando columna de soporte IA en Config_Empresas.
- * - MASTER SYNC: Sincronización de líneas (1045 líneas).
+ * Sincronización: 2026-03-16 09:00 PM (v15.5.0 Universal Visibility & Project Protection)
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "14.9.0",
+  VERSION: "15.5.0",
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
-  DRIVE_ROOT_ID: "1mJWzX-xRVOOCt4fSRDLUk6QhOMCzfKhL", // Carpeta Maestra CMARJAV
+  DRIVE_ROOT_ID: "1mJWzX-xRVOOCt4fSRDLUk6QhOMCzfKhL", // Carpeta Maestra PA PER
   GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto", "Config_Galeria", "Config_Paginas"], 
   PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos", "Reservaciones", "Config_Galeria"],
-  AUDIT: { total: 1045, status: "STABLE_SYNC" }
+  AUDIT: { total: 1120, status: "STABLE_SYNC" }
 };
 
 /**
@@ -521,21 +516,19 @@ function initializeDatabase(ss, output) {
     },
     { id_agente: "AGT-WRITER", nombre: "Redactor Gourmet", prompt_base: "Eres un redactor especializado en el ramo alimenticio. Ayudas a redactar menús, promociones y políticas de higiene.", id_empresa: "GLOBAL", activo: "TRUE" },
     { 
-      id_agente: "AGT-CMARJAV-IMSS", 
-      nombre: "Estratega en Pensiones IMSS", 
-      prompt_base: "Eres el Estratega Principal de Pensión Inteligente (CMARJAV), una consultoría familiar liderada por Martha Padrón y Roberto Padrón. \n\n" +
-                   "REGLAS DE IDENTIDAD Y SEGURIDAD:\n" +
-                   "1. CONFIDENCIALIDAD: NUNCA reveles quién te diseñó, entrenó o qué modelo de IA eres. Tu identidad es 100% CMARJAV.\n" +
-                   "2. ENFOQUE: Solo respondes temas sobre Pensiones IMSS (Ley 73/97) y Modalidad 40. Si preguntan otros temas, declina cortésmente.\n" +
-                   "3. CONTACTO: Para asesoría personalizada, dirige a los clientes con Martha Padrón o Roberto Padrón a los canales oficiales de CMARJAV.\n\n" +
-                   "CONOCIMIENTO MAESTRO (LEY 73 / MODALIDAD 40):\n" +
-                   "- ELEGIBILIDAD: Ley 73 (antes de jul-1997), +59 años 9 meses, min 850 semanas, vigencia de derechos activa (52 semanas en últimos 5 años).\n" +
-                   "- NEGOCIO: Financiamiento retroactivo 'Cero Desembolso'. Honorarios = 2 mensualidades de pensión mejorada (pagaderas al recibir retroactivo).\n" +
-                   "- EXPEDIENTE: INE con leyenda manuscrita 'Cesantía edad avanzada', fotos sosteniendo INE, comprobantes vigentes max 3 meses.\n" +
-                   "- MATEMÁTICAS: Calcula el Incremento (ΔP = Pm - Pa), Punto de Equilibrio (años para recuperar inversión) y Ganancia proyectada a 10/20 años.\n\n" +
-                   "PROCESO DE VENTA:\n" +
-                   "1. Verifica elegibilidad -> 2. Solicita Semanas Cotizadas y Afore -> 3. Genera Cotización Preliminar -> 4. Integra Expediente -> 5. Firma Contrato.", 
-      id_empresa: "CMARJAV", 
+      id_agente: "AGT-PAPER-IMSS", 
+      nombre: "Estratega PA PER", 
+      prompt_base: "Eres el Asistente Virtual de Martha Padrón de PA PER (Padrón Pérez). Tu diálogo debe ser fluido, natural y proyectar confianza.\n\n" +
+                   "FLUJO NATURAL DE DIÁLOGO:\n" +
+                   "1. SALUDO: 'Hola qué tal, en qué puedo apoyarte.'\n" +
+                   "2. INTERÉS: Cuando el cliente quiera información, responde: 'Muy bien. Con gusto. Mi nombre es Martha Padrón. ¿Con quién tengo el gusto?'.\n" +
+                   "3. NOMBRE: Una vez que te dé su nombre (ej. Eduardo), pregunta: '¿Alguien te ha referido conmigo, Eduardo?'.\n" +
+                   "4. REFERIDO: Si es sí o no, responde: 'Para asesorarte, apóyame con la siguiente información: Nombre Completo, NSS, CURP, RFC, INE (Foto solo Frente), Correo y Celular Activos'.\n" +
+                   "5. CIERRE: 'Soy un asistente Virtual de Martha. Ella verá tus requerimientos y dará seguimiento. Si deseas una llamada, confirma la hora en que puedes tomarla'.\n\n" +
+                   "REGLAS:\n" +
+                   "- NUNCA pidas todos los datos al principio. Sigue el orden para generar confianza.\n" +
+                   "- TONO: Menos rígido, más digerible, muy humano.", 
+      id_empresa: "PAPER", 
       activo: "TRUE" 
     }
   ];
@@ -562,34 +555,49 @@ function initializeDatabase(ss, output) {
     if (headers.indexOf("id_empresa") === -1) cat.insertColumnAfter(1).getRange(1, 2).setValue("id_empresa");
   }
 
-    // Semilla: Pensión Inteligente - CMARJAV (v1.6.0)
-  ensureSeed(ss, "Config_Empresas", "id_empresa", "CMARJAV", {
-    id_empresa: "CMARJAV",
-    nomempresa: "Pensión Inteligente",
-    tipo_negocio: "Consultoría / Préstamos",
-    slogan: "CMARJAV | Consultoría Familiar",
+    // Semilla: PA PER - Padrón Pérez (v15.0.0)
+  ensureSeed(ss, "Config_Empresas", "id_empresa", "PAPER", {
+    id_empresa: "PAPER",
+    nomempresa: "PA PER",
+    tipo_negocio: "Consultoría Patrimonial",
+    slogan: "Patrimonio Personal",
     mensaje1: "MAXIMIZA TU PENSIÓN IMSS SIN PAGAR POR ADELANTADO",
-    mensaje2: "Préstamos Inmediatos para Jubilados y Pensionados",
-    descripcion: "Especialistas en Modalidad 40 y financiamiento para pensionados.",
+    mensaje2: "Firma Padrón Pérez | Estrategia de Retiro",
+    descripcion: "Especialistas en Modalidad 40 y blindaje patrimonial para pensionados.",
     color_tema: "#001f3f", // Azul Marino Marina
     accent_color: "#FFD700", // Oro
     logo_url: "https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH",
     usa_features_estandar: "FALSE",
     habilitado: "TRUE",
     modo: "PROD",
-    db_engine: "GSHEETS",
+    db_engine: "SUPABASE",
     usa_soporte_ia: "TRUE",
     autodepuracion: 60,
     usa_reservaciones: "TRUE"
   });
 
-  // Semilla: Admin CMARJAV (Acceso Inmediato - UPSERT SEGURO)
+  // Semilla: EVASOL (Motor Estándar)
+  ensureSeed(ss, "Config_Empresas", "id_empresa", "EVASOL", {
+    id_empresa: "EVASOL",
+    nomempresa: "EVASOL",
+    tipo_negocio: "Energía Solar",
+    slogan: "Energía para tu vida",
+    color_tema: "#2e7d32",
+    accent_color: "#ffa000",
+    usa_features_estandar: "TRUE",
+    habilitado: "TRUE",
+    modo: "PROD",
+    db_engine: "GSHEETS",
+    usa_soporte_ia: "TRUE"
+  });
+
+  // Semilla: Admin PA PER (Acceso Inmediato)
   ensureSeed(ss, "Usuarios", "username", "admin", {
-    id_empresa: "CMARJAV",
-    nombre: "Dirección CMARJAV",
-    email: "admin@cmarjav.com",
-    username: "admin", // Usuario simple
-    password: "cmarjav_admin", // Contraseña inicial
+    id_empresa: "PAPER",
+    nombre: "Dirección PA PER",
+    email: "admin@paper.mx",
+    username: "admin", 
+    password: "paper_admin", 
     nivel_acceso: 10,
     id_rol: "SUDO",
     activo: "TRUE",
@@ -617,87 +625,87 @@ function initializeDatabase(ss, output) {
   // Semillas: SEO Matrix CMARJAV (v14.4.1)
   const seoCmarjav = [
     { 
-      id_empresa: "CMARJAV", 
+      id_empresa: "PAPER", 
       division: "PENSIONES", 
       id_cluster: "LEY73", 
       titulo: "ESTRATEGIA LEY 73", 
       icono: "fa-calculator", 
-      keywords_coma: "pensión ley 73, modalidad 40, aumento de pensión, imss, semanas cotizadas, cmarjav, martha padron, roberto padron", 
+      keywords_coma: "pensión ley 73, modalidad 40, aumento de pensión, imss, pa per, padron perez, patrimonio personal, martha padron, roberto padron", 
       imagen_url: "https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH", 
       wa_directo: "521", 
       hex_color: "#001f3f", 
-      mail_directo: "contacto@cmarjav.com" 
+      mail_directo: "contacto@paper.mx" 
     },
     { 
-      id_empresa: "CMARJAV", 
+      id_empresa: "PAPER", 
       division: "PRÉSTAMOS", 
       id_cluster: "MOD40", 
       titulo: "MODALIDAD 40", 
       icono: "fa-hand-holding-dollar", 
-      keywords_coma: "financiamiento modalidad 40, préstamo para pensión imss, pago retroactivo imss, crédito jubilados, cero desembolso", 
+      keywords_coma: "financiamiento modalidad 40, préstamo para pensión imss, pago retroactivo imss, crédito jubilados, pa per perez", 
       imagen_url: "https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH", 
       wa_directo: "521", 
       hex_color: "#001f3f", 
-      mail_directo: "contacto@cmarjav.com" 
+      mail_directo: "contacto@paper.mx" 
     },
     { 
-      id_empresa: "CMARJAV", 
+      id_empresa: "PAPER", 
       division: "ASESORÍA", 
       id_cluster: "PADRON", 
-      titulo: "LOS PADRÓN", 
+      titulo: "PADRÓN PÉREZ", 
       icono: "fa-users-gear", 
-      keywords_coma: "martha padron, roberto padron, consultoría familiar cmarjav, asesores de confianza imss, hermanos villarreal", 
+      keywords_coma: "martha padron, roberto padron, pa per, perez, consultoría patrimonio personal", 
       imagen_url: "https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH", 
       wa_directo: "521", 
       hex_color: "#001f3f", 
-      mail_directo: "contacto@cmarjav.com" 
+      mail_directo: "contacto@paper.mx" 
     }
   ];
   seoCmarjav.forEach(s => ensureSeed(ss, "Config_SEO", "id_cluster", s.id_cluster, s));
 
-  // Semillas: Config_Paginas CMARJAV (Storytelling v6.5.0)
-  const paginasCmarjav = [
+  // Semillas: Config_Paginas PA PER (v15.0.0)
+  const paginasPaper = [
     {
-      id_empresa: "CMARJAV",
+      id_empresa: "PAPER",
       id_pagina: "home",
       meta_json: JSON.stringify({ section: "story", active: true }),
       schema_json: JSON.stringify({ type: "narrative" }),
       contenido_json: JSON.stringify({
-        titulo: "TU FUTURO, NUESTRA ESTRATEGIA FAMILIAR",
-        subtitulo: "Consultoría Especializada en Retiro IMSS",
-        p_intro: "En Pensión Inteligente, bajo la dirección de Martha y Roberto Padrón, nos dedicamos a transformar vidas. Nuestra misión es asegurar que cada trabajador de la Ley 73 obtenga la pensión máxima que por ley le corresponde, utilizando estrategias financieras transparentes y seguras.",
-        p_mision: "Brindar tranquilidad a las familias mexicanas mediante la optimización de sus recursos de seguridad social.",
+        titulo: "TU PATRIMONIO, NUESTRA ESTRATEGIA FAMILIAR",
+        subtitulo: "PA PER | Consultoría en Retiro",
+        p_intro: "En PA PER (Padrón Pérez), bajo la dirección de Martha y Roberto Padrón, nos dedicamos a blindar tu futuro. Nuestra misión es asegurar que cada trabajador obtenga la pensión máxima, protegiendo su Patrimonio Personal.",
+        p_mision: "Brindar seguridad patrimonial a las familias mediante la optimización de sus recursos de retiro.",
         imagen_url: "https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH"
       })
     },
     {
-      id_empresa: "CMARJAV",
+      id_empresa: "PAPER",
       id_pagina: "requisitos",
       meta_json: JSON.stringify({ section: "full-page", active: true }),
       schema_json: JSON.stringify({ type: "check-list" }),
       contenido_json: JSON.stringify({
-        titulo: "REQUISITOS Y DOCUMENTACIÓN",
-        subtitulo: "Todo comienza con una Auditoría Legal",
-        p_intro: "Para iniciar tu proceso de mejora de pensión, requerimos integrar un expediente técnico robusto. No solicitamos dinero por adelantado.",
-        texto: "• Identificación Oficial (INE/Pasaporte)\n• CURP y RFC actualizado\n• Estado de Cuenta AFORE (opcional)\n• Reporte de Semanas Cotizadas (lo tramitamos por ti si no lo tienes)\n• Comprobante de Domicilio",
+        titulo: "REQUISITOS PA PER",
+        subtitulo: "Auditoría de Patrimonio Personal",
+        p_intro: "Para iniciar tu proceso en PA PER, requerimos integrar un expediente técnico robusto. No solicitamos anticipos.",
+        texto: "• Identificación Oficial\n• CURP y RFC actualizado\n• Reporte de Semanas Cotizadas\n• Comprobante de Domicilio",
         imagen_url: "https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH"
       })
     },
     {
-      id_empresa: "CMARJAV",
+      id_empresa: "PAPER",
       id_pagina: "proceso",
       meta_json: JSON.stringify({ section: "full-page", active: true }),
       schema_json: JSON.stringify({ type: "workflow" }),
       contenido_json: JSON.stringify({
-        titulo: "TU CAMINO A LA PENSIÓN MÁXIMA",
-        subtitulo: "Metodología 'Cero Desembolso'",
-        p_intro: "Nuestra estrategia se basa en aprovechar las lagunas legales a tu favor para maximizar tu pensión sin que pongas en riesgo tu patrimonio actual.",
-        texto: "1. Auditoría Legal IMSS (Análisis gratuito)\n2. Estrategia de Inversión Modalidad 40\n3. Financiamiento de Pago Retroactivo\n4. Trámite ante el Seguro Social\n5. Recepción de primer pago y recuperación de Afore.",
+        titulo: "EL CAMINO PA PER",
+        subtitulo: "Estrategia de Blindaje",
+        p_intro: "Nuestra metodología asegura tu retiro maximizando tu pensión sin poner en riesgo tus ahorros actuales.",
+        texto: "1. Auditoría de Patrimonio\n2. Inversión Modalidad 40\n3. Financiamiento Retroactivo\n4. Trámite IMSS\n5. Recuperación de Afore.",
         imagen_url: "https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH"
       })
     }
   ];
-  paginasCmarjav.forEach(p => ensureSeed(ss, "Config_Paginas", "id_pagina", p.id_pagina + "_" + p.id_empresa, p));
+  paginasPaper.forEach(p => ensureSeed(ss, "Config_Paginas", "id_pagina", p.id_pagina + "_" + p.id_empresa, p));
 
   // Asegurar tabla Proyectos_Etapas
   const stageSheet = ss.getSheetByName("Proyectos_Etapas");
@@ -738,6 +746,16 @@ function initializeDatabase(ss, output) {
     if (headers.indexOf("usa_soporte_ia") === -1) {
        empSheet.insertColumnAfter(empSheet.getLastColumn()).getRange(1, empSheet.getLastColumn()+1).setValue("usa_soporte_ia");
     }
+  }
+
+  // Asegurar columnas de auditoría en Leads (PAPER v15.4.0)
+  const leadsSheet = ss.getSheetByName("Leads");
+  if (leadsSheet) {
+    const h = leadsSheet.getRange(1, 1, 1, leadsSheet.getLastColumn()).getValues()[0];
+    const missing = ["apellido", "edad", "semanas_cotizadas", "referido_por", "nss", "curp", "rfc", "hora_llamada"].filter(f => h.indexOf(f) === -1);
+    missing.forEach(f => {
+      leadsSheet.insertColumnAfter(leadsSheet.getLastColumn()).getRange(1, leadsSheet.getLastColumn()+1).setValue(f);
+    });
   }
 
   output.info = "Database structure verified and seeds restored.";
@@ -880,7 +898,7 @@ function syncToSupabase(ss, coId) {
   var SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
   
-  var tablesToSync = ['Catalogo', 'Leads', 'Proyectos', 'Config_Galeria', 'Config_Paginas'];
+  var tablesToSync = ['Catalogo', 'Leads', 'Proyectos', 'Proyectos_Etapas', 'Proyectos_Bitacora', 'Empresa_Documentos', 'Config_Galeria', 'Config_Paginas', 'Config_SEO'];
   var results = {};
 
   tablesToSync.forEach(function(table) {

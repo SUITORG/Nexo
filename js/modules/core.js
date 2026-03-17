@@ -158,7 +158,7 @@ const app = {
                     retries++;
                 }
             }
-            
+
             if (loaded) {
                 // --- ULTRA DEBUG MODE (v5.3.5) ---
                 console.log("🔍 [DATA_CHECK] Estructura de Config_Empresas:");
@@ -265,21 +265,21 @@ const app = {
     loadData: async () => {
         try {
             const fetchId = app.state.companyId || "SuitOrg";
-            
+
             // 1. CARGA DE CONFIGURACIÓN MAESTRA (Siempre desde Google Sheets)
             const masterUrl = `${app.apiUrl}?action=getAll&id_empresa=${fetchId}&token=${app.apiToken}`;
             const masterRes = await fetch(masterUrl);
             const masterData = await masterRes.json();
-            
+
             if (masterData.status === 'ERROR' || masterData.error) throw new Error(masterData.message || masterData.error);
-            
+
             // Sanitizar datos maestros
             const sanitizedMaster = JSON.parse(JSON.stringify(masterData), (key, value) =>
                 typeof value === 'string' ? app.utils.sanitizeString(value) : value
             );
 
             // 2. DETECTAR MOTOR DE DATOS
-            const currentBiz = (sanitizedMaster.Config_Empresas || []).find(c => 
+            const currentBiz = (sanitizedMaster.Config_Empresas || []).find(c =>
                 String(c.id_empresa).toUpperCase() === String(fetchId).toUpperCase()
             ) || sanitizedMaster.Config_Empresas[0];
 
@@ -321,12 +321,13 @@ const app = {
             return false;
         }
     },
+    // EVASOL - CORE MODULE (v14.12.0)
     loadFromSupabase: async (coId) => {
         const SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
-        
+
         console.log(`⚡ [SUPABASE] Cargando datos para ${coId}...`);
-        const tables = ['Catalogo', 'Leads', 'Proyectos', 'Config_Galeria', 'Config_Paginas'];
+        const tables = ['Catalogo', 'Leads', 'Proyectos', 'Proyectos_Etapas', 'Proyectos_Bitacora', 'Empresa_Documentos', 'Config_Galeria', 'Config_Paginas', 'Config_SEO'];
         const results = {};
 
         try {
@@ -398,7 +399,7 @@ const app = {
     createAgentTask: async (taskType, params) => {
         const SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
-        
+
         try {
             const res = await fetch(`${SB_URL}/rest/v1/Agent_Tasks`, {
                 method: 'POST',

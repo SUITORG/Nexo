@@ -1,5 +1,5 @@
 /**
- * EVASOL - PUBLIC MODULE (v4.10.0)
+ * EVASOL - PUBLIC MODULE (v4.19.0)
  * Responsabilidad: Vistas públicas, Landing Page, SEO, Menú y Órbita.
  */
 app.public = {
@@ -175,7 +175,7 @@ app.public = {
         const company = companyData || app.data.Config_Empresas.find(c => {
             const cId = String(c.id_empresa || "").toUpperCase();
             const cAlias = String(c.alias_seo || "").toUpperCase();
-            return cId === urlId || cAlias === urlId || cId === "CMARJAV" || cId.replace(/_/g, "") === urlId.replace(/_/g, "");
+            return cId === urlId || cAlias === urlId || cId === "PAPER" || cId.replace(/_/g, "") === urlId.replace(/_/g, "");
         });
 
         if (!company) return console.error("[RENDER_HOME] No company data found for ID:", rawId);
@@ -492,7 +492,7 @@ app.public = {
                             CONTACTAR AHORA
                         </button>
                         ${(company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) ? `
-                        <button class="btn-primary" style="padding:15px 45px; border-radius:50px; font-weight:900; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-CMARJAV-IMSS')">
+                        <button class="btn-primary" style="padding:15px 45px; border-radius:50px; font-weight:900; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
                             <i class="fas fa-robot"></i> CONSULTAR AI
                         </button>` : ''}
                     </div>
@@ -515,7 +515,7 @@ app.public = {
                 `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar Ahora</button>`;
 
             if (company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) {
-                btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('AGT-CMARJAV-IMSS')"><i class="fas fa-robot"></i> Consultar AI</button>`;
+                btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('AGT-PAPER-IMSS')"><i class="fas fa-robot"></i> Consultar AI</button>`;
             }
             actions.innerHTML = btns;
         }
@@ -546,8 +546,9 @@ app.public = {
             `;
         }
 
-        // Renderizar Matriz SEO (v6.6.0)
+        // Renderizar Matriz SEO y Meta-Tags (v6.6.0)
         if (app.public.renderSEO) app.public.renderSEO();
+        if (app.public.updateMetadata) app.public.updateMetadata();
 
         // AJUSTE DE ESPACIOS INTELIGENTES (v6.6.1)
         const gallerySection = document.getElementById('company-gallery-section');
@@ -714,6 +715,9 @@ app.public = {
         const mainSub = container.querySelector('p');
         if (mainTitle) mainTitle.style.display = 'none';
         if (mainSub) mainSub.style.display = 'none';
+
+        // Inyectar Metadata Semántica (v6.7.0)
+        app.public.updateMetadata();
 
 
         let grid = container.querySelector('.seo-grid');
@@ -1242,23 +1246,88 @@ app.public = {
             return;
         }
 
+        const isPaper = (app.state.dbEngine || "").toUpperCase() === 'SUPABASE';
         const isInsurance = (company.tipo_negocio || "").toString().toUpperCase().includes('SEGUROS') || (company.tipo_negocio || "").toString().toUpperCase().includes('FINANZAS');
 
         container.innerHTML = `
             <div class="form-container">
-                <h2>${isInsurance ? 'Solicitud de Asesoría' : 'Contáctanos'}</h2>
-                <p>${isInsurance ? 'Personaliza tu protección. Un experto de TopLux Finance te contactará.' : 'Déjanos tus datos y un asesor se comunicará contigo.'}</p>
+                <h2>${isPaper ? 'Auditoría de Patrimonio Personal' : isInsurance ? 'Solicitud de Asesoría' : 'Contáctanos'}</h2>
+                <p style="margin-bottom:25px; opacity:0.8;">${isPaper ? 'Inicia hoy la mejora de tu pensión. Martha Padrón y Roberto Padrón revisarán tu caso sin costo.' : isInsurance ? 'Personaliza tu protección. Un experto de TopLux Finance te contactará.' : 'Déjanos tus datos y un asesor se comunicará contigo.'}</p>
                 <form id="public-lead-form">
                     <div class="form-group">
                         <label>Teléfono / WhatsApp *</label>
                         <input type="tel" id="lead-phone" required placeholder="Ej: 521...">
                     </div>
-                    <div class="form-group">
-                        <label>Nombre Completo *</label>
-                        <input type="text" id="lead-name" required>
+                    <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>Nombre(s) *</label>
+                            <input type="text" id="lead-name" required>
+                        </div>
+                        ${isPaper ? `
+                        <div class="form-group" style="flex:1;">
+                            <label>Apellidos *</label>
+                            <input type="text" id="lead-lastname" required>
+                        </div>
+                        ` : ''}
                     </div>
 
-                    ${isInsurance ? `
+                    ${isPaper ? `
+                    <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 10px;">¿Alguien te ha referido con Martha Padrón?</label>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <label><input type="radio" name="referral-choice" value="SI" onchange="document.getElementById('referral-name-box').classList.remove('hidden')"> Sí</label>
+                            <label><input type="radio" name="referral-choice" value="NO" checked onchange="document.getElementById('referral-name-box').classList.add('hidden')"> No</label>
+                        </div>
+                        <div id="referral-name-box" class="hidden">
+                            <input type="text" id="lead-referral" placeholder="Nombre completo de quien te refirió" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>Edad Actual *</label>
+                            <input type="number" id="lead-age" required placeholder="Años">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Semanas Cotizadas (Aprox) *</label>
+                            <input type="number" id="lead-weeks" required placeholder="Ej: 800">
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(var(--primary-rgb), 0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.05);">
+                        <h4 style="margin-top: 0; font-size: 0.8rem; text-transform: uppercase; color: #666; margin-bottom: 15px;">Datos de Identidad (Auditoría)</h4>
+                        <div class="form-group">
+                            <label>NSS (Número de Seguridad Social)</label>
+                            <input type="text" id="lead-nss" placeholder="11 dígitos">
+                        </div>
+                        <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+                            <div class="form-group" style="flex:1;">
+                                <label>CURP</label>
+                                <input type="text" id="lead-curp" placeholder="18 caracteres">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label>RFC</label>
+                                <input type="text" id="lead-rfc" placeholder="13 caracteres">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Servicio de Interés *</label>
+                        <select id="lead-subtype" required style="width:100%; padding:15px; border-radius:15px; border:1px solid #ddd; background:white; font-size:1rem;">
+                            <option value="">¿Cómo podemos ayudarte?</option>
+                            <option value="AUDITORIA">Auditoría Gratuita Ley 73</option>
+                            <option value="MOD40">Inversión Modalidad 40</option>
+                            <option value="RETRO">Financiamiento Retroactivo</option>
+                            <option value="PRESTAMO">Préstamo para Pensionados</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Si deseas una llamada, confirma el horario:</label>
+                        <input type="text" id="lead-call-time" placeholder="Ej: Lunes a las 4pm">
+                    </div>
+                    ` : isInsurance ? `
                     <div class="form-group">
                         <label>¿Qué deseas proteger? *</label>
                         <select id="lead-subtype" required onchange="app.public.toggleInsuranceFields(this.value)" style="width:100%; padding:12px; border-radius:12px; border:1px solid #ddd;">
@@ -1270,22 +1339,19 @@ app.public = {
                             <option value="NEGOCIO">Seguro PyME / Empresarial</option>
                         </select>
                     </div>
-                    <!-- Campos Dinámicos de Seguros (v6.1.7) -->
-                    <div id="insurance-dynamic-fields" style="margin-top:20px; border-left:4px solid var(--primary-color); padding-left:15px;" class="hidden">
-                        <!-- Inyectado por toggleInsuranceFields -->
-                    </div>
+                    <div id="insurance-dynamic-fields" style="margin-top:20px; border-left:4px solid var(--primary-color); padding-left:15px;" class="hidden"></div>
                     ` : ''}
 
                     <div class="form-group">
-                        <label>Correo Electrónico</label>
+                        <label>Correo Electrónico (Opcional)</label>
                         <input type="email" id="lead-email">
                     </div>
                     <div class="form-group">
-                        <label>Dirección *</label>
-                        <input type="text" id="lead-address" required placeholder="Calle, Número, Colonia..." autocomplete="off">
+                        <label>Dirección o Ciudad *</label>
+                        <input type="text" id="lead-address" required placeholder="Ubicación para asesoría..." autocomplete="off">
                     </div>
                     
-                    ${finalBilling ? `
+                    ${(finalBilling && !isPaper) ? `
                     <div id="billing-fields" style="background: rgba(0, 210, 255, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--primary-color); margin: 20px 0;">
                         <h4 style="margin-top:0; color:var(--primary-color); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;">
                             <i class="fas fa-file-invoice"></i> Datos de Facturación (Opcional)
@@ -1306,8 +1372,8 @@ app.public = {
                     ` : ''}
 
                     <div id="contact-msg" class="success-msg hidden" style="margin-bottom:15px; text-align:center; color:var(--primary-color); font-weight:bold;"></div>
-                    <button type="submit" class="btn-primary w-100" id="btn-submit-contact">
-                        ${isInsurance ? 'Solicitar Cotización Virtual' : 'Enviar Información'} <i class="fas fa-paper-plane" style="margin-left:8px;"></i>
+                    <button type="submit" class="btn-primary w-100" id="btn-submit-contact" style="padding:18px; font-weight:900; letter-spacing:1px; text-transform:uppercase;">
+                        ${isPaper ? 'INICIAR MI AUDITORÍA PATRIMONIAL' : isInsurance ? 'Solicitar Cotización Virtual' : 'Enviar Información'} <i class="fas fa-paper-plane" style="margin-left:8px;"></i>
                     </button>
                 </form>
             </div>
@@ -1326,20 +1392,20 @@ app.public = {
                 );
 
                 if (existing) {
-                    console.log("[CRM] Cliente existente encontrado, auto-rellenando...");
+                    console.log("[CRM] Cliente PAPaper existente encontrado, auto-rellenando...");
                     const elName = document.getElementById('lead-name');
+                    const elLName = document.getElementById('lead-lastname');
+                    const elAge = document.getElementById('lead-age');
+                    const elWeeks = document.getElementById('lead-weeks');
                     const elEmail = document.getElementById('lead-email');
                     const elAddr = document.getElementById('lead-address');
-                    const elRfc = document.getElementById('lead-rfc');
-                    const elBiz = document.getElementById('lead-business');
-                    const elBillDir = document.getElementById('lead-billing-address');
 
                     if (elName) elName.value = existing.nombre || '';
+                    if (elLName) elLName.value = existing.apellido || '';
+                    if (elAge) elAge.value = existing.edad || '';
+                    if (elWeeks) elWeeks.value = existing.semanas_cotizadas || '';
                     if (elEmail) elEmail.value = existing.email || '';
                     if (elAddr) elAddr.value = existing.direccion || '';
-                    if (elRfc) elRfc.value = existing.rfc || '';
-                    if (elBiz) elBiz.value = existing.negocio || '';
-                    if (elBillDir) elBillDir.value = existing.direccion_comercial || '';
 
                     // Notificar visualmente
                     const msg = document.getElementById('contact-msg');
@@ -1764,5 +1830,48 @@ app.vault = {
         status.innerText = "¡Archivos enviados a revisión!";
         setTimeout(() => status.classList.add('hidden'), 3500);
         app.vault.refresh();
+    },
+
+    updateMetadata: () => {
+        const targetId = String(app.state.companyId || "").trim().toUpperCase();
+        const company = app.data.Config_Empresas.find(c => c.id_empresa === targetId);
+        if (!company) return;
+
+        // 1. Títulos Dinámicos y SEO Matrix Integration
+        const seoList = (app.data.Config_SEO || []).filter(s => String(s.id_empresa || "").toUpperCase() === targetId);
+        const seoMain = seoList[0]; // Tomamos el primer cluster como referencia de identidad
+
+        const pageTitle = seoMain ? `${seoMain.titulo} | ${company.nomempresa}` : `${company.nomempresa} | ${company.slogan || ''}`;
+        const pageDesc = company.descripcion || company.mensaje1 || "Solución inteligente para tu negocio.";
+        const keywords = seoList.map(s => s.keywords_coma).filter(k => k).join(', ');
+
+        // Actualizar DOM real
+        document.title = pageTitle;
+
+        const updateMeta = (name, content, attr = 'name') => {
+            if (!content) return;
+            let el = document.querySelector(`meta[${attr}="${name}"]`);
+            if (!el) {
+                el = document.createElement('meta');
+                el.setAttribute(attr, name);
+                document.head.appendChild(el);
+            }
+            el.setAttribute('content', content);
+        };
+
+        // 2. Inyección Anti-Invisibilidad (Robots & Social)
+        updateMeta('description', pageDesc);
+        updateMeta('keywords', keywords);
+        updateMeta('og:title', pageTitle, 'property');
+        updateMeta('og:description', pageDesc, 'property');
+        updateMeta('og:type', 'website', 'property');
+        if (company.logo_url) updateMeta('og:image', app.utils.fixDriveUrl(company.logo_url), 'property');
+
+        // 3. Twitter Cards
+        updateMeta('twitter:card', 'summary_large_image');
+        updateMeta('twitter:title', pageTitle);
+        updateMeta('twitter:description', pageDesc);
+
+        console.log(`[SEO_ENGINE] Visibilidad Actualizada: ${targetId} - ${pageTitle}`);
     }
 };
