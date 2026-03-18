@@ -4,7 +4,7 @@
  */
 const app = {
     // --- APP CONFIG ---
-    version: "14.1.0", // v14.1.0
+    version: "15.6.5", // Auditoría IA & Memoria Superior (v15.6.5)
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
     apiToken: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiToken : '',

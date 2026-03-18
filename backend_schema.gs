@@ -5,7 +5,7 @@
  */
 
 const CONFIG = {
-  VERSION: "15.5.0",
+  VERSION: "15.6.8", // Hybrid Core (v15.6.8)
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
   DRIVE_ROOT_ID: "1mJWzX-xRVOOCt4fSRDLUk6QhOMCzfKhL", // Carpeta Maestra PA PER
   GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto", "Config_Galeria", "Config_Paginas"], 
@@ -20,7 +20,7 @@ const CONFIG = {
 function ejecutarConfiguracionManual() {
   var ss = SpreadsheetApp.openById(CONFIG.DB_ID);
   var output = { info: "" };
-  console.log("🚀 Iniciando configuración de Pensión Inteligente v14.1.0...");
+  console.log("🚀 Iniciando configuración de Pensión Inteligente v15.6.8 (Auditoría IA & Memoria Superior)...");
   
   // 1. Inicializar Base de Datos (Semillas)
   initializeDatabase(ss, output);

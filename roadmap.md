@@ -253,6 +253,9 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v5.7.5: SEO Identity & Dynamic Colors**: Identidad visual por ficha SEO (color, whatsapp y mail directo) con lógica de fallback.
 - [x] **v5.7.3: Seguimiento de Proyectos (EVASOL Master Flow)**: Gestión de avances (%), bitácora con hora exacta y multi-inquilino.
 - [x] **v5.2.4: Smart ID & Project Traceability**: Identidad por teléfono, folios secuenciales `LEAD-XXX`/`ORD-XXX` y timestamps ISO.
+- [x] **v15.6.8: Motores Independientes (Hybrid Core)**: La Memoria IA y Auditoría funcionan por Supabase de forma universal, sin depender de que el resto del negocio esté migrado.
+- [x] **v15.6.5: Auditoría IA & Memoria Superior**: Implementación de tabla `paper_logs_ia` y robustecimiento de resúmenes.
+- [ ] **v16.0.0: Full Supabase Migration (Future)**: Migrar todas las tablas de negocio (Catálogo, Proyectos, Leads) a Supabase para máxima velocidad de carga.
 - [x] **v5.2.5: Lead Sync & Timestamps**: Sincronización de columnas `fecha`, `nom_negocio`, `dir_comercial` y timestamps con hora.
 - [x] **v6.2.8: Gallery Slider & Navigation**: Implementación de slider horizontal con flechas, navegación táctil y loader de transición ("Orbit Spinner").
 - [x] **v6.3.0: SEO Shortlinks & Redirector Maestro**: Implementada capa de redirección por `alias_seo` para permitir URLs amigables (ej: `/roberto`). Limpieza de campos obsoletos (`galleryimages`).

@@ -278,19 +278,99 @@ app.public = {
                             overflow: hidden;
                             display: flex;
                         }
-                        @media (max-width: 1024px) {
+                        @keyframes suit-fade-up {
+                            from { opacity: 0; transform: translateY(30px); }
+                            to { opacity: 1; transform: translateY(0); }
+                        }
+                        @keyframes suit-ken-burns {
+                            from { transform: scale(1.1); }
+                            to { transform: scale(1.0); }
+                        }
+                        .animate-cascade {
+                            opacity: 0;
+                            animation: suit-fade-up 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+                        }
+                        .animate-ken-burns {
+                            animation: suit-ken-burns 15s ease-out forwards;
+                        }
+                        @media (max-width: 768px) {
+                            .ui-text-mobile-center {
+                                position: relative !important;
+                                top: auto !important;
+                                left: auto !important;
+                                right: auto !important;
+                                bottom: auto !important;
+                                transform: none !important;
+                                text-align: center !important;
+                                width: 100% !important;
+                                margin: 10px 0 !important;
+                                padding: 10px !important;
+                            }
+                            .ui-overlay-full {
+                                display: flex !important;
+                                flex-direction: column !important;
+                                justify-content: center !important;
+                                align-items: center !important;
+                                padding: 20px !important;
+                                background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 60%) !important;
+                            }
+                            .banner-qr-official {
+                                display: none !important; /* Ocultar QR en móvil para limpiar espacio */
+                            }
+                        }
+                        /* CONFIGURACIÓN GRID 9 (Desktop >= 1025px) */
+                        @media (min-width: 1025px) {
+                            .ui-grid-9-layout {
+                                display: grid !important;
+                                grid-template-columns: 1fr 1fr 1fr !important;
+                                grid-template-rows: 1fr 1fr 1fr !important;
+                                gap: 20px;
+                            }
+                            .ui-grid-9-layout > div { 
+                                position: relative !important; 
+                                top: auto !important; left: auto !important; right: auto !important; bottom: auto !important;
+                                transform: none !important;
+                                width: 100% !important;
+                                display: flex !important;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 20px;
+                            }
+                            .grid-sec-1 { grid-area: 1 / 1; align-items: flex-start !important; justify-content: flex-start !important; }
+                            .grid-sec-4 { grid-area: 2 / 1; align-items: center !important; justify-content: center !important; text-align: center; }
+                            .grid-sec-7 { grid-area: 3 / 1; align-items: flex-end !important; justify-content: flex-start !important; }
+                        }
+
+                        /* MODO CELULAR: SECCIONES STACKED VERTICAL (v16.1.0) */
+                        @media (max-width: 768px) {
                             .personal-responsive-container {
-                                flex-direction: column;
-                                padding-top: 120px;
-                                gap: 60px;
+                                display: block !important;
+                                width: 100% !important;
+                                overflow-x: hidden !important;
                             }
+                            
                             .personal-section {
-                                width: 100%;
-                                flex: none;
+                                display: block !important;
+                                width: 100% !important;
+                                min-height: 80vh !important;
+                                height: auto !important;
+                                position: relative !important;
+                                margin-bottom: 2px;
                             }
-                            .personal-card-base {
-                                max-width: 95%;
-                                height: 750px; /* Ligero ajuste para móviles */
+
+                            /* Matriz SEO Horizontal en Marca Personal se mantiene */
+                            .is-personal-brand .seo-grid {
+                                display: flex !important;
+                                overflow-x: auto !important;
+                                scroll-snap-type: x mandatory !important;
+                                gap: 15px !important;
+                                padding-bottom: 30px !important;
+                                -webkit-overflow-scrolling: touch;
+                            }
+                            .is-personal-brand .seo-grid .feature-card {
+                                flex: 0 0 85% !important;
+                                scroll-snap-align: center !important;
+                                margin: 0 !important;
                             }
                         }
                     </style>
@@ -302,26 +382,45 @@ app.public = {
                                     
                                     <div style="position:absolute; inset:0; background:linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.7) 100%); pointer-events:none;"></div>
 
-                                    <div class="ui-overlay-full" style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none;">
-                                        <!-- SUPERIOR IZQUIERDA: SLOGAN -->
-                                        <div class="ui-text-premium" style="position:absolute; top:40px; left:40px; text-align:left; font-size:var(--font-size-small, 0.75rem); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding:10px 15px; letter-spacing:3px; background:rgba(0,0,0,0.4); border-radius:0 10px 10px 0; color:white; font-weight:800; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">
-                                            ${company.slogan || company.nomempresa}
+                                    <div class="ui-overlay-full ui-grid-9-layout" style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none; padding:40px;">
+                                        <!-- SECCIÓN 1: SLOGAN -->
+                                        <div class="grid-sec-1">
+                                            <h2 class="ui-text-premium animate-cascade ui-std-mobile" style="margin:0; position:absolute; top:40px; left:40px; text-align:left; font-size:var(--font-size-small, 0.75rem); text-transform:uppercase; border-left:4px solid var(--accent-color, #ffd700); padding:10px 15px; letter-spacing:3px; color:white; font-weight:800; text-shadow: 0 5px 20px rgba(0,0,0,0.9); animation-delay: 0.3s;">
+                                                ${company.slogan || company.nomempresa}
+                                            </h2>
                                         </div>
 
-                                        <!-- CENTRO: MENSAJE 1 -->
-                                        <div class="ui-text-premium" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; font-size:clamp(1.5rem, 5vw, 3rem); line-height:1; width:90%; text-shadow: 0 4px 30px rgba(0,0,0,1); font-weight:900; letter-spacing:-1px; color:white;">
-                                            ${company.mensaje1 || ''}
+                                        <!-- CUADRANTE 4: MENSAJE 1 (Centrado en columna izquierda) -->
+                                        <div class="grid-sec-4">
+                                            <h2 class="ui-text-premium animate-cascade ui-std-mobile" style="margin:0; text-align:center; font-size:clamp(1.2rem, 3vw, 2rem); line-height:1.2; width:95%; text-shadow: 0 5px 25px rgba(0,0,0,0.8); font-weight:900; letter-spacing:-1px; color:rgba(255,255,255,0.85); animation-delay: 0.5s;">
+                                                ${company.mensaje1 || ''}
+                                            </h2>
                                         </div>
 
-                                        <!-- INFERIOR DERECHA: MENSAJE 2 -->
-                                        <div class="ui-text-premium" style="position:absolute; bottom:40px; right:40px; text-align:right; font-size:1.8rem; color:var(--accent-color, #ffd700); text-shadow:0 4px 20px rgba(0,0,0,1); font-weight:800;">
-                                            ${company.mensaje2 || ''}
-                                        </div>
-                                    </div>
+                                        <!-- CUADRANTE 7: IDENTIDAD BASE (QR, Botones, Mensaje 2) -->
+                                        <div class="grid-sec-7" style="display:flex; flex-direction:row !important; align-items:flex-end !important; justify-content:space-between !important; width:100% !important; pointer-events:auto; gap:10px;">
+                                            <!-- QR (Izquierda) -->
+                                            <div class="banner-qr-official animate-cascade" style="background:white; padding:8px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px; box-shadow:0 10px 20px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); animation-delay: 1.1s;">
+                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:35px; height:35px; image-rendering:pixelated;">
+                                                <span style="font-size:0.45rem; color:#000; font-weight:900; text-transform:uppercase;">${company.bizid || 'PAPER'}</span>
+                                            </div>
 
-                                    <div class="banner-qr-official" style="position:absolute; bottom:30px; left:30px; background:white; padding:12px; border-radius:20px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 20px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid rgba(255,255,255,0.2);">
-                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:50px; height:50px; image-rendering:pixelated;">
-                                        <span style="font-size:0.55rem; color:#000; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${company.nomempresa}</span>
+                                            <!-- Botones (Centro) -->
+                                            <div class="animate-cascade" style="display:flex; flex-direction:column; gap:8px; animation-delay: 0.8s; flex-grow:1; align-items:center;">
+                                                <button class="btn-primary" style="width:100%; white-space:nowrap; padding:10px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,0,0,0.3); border:none; cursor:pointer;" onclick="window.location.hash='#contact'">
+                                                    CONTACTAR
+                                                </button>
+                                                ${(company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) ? `
+                                                <button class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
+                                                    IA
+                                                </button>` : ''}
+                                            </div>
+
+                                            <!-- Mensaje 2 (Derecha) -->
+                                            <h3 class="ui-text-premium animate-cascade ui-std-mobile" style="margin:0; text-align:right; font-size:clamp(0.7rem, 1.4vw, 1rem); color:var(--accent-color, #ffd700); text-shadow:0 5px 20px rgba(0,0,0,1); font-weight:800; animation-delay: 0.7s; max-width:40%;">
+                                                ${company.mensaje2 || ''}
+                                            </h3>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -460,9 +559,9 @@ app.public = {
                 const photoUrl = app.utils.fixDriveUrl(company.foto_agente || company.logo_url);
 
                 heroBanner.innerHTML = `
-                    <!-- Capa de Foto Completa (v12.5.1) -->
-                    <div style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center; z-index:1;">
-                        <img src="${photoUrl}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;">
+                    <!-- Capa de Foto Completa (v12.5.1 + Optimizer Pro) -->
+                    <div style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center; z-index:1; overflow:hidden;">
+                        <img src="${photoUrl}" class="animate-ken-burns" style="width:100%; height:100%; object-fit:contain; pointer-events:none; filter: brightness(0.6) contrast(1.1) saturate(1.2); transition: filter 1s ease;">
                     </div>
 
                     <!-- Overlay Premium -->
@@ -470,37 +569,108 @@ app.public = {
 
                     <!-- COORDENADAS DE IDENTIDAD UNIVERSAL -->
                     <div style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none; padding: 40px;">
-                        <!-- SUPERIOR IZQUIERDA: SLOGAN (Part 1/3) -->
-                        <div style="position:absolute; top:40px; left:40px; width:30%; font-size:var(--font-size-small, 0.7rem); text-transform:uppercase; letter-spacing:2px; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,0.8); color:white; border-left:4px solid ${company.color_tema}; padding-left:15px; line-height:1.2;">
-                            ${company.slogan || ''}
+                        <style>
+                            @keyframes suit-fade-up {
+                                from { opacity: 0; transform: translateY(30px); }
+                                to { opacity: 1; transform: translateY(0); }
+                            }
+                            @keyframes suit-ken-burns {
+                                from { transform: scale(1.1); }
+                                to { transform: scale(1.0); }
+                            }
+                            .animate-cascade-std {
+                                opacity: 0;
+                                animation: suit-fade-up 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+                            }
+                            @media (max-width: 768px) {
+                                .ui-std-mobile {
+                                    position: relative !important;
+                                    top: auto !important;
+                                    left: auto !important;
+                                    right: auto !important;
+                                    bottom: auto !important;
+                                    transform: none !important;
+                                    text-align: center !important;
+                                    width: 100% !important;
+                                    margin: 5px 0 !important;
+                                }
+                                .ui-std-overlay {
+                                    display: flex !important;
+                                    flex-direction: column !important;
+                                    justify-content: center !important;
+                                    align-items: center !important;
+                                    padding: 20px !important;
+                                }
+                            }
+                        /* CONFIGURACIÓN GRID 9 (Desktop >= 1025px) */
+                        @media (min-width: 1025px) {
+                            .ui-grid-9-std {
+                                display: grid !important;
+                                grid-template-columns: 1fr 1fr 1fr !important;
+                                grid-template-rows: 1fr 1fr 1fr !important;
+                                z-index: 10;
+                            }
+                            .ui-grid-9-std > div { 
+                                position: relative !important; 
+                                top: auto !important; left: auto !important; right: auto !important; bottom: auto !important;
+                                transform: none !important;
+                                width: 100% !important;
+                                display: flex !important;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 20px;
+                            }
+                            .grid-sec-1 { grid-area: 1 / 1; align-items: flex-start !important; justify-content: flex-start !important; }
+                            .grid-sec-5 { grid-area: 2 / 2; align-items: center !important; justify-content: center !important; text-align: center; }
+                            .grid-sec-7 { grid-area: 3 / 1; align-items: flex-end !important; justify-content: flex-start !important; }
+                            .grid-sec-8 { grid-area: 3 / 2; align-items: flex-end !important; justify-content: center !important; }
+                            .grid-sec-9 { grid-area: 3 / 3; align-items: flex-end !important; justify-content: flex-end !important; text-align: right; }
+                        }
+                    </style>
+                    <!-- COORDENADAS DE IDENTIDAD UNIVERSAL (v15.0.0 - Grid 9 Enabled) -->
+                    <div class="ui-grid-9-std" style="position:absolute; inset:0; z-index:5; width:100%; height:100%; pointer-events:none; padding: 40px;">
+                        
+                        <!-- SECCIÓN 1: SLOGAN (Part 1/3) -->
+                        <div class="grid-sec-1">
+                            <h2 class="animate-cascade-std ui-std-mobile" style="margin:0; width:100%; font-size:var(--font-size-small, 0.7rem); text-transform:uppercase; letter-spacing:2px; font-weight:800; text-shadow:0 5px 15px rgba(0,0,0,0.9); color:white; border-left:4px solid ${company.color_tema}; padding-left:15px; line-height:1.2; animation-delay: 0.3s; padding-top:5px; padding-bottom:5px;">
+                                ${company.slogan || ''}
+                            </h2>
                         </div>
 
-                        <!-- CENTRO: MENSAJE 1 (Part 2/3) -->
-                        <h1 style="position:absolute; top:45%; left:50%; transform:translate(-50%, -50%); font-size:clamp(1.4rem, 4vw, 2.8rem); font-weight:900; text-align:center; width:35%; text-shadow:0 10px 30px rgba(0,0,0,0.8); color:white; margin:0; line-height:1.1;">
-                            ${company.mensaje1 || company.nomempresa}
-                        </h1>
-
-                        <!-- INFERIOR DERECHA: MENSAJE 2 (Part 3/3) -->
-                        <div style="position:absolute; bottom:40px; right:40px; width:30%; text-align:right; font-size:clamp(1rem, 2.5vw, 1.8rem); font-weight:800; color:#FFFFFF; text-shadow:0 4px 15px rgba(0,0,0,1); line-height:1.2;">
-                            ${company.mensaje2 || ''}
+                        <!-- SECCIÓN 5: MENSAJE 1 (Refined v2.0) -->
+                        <div class="grid-sec-5">
+                            <h1 class="animate-cascade-std ui-std-mobile" style="font-size:clamp(0.9rem, 3vw, 1.8rem); font-weight:900; text-align:center; width:95%; text-shadow:0 10px 30px rgba(0,0,0,0.7); color:rgba(255,255,255,0.85); margin:0; line-height:1.1; animation-delay: 0.5s;">
+                                ${company.mensaje1 || company.nomempresa}
+                            </h1>
                         </div>
-                    </div>
 
-                    <!-- ACCIONES: BOTONES CÁPSULA (PIE DE BANNER v4.10.0) -->
-                    <div style="position:absolute; bottom:40px; left:50%; transform:translateX(-50%); z-index:10; display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
-                        <button class="btn-primary" style="padding:15px 45px; border-radius:50px; font-weight:900; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:none; cursor:pointer;" onclick="window.location.hash='#contact'">
-                            CONTACTAR AHORA
-                        </button>
-                        ${(company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) ? `
-                        <button class="btn-primary" style="padding:15px 45px; border-radius:50px; font-weight:900; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
-                            <i class="fas fa-robot"></i> CONSULTAR AI
-                        </button>` : ''}
-                    </div>
+                        <!-- SECCIÓN 7: QR Dinámico (Protected Mode) -->
+                        <div class="grid-sec-7">
+                            <div class="banner-qr-official animate-cascade-std" style="background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 15px 30px rgba(0,0,0,0.5); z-index:10; border:1px solid #eee; opacity:0.9; animation-delay: 1.1s;">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:40px; height:40px; image-rendering:pixelated;">
+                                <span style="font-size:0.5rem; color:#000; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${company.nomempresa}</span>
+                            </div>
+                        </div>
 
-                    <!-- QR Dinámico (Protected Mode) -->
-                    <div class="banner-qr-official" style="position:absolute; bottom:30px; left:30px; background:white; padding:10px; border-radius:15px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:0 20px 40px rgba(0,0,0,0.5); z-index:10; border:1px solid #eee; opacity:0.8;">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:45px; height:45px; image-rendering:pixelated;">
-                        <span style="font-size:0.55rem; color:#000; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${company.nomempresa}</span>
+                        <!-- SECCIÓN 8: BOTONES CÁPSULA (v15.0.0 - Smaller) -->
+                        <div class="grid-sec-8" style="pointer-events: auto;">
+                            <div class="animate-cascade-std" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; animation-delay: 0.9s;">
+                                <button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:none; cursor:pointer;" onclick="window.location.hash='#contact'">
+                                    CONTACTAR
+                                </button>
+                                ${(company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) ? `
+                                <button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
+                                    <i class="fas fa-robot"></i> CONSULTAR
+                                </button>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 9: MENSAJE 2 (Part 3/3) -->
+                        <div class="grid-sec-9">
+                            <h3 class="animate-cascade-std ui-std-mobile" style="margin:0; width:100%; text-align:right; font-size:clamp(0.64rem, 2vw, 1.12rem); font-weight:800; color:#FFFFFF; text-shadow:0 8px 30px rgba(0,0,0,1); line-height:1.2; animation-delay: 0.7s;">
+                                ${company.mensaje2 || ''}
+                            </h3>
+                        </div>
                     </div>
                 `;
             }

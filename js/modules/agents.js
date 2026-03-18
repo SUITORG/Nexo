@@ -69,9 +69,8 @@ app.agents = {
             }
         }, 10000); // 10s check interval 
 
-        // Inyectar Memoria de Supabase (UNIVERSAL v4.16.0)
-        const isSupabase = (app.state.dbEngine || "").toUpperCase() === 'SUPABASE';
-        if (isSupabase && SUIT_CONFIG.sbUrl) {
+        // Inyectar Memoria de Supabase (UNIVERSAL HYBRID v15.6.8)
+        if (SUIT_CONFIG.sbUrl && SUIT_CONFIG.sbKey) {
             const vid = app.agents.getVisitorId();
             app.agents.fetchMemory(vid).then(memory => {
                 if (memory && memory.ultimo_resumen) {
@@ -101,12 +100,14 @@ app.agents = {
 
     saveMemory: async (vid, resumen, dataObj = {}) => {
         try {
+            if (!SUIT_CONFIG.sbUrl || !SUIT_CONFIG.sbKey) return;
+
             const url = `${SUIT_CONFIG.sbUrl}/rest/v1/paper_memoria_leads`;
             const payload = {
                 id_visitante: vid,
-                ultimo_resumen: resumen,
+                ultimo_resumen: resumen, // v15.6.5: Límite aumentado a 1000 chars en app
                 fecha_actualizacion: new Date().toISOString(),
-                ...dataObj
+                data_adicional: dataObj
             };
             await fetch(url, {
                 method: 'POST',
@@ -119,6 +120,32 @@ app.agents = {
                 body: JSON.stringify(payload)
             });
         } catch (e) { console.error("Memory save failed:", e); }
+    },
+
+    logInteraction: async (vid, question, answer, model = 'unknown') => {
+        try {
+            if (!SUIT_CONFIG.sbUrl || !SUIT_CONFIG.sbKey) return;
+
+            const url = `${SUIT_CONFIG.sbUrl}/rest/v1/paper_logs_ia`;
+            const payload = {
+                id_visitante: vid,
+                id_empresa: app.state.companyId || 'SYSTEM',
+                agente_id: app.state.currentAgent ? app.state.currentAgent.id_agente : 'unknown',
+                modelo: model,
+                pregunta: question,
+                respuesta: answer,
+                fecha_hora: new Date().toISOString()
+            };
+            await fetch(url, {
+                method: 'POST',
+                headers: {
+                    "apikey": SUIT_CONFIG.sbKey,
+                    "Authorization": "Bearer " + SUIT_CONFIG.sbKey,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+        } catch (e) { console.error("IA Log failed:", e); }
     },
 
     closeChat: () => {
@@ -259,12 +286,18 @@ app.agents = {
                     }
                 }
 
-                // --- Sincronización de Memoria DYNAMICA (v4.16.0) ---
-                if ((app.state.dbEngine || "").toUpperCase() === 'SUPABASE') {
+                // --- Sincronización de Memoria DYNAMICA & Auditoría (v15.6.8 Hybrid) ---
+                if (SUIT_CONFIG.sbUrl && SUIT_CONFIG.sbKey) {
                     const vid = app.agents.getVisitorId();
-                    const lastMsgs = app.state.chatHistory.slice(-2).map(h => h.content).join(' ');
-                    // Disparamos el guardado de forma asíncrona (no bloqueante)
-                    app.agents.saveMemory(vid, lastMsgs.substring(0, 200));
+                    const modelUsed = app.state._aiModel || localStorage.getItem('evasol_ai_model') || "gemini-1.5-flash";
+
+                    // 1. Auditoría Granular en logs (Toda la interacción)
+                    app.agents.logInteraction(vid, text, data.answer, modelUsed);
+
+                    // 2. Memoria Semántica (Resumen para el próximo saludo)
+                    // Tomamos un fragmento más amplio de la conversación para el resumen
+                    const contextResumen = app.state.chatHistory.slice(-2).map(h => h.content).join(' | ');
+                    app.agents.saveMemory(vid, contextResumen.substring(0, 1000));
                 }
             } else {
                 let fullError = data.error || "No se pudo conectar con la IA.";
