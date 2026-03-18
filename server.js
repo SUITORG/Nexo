@@ -4,6 +4,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Serve static files from the current directory
+app.use((req, res, next) => {
+    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+    next();
+});
 app.use(express.static(__dirname));
 
 // For SPA routing, redirect all other requests to index.html
@@ -11,7 +15,7 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`
 🚀 SUITORG LOCAL SERVER RUNNING
 -------------------------------

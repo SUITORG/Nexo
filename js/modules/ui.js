@@ -29,7 +29,7 @@ app.ui = {
     scrollGalleryBySlot: (direction, visibleSlots) => {
         const grid = document.getElementById('company-gallery-grid');
         if (!grid) return;
-        
+
         const slots = grid.querySelectorAll('.gallery-slot');
         if (slots.length === 0) return;
 
@@ -121,7 +121,7 @@ app.ui = {
             btn.innerHTML = `<i class="fa-solid fa-robot"></i> AUDIT IA`;
             btn.title = "Lanzar auditoría visual con Agente IA";
             btn.onclick = () => app.ui.triggerAgentAudit();
-            
+
             statusBar.insertBefore(btn, statusBar.firstChild);
         }
     },
@@ -329,8 +329,8 @@ app.ui = {
     syncSupabase: async () => {
         app.ui.updateConsole("SUPABASE_SYNCING...");
         const btn = document.getElementById('btn-sync-supabase');
-        if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
-        
+        if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+
         try {
             const res = await fetch(app.apiUrl, {
                 method: 'POST',
@@ -353,7 +353,46 @@ app.ui = {
             app.ui.updateConsole("SUPABASE_CONN_ERR", true);
             alert("Error de red al conectar con Google Apps Script para la sincronización.");
         } finally {
-            if(btn) btn.innerHTML = '<i class="fas fa-database"></i> Sincronizar Supabase';
+            if (btn) btn.innerHTML = '<i class="fas fa-database"></i> Sincronizar Supabase';
+        }
+    },
+
+    repairDatabase: async function () {
+        const user = app.state.currentUser;
+        if (!user || (user.id_rol !== 'SUDO' && (user.nivel_acceso || 0) < 10)) {
+            alert("⛔ Acceso denegado. Se requieren permisos de SUDO.");
+            return;
+        }
+
+        if (!confirm("⚠️ ¿Ejecutar REPARACIÓN DE EMERGENCIA? \nEsto regenerará semillas, roles y limpiará logs antiguos.")) return;
+
+        app.ui.updateConsole("DB_REPAIR_STARTING...");
+        const btn = document.getElementById('admin-tool-repair-db');
+        const originalHtml = btn ? btn.innerHTML : 'Reparar DB';
+        if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reparando...';
+
+        try {
+            const res = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({
+                    action: 'repairDatabase',
+                    id_empresa: app.state.companyId,
+                    token: app.apiToken
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                app.ui.updateConsole("DB_REPAIR_OK");
+                alert("✅ Sistema reparado con éxito.\nLas tablas y roles base han sido normalizados.");
+            } else {
+                throw new Error(data.error || "Error desconocido");
+            }
+        } catch (e) {
+            app.ui.updateConsole("DB_REPAIR_FAIL", true);
+            alert("❌ Fallo en reparación: " + e.message);
+        } finally {
+            if (btn) btn.innerHTML = originalHtml;
         }
     },
 

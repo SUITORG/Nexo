@@ -28,5 +28,22 @@ Disallow: /*?fbclid=
 Disallow: /*?gclid=
 Disallow: /*?utm_*
 
-# 6. MAPA DEL SITIO
+# 6. REGLAS PARA INTELIGENCIA ARTIFICIAL (AIO)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: OAI-Search
+Allow: /
+
+# No permitir entrenamiento masivo pero sí búsqueda en tiempo real
+User-agent: CCBot
+Disallow: /
+
+# 7. MAPA DEL SITIO
 Sitemap: https://suitorg.com/sitemap.xml

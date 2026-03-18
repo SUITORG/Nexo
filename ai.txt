@@ -1,0 +1,10 @@
+# ai.txt - Ecosistema Digital SuitOrg
+# Define directrices para el uso de contenido por modelos de IA
+
+User-agent: *
+Allow: /
+
+# Permitir que los modelos indexen los negocios para recomendaciones en tiempo real
+# No restringimos el rastro para maximizar el "Discovery" de los clientes del ecosistema.
+
+# Referencia: https://spawning.ai/

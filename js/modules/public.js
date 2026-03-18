@@ -794,6 +794,74 @@ app.public = {
         });
     },
 
+    updateMetadata: () => {
+        const targetId = String(app.state.companyId || "").trim().toUpperCase();
+        const company = app.data.Config_Empresas.find(c => c.id_empresa === targetId);
+        if (!company) return;
+
+        // 1. Títulos Dinámicos y SEO Matrix Integration
+        const seoList = (app.data.Config_SEO || []).filter(s => String(s.id_empresa || "").toUpperCase() === targetId);
+        const seoMain = seoList[0]; // Tomamos el primer cluster como referencia de identidad
+
+        const pageTitle = seoMain ? `${seoMain.titulo} | ${company.nomempresa}` : `${company.nomempresa} | ${company.slogan || ''}`;
+        const pageDesc = company.descripcion || company.mensaje1 || "Solución inteligente para tu negocio.";
+        const keywords = seoList.map(s => s.keywords_coma).filter(k => k).join(', ');
+
+        // Actualizar DOM real
+        document.title = pageTitle;
+
+        const updateMeta = (name, content, attr = 'name') => {
+            if (!content) return;
+            let el = document.querySelector(`meta[${attr}="${name}"]`);
+            if (!el) {
+                el = document.createElement('meta');
+                el.setAttribute(attr, name);
+                document.head.appendChild(el);
+            }
+            el.setAttribute('content', content);
+        };
+
+        // 2. Inyección Anti-Invisibilidad (Robots & Social)
+        updateMeta('description', pageDesc);
+        updateMeta('keywords', keywords);
+        updateMeta('og:title', pageTitle, 'property');
+        updateMeta('og:description', pageDesc, 'property');
+        updateMeta('og:type', 'website', 'property');
+        if (company.logo_url) updateMeta('og:image', app.utils.fixDriveUrl(company.logo_url), 'property');
+
+        // 3. Twitter Cards
+        updateMeta('twitter:card', 'summary_large_image');
+        updateMeta('twitter:title', pageTitle);
+        updateMeta('twitter:description', pageDesc);
+
+        // 4. Inyección JSON-LD para IA (AIO - AI Optimization) v6.7.5
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": company.nomempresa,
+            "description": pageDesc,
+            "url": window.location.origin + window.location.pathname + "?id=" + targetId,
+            "logo": app.utils.fixDriveUrl(company.logo_url),
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": company.telefonowhatsapp,
+                "contactType": "customer service"
+            },
+            "keywords": keywords
+        };
+
+        let script = document.getElementById('schema-json-ld');
+        if (!script) {
+            script = document.createElement('script');
+            script.id = 'schema-json-ld';
+            script.type = 'application/ld+json';
+            document.head.appendChild(script);
+        }
+        script.textContent = JSON.stringify(schema);
+
+        console.log(`[SEO_ENGINE] Visibilidad y AIO Actualizada: ${targetId} - ${pageTitle}`);
+    },
+
     renderFoodMenu: () => {
         const container = document.getElementById('food-menu-grid');
         const tabsContainer = document.getElementById('food-category-tabs');
@@ -1832,46 +1900,7 @@ app.vault = {
         app.vault.refresh();
     },
 
-    updateMetadata: () => {
-        const targetId = String(app.state.companyId || "").trim().toUpperCase();
-        const company = app.data.Config_Empresas.find(c => c.id_empresa === targetId);
-        if (!company) return;
-
-        // 1. Títulos Dinámicos y SEO Matrix Integration
-        const seoList = (app.data.Config_SEO || []).filter(s => String(s.id_empresa || "").toUpperCase() === targetId);
-        const seoMain = seoList[0]; // Tomamos el primer cluster como referencia de identidad
-
-        const pageTitle = seoMain ? `${seoMain.titulo} | ${company.nomempresa}` : `${company.nomempresa} | ${company.slogan || ''}`;
-        const pageDesc = company.descripcion || company.mensaje1 || "Solución inteligente para tu negocio.";
-        const keywords = seoList.map(s => s.keywords_coma).filter(k => k).join(', ');
-
-        // Actualizar DOM real
-        document.title = pageTitle;
-
-        const updateMeta = (name, content, attr = 'name') => {
-            if (!content) return;
-            let el = document.querySelector(`meta[${attr}="${name}"]`);
-            if (!el) {
-                el = document.createElement('meta');
-                el.setAttribute(attr, name);
-                document.head.appendChild(el);
-            }
-            el.setAttribute('content', content);
-        };
-
-        // 2. Inyección Anti-Invisibilidad (Robots & Social)
-        updateMeta('description', pageDesc);
-        updateMeta('keywords', keywords);
-        updateMeta('og:title', pageTitle, 'property');
-        updateMeta('og:description', pageDesc, 'property');
-        updateMeta('og:type', 'website', 'property');
-        if (company.logo_url) updateMeta('og:image', app.utils.fixDriveUrl(company.logo_url), 'property');
-
-        // 3. Twitter Cards
-        updateMeta('twitter:card', 'summary_large_image');
-        updateMeta('twitter:title', pageTitle);
-        updateMeta('twitter:description', pageDesc);
-
-        console.log(`[SEO_ENGINE] Visibilidad Actualizada: ${targetId} - ${pageTitle}`);
+    refreshVaultStats: () => {
+        console.log("[VAULT] Refreshing stats...");
     }
 };

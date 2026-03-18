@@ -36,13 +36,20 @@
       <changefreq>daily</changefreq>
       <priority>0.8</priority>
    </url>
-   <!-- Grupo EVASOL -->
-   <url>
-      <loc>https://suitorg.com/?id=EVASOL</loc>
-      <lastmod>2026-02-18</lastmod>
-      <changefreq>weekly</changefreq>
-      <priority>0.8</priority>
-   </url>
+    <!-- Patrimonio Personal (PA PER) - v15.5.0 -->
+    <url>
+       <loc>https://suitorg.com/?id=PAPER</loc>
+       <lastmod>2026-03-16</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>1.0</priority>
+    </url>
+    <!-- Grupo EVASOL -->
+    <url>
+       <loc>https://suitorg.com/?id=EVASOL</loc>
+       <lastmod>2026-03-16</lastmod>
+       <changefreq>weekly</changefreq>
+       <priority>0.8</priority>
+    </url>
    <!-- SuitOrg Principal -->
    <url>
       <loc>https://suitorg.com/?id=SUITORG</loc>

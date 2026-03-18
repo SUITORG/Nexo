@@ -1,6 +1,6 @@
-/* SuitOrg Backend Engine - v15.5.0
+/* SuitOrg Backend Engine - v15.5.1
  * ---------------------------------------------------------
- * Sincronización: 2026-03-16 09:00 PM (v15.5.0 Universal Visibility & Project Protection)
+ * Sincronización: 2026-03-17 01:29 PM (v15.5.1 Security & Repair Patch | 1065 Lines)
  * ---------------------------------------------------------
  */
 
@@ -103,6 +103,11 @@ function handlePostAction(data, output) {
 
   try {
     switch (action) {
+      case "repairDatabase":
+        initializeDatabase(ss, output);
+        runAutoPurge(ss);
+        output.success = true; break;
+
       case "initializeRbac":
         initializeDatabase(ss, output);
         output.success = true; break;
@@ -591,13 +596,15 @@ function initializeDatabase(ss, output) {
     usa_soporte_ia: "TRUE"
   });
 
-  // Semilla: Admin PA PER (Acceso Inmediato)
+  // Semilla: Admin Maestro (Acceso Global a todos los inquilinos)
+  // v15.6.8: ID de Empresa cambiado a 'GLOBAL' para permitir administración multiplataforma
+  const secureAdminPass = PropertiesService.getScriptProperties().getProperty('ADMIN_PAPER_PASS') || "paper_admin_v1";
   ensureSeed(ss, "Usuarios", "username", "admin", {
-    id_empresa: "PAPER",
-    nombre: "Dirección PA PER",
+    id_empresa: "GLOBAL",
+    nombre: "Administrador del Sistema",
     email: "admin@paper.mx",
     username: "admin", 
-    password: "paper_admin", 
+    password: secureAdminPass, 
     nivel_acceso: 10,
     id_rol: "SUDO",
     activo: "TRUE",
@@ -895,8 +902,14 @@ function updateRowMapped(ss, sheetName, idCol, idVal, dataObj) {
  * Exporta el estado actual de GSheets a Supabase (Volcado)
  */
 function syncToSupabase(ss, coId) {
-  var SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
-  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
+  const SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
+  
+  // v15.6.5: Key movida a Script Properties para evitar filtraciones
+  const SB_KEY = PropertiesService.getScriptProperties().getProperty('SUPABASE_KEY');
+  
+  if (!SB_KEY) {
+    return { error: "LLAVE_SUPABASE_FALTANTE", detail: "Configura SUPABASE_KEY en las propiedades del script." };
+  }
   
   var tablesToSync = ['Catalogo', 'Leads', 'Proyectos', 'Proyectos_Etapas', 'Proyectos_Bitacora', 'Empresa_Documentos', 'Config_Galeria', 'Config_Paginas', 'Config_SEO'];
   var results = {};

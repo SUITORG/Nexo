@@ -11,6 +11,9 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
 - [ ] **Sincronización Total de Supabase**: Entrar a la URL `?id=PAPER#orbit`, hacer login con el perfil de `admin` (SUDO) y ejecutar la sincronización para abatir los errores de caché rápida.
+- [X] **v15.6.8: Global Admin Authority**: Elevación del usuario `admin` a nivel `GLOBAL` para permitir la entrada a cualquier negocio del ecosistema con una sola credencial maestra.
+- [X] **v15.6.5: Security Hardening (Zero-Secrets Policy)**: Eliminación de llaves y contraseñas hardcoreadas en el backend. Implementación de `PropertiesService` para manejo de secretos de Supabase y Admin.
+- [X] **v15.6.0: AIO (AI Optimization) & Structured Identity**: Implementación de `ai.txt`, permisos para bots modernos (GPTBot, ClaudeBot) e inyección dinámica de JSON-LD (Schema.org) para mejorar recomendaciones de IA.
 - [X] **v15.5.0: Universal Visibility & Project Protection**: Refuerzo anti-invisibilidad de SEO. Sincronización de Meta-Tags, Títulos y Seguimiento de Proyectos (Etapas/Bitácora) a Supabase. Tiempos de carga optimizados para robots de Google y Facebook.
 - [X] **v15.4.0: Martha Padrón Trust-First Flow**: Implementación de diálogo de confianza (Saludo -> Identidad -> Referido) y captura extendida de expediente (NSS, CURP, RFC, Referido) para auditorías patrimoniales.
 - [x] **v15.3.0: Hybrid Data Engine Universal**: Desacoplamiento de la lógica de Memoria e Interfaz del ID fijo 'PAPER'. Ahora el sistema es agnóstico: cualquier negocio con `db_engine = SUPABASE` en Sheets activa automáticamente la Auditoría Patrimonial y la Memoria de IA.
@@ -244,6 +247,7 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
     - [ ] **Skill Handoff**: Generación de resumen detallado de la conversación para el operador humano.
     - [ ] **IA Instruction**: Nueva lógica en `Prompts_IA` para detectar solicitudes de ayuda humana y redirigir a WhatsApp con contexto.
     - [ ] **Chat Logging**: Registro persistente de interacciones en tabla `Logs_Chat`.
+- [ ] **v15.7.0: Config_AIO Personalidad de Negocio**: Crear tabla para definir cómo la IA describe cada negocio (Tono, USP, Limitaciones) para respuestas de chat más afinadas.
 - [ ] **v5.8.0: Módulo Blog & Accesibilidad (A11y)**: Gestión de artículos largos, soporte para lectores de pantalla y modo de alto contraste para proyectos sociales.
 - [x] **v5.7.6: Personal Brand & Circular UI**: Soporte para identidades individuales, fotos de perfil redondas y estilos humanizados.
 - [x] **v5.7.5: SEO Identity & Dynamic Colors**: Identidad visual por ficha SEO (color, whatsapp y mail directo) con lógica de fallback.
@@ -264,4 +268,4 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v6.3.1: SEO Indexing Audit (Google/Meta)**: Verificar por qué los enlaces dinámicos (ej: `ROBERTO_V`) no son indexados correctamente. Auditoría realizada y optimizada via Sitemap dinámico.
 - [ ] **v6.4.0: Discovery & Visitor Seeding**: Implementar persistencia de visitas (`LocalStorage/Cookies`) por negocio para telemetría de retención y reconocimiento de clientes recurrentes.
 ---
-*Última actualización: 2026-03-12 | Versión: v13.0.8 (MATRIX STABLE)*
+*Última actualización: 2026-03-17 | Versión: v15.6.5 (SECURITY MASTER)*

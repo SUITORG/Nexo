@@ -11,6 +11,7 @@
         content="SuitOrg, gestión empresarial, SaaS para pymes, software de ventas, digitalización de negocios">
 
     <!-- ESTRUCTURA SEO DINÁMICA v6.2.6 (REFUERZO ROBOTS) -->
+    <meta name="robots" content="index, follow">
     <meta name="fragment" content="!">
     <meta property="og:type" content="website">
     <meta property="og:title" content="SuitOrg | Ecosistema Digital">
@@ -132,10 +133,7 @@
     <!-- MAIN CONTENT AREA -->
     <main id="app-content">
         <!-- Orbit Hub View (Disruptive Landing) -->
-        <section id="view-orbit" class="view-section hidden"
-            style="position: relative; width: 100%; height: 100vh; overflow: hidden; background: #000;">
-            <div id="orbit-bubbles" style="position: relative; width: 100%; height: 100%;"></div>
-        </section>
+        <!-- Removed duplicate orbit-view section correctly managed after contact-view -->
 
         <!-- SECTION: HOME / LANDING -->
 
@@ -173,14 +171,18 @@
             <div id="company-gallery-section" class="about-section hidden"
                 style="margin-top: 0; padding: 50px 0; position: relative; overflow: hidden;">
                 <div class="view-home-section company-gallery" style="text-align: center; margin-top: 0;">
-                    <h2 style="color: white; margin-bottom: 30px; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">Galería de Proyectos</h2>
+                    <h2 style="color: white; margin-bottom: 30px; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">Galería de
+                        Proyectos</h2>
                     <div class="gallery-breakout-container" style="position: relative;">
                         <!-- Las flechas se inyectarán o activarán aquí vía JS -->
-                        <button class="gallery-arrow prev" onclick="app.ui.scrollGallery(-1)" aria-label="Anterior" style="z-index: 100;">
+                        <button class="gallery-arrow prev" onclick="app.ui.scrollGallery(-1)" aria-label="Anterior"
+                            style="z-index: 100;">
                             <i class="fas fa-chevron-left"></i>
                         </button>
-                        <div id="company-gallery-grid" class="gallery-grid" style="display: flex; gap: 0; margin: 0 auto;"></div>
-                        <button class="gallery-arrow next" onclick="app.ui.scrollGallery(1)" aria-label="Siguiente" style="z-index: 100;">
+                        <div id="company-gallery-grid" class="gallery-grid"
+                            style="display: flex; gap: 0; margin: 0 auto;"></div>
+                        <button class="gallery-arrow next" onclick="app.ui.scrollGallery(1)" aria-label="Siguiente"
+                            style="z-index: 100;">
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
@@ -316,7 +318,8 @@
                             style="background: #4285F4; border:none;"><i class="fab fa-google-drive"></i> Sincronizar
                             Drive</button>
                         <button id="btn-sync-supabase" class="btn-primary" onclick="app.ui.syncSupabase()"
-                            style="background: #3ecf8e; border:none; color: #111;"><i class="fas fa-database"></i> Sincronizar
+                            style="background: #3ecf8e; border:none; color: #111;"><i class="fas fa-database"></i>
+                            Sincronizar
                             Supabase</button>
                     </div>
                 </div>

@@ -142,8 +142,8 @@ const app = {
             if (app.monitor && app.monitor.start) app.monitor.start();
 
             const loaded = await app.loadData();
-            const loader = document.getElementById('loading-overlay');
-            if (loader) loader.remove();
+            const loader = document.getElementById('transition-loader');
+            if (loader) loader.classList.add('hidden'); // Use hidden class instead of remove if preferred, but for now just fix the ID.
 
             // --- ESPERA DE MÓDULOS (v6.5.3 Blindaje Total) ---
             // Aseguramos que public.js y otros módulos se hayan inyectado correctamente en el objeto app
