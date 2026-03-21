@@ -42,108 +42,132 @@ app.agents = {
             return;
         }
         app.state.currentAgent = agt;
-        app.state.chatHistory = []; // Reset history for new session
-        document.getElementById('agent-display-name').innerText = agt.nombre;
-        document.getElementById('ai-chat-modal').classList.remove('hidden');
+        // --- SISTEMA DE MEMORIA PERSISTENTE BACKEND (v15.8.7) ---
+        const vid = app.agents.getVisitorId();
+        const agtIdLocal = agtId;
+        
+        // Mostrar Loading mientras recuperamos info
         const historyDiv = document.getElementById('chat-history');
-        historyDiv.innerHTML = `
-    <div class="ai-msg" style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid var(--primary-color); max-width: 80%; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-        Hola, soy tu <b>${agt.nombre}</b>. ¿En qué puedo apoyarte hoy?
-    </div>
-    `;
-        // Scroll to chat top
-        historyDiv.scrollTop = 0;
-        // Inactivity monitor for the chat specifically
+        historyDiv.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Recuperando memoria...</div>';
+
+        // Intentar recuperar memoria del Backend (Sheets/Supabase)
+        app.agents.fetchMemory(vid, agtIdLocal).then(res => {
+            historyDiv.innerHTML = ''; // Limpiar
+            
+            if (res && res.history && res.history.length > 0) {
+                app.state.chatHistory = res.history.map(h => ({ role: h.role, content: h.content }));
+                app.state.currentConvId = res.memory.id_conversacion;
+
+                const recoveryNotice = document.createElement('div');
+                recoveryNotice.innerHTML = `<i class="fas fa-cloud"></i> Sesión recuperada de la nube (ID: ${app.state.currentConvId})`;
+                recoveryNotice.className = "ai-msg";
+                recoveryNotice.style.cssText = "background:rgba(0,0,0,0.05); font-size:0.7rem; color:var(--primary-color); padding:5px 10px; border-radius:10px; border:none; width:fit-content; margin:0 auto 10px auto; opacity:0.8;";
+                historyDiv.appendChild(recoveryNotice);
+
+                app.state.chatHistory.forEach(h => {
+                    const roleId = h.role === 'user' ? 'user' : 'ai';
+                    app.agents.addMessageToUI(roleId, h.content, true);
+                });
+                historyDiv.scrollTop = historyDiv.scrollHeight;
+            } else {
+                app.state.chatHistory = [];
+                app.state.currentConvId = 'CHAT-' + Date.now().toString(36).toUpperCase();
+                
+                historyDiv.innerHTML = `
+                    <div class="ai-msg" style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid var(--primary-color); max-width: 80%; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        Hola, soy tu <b>${agt.nombre}</b>. ¿En qué puedo apoyarte hoy?
+                    </div>
+                `;
+            }
+            
+            // Si tenemos un resumen previo, saludar con contexto
+            if (res && res.memory && res.memory.resumen_semantico) {
+                setTimeout(() => {
+                    app.agents.addMessageToUI('ai', `¡Hola de nuevo! Recordando nuestra plática anterior: <i>"${res.memory.resumen_semantico}"</i>. ¿Cómo va todo con eso?`);
+                }, 800);
+            }
+        });
+
+        // Monitor de inactividad específico para el chat
         app.state._lastChatActivity = Date.now();
-        const checkInactivity = setInterval(() => {
+        if (app.state._chatTimer) clearInterval(app.state._chatTimer);
+        app.state._chatTimer = setInterval(() => {
             if (!app.state.currentAgent) {
-                clearInterval(checkInactivity);
+                clearInterval(app.state._chatTimer);
                 return;
             }
             const idleSeconds = (Date.now() - app.state._lastChatActivity) / 1000;
-            if (idleSeconds > 180) { // 180 seconds (3 min) of idle in chat = auto close
+            if (idleSeconds > 180) { // 3 minutos
                 if (app.state.currentAgent) {
                     app.agents.addMessageToUI('ai', `Sesión pausada por inactividad. Estaré aquí si necesitas algo más.`);
                     app.agents.closeChat();
                 }
             }
-        }, 10000); // 10s check interval 
+        }, 10000);
 
-        // Inyectar Memoria de Supabase (UNIVERSAL HYBRID v15.6.8)
-        if (SUIT_CONFIG.sbUrl && SUIT_CONFIG.sbKey) {
-            const vid = app.agents.getVisitorId();
-            app.agents.fetchMemory(vid).then(memory => {
-                if (memory && memory.ultimo_resumen) {
-                    setTimeout(() => {
-                        app.agents.addMessageToUI('ai', `¡Hola de nuevo! Veo que en nuestra última plática nos quedamos en: <i>"${memory.ultimo_resumen}"</i>. ¿Cómo va todo con eso?`);
-                        app.state.chatHistory.push({ role: 'model', content: `Reconocimiento: El cliente regresó. Resumen anterior: ${memory.ultimo_resumen}` });
-                    }, 1000);
-                }
-            });
-        }
+        document.getElementById('agent-display-name').innerText = agt.nombre;
+        document.getElementById('ai-chat-modal').classList.remove('hidden');
     },
 
-    fetchMemory: async (vid) => {
+    fetchMemory: async (vid, agtId = null) => {
         try {
-            const url = `${SUIT_CONFIG.sbUrl}/rest/v1/paper_memoria_leads?id_visitante=eq.${vid}&select=*`;
-            const res = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    "apikey": SUIT_CONFIG.sbKey,
-                    "Authorization": "Bearer " + SUIT_CONFIG.sbKey
-                }
+            const user = app.state.currentUser || {};
+            const body = {
+                action: 'getAiMemory',
+                id_visitante: vid,
+                id_empresa: app.state.companyId,
+                nombre: user.nombre,
+                telefono: user.telefono || user.whatsapp,
+                token: app.apiToken
+            };
+            
+            const res = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(body)
             });
             const data = await res.json();
-            return data && data.length > 0 ? data[0] : null;
+            return data.success ? { memory: data.memory, history: data.history } : null;
         } catch (e) { console.error("Memory fetch failed:", e); return null; }
     },
 
-    saveMemory: async (vid, resumen, dataObj = {}) => {
+    saveMemory: async (vid, resumen, contextData = {}) => {
         try {
-            if (!SUIT_CONFIG.sbUrl || !SUIT_CONFIG.sbKey) return;
-
-            const url = `${SUIT_CONFIG.sbUrl}/rest/v1/paper_memoria_leads`;
-            const payload = {
+            const body = {
+                action: 'saveAiMemory',
+                id_conversacion: app.state.currentConvId,
                 id_visitante: vid,
-                ultimo_resumen: resumen, // v15.6.5: Límite aumentado a 1000 chars en app
-                fecha_actualizacion: new Date().toISOString(),
-                data_adicional: dataObj
+                id_empresa: app.state.companyId,
+                resumen: resumen,
+                contexto: contextData,
+                agente_id: app.state.currentAgent?.id_agente,
+                token: app.apiToken
             };
-            await fetch(url, {
+
+            await fetch(app.apiUrl, {
                 method: 'POST',
-                headers: {
-                    "apikey": SUIT_CONFIG.sbKey,
-                    "Authorization": "Bearer " + SUIT_CONFIG.sbKey,
-                    "Content-Type": "application/json",
-                    "Prefer": "resolution=merge-duplicates"
-                },
-                body: JSON.stringify(payload)
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(body)
             });
         } catch (e) { console.error("Memory save failed:", e); }
     },
 
-    logInteraction: async (vid, question, answer, model = 'unknown') => {
+    logInteraction: async (role, content) => {
         try {
-            if (!SUIT_CONFIG.sbUrl || !SUIT_CONFIG.sbKey) return;
-
-            const url = `${SUIT_CONFIG.sbUrl}/rest/v1/paper_logs_ia`;
-            const payload = {
-                id_visitante: vid,
-                id_empresa: app.state.companyId || 'SYSTEM',
-                agente_id: app.state.currentAgent ? app.state.currentAgent.id_agente : 'unknown',
-                modelo: model,
-                pregunta: question,
-                respuesta: answer,
-                fecha_hora: new Date().toISOString()
+            const body = {
+                action: 'saveAiConversation',
+                id_conversacion: app.state.currentConvId,
+                id_visitante: app.agents.getVisitorId(),
+                id_empresa: app.state.companyId,
+                agente_id: app.state.currentAgent?.id_agente,
+                role: role,
+                content: content,
+                token: app.apiToken
             };
-            await fetch(url, {
+            await fetch(app.apiUrl, {
                 method: 'POST',
-                headers: {
-                    "apikey": SUIT_CONFIG.sbKey,
-                    "Authorization": "Bearer " + SUIT_CONFIG.sbKey,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(body)
             });
         } catch (e) { console.error("IA Log failed:", e); }
     },
@@ -163,6 +187,16 @@ app.agents = {
     },
     diagnoseAi: async () => {
         app.ui.updateConsole("AI_DIAGNOSING...");
+        
+        // --- ANIMACIÓN DE BOTÓN (v15.8.1) ---
+        const btn = document.querySelector('button[onclick="app.agents.diagnoseAi()"]');
+        const originalHtml = btn ? btn.innerHTML : '<i class="fas fa-stethoscope"></i> Diagnosticar IA';
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ESCANEANDO...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        }
+
         try {
             const res = await fetch(app.apiUrl, {
                 method: 'POST',
@@ -214,14 +248,21 @@ app.agents = {
         } catch (e) {
             console.error(e);
             alert("Error de conexión al diagnosticar IA.");
+        } finally {
+            if (btn) {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
         }
     },
     sendMessage: async () => {
         const input = document.getElementById('chat-user-input');
         const text = input.value.trim();
         if (!text || !app.state.currentAgent) return;
-        // 1. Add User Message to UI
+        // 1. Add User Message to UI & Persist
         app.agents.addMessageToUI('user', text);
+        app.agents.logInteraction('user', text);
         input.value = '';
         app.state._lastChatActivity = Date.now();
         // 2. Prepare History for AI
@@ -251,6 +292,27 @@ app.agents = {
             if (data.success) {
                 app.agents.addMessageToUI('ai', data.answer);
                 app.state.chatHistory.push({ role: 'model', content: data.answer });
+                
+                // Persistencia de Respuesta
+                app.agents.logInteraction('model', data.answer);
+
+                // --- DETECCIÓN DE DATOS PARA MEMORIA SEMÁNTICA (v15.8.7) ---
+                // Si el mensaje contiene nombre o teléfono, actualizamos el contexto
+                const lowerText = text.toLowerCase();
+                const possiblePhone = text.match(/\d{8,10}/);
+                if (lowerText.includes("me llamo") || lowerText.includes("mi nombre es") || possiblePhone) {
+                    const vid = app.agents.getVisitorId();
+                    const context = {
+                        nombre: text.substring(0, 50),
+                        telefono: possiblePhone ? possiblePhone[0] : null,
+                        last_interaction: new Date()
+                    };
+                    app.agents.saveMemory(vid, `Conversando con ${context.nombre || 'cliente'}. Interés detectado.`, context);
+                } else if (app.state.chatHistory.length % 5 === 0) {
+                    const vid = app.agents.getVisitorId();
+                    const summary = app.state.chatHistory.slice(-2).map(h => h.content).join(' | ');
+                    app.agents.saveMemory(vid, summary.substring(0, 500));
+                }
 
                 // Inyectar botón de WhatsApp dinámico con jerarquía de contacto (v5.8.9)
                 if (app.state.chatHistory.length >= 4) {
@@ -286,19 +348,7 @@ app.agents = {
                     }
                 }
 
-                // --- Sincronización de Memoria DYNAMICA & Auditoría (v15.6.8 Hybrid) ---
-                if (SUIT_CONFIG.sbUrl && SUIT_CONFIG.sbKey) {
-                    const vid = app.agents.getVisitorId();
-                    const modelUsed = app.state._aiModel || localStorage.getItem('evasol_ai_model') || "gemini-1.5-flash";
-
-                    // 1. Auditoría Granular en logs (Toda la interacción)
-                    app.agents.logInteraction(vid, text, data.answer, modelUsed);
-
-                    // 2. Memoria Semántica (Resumen para el próximo saludo)
-                    // Tomamos un fragmento más amplio de la conversación para el resumen
-                    const contextResumen = app.state.chatHistory.slice(-2).map(h => h.content).join(' | ');
-                    app.agents.saveMemory(vid, contextResumen.substring(0, 1000));
-                }
+                // REMOVIDO: Sincronización Supabase directa desde front (Ahora vía Backend Sync en GAS)
             } else {
                 let fullError = data.error || "No se pudo conectar con la IA.";
                 if (data.detail) fullError += "\n\nDetalle técnico: " + data.detail;
@@ -313,7 +363,7 @@ app.agents = {
             document.getElementById('btn-send-chat').disabled = false;
         }
     },
-    addMessageToUI: (role, text) => {
+    addMessageToUI: (role, text, silent = false) => {
         const historyDiv = document.getElementById('chat-history');
         const msgDiv = document.createElement('div');
         const isAi = role === 'ai';
@@ -357,7 +407,7 @@ app.agents = {
             msgDiv.innerText = text;
         }
         historyDiv.appendChild(msgDiv);
-        historyDiv.scrollTop = historyDiv.scrollHeight;
+        if (!silent) historyDiv.scrollTop = historyDiv.scrollHeight;
     },
     sendSupportTicket: async (ticketData) => {
         app.ui.updateConsole("SENDING_TICKET...");
@@ -440,5 +490,80 @@ app.agents = {
         };
         for (let key in icons) if (name.toLowerCase().includes(key.toLowerCase())) return icons[key];
         return "fa-brain";
+    },
+
+    // --- HEALTH CHECK ENGINE (v15.8.0) ---
+    checkAiHealth: async () => {
+        const circle = document.getElementById('sb-ai-health');
+        if (!circle) return;
+
+        // Evitar verificaciones redundantes si ya está ONLINE hace poco
+        if (circle.classList.contains('online') && (Date.now() - (app.state._lastAiHealthCheck || 0) < 60000)) return;
+        
+        app.state._lastAiHealthCheck = Date.now();
+        circle.className = 'ai-status-circle warning';
+        circle.title = "Verificando conexión con IA...";
+
+        try {
+            const currentModel = app.state._aiModel || localStorage.getItem('evasol_ai_model') || "gemini-1.5-flash";
+            const res = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({
+                    action: 'askGemini',
+                    message: 'health-check-ping',
+                    model: currentModel,
+                    token: app.apiToken
+                })
+            });
+            const data = await res.json();
+
+            if (data.success && !data.error) {
+                circle.className = 'ai-status-circle online';
+                circle.title = `IA Conectada (${currentModel})`;
+            } else {
+                // --- DETECCIÓN DE CUOTA EXCEDIDA (v15.8.1) ---
+                const detail = (data.detail || "").toString().toLowerCase();
+                const errorMsg = (data.error || "").toString().toLowerCase();
+                
+                if (detail.includes("quota") || detail.includes("429") || errorMsg.includes("quota") || errorMsg.includes("limit")) {
+                    circle.className = 'ai-status-circle warning';
+                    circle.title = "Cuota de IA saturada. Espera unos segundos (Rate Limit).";
+                    app.ui.updateConsole("AI_QUOTA_REACHED");
+                    return; // No intentar auto-fix si es solo por cuota
+                }
+
+                // Si el modelo específico falló por otra razón, intentar diagnosticar uno nuevo automáticamente
+                console.warn(`[AI_HEALTH] Model ${currentModel} failed. Attempting auto-fix...`);
+                circle.title = "Enlace roto detectado. Intentando reconectar...";
+                
+                // --- AUTO-FIX LINK ENGINE ---
+                const diagRes = await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({ action: 'listAiModels', token: app.apiToken })
+                });
+                const diagData = await diagRes.json();
+                
+                if (diagData.success && diagData.models && diagData.models.length > 0) {
+                    // Buscar el primer flash disponible (son los más estables para chat)
+                    const backupModel = diagData.models.find(m => m.includes('flash')) || diagData.models[0];
+                    app.state._aiModel = backupModel;
+                    localStorage.setItem('evasol_ai_model', backupModel);
+                    
+                    circle.className = 'ai-status-circle online';
+                    circle.title = `IA Reconectada (${backupModel})`;
+                    app.ui.updateConsole(`AI_LINK_FIXED: ${backupModel}`);
+                } else {
+                    circle.className = 'ai-status-circle offline';
+                    circle.title = "Error de Enlace: No se encontraron modelos compatibles.";
+                    app.ui.updateConsole("AI_LINK_BROKEN", true);
+                }
+            }
+        } catch (e) {
+            circle.className = 'ai-status-circle offline';
+            circle.title = "Error de Red: No hay respuesta del backend.";
+            app.ui.updateConsole("AI_NET_ERR", true);
+        }
     }
 };

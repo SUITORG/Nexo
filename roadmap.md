@@ -10,6 +10,9 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
+- [x] **v15.8.8: Seed Duplication Fix & Persistent Memory**: Corregido bug de composite-key en `Config_Paginas` que causaba duplicación de semillas. Sincronización total de versiones a 15.8.8.
+- [ ] **v15.8.0: AI Interactive & Health Status**: Implementar indicador visual de disponibilidad de IA en la barra de status y mejorar la interactividad del botón de chat con micro-animaciones de estado (Validando/Conectado/Error).
+- [X] **v15.7.0: Supabase Pause & GSheet Stability**: Pausa estratégica de conexiones a Supabase para resolver problemas de conexión externa. Se restablece Google Sheets como motor primario universal en `app.state.dbEngine`.
 - [ ] **Sincronización Total de Supabase**: Entrar a la URL `?id=PAPER#orbit`, hacer login con el perfil de `admin` (SUDO) y ejecutar la sincronización para abatir los errores de caché rápida.
 - [X] **v15.6.8: Global Admin Authority**: Elevación del usuario `admin` a nivel `GLOBAL` para permitir la entrada a cualquier negocio del ecosistema con una sola credencial maestra.
 - [X] **v15.6.5: Security Hardening (Zero-Secrets Policy)**: Eliminación de llaves y contraseñas hardcoreadas en el backend. Implementación de `PropertiesService` para manejo de secretos de Supabase y Admin.
@@ -143,6 +146,7 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
     - [ ] **Servidor de Herramientas:** Crear un servidor MCP independiente para centralizar las habilidades de la IA (Ventas, Stock, CRM).
     - [ ] **Compatibilidad Universal:** Permitir que cualquier interfaz (Web, Desktop, WhatsApp) use el mismo catálogo de funciones de EVASOL.
     - [ ] **Bridge Cloud:** Configurar el enlace seguro entre el protocolo MCP y el Google Apps Script Backend.
+    - [ ] **NotebookLM Integration:** Instalar y configurar el servidor MCP para NotebookLM para potenciar el análisis de documentos del ecosistema.
 - [x] **Respaldo en la Nube (GitHub):** Asegurar privacidad del repositorio (Regresar a modo PRIVADO) para proteger el archivo `backend_schema.gs` y la lógica de seguridad. Confirmado privado por el usuario.
 - [ ] **Despliegue Externo (Vercel):** Configurar despliegue seguro desde el repositorio privado hacia Vercel para evitar la exposición del código fuente en la web.
     - [ ] **Fix de Renderizado en Prod:** Corregir rutas de imágenes (C:// drive local -> Drive URL).
@@ -173,7 +177,7 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v14.11.0: Protocolo de Estabilidad Antigravity (Mantenimiento)**: Documentado el manejo de actualizaciones del motor de IA para evitar cierres accidentales y desinstalaciones. (No pulsar 'Restart to Update' durante sesiones críticas, usar instalación manual si falla).
 
 ---
-*Última actualización: 2026-03-15 | Versión: v15.0.0 (PA PER MASTER RELEASE)*
+*Última actualización: 2026-03-20 | Versión: v15.8.7 (STABLE)*
 
 ## v4.6.0 - Flujo Delivery de 3 Pasos (TESTING)
 - [x] **Estado Intermedio**: Implementado estado `EN-CAMINO`.
@@ -271,4 +275,4 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [x] **v6.3.1: SEO Indexing Audit (Google/Meta)**: Verificar por qué los enlaces dinámicos (ej: `ROBERTO_V`) no son indexados correctamente. Auditoría realizada y optimizada via Sitemap dinámico.
 - [ ] **v6.4.0: Discovery & Visitor Seeding**: Implementar persistencia de visitas (`LocalStorage/Cookies`) por negocio para telemetría de retención y reconocimiento de clientes recurrentes.
 ---
-*Última actualización: 2026-03-17 | Versión: v15.6.5 (SECURITY MASTER)*
+*Última actualización: 2026-03-20 | Versión: v15.8.8 (STABLE)*

@@ -86,6 +86,19 @@ app.ui = {
         const versionEl = document.getElementById('gs-version-text');
         if (versionEl) versionEl.innerText = `V: ${app.version}`;
 
+        // --- INDICADOR DE SALUD IA (v15.8.0) ---
+        const biz = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase());
+        const aiContainer = document.getElementById('sb-ai-container');
+        if (aiContainer) {
+            const usesAi = biz?.usa_soporte_ia === 'TRUE' || biz?.usa_soporte_ia === true;
+            if (usesAi) {
+                aiContainer.classList.remove('hidden');
+                if (app.agents?.checkAiHealth) app.agents.checkAiHealth();
+            } else {
+                aiContainer.classList.add('hidden');
+            }
+        }
+
         // --- BOTÓN AGENT BROWSER MANUAL (v14.0.3) ---
         app.ui.renderAgentAuditButton();
     },

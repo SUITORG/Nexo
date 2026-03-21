@@ -1,8 +1,8 @@
 # Manual Técnico y Operativo - SuitOrg
 > **Identidad Principal:** SuitOrg (Powered by EVASOL Engine)
-- **Última Versión Estable**: v14.1.0 (PROD - Multi-Tenant)
-- **Estado del Sistema**: Operativo con Identidad v1.6.0 (CMARJAV).
-- **Total de Líneas Consolidadas**: ~13,691 (Auditado 2026-03-13).
+- **Última Versión Estable**: v15.8.8 (PROD - Seed Fix)
+- **Estado del Sistema**: Operativo con Memoria GSheets v15.8.8.
+- **Total de Líneas Consolidadas**: 14,673 (Auditado 2026-03-20).
 
 ## 0. Resumen Ejecutivo (TL;DR) - Para gente con prisa ⚡
 1.  **¿Qué es?** Un potente "Food Hub" multi-inquilino especializado en el sector alimenticio (Restaurantes, Snacks, Comida Rápida).
@@ -361,12 +361,12 @@ A partir de la versión 4.7.0, el ecosistema de desarrollo se ha optimizado medi
 
 | Archivo / Carpeta | Líneas | Comentario |
 | :--- | :--- | :--- |
-| index.html | 1793 | Estructura base / Bóveda v14.1.0 |
-| style.css | 3764 | UI/UX Premium (Refactorización) |
-| js/modules/ | 7205 | Lógica Documental & Vault Engine |
+| index.html | 1803 | Estructura base / Bóveda v15.8.7 |
+| style.css | 3829 | UI/UX Premium (Refactorización) |
+| js/modules/ | 7808 | Lógica AI & Vault Engine |
 | app.js | 70 | Router y Orquestación Inicial |
-| backend_schema.gs | 859 | Multi-Tenant & SaaS Core |
-| **TOTAL** | **13691** | Producción v14.1.0 Estándar |
+| backend_schema.gs | 1163 | Seed Fix & AI Memory |
+| **TOTAL** | **14673** | Producción v15.8.8 Estándar |
 
 ---
 *Manual generado automáticamente por Antigravity AI.*

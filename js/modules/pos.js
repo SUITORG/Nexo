@@ -1019,7 +1019,7 @@ app.pos = {
                 const card = document.createElement('div');
                 card.className = 'food-card';
                 const stock = parseInt(p.stock) || 0;
-                const img = p.imagen_url ? app.utils.fixDriveUrl(p.imagen_url) : 'https://docs.google.com/uc?export=view&id=1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv';
+                const img = p.imagen_url ? app.utils.fixDriveUrl(p.imagen_url) : 'https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv';
                 const price = app.utils.getEffectivePrice(p);
 
                 const promo = (p.etiqueta_promo || "").toString().trim();

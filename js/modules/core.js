@@ -1,10 +1,14 @@
 /**
- * 
+ * SuitOrg Core Module - v15.8.8
+ * ---------------------------------------------------------
+ * Sincronización: 2026-03-20 10:58 AM (438 Lines)
+ * ---------------------------------------------------------
  * Responsabilidad: Estado global, carga de datos y utilidades base.
  */
 const app = {
     // --- APP CONFIG ---
-    version: "15.6.5", // Auditoría IA & Memoria Superior (v15.6.5)
+    version: "15.8.8", // AI Persistent Memory (v15.8.8)
+    PAUSE_SUPABASE: true, // Pausa estratégica de conexión externa (Control Manual)
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
     apiToken: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiToken : '',
@@ -49,8 +53,12 @@ const app = {
         fixDriveUrl: (url) => {
             if (!url) return "";
             const sUrl = url.toString().trim();
-            // 1. Detectar si es una URL de Drive estándar
-            const idMatch = sUrl.match(/\/d\/([^\/?#]+)/) || sUrl.match(/[?&]id=([^&?#]+)/) || sUrl.match(/\/file\/d\/([^\/?#]+)/);
+            // 1. Detectar si es una URL de Drive estándar o el formato obsoleto 'uc?id='
+            const idMatch = sUrl.match(/\/d\/([^\/?#]+)/) || 
+                            sUrl.match(/[?&]id=([^&?#]+)/) || 
+                            sUrl.match(/\/file\/d\/([^\/?#]+)/) ||
+                            sUrl.match(/\/open\?id=([^&?#]+)/);
+                            
             if (idMatch && idMatch[1] && (sUrl.includes('google.com') || sUrl.includes('drive.google.com'))) {
                 return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
             }
@@ -288,13 +296,16 @@ const app = {
 
             let finalData = sanitizedMaster;
 
-            // 3. CARGA EXTENDIDA DESDE SUPABASE (Si aplica)
-            if (dbEngine === 'SUPABASE') {
+            // 3. CARGA EXTENDIDA DESDE SUPABASE (Si aplica y NO está en pausa)
+            if (dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
                 const supabaseData = await app.loadFromSupabase(fetchId);
                 // Combinar: Config_Empresas siempre viene de Google, el resto se puede sobreescribir
                 finalData = { ...sanitizedMaster, ...supabaseData };
                 finalData.Config_Empresas = sanitizedMaster.Config_Empresas; // Prioridad GSheets para el core
                 finalData.Usuarios = sanitizedMaster.Usuarios; // Prioridad GSheets para seguridad y nuevos perfiles
+            } else if (dbEngine === 'SUPABASE' && app.PAUSE_SUPABASE) {
+                console.warn(`🛑 [PAUSE_ACTIVE] Se detectó motor SUPABASE pero la conexión está en PAUSA GLOBLAL.`);
+                app.state.dbEngine = 'GSHEETS'; // Fallback forzado a GSheets por pausa
             }
 
             // 4. PERSISTENCIA Y CACHÉ (Proyectos)

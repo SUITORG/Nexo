@@ -1,24 +1,36 @@
-/* SuitOrg Backend Engine - v15.5.1
+/* SuitOrg Backend Engine - v15.8.8
  * ---------------------------------------------------------
- * Sincronización: 2026-03-17 01:29 PM (v15.5.1 Security & Repair Patch | 1065 Lines)
+ * Sincronización: 2026-03-20 10:58 AM (v15.8.8 Seed Fix | 1163 Lines)
  * ---------------------------------------------------------
  */
 
 const CONFIG = {
-  VERSION: "15.6.8", // Hybrid Core (v15.6.8)
+  VERSION: "15.8.8", // Persistent AI Memory (v15.8.8)
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
   DRIVE_ROOT_ID: "1mJWzX-xRVOOCt4fSRDLUk6QhOMCzfKhL", // Carpeta Maestra PA PER
   GLOBAL_TABLES: ["Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto", "Config_Galeria", "Config_Paginas"], 
-  PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos", "Reservaciones", "Config_Galeria"],
-  AUDIT: { total: 1120, status: "STABLE_SYNC" }
+  PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos", "Reservaciones", "Config_Galeria", "Logs_Chat_IA", "Memoria_IA_Snapshots"],
+  AUDIT: { total: 14500, status: "STABLE_SYNC" }
 };
+
+function getSS() {
+    try {
+        var ss = SpreadsheetApp.getActiveSpreadsheet();
+        if (ss) return ss;
+        ss = SpreadsheetApp.openById(CONFIG.DB_ID);
+        if (ss) return ss;
+        throw new Error("No se pudo conectar a la base de datos.");
+    } catch (e) {
+        throw new Error("FALLO_CONEXION: " + e.message + " (ID: " + CONFIG.DB_ID + ")");
+    }
+}
 
 /**
  * ⚡ DISPARADOR MANUAL (Usa este para el hito final)
  * Selecciona esta función en el menú de arriba y dale a EJECUTAR.
  */
 function ejecutarConfiguracionManual() {
-  var ss = SpreadsheetApp.openById(CONFIG.DB_ID);
+  var ss = getSS();
   var output = { info: "" };
   console.log("🚀 Iniciando configuración de Pensión Inteligente v15.6.8 (Auditoría IA & Memoria Superior)...");
   
@@ -47,7 +59,7 @@ function doGet(e) {
     var empresaSolicitante = (e && e.parameter && e.parameter.id_empresa) ? e.parameter.id_empresa.trim() : "SuitOrg";
     
     if (action === "getAll") {
-        var ss = SpreadsheetApp.openById(CONFIG.DB_ID);
+        var ss = getSS();
         CONFIG.GLOBAL_TABLES.forEach(function(tableName) {
             try {
                 result[tableName] = getSheetData(ss, tableName);
@@ -98,7 +110,7 @@ function handlePostAction(data, output) {
   var lock = LockService.getScriptLock();
   try { lock.waitLock(15000); } catch (e) { throw new Error("Servidor ocupado."); }
 
-  var ss = SpreadsheetApp.openById(CONFIG.DB_ID);
+  var ss = getSS();
   var action = data.action;
 
   try {
@@ -422,6 +434,73 @@ function handlePostAction(data, output) {
         appendRowMapped(ss, "Reservaciones", reservation);
         output.success = true; break;
 
+      case "saveAiConversation":
+        // Guardar Log Granular
+        var logChatObj = {
+          id_conversacion: data.id_conversacion,
+          id_visitante: data.id_visitante,
+          id_empresa: data.id_empresa || "SYSTEM",
+          agente_id: data.agente_id,
+          role: data.role,
+          content: data.content,
+          fecha_hora: new Date()
+        };
+        appendRowMapped(ss, "Logs_Chat_IA", logChatObj);
+        output.success = true; break;
+
+      case "saveAiMemory":
+        // Guardar Snapshot Semántico (Upsert)
+        var memObj = {
+          id_conversacion: data.id_conversacion,
+          id_visitante: data.id_visitante,
+          id_empresa: data.id_empresa || "SYSTEM",
+          resumen_semantico: data.resumen,
+          contexto_datos: typeof data.contexto === 'object' ? JSON.stringify(data.contexto) : data.contexto,
+          ultimo_agente: data.agente_id,
+          estado_sesion: data.estado || "PENDIENTE",
+          fecha_actualizacion: new Date()
+        };
+        
+        // Intentar actualizar por id_conversacion, si no existe, append
+        try {
+          updateRowMapped(ss, "Memoria_IA_Snapshots", "id_conversacion", data.id_conversacion, memObj);
+        } catch (e) {
+          appendRowMapped(ss, "Memoria_IA_Snapshots", memObj);
+        }
+        output.success = true; break;
+
+      case "getAiMemory":
+        var vid = data.id_visitante;
+        var phone = data.telefono;
+        var name = data.nombre;
+        
+        var allMem = getSheetData(ss, "Memoria_IA_Snapshots", data.id_empresa);
+        var match = null;
+        
+        // 1. Buscar por Visitante ID
+        if (vid) match = allMem.find(m => String(m.id_visitante) === String(vid));
+        
+        // 2. Buscar por Teléfono en Contexto (si no hay match)
+        if (!match && phone) {
+          match = allMem.find(m => (m.contexto_datos || "").includes(phone));
+        }
+        
+        // 3. Buscar por Nombre (si no hay match)
+        if (!match && name) {
+          match = allMem.find(m => (m.contexto_datos || "").toUpperCase().includes(name.toUpperCase()));
+        }
+        
+        if (match) {
+          output.memory = match;
+          // Recuperar también los últimos X mensajes de esta conversación
+          var allLogs = getSheetData(ss, "Logs_Chat_IA", data.id_empresa);
+          output.history = allLogs.filter(l => l.id_conversacion === match.id_conversacion).slice(-20);
+          output.success = true;
+        } else {
+          output.success = true; output.memory = null;
+        }
+        break;
+
       default:
         output.error = "Acción no implementada en " + CONFIG.VERSION + ": " + action;
     }
@@ -440,7 +519,7 @@ function runGeminiInference(data, output) {
     output.success = true; return;
   }
 
-  const ss = SpreadsheetApp.openById(CONFIG.DB_ID);
+  const ss = getSS();
   const model = data.model || "gemini-1.5-flash";
   const systemPrompt = data.promptBase || "Eres un asistente servicial de SuitOrg.";
   const history = data.history || [];
@@ -501,10 +580,11 @@ function runGeminiInference(data, output) {
   }
 }
 
-/**
- * 🛠️ INICIALIZACIÓN Y SEMILLAS (REPAIR DB)
- */
 function initializeDatabase(ss, output) {
+  // --- AUTO-INICIALIZACIÓN (v15.8.9) ---
+  if (!ss) ss = getSS();
+  if (!output) output = { info: "" };
+
   // Asegurar tabla Prompts_IA
   const agents = [
     { 
@@ -712,7 +792,11 @@ function initializeDatabase(ss, output) {
       })
     }
   ];
-  paginasPaper.forEach(p => ensureSeed(ss, "Config_Paginas", "id_pagina", p.id_pagina + "_" + p.id_empresa, p));
+  paginasPaper.forEach(p => {
+    const finalId = p.id_pagina + "_" + p.id_empresa;
+    p.id_pagina = finalId; // Normalizar ID para evitar duplicados por composite-key
+    ensureSeed(ss, "Config_Paginas", "id_pagina", finalId, p);
+  });
 
   // Asegurar tabla Proyectos_Etapas
   const stageSheet = ss.getSheetByName("Proyectos_Etapas");
@@ -765,7 +849,20 @@ function initializeDatabase(ss, output) {
     });
   }
 
-  output.info = "Database structure verified and seeds restored.";
+  // --- ASEGURAR TABLAS DE MEMORIA IA (v15.8.7) ---
+  const chatLogsSheet = ss.getSheetByName("Logs_Chat_IA");
+  if (!chatLogsSheet) {
+    const s = ss.insertSheet("Logs_Chat_IA");
+    s.appendRow(["id_conversacion", "id_visitante", "id_empresa", "agente_id", "role", "content", "fecha_hora"]);
+  }
+  
+  const aiMemorySheet = ss.getSheetByName("Memoria_IA_Snapshots");
+  if (!aiMemorySheet) {
+    const s = ss.insertSheet("Memoria_IA_Snapshots");
+    s.appendRow(["id_conversacion", "id_visitante", "id_empresa", "resumen_semantico", "contexto_datos", "ultimo_agente", "estado_sesion", "fecha_actualizacion"]);
+  }
+
+  output.info = "Database structure verified (AI Memory Tables Added) and seeds restored.";
   
   // Ejecutar Autodepuración Quirúrgica (v4.9.2)
   try { runAutoPurge(ss); } catch(e) { console.error("Purge fail: " + e.message); }
