@@ -1,5 +1,0 @@
-# Evitar subir archivos pesados o respaldos locales
-*.zip
-.gemini/
-node_modules/
-.DS_Store

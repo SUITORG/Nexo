@@ -83,10 +83,14 @@ app.auth = {
         return { success: true };
     },
     logout: () => {
-        console.log("🚪 Cerrando sesión...");
+        const currentBizId = app.state.companyId;
+        console.log("🚪 Cerrando sesión para:", currentBizId);
         app.state.currentUser = null;
         if (app.auth.setLoggedOutState) app.auth.setLoggedOutState();
+        
+        // v16.5.3: El redireccionado a #home ahora se asegura de que el hash cambie limpiamente
         window.location.hash = "#home";
+        if (app.router && app.router.handleRoute) app.router.handleRoute();
     },
     showLogin: () => {
         const modal = document.getElementById('login-modal-overlay');

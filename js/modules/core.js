@@ -1,13 +1,13 @@
 /**
- * SuitOrg Core Module - v15.8.8
+ * SuitOrg Core Module - v16.2.0
  * ---------------------------------------------------------
- * Sincronización: 2026-03-20 10:58 AM (438 Lines)
+ * Sincronización: 2026-03-24 07:10 PM (Platinum)
  * ---------------------------------------------------------
  * Responsabilidad: Estado global, carga de datos y utilidades base.
  */
 const app = {
     // --- APP CONFIG ---
-    version: "15.8.8", // AI Persistent Memory (v15.8.8)
+    version: "16.2.0", // Sistema Unificado (v16.2.0)
     PAUSE_SUPABASE: true, // Pausa estratégica de conexión externa (Control Manual)
     // Se cargan desde js/modules/config.js (ignorado en git)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
@@ -26,7 +26,8 @@ const app = {
         Prompts_IA: [],
         Config_SEO: [],
         Cuotas_Pagos: [],
-        Config_Paginas: []
+        Config_Paginas: [],
+        Config_IA_Notebooks: []
     },
     state: {
         currentUser: null,
@@ -54,11 +55,11 @@ const app = {
             if (!url) return "";
             const sUrl = url.toString().trim();
             // 1. Detectar si es una URL de Drive estándar o el formato obsoleto 'uc?id='
-            const idMatch = sUrl.match(/\/d\/([^\/?#]+)/) || 
-                            sUrl.match(/[?&]id=([^&?#]+)/) || 
-                            sUrl.match(/\/file\/d\/([^\/?#]+)/) ||
-                            sUrl.match(/\/open\?id=([^&?#]+)/);
-                            
+            const idMatch = sUrl.match(/\/d\/([^\/?#]+)/) ||
+                sUrl.match(/[?&]id=([^&?#]+)/) ||
+                sUrl.match(/\/file\/d\/([^\/?#]+)/) ||
+                sUrl.match(/\/open\?id=([^&?#]+)/);
+
             if (idMatch && idMatch[1] && (sUrl.includes('google.com') || sUrl.includes('drive.google.com'))) {
                 return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
             }
@@ -242,6 +243,7 @@ const app = {
                 }
 
                 if (app.ui && app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
+                if (app.pos && app.pos.loadCart) app.pos.loadCart();
                 app.checkBackendVersion();
             } else {
                 console.error("[INIT_FAILED] DATA_LOAD_FAILED");
@@ -388,15 +390,18 @@ const app = {
         const orbitView = document.getElementById('view-orbit');
         if (orbitView) orbitView.classList.add('hidden');
 
-        app.state.companyId = newId;
-        app.state.isFood = false;
+            if (app.pos && app.pos.saveCart) app.pos.saveCart(); // Guardar el anterior por seguridad
+            app.state.companyId = newId;
+            app.state.isFood = false;
 
-        const success = await app.loadData();
-        if (success) {
-            const company = app.data.Config_Empresas.find(c => c.id_empresa === newId);
-            if (app.ui.applyTheme) app.ui.applyTheme(company);
+            const success = await app.loadData();
+            if (success) {
+                const company = app.data.Config_Empresas.find(c => c.id_empresa === newId);
+                if (app.ui.applyTheme) app.ui.applyTheme(company);
 
-            window.location.hash = "#home";
+                if (app.pos && app.pos.loadCart) app.pos.loadCart(); // Cargar la nueva sesión aislada
+                
+                window.location.hash = "#home";
             if (app.router && app.router.handleRoute) app.router.handleRoute();
 
             if (app.ui.updateConsole) app.ui.updateConsole(`TENANT_SWITCH: ${newId}`);

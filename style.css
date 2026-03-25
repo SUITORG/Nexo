@@ -5,7 +5,8 @@
     --text-color: #333;
     --glass-bg: rgba(255, 255, 255, 0.9);
     --glass-border: 1px solid rgba(255, 255, 255, 0.3);
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.08); /* ELEVACIÓN PREMIUM */
     --danger-color: #d32f2f;
     --personal-bg: #ffffff;
     --personal-text: #1a1a1a;
@@ -361,7 +362,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
     border: 1px solid #f0f0f0;
     flex: 0 0 132px;
     /* Reduced 20% from ~165px */

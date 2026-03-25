@@ -175,7 +175,7 @@ app.public = {
         const company = companyData || app.data.Config_Empresas.find(c => {
             const cId = String(c.id_empresa || "").toUpperCase();
             const cAlias = String(c.alias_seo || "").toUpperCase();
-            return cId === urlId || cAlias === urlId || cId === "PAPER" || cId.replace(/_/g, "") === urlId.replace(/_/g, "");
+            return cId === urlId || cAlias === urlId || cId.replace(/_/g, "") === urlId.replace(/_/g, "");
         });
 
         if (!company) return console.error("[RENDER_HOME] No company data found for ID:", rawId);
@@ -410,10 +410,14 @@ app.public = {
                                                 <button class="btn-primary" style="width:100%; white-space:nowrap; padding:10px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,0,0,0.3); border:none; cursor:pointer;" onclick="window.location.hash='#contact'">
                                                     CONTACTAR
                                                 </button>
-                                                ${(company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) ? `
-                                                <button class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
-                                                    IA
-                                                </button>` : ''}
+                                                ${(() => {
+                        const aiVal = (company.usa_soporte_ia || "").toString().toUpperCase();
+                        const usesAi = aiVal === 'TRUE' || aiVal.includes(',');
+                        return usesAi ? `
+                                                    <button class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
+                                                        IA
+                                                    </button>` : '';
+                    })()}
                                             </div>
 
                                             <!-- Mensaje 2 (Derecha) -->
@@ -658,10 +662,14 @@ app.public = {
                                 <button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:none; cursor:pointer;" onclick="window.location.hash='#contact'">
                                     CONTACTAR
                                 </button>
-                                ${(company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) ? `
-                                <button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
-                                    <i class="fas fa-robot"></i> CONSULTAR
-                                </button>` : ''}
+                                ${(() => {
+                        const aiVal = (company.usa_soporte_ia || "").toString().toUpperCase();
+                        const usesAi = aiVal === 'TRUE' || aiVal.includes(',');
+                        return usesAi ? `
+                                     <button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
+                                         <i class="fas fa-robot"></i> CONSULTAR
+                                     </button>` : '';
+                    })()}
                             </div>
                         </div>
 
@@ -684,7 +692,8 @@ app.public = {
                 `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
                 `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar Ahora</button>`;
 
-            if (company.usa_soporte_ia === 'TRUE' || company.usa_soporte_ia === true) {
+            const aiVal = (company.usa_soporte_ia || "").toString().toUpperCase();
+            if (aiVal === 'TRUE' || aiVal.includes(',')) {
                 btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('AGT-PAPER-IMSS')"><i class="fas fa-robot"></i> Consultar AI</button>`;
             }
             actions.innerHTML = btns;
@@ -969,15 +978,51 @@ app.public = {
         const company = app.data.Config_Empresas.find(c => c.id_empresa === targetId);
         if (!company) return;
 
-        // 1. Títulos Dinámicos y SEO Matrix Integration
+        // --- MOTOR DE CONTEXTO UNIVERSAL (v16.2.0 - Capas de Datos) ---
+        const currentHash = (window.location.hash.replace('#', '') || 'home').trim().toLowerCase();
+        
+        // Capa 1: Identidad Base (Config_Empresas)
+        let pageTitle = company.nomempresa;
+        let pageDesc = company.descripcion || company.mensaje1 || "";
+        let pageKeywords = "";
+        let pageImage = app.utils.fixDriveUrl(company.logo_url);
+
+        // Capa 2: Estrategia de Clúster (Config_SEO)
         const seoList = (app.data.Config_SEO || []).filter(s => String(s.id_empresa || "").toUpperCase() === targetId);
-        const seoMain = seoList[0]; // Tomamos el primer cluster como referencia de identidad
+        // Buscar si el Hash coincide con un Cluster ID en Config_SEO
+        const seoMatch = seoList.find(s => String(s.id_cluster || "").trim().toLowerCase() === currentHash) || seoList[0];
+        
+        if (seoMatch) {
+            if (seoMatch.titulo) pageTitle = `${seoMatch.titulo} | ${company.nomempresa}`;
+            if (seoMatch.descripcion) pageDesc = seoMatch.descripcion;
+            if (seoMatch.keywords_coma) pageKeywords = seoMatch.keywords_coma;
+            if (seoMatch.imagen_url) pageImage = app.utils.fixDriveUrl(seoMatch.imagen_url);
+        }
 
-        const pageTitle = seoMain ? `${seoMain.titulo} | ${company.nomempresa}` : `${company.nomempresa} | ${company.slogan || ''}`;
-        const pageDesc = company.descripcion || company.mensaje1 || "Solución inteligente para tu negocio.";
-        const keywords = seoList.map(s => s.keywords_coma).filter(k => k).join(', ');
+        // Capa 3: Detalle de Página (Config_Paginas) - Mandatorio sobre las anteriores
+        const pageData = (app.data.Config_Paginas || []).find(p => 
+            String(p.id_empresa || "").toUpperCase() === targetId && 
+            String(p.id_pagina || "").trim().toLowerCase() === currentHash
+        );
 
-        // Actualizar DOM real
+        if (pageData && currentHash !== 'home') {
+            let jsonData = {};
+            try { jsonData = pageData.contenido_json ? JSON.parse(pageData.contenido_json) : {}; } catch(e){}
+            
+            // Sobrescritura de precisión desde el JSON de la página
+            const pTitle = jsonData.H1 || jsonData.titulo || pageData.subtitulo || pageData.id_pagina;
+            if (pTitle) pageTitle = `${pTitle} | ${company.nomempresa}`;
+            
+            const pDesc = jsonData.descripcion || jsonData.p_intro || pageData.contenido;
+            if (pDesc) pageDesc = pDesc;
+
+            const pKeywords = jsonData.keywords || pageData.keywords;
+            if (pKeywords) pageKeywords = pKeywords;
+
+            if (pageData.foto_url || jsonData.imagen_url) pageImage = app.utils.fixDriveUrl(pageData.foto_url || jsonData.imagen_url);
+        }
+
+        // --- INYECCIÓN FÍSICA AL DOM ---
         document.title = pageTitle;
 
         const updateMeta = (name, content, attr = 'name') => {
@@ -991,33 +1036,34 @@ app.public = {
             el.setAttribute('content', content);
         };
 
-        // 2. Inyección Anti-Invisibilidad (Robots & Social)
+        // Metadatos Generales e IA-Ready (v16.2.2)
         updateMeta('description', pageDesc);
-        updateMeta('keywords', keywords);
+        updateMeta('keywords', pageKeywords);
         updateMeta('og:title', pageTitle, 'property');
         updateMeta('og:description', pageDesc, 'property');
+        updateMeta('og:image', pageImage, 'property');
         updateMeta('og:type', 'website', 'property');
-        if (company.logo_url) updateMeta('og:image', app.utils.fixDriveUrl(company.logo_url), 'property');
 
-        // 3. Twitter Cards
+        // Twitter Cards y Marcado de Identidad
         updateMeta('twitter:card', 'summary_large_image');
         updateMeta('twitter:title', pageTitle);
         updateMeta('twitter:description', pageDesc);
+        updateMeta('twitter:image', pageImage);
 
-        // 4. Inyección JSON-LD para IA (AIO - AI Optimization) v6.7.5
+        // Inyección de Esquema JSON-LD para Optimización de IA (AIO)
         const schema = {
             "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": company.nomempresa,
+            "@type": "WebPage",
+            "name": pageTitle,
             "description": pageDesc,
-            "url": window.location.origin + window.location.pathname + "?id=" + targetId,
-            "logo": app.utils.fixDriveUrl(company.logo_url),
-            "contactPoint": {
-                "@type": "ContactPoint",
-                "telephone": company.telefonowhatsapp,
-                "contactType": "customer service"
+            "publisher": {
+                "@type": "Organization",
+                "name": company.nomempresa,
+                "logo": app.utils.fixDriveUrl(company.logo_url)
             },
-            "keywords": keywords
+            "url": window.location.href,
+            "image": pageImage,
+            "keywords": pageKeywords
         };
 
         let script = document.getElementById('schema-json-ld');
@@ -1029,7 +1075,7 @@ app.public = {
         }
         script.textContent = JSON.stringify(schema);
 
-        console.log(`[SEO_ENGINE] Visibilidad y AIO Actualizada: ${targetId} - ${pageTitle}`);
+        console.log(`[SEO_ENGINE] Unificado (${currentHash}): ${pageTitle}`);
     },
 
     renderFoodMenu: () => {

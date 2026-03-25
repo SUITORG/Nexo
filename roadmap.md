@@ -10,6 +10,9 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
+- [ ] **v16.1.0: Auditoría de Sistemas & Strategic Planning**: Análisis profundo de seguridad multi-inquilino (RLS), optimización de rendimiento (Sheets to SQL) y diseño de integración con NotebookLM MCP (Punto 3).
+- [x] **v15.8.9: Persistent Memory & Martha Padrón Human-Flow**: Sincronización cerebral de 1,175 líneas y prompt estratégico de Martha Padrón v15.8.9 (Estratega de Confianza). Activación de Memoria Semántica en GSheets.
+- [ ] **v15.9.0: Modular Architecture & CLASP Integration**: Dividir `backend_schema.gs` en módulos (`Core`, `AI`, `Seeds`, `Utils`) e implementar sincronización local vía Google Clasp para evitar truncamiento de archivos.
 - [x] **v15.8.8: Seed Duplication Fix & Persistent Memory**: Corregido bug de composite-key en `Config_Paginas` que causaba duplicación de semillas. Sincronización total de versiones a 15.8.8.
 - [ ] **v15.8.0: AI Interactive & Health Status**: Implementar indicador visual de disponibilidad de IA en la barra de status y mejorar la interactividad del botón de chat con micro-animaciones de estado (Validando/Conectado/Error).
 - [X] **v15.7.0: Supabase Pause & GSheet Stability**: Pausa estratégica de conexiones a Supabase para resolver problemas de conexión externa. Se restablece Google Sheets como motor primario universal en `app.state.dbEngine`.

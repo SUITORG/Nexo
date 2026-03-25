@@ -90,8 +90,9 @@ app.ui = {
         const biz = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase());
         const aiContainer = document.getElementById('sb-ai-container');
         if (aiContainer) {
-            const usesAi = biz?.usa_soporte_ia === 'TRUE' || biz?.usa_soporte_ia === true;
-            if (usesAi) {
+        const aiVal = (biz?.usa_soporte_ia || "").toString().toUpperCase();
+        const usesAi = aiVal === 'TRUE' || aiVal.includes(',');
+        if (usesAi) {
                 aiContainer.classList.remove('hidden');
                 if (app.agents?.checkAiHealth) app.agents.checkAiHealth();
             } else {
@@ -99,8 +100,9 @@ app.ui = {
             }
         }
 
-        // --- BOTÓN AGENT BROWSER MANUAL (v14.0.3) ---
+        // --- BOTONES DE HERRAMIENTAS IA (v16.4.0) ---
         app.ui.renderAgentAuditButton();
+        app.ui.renderMarketingStrategyButton();
     },
 
     renderAgentAuditButton: () => {
@@ -136,6 +138,90 @@ app.ui = {
             btn.onclick = () => app.ui.triggerAgentAudit();
 
             statusBar.insertBefore(btn, statusBar.firstChild);
+        }
+    },
+
+    renderMarketingStrategyButton: () => {
+        const statusBar = document.querySelector('.sb-right');
+        if (!statusBar) return;
+
+        // Eliminar botón previo si existe
+        const oldBtn = document.getElementById('sb-mkt-plan-btn');
+        if (oldBtn) oldBtn.remove();
+
+        const biz = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase());
+        const hasNotebook = biz?.id_notebooklm || biz?.id_notebook || biz?.Id_NotebookLM;
+        const isAdmin = app.state.currentUser && (app.state.currentUser.nivel_acceso >= 10 || app.state.currentUser.rol === 'DIOS' || app.state.currentUser.id_rol === 'DIOS');
+
+        // Solo mostrar si tiene un Notebook configurado y el usuario es ADMIN/DIOS
+        if (hasNotebook && isAdmin) {
+            const btn = document.createElement('span');
+            btn.id = 'sb-mkt-plan-btn';
+            btn.style.cssText = `
+                background: #6200ea;
+                color: #fff;
+                padding: 2px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.65rem;
+                font-weight: bold;
+                margin-right: 10px;
+                border: 1px solid rgba(255,255,255,0.2);
+                transition: 0.3s;
+                box-shadow: 0 0 10px rgba(98, 0, 234, 0.4);
+            `;
+            btn.innerHTML = `<i class="fa-solid fa-bullhorn"></i> CONSULTOR MKT`;
+            btn.title = "Generar Plan de Marketing Estratégico para este Inquilino";
+            btn.onclick = () => app.ui.triggerMarketingStrategy();
+
+            // Insertar después del botón de Audit si existe
+            const auditBtn = document.getElementById('sb-ia-audit-btn');
+            if (auditBtn) statusBar.insertBefore(btn, auditBtn.nextSibling);
+            else statusBar.insertBefore(btn, statusBar.firstChild);
+        }
+    },
+
+    triggerMarketingStrategy: async () => {
+        const btn = document.getElementById('sb-mkt-plan-btn');
+        if (!btn) return;
+
+        if (!confirm("¿Deseas generar una Estrategia de Marketing Profesional para este inquilino basada en sus datos de Excel y NotebookLM?")) return;
+
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> PROCESANDO...`;
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.7';
+
+        try {
+            // Llamar al motor de IA con contexto de marketing
+            app.ui.updateConsole("GENERATING_MKT_STRATEGY...");
+            
+            // Esta función vivirá en agents.js o ai_engine.js
+            if (app.agents && app.agents.generateMarketingPlan) {
+                await app.agents.generateMarketingPlan();
+            } else {
+                throw new Error("Módulo de IA Estratégica no cargado.");
+            }
+
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> LISTO!`;
+            btn.style.background = "#00e676";
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+                btn.style.background = '';
+            }, 3000);
+
+        } catch (e) {
+            console.error("MKT Strategy Error:", e);
+            btn.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ERROR`;
+            btn.style.background = "#f44";
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+                btn.style.background = '';
+            }, 3000);
         }
     },
 

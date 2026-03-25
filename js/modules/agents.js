@@ -1,5 +1,16 @@
+/* SuitOrg Agents Controller - v15.8.9
+ * ---------------------------------------------------------
+ * Sincronización: 2026-03-21 10:28 AM (v15.8.9 Cerebral Sync)
+ * ---------------------------------------------------------
+ */
 app.agents = {
     getVisitorId: () => {
+        // v16.4.2: Session Isolation for Admin vs User Context
+        const user = app.state.currentUser;
+        if (user && (user.nivel_acceso >= 10 || user.id_rol === 'DIOS')) {
+            return 'ADMIN-' + (user.username || 'SUDO');
+        }
+
         let vid = localStorage.getItem('suit_visitor_id');
         if (!vid) {
             vid = 'VISIT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -32,7 +43,7 @@ app.agents = {
             output.value = response;
         }, 1000);
     },
-    select: (agtId) => {
+    select: async (agtId) => {
         const agt = (app.data.Prompts_IA || []).find(a => a.id_agente === agtId);
         if (!agt) {
             console.error(`AGENT_NOT_FOUND: ${agtId}. Please run Repair DB in Maintenance.`);
@@ -48,45 +59,45 @@ app.agents = {
         
         // Mostrar Loading mientras recuperamos info
         const historyDiv = document.getElementById('chat-history');
-        historyDiv.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Recuperando memoria...</div>';
+        if (historyDiv) historyDiv.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Recuperando memoria...</div>';
 
         // Intentar recuperar memoria del Backend (Sheets/Supabase)
-        app.agents.fetchMemory(vid, agtIdLocal).then(res => {
-            historyDiv.innerHTML = ''; // Limpiar
-            
-            if (res && res.history && res.history.length > 0) {
-                app.state.chatHistory = res.history.map(h => ({ role: h.role, content: h.content }));
-                app.state.currentConvId = res.memory.id_conversacion;
+        const res = await app.agents.fetchMemory(vid, agtIdLocal);
 
-                const recoveryNotice = document.createElement('div');
-                recoveryNotice.innerHTML = `<i class="fas fa-cloud"></i> Sesión recuperada de la nube (ID: ${app.state.currentConvId})`;
-                recoveryNotice.className = "ai-msg";
-                recoveryNotice.style.cssText = "background:rgba(0,0,0,0.05); font-size:0.7rem; color:var(--primary-color); padding:5px 10px; border-radius:10px; border:none; width:fit-content; margin:0 auto 10px auto; opacity:0.8;";
-                historyDiv.appendChild(recoveryNotice);
+        historyDiv.innerHTML = ''; // Limpiar
+        
+        if (res && res.history && res.history.length > 0) {
+            app.state.chatHistory = res.history.map(h => ({ role: h.role, content: h.content }));
+            app.state.currentConvId = res.memory.id_conversacion;
 
-                app.state.chatHistory.forEach(h => {
-                    const roleId = h.role === 'user' ? 'user' : 'ai';
-                    app.agents.addMessageToUI(roleId, h.content, true);
-                });
-                historyDiv.scrollTop = historyDiv.scrollHeight;
-            } else {
-                app.state.chatHistory = [];
-                app.state.currentConvId = 'CHAT-' + Date.now().toString(36).toUpperCase();
-                
-                historyDiv.innerHTML = `
-                    <div class="ai-msg" style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid var(--primary-color); max-width: 80%; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                        Hola, soy tu <b>${agt.nombre}</b>. ¿En qué puedo apoyarte hoy?
-                    </div>
-                `;
-            }
+            const recoveryNotice = document.createElement('div');
+            recoveryNotice.innerHTML = `<i class="fas fa-cloud"></i> Sesión recuperada de la nube (ID: ${app.state.currentConvId})`;
+            recoveryNotice.className = "ai-msg";
+            recoveryNotice.style.cssText = "background:rgba(0,0,0,0.05); font-size:0.7rem; color:var(--primary-color); padding:5px 10px; border-radius:10px; border:none; width:fit-content; margin:0 auto 10px auto; opacity:0.8;";
+            historyDiv.appendChild(recoveryNotice);
+
+            app.state.chatHistory.forEach(h => {
+                const roleId = h.role === 'user' ? 'user' : 'ai';
+                app.agents.addMessageToUI(roleId, h.content, true);
+            });
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        } else {
+            app.state.chatHistory = [];
+            app.state.currentConvId = 'CHAT-' + Date.now().toString(36).toUpperCase();
             
-            // Si tenemos un resumen previo, saludar con contexto
-            if (res && res.memory && res.memory.resumen_semantico) {
-                setTimeout(() => {
-                    app.agents.addMessageToUI('ai', `¡Hola de nuevo! Recordando nuestra plática anterior: <i>"${res.memory.resumen_semantico}"</i>. ¿Cómo va todo con eso?`);
-                }, 800);
-            }
-        });
+            historyDiv.innerHTML = `
+                <div class="ai-msg" style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid var(--primary-color); max-width: 80%; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    Hola, soy tu <b>${agt.nombre}</b>. ¿En qué puedo apoyarte hoy?
+                </div>
+            `;
+        }
+        
+        // Si tenemos un resumen previo, saludar con contexto
+        if (res && res.memory && res.memory.resumen_semantico) {
+            setTimeout(() => {
+                app.agents.addMessageToUI('ai', `¡Hola de nuevo! Recordando nuestra plática anterior: <i>"${res.memory.resumen_semantico}"</i>. ¿Cómo va todo con eso?`);
+            }, 800);
+        }
 
         // Monitor de inactividad específico para el chat
         app.state._lastChatActivity = Date.now();
@@ -272,16 +283,33 @@ app.agents = {
         document.getElementById('btn-send-chat').disabled = true;
         app.ui.updateConsole("AI_PROCESSING...");
         try {
+            // --- INYECTOR DE CONTEXTO MAESTRO (v16.5.0) ---
+            // Se elimina la dependencia de NotebookLM para favorecer la estabilidad 100% local (Excel-Driven)
+            const action = 'askGemini'; 
+
+            // --- DETECCIÓN DE ESTATUS CRM (v16.5.0) ---
+            const vid = app.agents.getVisitorId();
+            const currentLead = (app.data.Leads || []).find(l => l.id_visitante === vid || (app.state.currentUser && l.telefono === app.state.currentUser.telefono));
+            let crmContext = "";
+            if (currentLead) {
+                const missingFields = [];
+                if (!currentLead.email) missingFields.push("Email");
+                if (!currentLead.direccion) missingFields.push("Dirección");
+                if (missingFields.length > 0) {
+                    crmContext = `\n\n[SISTEMA CRM]: El usuario ya es un LEAD (${currentLead.id_lead}). Falta capturar: ${missingFields.join(', ')}. Tu misión es obtener estos datos sutilmente.`;
+                }
+            }
+
             // 4. Call Backend Proxy
             const response = await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify({
-                    action: 'askGemini',
+                    action: action,
                     id_empresa: app.state.companyId || 'SYSTEM',
                     usuario: app.state.currentUser ? app.state.currentUser.nombre : 'Visitante',
                     agentId: app.state.currentAgent.id_agente,
-                    promptBase: app.state.currentAgent.prompt_base,
+                    promptBase: app.state.currentAgent.prompt_base + crmContext,
                     history: app.state.chatHistory,
                     message: text,
                     model: app.state._aiModel || localStorage.getItem('evasol_ai_model') || "gemini-1.5-flash",
@@ -296,26 +324,28 @@ app.agents = {
                 // Persistencia de Respuesta
                 app.agents.logInteraction('model', data.answer);
 
-                // --- DETECCIÓN DE DATOS PARA MEMORIA SEMÁNTICA (v15.8.7) ---
-                // Si el mensaje contiene nombre o teléfono, actualizamos el contexto
+                // --- DETECCIÓN DE DATOS PARA MEMORIA SEMÁNTICA (v15.8.9) ---
                 const lowerText = text.toLowerCase();
                 const possiblePhone = text.match(/\d{8,10}/);
-                if (lowerText.includes("me llamo") || lowerText.includes("mi nombre es") || possiblePhone) {
+                const interestKeywords = ["asesoria", "pension", "modalidad 40", "imss", "ley 73", "inversion", "ahorro"];
+                const hasInterest = interestKeywords.some(k => lowerText.includes(k));
+
+                if (lowerText.includes("me llamo") || lowerText.includes("mi nombre es") || possiblePhone || hasInterest) {
                     const vid = app.agents.getVisitorId();
                     const context = {
                         nombre: text.substring(0, 50),
                         telefono: possiblePhone ? possiblePhone[0] : null,
+                        interes: hasInterest ? "ACTIVO" : "PENDIENTE",
                         last_interaction: new Date()
                     };
-                    app.agents.saveMemory(vid, `Conversando con ${context.nombre || 'cliente'}. Interés detectado.`, context);
-                } else if (app.state.chatHistory.length % 5 === 0) {
+                    app.agents.saveMemory(vid, `Interés detectado: ${lowerText.substring(0, 50)}...`, context);
+                } else if (app.state.chatHistory.length % 3 === 0) {
                     const vid = app.agents.getVisitorId();
-                    const summary = app.state.chatHistory.slice(-2).map(h => h.content).join(' | ');
-                    app.agents.saveMemory(vid, summary.substring(0, 500));
+                    const summary = app.state.chatHistory.slice(-4).map(h => h.content).join(' | ');
+                    app.agents.saveMemory(vid, "Resumen parcial: " + summary.substring(0, 400));
                 }
 
-                // Inyectar botón de WhatsApp dinámico con jerarquía de contacto (v5.8.9)
-                if (app.state.chatHistory.length >= 4) {
+                if (app.state.chatHistory.length >= 8) {
                     const currentId = (app.state.companyId || "").trim().toUpperCase();
                     const company = app.data.Config_Empresas.find(c => (c.id_empresa || "").toUpperCase() === currentId);
 
@@ -323,18 +353,15 @@ app.agents = {
                         let targetPhone = "";
                         const useStandard = (company.usa_features_estandar === "TRUE" || company.usa_features_estandar === true);
 
-                        // Jerarquía Nivel 1: SEO (Solo si usa features estándar)
                         if (useStandard) {
                             const seoItem = (app.data.Config_SEO || []).find(s => (s.id_empresa || "").toUpperCase() === currentId && s.wa_directo);
                             if (seoItem) targetPhone = seoItem.wa_directo;
                         }
 
-                        // Jerarquía Nivel 2: Fallback a Teléfono de Empresa
-                        if (!targetPhone) targetPhone = company.telefonowhatsapp || "8129552094"; // Fallback final de emergencia
+                        if (!targetPhone) targetPhone = company.telefonowhatsapp || "8129552094"; 
 
-                        // Limpieza y Formateo Internacional (v5.8.9)
                         let cleanPhone = targetPhone.toString().replace(/\D/g, '');
-                        if (cleanPhone.length === 10) cleanPhone = "52" + cleanPhone; // Auto-fix para México si falta prefijo
+                        if (cleanPhone.length === 10) cleanPhone = "52" + cleanPhone; 
 
                         const lastFive = app.state.chatHistory.slice(-5).map(h => h.content).join(' | ');
                         const waText = encodeURIComponent(`Hola ${company.nomempresa}, estuve hablando con su IA sobre: "${lastFive.substring(0, 100)}...". Me gustaría hablar con un experto.`);
@@ -564,6 +591,123 @@ app.agents = {
             circle.className = 'ai-status-circle offline';
             circle.title = "Error de Red: No hay respuesta del backend.";
             app.ui.updateConsole("AI_NET_ERR", true);
+        }
+    },
+    updateAiProgress: (percent, status) => {
+        const wrapper = document.getElementById('ai-progress-wrapper');
+        const fill = document.getElementById('ai-progress-fill');
+        const statusEl = document.getElementById('ai-progress-status');
+        const percentEl = document.getElementById('ai-progress-percent');
+        
+        if (wrapper) wrapper.classList.remove('hidden');
+        if (fill) fill.style.width = `${percent}%`;
+        if (statusEl) statusEl.innerText = status.toUpperCase();
+        if (percentEl) percentEl.innerText = `${Math.round(percent)}%`;
+        
+        if (percent >= 100) {
+            setTimeout(() => { if (wrapper) wrapper.classList.add('hidden'); }, 3000);
+        }
+    },
+
+    // --- MOTOR DE CONSULTORÍA ESTRATÉGICA (v16.4.0) ---
+    generateMarketingPlan: async () => {
+        const id = app.state.companyId;
+        app.agents.updateAiProgress(10, 'Iniciando Consultoría...');
+
+        const company = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(id).toUpperCase());
+        const seoData = (app.data.Config_SEO || []).filter(s => String(s.id_empresa).toUpperCase() === String(id).toUpperCase());
+        const pagesData = (app.data.Config_Paginas || []).filter(p => String(p.id_empresa).toUpperCase() === String(id).toUpperCase());
+        const notebook = (app.data.Config_IA_Notebooks || []).find(n => String(n.id_empresa).toUpperCase() === String(id).toUpperCase());
+        const notebookId = notebook ? notebook.notebook_id : (company?.id_notebooklm || "N/A");
+
+        if (!company) {
+            app.agents.updateAiProgress(0, 'Error: Empresa no encontrada');
+            throw new Error("Datos de empresa no encontrados.");
+        }
+
+        app.agents.updateAiProgress(20, 'Cargando Conocimiento de Negocio...');
+
+        // 1. Consolidar la "Maleta de Contexto" para la IA
+        const businessIdentity = `
+            IDENTIDAD: ${company.nomempresa} (${company.giro_comercial || 'Servicios'})
+            SLOGAN: ${company.slogan_empresa || ''}
+            DESCRIPCIÓN: ${company.descripcion || ''}
+            PILARES SEO: ${seoData.map(s => s.titulo).join(', ')}
+            KEYWORDS OBJETIVO: ${seoData.map(s => s.keywords_coma).join(', ')}
+            SERVICIOS DETALLADOS (PÁGINAS): ${pagesData.map(p => p.id_pagina).join(', ')}
+            NOTEBOOK_REF: ${notebookId}
+        `;
+
+        const marketingPrompt = `
+            ACTÚA COMO UN CONSULTOR DE MARKETING ESTRATÉGICO DE ÉLITE.
+            Tu misión es generar un PLAN DE MARKETING INTEGRAL para el negocio detallado a continuación.
+            
+            ${businessIdentity}
+            
+            GUÍA DE ACCIÓN:
+            1. Analiza su Propuesta de Valor única.
+            2. Define el Buyer Persona (quién compra estos servicios).
+            3. Redacta 3 Estrategias de Marketing Digital de alto impacto.
+            4. Sugiere mejoras para su posicionamiento SEO basado en sus keywords actuales.
+            
+            Usa el conocimiento profundo de tus fuentes (NotebookLM) para ser extremadamente preciso. 
+            No generes generalidades; genera acciones concretas para este inquilino específico.
+        `;
+
+        app.agents.updateAiProgress(40, 'Conectando con Agente Estratégico...');
+        await app.agents.select('AGT-001'); 
+        
+        const chatBox = document.getElementById('chat-history');
+        if (chatBox) chatBox.innerHTML = ''; 
+        
+        app.agents.addMessageToUI('ai', `🚀 <b>Iniciando Consultoría para ${company.nomempresa}...</b><br>Analizando datos de Excel y catálogos locales.`);
+        
+        app.agents.updateAiProgress(60, 'IA está Redactando Estrategia...');
+        document.getElementById('ai-loading').classList.remove('hidden');
+        document.getElementById('btn-send-chat').disabled = true;
+
+        // --- ANTICIPACIÓN DE ERRORES: TIMEOUT (v15.9.9) ---
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 segundos límite
+
+        try {
+            // DETECCIÓN DE DATOS DE CATÁLOGO (v16.5.0)
+            const catalog = (app.data.Catalogo || []).filter(p => String(p.id_empresa).toUpperCase() === String(id).toUpperCase()).slice(0, 15);
+            const catalogContext = catalog.length > 0 ? "PRODUCTOS/SERVICIOS REALES: " + catalog.map(p => `${p.nombre} ($${p.precio})`).join(', ') : "Sin catálogo cargado.";
+
+            const response = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    action: 'askGemini',
+                    id_empresa: id,
+                    usuario: app.state.currentUser.nombre,
+                    message: `${marketingPrompt}\n\nDATOS DE INVENTARIO: ${catalogContext}\n\nMENSAJE_CONTROL: Genera el Plan de Marketing Estratégico detallado arriba usando ÚNICAMENTE estos datos locales.`,
+                    token: app.apiToken
+                })
+            });
+            
+            clearTimeout(timeoutId);
+            const data = await response.json();
+            
+            if (data.success) {
+                app.agents.updateAiProgress(90, 'Finalizando reporte...');
+                app.agents.addMessageToUI('ai', data.answer);
+                app.agents.updateAiProgress(100, 'Consultoría Finalizada (Local Sync OK)');
+            } else {
+                app.agents.updateAiProgress(0, 'Error en IA');
+                app.agents.addMessageToUI('ai', "❌ Error: " + (data.error || "Falla técnica en backend."));
+            }
+        } catch (e) {
+            clearTimeout(timeoutId);
+            console.error(e);
+            app.agents.updateAiProgress(0, 'Fallo de Conexión');
+            const errorMsg = e.name === 'AbortError' ? "⏱️ La IA tardó demasiado en responder (Timeout). Reintenta en unos momentos." : "❌ Error de conexión crítica con el motor estratégico local.";
+            app.agents.addMessageToUI('ai', errorMsg);
+        } finally {
+            document.getElementById('ai-loading').classList.add('hidden');
+            document.getElementById('btn-send-chat').disabled = false;
         }
     }
 };

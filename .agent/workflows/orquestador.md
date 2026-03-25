@@ -140,6 +140,9 @@ Estas reglas NO pueden violarse sin una instrucción explícita del usuario. Cad
   - Debe existir la vista `#view-projects` y su tabla `#projects-table-body`.
   - Debe calcular y mostrar correctamente la "temperatura" (avance %) basada en `Config_Flujo_Proyecto`.
 
+### 2.3 Estándar de Feedback Visual (v15.9.9)
+Todo proceso que tome más de 2 segundos (IA, Sincronización, Cargas masivas) **DEBE** mostrar un porcentaje o estados de avance (Analizando, Procesando, Generando...) para evitar la percepción de "sistema congelado".
+
 **Procedimiento ante riesgo de violación:**
 - El agente debe:
   - Advertir al usuario.
@@ -155,6 +158,7 @@ Estas reglas NO pueden violarse sin una instrucción explícita del usuario. Cad
 
 Este paso es PRIORITARIO al inicio de tareas pesadas o al detectar saturación.
 
+- **Anticipación de Errores (v15.9.9):** Cada nueva función debe incluir manejo de excepciones (`try-catch`), tiempos de espera (timeouts) y validación previa de datos para evitar que el sistema se detenga sin informar al usuario.
 - **Antigüedad**: Borrar errores/soluciones de >30 días con baja frecuencia en `soluciones.md`.
 - **Uso**: Eliminar soluciones obsoletas que no han sido consultadas.
 - **Salud del Backend**: Ejecutar purga de logs si `backend_schema.gs` reporta auditorías elevadas.

@@ -2,11 +2,10 @@ app.pos = {
     addToCart: (id) => {
         const userRole = (app.state.currentUser?.id_rol || "").toString().toUpperCase();
         if (userRole === 'DELIVERY' || (app.state.currentUser?.nombre || "").toUpperCase().includes('REPARTIDOR')) {
-            return; // Silently ignore or show message
+            return; 
         }
         const prod = app.data.Catalogo.find(p => p.id_producto === id);
         if (!prod) return;
-        // Stock Check
         if (parseInt(prod.stock) <= 0) {
             alert("Sin inventario para este producto.");
             return;
@@ -23,6 +22,7 @@ app.pos = {
             app.state.cart.push({ id: prod.id_producto, name: prod.nombre, price: price, qty: 1 });
         }
         app.pos.updateCartVisuals();
+        app.pos.saveCart();
     },
     removeFromCart: (id) => {
         const idx = app.state.cart.findIndex(i => i.id === id);
@@ -31,6 +31,7 @@ app.pos = {
             if (app.state.cart[idx].qty <= 0) app.state.cart.splice(idx, 1);
         }
         app.pos.updateCartVisuals();
+        app.pos.saveCart();
     },
     clearCart: () => {
         app.state.cart = [];
@@ -47,6 +48,7 @@ app.pos = {
         });
         app.pos.updateCartVisuals();
         app.pos.renderExpressTicket();
+        app.pos.saveCart();
         if (app.ui && app.ui.toggleMobileTicket) app.ui.toggleMobileTicket(false);
     },
     updateCartVisuals: () => {
@@ -322,6 +324,7 @@ app.pos = {
                     }
                 }
                 app.pos.clearCart();
+                app.pos.saveCart();
                 app.pos.closeCheckout();
             } else {
                 app.pos.nextStep(3);
@@ -1178,5 +1181,39 @@ app.pos = {
 
         display.innerText = `$${change.toFixed(2)}`;
         display.style.color = paid >= total ? '#27ae60' : '#e74c3c';
+    },
+
+    // --- AISLAMIENTO DE SESIÓN (v16.3.0) ---
+    saveCart: () => {
+        if (!app.state.companyId) return;
+        const key = `suit_cart_${app.state.companyId.toString().toUpperCase()}`;
+        const data = {
+            cart: app.state.cart,
+            delivery: app.state.deliveryMethod,
+            ts: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(data));
+        console.log(`[POS] Carrito blindado y guardado para: ${app.state.companyId}`);
+    },
+
+    loadCart: () => {
+        if (!app.state.companyId) return;
+        const key = `suit_cart_${app.state.companyId.toString().toUpperCase()}`;
+        const raw = localStorage.getItem(key);
+        if (raw) {
+            try {
+                const data = JSON.parse(raw);
+                app.state.cart = data.cart || [];
+                app.state.deliveryMethod = data.delivery || 'DOMICILIO';
+                console.log(`[POS] Sesión recuperada para: ${app.state.companyId}`);
+            } catch (e) {
+                console.warn("[POS] Error al cargar carrito aislado:", e);
+                app.state.cart = [];
+            }
+        } else {
+            app.state.cart = [];
+            console.log(`[POS] Nueva sesión iniciada para: ${app.state.companyId}`);
+        }
+        if (app.pos.updateCartVisuals) app.pos.updateCartVisuals();
     }
 };

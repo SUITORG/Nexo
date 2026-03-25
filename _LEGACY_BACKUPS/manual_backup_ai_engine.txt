@@ -1,0 +1,148 @@
+/* SuitOrg Backend - AI Engine Module (v15.9.2) 
+ * ---------------------------------------------------------
+ * Responsabilidad: Motor Gemini con Auto-Failover y Refuerzo Vector Legacy.
+ * ---------------------------------------------------------
+ */
+
+function runGeminiInference(data, output) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) {
+    output.answer = "⚠️ Error: API_KEY no configurada en las propiedades del script de Google Apps Script.";
+    output.success = true; return;
+  }
+
+  // 🛡️ LÓGICA DE ROTACIÓN (v15.9.2) - REFUERZO VECTOR LEGACY
+  var aiConfig = (data.ai_config || "TRUE").toString().trim();
+  var modelVector = ["gemini-1.5-flash"]; // Fallback base
+
+  // Si detecta un vector booleano viejo (ej: [true, false...]) forzar a TRUE
+  if (aiConfig.includes("[") && (aiConfig.toLowerCase().includes("true") || aiConfig.toLowerCase().includes("false"))) {
+    aiConfig = "TRUE";
+  }
+
+  if (aiConfig.includes(",")) {
+    modelVector = aiConfig.split(",").map(m => m.trim());
+  } else if (aiConfig === "TRUE") {
+    modelVector = [data.model || "gemini-1.5-flash"];
+  } else if (aiConfig === "FALSE" || aiConfig === "") {
+    output.answer = "El soporte de IA está desactivado para este negocio.";
+    output.success = true; return;
+  }
+
+  const systemPrompt = data.promptBase || "Eres Martha Padrón de PA PER.";
+  const messages = [
+    { role: "user", parts: [{ text: "SYSTEM_INSTRUCTIONS:\n" + systemPrompt }] },
+    { role: "model", parts: [{ text: "Entendido." }] }
+  ];
+  
+  (data.history || []).forEach(h => {
+    messages.push({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.content }] });
+  });
+  
+  messages.push({ role: "user", parts: [{ text: data.message || "" }] });
+
+  // --- CICLO DE NAVEGACIÓN EN EL VECTOR ---
+  for (var i = 0; i < modelVector.length; i++) {
+    var model = modelVector[i];
+    try {
+      console.log(`🤖 Intentando con modelo: ${model} (${i+1}/${modelVector.length})`);
+      const response = UrlFetchApp.fetch(`https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`, {
+        method: "POST",
+        contentType: "application/json",
+        payload: JSON.stringify({ contents: messages }),
+        muteHttpExceptions: true
+      });
+
+      const responseCode = response.getResponseCode();
+      const rawResponse = response.getContentText();
+      const result = JSON.parse(rawResponse);
+
+      if (responseCode === 200 && result.candidates && result.candidates[0]) {
+        output.answer = result.candidates[0].content.parts[0].text;
+        output.success = true;
+        output.active_model = model; 
+        return; // Éxito absoluto!
+      } 
+      
+      // Si el error es de cuota (429), intentamos el siguiente modelo
+      if (responseCode === 429) {
+        console.warn(`⚠️ Cuota agotada en ${model}. Saltando al siguiente...`);
+        continue; 
+      }
+
+      // Si es otro error grave, lo reportamos y paramos para diagnóstico
+      if (result.error) {
+        throw new Error(result.error.message || "Error desconocido de IA");
+      }
+      
+      // Si no hay candidates pero el status no es 200, algo está mal
+      throw new Error(`Código ${responseCode}: ${rawResponse.substring(0, 100)}...`);
+
+    } catch (e) {
+      console.error(`Fallo en ${model}: ${e.message}`);
+      if (i === modelVector.length - 1) { // Si era el último modelo
+         output.error = "Error crítico de IA: " + e.message;
+         output.detail = `Modelo final intentado: ${model}`;
+      }
+    }
+  }
+}
+
+/**
+ * 📚 BRIDGE MCP NOTEBOOKLM (v16.1.0)
+ */
+function runNotebookLMQuery(data, output) {
+  const BRIDGE_URL = PropertiesService.getScriptProperties().getProperty('MCP_BRIDGE_URL');
+  if (!BRIDGE_URL) {
+    data.promptBase += "\n[CONTEXTO_REFORZADO]: Consulta la base de conocimiento de " + (data.notebook_id || "Global") + ".";
+    return runGeminiInference(data, output);
+  }
+
+  try {
+    const res = UrlFetchApp.fetch(BRIDGE_URL + "/notebooklm/query", {
+      method: "POST",
+      contentType: "application/json",
+      payload: JSON.stringify({
+        notebookId: data.notebook_id,
+        query: data.message,
+        history: data.history,
+        tenantId: data.id_empresa
+      }),
+      muteHttpExceptions: true
+    });
+    
+    if (res.getResponseCode() === 200) {
+      const result = JSON.parse(res.getContentText());
+      output.answer = result.answer;
+      output.success = true;
+    } else {
+      throw new Error("Bridge MCP respondió con error.");
+    }
+  } catch (e) {
+    output.error = "Fallo de conexión con Bridge MCP: " + e.message;
+    runGeminiInference(data, output);
+  }
+}
+
+/**
+ * 🔍 LISTADO DE MODELOS DISPONIBLES (v16.1.1)
+ */
+function listAiModels() {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) return ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+  
+  try {
+    const url = "https://generativelanguage.googleapis.com/v1/models?key=" + apiKey;
+    const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    
+    if (res.getResponseCode() === 200) {
+      const result = JSON.parse(res.getContentText());
+      return result.models
+        .filter(m => m.supportedGenerationMethods.includes("generateContent"))
+        .map(m => m.name.replace("models/", ""));
+    }
+  } catch (e) {
+    console.error("Error listAiModels: " + e.message);
+  }
+  return ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]; 
+}
