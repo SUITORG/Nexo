@@ -1,17 +1,17 @@
 /**
- * SuitOrg Core Module - v16.2.0
+ * SuitOrg Core Module - v16.5.5
  * ---------------------------------------------------------
- * Sincronización: 2026-03-24 07:10 PM (Platinum)
+ * Sincronización: 2026-03-25 04:30 PM (Self-Recovery)
  * ---------------------------------------------------------
  * Responsabilidad: Estado global, carga de datos y utilidades base.
  */
 const app = {
     // --- APP CONFIG ---
-    version: "16.2.0", // Sistema Unificado (v16.2.0)
-    PAUSE_SUPABASE: true, // Pausa estratégica de conexión externa (Control Manual)
-    // Se cargan desde js/modules/config.js (ignorado en git)
-    apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiUrl : '',
-    apiToken: (typeof SUIT_CONFIG !== 'undefined') ? SUIT_CONFIG.apiToken : '',
+    version: "16.5.5", // Sistema Inteligente (v16.5.5)
+    PAUSE_SUPABASE: true, 
+    // Se cargan desde js/modules/config.js (inyectado en deploy)
+    apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.apiUrl || "").trim() : '',
+    apiToken: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.apiToken || "").trim() : '',
     data: {
         Config_Empresas: [],
         Usuarios: [],
