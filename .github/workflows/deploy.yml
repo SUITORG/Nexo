@@ -22,13 +22,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create Secure Config File
+        env:
+          MY_URL: ${{ secrets.API_URL }}
+          MY_TOKEN: ${{ secrets.API_TOKEN }}
         run: |
           mkdir -p js/modules
-          U=$(echo "${{ secrets.API_URL }}" | tr -d '[:space:]')
-          T=$(echo "${{ secrets.API_TOKEN }}" | tr -d '[:space:]')
-          printf "const SUIT_CONFIG = { apiUrl: '%%s', apiToken: '%%s' };" "$U" "$T" > js/modules/config.js.tmp
-          tr -d '\r\n' < js/modules/config.js.tmp > js/modules/config.js
-          rm js/modules/config.js.tmp
+          U=$(echo "$MY_URL" | tr -d '[:space:]')
+          T=$(echo "$MY_TOKEN" | tr -d '[:space:]')
+          echo "const SUIT_CONFIG = { apiUrl: '$U', apiToken: '$T' };" > js/modules/config.js
         shell: bash
 
       - name: Setup Pages
