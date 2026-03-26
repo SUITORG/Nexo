@@ -26,7 +26,9 @@ jobs:
           mkdir -p js/modules
           U=$(echo "${{ secrets.API_URL }}" | tr -d '[:space:]')
           T=$(echo "${{ secrets.API_TOKEN }}" | tr -d '[:space:]')
-          printf "const SUIT_CONFIG = {\n    apiUrl: '%%s',\n    apiToken: '%%s'\n};\n" "$U" "$T" > js/modules/config.js
+          printf "const SUIT_CONFIG = { apiUrl: '%%s', apiToken: '%%s' };" "$U" "$T" > js/modules/config.js.tmp
+          tr -d '\r\n' < js/modules/config.js.tmp > js/modules/config.js
+          rm js/modules/config.js.tmp
         shell: bash
 
       - name: Setup Pages
