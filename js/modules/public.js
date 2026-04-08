@@ -1167,7 +1167,7 @@ app.public = {
                 categories[catName].forEach(p => {
                     const card = document.createElement('div');
                     card.className = 'food-card';
-                    const img = p.imagen_url ? app.utils.fixDriveUrl(p.imagen_url) : 'https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv';
+                    const img = p.imagen_url ? app.utils.fixDriveUrl(p.imagen_url) : 'https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm';
                     const price = app.utils.getEffectivePrice(p);
                     const stock = parseInt(p.stock) || 0;
                     const promo = (p.etiqueta_promo || "").toString().trim();
@@ -1205,7 +1205,7 @@ app.public = {
         const hTitle = document.getElementById('header-title');
         const hLogo = document.getElementById('header-logo');
         if (hTitle) hTitle.innerText = "SuitOrg";
-        if (hLogo) hLogo.src = "https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv";
+        if (hLogo) hLogo.src = "https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm";
         document.documentElement.style.setProperty('--primary-color', '#004d40'); // SuitOrg Teal base
 
         const container = document.getElementById('orbit-bubbles');
@@ -1279,7 +1279,7 @@ app.public = {
 
                 <img src="${bubbleImg ? app.utils.fixDriveUrl(bubbleImg) : ''}" class="bubble-logo" 
                      style="width: ${isEvasol ? '70%' : '60%'}; ${logoFilter}; transition: all 0.5s ease; z-index: 10; margin-bottom: 5px;"
-                     onerror="this.src='https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv'">
+                     onerror="this.src='https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm'">
                 
                 <!-- Etiqueta de apoyo (Visible on Hover via CSS) -->
                 <span class="bubble-name" style="font-size:0.6rem; font-weight: 900; opacity: 0; transition: 0.3s; position:absolute; bottom: 10%; background: rgba(0,0,0,0.7); padding: 2px 10px; border-radius: 20px; color: white;">
@@ -1297,7 +1297,8 @@ app.public = {
                 vx: (Math.random() - 0.5) * 2,
                 vy: (Math.random() - 0.5) * 2,
                 radius: radius,
-                size: size
+                size: size,
+                zOffset: Math.random() * Math.PI * 2
             });
         });
 
@@ -1327,10 +1328,19 @@ app.public = {
         const update = () => {
             const w = window.innerWidth;
             const h = window.innerHeight;
+            const time3D = Date.now() / 2000;
 
             bubbles.forEach((b1, i) => {
-                b1.x += b1.vx;
-                b1.y += b1.vy;
+                const rawZ = Math.sin(time3D + b1.zOffset); 
+                const scaleZ = 1 + (rawZ * 0.35); 
+                const blurZ = Math.max(0, (rawZ * -1) * 3); 
+                
+                b1.el.style.transform = `scale(${scaleZ})`;
+                b1.el.style.filter = `blur(${blurZ}px)`;
+                b1.el.style.zIndex = Math.floor((rawZ + 1) * 50) + 10;
+
+                b1.x += b1.vx * scaleZ;
+                b1.y += b1.vy * scaleZ;
 
                 if (b1.x <= 0) { b1.x = 0; b1.vx *= -1; }
                 if (b1.x + b1.size >= w) { b1.x = w - b1.size; b1.vx *= -1; }
@@ -1348,8 +1358,9 @@ app.public = {
                     const dy = (b2.y + b2.radius) - (b1.y + b1.radius);
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     const minDist = b1.radius + b2.radius;
+                    const thresholdDist = minDist * 0.6; // 40% de overlap permitido
 
-                    if (distance < minDist) {
+                    if (distance < thresholdDist) {
                         const angle = Math.atan2(dy, dx);
                         const sin = Math.sin(angle);
                         const cos = Math.cos(angle);
@@ -1367,7 +1378,7 @@ app.public = {
                         b2.vx = vx2Final * cos - vy2 * sin;
                         b2.vy = vy2 * cos + vx2Final * sin;
 
-                        const overlap = minDist - distance;
+                        const overlap = thresholdDist - distance;
                         b1.x -= cos * overlap / 2;
                         b1.y -= sin * overlap / 2;
                         b2.x += cos * overlap / 2;

@@ -6,26 +6,25 @@ description: Dame el nuevo mapeo completo de ui.js por clasificación, cantidad 
 
 Este workflow realiza un análisis exhaustivo de la estructura del archivo `ui.js`, clasificando sus funciones, contando líneas y vinculándolas con las tablas de datos del backend.
 
-## 📊 Mapeo Maestro de ui.js (v4.6.9)
+## 📊 Mapeo Maestro de ui.js (v16.7.23)
 
-| Clasificación | Módulo Aplicable | Total Líneas | Funciones Clave | Tablas de Datos Vinculadas |
-| :--- | :--- | :--- | :--- | :--- |
-| **Core & Auth** | `config` | **226** | `applyTheme`, `setLoggedInState`, `showLogin` | `Config_Empresas`, `Config_Roles`, `Usuarios` |
-| **Puntales de Public (API)** | `config` | **12** | `renderHome`, `renderSEO`, `renderOrbit` | `Config_SEO`, `Config_Empresas` |
-| **Monitor POS & Ventas** | `pos`, `staff-pos` | **601** | `renderPOS`, `filterPOS`, `renderStaffPOS` | `Proyectos`, `Leads`, `Catalogo` |
-| **Motor de Reportes** | `dashboard`, `reports` | **505** | `renderReport`, `renderDashboard` | `Proyectos_Pagos`, `Proyectos` |
-| **Gestión CRM** | `leads`, `projects` | **355** | `renderLeads`, `renderProjects` | `Leads`, `Proyectos` |
-| **Base de Conocimientos** | `knowledge` | **154** | `renderKnowledge`, `syncKnowledge` | `Empresa_Documentos` |
-| **Catálogo CRUD** | `catalog`, `catalog_add`, `catalog_edit`, `catalog_delete`, `catalog_stock` | **291** | `renderCatalog`, `saveProduct`, `deleteProduct` | `Catalogo` |
-| **Sistema & Admin** | `config` | **260** | `updateConsole`, `toggleLogs`, `repairDatabase` | `Logs`, `Config_Empresas` |
-| **Seguridad Delivery (OTP)** | `pos` | **72** | `showOtpEntry`, `verifyOtp` | `Proyectos` |
-| **Gestión de Cuotas SaaS** | `quotas` | **59** | `renderQuotas` | `Cuotas_Pagos` |
-| **IA Agentes** | `agents` | **112** | `openAgentsModal`, `getAgentIcon` | `Prompts_IA` |
+| Clasificación | Modulo/Responsabilidad | Funciones Clave Activas | Tablas Mapeadas Vía Core |
+| :--- | :--- | :--- | :--- |
+| **Núcleo (System UI)** | Barra ST, Consola, Temas | `updateConsole`, `updateEstandarBarraST`, `applyTheme`, `toggleLogs`, `bindEvents` | `Config_Empresas`, `Logs` |
+| **Catálogo & Public** | Renderizado de Vistas | `renderCatalog`, `renderOrbit`, `renderHome`, `renderSEO`, `renderGallery` | `Config_SEO`, `Catalogo` |
+| **Navegación Táctica** | Carruseles y Modales | `scrollGallery`, `showAboutUs`, `showLocation`, `closeInfoModal` | N/A |
+| **Inteligencia (AI)** | Interfaz de Agentes | `renderAgentAuditButton`, `renderMarketingStrategyButton`, `openAgentsModal` | `Prompts_IA` |
+| **Operación POS** | Monitores y Tickets | `renderPOS`, `renderStaffPOS`, `printTicket`, `setPosPaymentMethod`, `updateExternalOrderAlert` | `Proyectos`, `Cobros` |
+| **Gestión CRM** | Leads y Proyectos | `renderLeads`, `renderProjects`, `openProjectDetails`, `toggleStage`, `addProjectPayment` | `Leads`, `Proyectos` |
+| **Finanzas & SaaS** | Dashboard y Cuotas | `renderDashboard`, `renderReport`, `exportReport`, `renderQuotas` | `Cuotas_Pagos` |
+| **Knowledge Base** | Wiki Documental | `renderKnowledge`, `syncKnowledge` | `Empresa_Documentos` |
+| **Seguridad OTP** | Auth y Webhooks | `showLogin`, `showOtpEntry`, `verifyOtp` | `Usuarios` |
 
 ## 📐 Estadísticas Generales
-- **Líneas Totales:** ~2,549 líneas.
-- **Clasificaciones:** 11 áreas funcionales.
-- **Tablas Mapeadas:** +14 tablas de Google Sheets.
+- **Líneas Totales:** 540 líneas (Reducción por modularización Multi-Tenant desde 2,549 líneas).
+- **Clasificaciones:** 9 áreas de renderizado visual puro.
+- **Tamaño del Archivo:** ~24 KB brutos (`24141 bytes`).
+- **Estado de Orquestación:** Limpio y encapsulado como Capa UI Glue.
 
 ---
-*Generado por Suit.Org Orchestrator v4.7.0*
+*Generado por Suit.Org Orchestrator v16.7.23*

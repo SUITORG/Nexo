@@ -608,7 +608,7 @@ app.public = {
                 categories[catName].forEach(p => {
                     const card = document.createElement('div');
                     card.className = 'food-card';
-                    const img = p.imagen_url ? app.utils.fixDriveUrl(p.imagen_url) : 'https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv';
+                    const img = p.imagen_url ? app.utils.fixDriveUrl(p.imagen_url) : 'https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm';
                     const price = app.utils.getEffectivePrice(p);
                     const stock = parseInt(p.stock) || 0;
                     const promo = (p.etiqueta_promo || "").toString().trim();
@@ -646,7 +646,7 @@ app.public = {
         const hTitle = document.getElementById('header-title');
         const hLogo = document.getElementById('header-logo');
         if (hTitle) hTitle.innerText = "SuitOrg";
-        if (hLogo) hLogo.src = "https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv";
+        if (hLogo) hLogo.src = "https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm";
         document.documentElement.style.setProperty('--primary-color', '#004d40'); // SuitOrg Teal base
 
         const container = document.getElementById('orbit-bubbles');
@@ -711,7 +711,7 @@ app.public = {
             bubbleEl.innerHTML = `
                 <img src="${bubbleImg ? app.utils.fixDriveUrl(bubbleImg) : ''}" class="bubble-logo" 
                      style="width: ${isEvasol ? '85%' : '75%'}; ${logoFilter}"
-                     onerror="this.src='https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv'">
+                     onerror="this.src='https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm'">
                 <span class="bubble-name" style="font-size:${nameFontSize}rem; font-weight: 800;">${co.nomempresa}</span>
             `;
 

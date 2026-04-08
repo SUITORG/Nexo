@@ -937,7 +937,7 @@ app.admin = {
         list.forEach(prod => {
             const card = document.createElement('div');
             card.className = 'product-card';
-            const img = prod.imagen_url ? app.utils.fixDriveUrl(prod.imagen_url) : 'https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv';
+            const img = prod.imagen_url ? app.utils.fixDriveUrl(prod.imagen_url) : 'https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm';
             const price = app.utils.getEffectivePrice(prod);
 
             card.innerHTML = `
