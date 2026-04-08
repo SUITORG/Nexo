@@ -1,0 +1,24 @@
+SuitOrg — Contexto del Proyecto
+¿Qué es SuitOrg?
+Sistema multi-tenant (multi-inquilino) que permite a diferentes negocios tener su propio sitio/app bajo una misma plataforma. Cada negocio es un "tenant" con su propia configuración, usuarios, catálogo y permisos.
+Arquitectura General
+GSheets (cerebro maestro)
+    ↓
+Google Apps Script (GAS) — backend/API
+    ↓
+Frontend JS (vanilla) — corre en navegador
+    ↑
+Supabase (base de datos en la nube) — opcional por tenant
+Tecnologías
+CapaTecnologíaBase de datos principalGoogle SheetsAPI backendGoogle Apps Script (.gs)FrontendJavaScript vanilla (sin framework)Base de datos nubeSupabase (PostgreSQL)IDE de desarrolloGoogle IDX (Project IDX / Antigravity)
+Cómo funciona el multi-tenant
+
+Usuario entra al Hub Orbit — ve burbujas de negocios disponibles
+Selecciona un negocio → switchCompany(id_empresa)
+El sistema carga datos de ese negocio desde GSheets via GAS
+Si el negocio tiene db_engine = SUPABASE, ciertos datos se leen desde Supabase
+
+Archivos clave del frontend
+ArchivoFuncióncore.jsCarga de datos, login, switchCompanyauth.jsLogin, setLoggedInState, RBACpublic.jsHub Orbit, renderFoodMenu, burbujasrouter.jsNavegación por hash (#home, #pos, etc)app.jsMonitor de sesión, loop de sincronización
+Archivos del GAS
+ArchivoFuncióncore.gsdoGet, getRemoteData, lógica principaldatabase.gsgetSheetData, conexión a hojasutils.gsFunciones auxiliares

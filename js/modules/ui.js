@@ -86,6 +86,17 @@ app.ui = {
         const versionEl = document.getElementById('gs-version-text');
         if (versionEl) versionEl.innerText = `V: ${app.version}`;
 
+        // --- INDICADOR MOTOR DB (SB/GS) v16.7.0 ---
+        const engineEl = document.getElementById('sb-engine');
+        if (engineEl) {
+            const engine = (app.state.dbEngine || 'GSHEETS').toUpperCase();
+            const isSupa = engine === 'SUPABASE';
+            engineEl.innerText = isSupa ? 'SB' : 'GS';
+            engineEl.title = isSupa ? 'Motor: Supabase' : 'Motor: Google Sheets';
+            engineEl.style.color = isSupa ? '#3ecf8e' : '#ffb300';
+            engineEl.style.background = isSupa ? 'rgba(62,207,142,0.15)' : 'rgba(255,179,0,0.15)';
+        }
+
         // --- INDICADOR DE SALUD IA (v15.8.0) ---
         const biz = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase());
         const aiContainer = document.getElementById('sb-ai-container');

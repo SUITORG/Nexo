@@ -696,28 +696,40 @@ app.admin = {
         e.preventDefault();
         const projectData = {
             id_empresa: app.state.companyId,
-            nombre_proyecto: document.getElementById('project-name').value || document.getElementById('proj-name').value,
+            id_proyecto: 'PROJ-' + Date.now(),
+            nombre_proyecto: document.getElementById('project-name')?.value || document.getElementById('proj-name')?.value,
             id_lead: document.getElementById('proj-client')?.value,
             descripcion: document.getElementById('project-desc')?.value || document.getElementById('proj-desc')?.value,
-            estado: document.getElementById('proj-status')?.value || "NUEVO",
-            estatus: document.getElementById('proj-status')?.value || "NUEVO",
-            fecha_inicio: (app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString(),
-            fecha_estatus: (app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString(),
+            status: document.getElementById('proj-status')?.value || 'NUEVO',
+            estado: document.getElementById('proj-status')?.value || 'NUEVO',
+            fecha_inicio: app.utils.getTimestamp(),
+            fecha_estatus: app.utils.getTimestamp(),
             activo: true
         };
         try {
-            const res = await fetch(app.apiUrl, {
-                method: 'POST',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'createProject', project: projectData, token: app.apiToken })
-            });
-            const result = await res.json();
-            if (result.success) {
-                await app.loadData();
-                app.admin.renderProjects();
-                document.getElementById('project-modal-overlay').classList.add('hidden');
+            if (app.state.dbEngine === 'SUPABASE') {
+                const result = await app.saveRecord('Proyectos', projectData, 'id_proyecto');
+                if (result.ok) {
+                    await app.loadData();
+                    app.admin.renderProjects();
+                    document.getElementById('project-modal-overlay').classList.add('hidden');
+                } else {
+                    console.error('[saveProject] Error Supabase:', result.error);
+                }
+            } else {
+                const res = await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({ action: 'createProject', project: projectData, token: app.apiToken })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    await app.loadData();
+                    app.admin.renderProjects();
+                    document.getElementById('project-modal-overlay').classList.add('hidden');
+                }
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('[saveProject]', err); }
     },
 
     renderProjects: () => {
@@ -868,20 +880,23 @@ app.admin = {
 
     updateProjectStatus: async (pId, newStatus) => {
         try {
-            await fetch(app.apiUrl, {
-                method: 'POST',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({
-                    action: 'updateProjectStatus',
-                    id: pId,
+            if (app.state.dbEngine === 'SUPABASE') {
+                await app.saveRecord('Proyectos', {
+                    id_proyecto: pId,
                     status: newStatus,
-                    id_empresa: app.state.companyId,
-                    token: app.apiToken
-                })
-            });
+                    estado: newStatus,
+                    fecha_estatus: app.utils.getTimestamp()
+                }, 'id_proyecto');
+            } else {
+                await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({ action: 'updateProjectStatus', id: pId, status: newStatus, id_empresa: app.state.companyId, token: app.apiToken })
+                });
+            }
             await app.loadData();
             app.admin.renderProjects();
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error('[updateProjectStatus]', e); }
     },
 
     // --- CATALOG MANAGEMENT ---
@@ -905,7 +920,7 @@ app.admin = {
         if (btnAdd) canAdd ? btnAdd.classList.remove('hidden') : btnAdd.classList.add('hidden');
 
         let list = (app.data.Catalogo || []).filter(p => {
-            const matchCo = p.id_empresa === app.state.companyId;
+            const matchCo = (p.id_empresa || "").toString().trim().toUpperCase() === (app.state.companyId || "").toString().trim().toUpperCase();
             const isActive = p.activo !== false && p.activo !== "FALSE" && p.activo !== "0";
             return matchCo && isActive;
         });
@@ -1085,26 +1100,47 @@ app.admin = {
         const name = prompt("Nombre de la nueva etapa:");
         if (!name) return;
         try {
-            await fetch(app.apiUrl, {
-                method: 'POST',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'addProjectStage', id: pId, stage: name, id_empresa: app.state.companyId, token: app.apiToken })
-            });
+            if (app.state.dbEngine === 'SUPABASE') {
+                await app.saveRecord('Proyectos_Etapas', {
+                    id_etapa: 'ETAPA-' + Date.now(),
+                    id_proyecto: pId,
+                    nombre: name,
+                    completado: false,
+                    fecha: app.utils.getTimestamp()
+                }, 'id_etapa');
+            } else {
+                await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({ action: 'addProjectStage', id: pId, stage: name, id_empresa: app.state.companyId, token: app.apiToken })
+                });
+            }
             await app.loadData();
             app.admin.openProjectDetails(pId);
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error('[addProjectStage]', e); }
     },
 
     toggleStage: async (pId, stageName, completed) => {
         try {
-            await fetch(app.apiUrl, {
-                method: 'POST',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'toggleProjectStage', id: pId, stage: stageName, completed, id_empresa: app.state.companyId, token: app.apiToken })
-            });
+            if (app.state.dbEngine === 'SUPABASE') {
+                const etapa = (app.data.Proyectos_Etapas || []).find(e => e.id_proyecto === pId && e.nombre === stageName);
+                if (etapa) {
+                    await app.saveRecord('Proyectos_Etapas', {
+                        id_etapa: etapa.id_etapa,
+                        completado: completed,
+                        fecha_estatus: app.utils.getTimestamp()
+                    }, 'id_etapa');
+                }
+            } else {
+                await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({ action: 'toggleProjectStage', id: pId, stage: stageName, completed, id_empresa: app.state.companyId, token: app.apiToken })
+                });
+            }
             await app.loadData();
             app.admin.internalAddLog(pId, 'ETAPA', `Etapa ${stageName} marcada como ${completed ? 'COMPLETADA' : 'PENDIENTE'}`);
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error('[toggleStage]', e); }
     },
 
     addProjectPayment: async (pId) => {
@@ -1112,15 +1148,25 @@ app.admin = {
         const concepto = prompt("Concepto:");
         if (!monto) return;
         try {
-            await fetch(app.apiUrl, {
-                method: 'POST',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'addProjectPayment', id: pId, monto, concepto, id_empresa: app.state.companyId, token: app.apiToken })
-            });
+            if (app.state.dbEngine === 'SUPABASE') {
+                await app.saveRecord('Proyectos_Pagos', {
+                    id_pago: 'PAGO-' + Date.now(),
+                    id_proyecto: pId,
+                    monto: parseFloat(monto),
+                    concepto: concepto,
+                    fecha: app.utils.getTimestamp()
+                }, 'id_pago');
+            } else {
+                await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({ action: 'addProjectPayment', id: pId, monto, concepto, id_empresa: app.state.companyId, token: app.apiToken })
+                });
+            }
             await app.loadData();
             app.admin.internalAddLog(pId, 'PAGO', `Pago registrado: $${monto} - ${concepto}`);
             app.admin.openProjectDetails(pId);
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error('[addProjectPayment]', e); }
     },
 
     addProjectManualLog: async (pId) => {

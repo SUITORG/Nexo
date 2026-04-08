@@ -34,6 +34,21 @@ app.router = {
             return;
         }
 
+        // --- SINCRONIZACIÓN DE MENÚ Y HUD (v16.7.0) ---
+        // Garantiza que el header siempre refleje el estado real del usuario,
+        // incluso al navegar con las flechas del navegador.
+        const menuPublic = document.getElementById('menu-public');
+        const menuStaff  = document.getElementById('menu-staff');
+        if (app.state.currentUser) {
+            if (menuPublic) menuPublic.classList.add('hidden');
+            if (menuStaff)  menuStaff.classList.remove('hidden');
+        } else {
+            if (menuPublic) menuPublic.classList.remove('hidden');
+            if (menuStaff)  menuStaff.classList.add('hidden');
+        }
+        // Actualizar HUD de motor y hora en cada ruta
+        if (app.ui && app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
+
         // IDENTITY PROTECTION: Block Hub in WHITE Mode (v6.1.5)
         if (hash === '#orbit') {
             const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
@@ -77,7 +92,10 @@ app.router = {
             const isDynamic = (app.data.Config_Paginas || []).some(p => {
                 const pCoId = String(p.id_empresa || "").toUpperCase().replace(/_/g, "");
                 const pPgId = String(p.id_pagina || "").trim().toLowerCase();
-                return pPgId === cleanHash && pCoId === urlId;
+                const pClId = String(p.id_cluster || "").trim().toLowerCase();
+                // --- ACCESO DUAL (v16.7.10) ---
+                // Permite abrir la vista-home si el hash coincide con id_pagina O id_cluster
+                return (pPgId === cleanHash || (pClId !== '' && pClId === cleanHash)) && pCoId === urlId;
             });
             if (isDynamic) {
                 console.log("📍 Página Dinámica Detectada:", cleanHash);

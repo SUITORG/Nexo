@@ -68,6 +68,7 @@
             <span class="console-text" id="console-text">> SYSTEM READY</span>
         </div>
         <div class="sb-right">
+            <span id="sb-engine" title="Motor de Base de Datos activo" style="font-size:0.65rem; font-weight:bold; padding:2px 7px; border-radius:4px; margin-right:8px; background:rgba(255,255,255,0.1); color:#00e676; letter-spacing:1px;">GS</span>
             <span id="gs-version-text" style="font-size:0.75rem; margin-right:8px; opacity:0.6;">V: --</span>
             <span id="sb-date" style="font-weight: bold; margin-right: 5px;"></span>
             <span id="sb-time" style="opacity: 0.8; margin-right: 15px;"></span>
@@ -127,8 +128,7 @@
                 </li>
                 <li class="nav-item role-admin hidden"><a href="#quotas" onclick="app.ui.showView('view-quotas')"><i
                             class="fas fa-credit-card"></i> Cuotas</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" onclick="app.auth.logout()"><i class="fas fa-sign-out-alt"></i>
-                        Salir</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" id="btn-staff-home" onclick="app.auth.logout()"><i class="fas fa-home"></i> Inicio</a></li>
             </ul>
         </nav>
         <!-- Mobile Menu Overlay (Premium Glassmorphism) -->
@@ -1591,17 +1591,17 @@
             </div>
         </div>
     </div>
-    <script src="js/modules/config.js?v=16.6.0"></script>
-    <script src="js/modules/core.js?v=16.6.0"></script>
-    <script src="js/modules/auth.js?v=16.6.0"></script>
-    <script src="js/modules/public.js?v=16.6.0"></script>
-    <script src="js/modules/events.js?v=16.6.0"></script>
-    <script src="js/modules/ui.js?v=16.6.0"></script>
-    <script src="js/modules/agents.js?v=16.6.0"></script>
-    <script src="js/modules/admin.js?v=16.6.0"></script>
-    <script src="js/modules/router.js?v=16.6.0"></script>
-    <script src="js/modules/pos.js?v=16.6.0"></script>
-    <script src="app.js?v=16.6.0"></script>
+    <script src="js/modules/config.js?v=16.7.23"></script>
+    <script src="js/modules/core.js?v=16.7.23"></script>
+    <script src="js/modules/auth.js?v=16.7.23"></script>
+    <script src="js/modules/public.js?v=16.7.23"></script>
+    <script src="js/modules/events.js?v=16.7.23"></script>
+    <script src="js/modules/ui.js?v=16.7.23"></script>
+    <script src="js/modules/agents.js?v=16.7.23"></script>
+    <script src="js/modules/admin.js?v=16.7.23"></script>
+    <script src="js/modules/router.js?v=16.7.23"></script>
+    <script src="js/modules/pos.js?v=16.7.23"></script>
+    <script src="app.js?v=16.7.23"></script>
     <!-- MODAL: KNOWLEDGE UPLOAD (Manual) -->
     <div id="knowledge-modal" class="modal-overlay hidden">
         <div class="modal-content minimalist-form" style="max-width: 500px;">

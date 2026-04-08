@@ -276,75 +276,279 @@ app.pos = {
             generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
             app.state._currentOrderOtp = generatedOtp;
         }
-        const fullOrderPayload = {
-            action: 'processFullOrder',
-            token: app.apiToken,
-            lead: leadData,
-            project: {
+        // =====================================================================
+        // MIGRACIÓN SUPABASE v16.7.0 - Escritura directa cuando db_engine = SUPABASE
+        // =====================================================================
+        const dbEngine = (company?.db_engine || 'GSHEETS').toUpperCase();
+        const isSupabase = dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE;
+
+        if (isSupabase) {
+            // === ESCRITURA DIRECTA A SUPABASE ===
+            await app.pos._checkoutSupabase({
+                leadData, cartTotal, method, confirmNum, isStaffSale,
+                name, phone, address, notes, generatedOtp, company, stockUpdates
+            });
+        } else {
+            // === FALLBACK A GSHEETS (comportamiento original) ===
+            const fullOrderPayload = {
+                action: 'processFullOrder',
+                token: app.apiToken,
+                lead: leadData,
+                project: {
+                    id_empresa: app.state.companyId,
+                    nombre_proyecto: `Pedido ${company?.nomempresa || "POS"} - ${name}`,
+                    direccion: address,
+                    telefono: phone,
+                    descripcion: `DIR: ${address} | TEL: ${phone} | NOTAS: ${notes}`,
+                    line_items: JSON.stringify(app.state.cart),
+                    codigo_otp: generatedOtp,
+                    estatus: "PEDIDO-RECIBIDO",
+                    estado: "PEDIDO-RECIBIDO",
+                    status: "PEDIDO-RECIBIDO"
+                },
+                payment: {
+                    id_empresa: app.state.companyId,
+                    monto: cartTotal,
+                    concepto: `Venta POS - ${name}`,
+                    metodo_pago: method,
+                    folio: confirmNum || "CAJA",
+                    referencia: isStaffSale ? "STAFF" : "CLIENTE-URL",
+                    pago_con: document.getElementById('pos-cash-input')?.value || 0,
+                    cambio: (document.getElementById('pos-cash-change')?.innerText || "$0.00").replace('$', '')
+                },
+                stockUpdates: stockUpdates
+            };
+            try {
+                const response = await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(fullOrderPayload)
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || "Error en el servidor");
+                app.state.lastOrderId = result.newOrderId;
+
+                // 5. Success UI & Cleanup
+                if (isStaffSale) {
+                    const printNow = confirm("¡Pedido registrado exitosamente!\n\n¿Deseas imprimir el ticket físico?");
+                    if (printNow) {
+                        try {
+                            app.ui.printTicket({ name: name, costo_envio: deliveryFee }, [...app.state.cart]);
+                        } catch (pErr) {
+                            console.error("Print error:", pErr);
+                        }
+                    }
+                    app.pos.clearCart();
+                    app.pos.saveCart();
+                    app.pos.closeCheckout();
+                } else {
+                    app.pos.nextStep(3);
+                }
+                app.ui.updateConsole("ORDER_SUCCESS");
+                // Refresh Data in background
+                app.loadData().then(() => {
+                    if (window.location.hash === '#pos') app.ui.renderPOS();
+                    if (window.location.hash === '#staff-pos') app.ui.renderStaffPOS();
+                    app.pos.updateLastSaleDisplay();
+                });
+            } catch (e) {
+                console.error("Order Transaction Error:", e);
+                app.ui.updateConsole("TRANS_FAIL", true);
+                alert("Hubo un error al procesar tu pedido. Por favor intenta de nuevo.");
+            } finally {
+                if (btn) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            }
+        } // Fin del else (GSHEETS fallback)
+    },
+    // =====================================================================
+    // MIGRACIÓN SUPABASE v16.7.2 - Función de escritura directa
+    // =====================================================================
+    _checkoutSupabase: async (params) => {
+        const {
+            leadData, cartTotal, method, confirmNum, isStaffSale,
+            name, phone, address, notes, generatedOtp, company, stockUpdates
+        } = params;
+
+        console.log('🔵 [SUPABASE_CHECKOUT] 1/6 - Iniciando transacción...');
+
+        try {
+            const SB_URL = app.sbUrl || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
+            const SB_KEY = app.sbKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVneXhnbmxuemFueHBxeXV2bXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDE2NjMsImV4cCI6MjA4OTY3NzY2M30.8nBh6b3pphZcM93Qi23Qa2_TB88ofGGWo18rsAszTrw';
+            const headers = {
+                'Content-Type': 'application/json',
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`,
+                'Prefer': 'return=representation'
+            };
+
+            // 1. INSERTAR LEAD
+            console.log('🔵 [SUPABASE_CHECKOUT] 2/6 - Insertando Lead...');
+            const leadPayload = {
+                id_lead: leadData.id_lead || `LEAD-${Date.now()}`,
+                id_empresa: leadData.id_empresa,
+                fecha: new Date().toISOString(),
+                nombre: leadData.nombre,
+                email: leadData.email || "",
+                telefono: leadData.telefono,
+                direccion: leadData.direccion,
+                fuente: leadData.origen || 'POS',
+                nivel_crm: leadData.nivel_crm,
+                status: 'NUEVO'
+            };
+            const leadRes = await fetch(`${SB_URL}/rest/v1/Leads`, {
+                method: 'POST',
+                headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+                body: JSON.stringify(leadPayload)
+            });
+            if (!leadRes.ok) {
+                const err = await leadRes.text();
+                console.warn('⚠️ [SUPABASE] Lead insert falló (posiblemente existe):', err);
+            } else {
+                console.log('✅ [SUPABASE] Lead insertado correctamente');
+            }
+
+            // 2. INSERTAR PROYECTO/PEDIDO
+            console.log('🔵 [SUPABASE_CHECKOUT] 3/6 - Insertando Proyecto...');
+            const projectId = `PED-${Date.now()}`;
+            const projectPayload = {
+                id_proyecto: projectId,
                 id_empresa: app.state.companyId,
+                id_cliente: leadPayload.id_lead,
                 nombre_proyecto: `Pedido ${company?.nomempresa || "POS"} - ${name}`,
-                direccion: address,
-                telefono: phone,
                 descripcion: `DIR: ${address} | TEL: ${phone} | NOTAS: ${notes}`,
-                line_items: JSON.stringify(app.state.cart),
+                line_items: app.state.cart,
                 codigo_otp: generatedOtp,
-                estatus: "PEDIDO-RECIBIDO",
+                status: "PEDIDO-RECIBIDO",
                 estado: "PEDIDO-RECIBIDO",
-                status: "PEDIDO-RECIBIDO"
-            },
-            payment: {
+                fecha_estatus: new Date().toISOString(),
+                activo: "TRUE"
+            };
+            const projectRes = await fetch(`${SB_URL}/rest/v1/Proyectos`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(projectPayload)
+            });
+            if (!projectRes.ok) {
+                console.error('❌ [SUPABASE] Proyecto insert falló:', await projectRes.text());
+            } else {
+                console.log('✅ [SUPABASE] Proyecto insertado:', projectId);
+            }
+            app.state.lastOrderId = projectId;
+
+            // 3. INSERTAR PAGO (Tabla Pagos usa PK compuesta: id_empresa + id_proyecto)
+            console.log('🔵 [SUPABASE_CHECKOUT] 4/6 - Insertando Pago...');
+            const paymentPayload = {
                 id_empresa: app.state.companyId,
+                id_proyecto: projectId,
+                monto: cartTotal,
+                metodo_pago: method,
+                folio: confirmNum || "CAJA",
+                referencia: isStaffSale ? "STAFF" : "CLIENTE-URL",
+                fecha_pago: new Date().toISOString(),
+                pago_con: parseFloat(document.getElementById('pos-cash-input')?.value || 0),
+                cambio: parseFloat((document.getElementById('pos-cash-change')?.innerText || "$0.00").replace('$', '') || 0)
+            };
+            const paymentRes = await fetch(`${SB_URL}/rest/v1/Pagos`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(paymentPayload)
+            });
+            if (!paymentRes.ok) {
+                const errText = await paymentRes.text();
+                console.error('❌ [SUPABASE] Pago insert falló:', errText);
+                // Si falla por duplicate key, es porque ya existe - continuar
+                if (!errText.includes('duplicate')) {
+                    throw new Error('Pago insert failed: ' + errText);
+                }
+            } else {
+                console.log('✅ [SUPABASE] Pago insertado correctamente');
+            }
+
+            // 4. INSERTAR EN Proyectos_Pagos (esta SÍ tiene id_pago como columna, no como PK)
+            console.log('🔵 [SUPABASE_CHECKOUT] 5/6 - Insertando Proyectos_Pagos...');
+            const projPagoPayload = {
+                id_empresa: app.state.companyId,
+                id_pago: `PAY-${Date.now()}`,
+                id_proyecto: projectId,
                 monto: cartTotal,
                 concepto: `Venta POS - ${name}`,
                 metodo_pago: method,
                 folio: confirmNum || "CAJA",
                 referencia: isStaffSale ? "STAFF" : "CLIENTE-URL",
-                pago_con: document.getElementById('pos-cash-input')?.value || 0,
-                cambio: (document.getElementById('pos-cash-change')?.innerText || "$0.00").replace('$', '')
-            },
-            stockUpdates: stockUpdates
-        };
-        try {
-            const response = await fetch(app.apiUrl, {
+                fecha_pago: new Date().toISOString(),
+                activo: "TRUE",
+                pago_con: paymentPayload.pago_con,
+                cambio: paymentPayload.cambio
+            };
+            const projPagoRes = await fetch(`${SB_URL}/rest/v1/Proyectos_Pagos`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(projPagoPayload)
+            });
+            if (!projPagoRes.ok) {
+                console.error('❌ [SUPABASE] Proyectos_Pagos insert falló:', await projPagoRes.text());
+            } else {
+                console.log('✅ [SUPABASE] Proyectos_Pagos insertado correctamente');
+            }
+
+            // 5. ACTUALIZAR STOCK en Catalogo
+            console.log('🔵 [SUPABASE_CHECKOUT] 6/6 - Actualizando stock...');
+            for (const stockItem of stockUpdates) {
+                await fetch(`${SB_URL}/rest/v1/Catalogo?id_producto=eq.${stockItem.id_producto}&id_empresa=eq.${stockItem.id_empresa}`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ stock: stockItem.stock })
+                });
+            }
+            console.log('✅ [SUPABASE] Stock actualizado:', stockUpdates.length, 'productos');
+
+            // 6. SINCRONIZACIÓN A GSHEETS (background, como respaldo)
+            console.log('🔵 [SUPABASE_CHECKOUT] 7/7 - Sincronizando con GSheets (backup)...');
+            // Fix de Serialización para GSheets (v16.7.4): GSheets no soporta arrays nativamente en una celda
+            const gasProject = { ...projectPayload };
+            if (gasProject.line_items) gasProject.line_items = JSON.stringify(gasProject.line_items);
+
+            const fullOrderPayload = {
+                action: 'processFullOrder',
+                token: app.apiToken,
+                lead: leadData,
+                project: gasProject, // Enviamos los items como texto plano
+                payment: paymentPayload,
+                stockUpdates: stockUpdates
+            };
+            fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(fullOrderPayload)
-            });
-            const result = await response.json();
-            if (!result.success) throw new Error(result.error || "Error en el servidor");
-            app.state.lastOrderId = result.newOrderId;
-            // 5. Success UI & Cleanup
+            }).catch(e => console.warn('[GAS_SYNC_FAIL] Respaldo a GSheets falló:', e));
+
+            console.log('✅✅✅ [SUPABASE_CHECKOUT] Transacción completada exitosamente ✅✅✅');
+
+            // Limpiar carrito y UI
+            app.state.cart = [];
+            if (app.pos.saveCart) app.pos.saveCart();
+            if (app.pos.updateCartVisuals) app.pos.updateCartVisuals();
+
+            // Cerrar modal y mostrar confirmación
             if (isStaffSale) {
+                if (app.pos.closeCheckout) app.pos.closeCheckout();
                 const printNow = confirm("¡Pedido registrado exitosamente!\n\n¿Deseas imprimir el ticket físico?");
-                if (printNow) {
-                    try {
-                        app.ui.printTicket({ name: name, costo_envio: deliveryFee }, [...app.state.cart]);
-                    } catch (pErr) {
-                        console.error("Print error:", pErr);
-                    }
+                if (printNow && app.ui.printTicket) {
+                    app.ui.printTicket({ name: name, costo_envio: 0 }, [...(app.state.cart || [])]);
                 }
-                app.pos.clearCart();
-                app.pos.saveCart();
-                app.pos.closeCheckout();
             } else {
-                app.pos.nextStep(3);
+                // Mostrar pantalla de confirmación (paso 3 - OTP)
+                if (app.pos.nextStep) app.pos.nextStep(3);
             }
-            app.ui.updateConsole("ORDER_SUCCESS");
-            // Refresh Data in background
-            app.loadData().then(() => {
-                if (window.location.hash === '#pos') app.ui.renderPOS();
-                if (window.location.hash === '#staff-pos') app.ui.renderStaffPOS();
-                app.pos.updateLastSaleDisplay();
-            });
+
+            return true;
         } catch (e) {
-            console.error("Order Transaction Error:", e);
-            app.ui.updateConsole("TRANS_FAIL", true);
-            alert("Hubo un error al procesar tu pedido. Por favor intenta de nuevo.");
-        } finally {
-            if (btn) {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            console.error('❌❌❌ [SUPABASE_CHECKOUT] Error crítico:', e);
+            alert('Error al procesar el pedido: ' + e.message);
+            throw e;
         }
     },
     renderCartSummary: () => {
@@ -980,7 +1184,8 @@ app.pos = {
         const items = (app.data.Catalogo || []).filter(p => {
             const pCo = (p.id_empresa || "").toString().trim().toUpperCase();
             const sCo = (app.state.companyId || "").toString().trim().toUpperCase();
-            const isActive = (p.activo == true || p.activo == 1 || p.activo === "TRUE" || p.activo === "1");
+            // ✅ v16.7.1 - Soporte para "true"/"TRUE"/1/true booleano (Supabase)
+            const isActive = p.activo === true || p.activo === "true" || p.activo === "TRUE" || p.activo === "1" || p.activo === 1 || String(p.activo).toLowerCase() === "true";
             return pCo === sCo && isActive;
         });
 

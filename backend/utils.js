@@ -85,48 +85,252 @@ function deleteRowMapped(ss, sheetName, idCol, idVal) {
 }
 
 /**
- * 💰 POS / CAJA / EXPRESS (Lógica Restaurada v15.9.1)
+ * 💰 POS / CAJA / EXPRESS (MIGRACIÓN SUPABASE v16.7.0)
+ * Escribe primero a Supabase, luego replica a GSheets como respaldo
  */
 function processTransaction(ss, data, output) {
+  var coId = data.lead?.id_empresa || data.project?.id_empresa || "GLOBAL";
+
+  // =====================================================================
+  // 1. DETECTAR MOTOR DE DATOS
+  // =====================================================================
+  var configData = getSheetData(ss, "Config_Empresas", coId);
+  var company = configData && configData.length > 0 ? configData[0] : {};
+  var dbEngine = String(company.db_engine || company.dbengine || "GSHEETS").toUpperCase();
+  var useSupabase = dbEngine === "SUPABASE";
+
+  if (useSupabase) {
+    try {
+      processTransactionSupabase(ss, data, output, coId);
+      // Replicar a GSheets como backup (background)
+      processTransactionGSheets(ss, data, output, true);
+      return;
+    } catch (sbErr) {
+      console.error("[SUPABASE_FAIL] Fallback a GSheets:", sbErr.message);
+      // Fallback automático a GSheets si Supabase falla
+    }
+  }
+
+  // =====================================================================
+  // 2. FALLBACK A GSHEETS (comportamiento original)
+  // =====================================================================
+  processTransactionGSheets(ss, data, output, false);
+}
+
+/**
+ * 💰 PROCESAR TRANSACCIÓN EN SUPABASE
+ */
+function processTransactionSupabase(ss, data, output, coId) {
+  var SB_KEY = PropertiesService.getScriptProperties().getProperty('SUPABASE_KEY');
+  var SB_URL = PropertiesService.getScriptProperties().getProperty('SUPABASE_URL') || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
+
+  if (!SB_KEY) throw new Error("SUPABASE_KEY no configurada en Script Properties");
+
+  var headers = {
+    "Content-Type": "application/json",
+    "apikey": SB_KEY,
+    "Authorization": "Bearer " + SB_KEY,
+    "Prefer": "return=representation"
+  };
+
+  // 1. INSERTAR LEAD
+  var leadId = data.lead?.id_lead || ("LEAD-" + Date.now());
+  var leadPayload = {
+    id_lead: leadId,
+    id_empresa: coId,
+    fecha: new Date().toISOString(),
+    nombre: data.lead?.nombre || "",
+    email: data.lead?.email || "",
+    telefono: data.lead?.telefono || "",
+    direccion: data.lead?.direccion || "",
+    origen: data.lead?.origen || "POS",
+    nivel_crm: data.lead?.nivel_crm || 0,
+    status: "NUEVO"
+  };
+  var leadRes = UrlFetchApp.fetch(SB_URL + "/rest/v1/Leads", {
+    method: "post",
+    contentType: "application/json",
+    headers: headers,
+    payload: JSON.stringify(leadPayload),
+    muteHttpExceptions: true
+  });
+  if (leadRes.getResponseCode() !== 201 && leadRes.getResponseCode() !== 200) {
+    console.warn("[SUPABASE] Lead insert falló:", leadRes.getContentText());
+  }
+
+  // 2. INSERTAR PROYECTO/PEDIDO
+  var projId = data.project?.id_proyecto || ("PED-" + Date.now());
+  data.project.id_proyecto = projId;
+  data.project.status = data.project.status || "PEDIDO-RECIBIDO";
+  data.project.estado = data.project.estado || "PEDIDO-RECIBIDO";
+  data.project.estatus = data.project.estatus || "PEDIDO-RECIBIDO";
+  data.project.fecha_estatus = new Date().toISOString();
+  data.project.activo = "TRUE";
+
+  var projPayload = {
+    id_proyecto: projId,
+    id_empresa: coId,
+    id_cliente: leadId,
+    nombre_proyecto: data.project.nombre_proyecto || "Pedido POS",
+    direccion: data.project.direccion || "",
+    telefono: data.project.telefono || "",
+    descripcion: data.project.descripcion || "",
+    line_items: typeof data.project.line_items === "string" ? JSON.parse(data.project.line_items) : (data.project.line_items || []),
+    codigo_otp: data.project.codigo_otp || "",
+    status: data.project.status,
+    estado: data.project.estado,
+    estatus: data.project.estatus,
+    fecha_estatus: new Date().toISOString()
+  };
+  var projRes = UrlFetchApp.fetch(SB_URL + "/rest/v1/Proyectos", {
+    method: "post",
+    contentType: "application/json",
+    headers: headers,
+    payload: JSON.stringify(projPayload),
+    muteHttpExceptions: true
+  });
+  if (projRes.getResponseCode() !== 201 && projRes.getResponseCode() !== 200) {
+    console.error("[SUPABASE] Proyecto insert falló:", projRes.getContentText());
+  }
+
+  // 3. INSERTAR PAGO
+  if (data.payment) {
+    var payId = "PAY-" + Date.now();
+    var payPayload = {
+      id_pago: payId,
+      id_empresa: coId,
+      id_proyecto: projId,
+      monto: parseFloat(data.payment.monto) || 0,
+      metodo_pago: data.payment.metodo_pago || "Efectivo",
+      folio: data.payment.folio || "CAJA",
+      referencia: data.payment.referencia || "POS",
+      fecha_pago: new Date().toISOString(),
+      pago_con: parseFloat(data.payment.pago_con) || 0,
+      cambio: parseFloat(data.payment.cambio) || 0
+    };
+    var payRes = UrlFetchApp.fetch(SB_URL + "/rest/v1/Pagos", {
+      method: "post",
+      contentType: "application/json",
+      headers: headers,
+      payload: JSON.stringify(payPayload),
+      muteHttpExceptions: true
+    });
+    if (payRes.getResponseCode() !== 201 && payRes.getResponseCode() !== 200) {
+      console.warn("[SUPABASE] Pago insert falló:", payRes.getContentText());
+    }
+
+    // 4. INSERTAR EN Proyectos_Pagos
+    var projPagoPayload = {
+      id_empresa: coId,
+      id_pago: payId,
+      id_proyecto: projId,
+      monto: payPayload.monto,
+      concepto: data.payment.concepto || "Venta POS",
+      metodo_pago: payPayload.metodo_pago,
+      folio: payPayload.folio,
+      referencia: payPayload.referencia,
+      fecha_pago: payPayload.fecha_pago,
+      activo: "TRUE",
+      pago_con: payPayload.pago_con,
+      cambio: payPayload.cambio
+    };
+    UrlFetchApp.fetch(SB_URL + "/rest/v1/Proyectos_Pagos", {
+      method: "post",
+      contentType: "application/json",
+      headers: headers,
+      payload: JSON.stringify(projPagoPayload),
+      muteHttpExceptions: true
+    });
+  }
+
+  // 5. ACTUALIZAR STOCK en Catalogo
+  if (data.stockUpdates && data.stockUpdates.length > 0) {
+    data.stockUpdates.forEach(function(item) {
+      var fetchUrl = SB_URL + "/rest/v1/Catalogo?id_producto=eq." + item.id_producto + "&id_empresa=eq." + item.id_empresa;
+      UrlFetchApp.fetch(fetchUrl, {
+        method: "patch",
+        contentType: "application/json",
+        headers: headers,
+        payload: JSON.stringify({ stock: item.stock }),
+        muteHttpExceptions: true
+      });
+    });
+  }
+
+  output.newOrderId = projId;
+  output.success = true;
+  output.source = "SUPABASE";
+}
+
+/**
+ * 💰 PROCESAR TRANSACCIÓN EN GSHEETS (fallback/respaldo)
+ */
+function processTransactionGSheets(ss, data, output, isBackup) {
   var leadId = (data.lead && data.lead.id_lead) ? data.lead.id_lead : ("LEAD-" + (ss.getSheetByName("Leads").getLastRow() + 99));
   if (data.lead && !data.lead.id_lead) {
      data.lead.id_lead = leadId;
      appendRowMapped(ss, "Leads", data.lead);
   }
-  
+
   var projSheet = ss.getSheetByName("Proyectos");
   var nextNum = projSheet.getLastRow() + 99;
-  var projId = "ORD-" + nextNum;
-  
+  var projId = data.project?.id_proyecto || ("ORD-" + nextNum);
+
   data.project.id_proyecto = projId;
   data.project.status = data.project.status || "RECIBIDO";
   data.project.fecha_inicio = new Date();
   appendRowMapped(ss, "Proyectos", data.project);
-  
+
   // CAJA: Gestión de pagos y cambio
   if (data.payment) {
      var payObj = {
-       id_empresa: data.id_empresa, id_proyecto: projId, id_cliente: leadId,
-       monto: data.payment.monto, metodo_pago: data.payment.metodo || "Efectivo",
-       referencia: data.payment.cambio ? ("Pago con: " + data.payment.recibido + " | Cambio: " + data.payment.cambio) : "Pago Directo",
-       fecha_pago: new Date()
+       id_empresa: data.project?.id_empresa || "GLOBAL",
+       id_proyecto: projId,
+       id_cliente: leadId,
+       monto: data.payment.monto,
+       metodo_pago: data.payment.metodo_pago || "Efectivo",
+       folio: data.payment.folio || "CAJA",
+       referencia: data.payment.referencia || (data.payment.cambio ? ("Pago con: " + data.payment.pago_con + " | Cambio: " + data.payment.cambio) : "Pago Directo"),
+       fecha_pago: new Date(),
+       pago_con: data.payment.pago_con || 0,
+       cambio: data.payment.cambio || 0
      };
      appendRowMapped(ss, "Pagos", payObj);
+
+     // También en Proyectos_Pagos
+     var projPagoObj = {
+       id_empresa: data.project?.id_empresa || "GLOBAL",
+       id_pago: "PAY-" + Date.now(),
+       id_proyecto: projId,
+       monto: data.payment.monto,
+       concepto: data.payment.concepto || "Venta POS",
+       metodo_pago: payObj.metodo_pago,
+       folio: payObj.folio,
+       referencia: payObj.referencia,
+       fecha_pago: new Date(),
+       activo: "TRUE",
+       pago_con: payObj.pago_con,
+       cambio: payObj.cambio
+     };
+     appendRowMapped(ss, "Proyectos_Pagos", projPagoObj);
   }
 
   // STOCK: Salida automática de artículos
-  if (data.items && data.items.length > 0) {
+  if (data.stockUpdates && data.stockUpdates.length > 0) {
     var catSheet = ss.getSheetByName("Catalogo");
     var catData = catSheet.getDataRange().getValues();
     var catHeaders = catData[0].map(h => String(h).toLowerCase().trim());
+    var idProdIdx = catHeaders.indexOf("id_producto");
+    var empIdx = catHeaders.indexOf("id_empresa");
     var stockIdx = catHeaders.indexOf("stock");
-    var idCodeIdx = catHeaders.indexOf("id_codigo");
 
-    data.items.forEach(item => {
+    data.stockUpdates.forEach(function(item) {
       for (var i = 1; i < catData.length; i++) {
-        if (String(catData[i][idCodeIdx]) === String(item.id_codigo)) {
+        var rowProd = String(catData[i][idProdIdx]).trim();
+        var rowEmp = String(catData[i][empIdx]).trim();
+        if (rowProd === String(item.id_producto) && rowEmp === String(item.id_empresa)) {
            var cur = Number(catData[i][stockIdx]) || 0;
-           catSheet.getRange(i + 1, stockIdx + 1).setValue(cur - (Number(item.cantidad) || 0));
+           catSheet.getRange(i + 1, stockIdx + 1).setValue(cur - (Number(item.stock) || 0));
            break;
         }
       }
@@ -135,6 +339,7 @@ function processTransaction(ss, data, output) {
 
   output.newOrderId = projId;
   output.success = true;
+  output.source = isBackup ? "GSHEETS_BACKUP" : "GSHEETS";
 }
 
 function syncToSupabase(ss, coId) {

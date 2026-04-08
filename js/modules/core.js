@@ -5,13 +5,15 @@
  * ---------------------------------------------------------
  * Responsabilidad: Estado global, carga de datos y utilidades base.
  */
-const app = {
+var app = {
     // --- APP CONFIG ---
-    version: "16.5.5", // Sistema Inteligente (v16.5.5)
-    PAUSE_SUPABASE: true, 
+    version: "16.7.23", // Sistema Inteligente (v16.7.23)
+    PAUSE_SUPABASE: false, // ✅ Supabase ACTIVO - Migración v16.7.0
     // Se cargan desde js/modules/config.js (inyectado en deploy)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.apiUrl || "").trim() : '',
     apiToken: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.apiToken || "").trim() : '',
+    sbUrl: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.sbUrl || "https://egyxgnlnzanxpqyuvmsg.supabase.co").trim() : 'https://egyxgnlnzanxpqyuvmsg.supabase.co',
+    sbKey: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.sbKey || "").trim() : '',
     data: {
         Config_Empresas: [],
         Usuarios: [],
@@ -242,7 +244,6 @@ const app = {
                     app.router.handleRoute();
                 }
 
-                if (app.ui && app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
                 if (app.pos && app.pos.loadCart) app.pos.loadCart();
                 app.checkBackendVersion();
             } else {
@@ -298,71 +299,165 @@ const app = {
 
             let finalData = sanitizedMaster;
 
-            // 3. CARGA EXTENDIDA DESDE SUPABASE (Si aplica y NO está en pausa)
-            if (dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
-                const supabaseData = await app.loadFromSupabase(fetchId);
-                // Combinar: Config_Empresas siempre viene de Google, el resto se puede sobreescribir
-                finalData = { ...sanitizedMaster, ...supabaseData };
-                finalData.Config_Empresas = sanitizedMaster.Config_Empresas; // Prioridad GSheets para el core
-                finalData.Usuarios = sanitizedMaster.Usuarios; // Prioridad GSheets para seguridad y nuevos perfiles
-            } else if (dbEngine === 'SUPABASE' && app.PAUSE_SUPABASE) {
-                console.warn(`🛑 [PAUSE_ACTIVE] Se detectó motor SUPABASE pero la conexión está en PAUSA GLOBLAL.`);
-                app.state.dbEngine = 'GSHEETS'; // Fallback forzado a GSheets por pausa
-            }
-
-            // 4. PERSISTENCIA Y CACHÉ (Proyectos)
-            let localCache = JSON.parse(localStorage.getItem('suit_status_cache') || '{}');
-            if (finalData.Proyectos && localCache) {
-                const now = Date.now();
-                finalData.Proyectos.forEach(p => {
-                    const id = (p.id_proyecto || "").toString().trim().toUpperCase();
-                    const cached = localCache[id];
-                    if (cached) {
-                        const age = now - cached.ts;
-                        const serverTs = p.fecha_estatus ? new Date(p.fecha_estatus).getTime() : 0;
-                        if (age < 120000 || (serverTs && serverTs < cached.ts)) {
-                            if (p.status !== cached.status) p.status = p.estado = p.estatus = cached.status;
-                        }
-                    }
-                });
-            }
-
             app.data = finalData;
+
+            // 🚀 ESTRATEGIA DE VELOCIDAD 1% (v16.7.14) - CARGA EN PARALELO
+            // No esperamos uno por uno, pedimos todo al mismo tiempo
+            await Promise.all([
+                (async () => {
+                    if (dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
+                        const supabaseData = await app.loadFromSupabase(fetchId);
+                        app.data = { ...app.data, ...supabaseData };
+                        app.data.Config_Empresas = sanitizedMaster.Config_Empresas; 
+                        app.data.Usuarios = sanitizedMaster.Usuarios;
+                        app.state.dbEngine = 'SUPABASE';
+                    }
+                })(),
+                (async () => {
+                    if (app.loadGalleryFromStorage) await app.loadGalleryFromStorage(fetchId);
+                })()
+            ]);
+
+            if (app.ui && app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
             return true;
         } catch (e) {
             console.error("[DATA_LOAD_CRITICAL]", e);
             return false;
         }
     },
-    // EVASOL - CORE MODULE (v14.12.0)
+    // EVASOL - CORE MODULE (v16.7.0 - MIGRACIÓN COMPLETA SUPABASE)
     loadFromSupabase: async (coId) => {
-        const SB_URL = 'https://hmrpotibipxhsnowgjvq.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtcnBvdGliaXB4aHNub3dnanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzAxMzQsImV4cCI6MjA4ODk0NjEzNH0.6Ftmwtbw5Prp-TQhMkmGivo6CDVV8QDP_Xj1OJZ7G5w';
+        // Usar credenciales de config.js (actualizadas)
+        const SB_URL = app.sbUrl || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
+        const SB_KEY = app.sbKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVneXhnbmxuemFueHBxeXV2bXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDE2NjMsImV4cCI6MjA4OTY3NzY2M30.8nBh6b3pphZcM93Qi23Qa2_TB88ofGGWo18rsAszTrw';
 
-        console.log(`⚡ [SUPABASE] Cargando datos para ${coId}...`);
-        const tables = ['Catalogo', 'Leads', 'Proyectos', 'Proyectos_Etapas', 'Proyectos_Bitacora', 'Empresa_Documentos', 'Config_Galeria', 'Config_Paginas', 'Config_SEO'];
+        console.log(`⚡ [SUPABASE] Cargando TODAS las tablas para ${coId}...`);
+
+        // TABLAS PRIVATE - Todas las que se migraron a Supabase
+        const tables = [
+            // Operativas críticas
+            'Catalogo',
+            'Leads',
+            'Proyectos',
+            'Pagos',
+            'Proyectos_Pagos',
+            'Proyectos_Etapas',
+            'Proyectos_Bitacora',
+            'Config_Flujo_Proyecto',
+            'Proyectos_Materiales',
+            // IA y Logs
+            'Prompts_IA',
+            'Logs_Chat_IA',
+            'Memoria_IA_Snapshots',
+            'Logs',
+            // Galería y Documentos
+            'Config_Galeria',
+            'Empresa_Galeria',
+            'Empresa_Documentos',
+            'Reservaciones',
+            // Configuración
+            'Config_SEO',
+            'Config_Paginas',
+            'Cuotas_Pagos',
+            'Config_IA_Notebooks'
+        ];
+
         const results = {};
 
         try {
             await Promise.all(tables.map(async (table) => {
+                // Construir URL con filtro por tenant
                 const url = `${SB_URL}/rest/v1/${table}?id_empresa=eq.${coId}&select=*`;
                 const res = await fetch(url, {
-                    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+                    headers: {
+                        'apikey': SB_KEY,
+                        'Authorization': `Bearer ${SB_KEY}`,
+                        'Prefer': 'resolution=merge-duplicates' // Manejar duplicados en PK compuestas
+                    }
                 });
                 if (res.ok) {
                     const raw = await res.json();
                     results[table] = JSON.parse(JSON.stringify(raw), (key, value) =>
                         typeof value === 'string' ? app.utils.sanitizeString(value) : value
                     );
+                    console.log(`  ✓ ${table}: ${results[table].length} registros`);
                 } else {
-                    console.warn(`⚠️ [SUPABASE] Error en tabla ${table}: ${res.statusText}`);
+                    const errorText = await res.text();
+                    console.warn(`  ⚠️ [SUPABASE] Error en tabla ${table}: ${res.status} - ${errorText}`);
                     results[table] = [];
                 }
             }));
+
+            console.log(`✅ [SUPABASE] Carga completada: ${Object.keys(results).length} tablas`);
             return results;
         } catch (err) {
             console.error("❌ [SUPABASE_FAIL]", err);
             return {};
+        }
+    },
+
+    /**
+     * EVASOL - STORAGE ENGINE (v16.7.13)
+     * Automatización total para galerías sin copy-paste.
+     */
+    loadGalleryFromStorage: async (coId) => {
+        if (!coId) return;
+            // Configuración desde el estado global (v16.7.17)
+            const SB_URL = app.sbUrl;
+            const SB_KEY = app.sbKey || (typeof SUIT_CONFIG !== 'undefined' ? SUIT_CONFIG.sbKey : '');
+            const bucket = 'galeria-privada';
+            const path = coId.toUpperCase();
+
+            if (!SB_URL || !SB_KEY) {
+                console.warn("⚠️ [STORAGE] Falta configuración de Supabase (URL/KEY)");
+                return;
+            }
+
+            console.log(`📸 [STORAGE] Escaneando bucket '${bucket}' para el tenant: ${path}...`);
+
+            try {
+                const res = await fetch(`${SB_URL}/storage/v1/object/list/${bucket}`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SB_KEY,
+                    'Authorization': `Bearer ${SB_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    prefix: path + '/',
+                    limit: 30, // Aumentamos límite para Marca Personal
+                    offset: 0
+                })
+            });
+
+            if (res.ok) {
+                const rawFiles = await res.json();
+                // Filtro Élite: Destruir ".emptyFolderPlaceholder" y subcarpetas sin ID
+                let files = rawFiles.filter(f => f.id && f.name && !f.name.includes('emptyFolder'));
+                
+                // Ordenar por las 10 más recientes (v16.7.22)
+                files.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+                files = files.slice(0, 10);
+                
+                console.log(`  ✓ Storage: ${files.length} fotos recientes detectadas en ${path} (Autoplay)`);
+
+                // Convertir archivos de storage al formato que espera el componente Gallery
+                const storagePhotos = files.map(f => ({
+                    id_empresa: coId,
+                    foto_url: `${SB_URL}/storage/v1/object/public/${bucket}/${path}/${f.name}`,
+                    orden: 1,
+                    titulo: f.name.replace(/_/g, ' ').replace(/\.[^/.]+$/, "") // Nombre limpio
+                }));
+
+                // Integrar con el caché global de galerías
+                if (!app.data.Config_Galeria) app.data.Config_Galeria = [];
+                // Evitar duplicados si ya existen o combinar
+                app.data.Config_Galeria = [...storagePhotos, ...app.data.Config_Galeria.filter(g => g.id_empresa !== coId)];
+            } else {
+                console.warn(`  ⚠️ [STORAGE] No se pudo leer el bucket. Asegúrate que sea público.`);
+            }
+        } catch (e) {
+            console.error("[STORAGE_REFRESH_ERROR]", e);
         }
     },
     switchCompany: async (newId) => {
@@ -440,6 +535,40 @@ const app = {
         } catch (e) {
             console.error("❌ [AGENT_TASK_FAIL]", e);
             return null;
+        }
+    },
+    saveRecord: async (tabla, registro, campoId) => {
+        const SB_URL = app.sbUrl || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
+        const SB_KEY = app.sbKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVneXhnbmxuemFueHBxeXV2bXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDE2NjMsImV4cCI6MjA4OTY3NzY2M30.8nBh6b3pphZcM93Qi23Qa2_TB88ofGGWo18rsAszTrw';
+        registro.id_empresa = registro.id_empresa || app.state.companyId;
+        if (app.state.dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
+            try {
+                const res = await fetch(`${SB_URL}/rest/v1/${tabla}`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SB_KEY,
+                        'Authorization': `Bearer ${SB_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'resolution=merge-duplicates,return=representation'
+                    },
+                    body: JSON.stringify(registro)
+                });
+                if (res.ok) {
+                    const saved = await res.json();
+                    console.log(`✅ [SUPABASE WRITE] ${tabla} → ${registro[campoId]}`);
+                    return { ok: true, data: saved };
+                } else {
+                    const err = await res.text();
+                    console.warn(`⚠️ [SUPABASE WRITE] Error en ${tabla}: ${err}`);
+                    return { ok: false, error: err };
+                }
+            } catch (e) {
+                console.error(`❌ [SUPABASE WRITE FAIL] ${tabla}`, e);
+                return { ok: false, error: e.message };
+            }
+        } else {
+            console.log(`[GAS WRITE] ${tabla} → motor no es SUPABASE, sin acción.`);
+            return { ok: false, error: 'Motor no es SUPABASE' };
         }
     }
 };

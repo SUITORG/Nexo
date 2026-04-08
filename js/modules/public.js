@@ -187,7 +187,9 @@ app.public = {
         const pageData = (app.data.Config_Paginas || []).find(p => {
             const pCoId = String(p.id_empresa || "").toUpperCase();
             const pPgId = String(p.id_pagina || "").trim().toLowerCase();
-            return (pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, "")) && pPgId === hash;
+            const pClId = String(p.id_cluster || "").trim().toLowerCase();
+            const coMatch = (pCoId === urlId || pCoId.replace(/_/g, "") === urlId.replace(/_/g, ""));
+            return coMatch && (pPgId === hash || (pClId === hash && pClId !== ''));
         });
 
         // Renderizado HOME Estándar (PFM/PMP/Industrial)
@@ -208,14 +210,19 @@ app.public = {
 
             if (pageData && hash !== 'home') {
                 // MODO SUB-PÁGINA: [Contenido] -> [SEO] -> [Banner]
-                viewHome.insertBefore(storySection, seoSection);
+                if (bizType === 'SERVICIOS') {
+                    viewHome.prepend(storySection); // Servicios: Contenido arriba del todo
+                } else {
+                    viewHome.insertBefore(storySection, seoSection);
+                }
+
                 if (activeBanner) {
                     viewHome.appendChild(activeBanner); // Mover al final absoluto
                     activeBanner.style.display = isPersonal ? 'block' : 'flex';
                     activeBanner.style.minHeight = "60vh"; // Ajuste para cierre fluido
                 }
                 if (inactiveBanner) inactiveBanner.style.display = 'none';
-                storySection.style.marginTop = "80px";
+                storySection.style.marginTop = bizType === 'SERVICIOS' ? "0" : "80px";
                 app.public.renderDynamicContent(pageData);
             } else {
                 // MODO INICIO: [Banner] -> [SEO] -> [Contenido]
@@ -227,6 +234,7 @@ app.public = {
                 if (inactiveBanner) inactiveBanner.style.display = 'none';
                 viewHome.appendChild(storySection); // Contenido al final
                 storySection.style.marginTop = "40px";
+                if (bizType === 'SERVICIOS') storySection.classList.add('hidden'); // Ocultar si estamos en Home-Servicios
             }
         }
 
@@ -510,21 +518,8 @@ app.public = {
                                                 </div>
                                                 <!-- Indicadores de Galería -->
                                                 <div style="position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10;">
-                                                    ${gallery.map((_, i) => `<div class="carousel-dot" data-index="${i}" style="width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.4); transition:0.3s;"></div>`).join('')}
+                                                    ${gallery.map((_, i) => `<div class="carousel-dot" data-index="${i}" style="width:8px; height:8px; border-radius:50%; background:${i === 0 ? '#ffd700' : 'rgba(255,255,255,0.4)'}; transition:0.3s;"></div>`).join('')}
                                                 </div>
-                                                <script>
-                                                    ((total) => {
-                                                        let current = 0;
-                                                        const el = document.getElementById('personal-carousel');
-                                                        const dots = document.querySelectorAll('.carousel-dot');
-                                                        if(!el) return;
-                                                        setInterval(() => {
-                                                            current = (current + 1) % total;
-                                                            el.style.transform = \`translateX(-\${(current * 100) / total}%)\`;
-                                                            dots.forEach((d, i) => d.style.background = i === current ? '#ffd700' : 'rgba(255,255,255,0.4)');
-                                                        }, 4000);
-                                                    })(${gallery.length});
-                                                </script>
                                             `;
                         } else {
                             return `<div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}') center center / cover no-repeat;"></div>`;
@@ -542,6 +537,21 @@ app.public = {
                     </div>
                 `;
                 personalNode.style.display = 'block';
+
+                // Activar Autoplay Dinámico cada 5 Segundos (v16.7.22)
+                const carouselEl = document.getElementById('personal-carousel');
+                const dots = document.querySelectorAll('.carousel-dot');
+                if (carouselEl && dots.length > 1) {
+                    if (window._personalCarouselInterval) clearInterval(window._personalCarouselInterval);
+                    let current = 0;
+                    const total = dots.length;
+                    window._personalCarouselInterval = setInterval(() => {
+                        current = (current + 1) % total;
+                        carouselEl.style.transform = `translateX(-${(current * 100) / total}%)`;
+                        dots.forEach((d, i) => d.style.background = i === current ? '#ffd700' : 'rgba(255,255,255,0.4)');
+                    }, 5000); // 5000 milisegundos = 5 segundos
+                }
+
             }
             if (heroBanner) heroBanner.style.display = 'none';
         } else {
@@ -701,6 +711,8 @@ app.public = {
 
         if (menuPublic) {
             const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
+            const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
+            const showHub = siteMode === "HUB" || (siteMode !== "WHITE" && !isIsolated);
 
             // --- MOTOR DE MENÚ DINÁMICO (v8.2.0) ---
             const dynamicPages = (app.data.Config_Paginas || []).filter(p => {
@@ -710,13 +722,33 @@ app.public = {
             });
 
             let dynamicLinksHtml = '';
-            dynamicPages.forEach(p => {
-                const label = p.id_pagina.charAt(0).toUpperCase() + p.id_pagina.slice(1);
-                dynamicLinksHtml += `<li><a href="#${p.id_pagina}">${label}</a></li>`;
-            });
+            // --- RESTRICCIÓN DE MENÚ PARA SERVICIOS (v16.7.7) ---
+            const isServices = bizType === 'SERVICIOS';
+            const isHome = hash === 'home';
+
+            if (!isServices) {
+                // Comportamiento universal para otros giros
+                dynamicPages.forEach(p => {
+                    const label = p.id_pagina.charAt(0).toUpperCase() + p.id_pagina.slice(1);
+                    dynamicLinksHtml += `<li><a href="#${p.id_pagina}">${label}</a></li>`;
+                });
+            } else if (!isHome) {
+                // Servicios en Sub-página: Mostrar todas las páginas del clúster actual
+                const activeRef = pageData ? (pageData.id_cluster || pageData.id_pagina) : hash;
+                
+                dynamicPages.filter(p => {
+                    const pId = String(p.id_pagina || "").trim().toLowerCase();
+                    const pCl = String(p.id_cluster || "").trim().toLowerCase();
+                    const ref = activeRef.trim().toLowerCase();
+                    return pId === ref || (pCl !== '' && pCl === ref);
+                }).forEach(p => {
+                    const label = (p.id_pagina.charAt(0).toUpperCase() + p.id_pagina.slice(1)).replace(/_/g, ' ');
+                    dynamicLinksHtml += `<li><a href="#${p.id_pagina}">${label}</a></li>`;
+                });
+            }
 
             menuPublic.innerHTML = `
-                ${!isIsolated ? '<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>' : ''}
+                ${(showHub && isHome) ? '<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>' : ''}
                 <li><a href="#home">Inicio</a></li>
                 ${dynamicLinksHtml}
                 ${isFood ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
@@ -928,6 +960,17 @@ app.public = {
 
             card.style.cssText = bgStyle;
 
+            // --- HABILITADOR DE NAVEGACIÓN (v16.7.8 - Comparación Exacta) ---
+            const bizType = (company.tipo_negocio || "").toString().trim();
+            const clusterId = (item.id_cluster || "").toString().trim();
+            
+            if (bizType === 'Servicios' && clusterId) {
+                card.style.cursor = 'pointer';
+                card.onclick = () => {
+                    window.location.hash = `#${clusterId}`;
+                };
+            }
+
             card.innerHTML = `
                 <div class="seo-card-inner" style="position:relative; height:100%; min-height:520px; display:flex; flex-direction:column; padding:30px; box-sizing:border-box;">
                     <div class="seo-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:20px; gap:15px;">
@@ -1090,7 +1133,7 @@ app.public = {
             let items = (app.data.Catalogo || []).filter(p => {
                 const pCo = (p.id_empresa || "").toString().trim().toUpperCase();
                 const sCo = (app.state.companyId || "").toString().trim().toUpperCase();
-                const isActive = p.activo === true || p.activo === "TRUE" || p.activo === "1" || p.activo === 1;
+                const isActive = p.activo === true || p.activo === "TRUE" || p.activo === "true" || p.activo === "1" || p.activo === 1;
                 const matchesSearch = !searchTerm || p.nombre.toLowerCase().includes(searchTerm.toLowerCase());
                 return (pCo === sCo || pCo === "GLOBAL") && isActive && matchesSearch;
             });
@@ -1225,10 +1268,23 @@ app.public = {
             const nameFontSize = Math.max(baseFont * scaleFactor, 0.6);
 
             bubbleEl.innerHTML = `
+                <svg viewBox="0 0 100 100" style="position:absolute; inset:0; width:100%; height:100%; overflow: visible; pointer-events: none;">
+                    <path id="path-${co.id_empresa}" d="M 5, 50 A 45,45 0 0,0 95,50" fill="none" />
+                    <text font-family="Outfit, sans-serif" font-weight="900" letter-spacing="1.5px" fill="white" style="opacity: 0.35; text-transform: uppercase;">
+                        <textPath xlink:href="#path-${co.id_empresa}" startOffset="50%" text-anchor="middle" font-size="7">
+                            ${co.nomempresa}
+                        </textPath>
+                    </text>
+                </svg>
+
                 <img src="${bubbleImg ? app.utils.fixDriveUrl(bubbleImg) : ''}" class="bubble-logo" 
-                     style="width: ${isEvasol ? '85%' : '75%'}; ${logoFilter}"
+                     style="width: ${isEvasol ? '70%' : '60%'}; ${logoFilter}; transition: all 0.5s ease; z-index: 10; margin-bottom: 5px;"
                      onerror="this.src='https://lh3.googleusercontent.com/d/1t6BmvpGTCR6-OZ3Nnx-yOmpohe5eCKvv'">
-                <span class="bubble-name" style="font-size:${nameFontSize}rem; font-weight: 800;">${co.nomempresa}</span>
+                
+                <!-- Etiqueta de apoyo (Visible on Hover via CSS) -->
+                <span class="bubble-name" style="font-size:0.6rem; font-weight: 900; opacity: 0; transition: 0.3s; position:absolute; bottom: 10%; background: rgba(0,0,0,0.7); padding: 2px 10px; border-radius: 20px; color: white;">
+                    ${co.nomempresa}
+                </span>
             `;
 
             bubbleEl.onclick = () => app.switchCompany(co.id_empresa);
@@ -1399,7 +1455,10 @@ app.public = {
             String(img.id_empresa || "").trim().toUpperCase() === urlId
         );
 
-        if (imgs.length === 0) {
+        // Lógica Élite: Si es Marca Personal, ocultamos esta galería redundante
+        const tipoNegocio = (company.tipo_negocio || company.tiponegocio || "").toUpperCase().trim();
+        
+        if (imgs.length === 0 || tipoNegocio === 'MARCA PERSONAL') {
             section.classList.add('hidden');
             section.style.display = 'none';
             return;

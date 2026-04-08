@@ -138,7 +138,10 @@ app.auth = {
         const menuItems = document.querySelectorAll('#menu-staff li');
         menuItems.forEach(li => {
             const link = li.querySelector('a');
-            if (!link || link.id === 'btn-logout' || link.getAttribute('href') === '#logout') return;
+            if (!link) return;
+            const linkId = link.id;
+            if (linkId === 'btn-staff-home' || linkId === 'btn-staff-logout' || linkId === 'btn-logout') return;
+            
             const targetHash = (link.getAttribute('href') || "").toLowerCase();
             const targetBase = targetHash.replace('#', '');
 
