@@ -4,6 +4,18 @@
  * ---------------------------------------------------------
  */
 app.agents = {
+    // --- UTILS (v16.10.28) ---
+    normalizeModelName: (m) => {
+        if (!m || typeof m !== 'string' || m.includes('/')) return m;
+        const low = m.toLowerCase();
+        if (low.includes('gemini')) return 'google/' + m;
+        if (low.includes('gpt')) return 'openai/' + m;
+        if (low.includes('claude')) return 'anthropic/' + m;
+        if (low.includes('qwen')) return 'alibaba/' + m;
+        if (low.includes('llama')) return 'meta-llama/' + m;
+        return m;
+    },
+
     getVisitorId: () => {
         // v16.4.2: Session Isolation for Admin vs User Context
         const user = app.state.currentUser;
@@ -18,30 +30,19 @@ app.agents = {
         }
         return vid;
     },
-    run: (agentName) => {
-        const box = document.getElementById('agent-output-box');
-        const output = document.getElementById('agent-response');
-        const title = document.getElementById('agent-title');
-        box.classList.remove('hidden');
-        title.innerText = `⏳ ${agentName} pensando...`;
-        output.value = "Conectando con la red neuronal de EVASOL...";
-        setTimeout(() => {
-            title.innerText = `✅ Respuesta del ${agentName}`;
-            let response = "";
-            const leads = app.data.Leads.length;
-            const projs = app.data.Proyectos.length;
-            const docs = app.data.Empresa_Documentos.length;
-            if (agentName === 'Escritor') {
-                response = `[BORRADOR GENERADO]\n\nBasado en la estructura de EVASOL y los ${docs} documentos sincronizados, estoy listo para redactar.`;
-            } else if (agentName === 'Analista') {
-                response = `[ANÁLISIS DE DATOS REAL]\n\n📊 Resumen de Operaciones:\n- Leads: ${leads}\n- Proyectos: ${projs}\n- Base de Conocimiento: ${docs} archivos.`;
-            } else if (agentName === 'Marketing') {
-                response = `[ESTRATEGIA]\n\nUsando el nombre "${app.state.companyId}", podemos lanzar una campaña resaltando nuestros ${projs} proyectos exitosos.`;
-            } else if (agentName === 'Negocio') {
-                response = `[INTELIGENCIA DE NEGOCIO]\n\nDetecto ${docs} documentos. Si sincronizas el 'Acta Constitutiva', podré detallar la estructura legal.`;
-            }
-            output.value = response;
-        }, 1000);
+    run: (agentKey) => {
+        const agent = (app.data.Agentes || app.data.Prompts_IA || []).find(a =>
+            a.id_agente === agentKey || a.id === agentKey
+        );
+        if (!agent) return;
+        // Solo bloquear agentes internos (Staff) — los públicos pasan directo
+        const esPublico = String(agent.publico || agent.tipo || "").toUpperCase() === 'PUBLICO';
+        if (!esPublico && !app.state.currentUser && !app.state.user) {
+            console.warn("⚠️ [AGENTS] Agente interno requiere sesión.");
+            if (app.ui && app.ui.showLogin) app.ui.showLogin();
+            return;
+        }
+        app.agents.select(agent.id_agente);
     },
     select: async (agtId) => {
         const agt = (app.data.Prompts_IA || []).find(a => a.id_agente === agtId);
@@ -56,6 +57,29 @@ app.agents = {
         // --- SISTEMA DE MEMORIA PERSISTENTE BACKEND (v15.8.7) ---
         const vid = app.agents.getVisitorId();
         const agtIdLocal = agtId;
+        
+        // --- 🧹 LIMPIEZA Y SINCRONIZACIÓN DEL VECTOR DE SESIÓN (v16.10.23) ---
+        app.state.leadVector = {}; 
+        localStorage.removeItem(`suit_lead_vec_${vid}`);
+        
+        try {
+            // Sincronizar con backend por si ya somos un Lead Oficial
+            const leadRes = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'getLeadByVisitor', id_visitante: vid, token: app.apiToken })
+            });
+            const leadData = await leadRes.json();
+            if (leadData.success && leadData.lead) {
+                console.log("🔄 [SYNC] Lead Oficial encontrado. Cargando al Vector de Sesión:", leadData.lead.id_lead);
+                app.state.leadVector = { ...leadData.lead };
+                localStorage.setItem(`suit_lead_vec_${vid}`, JSON.stringify(app.state.leadVector));
+            } else {
+                console.log("🆕 [SYNC] Visitante nuevo o sin datos. Vector inicializado en limpio.");
+            }
+        } catch (e) {
+            console.warn("⚠️ [SYNC] API inaccesible para sincronizar vector inicial.");
+        }
         
         // Mostrar Loading mientras recuperamos info
         const historyDiv = document.getElementById('chat-history');
@@ -117,6 +141,17 @@ app.agents = {
         }, 10000);
 
         document.getElementById('agent-display-name').innerText = agt.nombre;
+        
+        // --- COLOREAR CHAT INSTITUCIONAL (v16.7.28) ---
+        const company = app.data.Config_Empresas.find(c => (c.id_empresa || "").toUpperCase() === app.state.companyId.toUpperCase());
+        if (company && company.color_tema) {
+            const raw = company.color_tema;
+            // Generar versión Light (Pastel) para fondo
+            document.documentElement.style.setProperty('--chat-bg', `${raw}15`); // Opacidad 15 hex (aprox 8%)
+        } else {
+            document.documentElement.style.setProperty('--chat-bg', '#f9f9f9');
+        }
+
         document.getElementById('ai-chat-modal').classList.remove('hidden');
     },
 
@@ -127,8 +162,8 @@ app.agents = {
                 action: 'getAiMemory',
                 id_visitante: vid,
                 id_empresa: app.state.companyId,
-                nombre: user.nombre,
-                telefono: user.telefono || user.whatsapp,
+                nombre: app.state.currentUser?.nombre || '',
+                telefono: app.state.currentUser?.telefono || '',
                 token: app.apiToken
             };
             
@@ -160,6 +195,16 @@ app.agents = {
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(body)
             });
+            // Intentar extraer lead desde el resumen
+            const phoneInResumen = resumen.match(/(\d{10})/);
+            const nameInResumen = resumen.match(/(?:detectado:|nombre:|cliente:)\s*([A-ZÁÉÍÓÚa-záéíóúñÑ]{2,}\s+[A-ZÁÉÍÓÚa-záéíóúñÑ]{2,}(?:\s+[A-ZÁÉÍÓÚa-záéíóúñÑ]{2,})?)/i);
+            if (phoneInResumen && nameInResumen) {
+                console.log('🎯 [MEMORY→LEAD] Extrayendo lead desde memoria...');
+                setTimeout(() => app.agents.saveLead({
+                    nombre: nameInResumen[1].trim(),
+                    telefono: phoneInResumen[1]
+                }), 1500);
+            }
         } catch (e) { console.error("Memory save failed:", e); }
     },
 
@@ -175,15 +220,28 @@ app.agents = {
                 content: content,
                 token: app.apiToken
             };
-            await fetch(app.apiUrl, {
+            const res = await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(body)
             });
-        } catch (e) { console.error("IA Log failed:", e); }
+            const result = await res.json();
+            if (result.success) {
+                console.log(`✅ [LOG_IA] ${role} grabado`);
+            } else {
+                console.warn(`⚠️ [LOG_IA] GAS respondió sin éxito:`, result);
+            }
+        } catch (e) {
+            console.error('❌ [LOG_IA] Error:', e);
+        }
     },
 
     closeChat: () => {
+        // 🛑 GUARDADO FORZOSO AL CERRAR (v16.10.18)
+        if (app.state.leadVector && Object.keys(app.state.leadVector).length > 0) {
+            console.log('🚪 [CLOSE_CHAT] Guardado forzoso al cerrar...');
+            app.agents.saveLead(app.state.leadVector);
+        }
         document.getElementById('ai-chat-modal').classList.add('hidden');
         // app.state.currentAgent = null; // Mantenemos el agente cargado para persistencia de sesión
     },
@@ -209,56 +267,57 @@ app.agents = {
         }
 
         try {
-            const res = await fetch(app.apiUrl, {
-                method: 'POST',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'listAiModels', token: app.apiToken })
-            });
-            const data = await res.json();
-            if (data.success) {
-                const models = data.models || [];
-                let best = null;
-                app.ui.updateConsole(`SCANNING ${models.length} MODELS...`);
+            // Lista Híbrida de Rescate (v16.7.28) - PRIORIDAD: OPENROUTER
+            const company = (app.data.Config_Empresas || []).find(c => c.id_empresa === app.state.companyId);
+            const savedModels = (company?.usa_soporte_ia || '').toString().split(',').map(m => m.trim()).filter(m => m && !['TRUE','FALSE','NO',''].includes(m.toUpperCase()));
+            const fallbackModels = ['meta-llama/llama-3.3-70b-instruct:free', 'mistralai/mistral-small-3.1:free', 'openrouter/free'];
+            const modelIds = savedModels.length ? savedModels : fallbackModels;
+            const models = modelIds.map(id => ({ id, type: 'OPENROUTER' }));
+            
+            let best = null;
+            app.ui.updateConsole(`DIAGNOSING HYBRID MODELS...`);
 
-                // Stress Test: Intentar hablar con cada uno
-                for (let m of models) {
-                    if (!m.includes('flash') && !m.includes('pro')) continue; // Ignorar embeddings o experimentales
-                    app.ui.updateConsole(`TRYING: ${m}...`);
-                    try {
+            for (let m of models) {
+                app.ui.updateConsole(`TESTING (${m.type}): ${m.id}...`);
+                try {
+                    let result;
+                    if (m.type === 'OPENROUTER') {
+                        result = await app.agents.callOpenRouterAI(m.id, "ping", "Responde solo con la palabra OK.");
+                    } else {
                         const testRes = await fetch(app.apiUrl, {
                             method: 'POST',
                             headers: { "Content-Type": "text/plain" },
                             body: JSON.stringify({
                                 action: 'askGemini',
-                                message: 'ping',
-                                model: m,
+                                message: 'health-check-ping',
+                                model: m.id,
                                 token: app.apiToken
                             })
                         });
-                        const testData = await testRes.json();
-                        if (testData.success && !testData.error) {
-                            best = m;
-                            break; // Encontramos el ganador
-                        }
-                    } catch (e) { console.warn(`Model ${m} failed test.`); }
-                }
+                        result = await testRes.json();
+                    }
 
-                if (best) {
-                    app.state._aiModel = best;
-                    localStorage.setItem('evasol_ai_model', best);
-                    alert(`✅ DIAGNÓSTICO MAESTRO FINALIZADO.\n\nEl modelo "${best}" es 100% compatible con tu cuenta de Google.\n\nConfiguración activada y guardada.`);
-                    app.ui.updateConsole("AI_READY");
-                } else {
-                    alert("❌ Error: Se detectaron modelos pero ninguno respondió al test. Revisa tu GEMINI_API_KEY o cuotas en Google Console.");
-                    app.ui.updateConsole("AI_FAIL", true);
-                }
+                    if (result.success && !result.error) {
+                        best = m.id;
+                        break; 
+                    }
+                } catch (e) { console.warn(`Model ${m.id} failed diagnostic.`); }
+            }
+
+            if (best) {
+                app.state._aiModel = best;
+                localStorage.setItem('evasol_ai_model', best);
+                app.ui.updateConsole("AI_READY");
+                const ts = new Date().toISOString().slice(0,16).replace('T',' ');
+                console.log(`[AI_MODEL_OK] ${ts} | empresa: ${app.state.companyId} | modelo: ${best}`);
+                alert(`✅ IA REPARADA: Modelo "${best}" activado.\n\nCopia este modelo a usa_soporte_ia en GSheets:\n${best}`);
             } else {
-                alert("❌ Error de Diagnóstico: " + data.error);
+                alert("❌ Fallo total: Ni Gemini ni OpenRouter responden. Revisa tus API Keys.");
                 app.ui.updateConsole("AI_FAIL", true);
             }
         } catch (e) {
             console.error(e);
-            alert("Error de conexión al diagnosticar IA.");
+            alert("Error crítico durante el diagnóstico.");
         } finally {
             if (btn) {
                 btn.innerHTML = originalHtml;
@@ -267,13 +326,18 @@ app.agents = {
             }
         }
     },
+
+    triggerMicroAuthRepair: () => {
+        // Acceso directo sin contraseña (v16.10.12 - Solicitud de Usuario)
+        app.agents.diagnoseAi();
+    },
     sendMessage: async () => {
         const input = document.getElementById('chat-user-input');
         const text = input.value.trim();
         if (!text || !app.state.currentAgent) return;
         // 1. Add User Message to UI & Persist
         app.agents.addMessageToUI('user', text);
-        app.agents.logInteraction('user', text);
+        app.agents.logInteraction('user', text); // fire-and-forget
         input.value = '';
         app.state._lastChatActivity = Date.now();
         // 2. Prepare History for AI
@@ -300,7 +364,21 @@ app.agents = {
                 }
             }
 
-            // 4. Call Backend Proxy
+            // --- INYECTOR DE RELOJ Y MODELO DINÁMICO (v16.7.28) ---
+            const currentCo = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase());
+            const clockContext = `\n\n[RELOJ_SISTEMA]: Hoy es ${new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Hora local: ${new Date().toLocaleTimeString('es-MX')}. Usa esta fecha para cálculos de edad y vigencia de derechos.`;
+            
+            // Priorizar lista de modelos desde Config_Empresas (usa_soporte_ia)
+            // v16.10.28: Enviamos la lista completa normalizada para habilitar el Fallback en el Backend
+            const rawModels = (currentCo?.usa_soporte_ia || app.state._aiModel || localStorage.getItem('evasol_ai_model') || "gemini-1.5-flash").toString();
+            let selectedModels = rawModels.replace(/,\s*no$/i, '').split(',').map(m => app.agents.normalizeModelName(m.trim())).join(',');
+            
+            const finalSystemPrompt = app.state.currentAgent.prompt_base + crmContext + clockContext;
+            console.log('🔍 [IA_ENGINE] Enviando solicitud al backend con fallback:', selectedModels);
+            console.log('🔍 [DEBUG_PROMPT] Prompt completo:', finalSystemPrompt);
+
+            // --- MOTOR UNIFICADO (BACKEND-FIRST) ---
+            app.ui.updateConsole(`AI_SYNC: ${selectedModels.split(',')[0].toUpperCase()}`);
             const response = await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
@@ -309,20 +387,24 @@ app.agents = {
                     id_empresa: app.state.companyId || 'SYSTEM',
                     usuario: app.state.currentUser ? app.state.currentUser.nombre : 'Visitante',
                     agentId: app.state.currentAgent.id_agente,
-                    promptBase: app.state.currentAgent.prompt_base + crmContext,
+                    promptBase: finalSystemPrompt,
                     history: app.state.chatHistory,
                     message: text,
-                    model: app.state._aiModel || localStorage.getItem('evasol_ai_model') || "gemini-1.5-flash",
+                    ai_config: selectedModels, // Enviamos el vector completo
                     token: app.apiToken
                 })
             });
-            const data = await response.json();
+            data = await response.json();
             if (data.success) {
                 app.agents.addMessageToUI('ai', data.answer);
                 app.state.chatHistory.push({ role: 'model', content: data.answer });
                 
                 // Persistencia de Respuesta
-                app.agents.logInteraction('model', data.answer);
+                setTimeout(() => app.agents.logInteraction('model', data.answer), 500); // fire-and-forget con delay
+
+                // --- DETECTOR DE INTENCIONES (Fix 2) ---
+                app.agents.processIntent(data.answer, text);
+
 
                 // --- DETECCIÓN DE DATOS PARA MEMORIA SEMÁNTICA (v15.8.9) ---
                 const lowerText = text.toLowerCase();
@@ -338,11 +420,11 @@ app.agents = {
                         interes: hasInterest ? "ACTIVO" : "PENDIENTE",
                         last_interaction: new Date()
                     };
-                    app.agents.saveMemory(vid, `Interés detectado: ${lowerText.substring(0, 50)}...`, context);
+                    setTimeout(() => app.agents.saveMemory(vid, `Interés detectado: ${lowerText.substring(0, 50)}...`, context), 1000); // fire-and-forget
                 } else if (app.state.chatHistory.length % 3 === 0) {
                     const vid = app.agents.getVisitorId();
                     const summary = app.state.chatHistory.slice(-4).map(h => h.content).join(' | ');
-                    app.agents.saveMemory(vid, "Resumen parcial: " + summary.substring(0, 400));
+                    setTimeout(() => app.agents.saveMemory(vid, "Resumen parcial: " + summary.substring(0, 400)), 1000); // fire-and-forget
                 }
 
                 if (app.state.chatHistory.length >= 8) {
@@ -405,18 +487,9 @@ app.agents = {
             msgDiv.style.background = 'white';
             msgDiv.style.borderLeft = '4px solid var(--primary-color)';
             msgDiv.style.alignSelf = 'flex-start';
-            // Detect JSON for automatic ticket triggering
-            if (text.includes('{') && text.includes('}')) {
-                try {
-                    const potentialJson = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                    const ticket = JSON.parse(potentialJson);
-                    if (ticket.nombre && (ticket.queja || ticket.reporte)) {
-                        app.agents.sendSupportTicket(ticket);
-                        msgDiv.innerHTML = "✅ Reporte generado y enviado con éxito. Cerrando chat...";
-                        historyDiv.appendChild(msgDiv);
-                        return;
-                    }
-                } catch (e) { }
+            // Detectar intenciones delegando a processIntent (Fix 2)
+            if (text.includes('{') || /nombre|telefono|whatsapp/i.test(text)) {
+                // El procesamiento se hace ahora en sendMessage tras recibir la respuesta
             }
             // Close chat automatically if AI says a closing phrase
             const lowerText = text.toLowerCase();
@@ -426,7 +499,13 @@ app.agents = {
                     if (app.state.currentAgent) app.agents.closeChat();
                 }, 5000);
             }
-            msgDiv.innerHTML = text.replace(/\n/g, '<br>'); // Simple break formatting
+            
+            if (silent) {
+                msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+            } else {
+                const cleanText = text.replace(/\[LEAD\][\s\S]*?\[\/LEAD\]/g, '').trim();
+                app.agents.humanTyping(msgDiv, cleanText);
+            }
         } else {
             msgDiv.style.background = 'var(--primary-color)';
             msgDiv.style.color = 'white';
@@ -435,6 +514,35 @@ app.agents = {
         }
         historyDiv.appendChild(msgDiv);
         if (!silent) historyDiv.scrollTop = historyDiv.scrollHeight;
+    },
+
+    humanTyping: async (element, fullText) => {
+        let current = "";
+        const mistakes = ["q", "w", "e", "r", "a", "s", "d", "f"]; // Teclas cercanas comunes
+        
+        for (let i = 0; i < fullText.length; i++) {
+            // Probabilidad de error (1.5%) - Solo en medio del texto
+            if (Math.random() < 0.015 && i > 10 && i < fullText.length - 10) {
+                const wrongChar = mistakes[Math.floor(Math.random() * mistakes.length)];
+                element.innerHTML = (current + wrongChar).replace(/\n/g, '<br>');
+                await new Promise(r => setTimeout(r, 150 + Math.random() * 200)); // Pausa de "Ups"
+                
+                // Borrar el error (Efecto Backspace)
+                element.innerHTML = current.replace(/\n/g, '<br>');
+                await new Promise(r => setTimeout(r, 300 + Math.random() * 200)); // Pausa de corrección
+            }
+
+            current += fullText[i];
+            element.innerHTML = current.replace(/\n/g, '<br>');
+            
+            // Velocidad variable (Mecanografía realista)
+            const speed = fullText[i] === ' ' ? 80 : (15 + Math.random() * 40);
+            await new Promise(r => setTimeout(r, speed));
+
+            // Auto-scroll durante el tecleo
+            const history = document.getElementById('chat-history');
+            if (history) history.scrollTop = history.scrollHeight;
+        }
     },
     sendSupportTicket: async (ticketData) => {
         app.ui.updateConsole("SENDING_TICKET...");
@@ -464,6 +572,404 @@ app.agents = {
                 }, 1500);
             }
         } catch (e) { console.error(e); }
+    },
+
+    processIntent: (response, userMessage) => {
+        const datos = {};
+        
+        // --- EXTRACCIÓN POR TAGS [LEAD] (v16.10.30) ---
+        const jsonMatch = response.match(/\[LEAD\]([\s\S]*?)\[\/LEAD\]/);
+        if (jsonMatch) {
+            try {
+                const aiData = JSON.parse(jsonMatch[1].trim());
+                if (aiData.nombre || aiData.telefono || aiData.email) {
+                    console.log('🤖 [IA_INTENT] JSON detectado en tags:', aiData);
+                    Object.assign(datos, aiData);
+                }
+            } catch (e) {
+                console.warn('⚠️ [IA_INTENT] Error al parsear tags [LEAD]:', e.message);
+            }
+        }
+        const msg = userMessage.trim();
+        
+        // 📅 FECHA NACIMIENTO: DD/MM/AAAA (se detecta PRIMERO para no confundir con nombres)
+        const fechaMatch = msg.match(/\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})\b/);
+        if (fechaMatch) {
+            const dia = parseInt(fechaMatch[1]);
+            const mes = parseInt(fechaMatch[2]) - 1;
+            const anio = parseInt(fechaMatch[3]);
+            const fechaNac = new Date(anio, mes, dia);
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - fechaNac.getFullYear();
+            const cumpleEsteAnio = new Date(hoy.getFullYear(), mes, dia);
+            if (hoy < cumpleEsteAnio) edad--;
+            datos.fecha_nacimiento = `${String(dia).padStart(2,'0')}/${String(mes+1).padStart(2,'0')}/${anio}`;
+            datos.edad = edad;
+            console.log(`📅 [INTENT] Fecha nacimiento: ${datos.fecha_nacimiento} → Edad: ${edad}`);
+        }
+        
+        // 👤 NOMBRE (método multicapa):
+        // Capa 1: Con palabras clave "soy/llamo/nombre es" (v16.10.23: permite 1 sola palabra)
+        const nameMatch1 = msg.match(/(?:soy|llamo|me\s+dicen|nombre\s+es|nombre\s+completo\s+es)\s+([A-ZÁÉÍÓÚñ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚñ][a-záéíóúñ]+)*)/i);
+        
+        // Capa 2: Mensaje corto que parece solo un nombre (1-4 palabras capitalizadas)
+        const soloNombre = !fechaMatch && !msg.includes('@') && !msg.match(/\d{8,}/) && msg.length < 50;
+        const nameMatch2 = soloNombre ? msg.match(/^([A-ZÁÉÍÓÚñ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚñ][a-záéíóúñ]+){0,3})$/) : null;
+        
+        // Capa 3: Nombre detectado al inicio de un mensaje mixto (ej: "Juan Perez 811...")
+        const nameMatch3 = msg.match(/^([A-Za-záéíóúñÁÉÍÓÚÑ]+(?:\s+[A-Za-záéíóúñÁÉÍÓÚÑ]+){1,3})/);
+        
+        // --- 🛡️ FILTRO DE PALABRAS PROHIBIDAS (v16.10.26) ---
+        const blacklist = ["Deseo", "Quiero", "Hola", "Buenas", "Necesito", "Tengo", "Solicito", "Busco", "Vengo", "La", "El", "Los", "Las", "Mi", "Su", "Un", "Una", "Oye", "Mira"];
+        
+        let nombreCapturado = null;
+        if (nameMatch1) nombreCapturado = nameMatch1[1].trim();
+        else if (nameMatch2 && !datos.nombre) nombreCapturado = nameMatch2[1].trim();
+        else if (nameMatch3 && !datos.nombre) {
+            const candidato = nameMatch3[1].trim();
+            const primeraPalabra = candidato.split(' ')[0];
+            // Solo capturar si la primera palabra no está en la lista negra
+            if (!blacklist.some(b => b.toLowerCase() === primeraPalabra.toLowerCase())) {
+                nombreCapturado = candidato;
+            }
+        }
+
+        if (nombreCapturado) {
+            // Auto-capitalizar cada palabra
+            datos.nombre = nombreCapturado.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+        
+        // 📞 TELÉFONO: 10 dígitos con posibles separadores
+        const phoneMatch = msg.match(/(\d[\d\s\-]{8,}\d)/);
+        if (phoneMatch) {
+            const tel = phoneMatch[1].replace(/[\s\-]/g, '');
+            if (tel.length >= 10) datos.telefono = tel;
+        }
+        
+        // 📧 EMAIL
+        const emailMatch = msg.match(/([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i);
+        if (emailMatch) datos.email = emailMatch[1].toLowerCase();
+        
+        // 🔢 NSS: 11 dígitos (solo si menciona "nss")
+        if (msg.toLowerCase().includes('nss')) {
+            const nssMatch = msg.match(/\b(\d{11})\b/);
+            if (nssMatch) datos.nss = nssMatch[1];
+        }
+        
+        // 🪪 CURP: 18 caracteres (solo si menciona "curp")
+        if (msg.toLowerCase().includes('curp')) {
+            const curpMatch = msg.match(/\b([A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d)\b/i);
+            if (curpMatch) datos.curp = curpMatch[1].toUpperCase();
+        }
+        
+        // 🏛️ RFC: formato estándar
+        const rfcMatch = msg.match(/\b([A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3})\b/i);
+        if (rfcMatch) datos.rfc = rfcMatch[1].toUpperCase();
+        
+        // 👥 REFERIDO: Detección flexible (v16.10.18 - Sin palabras clave)
+        // Opción 1: Con palabras clave (bidireccional)
+        const refMatch1 = msg.match(/(?:recomendó|refirió|mandó|vengo\s+de\s+parte\s+de)\s+([A-ZÁÉÍÓÚñ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚñ][a-záéíóúñ]+)*)/i);
+        const refMatch2 = msg.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:me\s+recomendó|me\s+refirió|me\s+mandó|me\s+invitó)/i);
+
+        // Opción 2: Si el mensaje es SOLO un nombre (1-4 palabras capitalizadas, sin verbos)
+        // Ej: "Josefina", "el señor Juan", "la señora María Ortiz"
+        const esSoloNombre = msg.length < 60 &&
+                             !msg.match(/(?:quiero|deseo|necesito|busco|voy|venimos|fui|fue)/i) &&
+                             msg.match(/^(?:el\s+|la\s+|los\s+|las\s+)?[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){0,3}$/i);
+
+        // Opción 3: Verificar si viene de una pregunta de referido en el historial
+        const lastBotMsg = (app.state.chatHistory || []).filter(m => m.role === 'assistant').pop();
+        const botPreguntoReferido = lastBotMsg && lastBotMsg.content &&
+            lastBotMsg.content.match(/(?:quién\s+te\s+refirió|de\s+parte\s+de\s+quién|quién\s+te\s+mandó|referido|recomendó)/i);
+
+        if (refMatch1) {
+            datos.referido_por = refMatch1[1].trim();
+            console.log('👥 [REFERIDO] Detectado (patrón 1 - keyword):', datos.referido_por);
+        } else if (refMatch2) {
+            datos.referido_por = refMatch2[1].trim();
+            console.log('👥 [REFERIDO] Detectado (patrón 2 - inverso):', datos.referido_por);
+        } else if (esSoloNombre && botPreguntoReferido) {
+            // El usuario respondió con solo el nombre después de que el bot preguntó
+            datos.referido_por = msg.trim();
+            console.log('👥 [REFERIDO] Detectado (respuesta directa):', datos.referido_por);
+        } else if (esSoloNombre && !datos.nombre) {
+            // Si no hay nombre aún y es solo un nombre, asumimos que es el referido
+            // (el nombre del usuario ya debería haberse capturado antes)
+            if ((app.state.leadVector?.nombre || app.data.Leads?.find(l => l.id_visitante === app.agents.getVisitorId())?.nombre)) {
+                datos.referido_por = msg.trim();
+                console.log('👥 [REFERIDO] Detectado (nombre sin contexto):', datos.referido_por);
+            }
+        }
+        
+        // Guardar si hay datos útiles (v16.10.18 - Guardado Inteligente)
+        if (Object.keys(datos).length > 0) {
+            console.log('🎯 [INTENT] Datos detectados:', datos);
+
+            // Sincronizar con el Vector de Sesión
+            if (!app.state.leadVector) {
+                const saved = localStorage.getItem(`suit_lead_vec_${app.agents.getVisitorId()}`);
+                app.state.leadVector = saved ? JSON.parse(saved) : {};
+            }
+
+            // Merge de los nuevos datos capturados al vector
+            app.state.leadVector = { ...app.state.leadVector, ...datos };
+
+            // Persistencia del vector en localStorage
+            localStorage.setItem(`suit_lead_vec_${app.agents.getVisitorId()}`, JSON.stringify(app.state.leadVector));
+
+            // 🛑 NO guardar inmediatamente - esperar a tener datos completos
+            // Guardar solo si tenemos nombre + (telefono O email)
+            const tieneNombre = !!app.state.leadVector.nombre;
+            const tieneContacto = !!app.state.leadVector.telefono || !!app.state.leadVector.email;
+
+            if (tieneNombre && tieneContacto) {
+                console.log('✅ [INTENT] Datos completos, disparando guardado...');
+                app.agents.saveLead(app.state.leadVector);
+            } else {
+                console.log('⏳ [INTENT] Esperando más datos (nombre:', tieneNombre, '| contacto:', tieneContacto, ')');
+            }
+        }
+    },
+
+    saveLead: async (leadData) => {
+        const vid = app.agents.getVisitorId();
+        // 🛡️ CERROJO POR VISITANTE (no por contenido): Cualquier disparo del mismo
+        // visitante en menos de 6s se bloquea, sin importar si trae email, nombre o teléfono.
+        const ahora = Date.now();
+        const tiempoUltimo = app.state._lastLeadTime?.[vid] || 0;
+        const VENTANA_MS = 6000; // 6s: cubre processIntent + saveMemory (1.5s delay) + margen
+
+        if (app.state._isSavingLead) {
+            console.warn(`⛔ [SAVE_LEAD] Cerrojo activo para ${vid}. Ignorando disparo duplicado.`);
+            return;
+        }
+        if ((ahora - tiempoUltimo) < VENTANA_MS) {
+            console.log(`🛑 [SAVE_LEAD] Ventana de ${VENTANA_MS/1000}s activa para ${vid}. Disparo ignorado.`);
+            return;
+        }
+
+        app.state._isSavingLead = true;
+        if (!app.state._lastLeadTime) app.state._lastLeadTime = {};
+        app.state._lastLeadTime[vid] = ahora;
+
+        // Asegurar que el vector esté inicializado si saveLead se llama externamente
+        const finalData = { ...(app.state.leadVector || {}), ...leadData };
+        
+        console.log('💾 [SAVE_LEAD] Procesando Vector Atómico:', finalData);
+        try {
+            console.log('🔑 [SAVE_LEAD] Visitante ID:', vid);
+            
+            // BUSCAR por id_visitante PRIMERO (cache local)
+            let existe = (app.data.Leads || []).find(l => String(l.id_visitante) === String(vid));
+            console.log('🔍 [SAVE_LEAD] Búsqueda en cache:', existe ? `Encontrado: ${existe.id_lead}` : 'No encontrado');
+            console.log('🔍 [SAVE_LEAD] Leads en cache:', app.data.Leads?.length || 0, 'registros');
+
+            // Si no está en cache, consultar backend (SIEMPRE)
+            if (!existe && vid) {
+                console.log('🌐 [SAVE_LEAD] Consultando backend para id_visitante:', vid, '| id_empresa:', app.state.companyId);
+                try {
+                    const res = await fetch(app.apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify({
+                            action: 'getLeadByVisitor',
+                            id_visitante: vid,
+                            id_empresa: app.state.companyId,
+                            token: app.apiToken
+                        })
+                    });
+                    const data = await res.json();
+                    console.log('🌐 [SAVE_LEAD] Respuesta backend:', JSON.stringify(data));
+                    if (data.success && data.lead) {
+                        existe = data.lead;
+                        console.log('✅ [SAVE_LEAD] Encontrado en backend:', existe.id_lead);
+                    }
+                } catch (e) { 
+                    console.warn('⚠️ [SAVE_LEAD] Backend no respondió (normal si no existe)'); 
+                }
+            }
+            
+            // Preparar datos (merge) — String() defensivo por datos numéricos de GSheets
+            // 🛡️ VALIDACIÓN: Si existe.nombre parece asunto (empieza con verbo), usar finalData
+            const nombreCorrupto = existe?.nombre && existe.nombre.match(/^(?:Deseo|Quiero|Necesito|Solicito|Busco|Aumentar|Obtener)/i);
+            const nombre   = String(finalData.nombre || (nombreCorrupto ? '' : existe?.nombre) || '').trim();
+            const telefono = String(finalData.telefono || existe?.telefono || '').replace(/[\s\-]/g, '');
+            const email    = String(finalData.email    || existe?.email    || '').toLowerCase().trim();
+            const nss      = String(finalData.nss      || existe?.nss      || '').trim();
+            const rfc      = String(finalData.rfc      || existe?.rfc      || '').trim();
+            const curp     = String(finalData.curp     || existe?.curp     || '').trim();
+            const referido = String(finalData.referido_por || existe?.referido_por || '').trim();
+            const fechaNac = String(finalData.fecha_nacimiento || existe?.fecha_nacimiento || '').trim();
+
+            // 📅 FORMATO EDAD: "Fecha , Edad" (Solicitud de Usuario)
+            let edadValue = '';
+            const numEdad = finalData.edad ?? existe?.edad ?? '';
+            if (fechaNac && numEdad) {
+                edadValue = `${fechaNac} , ${numEdad}`;
+            } else {
+                edadValue = numEdad;
+            }
+
+            // 📝 BODY
+            const body = String(finalData.body || existe?.body || '').trim();
+
+            // 🔍 DEBUG: Verificar origen de datos (v16.10.17)
+            console.log('🔬 [DEBUG] finalData.email:', finalData.email, '| existe.email:', existe?.email, '| email final:', email);
+            console.log('🔬 [DEBUG] finalData.referido_por:', finalData.referido_por, '| existe.referido_por:', existe?.referido_por, '| referido final:', referido);
+            if (nombreCorrupto) console.warn('⚠️ [SAVE_LEAD] Lead corrupto detectado, usando nombre del vector:', nombre);
+
+            // Calcular nivel CRM
+            let nivel_crm = 'FRIO';
+            if (nombre && telefono) nivel_crm = 'TIBIO';
+            if (nombre && (telefono || email)) nivel_crm = 'CALIENTE';
+            
+            if (existe) {
+                // ♻️ ACTUALIZAR (v16.10.17 - Payload Normalizado + Fecha Forzada)
+                console.log(`♻️ [SAVE_LEAD] Actualizando: ${existe.id_lead} → ${nivel_crm}`);
+                const payload = {
+                    id_lead:          existe.id_lead,
+                    id_visitante:     existe.id_visitante || vid,
+                    nombre:           nombre,
+                    telefono:         telefono,
+                    email:            email || undefined,  // Forzar inclusión si existe
+                    nss:              nss,
+                    rfc:              rfc,
+                    curp:             curp,
+                    body:             body,
+                    referido_por:     referido || undefined,  // Forzar inclusión si existe
+                    fecha_nacimiento: fechaNac || undefined,
+                    edad:             edadValue !== '' ? edadValue : undefined,
+                    nivel_crm:        nivel_crm,
+                    status:           existe.status || 'NUEVO',
+                    fecha:            new Date().toISOString()  // Forzar fecha de actualización
+                };
+                // Eliminar campos vacíos (null/undefined/'') antes de enviar
+                Object.keys(payload).forEach(k => {
+                    if (payload[k] === null || payload[k] === '' || payload[k] === undefined) {
+                        delete payload[k];
+                    }
+                });
+                console.log('📦 [PAYLOAD UPDATE] Enviando:', JSON.stringify(payload, null, 2));
+
+                // 📤 Enviar UPDATE al backend
+                const updateBody = {
+                    action: 'updateLead',
+                    lead: payload,
+                    token: app.apiToken,
+                    id_empresa: app.state.companyId
+                };
+                console.log('📤 [SAVE_LEAD] Body completo:', JSON.stringify(updateBody));
+
+                const updateRes = await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(updateBody)
+                });
+                const updateData = await updateRes.json();
+                console.log('📥 [SAVE_LEAD] Respuesta backend:', JSON.stringify(updateData));
+
+                if (!updateData.success) {
+                    console.error('❌ [SAVE_LEAD] Backend rechazó el update:', updateData.error || JSON.stringify(updateData));
+
+                    // --- 🚁 FALLBACK DE RESCATE (v16.10.26) ---
+                    if (JSON.stringify(updateData).includes("ACTION_WAITING")) {
+                        console.warn("⚠️ [SAVE_LEAD] Backend no reconoce acción, intentando createLead...");
+                        const createBody = {
+                            action: 'createLead',
+                            lead: payload,
+                            token: app.apiToken,
+                            id_empresa: app.state.companyId
+                        };
+                        const createRes = await fetch(app.apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain' },
+                            body: JSON.stringify(createBody)
+                        });
+                        const createData = await createRes.json();
+                        console.log('📥 [SAVE_LEAD] Respuesta createLead:', JSON.stringify(createData));
+                    }
+                } else {
+                    // Actualizar cache solo si backend confirmó
+                    const idx = app.data.Leads.findIndex(l => l.id_lead === existe.id_lead);
+                    if (idx >= 0) app.data.Leads[idx] = { ...existe, ...payload };
+                    console.log(`✅ [SAVE_LEAD] Lead actualizado en GSheets: ${JSON.stringify(payload)}`);
+                }
+                
+            } else {
+                // 🆕 CREAR NUEVO (v16.10.17 - Payload Normalizado + Debug)
+                console.log(`🆕 [SAVE_LEAD] Creando nuevo lead → ${nivel_crm}`);
+                const payload = {
+                    id_lead: `LEAD-${Date.now()}`,
+                    id_empresa: app.state.companyId,
+                    id_visitante: vid,
+                    nombre: nombre,
+                    telefono: telefono,
+                    email: email || undefined,  // Forzar inclusión
+                    nss: nss,
+                    rfc: rfc,
+                    curp: curp,
+                    body: body,
+                    referido_por: referido || undefined,  // Forzar inclusión
+                    fecha_nacimiento: fechaNac || undefined,
+                    edad: edadValue,
+                    status: 'NUEVO',
+                    nivel_crm: nivel_crm,
+                    fecha: new Date().toISOString()
+                };
+                // Eliminar campos vacíos antes de enviar
+                Object.keys(payload).forEach(k => {
+                    if (payload[k] === null || payload[k] === '' || payload[k] === undefined) {
+                        delete payload[k];
+                    }
+                });
+                console.log('📦 [PAYLOAD CREATE] Enviando:', JSON.stringify(payload, null, 2));
+                
+                await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ 
+                        action: 'createLead', 
+                        lead: payload, 
+                        token: app.apiToken 
+                    })
+                });
+                
+                app.data.Leads.push(payload);
+                app.state.currentLeadId = payload.id_lead;
+                
+                console.log(`✅ [SAVE_LEAD] Creado: ${payload.id_lead}`);
+            }
+            
+        } catch (err) { 
+            console.error('❌ [SAVE_LEAD] Error:', err);
+        } finally {
+            // Liberar cerrojo con pequeño delay para asegurar propagación de estado
+            setTimeout(() => { app.state._isSavingLead = false; }, 500);
+        }
+    },
+
+    // --- DEBUG DESDE CONSOLA (v16.10.18) ---
+    debugLead: (vid) => {
+        console.log('🔍 [DEBUG LEAD] Buscando:', vid);
+        console.log('📦 Vector:', app.state.leadVector);
+        console.log('💾 localStorage:', JSON.parse(localStorage.getItem('suit_lead_vec_' + vid)));
+        const enCache = (app.data.Leads || []).find(l => String(l.id_visitante) === String(vid));
+        console.log('📋 En cache:', enCache);
+        fetch(app.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'getLeadByVisitor', id_visitante: vid, id_empresa: app.state.companyId, token: app.apiToken })
+        }).then(r => r.json()).then(d => console.log('🌐 Backend:', d));
+    },
+
+    // --- GUARDADO MANUAL DESDE CONSOLA (v16.10.18) ---
+    forceSave: () => {
+        if (app.state.leadVector && Object.keys(app.state.leadVector).length > 0) {
+            console.log('💾 [FORCE_SAVE] Guardando vector:', app.state.leadVector);
+            app.agents.saveLead(app.state.leadVector);
+        } else {
+            console.warn('⚠️ [FORCE_SAVE] No hay datos en el vector');
+        }
     },
 
     openAgentsModal: () => {
@@ -531,66 +1037,64 @@ app.agents = {
         circle.className = 'ai-status-circle warning';
         circle.title = "Verificando conexión con IA...";
 
+        const company = (app.data.Config_Empresas || []).find(c => c.id_empresa === app.state.companyId);
+        const rawList = (company?.usa_soporte_ia || 'openai/gpt-3.5-turbo').toString().split(',').map(m => m.trim()).filter(m => m && m.toUpperCase() !== 'NO' && m.toUpperCase() !== 'TRUE' && m.toUpperCase() !== 'FALSE');
+        const modelList = rawList.map(m => app.agents.normalizeModelName(m));
+        const currentModel = app.state._aiModel || localStorage.getItem('evasol_ai_model') || modelList[0];
+
         try {
-            const currentModel = app.state._aiModel || localStorage.getItem('evasol_ai_model') || "gemini-1.5-flash";
-            const res = await fetch(app.apiUrl, {
+            // v17.0.0: Usar Proxy Seguro en lugar de llamada directa
+            const res = await fetch("/api/ai/chat", {
                 method: 'POST',
-                headers: { "Content-Type": "text/plain" },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    action: 'askGemini',
-                    message: 'health-check-ping',
                     model: currentModel,
-                    token: app.apiToken
+                    messages: [{ role: "user", content: "ping" }]
                 })
             });
             const data = await res.json();
-
-            if (data.success && !data.error) {
+            const isOk = res.ok && (data.choices && data.choices[0] || data.id); // Algunos modelos devuelven ID directo
+            if (isOk) {
+                app.state._aiModel = currentModel;
+                localStorage.setItem('evasol_ai_model', currentModel);
                 circle.className = 'ai-status-circle online';
                 circle.title = `IA Conectada (${currentModel})`;
             } else {
-                // --- DETECCIÓN DE CUOTA EXCEDIDA (v15.8.1) ---
-                const detail = (data.detail || "").toString().toLowerCase();
-                const errorMsg = (data.error || "").toString().toLowerCase();
-                
-                if (detail.includes("quota") || detail.includes("429") || errorMsg.includes("quota") || errorMsg.includes("limit")) {
-                    circle.className = 'ai-status-circle warning';
-                    circle.title = "Cuota de IA saturada. Espera unos segundos (Rate Limit).";
-                    app.ui.updateConsole("AI_QUOTA_REACHED");
-                    return; // No intentar auto-fix si es solo por cuota
+                console.warn(`[AI_HEALTH] Model ${currentModel} failed. Rotating...`);
+                let found = false;
+                for (let m of modelList) {
+                    if (m === currentModel) continue;
+                    try {
+                        const testRes = await fetch("/api/ai/chat", {
+                            method: 'POST',
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                model: m,
+                                messages: [{ role: "user", content: "ping" }]
+                            })
+                        });
+                        const testData = await testRes.json();
+                        if (testRes.ok && (testData.choices && testData.choices[0] || testData.id)) {
+                            app.state._aiModel = m;
+                            localStorage.setItem('evasol_ai_model', m);
+                            circle.className = 'ai-status-circle online';
+                            circle.title = `IA Reconectada (${m})`;
+                            app.ui.updateConsole(`AI_ROTATED_TO: ${m}`);
+                            found = true;
+                            break;
+                        }
+                    } catch (e) { }
                 }
-
-                // Si el modelo específico falló por otra razón, intentar diagnosticar uno nuevo automáticamente
-                console.warn(`[AI_HEALTH] Model ${currentModel} failed. Attempting auto-fix...`);
-                circle.title = "Enlace roto detectado. Intentando reconectar...";
-                
-                // --- AUTO-FIX LINK ENGINE ---
-                const diagRes = await fetch(app.apiUrl, {
-                    method: 'POST',
-                    headers: { "Content-Type": "text/plain" },
-                    body: JSON.stringify({ action: 'listAiModels', token: app.apiToken })
-                });
-                const diagData = await diagRes.json();
-                
-                if (diagData.success && diagData.models && diagData.models.length > 0) {
-                    // Buscar el primer flash disponible (son los más estables para chat)
-                    const backupModel = diagData.models.find(m => m.includes('flash')) || diagData.models[0];
-                    app.state._aiModel = backupModel;
-                    localStorage.setItem('evasol_ai_model', backupModel);
-                    
-                    circle.className = 'ai-status-circle online';
-                    circle.title = `IA Reconectada (${backupModel})`;
-                    app.ui.updateConsole(`AI_LINK_FIXED: ${backupModel}`);
-                } else {
+                if (!found) {
                     circle.className = 'ai-status-circle offline';
-                    circle.title = "Error de Enlace: No se encontraron modelos compatibles.";
-                    app.ui.updateConsole("AI_LINK_BROKEN", true);
+                    circle.title = 'IA Desconectada (Todos los modelos fallaron).';
+                    app.ui.updateConsole('AI_TOTAL_FAIL', true);
                 }
             }
         } catch (e) {
             circle.className = 'ai-status-circle offline';
-            circle.title = "Error de Red: No hay respuesta del backend.";
-            app.ui.updateConsole("AI_NET_ERR", true);
+            circle.title = 'Error de Red: No hay respuesta del backend.';
+            app.ui.updateConsole('AI_NET_ERR', true);
         }
     },
     updateAiProgress: (percent, status) => {
@@ -708,6 +1212,48 @@ app.agents = {
         } finally {
             document.getElementById('ai-loading').classList.add('hidden');
             document.getElementById('btn-send-chat').disabled = false;
+        }
+    },
+
+    callOpenRouterAI: async (model, userMessage, promptBase) => {
+        try {
+            // 1. Preparar Mensajes
+            const messages = [
+                { role: "system", content: promptBase },
+                ...app.state.chatHistory.map(h => ({
+                    role: h.role === 'user' ? 'user' : 'assistant',
+                    content: h.content
+                })),
+                { role: "user", content: userMessage }
+            ];
+
+            // 2. Ejecutar Llamada a través del Proxy Seguro del Servidor (v17.0.0)
+            const response = await fetch("/api/ai/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messages
+                })
+            });
+
+            const data = await response.json();
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                return {
+                    success: true,
+                    answer: data.choices[0].message.content
+                };
+            } else {
+                return {
+                    success: false,
+                    error: data.error?.message || "Error desconocido a través del Proxy local."
+                };
+            }
+        } catch (e) {
+            console.error("[PROXY_AI_ERROR]", e);
+            return { success: false, error: "Fallo de comunicación con el Proxy de Seguridad local." };
         }
     }
 };

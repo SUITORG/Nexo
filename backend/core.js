@@ -4,6 +4,20 @@
  * ---------------------------------------------------------
  */
 
+/** 
+ * 🛠️ CONFIGURACIÓN DE SEGURIDAD (v16.10.27)
+ * Ejecuta esta función SOLO UNA VEZ en tu editor de Google Apps Script 
+ * para guardar tu llave de OpenRouter de forma segura.
+ */
+function setupOpenRouterKey() {
+  const key = "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";
+  PropertiesService.getScriptProperties().setProperty('OPENROUTER_API_KEY', key);
+  PropertiesService.getScriptProperties().setProperty('USE_OPENROUTER', 'true');
+  Logger.log("✅ [SEGURIDAD] OPENROUTER_API_KEY guardada permanentemente en Script Properties.");
+  return "Llave guardada con éxito. Ya puedes borrar esta función o comentar la llave.";
+}
+
+
 const CONFIG = {
   VERSION: "15.9.9", // Sistema Estable (v15.9.9)
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
@@ -70,7 +84,11 @@ function doPost(e) {
 
 function handlePostAction(data, result) {
   var lock = LockService.getScriptLock();
-  try { lock.waitLock(15000); } catch (e) { throw new Error("Busy"); }
+  try { lock.waitLock(30000); } catch (e) { 
+    result.success = false;
+    result.error = 'LOCK_TIMEOUT: ' + action;
+    return;
+  }
   var ss = getSS();
   var action = data.action;
   var output = result; 
@@ -103,11 +121,60 @@ function handlePostAction(data, result) {
           evento: "CAMBIO_ESTATUS", comentario: data.comentario || ("Cambio a " + data.status), fecha: new Date()
         });
         output.success = true; break;
+      case "getLeadByVisitor":
+        var allLeads = getSheetData(ss, "Leads", data.id_empresa);
+        var lead = allLeads.filter(l => String(l.id_visitante) === String(data.id_visitante)).pop();
+        if (lead) {
+          result.lead = lead;
+          result.success = true;
+        } else { result.success = true; } 
+        break;
       case "createLead": 
-        data.lead.id_lead = "LEAD-" + (ss.getSheetByName("Leads").getLastRow() + 99);
-        appendRowMapped(ss, "Leads", data.lead);
-        output.newId = data.lead.id_lead;
-        output.success = true; break;
+        // 🔒 PROTECCIÓN ATÓMICA: Evitar duplicados
+        var leads = getSheetData(ss, "Leads", data.lead.id_empresa || "SYSTEM");
+        var cleanTel = (data.lead.telefono || "").replace(/[\s\-]/g,"");
+        var existingLead = leads.find(l => 
+          String(l.id_visitante) === String(data.lead.id_visitante) || 
+          (data.lead.email && String(l.email).toLowerCase() === String(data.lead.email).toLowerCase()) ||
+          (cleanTel && String(l.telefono).replace(/[\s\-]/g,"") === cleanTel)
+        );
+        if (existingLead) {
+          updateRowMapped(ss, "Leads", "id_lead", existingLead.id_lead, data.lead);
+          output.success = true;
+          output.msg = "LEAD_MERGED";
+        } else {
+          data.lead.id_lead = "LEAD-" + (ss.getSheetByName("Leads").getLastRow() + 99);
+          appendRowMapped(ss, "Leads", data.lead);
+          output.newId = data.lead.id_lead;
+          output.success = true; 
+        }
+        break;
+      case "updateLead":
+        try {
+          const lead = data.lead;
+          if (!lead || !lead.id_lead) {
+            output.success = false;
+            output.error = "MISSING_ID_LEAD";
+            break;
+          }
+          Logger.log("[BACKEND] updateLead recibido: " + JSON.stringify(lead));
+          // Filtrar solo campos que vinieron con contenido real
+          const updateObj = {};
+          for (let k in lead) {
+            if (k !== 'id_lead' && lead[k] !== undefined && lead[k] !== null && lead[k] !== '') {
+              updateObj[k] = lead[k];
+            }
+          }
+          Logger.log("[BACKEND] Actualizando con: " + JSON.stringify(updateObj));
+          updateRowMapped(ss, "Leads", "id_lead", lead.id_lead, updateObj);
+          output.success = true;
+          output.message = "Lead actualizado: " + lead.id_lead;
+        } catch (error) {
+          Logger.log("[ERROR] updateLead: " + error.message);
+          output.success = false;
+          output.error = error.message;
+        }
+        break;
       case "saveAiConversation":
         appendRowMapped(ss, "Logs_Chat_IA", {
           id_conversacion: data.id_conversacion, id_visitante: data.id_visitante,

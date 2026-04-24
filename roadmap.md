@@ -10,6 +10,10 @@ Este archivo es tu **Centro de Comando**. Úsalo para controlar el avance del pr
 
 Este documento rastrea el cumplimiento de las reglas fundamentales y la visión del proyecto.
 
+- [x] **v16.7.28: Hybrid AI Brain & Resiliency**: Implementación de motor dual (Gemini/OpenRouter) con auto-rotación de modelos gratuitos (Qwen, Gemma) y factor de humanización (Real-Typing). Botón de reparación de emergencia en barra de estatus.
+- [ ] **v16.9.8: JSON Generator Tool**: Implementar tablas de salida que generen la estructura JSON automáticamente basándose en los datos persistentes de la empresa. El objetivo es facilitar el proceso de "Copiar y Pegar" hacia la tabla `Config_Paginas`.
+- [ ] **v16.9.5: UI Polishing & SEO Shield**: (Heredado) Perfeccionar el filtrado de JSON-LD crudo (letras blancas), asegurar la inyección del logo corporativo como fallback lateral y optimizar el versionado dinámico de scripts para evitar problemas de caché en producción.
+- [ ] **v16.8.5: Automatic GSheet to Supabase Cloud-Sync**: Implementar el "Puente Invisible" que sincronice automáticamente los cambios de Google Sheets a Supabase sin intervención manual, asegurando coherencia total de datos en tiempo real.
 - [ ] **v16.1.0: Auditoría de Sistemas & Strategic Planning**: Análisis profundo de seguridad multi-inquilino (RLS), optimización de rendimiento (Sheets to SQL) y diseño de integración con NotebookLM MCP (Punto 3).
 - [x] **v15.8.9: Persistent Memory & Martha Padrón Human-Flow**: Sincronización cerebral de 1,175 líneas y prompt estratégico de Martha Padrón v15.8.9 (Estratega de Confianza). Activación de Memoria Semántica en GSheets.
 - [ ] **v15.9.0: Modular Architecture & CLASP Integration**: Dividir `backend_schema.gs` en módulos (`Core`, `AI`, `Seeds`, `Utils`) e implementar sincronización local vía Google Clasp para evitar truncamiento de archivos.
@@ -277,5 +281,7 @@ Este documento rastrea el cumplimiento de las reglas fundamentales y la visión 
 - [ ] **Remotion Video Engine**: Implementación de motor de generación de video programático para publicidad dinámica basada en datos del catálogo.
 - [x] **v6.3.1: SEO Indexing Audit (Google/Meta)**: Verificar por qué los enlaces dinámicos (ej: `ROBERTO_V`) no son indexados correctamente. Auditoría realizada y optimizada via Sitemap dinámico.
 - [ ] **v6.4.0: Discovery & Visitor Seeding**: Implementar persistencia de visitas (`LocalStorage/Cookies`) por negocio para telemetría de retención y reconocimiento de clientes recurrentes.
+- [ ] **v16.8.0: Admin Manual Gallery Management**: Crear un panel de control para que el administrador pueda subir, eliminar y reordenar fotos de la galería directamente (Arrastrar y Soltar), eliminando la dependencia exclusiva del flujo de invitados con IA.
+
 ---
-*Última actualización: 2026-03-20 | Versión: v15.8.8 (STABLE)*
+*Última actualización: 2026-04-09 | Versión: v16.7.28 (ACTIVE)*

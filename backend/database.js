@@ -38,7 +38,7 @@ function initializeDatabase(ss, output) {
   const leadsSheet = ss.getSheetByName("Leads");
   if (leadsSheet) {
     const h = leadsSheet.getRange(1, 1, 1, leadsSheet.getLastColumn()).getValues()[0];
-    const missing = ["apellido", "edad", "semanas_cotizadas", "referido_por", "nss", "curp", "rfc", "hora_llamada"].filter(f => h.indexOf(f) === -1);
+    const missing = ["id_visitante", "id_conversacion", "apellido", "edad", "fecha_nacimiento", "semanas_cotizadas", "referido_por", "nss", "curp", "rfc", "hora_llamada"].filter(f => h.indexOf(f) === -1);
     missing.forEach(f => {
       leadsSheet.insertColumnAfter(leadsSheet.getLastColumn()).getRange(1, leadsSheet.getLastColumn()+1).setValue(f);
     });

@@ -1,45 +1,98 @@
 /* SuitOrg Backend - AI Engine Module (v16.1.9 - INTELIGENCIA DINÁMICA) */
 
 function runGeminiInference(data, output) {
-  const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
-  if (!apiKey) { output.error = "Error: Key no configurada."; return; }
-
-  // 📡 PASO 1: Escanear qué modelos SÍ funcionan en tu cuenta
-  var validModels = listAiModels(); 
-  // Filtrar solo los que soportan generación de texto (evitar embeddings)
-  var modelsToTry = validModels.filter(m => m.methods && m.methods.includes("generateContent")).map(m => m.name);
+  const geminiKey = (PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY') || "").trim();
+  const openRouterKey = (PropertiesService.getScriptProperties().getProperty('OPENROUTER_API_KEY') || "").trim();
+  const effectiveORKey = openRouterKey || geminiKey;
   
-  // Si no hay ninguno útil, probamos los clásicos por si acaso
+  // 📡 PASO 1: Obtener lista de modelos (Prioridad)
+  // Viene de Config_Empresas.usa_soporte_ia
+  let modelsToTry = (data.ai_config || "gemini-1.5-flash").split(',').map(m => m.trim()).filter(Boolean);
+  
+  // Si no hay lista, cargamos fallback de seguridad
   if (modelsToTry.length === 0) modelsToTry = ["gemini-1.5-flash", "gemini-pro"];
 
   const messages = [{ role: "user", parts: [{ text: "SYSTEM_INSTRUCTIONS:\n" + (data.promptBase || "Ok.") }] }, { role: "model", parts: [{ text: "Entendido." }] }];
   if (data.history) data.history.forEach(h => messages.push({ role: h.role==='user'?'user':'model', parts: [{text:h.content}] }));
   messages.push({ role: "user", parts: [{ text: data.message || "Hola" }] });
 
+  // Formato para OpenRouter (mensajes chat)
+  const chatMessages = messages.map(m => ({
+    role: m.role === 'model' ? 'assistant' : 'user',
+    content: m.parts[0].text
+  }));
+
   var lastError = "";
-  var apiVersions = ["v1", "v1beta"];
 
-  // 📡 PASO 2: Intentar conexión con los modelos confirmados
-  for (var v = 0; v < apiVersions.length; v++) {
-    for (var i = 0; i < modelsToTry.length; i++) {
-        try {
-          // Normalizar nombre del modelo (asegurar que no tenga duplicado el prefijo models/)
-          var mName = modelsToTry[i].replace("models/", "");
-          var url = `https://generativelanguage.googleapis.com/${apiVersions[v]}/models/${mName}:generateContent?key=${apiKey}`;
-          
-          const res = UrlFetchApp.fetch(url, {
-            method: "POST", contentType: "application/json", payload: JSON.stringify({ contents: messages }), muteHttpExceptions: true
-          });
+  // 📡 PASO 2: Bucle de Resiliencia (Fallback secuencial)
+  for (var i = 0; i < modelsToTry.length; i++) {
+    var mName = modelsToTry[i];
+    try {
+      console.log(`🤖 [IA_ENGINE] Intentando con: ${mName}...`);
+      
+      // Deteminar si es OpenRouter (contiene / o no empieza por gemini)
+      const isOpenRouter = mName.includes("/") || !mName.toLowerCase().startsWith("gemini");
+      
+      let url, payload, headers;
+      
+      if (isOpenRouter) {
+        // --- CONFIG OPENROUTER ---
+        if (!effectiveORKey) { console.warn("⏭️ Saltando OpenRouter: Sin API Key"); continue; }
+        url = "https://openrouter.ai/api/v1/chat/completions";
+        headers = {
+          "Authorization": "Bearer " + effectiveORKey,
+          "HTTP-Referer": "https://suitorg.com", // Opcional
+          "X-Title": "SuitOrg AI Engine",
+          "Content-Type": "application/json"
+        };
+        payload = JSON.stringify({
+          model: mName,
+          messages: chatMessages
+        });
+      } else {
+        // --- CONFIG GEMINI DIRECTO ---
+        if (!geminiKey) { console.warn("⏭️ Saltando Gemini: Sin API Key"); continue; }
+        
+        let mClean = mName.replace("models/", "");
+        // 🧪 NORMALIZACIÓN AGRESIVA (Lo que funcionó en v16.1.4)
+        if (mClean.includes("gemini-1.5-flash") && !mClean.includes("-latest")) {
+          mClean = "gemini-1.5-flash-latest";
+        }
+        
+        console.log(`📡 [IA_ENGINE] Invocando Gemini v1beta: ${mClean}`);
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${mClean}:generateContent?key=${geminiKey}`;
+        headers = { "Content-Type": "application/json" };
+        payload = JSON.stringify({ contents: messages });
+      }
 
-          if (res.getResponseCode() === 200) {
-            output.answer = JSON.parse(res.getContentText()).candidates[0].content.parts[0].text;
-            output.success = true; output.active_model = mName; return;
-          }
-          lastError = `Mod: ${mName} (${apiVersions[v]}) -> Cod: ${res.getResponseCode()}`;
-        } catch (e) { lastError = e.message; }
+      const res = UrlFetchApp.fetch(url, {
+        method: "POST", headers: headers, payload: payload, muteHttpExceptions: true
+      });
+
+      const responseCode = res.getResponseCode();
+      const content = res.getContentText();
+
+      if (responseCode === 200) {
+        const json = JSON.parse(content);
+        // Extraer texto según el formato del API
+        output.answer = isOpenRouter ? json.choices[0].message.content : json.candidates[0].content.parts[0].text;
+        output.success = true; 
+        output.active_model = mClean; 
+        console.log(`✅ [IA_ENGINE] Éxito con: ${mClean}`);
+        return;
+      }
+      
+      const safeUrl = url.split("?")[0];
+      lastError = `Mod: ${mClean} (En: ${safeUrl}) -> Cod: ${responseCode} | ${content.substring(0,100)}`;
+      console.warn(`⚠️ [IA_ENGINE] Falló ${mName}: ${lastError}`);
+      
+    } catch (e) { 
+      lastError = e.message; 
+      console.error(`❌ [IA_ENGINE] Error crítico en ${mName}: ${lastError}`);
     }
   }
-  output.error = "Fallo de Inferencia: " + lastError;
+  
+  output.error = "Fallo de Inferencia Multimodelo: " + lastError;
 }
 
 // 🩺 DIAGNÓSTICO PROFUNDO

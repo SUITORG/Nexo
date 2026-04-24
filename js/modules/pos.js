@@ -375,8 +375,13 @@ app.pos = {
         console.log('🔵 [SUPABASE_CHECKOUT] 1/6 - Iniciando transacción...');
 
         try {
-            const SB_URL = app.sbUrl || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
-            const SB_KEY = app.sbKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVneXhnbmxuemFueHBxeXV2bXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDE2NjMsImV4cCI6MjA4OTY3NzY2M30.8nBh6b3pphZcM93Qi23Qa2_TB88ofGGWo18rsAszTrw';
+            const SB_URL = app.sbUrl;
+            const SB_KEY = app.sbKey;
+
+            if (!SB_URL || !SB_KEY) {
+                console.error("❌ [SUPABASE_ERROR] Credenciales no encontradas en el orquestador.");
+                throw new Error("Sistema no configurado: faltan credenciales de Supabase.");
+            }
             const headers = {
                 'Content-Type': 'application/json',
                 'apikey': SB_KEY,

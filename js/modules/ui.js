@@ -101,10 +101,49 @@ app.ui = {
         const biz = app.data.Config_Empresas.find(c => String(c.id_empresa).toUpperCase() === String(app.state.companyId).toUpperCase());
         const aiContainer = document.getElementById('sb-ai-container');
         if (aiContainer) {
-        const aiVal = (biz?.usa_soporte_ia || "").toString().toUpperCase();
-        const usesAi = aiVal === 'TRUE' || aiVal.includes(',');
+        const aiVal = (biz?.usa_soporte_ia || biz?.agent_enabled || "").toString().toUpperCase();
+        
+        // --- LOGICA DE ACTIVACIÓN HIBRIDA (v16.7.28) ---
+        const hasAiKeyword = aiVal.includes('TRUE') || aiVal.includes('GEMINI') || aiVal.includes('QWEN') || aiVal.includes('/') || aiVal.includes('PRO');
+        const isExplicitlyOff = aiVal.startsWith('FALSE') || aiVal.endsWith(',NO');
+        const usesAi = hasAiKeyword && !isExplicitlyOff;
+
+        // --- INDICADOR DISCRETO DE MODELO (v16.10.16) ---
+        const modelDisplay = document.getElementById('sb-ai-model');
+        if (modelDisplay) {
+            const currentModel = biz?.usa_soporte_ia || app.config.defaultModel || 'GEMINI';
+            const modelName = currentModel.includes('/') ? currentModel.split('/').pop().split(':')[0] : currentModel;
+            const shortName = modelName.replace('gemini-', 'G-').replace('v1beta', 'β').toUpperCase();
+            
+            if (usesAi) {
+                if (app.state.lastAiModel && app.state.lastAiModel !== shortName) {
+                    app.utils.playBuzz();
+                }
+                modelDisplay.innerText = `🤖 ${shortName}`;
+                modelDisplay.style.opacity = '0.5';
+                app.state.lastAiModel = shortName;
+            } else {
+                modelDisplay.innerText = '';
+            }
+        }
+
         if (usesAi) {
                 aiContainer.classList.remove('hidden');
+                
+                // --- BOTÓN DE REPARACIÓN RÁPIDA IA (v16.7.28) ---
+                const oldRepair = document.getElementById('sb-ai-repair');
+                if (!oldRepair) {
+                    const repairBtn = document.createElement('i');
+                    repairBtn.id = 'sb-ai-repair';
+                    repairBtn.className = 'fa-solid fa-screwdriver-wrench';
+                    repairBtn.style.cssText = 'font-size: 0.6rem; color: rgba(255,255,255,0.4); cursor: pointer; margin-left: 5px; transition: 0.3s;';
+                    repairBtn.title = 'Reparación de Emergencia IA';
+                    repairBtn.onmouseover = () => repairBtn.style.color = '#fff';
+                    repairBtn.onmouseout = () => repairBtn.style.color = 'rgba(255,255,255,0.4)';
+                    repairBtn.onclick = () => app.agents.triggerMicroAuthRepair();
+                    aiContainer.appendChild(repairBtn);
+                }
+
                 if (app.agents?.checkAiHealth) app.agents.checkAiHealth();
             } else {
                 aiContainer.classList.add('hidden');

@@ -12,6 +12,28 @@
     --personal-text: #1a1a1a;
 }
 
+/* --- INNOVATION PACK ANIMATIONS (v16.7.24) --- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bounce-soft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+.animate-bounce-soft { animation: bounce-soft 3s ease infinite; }
+.animate-cascade { animation: fadeInUp 0.8s ease backwards; }
+
+.btn-glass-upload:hover {
+    background: rgba(255,255,255,0.4) !important;
+    transform: scale(1.1);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
 /* --- TRANSITION LOADER (v6.2.7) --- */
 .orbit-spinner {
     width: 60px;
@@ -4425,3 +4447,11 @@ body.menu-open {
     font-family: 'Outfit', sans-serif;
     letter-spacing: -0.5px;
 }
+/* --- AI HUMANIZATION & SKELETON (v16.7.28) --- */
+.typing-indicator { display: flex; gap: 4px; align-items: center; padding: 5px 0; }
+.typing-indicator span { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: typing-bounce 1s infinite ease-in-out; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing-bounce { 0%, 100% { transform: translateY(0); opacity: 0.3; } 50% { transform: translateY(-4px); opacity: 1; } }
+.skeleton-box { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: skeleton-load 1.5s infinite; border-radius: 8px; }
+@keyframes skeleton-load { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }

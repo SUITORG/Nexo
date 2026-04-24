@@ -387,9 +387,11 @@ app.events = {
         const referralChoice = document.querySelector('input[name="referral-choice"]:checked');
         const referralValue = referralChoice && referralChoice.value === 'SI' ? (elReferral ? elReferral.value : 'SI') : 'NO';
 
+        // --- PAYLOAD NORMALIZADO (v16.10.17) - Coincide con schema GSheets ---
         const finalLead = {
-            id_lead: existingLead ? existingLead.id_lead : null, // El servidor asignará LEAD-xxx
+            id_lead: existingLead ? existingLead.id_lead : null,
             id_empresa: app.state.companyId,
+            id_visitante: existingLead ? existingLead.id_visitante : null,
             nombre: toTitleCase(document.getElementById('lead-name').value),
             apellido: elLastName ? toTitleCase(elLastName.value) : '',
             edad: elAge ? parseInt(elAge.value) : null,
@@ -401,24 +403,22 @@ app.events = {
             telefono: phone,
             email: document.getElementById('lead-email').value,
             direccion: document.getElementById('lead-address').value,
-            // Extra Billing Data
             rfc: elRfc ? elRfc.value : '',
             nom_negocio: elBiz ? elBiz.value : '',
             dir_comercial: elBillDir ? elBillDir.value : '',
-
-            // --- Integración Dinámica Seguros (v6.1.7) ---
             asunto: isPaper ? `Solicitud Auditoría - ${document.getElementById('lead-subtype').value}` : (app.state._currentLeadSubtype ? `Cotización ${app.state._currentLeadSubtype}` : 'Contacto Web'),
             body: isPaper ? `Edad: ${elAge?.value} | Semanas: ${elWeeks?.value} | NSS: ${elNss?.value} | CURP: ${elCurp?.value} | RFC: ${elRfc?.value} | Referido: ${referralValue}` : (app.state._currentLeadBody || ''),
             subtipo_negocio: isPaper ? document.getElementById('lead-subtype').value : (app.state._currentLeadSubtype || ''),
-
-            origen: existingLead ? (existingLead.origen || "Web") : "Web",
-            estado: existingLead ? (existingLead.estado || "NUEVO") : "NUEVO",
-            estatus: existingLead ? (existingLead.estado || "NUEVO") : "NUEVO",
-            nivel_crm: (hasBilling || isPaper) ? 2 : 1, // 2: Datos completos, 1: Datos básicos
-            fecha: existingLead ? (existingLead.fecha || existingLead.fecha_creacion) : ((app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString()),
-            fecha_creacion: existingLead ? (existingLead.fecha_creacion) : ((app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString()),
-            fecha_actualizacion: (app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString()
+            status: existingLead ? (existingLead.status || "NUEVO") : "NUEVO",
+            nivel_crm: (hasBilling || isPaper) ? 2 : 1,
+            fecha: existingLead ? (existingLead.fecha || existingLead.fecha_creacion) : ((app.utils && app.utils.getTimestamp) ? app.utils.getTimestamp() : new Date().toISOString())
         };
+        // Eliminar campos vacíos (el backend GSheets ignora null/undefined)
+        Object.keys(finalLead).forEach(k => {
+            if (finalLead[k] === null || finalLead[k] === '' || finalLead[k] === undefined) {
+                delete finalLead[k];
+            }
+        });
 
         // Limpiar estados temporales después de la captura
         app.state._currentLeadSubtype = null;

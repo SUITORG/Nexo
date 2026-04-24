@@ -210,7 +210,7 @@ app.public = {
 
             if (pageData && hash !== 'home') {
                 // MODO SUB-PÁGINA: [Contenido] -> [SEO] -> [Banner]
-                if (bizType === 'SERVICIOS') {
+                if (bizType.includes('SERVICIOS')) {
                     viewHome.prepend(storySection); // Servicios: Contenido arriba del todo
                 } else {
                     viewHome.insertBefore(storySection, seoSection);
@@ -234,7 +234,7 @@ app.public = {
                 if (inactiveBanner) inactiveBanner.style.display = 'none';
                 viewHome.appendChild(storySection); // Contenido al final
                 storySection.style.marginTop = "40px";
-                if (bizType === 'SERVICIOS') storySection.classList.add('hidden'); // Ocultar si estamos en Home-Servicios
+                if (bizType.includes('SERVICIOS')) storySection.classList.add('hidden'); // Ocultar si estamos en Home-Servicios
             }
         }
 
@@ -410,7 +410,7 @@ app.public = {
                                             <!-- QR (Izquierda) -->
                                             <div class="banner-qr-official animate-cascade" style="background:white; padding:8px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px; box-shadow:0 10px 20px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); animation-delay: 1.1s;">
                                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?id=' + company.id_empresa)}" style="width:35px; height:35px; image-rendering:pixelated;">
-                                                <span style="font-size:0.45rem; color:#000; font-weight:900; text-transform:uppercase;">${company.bizid || 'PAPER'}</span>
+                                                <span style="font-size:0.45rem; color:#000; font-weight:900; text-transform:uppercase;">${company.nomempresa || company.id_empresa}</span>
                                             </div>
 
                                             <!-- Botones (Centro) -->
@@ -419,8 +419,8 @@ app.public = {
                                                     CONTACTAR
                                                 </button>
                                                 ${(() => {
-                        const aiVal = (company.usa_soporte_ia || "").toString().toUpperCase();
-                        const usesAi = aiVal === 'TRUE' || aiVal.includes(',');
+                        const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
+                        const usesAi = !rawAi.endsWith(',NO') && (rawAi === 'TRUE' || rawAi.includes(','));
                         return usesAi ? `
                                                     <button class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
                                                         IA
@@ -473,19 +473,28 @@ app.public = {
 
                             return `
                                                 <div class="dynamic-entry" style="animation: fadeIn 0.5s ease;">
-                                                    <h2 style="font-size:2.4rem; color:${company.color_tema || '#034c3c'}; margin:0; font-weight:900; line-height:1.1; letter-spacing:-1px;">
+                                                    <h1 style="font-size:2.4rem; color:white; margin:0; font-weight:900; line-height:1.1; letter-spacing:-1px; text-shadow: 0 4px 20px rgba(0,0,0,0.9);">
                                                         ${displayTitle}
-                                                    </h2>
-                                                    ${displaySub ? `<h3 style="font-size:1.2rem; color:#666; margin:15px 0 0 0; font-weight:500;">${displaySub}</h3>` : ''}
-                                                    <div style="font-size:1.1rem; line-height:1.7; color:#333; margin-top:25px; opacity:0.9;">
+                                                    </h1>
+                                                    ${displaySub ? `<h2 style="font-size:1.2rem; color:white; margin:15px 0 0 0; font-weight:700; text-shadow: 0 3px 15px rgba(0,0,0,0.8);">${displaySub}</h2>` : ''}
+                                                    <div style="font-size:1.1rem; line-height:1.7; color:white; margin-top:25px; text-shadow: 0 2px 10px rgba(0,0,0,0.7);">
                                                         ${displayBody}
                                                     </div>
                                                 </div>
                                             `;
                         } else {
+                            // --- HOGAR SEMÁNTICO (v17.6.0 - SEO/GEO Master) ---
+                            // Prioridad: Giro(H1) > Slogan(H2) > Descripcion(H3)
                             return `
-                                                <h2 style="font-size:2.2rem; color:${company.color_tema || '#034c3c'}; margin:0; font-weight:900;">${company.nomempresa}</h2>
-                                                <p style="font-size:1.1rem; line-height:1.7; color:#444; margin-top:20px;">${company.descripcion || 'Seleccione una opción para conocer más sobre nuestra labor.'}</p>
+                                                <h1 style="font-size:2.2rem; color:white; margin:0; font-weight:900; line-height:1.1; text-shadow: 0 5px 25px rgba(0,0,0,0.8);">
+                                                    ${company.giro_especifico || company.nomempresa}
+                                                </h1>
+                                                <h2 style="font-size:1.3rem; color:white; margin-top:15px; font-weight:700; text-shadow: 0 3px 15px rgba(0,0,0,0.7);">
+                                                    ${company.slogan_empresa || company.slogan || ''}
+                                                </h2>
+                                                <h3 style="font-size:1.1rem; line-height:1.7; color:white; margin-top:20px; font-weight:500; text-shadow: 0 2px 10px rgba(0,0,0,0.6);">
+                                                    ${company.descripcion || ''}
+                                                </h3>
                                             `;
                         }
                     })()}
@@ -500,37 +509,69 @@ app.public = {
                                 </div>
                             </div>
 
-                            <!-- PARTE 3: GALERÍA DINÁMICA (v12.0.0 - Responsive) -->
+                            <!-- PARTE 3: GALERÍA DINÁMICA (v16.7.27 - Innovation Pack + Collage) -->
                             <div class="personal-section">
-                                <div class="personal-gallery-card personal-card-base" style="background:#111;">
+                                <div class="personal-gallery-card personal-card-base" 
+                                     style="background:#111; overflow:hidden; perspective: 1000px;"
+                                     onmousemove="app.public.handleGallery3DTilt(event, this)">
                                     ${(() => {
-                        const gallery = (app.data.Config_Galeria || []).filter(g => {
-                            const gCoId = String(g.id_empresa || "").toUpperCase();
-                            return gCoId === urlId || gCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
-                        });
+                                        let gallery = (app.data.Config_Galeria || []).filter(g => {
+                                            const gCoId = String(g.id_empresa || "").toUpperCase();
+                                            return gCoId === urlId || gCoId.replace(/_/g, "") === urlId.replace(/_/g, "");
+                                        });
 
-                        if (gallery.length > 0) {
-                            return `
+                                        // --- ORDENAR POR LO MÁS NUEVO (v16.7.27) ---
+                                        gallery.sort((a, b) => (b.created_at ? new Date(b.created_at) : 0) - (a.created_at ? new Date(a.created_at) : 0));
+
+                                        if (gallery.length > 0) {
+                                            const recent = gallery.slice(0, 3);
+                                            return `
+                                                <!-- COLLAGE DE CONFIRMACIÓN VISUAL (Recién subidas) -->
+                                                <div id="recent-uploads-collage" style="position:absolute; top:30px; left:30px; z-index:40; display:flex; gap:10px; pointer-events:none;">
+                                                    ${recent.map((img, i) => `
+                                                        <div style="width:50px; height:50px; border-radius:12px; border:2px solid white; overflow:hidden; box-shadow:0 10px 20px rgba(0,0,0,0.5); transform:rotate(${i*5-5}deg); background:#222; animation: suit-fade-up 0.5s ease backwards; animation-delay:${i*0.2}s;">
+                                                            <img src="${app.utils.fixDriveUrl(img.foto_url || img.url)}" style="width:100%; height:100%; object-fit:cover;">
+                                                        </div>
+                                                    `).join('')}
+                                                    <div style="background:rgba(0,230,118,0.9); color:black; padding:5px 12px; border-radius:20px; font-size:0.55rem; font-weight:900; height:fit-content; margin-top:10px; box-shadow:0 5px 15px rgba(0,230,118,0.4); animation: pulse-green 2s infinite;">RECIENTES</div>
+                                                </div>
+
                                                 <div id="personal-carousel" style="position:absolute; inset:0; display:flex; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); width: ${gallery.length * 100}%;">
                                                     ${gallery.map(img => `
-                                                        <div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(img.foto_url || img.url)}') center center / cover no-repeat;"></div>
+                                                        <div class="carousel-slide-item" style="width: 100%; height: 100%; position:relative; background: url('${app.utils.fixDriveUrl(img.foto_url || img.url)}') center center / cover no-repeat;">
+                                                            <!-- AI STORYTELLER BUBBLE (v16.7.24) -->
+                                                            <div class="ai-story-bubble hidden" style="position:absolute; background: rgba(255,255,255,0.7); backdrop-filter:blur(10px); color:#000; padding:10px 20px; border-radius:30px; font-weight:900; font-size:0.7rem; box-shadow:0 10px 30px rgba(0,0,0,0.3); pointer-events:none; z-index:20; white-space:nowrap; text-transform:uppercase;">
+                                                                <i class="fas fa-sparkles"></i> <span class="bubble-text">Capturado ahora mismo</span>
+                                                            </div>
+                                                        </div>
                                                     `).join('')}
                                                 </div>
                                                 <!-- Indicadores de Galería -->
-                                                <div style="position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10;">
+                                                <div id="carousel-dots-container" style="position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10;">
                                                     ${gallery.map((_, i) => `<div class="carousel-dot" data-index="${i}" style="width:8px; height:8px; border-radius:50%; background:${i === 0 ? '#ffd700' : 'rgba(255,255,255,0.4)'}; transition:0.3s;"></div>`).join('')}
                                                 </div>
                                             `;
-                        } else {
-                            return `<div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}') center center / cover no-repeat;"></div>`;
-                        }
-                    })()}
+                                        } else {
+                                            return `<div style="width: 100%; height: 100%; background: url('${app.utils.fixDriveUrl(company.foto_agente || company.logo_url)}') center center / cover no-repeat;"></div>`;
+                                        }
+                                    })()}
                                     
                                     <!-- Overlay de Galería -->
                                     <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 40%); pointer-events:none;"></div>
-                                    <div style="position:absolute; bottom:30px; right:30px; color:white; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:2px; opacity:0.8; z-index:10;">
-                                        <i class="fas fa-camera-retro" style="margin-right:8px;"></i> Galería Privada
+                                    
+                                    <!-- CONTROLES PREMIUM (v16.7.24) -->
+                                    <div style="position:absolute; bottom:30px; left:30px; display:flex; gap:15px; z-index:10;">
+                                        <div style="color:white; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:2px; opacity:0.8;">
+                                            <i class="fas fa-camera-retro" style="margin-right:8px;"></i> Galería Interactiva
+                                        </div>
                                     </div>
+
+                                    <!-- BOTÓN DE SUBIDA (Invitados Nivel 0) -->
+                                    <button onclick="app.public.showGuestUploadModal()" 
+                                            class="btn-glass-upload animate-bounce-soft"
+                                            style="position:absolute; bottom:25px; right:25px; width:50px; height:50px; border-radius:50%; background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.3); color:white; font-size:1.2rem; cursor:pointer; z-index:25; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(0,0,0,0.5);">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -538,18 +579,62 @@ app.public = {
                 `;
                 personalNode.style.display = 'block';
 
-                // Activar Autoplay Dinámico cada 5 Segundos (v16.7.22)
+                // Activar Autoplay Dinámico con AI Storyteller (v16.7.24)
                 const carouselEl = document.getElementById('personal-carousel');
                 const dots = document.querySelectorAll('.carousel-dot');
-                if (carouselEl && dots.length > 1) {
+                if (carouselEl && dots.length > 0) {
                     if (window._personalCarouselInterval) clearInterval(window._personalCarouselInterval);
                     let current = 0;
                     const total = dots.length;
+
+                    const storytellerPhrases = [
+                        "Dando vida a este proyecto ✨",
+                        "¡Un momento increíble! 📸",
+                        "Capturando la esencia pura 💎",
+                        "Desde el corazón del negocio ❤️",
+                        "Viviendo la experiencia completa 🔥",
+                        "Innovación en cada detalle 🚀",
+                        "Calidad que se siente 🌟",
+                        "¡Inspiración pura para hoy! 🌠"
+                    ];
+
+                    const updateStory = (index) => {
+                        const slides = carouselEl.querySelectorAll('.carousel-slide-item');
+                        slides.forEach((s, i) => {
+                            const bubble = s.querySelector('.ai-story-bubble');
+                            if (bubble) {
+                                if (i === index) {
+                                    // Aleatorizar posición de esquina
+                                    const corners = [
+                                        { top: '20px', left: '20px' },
+                                        { top: '20px', right: '20px' },
+                                        { bottom: '80px', left: '20px' },
+                                        { bottom: '80px', right: '20px' }
+                                    ];
+                                    const corner = corners[Math.floor(Math.random() * corners.length)];
+                                    bubble.style.top = corner.top || 'auto';
+                                    bubble.style.left = corner.left || 'auto';
+                                    bubble.style.right = corner.right || 'auto';
+                                    bubble.style.bottom = corner.bottom || 'auto';
+                                    
+                                    bubble.querySelector('.bubble-text').innerText = storytellerPhrases[Math.floor(Math.random() * storytellerPhrases.length)];
+                                    bubble.classList.remove('hidden');
+                                    bubble.style.animation = 'fadeInUp 0.8s ease';
+                                } else {
+                                    bubble.classList.add('hidden');
+                                }
+                            }
+                        });
+                    };
+
+                    updateStory(0); // Mostrar primer comentario
+
                     window._personalCarouselInterval = setInterval(() => {
                         current = (current + 1) % total;
                         carouselEl.style.transform = `translateX(-${(current * 100) / total}%)`;
                         dots.forEach((d, i) => d.style.background = i === current ? '#ffd700' : 'rgba(255,255,255,0.4)');
-                    }, 5000); // 5000 milisegundos = 5 segundos
+                        updateStory(current);
+                    }, 5000);
                 }
 
             }
@@ -673,8 +758,8 @@ app.public = {
                                     CONTACTAR
                                 </button>
                                 ${(() => {
-                        const aiVal = (company.usa_soporte_ia || "").toString().toUpperCase();
-                        const usesAi = aiVal === 'TRUE' || aiVal.includes(',');
+                        const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
+                        const usesAi = !rawAi.endsWith(',NO') && (rawAi.includes('TRUE') || rawAi.includes('/') || rawAi.includes(',') || rawAi.includes('GPT') || rawAi.includes('GEMINI'));
                         return usesAi ? `
                                      <button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
                                          <i class="fas fa-robot"></i> CONSULTAR
@@ -702,8 +787,9 @@ app.public = {
                 `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
                 `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar Ahora</button>`;
 
-            const aiVal = (company.usa_soporte_ia || "").toString().toUpperCase();
-            if (aiVal === 'TRUE' || aiVal.includes(',')) {
+            const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
+            const usesAi = !rawAi.endsWith(',NO') && (rawAi.includes('TRUE') || rawAi.includes('/') || rawAi.includes(',') || rawAi.includes('GPT') || rawAi.includes('GEMINI'));
+            if (usesAi) {
                 btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('AGT-PAPER-IMSS')"><i class="fas fa-robot"></i> Consultar AI</button>`;
             }
             actions.innerHTML = btns;
@@ -723,8 +809,9 @@ app.public = {
 
             let dynamicLinksHtml = '';
             // --- RESTRICCIÓN DE MENÚ PARA SERVICIOS (v16.7.7) ---
-            const isServices = bizType === 'SERVICIOS';
-            const isHome = hash === 'home';
+            const bizTypeStr = String(bizType || "").toUpperCase();
+            const isServices = bizTypeStr.includes('SERVICIOS');
+            const isHome = hash === 'home' || !hash || hash === '';
 
             if (!isServices) {
                 // Comportamiento universal para otros giros
@@ -748,7 +835,7 @@ app.public = {
             }
 
             menuPublic.innerHTML = `
-                ${(showHub && isHome) ? '<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>' : ''}
+                ${(showHub) ? '<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>' : ''}
                 <li><a href="#home">Inicio</a></li>
                 ${dynamicLinksHtml}
                 ${isFood ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
@@ -760,19 +847,6 @@ app.public = {
         // Renderizar Matriz SEO y Meta-Tags (v6.6.0)
         if (app.public.renderSEO) app.public.renderSEO();
         if (app.public.updateMetadata) app.public.updateMetadata();
-
-        // AJUSTE DE ESPACIOS INTELIGENTES (v6.6.1)
-        const gallerySection = document.getElementById('company-gallery-section');
-        if (gallerySection) {
-            // Si la sección de historia está oculta, pegamos la galería a la matriz SEO
-            if (!storySection || storySection.classList.contains('hidden')) {
-                gallerySection.style.marginTop = "var(--ui-gap, 32px)";
-                gallerySection.style.borderTop = "none";
-                gallerySection.style.paddingTop = "0";
-            } else {
-                gallerySection.style.marginTop = "var(--ui-section-margin, 100px)";
-            }
-        }
     },
 
     renderDynamicContent: (pageData) => {
@@ -783,8 +857,15 @@ app.public = {
             // Mapeo Inteligente de Campos (v6.5.2)
             const rawContent = typeof pageData.contenido_json === 'string' ? JSON.parse(pageData.contenido_json) : pageData.contenido_json;
             const content = {};
-            // Normalizar a minúsculas para búsqueda fácil
+            // --- SISTEMA HÍBRIDO DE INYECCIÓN SEMÁNTICA (v17.5.0 SEO/GEO) ---
+            // 1. Normalizar contenido del JSON (Lower Case para flexibilidad)
             Object.keys(rawContent).forEach(k => content[k.toLowerCase()] = rawContent[k]);
+
+            // 2. Fusionar con datos directos de columnas (Prioridad a columnas para SEO)
+            const h1Val = pageData.h1 || content.h1 || content.titulo || "Información";
+            const h2Val = pageData.h2 || pageData.subtitulo || content.h2 || content.subtitulo || "";
+            const h3Val = pageData.h3 || content.h3 || content.h2_1 || "";
+            const pVal = pageData.p || pageData.descripcion || content.p_intro || content.texto || content.descripcion || "";
 
             const h2 = document.getElementById('story-h2');
             const h3 = document.getElementById('story-h3');
@@ -792,20 +873,36 @@ app.public = {
             const img = document.getElementById('story-img');
             const imgContainer = document.querySelector('.story-image-container');
 
-            if (h2) h2.innerHTML = content.h1 || content.titulo || "Información";
-            if (h3) h3.innerHTML = content.h2_1 || content.subtitulo || "";
+            // Inyectar en el DOM con jerarquía real
+            if (h2) h2.innerHTML = h1Val; 
+            if (h3) h3.innerHTML = h2Val || h3Val; 
 
-            if (body) {
-                let txt = content.p_intro || content.texto || content.descripcion || "";
-                if (content.p_mision) txt += `<br><br><strong>Misión:</strong> ${content.p_mision}`;
-                body.innerHTML = txt || "Contenido disponible próximamente.";
-            }
+            // Barrendero de Código Radical (v17.5): Limpieza Total de Scripts y JSON
+            let txt = pVal;
+            if (content.p_mision) txt += `<br><br><strong>Misión:</strong> ${content.p_mision}`;
+
+            let finalBodyHtml = txt || "Contenido disponible próximamente.";
+            // 1. Quitar etiquetas de script
+            finalBodyHtml = finalBodyHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gim, "");
+            // 2. Quitar bloques de JSON-LD crudos (cualquier cosa entre llaves que huela a técnico)
+            finalBodyHtml = finalBodyHtml.replace(/\{(\s)*\"@(context|type)\"[\s\S]*?\}/gim, "");
+            
+            if (body) body.innerHTML = finalBodyHtml;
 
             if (img) {
-                const finalImg = app.utils.fixDriveUrl(content.imagen_url || pageData.foto_url);
-                img.src = finalImg;
-                if (imgContainer) imgContainer.style.display = finalImg ? 'block' : 'none';
-                section.style.gridTemplateColumns = finalImg ? '1fr 1fr' : '1fr';
+                const targetId = String(app.state.companyId || "").trim().toUpperCase();
+                const company = app.data.Config_Empresas.find(c => c.id_empresa === targetId);
+                const logo = company ? (company.logo_url || company.logo) : "";
+                const finalImg = app.utils.fixDriveUrl(content.imagen_url || pageData.foto_url || logo);
+                
+                if (finalImg && finalImg !== "") {
+                    img.src = finalImg;
+                    if (imgContainer) imgContainer.style.display = 'block';
+                    section.style.gridTemplateColumns = '1fr 1fr';
+                } else {
+                    if (imgContainer) imgContainer.style.display = 'none';
+                    section.style.gridTemplateColumns = '1fr';
+                }
             }
 
             section.classList.remove('hidden');
@@ -960,11 +1057,11 @@ app.public = {
 
             card.style.cssText = bgStyle;
 
-            // --- HABILITADOR DE NAVEGACIÓN (v16.7.8 - Comparación Exacta) ---
-            const bizType = (company.tipo_negocio || "").toString().trim();
+            // --- HABILITADOR DE NAVEGACIÓN (v16.7.8 - Tag Detection) ---
+            const bizTypeStr = (company.tipo_negocio || "").toString().toUpperCase();
             const clusterId = (item.id_cluster || "").toString().trim();
             
-            if (bizType === 'Servicios' && clusterId) {
+            if (bizTypeStr.includes('SERVICIOS') && clusterId) {
                 card.style.cursor = 'pointer';
                 card.onclick = () => {
                     window.location.hash = `#${clusterId}`;
@@ -1093,8 +1190,8 @@ app.public = {
         updateMeta('twitter:description', pageDesc);
         updateMeta('twitter:image', pageImage);
 
-        // Inyección de Esquema JSON-LD para Optimización de IA (AIO)
-        const schema = {
+        // Inyección de Esquema JSON-LD para Optimización de IA (AIO) - Combinado con Custom
+        let schema = {
             "@context": "https://schema.org",
             "@type": "WebPage",
             "name": pageTitle,
@@ -1108,6 +1205,21 @@ app.public = {
             "image": pageImage,
             "keywords": pageKeywords
         };
+
+        // Integrar esquema personalizado si existe (JSON-LD Manual del usuario)
+        const pageDataForSchema = (app.data.Config_Paginas || []).find(p => 
+            String(p.id_empresa || "").toUpperCase() === targetId && 
+            String(p.id_pagina || "").trim().toLowerCase() === currentHash
+        );
+        if (pageDataForSchema && pageDataForSchema.contenido_json) {
+            try {
+                const cJson = JSON.parse(pageDataForSchema.contenido_json);
+                if (cJson.schema_json) {
+                    const customSchema = typeof cJson.schema_json === 'string' ? JSON.parse(cJson.schema_json) : cJson.schema_json;
+                    schema = { ...schema, ...customSchema };
+                }
+            } catch(e) {}
+        }
 
         let script = document.getElementById('schema-json-ld');
         if (!script) {
@@ -1287,7 +1399,29 @@ app.public = {
                 </span>
             `;
 
-            bubbleEl.onclick = () => app.switchCompany(co.id_empresa);
+            bubbleEl.onmouseenter = () => {
+                if (!app.state.preloadedData) app.state.preloadedData = {};
+                if (!app.state.preloadedData[co.id_empresa]) {
+                    console.log(`📡 [PRELOAD] Anticipando datos para: ${co.id_empresa}`);
+                    // Pre-carga silenciosa
+                    fetch(app.apiUrl, {
+                        method: 'POST',
+                        headers: { "Content-Type": "text/plain" },
+                        body: JSON.stringify({ action: 'loadData', id_empresa: co.id_empresa, token: app.apiToken })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) app.state.preloadedData[co.id_empresa] = data.results;
+                    }).catch(() => {});
+                }
+            };
+
+            bubbleEl.onclick = () => {
+                // Guardar tema en caché rápida para Logic 3 (v16.7.28)
+                localStorage.setItem(`suit_theme_cache_${co.id_empresa}`, JSON.stringify({
+                    color: co.color_tema,
+                    logo: co.logo_url || co.url_logo || co.foto_agente
+                }));
+                app.switchCompany(co.id_empresa);
+            };
             container.appendChild(bubbleEl);
 
             bubbles.push({
@@ -1462,14 +1596,26 @@ app.public = {
         const company = app.data.Config_Empresas.find(c => c.id_empresa === urlId);
         if (!company) return;
 
+        // --- OPTIMIZACIÓN MARCA PERSONAL (v16.10.11) ---
+        // Si es Marca Personal, ocultamos la galería redundante ya que existe en el Hero.
+        const bizType = String(company.tipo_negocio || "").toUpperCase();
+        if (bizType === 'MARCA PERSONAL') {
+            section.classList.add('hidden');
+            section.style.display = 'none';
+            return;
+        }
+
         const imgs = (app.data.Config_Galeria || []).filter(img =>
             String(img.id_empresa || "").trim().toUpperCase() === urlId
         );
 
         // Lógica Élite: Si es Marca Personal, ocultamos esta galería redundante
+        // Lógica de Visibilidad Estricta (v16.7.28) - Default OFF
         const tipoNegocio = (company.tipo_negocio || company.tiponegocio || "").toUpperCase().trim();
+        const forceShow = tipoNegocio.includes('SI_GALERIA');
         
-        if (imgs.length === 0 || tipoNegocio === 'MARCA PERSONAL') {
+        // Solo se muestra si tiene fotos Y tiene el tag explícito de SI_GALERIA
+        if (imgs.length === 0 || !forceShow) {
             section.classList.add('hidden');
             section.style.display = 'none';
             return;
@@ -2008,6 +2154,7 @@ app.public = {
 
     submitOnboarding: async (e) => {
         const btn = e.target.querySelector('button[type="submit"]');
+        if (!btn) return;
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CREANDO ECOSISTEMA...';
 
@@ -2033,37 +2180,190 @@ app.public = {
             usa_reservaciones: 'FALSE'
         };
 
-        const response = await fetch(app.apiUrl, {
-            method: 'POST',
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify({ action: 'createBusiness', business: bizData, token: app.apiToken })
-        });
-        const result = await response.json();
+        try {
+            const response = await fetch(app.apiUrl, {
+                method: 'POST',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({ action: 'createBusiness', business: bizData, token: app.apiToken })
+            });
+            const result = await response.json();
 
-        if (result && result.success) {
-            document.getElementById('onboarding-form').classList.add('hidden');
-            const success = document.getElementById('onb-success');
-            success.classList.remove('hidden');
+            if (result && result.success) {
+                document.getElementById('onboarding-form').classList.add('hidden');
+                const success = document.getElementById('onb-success');
+                success.classList.remove('hidden');
 
-            const btnSee = document.getElementById('btn-see-site');
-            const btnWa = document.getElementById('btn-wa-activate');
-
-            if (btnSee) {
-                btnSee.innerHTML = `<i class="fab fa-whatsapp"></i> CONTACTAR A PERSONAL SUIT.ORG`;
-                const waMsg = `¡Hola! Acabo de registrar mi negocio [${bizData.nomempresa}] con ID [${result.newBusinessId}]. Me gustaría continuar con la configuración.`;
-                btnSee.onclick = () => { window.open(`https://wa.me/528129552094?text=${encodeURIComponent(waMsg)}`, '_blank'); };
-                btnSee.style.background = "#25D366";
+                const btnSee = document.getElementById('btn-see-site');
+                if (btnSee) {
+                    btnSee.innerHTML = `<i class="fab fa-whatsapp"></i> CONTACTAR A PERSONAL SUIT.ORG`;
+                    const waMsg = `¡Hola! Acabo de registrar mi negocio [${bizData.nomempresa}] con ID [${result.newBusinessId}]. Me gustaría continuar con la configuración.`;
+                    btnSee.onclick = () => { window.open(`https://wa.me/528129552094?text=${encodeURIComponent(waMsg)}`, '_blank'); };
+                    btnSee.style.background = "#25D366";
+                }
+            } else {
+                throw new Error("API fail");
             }
-            if (btnWa) {
-                btnWa.classList.add('hidden');
-            }
-        } else {
+        } catch (e) {
             alert("Error al crear el borrador. Intente de nuevo.");
             btn.disabled = false;
             btn.innerText = 'GENERAR MI SITIO WEB GRATIS';
         }
     }
 };
+
+/**
+ * 🚀 INNOVATION PACK - HOTFIX (v16.7.25)
+ * Re-asertar funciones interactivas para evitar errores de referencia.
+ */
+Object.assign(app.public, {
+    handleGallery3DTilt: (e, el) => {
+        const { left, top, width, height } = el.getBoundingClientRect();
+        const x = (e.clientX - left) / width;
+        const y = (e.clientY - top) / height;
+        const tiltX = (y - 0.5) * 15;
+        const tiltY = (x - 0.5) * -15;
+        el.style.transform = `scale(1.02) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+        el.style.transition = 'transform 0.1s ease';
+        el.onmouseleave = () => {
+            el.style.transform = 'scale(1) rotateX(0deg) rotateY(0deg)';
+            el.style.transition = 'transform 0.5s ease';
+        };
+    },
+    showGuestUploadModal: () => {
+        const coId = app.state.companyId || 'GENERAL';
+        const uploadCount = parseInt(localStorage.getItem(`suit_upload_count_${coId}`) || '0');
+        if (uploadCount >= 5) {
+            alert(`🚫 Límite diario excedido para este negocio.`);
+            return;
+        }
+        const modal = document.createElement('div');
+        modal.id = 'guest-upload-modal';
+        modal.className = 'modal-overlay';
+        modal.style.cssText = 'position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center;';
+        modal.innerHTML = `<div style="background:white; width:90%; max-width:400px; padding:30px; border-radius:30px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+            <h3 style="color:#111; font-weight:900;">¡Sube tu Momento! 📸</h3>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:25px;">Tu foto será analizada por AI.</p>
+            <div id="upload-stage-idle">
+                <input type="file" id="guest-file-input" accept="image/*" style="display:none;" onchange="app.public.processGuestFile(this.files[0])">
+                <button onclick="document.getElementById('guest-file-input').click()" style="width:100%; padding:15px; border-radius:50px; background:#111; color:white; border:none; font-weight:900; cursor:pointer;">SELECCIONAR FOTO</button>
+            </div>
+            <div id="upload-stage-loading" class="hidden">
+                 <p id="upload-status-text">Analizando...</p>
+            </div>
+            <button onclick="document.getElementById('guest-upload-modal').remove()" style="margin-top:20px; background:none; border:none; color:#999; text-decoration:underline;">Cerrar</button>
+        </div>`;
+        document.body.appendChild(modal);
+    },
+    processGuestFile: async (file) => {
+        if (!file) return;
+        const coId = app.state.companyId;
+        const idle = document.getElementById('upload-stage-idle');
+        const loading = document.getElementById('upload-stage-loading');
+        const status = document.getElementById('upload-status-text');
+        const modal = document.getElementById('guest-upload-modal');
+
+        if (idle) idle.classList.add('hidden');
+        if (loading) loading.classList.remove('hidden');
+
+        try {
+            // --- BLINDAJE DE IA CONTRA FALLOS DE CARGA (v16.7.25) ---
+            if (typeof tf === 'undefined') {
+                if (status) status.innerText = "Cargando Motor IA (TF)...";
+                const stf = document.createElement('script');
+                stf.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs";
+                document.head.appendChild(stf);
+                await new Promise(r => stf.onload = r);
+            }
+
+            if (typeof nsfwjs === 'undefined') {
+                if (status) status.innerText = "Cargando Filtros IA...";
+                const s = document.createElement('script');
+                s.src = "https://cdn.jsdelivr.net/npm/nsfwjs@2.4.1/dist/browser/nsfwjs.min.js"; 
+                document.head.appendChild(s);
+                await new Promise(r => s.onload = r);
+            }
+
+            if (status) status.innerText = "IA: Escaneando contenido...";
+            
+            // --- TIMEOUT SALVAVIDAS (v16.7.26) ---
+            // Si la IA no carga en 8 segundos, procedemos para no bloquear al usuario.
+            const aiTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout IA")), 8000));
+            const model = await Promise.race([window.nsfwjs.load(), aiTimeout]).catch(e => {
+                console.warn("⚠️ IA tomó demasiado tiempo o falló: Procediendo sin filtro.");
+                return null; 
+            });
+
+            if (model) {
+                if (status) status.innerText = "IA: Analizando seguridad...";
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                await new Promise(r => img.onload = r);
+
+                // --- SEGUNDO TIMEOUT SALVAVIDAS: CLASIFICACIÓN (v16.7.28) ---
+                const classifyTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout Classify")), 5000));
+                
+                try {
+                    const predictions = await Promise.race([model.classify(img), classifyTimeout]);
+                    // Bloquear Porn, Hentai o Sexy con confianza > 80%
+                    const unsafe = predictions.find(p => 
+                        (p.className === 'Porn' || p.className === 'Hentai' || p.className === 'Sexy') && p.probability > 0.8
+                    );
+
+                    if (unsafe) {
+                        alert("⚠️ Contenido no permitido. Nuestra IA detectó material inapropiado.");
+                        if (modal) modal.remove();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("⚠️ La clasificación de IA tardó demasiado: Saltando filtro.");
+                }
+            }
+
+            if (status) status.innerText = "Subiendo a la galería oficial...";
+            
+            const SB_URL = app.sbUrl;
+            const SB_KEY = app.sbKey;
+            const bucket = 'galeria-privada';
+            const fileName = `guest_${Date.now()}.jpg`;
+            const path = coId.toUpperCase();
+
+            if (!SB_URL || !SB_KEY) throw new Error("Falta configuración de Supabase");
+
+            // Convertir Base64 a Blob para subida directa (v16.7.27 - Performance Up)
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            await new Promise(r => reader.onload = r);
+            const arrayBuffer = reader.result;
+
+            const res = await fetch(`${SB_URL}/storage/v1/object/${bucket}/${path}/${fileName}`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SB_KEY,
+                    'Authorization': `Bearer ${SB_KEY}`,
+                    'Content-Type': file.type
+                },
+                body: arrayBuffer
+            });
+
+            if (res.ok) {
+                const count = parseInt(localStorage.getItem(`suit_upload_count_${coId}`) || '0');
+                localStorage.setItem(`suit_upload_count_${coId}`, (count + 1).toString());
+                if (status) status.innerText = "✅ ¡Foto subida! Refrescando...";
+                setTimeout(() => {
+                    if (modal) modal.remove();
+                    app.loadGalleryFromStorage(coId).then(() => app.ui.renderHome());
+                }, 1500);
+            } else {
+                const errData = await res.json();
+                throw new Error(errData.message || "Error en Supabase");
+            }
+        } catch (e) {
+            console.error("📸 [UPLOAD_ERROR]", e);
+            if (status) status.innerText = "Error crítico: " + e.message;
+            setTimeout(() => { if (modal) modal.remove(); }, 4000);
+        }
+    }
+});
 
 /**
  * 🔐 CLIENT VAULT MODULE (v6.1.7)

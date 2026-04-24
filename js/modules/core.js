@@ -7,13 +7,21 @@
  */
 var app = {
     // --- APP CONFIG ---
-    version: "16.7.23", // Sistema Inteligente (v16.7.23)
+    version: "260424-0953", // Sistema Inteligente (v260424-0953) - Secure Proxy 🛡️
     PAUSE_SUPABASE: false, // ✅ Supabase ACTIVO - Migración v16.7.0
     // Se cargan desde js/modules/config.js (inyectado en deploy)
     apiUrl: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.apiUrl || "").trim() : '',
     apiToken: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.apiToken || "").trim() : '',
+    config: {
+        engine: "OPENROUTER",
+        openRouterKey: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.openRouterKey || "").trim() : '',
+        defaultModel: "mistralai/mistral-7b-instruct:free",
+        aiMaxTokens: 1000,
+        aiTemperature: 0.7
+    },
     sbUrl: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.sbUrl || "https://egyxgnlnzanxpqyuvmsg.supabase.co").trim() : 'https://egyxgnlnzanxpqyuvmsg.supabase.co',
     sbKey: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.sbKey || "").trim() : '',
+    openRouterKey: (typeof SUIT_CONFIG !== 'undefined') ? String(SUIT_CONFIG.openRouterKey || "").trim() : '',
     data: {
         Config_Empresas: [],
         Usuarios: [],
@@ -29,7 +37,12 @@ var app = {
         Config_SEO: [],
         Cuotas_Pagos: [],
         Config_Paginas: [],
-        Config_IA_Notebooks: []
+        Config_IA_Notebooks: [],
+        // Config_Auth: [], // Huerfana
+        // Logs: [], // Huerfana
+        // Logs_Chat_IA: [], // Huerfana
+        // Memoria_IA_Snapshots: [], // Huerfana
+        // Logs_Consultas_SOP: [] // Huerfana
     },
     state: {
         currentUser: null,
@@ -86,13 +99,31 @@ var app = {
                 oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
                 oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
                 gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.1);
             } catch (e) { }
         },
+        playBuzz: () => {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.02, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.2);
+            } catch (e) { }
+        },
+
         playClick: () => {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -133,17 +164,39 @@ var app = {
             return new Date().toLocaleDateString('en-CA');
         }
     },
+    loadEnvConfig: async () => {
+        try {
+            const res = await fetch('/api/config', { cache: 'no-store' });
+            if (!res.ok) throw new Error(`HTTP ${res.status} - El servidor no tiene el endpoint /api/config`);
+            const cfg = await res.json();
+            
+            if (cfg.sbUrl && cfg.sbKey) {
+                app.sbUrl = cfg.sbUrl;
+                app.sbKey = cfg.sbKey;
+                if (cfg.openRouterKey) app.openRouterKey = cfg.openRouterKey;
+                console.log('🔑 [ENV] Configuración de llaves cargada exitosamente.');
+            } else {
+                console.warn('⚠️ [ENV] El servidor respondió pero las llaves están vacías. Revisa tu archivo .env');
+            }
+        } catch (e) {
+            console.error('❌ [ENV_FAIL] Error al cargar configuración:', e.message);
+            // Fallback: usa valores de config.js (SUIT_CONFIG) si existe
+            if (typeof SUIT_CONFIG !== 'undefined' && SUIT_CONFIG.sbUrl) {
+                app.sbUrl = SUIT_CONFIG.sbUrl;
+                app.sbKey = SUIT_CONFIG.sbKey;
+                console.warn('⚠️ [ENV] Usando fallback de config.js');
+            }
+        }
+    },
     init: async () => {
         try {
             console.log("🚀 Iniciando Orquestador EVASOL...");
 
-            // 1. Inicializar Router Primero (Seguridad de Enrutado)
-            if (app.router && app.router.init) app.router.init();
+            // 0. Cargar recursos externos (.env)
+            await app.loadEnvConfig();
 
-            if (window.location.hash === '#orbit' || !window.location.hash) {
-                const orbit = document.getElementById('view-orbit');
-                if (orbit) orbit.classList.remove('hidden');
-            }
+            // 1. Inicializar Router (Observador de Hash)
+            if (app.router && app.router.init) app.router.init();
 
             const urlParams = new URLSearchParams(window.location.search);
             const coParam = urlParams.get('co') || urlParams.get('id');
@@ -435,9 +488,9 @@ var app = {
                 // Filtro Élite: Destruir ".emptyFolderPlaceholder" y subcarpetas sin ID
                 let files = rawFiles.filter(f => f.id && f.name && !f.name.includes('emptyFolder'));
                 
-                // Ordenar por las 10 más recientes (v16.7.22)
+                // Ordenar por las 20 más recientes (v16.7.24)
                 files.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-                files = files.slice(0, 10);
+                files = files.slice(0, 20);
                 
                 console.log(`  ✓ Storage: ${files.length} fotos recientes detectadas en ${path} (Autoplay)`);
 
@@ -493,6 +546,10 @@ var app = {
             if (success) {
                 const company = app.data.Config_Empresas.find(c => c.id_empresa === newId);
                 if (app.ui.applyTheme) app.ui.applyTheme(company);
+                
+                // --- REFRESCAR GALERÍA Y STATUS BAR (v16.7.28) ---
+                app.loadGalleryFromStorage(newId);
+                if (app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
 
                 if (app.pos && app.pos.loadCart) app.pos.loadCart(); // Cargar la nueva sesión aislada
                 

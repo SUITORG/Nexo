@@ -30,7 +30,7 @@ const app = {
 
     // 3. CONTENEDOR DE DATOS (Single Source of Truth)
     data: {
-        Config_Auth: [],
+        // Config_Auth: [], // Huerfana
         Config_Empresas: [],
         Config_Roles: [],
         Usuarios: [],
@@ -42,7 +42,7 @@ const app = {
         Config_SEO: [],
         Prompts_IA: [],
         Catalogo: [],
-        Logs: [],
+        // Logs: [], // Huerfana
         Pagos: [],
         Cuotas_Pagos: [],
         Config_Reportes: [],
@@ -52,28 +52,32 @@ const app = {
         Config_Paginas: [],
         Empresa_Documentos: [],
         Reservaciones: [],
-        Logs_Chat_IA: [],
-        Memoria_IA_Snapshots: [],
-        Logs_Consultas_SOP: []
+        // Logs_Chat_IA: [], // Huerfana
+        // Memoria_IA_Snapshots: [], // Huerfana
+        // Logs_Consultas_SOP: [] // Huerfana
     },
 
     // 4a. CARGA DE CONFIGURACIÓN DESDE SERVIDOR
     loadEnvConfig: async () => {
         try {
             const res = await fetch('/api/config', { cache: 'no-store' });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status} - El servidor no tiene el endpoint /api/config`);
             const cfg = await res.json();
-            if (cfg.sbUrl)  app.sbUrl = cfg.sbUrl;
-            if (cfg.sbKey)  app.sbKey = cfg.sbKey;
-            console.log('🔑 [ENV] Supabase config cargada desde /api/config');
+            
+            if (cfg.sbUrl && cfg.sbKey) {
+                app.sbUrl = cfg.sbUrl;
+                app.sbKey = cfg.sbKey;
+                console.log('🔑 [ENV] Supabase config cargada exitosamente.');
+            } else {
+                console.warn('⚠️ [ENV] El servidor respondió pero las llaves están vacías. Revisa tu archivo .env');
+            }
         } catch (e) {
+            console.error('❌ [ENV_FAIL] Error al cargar configuración:', e.message);
             // Fallback: usa valores de config.js (SUIT_CONFIG) si existe
             if (typeof SUIT_CONFIG !== 'undefined' && SUIT_CONFIG.sbUrl) {
                 app.sbUrl = SUIT_CONFIG.sbUrl;
                 app.sbKey = SUIT_CONFIG.sbKey;
-                console.warn('⚠️ [ENV] /api/config no disponible, usando fallback de config.js');
-            } else {
-                console.warn('⚠️ [ENV] Sin config de Supabase. El cliente no se inicializará.');
+                console.warn('⚠️ [ENV] Usando fallback de config.js');
             }
         }
     },
