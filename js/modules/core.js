@@ -247,6 +247,13 @@ var app = {
                 // Si se encontró por alias, normalizar el state.companyId al ID técnico
                 if (company && company.alias_seo && String(company.alias_seo).toLowerCase() === String(app.state.companyId).toLowerCase()) {
                     console.log(`🔗 Redirección Maestro: [${app.state.companyId}] -> [${company.id_empresa}]`);
+                    
+                    // --- MAQUILLAJE ELITE (v16.8.0) ---
+                    // Si tenemos Alias SEO, lo usamos para limpiar la URL del navegador
+                    const cleanPath = `/${company.alias_seo}`;
+                    if (window.location.pathname !== cleanPath) {
+                        window.history.replaceState({}, '', cleanPath);
+                    }
                     app.state.companyId = company.id_empresa;
                 }
 
@@ -262,7 +269,9 @@ var app = {
                             console.log("🚀 Redirección Automática a Empresa Principal:", mainBiz.id_empresa);
                             app.state.companyId = mainBiz.id_empresa;
                             company = mainBiz;
-                            window.location.hash = '#home';
+                            // En lugar de ensuciar con #home, mantenemos la URL limpia si tiene alias
+                            const dest = company.alias_seo ? `/${company.alias_seo}` : `/#home`;
+                            window.history.replaceState({}, '', dest);
                         }
                     }
                 }
@@ -380,54 +389,23 @@ var app = {
     },
     // EVASOL - CORE MODULE (v16.7.0 - MIGRACIÓN COMPLETA SUPABASE)
     loadFromSupabase: async (coId) => {
-        // Usar credenciales de config.js (actualizadas)
-        const SB_URL = app.sbUrl || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
-        const SB_KEY = app.sbKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVneXhnbmxuemFueHBxeXV2bXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDE2NjMsImV4cCI6MjA4OTY3NzY2M30.8nBh6b3pphZcM93Qi23Qa2_TB88ofGGWo18rsAszTrw';
+        console.log(`⚡ [SECURE_DB] Cargando tablas vía Proxy para ${coId}...`);
 
-        console.log(`⚡ [SUPABASE] Cargando TODAS las tablas para ${coId}...`);
-
-        // TABLAS PRIVATE - Todas las que se migraron a Supabase
         const tables = [
-            // Operativas críticas
-            'Catalogo',
-            'Leads',
-            'Proyectos',
-            'Pagos',
-            'Proyectos_Pagos',
-            'Proyectos_Etapas',
-            'Proyectos_Bitacora',
-            'Config_Flujo_Proyecto',
-            'Proyectos_Materiales',
-            // IA y Logs
-            'Prompts_IA',
-            'Logs_Chat_IA',
-            'Memoria_IA_Snapshots',
-            'Logs',
-            // Galería y Documentos
-            'Config_Galeria',
-            'Empresa_Galeria',
-            'Empresa_Documentos',
-            'Reservaciones',
-            // Configuración
-            'Config_SEO',
-            'Config_Paginas',
-            'Cuotas_Pagos',
-            'Config_IA_Notebooks'
+            'Catalogo', 'Leads', 'Proyectos', 'Pagos', 'Proyectos_Pagos',
+            'Proyectos_Etapas', 'Proyectos_Bitacora', 'Config_Flujo_Proyecto',
+            'Proyectos_Materiales', 'Prompts_IA', 'Logs_Chat_IA',
+            'Memoria_IA_Snapshots', 'Logs', 'Config_Galeria',
+            'Empresa_Galeria', 'Empresa_Documentos', 'Reservaciones',
+            'Config_SEO', 'Config_Paginas', 'Cuotas_Pagos', 'Config_IA_Notebooks'
         ];
 
         const results = {};
-
         try {
             await Promise.all(tables.map(async (table) => {
-                // Construir URL con filtro por tenant
-                const url = `${SB_URL}/rest/v1/${table}?id_empresa=eq.${coId}&select=*`;
-                const res = await fetch(url, {
-                    headers: {
-                        'apikey': SB_KEY,
-                        'Authorization': `Bearer ${SB_KEY}`,
-                        'Prefer': 'resolution=merge-duplicates' // Manejar duplicados en PK compuestas
-                    }
-                });
+                // Pasamos coId como filtro de consulta al proxy
+                const url = `/api/db/${table}?id_empresa=${coId}`;
+                const res = await fetch(url);
                 if (res.ok) {
                     const raw = await res.json();
                     results[table] = JSON.parse(JSON.stringify(raw), (key, value) =>
@@ -435,16 +413,13 @@ var app = {
                     );
                     console.log(`  ✓ ${table}: ${results[table].length} registros`);
                 } else {
-                    const errorText = await res.text();
-                    console.warn(`  ⚠️ [SUPABASE] Error en tabla ${table}: ${res.status} - ${errorText}`);
+                    console.warn(`  ⚠️ [SECURE_DB] Error en tabla ${table}: ${res.status}`);
                     results[table] = [];
                 }
             }));
-
-            console.log(`✅ [SUPABASE] Carga completada: ${Object.keys(results).length} tablas`);
             return results;
         } catch (err) {
-            console.error("❌ [SUPABASE_FAIL]", err);
+            console.error("❌ [SECURE_DB_FAIL]", err);
             return {};
         }
     },
@@ -469,18 +444,10 @@ var app = {
             console.log(`📸 [STORAGE] Escaneando bucket '${bucket}' para el tenant: ${path}...`);
 
             try {
-                const res = await fetch(`${SB_URL}/storage/v1/object/list/${bucket}`, {
+            const res = await fetch(`/api/storage/list/${bucket}`, {
                 method: 'POST',
-                headers: {
-                    'apikey': SB_KEY,
-                    'Authorization': `Bearer ${SB_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    prefix: path + '/',
-                    limit: 30, // Aumentamos límite para Marca Personal
-                    offset: 0
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prefix: path })
             });
 
             if (res.ok) {
@@ -547,14 +514,19 @@ var app = {
                 const company = app.data.Config_Empresas.find(c => c.id_empresa === newId);
                 if (app.ui.applyTheme) app.ui.applyTheme(company);
                 
-                // --- REFRESCAR GALERÍA Y STATUS BAR (v16.7.28) ---
                 app.loadGalleryFromStorage(newId);
                 if (app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
 
                 if (app.pos && app.pos.loadCart) app.pos.loadCart(); // Cargar la nueva sesión aislada
                 
-                window.location.hash = "#home";
-            if (app.router && app.router.handleRoute) app.router.handleRoute();
+                // --- NAVEGACIÓN LIMPIA (v16.8.1) ---
+                if (company.alias_seo) {
+                    window.history.replaceState({}, '', `/${company.alias_seo}`);
+                    // Forzamos al router a procesar la vista de inicio
+                    if (app.router && app.router.handleRoute) app.router.handleRoute();
+                } else {
+                    window.location.hash = "#home";
+                }
 
             if (app.ui.updateConsole) app.ui.updateConsole(`TENANT_SWITCH: ${newId}`);
         }
@@ -595,32 +567,28 @@ var app = {
         }
     },
     saveRecord: async (tabla, registro, campoId) => {
-        const SB_URL = app.sbUrl || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
-        const SB_KEY = app.sbKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVneXhnbmxuemFueHBxeXV2bXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDE2NjMsImV4cCI6MjA4OTY3NzY2M30.8nBh6b3pphZcM93Qi23Qa2_TB88ofGGWo18rsAszTrw';
         registro.id_empresa = registro.id_empresa || app.state.companyId;
+
         if (app.state.dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
             try {
-                const res = await fetch(`${SB_URL}/rest/v1/${tabla}`, {
+                // v17.0.0: Guardado Seguro vía Proxy
+                const res = await fetch(`/api/db/${tabla}`, {
                     method: 'POST',
-                    headers: {
-                        'apikey': SB_KEY,
-                        'Authorization': `Bearer ${SB_KEY}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'resolution=merge-duplicates,return=representation'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(registro)
                 });
+
                 if (res.ok) {
                     const saved = await res.json();
-                    console.log(`✅ [SUPABASE WRITE] ${tabla} → ${registro[campoId]}`);
-                    return { ok: true, data: saved };
+                    console.log(`✅ [SECURE_WRITE] ${tabla} → ${registro[campoId]}`);
+                    return { ok: true, data: saved.data };
                 } else {
-                    const err = await res.text();
-                    console.warn(`⚠️ [SUPABASE WRITE] Error en ${tabla}: ${err}`);
-                    return { ok: false, error: err };
+                    const err = await res.json();
+                    console.warn(`⚠️ [SECURE_WRITE] Error en ${tabla}:`, err);
+                    return { ok: false, error: err.error || "Fallo en Proxy" };
                 }
             } catch (e) {
-                console.error(`❌ [SUPABASE WRITE FAIL] ${tabla}`, e);
+                console.error(`❌ [SECURE_WRITE_FAIL] ${tabla}`, e);
                 return { ok: false, error: e.message };
             }
         } else {
