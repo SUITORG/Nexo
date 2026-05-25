@@ -47,3 +47,4 @@ yarn-error.log*
 compendio_inteligencia_suitorg.txt
 test-backend.html
 mock_data.json
+.blackboxcli/

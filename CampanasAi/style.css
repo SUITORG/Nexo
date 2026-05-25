@@ -839,8 +839,6 @@ input:checked + .slider:before {
     font-size: 0.85rem;
     line-height: 1.4;
     opacity: 0.9;
-    max-height: 100px;
-    overflow-y: auto;
 }
 
 .slide-visual {

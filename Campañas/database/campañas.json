@@ -1,0 +1,60 @@
+{
+  "campañas": [
+    {
+      "id": "camp_1777161167580",
+      "empresa": "APE",
+      "nombre": "apagon",
+      "tema": "evita demandas por apagones",
+      "formato": "reel",
+      "fecha_creacion": "2026-04-25",
+      "estado": "generando",
+      "configuracion": {
+        "numero_laminas": 5,
+        "publico": "Profesionales"
+      }
+    },
+    {
+      "id": "camp_1777161392335",
+      "empresa": "APE",
+      "nombre": "APAGON",
+      "tema": "evita demandas por apagones en mexico",
+      "formato": "reel",
+      "fecha_creacion": "2026-04-25",
+      "estado": "generando",
+      "configuracion": {
+        "numero_laminas": 5,
+        "publico": "Profesionales"
+      }
+    },
+    {
+      "id": "camp_1777161594206",
+      "empresa": "ape",
+      "nombre": "apaga 1",
+      "tema": "evita demandas por apagones en mexico",
+      "formato": "post",
+      "fecha_creacion": "2026-04-25",
+      "estado": "generando",
+      "configuracion": {
+        "numero_laminas": 5,
+        "publico": "Profesionales"
+      }
+    },
+    {
+      "id": "camp_1777161715328",
+      "empresa": "ape",
+      "nombre": "demanda",
+      "tema": "evita demandas por apagones en mexico",
+      "formato": "reel",
+      "fecha_creacion": "2026-04-26",
+      "estado": "generando",
+      "configuracion": {
+        "numero_laminas": 5,
+        "publico": "Profesionales"
+      }
+    }
+  ],
+  "metadatos": {
+    "ultima_actualizacion": "2026-04-25T17:36:51.806Z",
+    "total_campañas": 0
+  }
+}

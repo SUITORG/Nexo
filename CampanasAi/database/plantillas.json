@@ -1,0 +1,28 @@
+{
+  "plantillas": [
+    {
+      "id": "template_reel_tecnico",
+      "nombre": "Reel Técnico Profundo",
+      "descripcion": "Carruseles con enfoque técnico y analítico",
+      "prompt_id": "reel_template",
+      "variables": ["Número", "Tema", "Público"],
+      "formato_salida": "reel"
+    },
+    {
+      "id": "template_post_engagement",
+      "nombre": "Post para Engagement",
+      "descripcion": "Publicaciones cortas para generar interacción",
+      "prompt_id": "post_template",
+      "variables": ["Tema", "Público"],
+      "formato_salida": "post"
+    },
+    {
+      "id": "template_story_qa",
+      "nombre": "Stories Q&A",
+      "descripcion": "Formato de preguntas y respuestas para stories",
+      "prompt_id": "story_template",
+      "variables": ["Tema", "Público"],
+      "formato_salida": "story"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "google-sheets": {
+      "source": "vm0-ai/vm0-skills",
+      "sourceType": "github",
+      "computedHash": "d1e0019c9c8f72bf886ce1c3547789e9c8ab4a70e009b6aef86ddcbef7a0c362"
+    }
+  }
+}

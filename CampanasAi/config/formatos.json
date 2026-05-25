@@ -1,0 +1,48 @@
+{
+  "reel": {
+    "tipo": "video",
+    "duracion": "15-30 segundos",
+    "resolucion": "1080x1920",
+    "formato_salida": "mp4",
+    "calidad": "alta",
+    "elementos": [
+      "fondo",
+      "texto",
+      "transiciones",
+      "musica_opcional"
+    ]
+  },
+  "post": {
+    "tipo": "imagen",
+    "dimensiones": "1080x1080",
+    "formato_salida": "jpg",
+    "calidad": "alta",
+    "elementos": [
+      "imagen_principal",
+      "texto_superpuesto",
+      "logo_marca"
+    ]
+  },
+  "story": {
+    "tipo": "imagen_secuencial",
+    "dimensiones": "1080x1920",
+    "formato_salida": "jpg",
+    "calidad": "alta",
+    "elementos": [
+      "fondo_color",
+      "texto",
+      "interactivos"
+    ]
+  },
+  "banner": {
+    "tipo": "imagen",
+    "dimensiones": "1200x628",
+    "formato_salida": "png",
+    "calidad": "alta",
+    "elementos": [
+      "imagen_fondo",
+      "texto_principal",
+      "botones_cta"
+    ]
+  }
+}

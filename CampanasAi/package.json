@@ -1,0 +1,17 @@
+{
+  "name": "campanasai",
+  "version": "1.0.0",
+  "description": "CMS optimizado para Google Sheets",
+  "main": "mock-server.js",
+  "scripts": {
+    "start": "node mock-server.js",
+    "test": "echo \"Abre test.html en tu navegador\""
+  },
+  "keywords": ["cms", "google-sheets", "frontend", "optimizado"],
+  "author": "SuitOrg Team",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

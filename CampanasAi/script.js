@@ -16,6 +16,7 @@ let previewSection, carouselContainer;
 let enableVoice, enableMusic, enableVideo;
 let uploadedLogoDataUrl = null;
 let companyConfigs = [];
+let bdUploadedPhotos = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar Elementos
@@ -44,6 +45,104 @@ document.addEventListener('DOMContentLoaded', () => {
     enableVoice = document.getElementById('enableVoice');
     enableMusic = document.getElementById('enableMusic');
     enableVideo = document.getElementById('enableVideo');
+    const enableAnimation = document.getElementById('enableAnimation');
+    const animationOptions = document.getElementById('animationOptions');
+    if (enableAnimation && animationOptions) {
+        enableAnimation.addEventListener('change', () => {
+            animationOptions.style.display = enableAnimation.checked ? 'flex' : 'none';
+        });
+    }
+
+    // Elementos de Fotos de BD
+    const bdPhotosContainer = document.getElementById('bdPhotosContainer');
+    const bdPhotosInput = document.getElementById('bdPhotosInput');
+    const bdPhotosPreview = document.getElementById('bdPhotosPreview');
+    const clearBdPhotosBtn = document.getElementById('clearBdPhotosBtn');
+    
+    // Función para actualizar etiqueta de cantidad de fotos esperadas
+    window.updateBdPhotosLabel = function() {
+        const slidesCount = parseInt(aiSlides.value) || 1;
+        const bdPhotosLabel = document.getElementById('bdPhotosLabel');
+        if (bdPhotosLabel) {
+            bdPhotosLabel.innerHTML = `Fotos del Carrusel (Locales) - <span style="color:var(--primary)">Sube hasta ${slidesCount} foto${slidesCount > 1 ? 's' : ''}</span> (secuencial según slide)`;
+        }
+    };
+
+    // Escuchar cambios en la cantidad de slides para actualizar la etiqueta
+    if (aiSlides) {
+        aiSlides.addEventListener('input', () => {
+            if (typeof window.updateBdPhotosLabel === 'function') {
+                window.updateBdPhotosLabel();
+            }
+        });
+    }
+
+    // Manejador de subida de fotos BD
+    if (bdPhotosInput) {
+        bdPhotosInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            const slidesCount = parseInt(aiSlides.value) || 1;
+            
+            // Limitar las fotos a subir según el número de slides
+            const filesToProcess = files.slice(0, slidesCount);
+            
+            bdUploadedPhotos = [];
+            if (bdPhotosPreview) bdPhotosPreview.innerHTML = '';
+
+            for (let i = 0; i < filesToProcess.length; i++) {
+                const file = filesToProcess[i];
+                const dataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target.result);
+                    reader.readAsDataURL(file);
+                });
+
+                bdUploadedPhotos.push(dataUrl);
+
+                // Agregar miniatura con etiqueta indicando el slide correspondiente
+                if (bdPhotosPreview) {
+                    const thumb = document.createElement('div');
+                    thumb.style.position = 'relative';
+                    thumb.style.width = '60px';
+                    thumb.style.height = '60px';
+                    thumb.style.borderRadius = '4px';
+                    thumb.style.backgroundImage = `url('${dataUrl}')`;
+                    thumb.style.backgroundSize = 'cover';
+                    thumb.style.backgroundPosition = 'center';
+                    thumb.style.border = '1px solid rgba(255,255,255,0.2)';
+                    
+                    const badge = document.createElement('span');
+                    badge.innerText = `S${i + 1}`;
+                    badge.style.position = 'absolute';
+                    badge.style.bottom = '2px';
+                    badge.style.right = '2px';
+                    badge.style.background = 'var(--primary)';
+                    badge.style.color = '#fff';
+                    badge.style.fontSize = '8px';
+                    badge.style.padding = '1px 3px';
+                    badge.style.borderRadius = '2px';
+                    badge.style.fontWeight = 'bold';
+
+                    thumb.appendChild(badge);
+                    bdPhotosPreview.appendChild(thumb);
+                }
+            }
+
+            if (clearBdPhotosBtn) {
+                clearBdPhotosBtn.style.display = bdUploadedPhotos.length > 0 ? 'inline-block' : 'none';
+            }
+        });
+    }
+
+    // Botón para limpiar fotos
+    if (clearBdPhotosBtn) {
+        clearBdPhotosBtn.addEventListener('click', () => {
+            bdUploadedPhotos = [];
+            if (bdPhotosInput) bdPhotosInput.value = '';
+            if (bdPhotosPreview) bdPhotosPreview.innerHTML = '';
+            clearBdPhotosBtn.style.display = 'none';
+        });
+    }
 
     // Manejador de subida de Logo
     const logoFileInput = document.getElementById('companyLogoFile');
@@ -61,6 +160,58 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 uploadedLogoDataUrl = null;
             }
+        });
+    }
+
+    // Google Drive Logo Picker
+    const driveBtn = document.getElementById('driveLogoBtn');
+    const driveModal = document.getElementById('driveModal');
+    const driveInput = document.getElementById('driveLinkInput');
+    const drivePreview = document.getElementById('drivePreview');
+    const driveConfirm = document.getElementById('driveConfirmBtn');
+    const driveCancel = document.getElementById('driveCancelBtn');
+
+    function showDriveModal() {
+        if (driveModal) driveModal.style.display = 'flex';
+        if (driveInput) driveInput.value = '';
+        if (drivePreview) drivePreview.style.display = 'none';
+    }
+    function hideDriveModal() {
+        if (driveModal) driveModal.style.display = 'none';
+    }
+
+    if (driveBtn) driveBtn.addEventListener('click', showDriveModal);
+    if (driveCancel) driveCancel.addEventListener('click', hideDriveModal);
+    if (driveModal) driveModal.addEventListener('click', (e) => { if (e.target === driveModal) hideDriveModal(); });
+
+    if (driveInput) {
+        driveInput.addEventListener('input', () => {
+            const raw = driveInput.value.trim();
+            const url = normalizeDriveUrl(raw);
+            if (url && url !== raw) driveInput.value = url; // auto-normalizar
+            if (drivePreview) {
+                if (url && url.match(/drive\.google\.com|uc\?/)) {
+                    const imgUrl = normalizeDriveUrl(url);
+                    drivePreview.innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain;" onerror="this.parentElement.innerHTML='<p style=color:red;font-size:0.7rem;>No se pudo previsualizar</p>'">`;
+                    drivePreview.style.display = 'block';
+                } else if (raw) {
+                    drivePreview.innerHTML = `<img src="${raw}" style="width:100%; height:100%; object-fit:contain;" onerror="this.parentElement.innerHTML='<p style=color:red;font-size:0.7rem;>No se pudo previsualizar</p>'">`;
+                    drivePreview.style.display = 'block';
+                } else {
+                    drivePreview.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    if (driveConfirm) {
+        driveConfirm.addEventListener('click', () => {
+            const url = normalizeDriveUrl(driveInput.value.trim());
+            if (!url) { showToast('❌ Pegá un enlace de Google Drive', 'error'); return; }
+            document.getElementById('companyLogo').value = url;
+            uploadedLogoDataUrl = null;
+            showToast('✅ Logo desde Drive cargado', 'success');
+            hideDriveModal();
         });
     }
 
@@ -106,6 +257,10 @@ document.addEventListener('DOMContentLoaded', () => {
             previewSection.style.display = 'none';
             captionField.value = '';
             uploadedLogoDataUrl = null;
+            bdUploadedPhotos = [];
+            if (bdPhotosInput) bdPhotosInput.value = '';
+            if (bdPhotosPreview) bdPhotosPreview.innerHTML = '';
+            if (clearBdPhotosBtn) clearBdPhotosBtn.style.display = 'none';
             showToast('Formulario limpios y listos para nueva campaña', 'success');
         });
     }
@@ -300,14 +455,17 @@ function getFormData() {
 }
 
 function autoToggleMultimedia(format) {
+    const enableAnimation = document.getElementById('enableAnimation');
     if (format === 'Reel' || format === 'Story') {
         enableVoice.checked = true;
         enableMusic.checked = true;
         enableVideo.checked = true;
+        if (enableAnimation) { enableAnimation.checked = true; enableAnimation.dispatchEvent(new Event('change')); }
     } else {
         enableVoice.checked = false;
         enableMusic.checked = false;
         enableVideo.checked = false;
+        if (enableAnimation) { enableAnimation.checked = false; enableAnimation.dispatchEvent(new Event('change')); }
     }
 }
 
@@ -352,7 +510,7 @@ function renderCarouselPreview(text) {
     const slides = text.split(/(?=Slide|Diapositiva|\n\d+\.)/i).filter(s => s.trim().length > 10);
 
     const format = document.querySelector('.format-tab.active').dataset.format;
-    const userLogoUrl = document.getElementById('companyLogo').value.trim();
+    const userLogoUrl = normalizeDriveUrl(document.getElementById('companyLogo').value.trim());
     const finalLogoUrl = uploadedLogoDataUrl || userLogoUrl; 
 
     slides.forEach((slideText, index) => {
@@ -422,8 +580,21 @@ function renderCarouselPreview(text) {
         `;
         carouselContainer.appendChild(slideEl);
 
-        // Lógica de carga con fallbacks
-        tryLoadImage(slideId, imageSources);
+        // Usar foto local si existe, si no usar fallbacks de IA
+        if (bdUploadedPhotos[index]) {
+            setTimeout(() => {
+                const el = document.getElementById(slideId);
+                const loader = document.getElementById(`loader-${slideId}`);
+                if (el) {
+                    el.style.backgroundImage = `url('${bdUploadedPhotos[index]}')`;
+                    el.style.backgroundSize = 'cover';
+                    el.style.backgroundPosition = 'center';
+                }
+                if (loader) loader.classList.add('hidden');
+            }, 0);
+        } else {
+            tryLoadImage(slideId, imageSources);
+        }
     });
 
     previewSection.scrollIntoView({ behavior: 'smooth' });
@@ -572,10 +743,17 @@ async function downloadCampaignKit() {
             const voiceBtn = slide.querySelector('.voice-player');
             const visualTag = slide.querySelector('.slide-visual');
             const slideNumberTag = slide.querySelector('.slide-number');
+            const titleTag = slide.querySelector('.slide-title');
             
             if (voiceBtn) voiceBtn.style.visibility = 'hidden';
             if (visualTag) visualTag.style.visibility = 'hidden';
             if (slideNumberTag) slideNumberTag.style.visibility = 'hidden';
+
+            let originalTitle = "";
+            if (titleTag) {
+                originalTitle = titleTag.innerText;
+                titleTag.innerText = originalTitle.replace(/^\s*\(\d+\)\s*[-.:]?\s*/, '');
+            }
 
             try {
                 const canvas = await html2canvas(slide, {
@@ -593,16 +771,60 @@ async function downloadCampaignKit() {
             } catch (err) {
                 console.error('Error renderizando slide:', err);
             } finally {
-                // Restaurar visibilidad
+                // Restaurar visibilidad y título original
                 if (voiceBtn) voiceBtn.style.visibility = 'visible';
                 if (visualTag) visualTag.style.visibility = 'visible';
                 if (slideNumberTag) slideNumberTag.style.visibility = 'visible';
+                if (titleTag && originalTitle) titleTag.innerText = originalTitle;
                 
                 const newVisualTag = slide.querySelector('.slide-visual');
                 if (newVisualTag) newVisualTag.style.visibility = 'visible';
             }
         }
-        showToast('✅ ¡Kit descargado exitosamente!', 'success');
+        // 3. Si animación activa, generar slideshow .mp4 limpio
+        const animToggle = document.getElementById('enableAnimation');
+        if (animToggle?.checked && typeof html2canvas !== 'undefined') {
+            try {
+                downloadBtn.innerHTML = '<div class="loader" style="display:inline-block; margin-right:8px;"></div> 🎬 VIDEO...';
+                showToast('🎬 Generando video animado del kit...', 'info');
+
+                const effect = document.getElementById('animationEffect')?.value || 'zoom';
+                const duration = parseInt(document.getElementById('animationDuration')?.value) || 5;
+
+                // Capturar slides CON campaña (con overlay/texto/logo visible)
+                const kitImages = [];
+                for (let i = 0; i < slides.length; i++) {
+                    const slide = slides[i];
+                    const canvas = await html2canvas(slide, {
+                        scale: 1.5, useCORS: true, allowTaint: true, backgroundColor: '#0f172a'
+                    });
+                    kitImages.push(canvas.toDataURL('image/jpeg', 0.9));
+                    downloadBtn.innerHTML = `<div class="loader" style="display:inline-block; margin-right:8px;"></div> 📷 ${i+1}/${slides.length}`;
+                }
+
+                downloadBtn.innerHTML = '<div class="loader" style="display:inline-block; margin-right:8px;"></div> 🚀 ENSAMBLANDO...';
+                const resp = await fetch('/api/slideshow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ images: kitImages, effect, duration, transition: 'fade' })
+                });
+                const data = await resp.json();
+                if (data.status === 'success' && data.video) {
+                    const b64 = data.video.split(',')[1];
+                    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+                    const blob = new Blob([bytes], { type: 'video/mp4' });
+                    downloadFile(URL.createObjectURL(blob), `kit_${company}_animado.mp4`);
+                } else {
+                    throw new Error(data.error || 'Error del servidor');
+                }
+                showToast('✅ ¡Kit completo con video animado!', 'success');
+            } catch (e) {
+                showToast(`⚠️ Video no generado: ${e.message}`, 'warning');
+                console.error(e);
+            }
+        } else {
+            showToast('✅ ¡Kit descargado exitosamente!', 'success');
+        }
     } else {
         showToast('❌ Error: Librería de renderizado no disponible', 'error');
     }
@@ -756,11 +978,13 @@ function setWorkMode(mode) {
     const aiBtn = document.getElementById('btnModeAi');
     const bdBtn = document.getElementById('btnModeBd');
     const container = document.getElementById('companyInputContainer');
+    const bdPhotosContainer = document.getElementById('bdPhotosContainer');
     
     if (mode === 'Ai') {
         aiBtn.classList.add('active');
         bdBtn.classList.remove('active');
         console.log("🤖 Modo actual: Inteligencia Artificial (Manual)");
+        if (bdPhotosContainer) bdPhotosContainer.style.display = 'none';
         
         // Cambiar a Input de Texto
         container.innerHTML = `
@@ -771,6 +995,12 @@ function setWorkMode(mode) {
         bdBtn.classList.add('active');
         aiBtn.classList.remove('active');
         console.log("📊 Modo actual: Base de Datos (Automático)");
+        if (bdPhotosContainer) {
+            bdPhotosContainer.style.display = 'block';
+            if (typeof window.updateBdPhotosLabel === 'function') {
+                window.updateBdPhotosLabel();
+            }
+        }
         
         // Cambiar a Select
         container.innerHTML = `
@@ -799,9 +1029,9 @@ function setWorkMode(mode) {
                             return foundKey ? selected[foundKey] : null;
                         };
 
-                        // 1. Logo
+                        // 1. Logo (normalizar Drive)
                         const logo = findVal(['logo_url', 'logo']);
-                        document.getElementById('companyLogo').value = logo || "";
+                        document.getElementById('companyLogo').value = normalizeDriveUrl(logo || "");
                         
                         // 2. Teléfono (Busca cualquier columna que mencione "tel" o "whatsapp" o "whas")
                         const tel = findVal(['telefonowhastapp', 'telefonowhasapp', 'telefono', 'tel', 'whatsapp', 'whas']);
@@ -830,12 +1060,18 @@ function setWorkMode(mode) {
     }
 }
 
+function normalizeDriveUrl(url) {
+    if (!url) return url;
+    const m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : url;
+}
+
 function renderCarouselFromJson(data) {
     if (!data || !data.slides) return;
     carouselContainer.innerHTML = '';
     const format = document.querySelector('.format-tab.active').dataset.format;
     const isReel = (format === 'Reel' || format === 'Story');
-    const userLogoUrl = document.getElementById('companyLogo').value.trim();
+    const userLogoUrl = normalizeDriveUrl(document.getElementById('companyLogo').value.trim());
     const industry = aiIndustry.value;
     const theme = aiTheme.value;
 
@@ -860,6 +1096,11 @@ function renderCarouselFromJson(data) {
                             onmouseover="this.style.background='var(--primary)'; this.style.borderColor='var(--primary)';"
                             onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.borderColor='rgba(255,255,255,0.3)';"
                             title="Cambiar Foto">🔄</button>
+                    <button class="anim-btn" onclick="downloadAnimatedVideo('${slideId}', '${index}')"
+                            style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.3); color:#fbbf24; width:35px; height:35px; border-radius:50%; cursor:pointer; display:${document.getElementById('enableAnimation')?.checked ? 'flex' : 'none'}; align-items:center; justify-content:center; backdrop-filter:blur(5px); transition:all 0.3s; font-size:0.8rem;"
+                            onmouseover="this.style.background='var(--accent-color)'; this.style.borderColor='var(--accent-color)';"
+                            onmouseout="this.style.background='rgba(245,158,11,0.2)'; this.style.borderColor='rgba(245,158,11,0.3)';"
+                            title="Descargar Video Animado">🎬</button>
                 </div>
                 <div class="slide-number">Slide ${index + 1}</div>
                 <div class="slide-title">${slide.title}</div>
@@ -873,7 +1114,26 @@ function renderCarouselFromJson(data) {
         carouselContainer.appendChild(slideEl);
 
         // --- VECTOR MAESTRO DE FUENTES AGRESIVO ---
-        loadSlideImage(slideId, slide.visual, industry, theme);
+        if (bdUploadedPhotos[index]) {
+            // Usar foto cargada localmente por el usuario
+            setTimeout(() => {
+                const el = document.getElementById(slideId);
+                const loader = document.getElementById(`loader-${slideId}`);
+                if (el) {
+                    el.style.backgroundImage = `url('${bdUploadedPhotos[index]}')`;
+                    el.style.backgroundSize = 'cover';
+                    el.style.backgroundPosition = 'center';
+                }
+                if (loader) loader.classList.add('hidden');
+                const sourceTag = document.getElementById(`source-${slideId}`);
+                if (sourceTag) {
+                    sourceTag.innerText = '[LOCAL]';
+                    sourceTag.style.color = '#10b981';
+                }
+            }, 0);
+        } else {
+            loadSlideImage(slideId, slide.visual, industry, theme);
+        }
     });
 
     previewSection.style.display = 'block';
@@ -949,3 +1209,112 @@ document.getElementById('btnModeBd')?.addEventListener('click', () => setWorkMod
 
 // Carga inicial de empresas si está en modo BD
 loadCompanies();
+
+// --- ANIMACIÓN DE FOTO (FFmpeg backend) ---
+async function downloadAnimatedVideo(slideId, index) {
+    const toggle = document.getElementById('enableAnimation');
+    if (!toggle?.checked) return;
+
+    const effect = document.getElementById('animationEffect')?.value || 'zoom';
+    const duration = parseInt(document.getElementById('animationDuration')?.value) || 5;
+    const slide = document.querySelectorAll('.carousel-slide')[parseInt(index)];
+    if (!slide) return;
+
+    showToast('🎬 Generando video animado...', 'info');
+
+    try {
+        // Extraer URL directa del background-image (limpia, sin overlay)
+        const bgDiv = slide.querySelector('.slide-image');
+        let imgUrl = '';
+        if (bgDiv) {
+            const bg = bgDiv.style.backgroundImage;
+            const m = bg.match(/url\(["']?([^"')]+)["']?\)/);
+            if (m) imgUrl = m[1];
+        }
+        if (!imgUrl) throw new Error('No se encontró imagen de fondo');
+
+        let imageBase64 = imgUrl;
+        if (!imgUrl.startsWith('data:')) {
+            const resp = await fetch(`/api/proxy-image?url=${encodeURIComponent(imgUrl)}`);
+            const data = await resp.json();
+            if (data.status !== 'ok') throw new Error(data.error || 'Error al descargar imagen');
+            imageBase64 = data.image;
+        }
+
+        const response = await fetch('/api/animate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageBase64, effect, duration })
+        });
+
+        const data = await response.json();
+        if (data.status !== 'success' || !data.video) {
+            throw new Error(data.error || 'Error del servidor');
+        }
+
+        const b64 = data.video.split(',')[1];
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const blob = new Blob([bytes], { type: 'video/mp4' });
+        downloadFile(URL.createObjectURL(blob), `slide_${parseInt(index)+1}_${effect}.mp4`);
+        showToast(`✅ Video ${effect} descargado (${duration}s)`, 'success');
+    } catch (e) {
+        showToast(`❌ Error: ${e.message}`, 'error');
+        console.error(e);
+    }
+}
+
+// Sincronizar visibilidad de botones de animación con el toggle
+document.addEventListener('change', (e) => {
+    if (e.target.id === 'enableAnimation') {
+        document.querySelectorAll('.anim-btn').forEach(btn => {
+            btn.style.display = e.target.checked ? 'flex' : 'none';
+        });
+    }
+});
+
+// --- CONSOLA DE LOGS UNIFICADA ---
+let logAutoRefresh = true;
+let logInterval = null;
+
+async function fetchLogs() {
+    try {
+        const res = await fetch('/api/logs');
+        if (!res.ok) return;
+        const logs = await res.json();
+        const el = document.getElementById('logContent');
+        if (!el) return;
+        el.innerHTML = logs.map(l => `<div>${l}</div>`).join('');
+        el.scrollTop = el.scrollHeight;
+    } catch (e) { /* servidor no disponible */ }
+}
+
+function toggleLogPanel() {
+    const panel = document.getElementById('logPanel');
+    if (!panel) return;
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if (panel.style.display === 'block') {
+        fetchLogs();
+        if (logAutoRefresh) {
+            logInterval = setInterval(fetchLogs, 2000);
+        }
+    } else {
+        clearInterval(logInterval);
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+        e.preventDefault();
+        toggleLogPanel();
+    }
+});
+
+document.getElementById('toggleLogBtn')?.addEventListener('click', () => {
+    logAutoRefresh = !logAutoRefresh;
+    document.getElementById('toggleLogBtn').style.color = logAutoRefresh ? 'var(--success)' : 'var(--text-dim)';
+    if (logAutoRefresh) {
+        logInterval = setInterval(fetchLogs, 2000);
+    } else {
+        clearInterval(logInterval);
+    }
+});

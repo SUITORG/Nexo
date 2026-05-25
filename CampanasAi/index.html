@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campañas AI - CMS Ligero</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="app-container">
+        <header class="header">
+            <div class="logo">
+                <span class="icon">🚀</span>
+                <h1>Campañas<span>AI</span></h1>
+            </div>
+            <p class="subtitle">CMS para Google Sheets</p>
+        </header>
+
+
+
+        <!-- Vista Previa del Carrusel (Simulación) -->
+        <div id="previewSection" class="preview-section glass-card" style="display: none;">
+            <div class="section-header">
+                <h3>👁️ Vista Previa del Carrusel</h3>
+                <button type="button" id="downloadBtn" class="download-btn">📥 Descargar Kit</button>
+            </div>
+            <div id="carouselContainer" class="carousel-container">
+                <!-- Los slides se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+
+        <section class="form-section glass-card">
+            <form id="cmsForm" novalidate>
+                <div class="form-header">
+                    <div class="header-left" style="display: flex; align-items: center; gap: 1rem;">
+                        <h2>Nueva Publicación</h2>
+                        <div class="mode-switch">
+                            <button type="button" class="mode-btn active" id="btnModeAi">Ai</button>
+                            <button type="button" class="mode-btn" id="btnModeBd">BD</button>
+                        </div>
+                    </div>
+                    <span class="badge">Google Sheets</span>
+                </div>
+
+                <div class="input-group-row">
+                    <div class="input-group full-width">
+                        <div class="format-menu glass-card">
+                            <label class="inner-label">Formato</label>
+                            <div class="menu-options">
+                                <button type="button" class="format-tab active" data-format="Post">📸 Post</button>
+                                <button type="button" class="format-tab" data-format="Reel">🎬 Reel</button>
+                                <button type="button" class="format-tab" data-format="Story">📱 Story</button>
+                                <button type="button" class="format-tab" data-format="Banner">🖼️ Banner</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group-row">
+                    <div class="input-group full-width">
+                        <div class="platform-menu glass-card">
+                            <label class="inner-label">Red Social</label>
+                            <div class="menu-options">
+                                <button type="button" class="platform-tab active" data-platform="Instagram">📸 Instagram</button>
+                                <button type="button" class="platform-tab" data-platform="Facebook">👥 Facebook</button>
+                                <button type="button" class="platform-tab" data-platform="TikTok">🎵 TikTok</button>
+                                <button type="button" class="platform-tab" data-platform="LinkedIn">💼 LinkedIn</button>
+                                <button type="button" class="platform-tab" data-platform="Twitter/X">🐦 X</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group-row two-cols responsive-cols" style="margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <div class="input-group" id="companyInputContainer" style="min-width: 250px; flex: 1.5;">
+                        <label for="companyName">Empresa / Marca</label>
+                        <input type="text" id="companyName" placeholder="Nombre de la marca..." required>
+                    </div>
+                    <div class="input-group" style="min-width: 250px; flex: 1;">
+                        <label for="webSite">Sitio Web / Enlace Oficial</label>
+                        <input type="url" id="webSite" placeholder="https://tuempresa.com">
+                    </div>
+                </div>
+
+                <div class="input-group-row two-cols responsive-cols" style="margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <div class="input-group" style="min-width: 250px; flex: 1.5;">
+                        <label>Logo (Subir archivo o URL)</label>
+                        <div class="logo-inputs-container" style="display: flex; gap: 0.2rem; align-items: center; flex-wrap: wrap;">
+                            <input type="file" id="companyLogoFile" accept="image/*" style="flex:1; min-width: 120px; padding: 0.4rem; font-size: 0.75rem;">
+                            <span style="color: var(--text-dim); font-size: 0.7rem;">O</span>
+                            <input type="url" id="companyLogo" placeholder="URL logo..." style="flex:2; min-width: 140px;">
+                            <button type="button" id="driveLogoBtn" title="Seleccionar de Google Drive" style="width:32px; height:32px; min-width:32px; margin:0; padding:0; background:rgba(66,133,244,0.15); border:1px solid rgba(66,133,244,0.3); border-radius:6px; color:#4285f4; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center;">📁</button>
+                        </div>
+                    </div>
+                    <div class="input-group" style="min-width: 200px; flex: 1;">
+                        <label for="contactPhone">Teléfono (WhatsApp)</label>
+                        <input type="text" id="contactPhone" placeholder="Ej: +52...">
+                    </div>
+                </div>
+
+                <!-- Contenedor de fotos locales para modo BD (Secuencial) -->
+                <div id="bdPhotosContainer" class="input-group" style="display: none; margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1);">
+                    <label id="bdPhotosLabel" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Fotos del Carrusel (Locales)</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <input type="file" id="bdPhotosInput" accept="image/*" multiple style="padding: 0.4rem; font-size: 0.75rem; flex: 1; min-width: 200px;">
+                        <button type="button" id="clearBdPhotosBtn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.3); color: #ffcccc; border-radius: 4px; display: none; cursor: pointer;">Limpiar Fotos</button>
+                    </div>
+                    <div id="bdPhotosPreview" style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;"></div>
+                </div>
+
+                <!-- Configuración de Producción Avanzada (Movida hacia arriba) -->
+                <div class="production-options ai-assistant-section">
+                    <div class="section-title">
+                        <span class="icon">🎬</span>
+                        <h3>Producción Multimedia</h3>
+                    </div>
+                    <div class="toggles-grid">
+                        <div class="toggle-group">
+                            <label class="switch">
+                                <input type="checkbox" id="enableVoice">
+                                <span class="slider round"></span>
+                            </label>
+                            <div class="toggle-info">
+                                <span class="toggle-label">Generar Voz (IA)</span>
+                                <span class="toggle-desc">Convierte el texto en audio profesional</span>
+                            </div>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="switch">
+                                <input type="checkbox" id="enableMusic">
+                                <span class="slider round"></span>
+                            </label>
+                            <div class="toggle-info">
+                                <span class="toggle-label">Música de Fondo</span>
+                                <span class="toggle-desc">Añade pista rítmica según el tema</span>
+                            </div>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="switch">
+                                <input type="checkbox" id="enableVideo">
+                                <span class="slider round"></span>
+                            </label>
+                            <div class="toggle-info">
+                                <span class="toggle-label">Auto-Video (Short/Reel)</span>
+                                <span class="toggle-desc">Ensambla clips y texto automáticamente</span>
+                            </div>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="switch">
+                                <input type="checkbox" id="enableAnimation">
+                                <span class="slider round"></span>
+                            </label>
+                            <div class="toggle-info">
+                                <span class="toggle-label">Animación de Foto</span>
+                                <span class="toggle-desc">Zoom, blink o cambio de color</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="animationOptions" style="display: none; margin-top:0.75rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                        <label style="font-size:0.75rem; color:var(--text-dim);">Efecto:</label>
+                        <select id="animationEffect" style="padding:0.3rem 0.6rem; font-size:0.75rem; border-radius:6px; background:rgba(15,23,42,0.5); border:1px solid var(--glass-border); color:white; flex:1; min-width:120px;">
+                            <option value="zoom">Zoom In</option>
+                            <option value="ken_burns">Ken Burns (zoom out)</option>
+                            <option value="blink">Blink / Parpadeo</option>
+                            <option value="color_shift">Cambio de Color</option>
+                        </select>
+                        <label style="font-size:0.75rem; color:var(--text-dim);">Duración (s):</label>
+                        <input type="number" id="animationDuration" value="5" min="2" max="10" style="width:60px; padding:0.3rem; font-size:0.75rem; border-radius:6px; background:rgba(15,23,42,0.5); border:1px solid var(--glass-border); color:white;">
+                    </div>
+                </div>
+
+                <!-- AI Assistant Section -->
+                <div class="ai-assistant-section">
+                    <div class="section-title">
+                        <span class="sparkle">✨</span>
+                        <h3>Asistente IA</h3>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="input-wrapper">
+                            <label for="aiIndustry">Industria / Nicho</label>
+                            <select id="aiIndustry">
+                                <option value="abogados">Abogados</option>
+                                <option value="agricultura">Agricultura</option>
+                                <option value="clinicas_medicas">Clínicas Médicas</option>
+                                <option value="construccion">Construcción</option>
+                                <option value="dentistas">Dentistas</option>
+                                <option value="despachos_contables">Despachos Contables</option>
+                                <option value="ecommerce">E-commerce</option>
+                                <option value="educacion">Educación</option>
+                                <option value="energia_solar">Energía Solar</option>
+                                <option value="hoteles_turismo">Hoteles y Turismo</option>
+                                <option value="manufacturera">Industria Manufacturera</option>
+                                <option value="inmobiliarias">Inmobiliarias</option>
+                                <option value="logistica_transporte">Logística y Transporte</option>
+                                <option value="mascotas">Mascotas</option>
+                                <option value="pastelerias">Pastelerías</option>
+                                <option value="restaurantes">Restaurantes y Comida Rápida</option>
+                                <option value="salud_bienestar">Salud y Bienestar</option>
+                                <option value="software">Software</option>
+                                <option value="tecnologia">Tecnología</option>
+                                <option value="tornos_maquinado">Tornos y Maquinado</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="aiTemplate">Tipo de Plantilla</label>
+                            <select id="aiTemplate">
+                                <option value="tecnico">📘 Técnico / Educativo</option>
+                                <option value="storytelling">📖 Storytelling (Narrativo)</option>
+                                <option value="q_a">❓ Preguntas y Respuestas</option>
+                                <option value="tutorial">💡 Tutorial / Paso a Paso</option>
+                                <option value="bts">🎥 Detrás de Cámaras</option>
+                                <option value="myth_busting">🛑 Mitos vs Realidad</option>
+                                <option value="lifestyle">✨ Estilo de Vida</option>
+                                <option value="dolor">🔥 Enfocado en el Dolor (Agitar Problema)</option>
+                                <option value="escasez">⏳ Sentido de Urgencia / Escasez</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="aiSlides">Cantidad de Slides</label>
+                            <input type="number" id="aiSlides" min="1" max="10" value="1">
+                        </div>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <label for="aiTheme">Tema de la publicación</label>
+                        <input type="text" id="aiTheme" placeholder="Ej: Importancia del SEO en 2024">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;">
+                        <button type="button" id="generateBtn" class="secondary-btn" style="flex: 2;">
+                            <span class="magic-icon">🪄</span>
+                            <span class="gen-text">Generar con IA (Incluye Imágenes)</span>
+                            <div class="gen-loader loader"></div>
+                        </button>
+                        <button type="reset" id="clearBtn" class="secondary-btn form-clear-btn" style="flex: 1; background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.3); color: #ffcccc;">
+                            🗑️ Limpiar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="caption">Contenido Generado / Manual</label>
+                    <textarea id="caption" placeholder="La IA escribirá aquí..." required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-wrapper">
+                        <label for="mediaUrl">URL Media</label>
+                        <input type="url" id="mediaUrl" name="mediaUrl" placeholder="https://ejemplo.com/imagen.jpg">
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="postDate">Fecha y Hora</label>
+                        <input type="datetime-local" id="postDate" name="postDate" required>
+                    </div>
+                </div>
+
+                <div class="token-section">
+                    <label for="token">Token</label>
+                    <input type="password" id="token" name="token" value="SUITORG_SECURE_TOKEN_2026">
+                </div>
+
+                <button type="submit" id="submitBtn">
+                    <span class="btn-text">Guardar en Sheets</span>
+                    <div class="loader"></div>
+                </button>
+            </form>
+
+            <div id="toast" class="toast">
+                <span id="toastMessage"></span>
+            </div>
+        </section>
+
+        <section id="historySection" class="history-section glass-card">
+            <div class="section-header">
+                <h3>📜 Historial de Campañas</h3>
+                <button type="button" id="refreshHistoryBtn" class="refresh-btn">🔄 Actualizar</button>
+            </div>
+            <div id="historyContainer" class="history-grid">
+                <div class="empty-state">No hay publicaciones recientes.</div>
+            </div>
+        </section>
+
+        <!-- Log Console Panel -->
+        <div id="logPanel" class="log-panel glass-card" style="margin-top: 1rem; display: none;">
+            <div class="section-header" style="margin-bottom:0.5rem;">
+                <h3 style="font-size:0.85rem;">📋 Consola de Logs</h3>
+                <div style="display:flex; gap:0.5rem;">
+                    <button type="button" id="toggleLogBtn" style="width:auto; margin:0; padding:0.25rem 0.6rem; font-size:0.7rem; background:transparent; border:1px solid var(--glass-border); border-radius:4px; color:var(--text-dim); cursor:pointer;">🔄 Auto</button>
+                    <button type="button" onclick="document.getElementById('logContent').innerHTML=''" style="width:auto; margin:0; padding:0.25rem 0.6rem; font-size:0.7rem; background:transparent; border:1px solid var(--glass-border); border-radius:4px; color:var(--text-dim); cursor:pointer;">🗑️</button>
+                </div>
+            </div>
+            <div id="logContent" style="background:rgba(0,0,0,0.4); border-radius:8px; padding:0.5rem; max-height:200px; overflow-y:auto; font-family:monospace; font-size:0.65rem; line-height:1.4; color:#a8b2c1;"></div>
+        </div>
+
+        <!-- Modal Google Drive -->
+        <div id="driveModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+            <div class="glass-card" style="max-width:440px; width:90%; padding:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">📁 Google Drive</h3>
+                <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.75rem;">Pegá el enlace compartido de tu archivo en Drive:</p>
+                <input type="url" id="driveLinkInput" placeholder="https://drive.google.com/file/d/..." style="width:100%; margin-bottom:0.75rem; padding:0.6rem; font-size:0.85rem;">
+                <div style="display:flex; gap:0.5rem;">
+                    <button type="button" id="driveConfirmBtn" style="flex:2; margin:0; padding:0.5rem; font-size:0.85rem;">✓ Usar este archivo</button>
+                    <button type="button" id="driveCancelBtn" style="flex:1; margin:0; padding:0.5rem; font-size:0.85rem; background:transparent; border:1px solid var(--glass-border); color:var(--text-dim);">Cancelar</button>
+                </div>
+                <div id="drivePreview" style="margin-top:0.75rem; display:none; border-radius:6px; overflow:hidden; max-height:120px; background:rgba(0,0,0,0.2);"></div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>© 2026 SuitOrg. Optimizado para velocidad.</p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

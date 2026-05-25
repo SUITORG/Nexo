@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Simple</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-form { display: flex; flex-direction: column; gap: 10px; max-width: 500px; }
+        input, textarea, button { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007bff; color: white; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; min-height: 100px; white-space: pre-wrap; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Test Simple de Conexión</h1>
+    <p>Abre este archivo con un servidor web local (como Live Server en VS Code)</p>
+
+    <form class="test-form" id="testForm">
+        <textarea id="testCaption" placeholder="Caption de prueba" required>Test de contenido</textarea>
+        <input type="url" id="testMediaUrl" placeholder="URL de media (opcional)">
+        <input type="datetime-local" id="testPostDate" required>
+        <input type="password" id="testToken" value="SUITORG_SECURE_TOKEN_2026" placeholder="Token">
+        <button type="submit">Probar Conexión</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = document.getElementById('result');
+            result.textContent = 'Enviando...';
+
+            const formData = {
+                caption: document.getElementById('testCaption').value,
+                mediaUrl: document.getElementById('testMediaUrl').value,
+                postDate: document.getElementById('testPostDate').value,
+                token: document.getElementById('testToken').value
+            };
+
+            try {
+                // Usamos JSONP para evitar problemas con CORS y file://
+                const callbackName = 'callback_' + Date.now();
+                window[callbackName] = function(data) {
+                    result.textContent = JSON.stringify(data, null, 2);
+                    result.className = data.status === 'success' ? 'success' : 'error';
+                    delete window[callbackName];
+                };
+
+                const script = document.createElement('script');
+                script.src = `https://script.google.com/macros/s/AKfycby5gjlVPYLxAC1BtmEfPYa69ivpnrJnMLSKzyWAi6L3MMLajAda8oI8sk1D8zZdLc31XQ/exec?callback=${callbackName}&data=${encodeURIComponent(JSON.stringify(formData))}`;
+                document.body.appendChild(script);
+
+                // Timeout por si hay error
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        result.textContent = 'Error: Timeout o CORS no soportado';
+                        result.className = 'error';
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                    }
+                }, 5000);
+
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+                result.className = 'error';
+            }
+        });
+
+        // Establecer fecha y hora actual
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('testPostDate').value = now.toISOString().slice(0, 16);
+    </script>
+</body>
+</html>
