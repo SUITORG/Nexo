@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script async defer src="https://apis.google.com/js/api.js"></script>
+    <script async defer src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
     <div class="background-blobs">
@@ -47,6 +49,7 @@
                         <div class="mode-switch">
                             <button type="button" class="mode-btn active" id="btnModeAi">Ai</button>
                             <button type="button" class="mode-btn" id="btnModeBd">BD</button>
+                            <button type="button" class="mode-btn" id="btnModeBdpr">BDPR</button>
                         </div>
                     </div>
                     <span class="badge">Google Sheets</span>
@@ -99,7 +102,7 @@
                             <input type="file" id="companyLogoFile" accept="image/*" style="flex:1; min-width: 120px; padding: 0.4rem; font-size: 0.75rem;">
                             <span style="color: var(--text-dim); font-size: 0.7rem;">O</span>
                             <input type="url" id="companyLogo" placeholder="URL logo..." style="flex:2; min-width: 140px;">
-                            <button type="button" id="driveLogoBtn" title="Seleccionar de Google Drive" style="width:32px; height:32px; min-width:32px; margin:0; padding:0; background:rgba(66,133,244,0.15); border:1px solid rgba(66,133,244,0.3); border-radius:6px; color:#4285f4; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center;">📁</button>
+                            <button type="button" id="driveLogoBtn" title="Explorar Google Drive" style="width:32px; height:32px; min-width:32px; margin:0; padding:0; background:rgba(66,133,244,0.15); border:1px solid rgba(66,133,244,0.3); border-radius:6px; color:#4285f4; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center;">📁</button>
                         </div>
                     </div>
                     <div class="input-group" style="min-width: 200px; flex: 1;">
@@ -199,6 +202,7 @@
                                 <option value="ecommerce">E-commerce</option>
                                 <option value="educacion">Educación</option>
                                 <option value="energia_solar">Energía Solar</option>
+                                <option value="almacenamiento_energia">Almacenamiento Energía (Ind/Res/Clín)</option>
                                 <option value="hoteles_turismo">Hoteles y Turismo</option>
                                 <option value="manufacturera">Industria Manufacturera</option>
                                 <option value="inmobiliarias">Inmobiliarias</option>
@@ -225,6 +229,7 @@
                                 <option value="lifestyle">✨ Estilo de Vida</option>
                                 <option value="dolor">🔥 Enfocado en el Dolor (Agitar Problema)</option>
                                 <option value="escasez">⏳ Sentido de Urgencia / Escasez</option>
+                                <option value="vende_mente">🧠 Vende a la Mente (Inspirador/Urgente)</option>
                             </select>
                         </div>
                         <div class="input-wrapper">
@@ -304,11 +309,11 @@
             <div id="logContent" style="background:rgba(0,0,0,0.4); border-radius:8px; padding:0.5rem; max-height:200px; overflow-y:auto; font-family:monospace; font-size:0.65rem; line-height:1.4; color:#a8b2c1;"></div>
         </div>
 
-        <!-- Modal Google Drive -->
+        <!-- Modal Google Drive (Fallback: método manual) -->
         <div id="driveModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
             <div class="glass-card" style="max-width:440px; width:90%; padding:1.5rem;">
-                <h3 style="margin-bottom:0.75rem;">📁 Google Drive</h3>
-                <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.75rem;">Pegá el enlace compartido de tu archivo en Drive:</p>
+                <h3 style="margin-bottom:0.75rem;">📁 Google Drive (Manual)</h3>
+                <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.75rem;"><strong>Método alternativo</strong> — Pegá el enlace público del archivo en Drive:</p>
                 <input type="url" id="driveLinkInput" placeholder="https://drive.google.com/file/d/..." style="width:100%; margin-bottom:0.75rem; padding:0.6rem; font-size:0.85rem;">
                 <div style="display:flex; gap:0.5rem;">
                     <button type="button" id="driveConfirmBtn" style="flex:2; margin:0; padding:0.5rem; font-size:0.85rem;">✓ Usar este archivo</button>

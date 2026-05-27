@@ -143,6 +143,44 @@ app.post('/api/ai/generate', (req, res) => {
     proxyReq.end();
 });
 
+// CHAT ENDPOINT PARA AGENTES (v16.8.0) - Same engine as /api/ai/generate
+app.post('/api/ai/chat', (req, res) => {
+    const { messages } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "GOOGLE_GEMINI_KEY no configurada." });
+
+    const prompt = messages[messages.length - 1].content;
+    const postData = JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+    });
+
+    const options = {
+        hostname: 'generativelanguage.googleapis.com',
+        path: `/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
+    };
+
+    const proxyReq = https.request(options, (proxyRes) => {
+        let body = '';
+        proxyRes.on('data', (chunk) => body += chunk);
+        proxyRes.on('end', () => {
+            try {
+                const responseData = JSON.parse(body);
+                if (proxyRes.statusCode !== 200) return res.status(proxyRes.statusCode).json(responseData);
+                const aiText = responseData.candidates[0].content.parts[0].text;
+                res.json({ choices: [{ message: { content: aiText } }] });
+            } catch (e) {
+                res.status(500).json({ error: "Error en respuesta de Google" });
+            }
+        });
+    });
+    proxyReq.on('error', (e) => res.status(500).json({ error: e.message }));
+    proxyReq.write(postData);
+    proxyReq.end();
+});
+
 // PROXY SEGURO PARA BASE DE DATOS (v17.0.0)
 // Este túnel se salta el RLS usando la Service Role Key para que la web funcione
 app.get('/api/db/:table', async (req, res) => {
@@ -185,6 +223,26 @@ app.post('/api/db/:table', async (req, res) => {
     }
 });
 
+
+// UPLOAD PROXY - Usa service_role key para bypass RLS (v16.8.0)
+app.post('/api/storage/upload', express.json({ limit: '10mb' }), async (req, res) => {
+    const { bucket, path, fileName, contentType, buffer } = req.body;
+    if (!bucket || !path || !fileName || !buffer) return res.status(400).json({ error: "Faltan parámetros" });
+    try {
+        const { data, error } = await supabaseAdmin.storage
+            .from(bucket)
+            .upload(`${path}/${fileName}`, Buffer.from(buffer, 'base64'), {
+                contentType: contentType || 'image/jpeg',
+                upsert: false
+            });
+        if (error) throw error;
+        console.log(`📸 [UPLOAD_PROXY] Subido: ${path}/${fileName}`);
+        res.json({ success: true, data });
+    } catch (e) {
+        console.error(`❌ [UPLOAD_PROXY_ERROR]`, e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 app.post('/api/storage/list/:bucket', async (req, res) => {
     const { bucket } = req.params;

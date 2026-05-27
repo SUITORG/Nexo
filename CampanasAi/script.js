@@ -4,7 +4,10 @@
 const CONFIG = {
     AI_URL: '/api/ai/generate', 
     HISTORY_URL: '/api/history', 
-    TOKEN: 'SUITORG_SECURE_TOKEN_2026'
+    TOKEN: 'SUITORG_SECURE_TOKEN_2026',
+    DRIVE_API_KEY: 'AIzaSyCWfxEjPwtOwAR7QQOscS0e-180st_W35Q',  // Google Cloud API Key (Picker API)
+    DRIVE_CLIENT_ID: '136483197929-6rma46r0oc4d1bp39ti7vr4s7vjvah3n.apps.googleusercontent.com',  // OAuth 2.0 Client ID
+    DRIVE_APP_ID: '136483197929'                               // Google Cloud Project Number
 };
 
 // Variables Globales de UI
@@ -14,6 +17,7 @@ let aiTemplate;
 let formatTabs, platformTabs, historyContainer, refreshHistoryBtn, downloadBtn;
 let previewSection, carouselContainer;
 let enableVoice, enableMusic, enableVideo;
+let currentMode = 'Ai';
 let uploadedLogoDataUrl = null;
 let companyConfigs = [];
 let bdUploadedPhotos = [];
@@ -163,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Google Drive Logo Picker
+    // Google Drive Picker (Picker API con fallback a URL manual)
     const driveBtn = document.getElementById('driveLogoBtn');
     const driveModal = document.getElementById('driveModal');
     const driveInput = document.getElementById('driveLinkInput');
@@ -171,7 +175,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const driveConfirm = document.getElementById('driveConfirmBtn');
     const driveCancel = document.getElementById('driveCancelBtn');
 
-    function showDriveModal() {
+    let pickerApiLoaded = false;
+
+    function loadGooglePickerAPI(callback) {
+        if (pickerApiLoaded) { callback(); return; }
+        if (typeof gapi !== 'undefined') {
+            gapi.load('picker', () => {
+                pickerApiLoaded = true;
+                callback();
+            });
+        } else {
+            const check = setInterval(() => {
+                if (typeof gapi !== 'undefined') {
+                    clearInterval(check);
+                    gapi.load('picker', () => {
+                        pickerApiLoaded = true;
+                        callback();
+                    });
+                }
+            }, 200);
+            setTimeout(() => clearInterval(check), 15000);
+        }
+    }
+
+    function openDrivePicker() {
+        const hasCreds = CONFIG.DRIVE_API_KEY && CONFIG.DRIVE_CLIENT_ID;
+        if (!hasCreds) {
+            showToast('⚠️ Configura DRIVE_API_KEY y DRIVE_CLIENT_ID en CONFIG para usar el explorador', 'warning');
+            showDriveModalFallback();
+            return;
+        }
+        setAiLoading(true);
+        loadGooglePickerAPI(() => {
+            if (typeof google === 'undefined' || !google.accounts?.oauth2) {
+                showToast('⚠️ Google Identity Services no cargó, usando método manual', 'warning');
+                setAiLoading(false);
+                showDriveModalFallback();
+                return;
+            }
+            const tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CONFIG.DRIVE_CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/drive.readonly',
+                callback: (tokenResponse) => {
+                    setAiLoading(false);
+                    if (tokenResponse.access_token) {
+                        const picker = new google.picker.PickerBuilder()
+                            .addView(google.picker.ViewId.DOCS_IMAGES)
+                            .addView(google.picker.ViewId.DOCS_VIDEOS)
+                            .setOAuthToken(tokenResponse.access_token)
+                            .setDeveloperKey(CONFIG.DRIVE_API_KEY)
+                            .setAppId(CONFIG.DRIVE_APP_ID || CONFIG.DRIVE_CLIENT_ID.split('-')[0])
+                            .setCallback((data) => {
+                                if (data.action === google.picker.Action.PICKED) {
+                                    const file = data.docs[0];
+                                    const url = `https://drive.google.com/uc?export=view&id=${file.id}`;
+                                    document.getElementById('companyLogo').value = url;
+                                    uploadedLogoDataUrl = null;
+                                    showToast(`✅ Logo seleccionado: ${file.name}`, 'success');
+                                }
+                            })
+                            .build();
+                        picker.setVisible(true);
+                    } else {
+                        showToast('❌ No se pudo autenticar con Google', 'error');
+                    }
+                },
+                error_callback: () => {
+                    setAiLoading(false);
+                    showToast('❌ Error de autenticación con Google', 'error');
+                }
+            });
+            tokenClient.requestAccessToken();
+        });
+    }
+
+    function showDriveModalFallback() {
         if (driveModal) driveModal.style.display = 'flex';
         if (driveInput) driveInput.value = '';
         if (drivePreview) drivePreview.style.display = 'none';
@@ -180,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (driveModal) driveModal.style.display = 'none';
     }
 
-    if (driveBtn) driveBtn.addEventListener('click', showDriveModal);
+    if (driveBtn) driveBtn.addEventListener('click', openDrivePicker);
     if (driveCancel) driveCancel.addEventListener('click', hideDriveModal);
     if (driveModal) driveModal.addEventListener('click', (e) => { if (e.target === driveModal) hideDriveModal(); });
 
@@ -188,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         driveInput.addEventListener('input', () => {
             const raw = driveInput.value.trim();
             const url = normalizeDriveUrl(raw);
-            if (url && url !== raw) driveInput.value = url; // auto-normalizar
+            if (url && url !== raw) driveInput.value = url;
             if (drivePreview) {
                 if (url && url.match(/drive\.google\.com|uc\?/)) {
                     const imgUrl = normalizeDriveUrl(url);
@@ -232,9 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Manejador del Switch AI / BD
+    // Manejador del Switch AI / BD / BDPR
     document.getElementById('btnModeAi').addEventListener('click', () => setWorkMode('Ai'));
     document.getElementById('btnModeBd').addEventListener('click', () => setWorkMode('BD'));
+    document.getElementById('btnModeBdpr').addEventListener('click', () => setWorkMode('BDPR'));
+
+    // Sincronizar estado inicial
+    setWorkMode('Ai');
 
     // Cargar historial al inicio
     fetchHistory();
@@ -308,6 +390,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function generateAIContent() {
+    // --- MODO BDPR: tomar texto pegado, mostrar preview, sin IA ---
+    if (currentMode === 'BDPR') {
+        const text = captionField.value.trim();
+        if (!text) {
+            showToast('❌ Escribe o pega el contenido de la campaña', 'error');
+            captionField.focus();
+            return;
+        }
+        if (!document.getElementById('companyName').value.trim()) {
+            showToast('❌ Selecciona una empresa/marca', 'error');
+            return;
+        }
+        setAiLoading(true);
+        try {
+            renderCarouselPreview(text);
+            showToast('👁️ Vista previa generada', 'success');
+        } catch (e) {
+            showToast('❌ Error al generar preview: ' + e.message, 'error');
+        } finally {
+            setAiLoading(false);
+        }
+        return;
+    }
+
     const industry = aiIndustry.value;
     const template = aiTemplate.value;
     const slides = aiSlides.value;
@@ -445,7 +551,7 @@ function getFormData() {
         caption: captionField.value.trim(),
         mediaUrl: document.getElementById('mediaUrl').value.trim(),
         postDate: document.getElementById('postDate').value,
-        status: `${company}, ${platform}, ${format}, ${document.getElementById('aiTemplate').value}`, 
+        status: `${company}, ${platform}, ${format}, ${document.getElementById('aiTemplate').value}, Mode:${currentMode}`, 
         token: document.getElementById('token').value,
         options: {            voice: enableVoice.checked,
             music: enableMusic.checked,
@@ -957,107 +1063,130 @@ async function loadCompanies() {
         const data = await response.json();
         if (data.status === 'success') {
             companyConfigs = data.data;
-            const select = document.getElementById('companyName');
-            if (select && select.tagName === 'SELECT') {
-                select.innerHTML = '<option value="">-- Seleccionar Empresa --</option>';
-                companyConfigs.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.nomempresa;
-                    opt.textContent = c.nomempresa;
-                    select.appendChild(opt);
-                });
-                console.log("🏢 Empresas cargadas correctamente");
-            }
+            populateCompanySelect();
+            console.log("🏢 Empresas cargadas correctamente");
         }
     } catch (e) {
         console.warn("⚠️ No se pudieron cargar las empresas");
     }
 }
 
+function populateCompanySelect() {
+    const select = document.getElementById('companyName');
+    if (!select || select.tagName !== 'SELECT') return;
+    select.innerHTML = '<option value="">-- Seleccionar Empresa --</option>';
+    companyConfigs.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.nomempresa;
+        opt.textContent = c.nomempresa;
+        select.appendChild(opt);
+    });
+}
+
+function setupCompanyAutoFill() {
+    const select = document.getElementById('companyName');
+    if (!select) return;
+    const handler = (e) => {
+        const empresaSeleccionada = e.target.value;
+        const selected = companyConfigs.find(c => c.nomempresa === empresaSeleccionada);
+
+        if (selected) {
+            console.log("🔍 [BD] Datos encontrados para:", empresaSeleccionada, selected);
+            const findVal = (keys) => {
+                const foundKey = Object.keys(selected).find(k =>
+                    keys.some(key => k.toLowerCase().includes(key.toLowerCase()))
+                );
+                return foundKey ? selected[foundKey] : null;
+            };
+
+            const logo = findVal(['logo_url', 'logo']);
+            document.getElementById('companyLogo').value = normalizeDriveUrl(logo || "");
+
+            const tel = findVal(['telefonowhastapp', 'telefonowhasapp', 'telefono', 'tel', 'whatsapp', 'whas']);
+            document.getElementById('contactPhone').value = tel || "";
+
+            const web = findVal(['enlace_oficial', 'url_oficial', 'website', 'enlace']) || "";
+            document.getElementById('webSite').value = (web && web.toString().startsWith('http')) ? web : "";
+
+            const color = findVal(['color_tema', 'color', 'tema']);
+            if (color) {
+                document.documentElement.style.setProperty('--primary', color);
+                document.documentElement.style.setProperty('--primary-hover', color + 'dd');
+                showToast(`Configuración de ${empresaSeleccionada} cargada`, 'success');
+            }
+        } else {
+            document.getElementById('companyLogo').value = "";
+            document.getElementById('contactPhone').value = "";
+            document.getElementById('webSite').value = "";
+        }
+    };
+    select.removeEventListener('change', handler);
+    select.addEventListener('change', handler);
+}
+
 function setWorkMode(mode) {
+    currentMode = mode;
     const aiBtn = document.getElementById('btnModeAi');
     const bdBtn = document.getElementById('btnModeBd');
+    const bdprBtn = document.getElementById('btnModeBdpr');
     const container = document.getElementById('companyInputContainer');
     const bdPhotosContainer = document.getElementById('bdPhotosContainer');
-    
+    const genText = document.querySelector('.gen-text');
+    const magicIcon = document.querySelector('.magic-icon');
+
+    aiBtn.classList.remove('active');
+    bdBtn.classList.remove('active');
+    if (bdprBtn) bdprBtn.classList.remove('active');
+
     if (mode === 'Ai') {
         aiBtn.classList.add('active');
-        bdBtn.classList.remove('active');
         console.log("🤖 Modo actual: Inteligencia Artificial (Manual)");
         if (bdPhotosContainer) bdPhotosContainer.style.display = 'none';
-        
-        // Cambiar a Input de Texto
+        bdUploadedPhotos = [];
+        const bdPhotosInput = document.getElementById('bdPhotosInput');
+        const bdPhotosPreview = document.getElementById('bdPhotosPreview');
+        const clearBdPhotosBtn = document.getElementById('clearBdPhotosBtn');
+        if (bdPhotosInput) bdPhotosInput.value = '';
+        if (bdPhotosPreview) bdPhotosPreview.innerHTML = '';
+        if (clearBdPhotosBtn) clearBdPhotosBtn.style.display = 'none';
         container.innerHTML = `
             <label for="companyName">Empresa / Marca</label>
             <input type="text" id="companyName" placeholder="Nombre de la marca..." required>
         `;
-    } else {
-        bdBtn.classList.add('active');
-        aiBtn.classList.remove('active');
-        console.log("📊 Modo actual: Base de Datos (Automático)");
-        if (bdPhotosContainer) {
-            bdPhotosContainer.style.display = 'block';
-            if (typeof window.updateBdPhotosLabel === 'function') {
-                window.updateBdPhotosLabel();
-            }
-        }
-        
-        // Cambiar a Select
-        container.innerHTML = `
-            <label for="companyName">Empresa / Marca</label>
-            <select id="companyName">
-                <option value="">-- Cargando desde BD... --</option>
-            </select>
-        `;
-        
-        // Cargar datos y añadir listener de autocompletado
-        loadCompanies().then(() => {
-            const select = document.getElementById('companyName');
-            if (select) {
-                select.addEventListener('change', (e) => {
-                    const empresaSeleccionada = e.target.value;
-                    const selected = companyConfigs.find(c => c.nomempresa === empresaSeleccionada);
-                    
-                    if (selected) {
-                        console.log("🔍 [BD] Datos encontrados para:", empresaSeleccionada, selected);
-                        
-                        // Función para buscar valor en el objeto ignorando pequeñas variaciones de nombre
-                        const findVal = (keys) => {
-                            const foundKey = Object.keys(selected).find(k => 
-                                keys.some(key => k.toLowerCase().includes(key.toLowerCase()))
-                            );
-                            return foundKey ? selected[foundKey] : null;
-                        };
-
-                        // 1. Logo (normalizar Drive)
-                        const logo = findVal(['logo_url', 'logo']);
-                        document.getElementById('companyLogo').value = normalizeDriveUrl(logo || "");
-                        
-                        // 2. Teléfono (Busca cualquier columna que mencione "tel" o "whatsapp" o "whas")
-                        const tel = findVal(['telefonowhastapp', 'telefonowhasapp', 'telefono', 'tel', 'whatsapp', 'whas']);
-                        document.getElementById('contactPhone').value = tel || "";
-
-                        // 3. Sitio Web (Prioridad absoluta a enlace_oficial)
-                        const web = findVal(['enlace_oficial', 'url_oficial', 'website', 'enlace']) || "";
-                        document.getElementById('webSite').value = (web && web.toString().startsWith('http')) ? web : "";
-                        
-                        // 4. Color de Tema
-                        const color = findVal(['color_tema', 'color', 'tema']);
-                        if (color) {
-                            document.documentElement.style.setProperty('--primary', color);
-                            document.documentElement.style.setProperty('--primary-hover', color + 'dd');
-                            showToast(`Configuración de ${empresaSeleccionada} cargada`, 'success');
-                        }
-                    } else {
-                        // Limpiar si no hay selección
-                        document.getElementById('companyLogo').value = "";
-                        document.getElementById('contactPhone').value = "";
-                        document.getElementById('webSite').value = "";
-                    }
-                });
-            }
-        });
+        if (genText) genText.textContent = 'Generar con IA (Incluye Imágenes)';
+        if (magicIcon) magicIcon.textContent = '🪄';
+        captionField.placeholder = 'La IA escribirá aquí...';
+        return;
     }
+
+    // BD y BDPR comparten: select de empresa y fotos de carrusel
+    if (bdPhotosContainer) {
+        bdPhotosContainer.style.display = 'block';
+        if (typeof window.updateBdPhotosLabel === 'function') window.updateBdPhotosLabel();
+    }
+
+    container.innerHTML = `
+        <label for="companyName">Empresa / Marca</label>
+        <select id="companyName">
+            <option value="">-- Cargando desde BD... --</option>
+        </select>
+    `;
+
+    if (mode === 'BD') {
+        bdBtn.classList.add('active');
+        console.log("📊 Modo actual: Base de Datos (Automático)");
+        if (genText) genText.textContent = 'Generar con IA (Incluye Imágenes)';
+        if (magicIcon) magicIcon.textContent = '🪄';
+        captionField.placeholder = 'La IA escribirá aquí...';
+    } else if (mode === 'BDPR') {
+        bdprBtn.classList.add('active');
+        console.log("✏️ Modo actual: BD Personal/Manual");
+        if (genText) genText.textContent = 'Previsualizar Campaña';
+        if (magicIcon) magicIcon.textContent = '👁️';
+        captionField.placeholder = 'Escribe o pega la campaña aquí...';
+    }
+
+    loadCompanies().then(() => setupCompanyAutoFill());
 }
 
 function normalizeDriveUrl(url) {

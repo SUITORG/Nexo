@@ -7,11 +7,19 @@
     "start": "node mock-server.js",
     "test": "echo \"Abre test.html en tu navegador\""
   },
-  "keywords": ["cms", "google-sheets", "frontend", "optimizado"],
+  "keywords": [
+    "cms",
+    "google-sheets",
+    "frontend",
+    "optimizado"
+  ],
   "author": "SuitOrg Team",
   "license": "MIT",
   "type": "commonjs",
   "engines": {
     "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
   }
 }

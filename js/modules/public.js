@@ -2266,32 +2266,41 @@ Object.assign(app.public, {
         if (loading) loading.classList.remove('hidden');
 
         try {
-            // --- BLINDAJE DE IA CONTRA FALLOS DE CARGA (v16.7.25) ---
+            // --- CARGA DE SCRIPTS CON TIMEOUT Y FALLBACK (v16.8.0) ---
+            const loadScript = (src, timeoutMs) => Promise.race([
+                new Promise((resolve, reject) => {
+                    const el = document.createElement('script');
+                    el.src = src;
+                    el.onload = resolve;
+                    el.onerror = () => reject(new Error(`Error loading ${src}`));
+                    document.head.appendChild(el);
+                }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout ${src}`)), timeoutMs))
+            ]);
+
             if (typeof tf === 'undefined') {
                 if (status) status.innerText = "Cargando Motor IA (TF)...";
-                const stf = document.createElement('script');
-                stf.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs";
-                document.head.appendChild(stf);
-                await new Promise(r => stf.onload = r);
+                try { await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs", 10000); }
+                catch (e) { console.warn("⚠️ TF load falló:", e.message); }
             }
 
             if (typeof nsfwjs === 'undefined') {
                 if (status) status.innerText = "Cargando Filtros IA...";
-                const s = document.createElement('script');
-                s.src = "https://cdn.jsdelivr.net/npm/nsfwjs@2.4.1/dist/browser/nsfwjs.min.js"; 
-                document.head.appendChild(s);
-                await new Promise(r => s.onload = r);
+                try { await loadScript("https://cdn.jsdelivr.net/npm/nsfwjs@2.4.1/dist/browser/nsfwjs.min.js", 10000); }
+                catch (e) { console.warn("⚠️ nsfwjs load falló:", e.message); }
             }
 
-            if (status) status.innerText = "IA: Escaneando contenido...";
-            
-            // --- TIMEOUT SALVAVIDAS (v16.7.26) ---
-            // Si la IA no carga en 8 segundos, procedemos para no bloquear al usuario.
-            const aiTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout IA")), 8000));
-            const model = await Promise.race([window.nsfwjs.load(), aiTimeout]).catch(e => {
-                console.warn("⚠️ IA tomó demasiado tiempo o falló: Procediendo sin filtro.");
-                return null; 
-            });
+            let model = null;
+            if (typeof nsfwjs !== 'undefined' && typeof tf !== 'undefined') {
+                if (status) status.innerText = "IA: Escaneando contenido...";
+                const aiTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout IA")), 8000));
+                model = await Promise.race([window.nsfwjs.load(), aiTimeout]).catch(e => {
+                    console.warn("⚠️ IA model load falló:", e.message);
+                    return null;
+                });
+            } else {
+                console.warn("⚠️ IA no disponible (scripts no cargaron). Saltando filtro.");
+            }
 
             if (model) {
                 if (status) status.innerText = "IA: Analizando seguridad...";
@@ -2320,29 +2329,25 @@ Object.assign(app.public, {
             }
 
             if (status) status.innerText = "Subiendo a la galería oficial...";
-            
-            const SB_URL = app.sbUrl;
-            const SB_KEY = app.sbKey;
-            const bucket = 'galeria-privada';
+
             const fileName = `guest_${Date.now()}.jpg`;
             const path = coId.toUpperCase();
 
-            if (!SB_URL || !SB_KEY) throw new Error("Falta configuración de Supabase");
-
-            // Convertir Base64 a Blob para subida directa (v16.7.27 - Performance Up)
             const reader = new FileReader();
-            reader.readAsArrayBuffer(file);
+            reader.readAsDataURL(file);
             await new Promise(r => reader.onload = r);
-            const arrayBuffer = reader.result;
+            const base64 = reader.result.split(',')[1];
 
-            const res = await fetch(`${SB_URL}/storage/v1/object/${bucket}/${path}/${fileName}`, {
+            const res = await fetch('/api/storage/upload', {
                 method: 'POST',
-                headers: {
-                    'apikey': SB_KEY,
-                    'Authorization': `Bearer ${SB_KEY}`,
-                    'Content-Type': file.type
-                },
-                body: arrayBuffer
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bucket: 'galeria-privada',
+                    path: path,
+                    fileName: fileName,
+                    contentType: file.type,
+                    buffer: base64
+                })
             });
 
             if (res.ok) {
