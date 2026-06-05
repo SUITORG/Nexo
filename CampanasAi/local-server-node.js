@@ -334,26 +334,49 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // 🖼️ PROXY-IMAGE: fetch imagen externa y la devuelve como base64
+    // 🖼️ PROXY-IMAGE: fetch imagen externa y la devuelve como base64 (sigue redirects)
     if (pathname === '/api/proxy-image' && req.method === 'GET') {
         const url = parsedUrl.searchParams.get('url');
         if (!url) { res.writeHead(400); res.end(JSON.stringify({ error: 'Falta url' })); return; }
-        https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (imgRes) => {
-            const chunks = [];
-            imgRes.on('data', c => chunks.push(c));
-            imgRes.on('end', () => {
-                const b64 = Buffer.concat(chunks).toString('base64');
-                const ext = url.match(/\.(\w+)(\?|$)/)?.[1] || 'jpg';
-                const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ status: 'ok', image: `data:${mime};base64,${b64}` }));
-            });
-        }).on('error', (e) => {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ status: 'error', error: e.message }));
+
+        function fetchFollowingRedirects(targetUrl, redirectCount, cb) {
+            if (redirectCount > 10) return cb(new Error('Demasiados redirects'));
+            const lib = targetUrl.startsWith('https') ? https : http;
+            lib.get(targetUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (imgRes) => {
+                // Seguir redirects 301/302/307/308
+                if ([301, 302, 307, 308].includes(imgRes.statusCode) && imgRes.headers.location) {
+                    let nextUrl = imgRes.headers.location;
+                    if (!nextUrl.startsWith('http')) {
+                        const base = new URL(targetUrl);
+                        nextUrl = new URL(nextUrl, base.origin).href;
+                    }
+                    serverLog('INFO', `[PROXY-IMG] Redirect ${imgRes.statusCode} → ${nextUrl.substring(0, 80)}`);
+                    imgRes.resume(); // descartar cuerpo del redirect
+                    return fetchFollowingRedirects(nextUrl, redirectCount + 1, cb);
+                }
+                const chunks = [];
+                imgRes.on('data', c => chunks.push(c));
+                imgRes.on('end', () => cb(null, Buffer.concat(chunks), imgRes.headers['content-type']));
+            }).on('error', cb);
+        }
+
+        fetchFollowingRedirects(url, 0, (err, buf, contentType) => {
+            if (err) {
+                serverLog('WARN', `[PROXY-IMG] Error: ${err.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ status: 'error', error: err.message }));
+            }
+            const mime = contentType && contentType.startsWith('image/')
+                ? contentType.split(';')[0].trim()
+                : (url.includes('.png') ? 'image/png' : url.includes('.webp') ? 'image/webp' : 'image/jpeg');
+            const b64 = buf.toString('base64');
+            serverLog('INFO', `[PROXY-IMG] ✅ Entregado: ${mime}, ${(buf.length / 1024).toFixed(1)} KB`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'ok', image: `data:${mime};base64,${b64}` }));
         });
         return;
     }
+
 
     // 📋 LOGS ENDPOINT
     if (pathname === '/api/logs') {

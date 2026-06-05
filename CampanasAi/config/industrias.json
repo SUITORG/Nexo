@@ -1,0 +1,180 @@
+{
+  "clasificacion": [
+    {
+      "categoria": "Servicios Profesionales",
+      "icono": "⚖️",
+      "descripcion": "Bufetes, consultorías y asesorías especializadas",
+      "subclasificaciones": [
+        {
+          "valor": "abogados", "etiqueta": "Abogados", "sinonimos": ["jurídico", "legal", "litigio", "derecho", "bufete"],
+          "especializaciones": ["Derecho Corporativo", "Derecho Civil", "Derecho Laboral", "Derecho Fiscal", "Derecho Penal", "Propiedad Intelectual"]
+        },
+        {
+          "valor": "despachos_contables", "etiqueta": "Despachos Contables", "sinonimos": ["contabilidad", "impuestos", "contador", "finanzas", "auditoría"],
+          "especializaciones": ["Contabilidad General", "Auditoría", "Impuestos", "Finanzas Personales", "Consultoría Financiera"]
+        },
+        {
+          "valor": "consultoria_coaching", "etiqueta": "Consultoría y Coaching", "sinonimos": ["coaching", "mentoría", "consultor", "marca personal", "desarrollo profesional"],
+          "especializaciones": ["Marca Personal", "Coaching Ejecutivo", "Mentoría", "Consultoría Empresarial", "Desarrollo Organizacional", "Speaker / Conferencista"]
+        }
+      ]
+    },
+    {
+      "categoria": "Salud y Bienestar",
+      "icono": "🏥",
+      "descripcion": "Atención médica, dental y bienestar integral",
+      "subclasificaciones": [
+        {
+          "valor": "clinicas_medicas", "etiqueta": "Clínicas Médicas", "sinonimos": ["médico", "hospital", "medicina general", "consulta", "diagnóstico"],
+          "especializaciones": ["Medicina General", "Pediatría", "Ginecología", "Cardiología", "Medicina Estética", "Dermatología"]
+        },
+        {
+          "valor": "dentistas", "etiqueta": "Dentistas", "sinonimos": ["odontología", "dental", "dientes", "ortodoncia", "implantes"],
+          "especializaciones": ["Odontología General", "Ortodoncia", "Implantología", "Estética Dental", "Blanqueamiento"]
+        },
+        {
+          "valor": "salud_bienestar", "etiqueta": "Salud y Bienestar", "sinonimos": ["wellness", "nutrición", "fitness", "terapia", "holístico"],
+          "especializaciones": ["Psicología", "Nutrición", "Fisioterapia", "Terapias Alternativas", "Medicina Funcional", "Mindfulness"]
+        }
+      ]
+    },
+    {
+      "categoria": "Tecnología",
+      "icono": "💻",
+      "descripcion": "Desarrollo de software, hardware y servicios tech",
+      "subclasificaciones": [
+        {
+          "valor": "software", "etiqueta": "Software", "sinonimos": ["desarrollo", "app", "sistema", "web", "plataforma"],
+          "especializaciones": ["Desarrollo Web", "Apps Móviles", "SaaS", "IA / Machine Learning", "CRM / ERP"]
+        },
+        {
+          "valor": "tecnologia", "etiqueta": "Tecnología", "sinonimos": ["tech", "innovación", "IT", "digital", "transformación digital"],
+          "especializaciones": ["Ciberseguridad", "Cloud Computing", "Infraestructura IT", "Marketing Digital", "Transformación Digital"]
+        }
+      ]
+    },
+    {
+      "categoria": "Industria y Manufactura",
+      "icono": "🏭",
+      "descripcion": "Construcción, manufactura y maquinado industrial",
+      "subclasificaciones": [
+        {
+          "valor": "construccion", "etiqueta": "Construcción", "sinonimos": ["obra", "edificación", "infraestructura", "arquitectura", "inmuebles"],
+          "especializaciones": ["Obra Civil", "Construcción Residencial", "Construcción Comercial", "Arquitectura", "Remodelaciones"]
+        },
+        {
+          "valor": "manufacturera", "etiqueta": "Manufacturera", "sinonimos": ["fábrica", "producción", "industrial", "maquiladora", "ensamble"],
+          "especializaciones": ["Producción en Serie", "Control de Calidad", "Automatización", "Logística Industrial", "Maquila"]
+        },
+        {
+          "valor": "tornos_maquinado", "etiqueta": "Tornos y Maquinado", "sinonimos": ["mecanizado", "CNC", "metal", "herramientas", "precisión"],
+          "especializaciones": ["CNC", "Mecanizado de Precisión", "Soldadura", "Herramientas Industriales", "Inyección de Plásticos"]
+        }
+      ]
+    },
+    {
+      "categoria": "Energía",
+      "icono": "☀️",
+      "descripcion": "Energías renovables y almacenamiento",
+      "subclasificaciones": [
+        {
+          "valor": "energia_solar", "etiqueta": "Energía Solar", "sinonimos": ["paneles solares", "fotovoltaico", "renovable", "energía limpia", "solar"],
+          "especializaciones": ["Paneles Solares", "Sistemas Fotovoltaicos", "Calentadores Solares", "Mantenimiento Solar", "Consultoría Energética"]
+        },
+        {
+          "valor": "almacenamiento_energia", "etiqueta": "Almacenamiento de Energía", "sinonimos": ["baterías", "respaldo energético", "almacenamiento", "UPS", "reserva"],
+          "especializaciones": ["Baterías Industriales", "UPS", "Respaldo Energético", "Sistemas Híbridos", "Eficiencia Energética"]
+        }
+      ]
+    },
+    {
+      "categoria": "Comercio y Ventas",
+      "icono": "🛒",
+      "descripcion": "Comercio electrónico, inmobiliarias y ventas",
+      "subclasificaciones": [
+        {
+          "valor": "ecommerce", "etiqueta": "E-commerce", "sinonimos": ["tienda online", "ventas digitales", "comercio electrónico", "marketplace", "dropshipping"],
+          "especializaciones": ["Tiendas Online", "Dropshipping", "Marketplaces", "Logística E-commerce", "Conversion Rate Optimization"]
+        },
+        {
+          "valor": "inmobiliarias", "etiqueta": "Inmobiliarias", "sinonimos": ["bienes raíces", "propiedades", "renta", "venta de casas", "desarrollo inmobiliario"],
+          "especializaciones": ["Venta de Propiedades", "Rentas", "Desarrollo Inmobiliario", "Avalúos", "Hipotecas"]
+        }
+      ]
+    },
+    {
+      "categoria": "Alimentos y Hospitalidad",
+      "icono": "🍽️",
+      "descripcion": "Gastronomía, hotelería y turismo",
+      "subclasificaciones": [
+        {
+          "valor": "restaurantes", "etiqueta": "Restaurantes y Comida Rápida", "sinonimos": ["comida", "gastronomía", "cocina", "bar", "alimentos"],
+          "especializaciones": ["Comida Rápida", "Alta Cocina", "Bares", "Cafeterías", "Comida Saludable", "Catering"]
+        },
+        {
+          "valor": "pastelerias", "etiqueta": "Pastelerías", "sinonimos": ["repostería", "panadería", "dulces", "pasteles", "postres"],
+          "especializaciones": ["Repostería", "Panadería Artesanal", "Pasteles Personalizados", "Postres Premium", "Chocolatería"]
+        },
+        {
+          "valor": "hoteles_turismo", "etiqueta": "Hoteles y Turismo", "sinonimos": ["hotelería", "viajes", "hospedaje", "vacaciones", "alojamiento"],
+          "especializaciones": ["Hotelería", "Agencias de Viajes", "Turismo de Aventura", "Alojamiento Boutique", "Turismo Corporativo"]
+        }
+      ]
+    },
+    {
+      "categoria": "Educación",
+      "icono": "📚",
+      "descripcion": "Instituciones educativas y capacitación",
+      "subclasificaciones": [
+        {
+          "valor": "educacion", "etiqueta": "Educación", "sinonimos": ["enseñanza", "cursos", "capacitación", "escuela", "aprendizaje"],
+          "especializaciones": ["Capacitación Corporativa", "Idiomas", "Educación Online", "Coaching Educativo", "Educación Básica", "Universidades"]
+        }
+      ]
+    },
+    {
+      "categoria": "Logística y Transporte",
+      "icono": "🚚",
+      "descripcion": "Transporte, distribución y cadena de suministro",
+      "subclasificaciones": [
+        {
+          "valor": "logistica_transporte", "etiqueta": "Logística y Transporte", "sinonimos": ["distribución", "flotilla", "mensajería", "carga", "envíos"],
+          "especializaciones": ["Distribución", "Mensajería", "Flotillas", "Cadena de Suministro", "Transporte de Carga", "Última Milla"]
+        }
+      ]
+    },
+    {
+      "categoria": "Agropecuario",
+      "icono": "🌾",
+      "descripcion": "Agricultura, ganadería y campo",
+      "subclasificaciones": [
+        {
+          "valor": "agricultura", "etiqueta": "Agricultura", "sinonimos": ["campo", "cultivo", "agro", "siembra", "cosecha"],
+          "especializaciones": ["Cultivos", "Ganadería", "Agroindustria", "Agricultura Orgánica", "Tecnología Agrícola"]
+        }
+      ]
+    },
+    {
+      "categoria": "Mascotas",
+      "icono": "🐾",
+      "descripcion": "Cuidado, alimentos y accesorios para mascotas",
+      "subclasificaciones": [
+        {
+          "valor": "mascotas", "etiqueta": "Mascotas", "sinonimos": ["animales", "perros", "gatos", "veterinaria", "pet"],
+          "especializaciones": ["Veterinaria", "Alimentos", "Accesorios", "Pet Grooming", "Guardería Canina"]
+        }
+      ]
+    },
+    {
+      "categoria": "Otros",
+      "icono": "📦",
+      "descripcion": "Industrias no clasificadas en las categorías anteriores",
+      "subclasificaciones": [
+        {
+          "valor": "otro", "etiqueta": "Otro", "sinonimos": ["general", "varios", "otra industria", "especial", "personalizado"],
+          "especializaciones": []
+        }
+      ]
+    }
+  ]
+}

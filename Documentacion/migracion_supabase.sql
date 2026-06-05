@@ -80,6 +80,7 @@ CREATE TABLE public."Config_Empresas" (
     rsface TEXT,
     rsinsta TEXT,
     rstik TEXT,
+    rsyt TEXT,
     usa_otp_entrega TEXT DEFAULT 'FALSE',
     usa_features_estandar TEXT DEFAULT 'FALSE',
     is_isolated TEXT DEFAULT 'FALSE',

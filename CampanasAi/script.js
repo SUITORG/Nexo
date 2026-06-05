@@ -13,7 +13,7 @@ const CONFIG = {
 // Variables Globales de UI
 let form, submitBtn, generateBtn, loader, btnText, toast, toastMessage;
 let aiIndustry, aiSlides, aiTheme, captionField;
-let aiTemplate;
+let aiTemplate, aiEspecializacion;
 let formatTabs, platformTabs, historyContainer, refreshHistoryBtn, downloadBtn;
 let previewSection, carouselContainer;
 let enableVoice, enableMusic, enableVideo;
@@ -33,9 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
     toastMessage = document.getElementById('toastMessage');
     
     aiIndustry = document.getElementById('aiIndustry');
+    aiEspecializacion = document.getElementById('aiEspecializacion');
     aiTemplate = document.getElementById('aiTemplate');
     aiSlides = document.getElementById('aiSlides');
     aiTheme = document.getElementById('aiTheme');
+    const aiConciencia = document.getElementById('aiConciencia');
     captionField = document.getElementById('caption');
     formatTabs = document.querySelectorAll('.format-tab');
     platformTabs = document.querySelectorAll('.platform-tab');
@@ -56,6 +58,84 @@ document.addEventListener('DOMContentLoaded', () => {
             animationOptions.style.display = enableAnimation.checked ? 'flex' : 'none';
         });
     }
+
+    // Sugerencia automática del tema según conciencia, industria y plantilla
+    const INDUSTRY_LABELS = {
+        abogados: 'el mundo legal', agricultura: 'la agricultura',
+        clinicas_medicas: 'la salud', construccion: 'la construcción',
+        consultoria_coaching: 'la consultoría y el coaching',
+        dentistas: 'la odontología', despachos_contables: 'la contabilidad',
+        ecommerce: 'el e-commerce', educacion: 'la educación',
+        energia_solar: 'la energía solar', almacenamiento_energia: 'el almacenamiento de energía',
+        hoteles_turismo: 'el turismo', manufacturera: 'la manufactura',
+        inmobiliarias: 'el sector inmobiliario', logistica_transporte: 'la logística',
+        mascotas: 'las mascotas', pastelerias: 'la pastelería',
+        restaurantes: 'la gastronomía', salud_bienestar: 'el bienestar',
+        software: 'el software', tecnologia: 'la tecnología',
+        tornos_maquinado: 'el maquinado industrial', otro: 'tu industria'
+    };
+    const INDUSTRIAS_DATA = { clasificacion: [] };
+    const INDUSTRIA_CATEGORIA = {};
+    const ESPECIALIZACIONES = {};
+    const initCategoriaLookup = (data) => {
+        INDUSTRIAS_DATA.clasificacion = data.clasificacion;
+        data.clasificacion.forEach(grupo => {
+            grupo.subclasificaciones.forEach(sub => {
+                INDUSTRIA_CATEGORIA[sub.valor] = grupo.categoria;
+                ESPECIALIZACIONES[sub.valor] = sub.especializaciones || [];
+            });
+        });
+    };
+    const CONCIENCIA_SUGGEST = {
+        Inconsciente: ['¿Sabías que...?', 'Lo que nadie te dice sobre', 'La verdad oculta de'],
+        Consciente_Problema: ['¿Estás cometiendo este error en', 'El problema oculto en', 'Por qué sigues perdiendo oportunidades en'],
+        Consciente_Solucion: ['Cómo mejorar ', 'La solución definitiva para', 'Transforma '],
+        Consciente_Producto: ['Por qué elegir ', 'La mejor opción en', 'Todo lo que necesitas saber sobre'],
+        Mas_Consciente: ['Oferta exclusiva: ', 'Última oportunidad para', 'Descuento especial en']
+    };
+    function getCategoriaIndustria(valor) {
+        return INDUSTRIA_CATEGORIA[valor] || '';
+    }
+    function getEspecializaciones(valor) {
+        return ESPECIALIZACIONES[valor] || [];
+    }
+    function updateEspecializacionSelect() {
+        const ind = aiIndustry.value;
+        const list = getEspecializaciones(ind);
+        aiEspecializacion.innerHTML = '<option value="">-- Especialización --</option>';
+        if (list.length > 0) {
+            list.forEach(esp => {
+                const opt = document.createElement('option');
+                opt.value = esp;
+                opt.textContent = esp;
+                aiEspecializacion.appendChild(opt);
+            });
+            aiEspecializacion.style.display = '';
+        } else {
+            aiEspecializacion.style.display = 'none';
+        }
+        aiEspecializacion.value = '';
+    }
+    function suggestTheme() {
+        const c = aiConciencia.value;
+        const ind = aiIndustry.value;
+        const indLabel = INDUSTRY_LABELS[ind] || 'tu sector';
+        const esp = aiEspecializacion.value;
+        const phrases = CONCIENCIA_SUGGEST[c] || ['Estrategia para'];
+        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+        aiTheme.value = esp ? `${phrase} ${esp} en ${indLabel}` : `${phrase} ${indLabel}`;
+    }
+    function showCategoriaHint() {
+        const hint = document.getElementById('industriaCategoriaHint');
+        if (!hint) return;
+        const cat = getCategoriaIndustria(aiIndustry.value);
+        hint.textContent = cat ? `Categoría: ${cat}` : '';
+    }
+    aiConciencia.addEventListener('change', suggestTheme);
+    aiIndustry.addEventListener('change', () => { updateEspecializacionSelect(); suggestTheme(); showCategoriaHint(); });
+    aiEspecializacion.addEventListener('change', suggestTheme);
+    aiTemplate.addEventListener('change', suggestTheme);
+    suggestTheme();
 
     // Elementos de Fotos de BD
     const bdPhotosContainer = document.getElementById('bdPhotosContainer');
@@ -268,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = normalizeDriveUrl(raw);
             if (url && url !== raw) driveInput.value = url;
             if (drivePreview) {
-                if (url && url.match(/drive\.google\.com|uc\?/)) {
+                if (url && url.match(/drive\.google\.com|uc\?|lh3\.googleusercontent\.com/)) {
                     const imgUrl = normalizeDriveUrl(url);
                     drivePreview.innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain;" onerror="this.parentElement.innerHTML='<p style=color:red;font-size:0.7rem;>No se pudo previsualizar</p>'">`;
                     drivePreview.style.display = 'block';
@@ -317,6 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Sincronizar estado inicial
     setWorkMode('Ai');
+
+    // Cargar clasificación de industrias
+    fetch('/config/industrias.json')
+        .then(r => r.json())
+        .then(data => { initCategoriaLookup(data); showCategoriaHint(); updateEspecializacionSelect(); })
+        .catch(() => {});
 
     // Cargar historial al inicio
     fetchHistory();
@@ -404,7 +490,7 @@ async function generateAIContent() {
         }
         setAiLoading(true);
         try {
-            renderCarouselPreview(text);
+            await renderCarouselPreview(text);
             showToast('👁️ Vista previa generada', 'success');
         } catch (e) {
             showToast('❌ Error al generar preview: ' + e.message, 'error');
@@ -415,7 +501,22 @@ async function generateAIContent() {
     }
 
     const industry = aiIndustry.value;
-    const template = aiTemplate.value;
+    const conciencia = document.getElementById('aiConciencia').value;
+    let template = aiTemplate.value;
+    
+    if (!template) {
+        const templateMap = {
+            'Inconsciente': 'Storytelling (Narrativo)',
+            'Consciente_Problema': 'Enfocado en el Dolor (Agitar Problema)',
+            'Consciente_Solucion': 'Técnico / Educativo',
+            'Consciente_Producto': 'Vende a la Mente (Inspirador/Urgente)',
+            'Mas_Consciente': 'Oferta Directa / CTA Agresivo',
+            'audio_podcast': 'Podcast / Formato Auditivo',
+            'visual_infografia': 'Visual / Infografía Persuasiva'
+        };
+        template = templateMap[conciencia];
+    }
+
     const slides = aiSlides.value;
     const theme = aiTheme.value;
     const company = document.getElementById('companyName').value.trim();
@@ -446,16 +547,23 @@ async function generateAIContent() {
     setAiLoading(true);
 
     // 📝 CONSTRUCCIÓN DEL PROMPT MAESTRO (JSON)
+    const catLabel = getCategoriaIndustria(industry);
+    const espLabel = aiEspecializacion.value;
+    const contextDetails = `Nicho: ${industry}${catLabel ? `, Categoria: ${catLabel}` : ''}${espLabel ? `, Especializacion: ${espLabel}` : ''}`;
     const systemPrompt = `# PERSONA
 Actúa como un Copywriter Maestro en Conversión y Especialista en Branding dinámico.
 
 # CONTEXTO Y MERCADO
-- Empresa: ${company} (Nicho: ${industry}).
+- Empresa: ${company} (${contextDetails}).
 - Tema de Publicación: "${theme}" (Todo el contenido debe desarrollarse desde aquí).
 - Formato de Estrategia: ${template}.
+- Nivel de Conciencia del Cliente: ${conciencia}.
+
+# INSTRUCCIONES DE EJECUCIÓN PSICOLÓGICA
+- Alineación Psicológica: Adapta el gancho (hook), ángulo y tono al estado mental exacto del cliente (${conciencia}).
 
 # PASOS (CHAIN OF THOUGHT)
-1. Define el ángulo narrativo según la plantilla ${template}.
+1. Define el ángulo narrativo según la estrategia ${template} y el nivel de conciencia.
 2. Redacta un post caption persuasivo con hashtags.
 3. Estructura exactamente ${slides} slides: (1. Gancho, 2. Valor, 3. Desarrollo, 4... N-1. Beneficios, N. Cierre/CTA).
 
@@ -481,7 +589,7 @@ Actúa como un Copywriter Maestro en Conversión y Especialista en Branding din�
 
 # NOTAS IMPORTANTES
 - Genera exactamente ${slides} slides.
-- El contenido DEBE ser una mezcla perfecta entre el tema "${theme}" y el estilo "${template}".`;
+- El contenido DEBE ser una mezcla perfecta entre el tema "${theme}", el estilo "${template}" y el nivel de conciencia "${conciencia}".`;
 
     const userPrompt = `Generar campaña de ${slides} slides para ${platform} en formato ${format}. CTA final: ${phone || 'Interacción en redes'}. ¡Responde estrictamente con JSON!`;
 
@@ -520,7 +628,7 @@ Actúa como un Copywriter Maestro en Conversión y Especialista en Branding din�
         captionField.value = generatedJson.caption;
         
         // 2. Renderizar el carrusel usando la nueva función JSON
-        renderCarouselFromJson(generatedJson);
+        await renderCarouselFromJson(generatedJson);
         
         showToast('✨ ¡Contenido Maestro Generado!', 'success');
 
@@ -546,12 +654,13 @@ function getFormData() {
     const company = document.getElementById('companyName').value.trim();
     const platform = document.querySelector('.platform-tab.active').dataset.platform;
     const format = document.querySelector('.format-tab.active').dataset.format;
+    const espVal = aiEspecializacion.value;
     
     return {
         caption: captionField.value.trim(),
         mediaUrl: document.getElementById('mediaUrl').value.trim(),
         postDate: document.getElementById('postDate').value,
-        status: `${company}, ${platform}, ${format}, ${document.getElementById('aiTemplate').value}, Mode:${currentMode}`, 
+        status: `${company}, ${platform}, ${format}, ${document.getElementById('aiTemplate').value}, Mode:${currentMode}${espVal ? `, Esp:${espVal}` : ''}`, 
         token: document.getElementById('token').value,
         options: {            voice: enableVoice.checked,
             music: enableMusic.checked,
@@ -608,7 +717,7 @@ function showToast(message, type) {
     setTimeout(() => toast.classList.remove('show'), 4000);
 }
 
-function renderCarouselPreview(text) {
+async function renderCarouselPreview(text) {
     carouselContainer.innerHTML = '';
     previewSection.style.display = 'block';
 
@@ -616,8 +725,8 @@ function renderCarouselPreview(text) {
     const slides = text.split(/(?=Slide|Diapositiva|\n\d+\.)/i).filter(s => s.trim().length > 10);
 
     const format = document.querySelector('.format-tab.active').dataset.format;
-    const userLogoUrl = normalizeDriveUrl(document.getElementById('companyLogo').value.trim());
-    const finalLogoUrl = uploadedLogoDataUrl || userLogoUrl; 
+    const rawLogoUrl = normalizeDriveUrl(document.getElementById('companyLogo').value.trim());
+    const finalLogoUrl = uploadedLogoDataUrl || await resolveLogoUrl(rawLogoUrl);
 
     slides.forEach((slideText, index) => {
         const slideEl = document.createElement('div');
@@ -728,9 +837,10 @@ function tryLoadImage(elementId, sources, index = 0) {
     const img = new Image();
     let cleanUrl = sources[index];
     
-    // Limpiar Google Drive
-    if (cleanUrl.includes('drive.google.com') && !cleanUrl.includes('uc?')) {
-        cleanUrl = cleanUrl.replace('file/d/', 'uc?id=').split('/view')[0];
+    // Limpiar Google Drive con lh3.googleusercontent.com
+    const driveMatch = cleanUrl.match(/drive\.google\.com\/(?:file\/d\/|uc\?.*?id=|open\?.*?id=)\/?([^&/?]+)/);
+    if (driveMatch) {
+        cleanUrl = `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
     }
     
     img.src = cleanUrl;
@@ -847,11 +957,13 @@ async function downloadCampaignKit() {
 
             // Ocultar elementos de UI temporalmente
             const voiceBtn = slide.querySelector('.voice-player');
+            const slideControls = slide.querySelector('.slide-controls');
             const visualTag = slide.querySelector('.slide-visual');
             const slideNumberTag = slide.querySelector('.slide-number');
             const titleTag = slide.querySelector('.slide-title');
             
             if (voiceBtn) voiceBtn.style.visibility = 'hidden';
+            if (slideControls) slideControls.style.visibility = 'hidden';
             if (visualTag) visualTag.style.visibility = 'hidden';
             if (slideNumberTag) slideNumberTag.style.visibility = 'hidden';
 
@@ -879,6 +991,7 @@ async function downloadCampaignKit() {
             } finally {
                 // Restaurar visibilidad y título original
                 if (voiceBtn) voiceBtn.style.visibility = 'visible';
+                if (slideControls) slideControls.style.visibility = 'visible';
                 if (visualTag) visualTag.style.visibility = 'visible';
                 if (slideNumberTag) slideNumberTag.style.visibility = 'visible';
                 if (titleTag && originalTitle) titleTag.innerText = originalTitle;
@@ -1191,16 +1304,42 @@ function setWorkMode(mode) {
 
 function normalizeDriveUrl(url) {
     if (!url) return url;
-    const m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
-    return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : url;
+    // Extraer ID de cualquier formato de Google Drive
+    let fileId = null;
+    const patterns = [
+        /drive\.google\.com\/file\/d\/([^/?]+)/,
+        /drive\.google\.com\/uc\?.*?id=([^&]+)/,
+        /drive\.google\.com\/open\?.*?id=([^&]+)/,
+        /googleusercontent\.com\/d\/([^/?]+)/
+    ];
+    for (const p of patterns) {
+        const m = url.match(p);
+        if (m) { fileId = m[1]; break; }
+    }
+    if (!fileId) return url;
+    return `https://lh3.googleusercontent.com/d/${fileId}`;
 }
 
-function renderCarouselFromJson(data) {
+// Resuelve la URL del logo sin proxy: lh3.googleusercontent.com sirve imágenes directamente sin CORS
+async function resolveLogoUrl(rawUrl) {
+    if (!rawUrl) return null;
+    if (rawUrl.startsWith('data:')) return rawUrl;
+    const normalized = normalizeDriveUrl(rawUrl);
+    if (!normalized) return null;
+    // lh3.googleusercontent.com no necesita proxy — sirve la imagen directamente
+    if (normalized.includes('lh3.googleusercontent.com')) {
+        return normalized;
+    }
+    return normalized;
+}
+
+async function renderCarouselFromJson(data) {
     if (!data || !data.slides) return;
     carouselContainer.innerHTML = '';
     const format = document.querySelector('.format-tab.active').dataset.format;
     const isReel = (format === 'Reel' || format === 'Story');
-    const userLogoUrl = normalizeDriveUrl(document.getElementById('companyLogo').value.trim());
+    const rawLogoUrl = normalizeDriveUrl(document.getElementById('companyLogo').value.trim());
+    const userLogoUrl = await resolveLogoUrl(rawLogoUrl);
     const industry = aiIndustry.value;
     const theme = aiTheme.value;
 
@@ -1287,7 +1426,7 @@ async function loadSlideImage(slideId, visual, industry, theme, seedOverride = n
         const response = await fetch('/api/ai/image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: `${industry} ${theme} ${visual}, high resolution, 8k, professional photography` })
+            body: JSON.stringify({ prompt: `${aiEspecializacion.value ? aiEspecializacion.value + ' ' : ''}${industry} ${theme} ${visual}, high resolution, 8k, professional photography` })
         });
         
         const data = await response.json();

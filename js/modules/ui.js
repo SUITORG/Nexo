@@ -111,7 +111,7 @@ app.ui = {
         // --- INDICADOR DISCRETO DE MODELO (v16.10.16) ---
         const modelDisplay = document.getElementById('sb-ai-model');
         if (modelDisplay) {
-            const currentModel = biz?.usa_soporte_ia || app.config.defaultModel || 'GEMINI';
+            const currentModel = String(biz?.usa_soporte_ia || app.config.defaultModel || 'GEMINI');
             const modelName = currentModel.includes('/') ? currentModel.split('/').pop().split(':')[0] : currentModel;
             const shortName = modelName.replace('gemini-', 'G-').replace('v1beta', 'β').toUpperCase();
             

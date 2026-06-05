@@ -44,3 +44,61 @@
 ### Seguridad
 22. `.env` contiene secrets (API keys, tokens). No exponer en código ni commits.
 23. Helmet CSP bloquea recursos no autorizados. Agregar dominios a `connect-src` y `img-src` si se integran nuevos servicios.
+
+## Operational Rules for OpenCode
+
+### Environment Policy
+24. **WSL es el entorno principal** para desarrollo y ejecución del proyecto.
+25. Usar WSL para: `npm install`, `npm run dev`, `npm test`, builds, lint, bash scripts, grep, sed, manejo principal de archivos y comandos git locales.
+26. Usar **GitHub** para: ramas remotas, pull requests, GitHub Actions, CI/CD, releases y revisión de workflows.
+27. Usar **Windows shell nativo** solo para tareas del host: abrir apps de Windows, Explorer, navegadores o herramientas exclusivas de Windows.
+28. No usar PowerShell/CMD como entorno por defecto para tareas principales del repo salvo instrucción explícita del usuario.
+29. Si el repo está accesible desde WSL, preferir siempre rutas Linux y ejecución dentro de WSL.
+
+### Decision Rules
+30. Antes de ejecutar una acción, clasificarla explícitamente como: **WSL**, **GitHub** o **Windows**.
+31. Si una tarea toca código, dependencias, tests, build, scripts o git local, elegir primero **WSL**.
+32. Si una tarea toca colaboración remota, PRs, CI/CD o releases, elegir **GitHub**.
+33. Si una tarea solo existe en el host Windows, elegir **Windows shell** y explicar por qué no conviene hacerla desde WSL.
+
+### Change Workflow
+34. Antes de cambios medianos o de alto riesgo, informar:
+   - entorno elegido,
+   - archivos que serán modificados,
+   - plan de ejecución,
+   - validaciones que se correrán.
+35. No hacer refactors amplios sin aprobación explícita.
+36. No borrar archivos sin aprobación explícita.
+37. Preferir cambios pequeños, reversibles y con alcance mínimo.
+38. Si la solicitud es ambigua, pedir aclaración antes de modificar código crítico.
+
+### Validation Rules
+39. Después de editar, correr las validaciones disponibles y relevantes.
+40. Si existen scripts de lint, tests o build, ejecutarlos antes de dar por terminada la tarea.
+41. Si no existen tests, realizar smoke checks y reportar qué validación manual sigue pendiente.
+42. Si se cambian imports, rutas, módulos críticos o integración frontend/backend, validar explícitamente que no haya regresiones obvias.
+
+### Production Safety
+43. Si un cambio afecta producción, proponer primero estrategia de rollback.
+44. Nunca exponer secrets de `.env`, `service_role`, tokens o credenciales en código, logs, commits o respuestas.
+45. Si un cambio toca rutas, RBAC, `id_empresa`, autenticación, persistencia, CSP, Helmet, backend GAS o integración con Supabase, tratarlo como **alto riesgo** y requerir confirmación explícita.
+46. Antes de cambios de despliegue o integración, verificar impacto en:
+   - aislamiento multi-tenant,
+   - seguridad de tokens,
+   - compatibilidad con `server.js` y `CampanasAi/local-server-node.js`,
+   - CSP/Helmet,
+   - guardado en Google Sheets,
+   - llamadas internas a `/api/db/*`.
+
+### Subproject Scope
+47. Si se trabaja dentro de `CampanasAi/`, respetar sus reglas específicas y evitar asumir que el subproyecto comparte exactamente el mismo flujo que la raíz.
+48. Se recomienda agregar un `CampanasAi/AGENTS.md` si ese subproyecto empieza a tener reglas propias de build, pruebas o despliegue.
+
+### Expected Response Format for Risky Tasks
+49. En tareas medianas o críticas, responder primero con este formato:
+   - **Entorno recomendado**: WSL / GitHub / Windows
+   - **Archivos afectados**
+   - **Plan breve**
+   - **Validación propuesta**
+   - **Nivel de riesgo**: bajo / medio / alto
+   - **Confirmación requerida**: sí / no

@@ -300,6 +300,18 @@ app.get('/api/sheets/prompts', (req, res) => {
     });
 });
 
+// Endpoint para notificaciones del módulo de Citas
+app.post('/api/webhook/citas', (req, res) => {
+    const auth = req.headers['x-auth-token'];
+    if (auth !== process.env.API_AUTH_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
+    console.log(`📅 [CITAS_WEBHOOK]`, JSON.stringify(req.body));
+    res.json({ received: true });
+});
+
+// Montar módulo de Citas (webhook WhatsApp + API)
+const citasApp = require('./citas/index');
+app.use(citasApp);
+
 // Serve static files from the current directory
 app.use((req, res, next) => {
     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);

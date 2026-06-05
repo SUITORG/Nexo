@@ -13,6 +13,7 @@ app.public = {
             if (company.rsface) socialHtml += `<a href="${company.rsface}" target="_blank" style="color:#1877F2; font-size:1.5rem;"><i class="fab fa-facebook"></i></a>`;
             if (company.rsinsta) socialHtml += `<a href="${company.rsinsta}" target="_blank" style="color:#E4405F; font-size:1.5rem;"><i class="fab fa-instagram"></i></a>`;
             if (company.rstik) socialHtml += `<a href="${company.rstik}" target="_blank" style="color:#000000; font-size:1.5rem;"><i class="fab fa-tiktok"></i></a>`;
+            if (company.rsyt) socialHtml += `<a href="${company.rsyt}" target="_blank" style="color:#FF0000; font-size:1.5rem;"><i class="fab fa-youtube"></i></a>`;
 
             content.innerHTML = `
                 <div style="text-align: center; margin-bottom: 20px;">
@@ -835,7 +836,7 @@ app.public = {
             }
 
             menuPublic.innerHTML = `
-                ${(showHub) ? '<li><a href="#orbit"><i class="fas fa-planet-ring"></i> Hub</a></li>' : ''}
+                ${(showHub) ? '<li><a href="#orbit" title="Portal/Explorar"><i class="fas fa-compass"></i></a></li>' : ''}
                 <li><a href="#home">Inicio</a></li>
                 ${dynamicLinksHtml}
                 ${isFood ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
@@ -1545,6 +1546,7 @@ app.public = {
         if (company.rsface) socialHtml += `<a href="${company.rsface}" target="_blank" class="social-icon facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>`;
         if (company.rsinsta) socialHtml += `<a href="${company.rsinsta}" target="_blank" class="social-icon instagram" title="Instagram"><i class="fab fa-instagram"></i></a>`;
         if (company.rstik) socialHtml += `<a href="${company.rstik}" target="_blank" class="social-icon tiktok" title="TikTok"><i class="fab fa-tiktok"></i></a>`;
+        if (company.rsyt) socialHtml += `<a href="${company.rsyt}" target="_blank" class="social-icon youtube" title="YouTube"><i class="fab fa-youtube"></i></a>`;
 
         const showForm = company.formulario === 'TRUE' || company.formulario === true;
 
@@ -1640,18 +1642,19 @@ app.public = {
 
         // Renderizado de Tarjetas con Regla del 90%
         grid.innerHTML = imgs.map(img => `
-            <div class="gallery-slot" style="flex: 0 0 ${slotWidth}%; min-width: ${slotWidth}%; display: flex; justify-content: center; align-items: center; padding: 10px 0;">
-                <div class="gallery-card-premium" style="width: 90%; position: relative; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); background: white; aspect-ratio: 16/10;">
-                    <img src="${app.utils.fixDriveUrl(img.url_imagen || img.imagen_url)}" 
-                         alt="${img.titulo}" 
-                         style="width:100%; height:100%; object-fit:cover; display: block; transition: transform 0.5s ease;">
-                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); text-align: center;">
-                        <span style="color: white; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                            ${img.titulo || ''}
-                        </span>
-                    </div>
-                </div>
-            </div>`).join('');
+    <div class="gallery-slot" style="flex: 0 0 ${slotWidth}%; min-width: ${slotWidth}%; display: flex; justify-content: center; align-items: center; padding: 10px 0;">
+        <div class="gallery-card-premium" style="width: 90%; position: relative; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); background: white; aspect-ratio: 16/10;">
+            <img src="${app.utils.fixDriveUrl(img.url_imagen || img.imagen_url)}"
+                 alt="${img.titulo}"
+                 style="width:100%; height:100%; object-fit:cover; display: block; transition: transform 0.5s ease;">
+            ${company.logo_url ? `<img src="${app.utils.fixDriveUrl(company.logo_url)}" alt="Logo" class="gallery-logo-overlay" style="position:absolute; top:10px; left:10px; width:40px; height:auto; z-index:10;">` : ''}
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); text-align: center;">
+                <span style="color: white; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                    ${img.titulo || ''}
+                </span>
+            </div>
+        </div>
+    </div>`).join('');
 
         // Media Queries de Precisión y Estilizado de Flechas (v13.2.1)
         const galleryStyle = document.getElementById('ui-gallery-precision-css') || document.createElement('style');
@@ -2330,24 +2333,24 @@ Object.assign(app.public, {
 
             if (status) status.innerText = "Subiendo a la galería oficial...";
 
+            const SB_URL = app.sbUrl;
+            const SB_KEY = app.sbKey;
+            const bucket = 'galeria-privada';
             const fileName = `guest_${Date.now()}.jpg`;
             const path = coId.toUpperCase();
 
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            await new Promise(r => reader.onload = r);
-            const base64 = reader.result.split(',')[1];
+            if (!SB_URL || !SB_KEY) throw new Error("Falta configuración de Supabase");
 
-            const res = await fetch('/api/storage/upload', {
+            const arrayBuffer = await file.arrayBuffer();
+
+            const res = await fetch(`${SB_URL}/storage/v1/object/${bucket}/${path}/${fileName}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    bucket: 'galeria-privada',
-                    path: path,
-                    fileName: fileName,
-                    contentType: file.type,
-                    buffer: base64
-                })
+                headers: {
+                    'apikey': SB_KEY,
+                    'Authorization': `Bearer ${SB_KEY}`,
+                    'Content-Type': file.type
+                },
+                body: arrayBuffer
             });
 
             if (res.ok) {

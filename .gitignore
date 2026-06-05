@@ -1,5 +1,6 @@
-﻿# Common ignores
+# Common ignores
 node_modules/
+google-credentials.json
 .DS_Store
 Thumbs.db
 *.log
@@ -48,3 +49,16 @@ compendio_inteligencia_suitorg.txt
 test-backend.html
 mock_data.json
 .blackboxcli/
+
+# Local credentials and helper scripts
+suitorg*.json
+gas-client.js
+google-sheets.js
+supabase.js
+iniciar-servidor.*
+iniciar-suitorgstore.*
+
+# CampanasAi generated videos and temp files
+CampanasAi/slideshow_*.mp4
+CampanasAi/tmp_slideshow_*/
+

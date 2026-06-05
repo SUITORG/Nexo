@@ -444,10 +444,14 @@ var app = {
             console.log(`📸 [STORAGE] Escaneando bucket '${bucket}' para el tenant: ${path}...`);
 
             try {
-            const res = await fetch(`/api/storage/list/${bucket}`, {
+            const res = await fetch(`${SB_URL}/storage/v1/object/list/${bucket}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prefix: path })
+                headers: {
+                    'apikey': SB_KEY,
+                    'Authorization': `Bearer ${SB_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prefix: path, limit: 30, offset: 0, sortBy: { column: 'created_at', order: 'desc' } })
             });
 
             if (res.ok) {

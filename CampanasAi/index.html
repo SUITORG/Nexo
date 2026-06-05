@@ -191,35 +191,75 @@
                     
                     <div class="form-row">
                         <div class="input-wrapper">
+                            <label for="aiConciencia">Nivel de Conciencia</label>
+                            <select id="aiConciencia">
+                                <option value="Inconsciente">😴 Inconsciente</option>
+                                <option value="Consciente_Problema">🤔 Consciente del Problema</option>
+                                <option value="Consciente_Solucion">💡 Consciente de la Solución</option>
+                                <option value="Consciente_Producto">🛍️ Consciente del Producto</option>
+                                <option value="Mas_Consciente">🔥 Más Consciente</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
                             <label for="aiIndustry">Industria / Nicho</label>
                             <select id="aiIndustry">
-                                <option value="abogados">Abogados</option>
-                                <option value="agricultura">Agricultura</option>
-                                <option value="clinicas_medicas">Clínicas Médicas</option>
-                                <option value="construccion">Construcción</option>
-                                <option value="dentistas">Dentistas</option>
-                                <option value="despachos_contables">Despachos Contables</option>
-                                <option value="ecommerce">E-commerce</option>
-                                <option value="educacion">Educación</option>
-                                <option value="energia_solar">Energía Solar</option>
-                                <option value="almacenamiento_energia">Almacenamiento Energía (Ind/Res/Clín)</option>
-                                <option value="hoteles_turismo">Hoteles y Turismo</option>
-                                <option value="manufacturera">Industria Manufacturera</option>
-                                <option value="inmobiliarias">Inmobiliarias</option>
-                                <option value="logistica_transporte">Logística y Transporte</option>
-                                <option value="mascotas">Mascotas</option>
-                                <option value="pastelerias">Pastelerías</option>
-                                <option value="restaurantes">Restaurantes y Comida Rápida</option>
-                                <option value="salud_bienestar">Salud y Bienestar</option>
-                                <option value="software">Software</option>
-                                <option value="tecnologia">Tecnología</option>
-                                <option value="tornos_maquinado">Tornos y Maquinado</option>
-                                <option value="otro">Otro</option>
+                                <option value="">-- Seleccionar --</option>
+                                <optgroup label="⚖️ Servicios Profesionales">
+                                    <option value="abogados">Abogados</option>
+                                    <option value="despachos_contables">Despachos Contables</option>
+                                </optgroup>
+                                <optgroup label="🏥 Salud y Bienestar">
+                                    <option value="clinicas_medicas">Clínicas Médicas</option>
+                                    <option value="dentistas">Dentistas</option>
+                                    <option value="salud_bienestar">Salud y Bienestar</option>
+                                </optgroup>
+                                <optgroup label="💻 Tecnología">
+                                    <option value="software">Software</option>
+                                    <option value="tecnologia">Tecnología</option>
+                                </optgroup>
+                                <optgroup label="🏭 Industria y Manufactura">
+                                    <option value="construccion">Construcción</option>
+                                    <option value="manufacturera">Industria Manufacturera</option>
+                                    <option value="tornos_maquinado">Tornos y Maquinado</option>
+                                </optgroup>
+                                <optgroup label="☀️ Energía">
+                                    <option value="energia_solar">Energía Solar</option>
+                                    <option value="almacenamiento_energia">Almacenamiento de Energía</option>
+                                </optgroup>
+                                <optgroup label="🛒 Comercio y Ventas">
+                                    <option value="ecommerce">E-commerce</option>
+                                    <option value="inmobiliarias">Inmobiliarias</option>
+                                </optgroup>
+                                <optgroup label="🍽️ Alimentos y Hospitalidad">
+                                    <option value="restaurantes">Restaurantes y Comida Rápida</option>
+                                    <option value="pastelerias">Pastelerías</option>
+                                    <option value="hoteles_turismo">Hoteles y Turismo</option>
+                                </optgroup>
+                                <optgroup label="📚 Educación">
+                                    <option value="educacion">Educación</option>
+                                </optgroup>
+                                <optgroup label="🚚 Logística y Transporte">
+                                    <option value="logistica_transporte">Logística y Transporte</option>
+                                </optgroup>
+                                <optgroup label="🌾 Agropecuario">
+                                    <option value="agricultura">Agricultura</option>
+                                </optgroup>
+                                <optgroup label="🐾 Mascotas">
+                                    <option value="mascotas">Mascotas</option>
+                                </optgroup>
+                                <optgroup label="📦 Otros">
+                                    <option value="otro">Otro</option>
+                                </optgroup>
+                            </select>
+                            <div id="industriaCategoriaHint" style="font-size:0.7rem; color:var(--text-dim); margin-top:0.25rem; min-height:1em;"></div>
+                            <select id="aiEspecializacion" style="display:none; margin-top:0.5rem;">
+                                <option value="">-- Especialización --</option>
                             </select>
                         </div>
                         <div class="input-wrapper">
                             <label for="aiTemplate">Tipo de Plantilla</label>
                             <select id="aiTemplate">
+                                <option value="">🤖 Automático (Según Conciencia)</option>
                                 <option value="tecnico">📘 Técnico / Educativo</option>
                                 <option value="storytelling">📖 Storytelling (Narrativo)</option>
                                 <option value="q_a">❓ Preguntas y Respuestas</option>
@@ -230,6 +270,8 @@
                                 <option value="dolor">🔥 Enfocado en el Dolor (Agitar Problema)</option>
                                 <option value="escasez">⏳ Sentido de Urgencia / Escasez</option>
                                 <option value="vende_mente">🧠 Vende a la Mente (Inspirador/Urgente)</option>
+                                <option value="audio_podcast">🎧 Podcast / Formato Auditivo</option>
+                                <option value="visual_infografia">🎨 Visual / Infografía Persuasiva</option>
                             </select>
                         </div>
                         <div class="input-wrapper">
