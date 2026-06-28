@@ -201,12 +201,13 @@ function processTransactionSupabase(ss, data, output, coId) {
       id_empresa: coId,
       id_proyecto: projId,
       monto: parseFloat(data.payment.monto) || 0,
-      metodo_pago: data.payment.metodo_pago || "Efectivo",
-      folio: data.payment.folio || "CAJA",
-      referencia: data.payment.referencia || "POS",
-      fecha_pago: new Date().toISOString(),
-      pago_con: parseFloat(data.payment.pago_con) || 0,
-      cambio: parseFloat(data.payment.cambio) || 0
+       metodo_pago: data.payment.metodo_pago || "Efectivo",
+       folio: data.payment.folio || "CAJA",
+       referencia: data.payment.referencia || "POS",
+       fecha_pago: new Date().toISOString(),
+       pago_con: parseFloat(data.payment.pago_con) || 0,
+       cambio: parseFloat(data.payment.cambio) || 0,
+       referencia_stripe: data.payment.referencia_stripe || ""
     };
     var payRes = UrlFetchApp.fetch(SB_URL + "/rest/v1/Pagos", {
       method: "post",

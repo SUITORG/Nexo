@@ -6,6 +6,27 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Stripe módulo de pagos
+const stripePayments = require('./conecionpagos/index');
+
+// Stripe Webhook (debe ir ANTES de express.json() para recibir raw body)
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+    if (!sig || !endpointSecret) return res.status(400).json({ error: 'Firma o secret no configurado' });
+    try {
+        const result = await stripePayments.handleWebhook(req.body, sig, endpointSecret);
+        console.log(`💳 [STRIPE_WEBHOOK] ${result.event} | Status: ${result.status}`);
+        if (result.status === 'completed') {
+            console.log(`  Pago exitoso: ${result.paymentIntentId} - $${result.amount} MXN`);
+        }
+        res.json({ received: true });
+    } catch (e) {
+        console.error('❌ [STRIPE_WEBHOOK_ERROR]', e.message);
+        res.status(400).json({ error: e.message });
+    }
+});
+
 app.use(express.json());
 
 // 🛡️ Seguridad: Configuración de Security Headers via Helmet
@@ -13,13 +34,13 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             "default-src": ["'self'"],
-            "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.googleapis.com", "https://kit.fontawesome.com", "https://cdn.jsdelivr.net"],
+            "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.googleapis.com", "https://kit.fontawesome.com", "https://cdn.jsdelivr.net", "https://js.stripe.com"],
             "script-src-attr": ["'unsafe-inline'"],
-            "connect-src": ["'self'", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://openrouter.ai", "https://ka-f.fontawesome.com", "https://*.googleusercontent.com"],
-            "img-src": ["'self'", "data:", "https://loremflickr.com", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://*.googleusercontent.com"],
+            "connect-src": ["'self'", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://openrouter.ai", "https://ka-f.fontawesome.com", "https://*.googleusercontent.com", "https://api.stripe.com"],
+            "img-src": ["'self'", "data:", "https://loremflickr.com", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://*.googleusercontent.com", "https://*.stripe.com"],
             "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://kit.fontawesome.com", "https://cdnjs.cloudflare.com"],
             "font-src": ["'self'", "https://fonts.gstatic.com", "https://ka-f.fontawesome.com", "https://cdnjs.cloudflare.com"],
-            "frame-src": ["'self'", "https://*.google.com", "https://*.googleusercontent.com"],
+            "frame-src": ["'self'", "https://*.google.com", "https://*.googleusercontent.com", "https://js.stripe.com"],
             "upgrade-insecure-requests": [],
         },
     },
@@ -311,6 +332,46 @@ app.post('/api/webhook/citas', (req, res) => {
 // Montar módulo de Citas (webhook WhatsApp + API)
 const citasApp = require('./citas/index');
 app.use(citasApp);
+
+// =====================================================================
+// 💳 STRIPE PAYMENT ENDPOINTS
+// =====================================================================
+// Obtener la publishable key de Stripe para el frontend
+app.get('/api/stripe/config', (req, res) => {
+    const companyId = req.query.company_id || '';
+    const pubKey = stripePayments.getPublishableKey(companyId);
+    if (!pubKey) return res.status(404).json({ error: 'Stripe no configurado para esta empresa' });
+    res.json({ publishableKey: pubKey });
+});
+
+// Crear PaymentIntent para cobro con tarjeta
+app.post('/api/stripe/create-payment-intent', async (req, res) => {
+    const { amount, company_id, metadata } = req.body;
+    if (!amount || !company_id) return res.status(400).json({ error: 'Faltan amount y company_id' });
+    try {
+        const intent = await stripePayments.createPaymentIntent({
+            amount,
+            companyId: company_id,
+            metadata: metadata || {}
+        });
+        res.json(intent);
+    } catch (e) {
+        console.error('❌ [STRIPE_CREATE_INTENT_ERROR]', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Confirmar estado de un PaymentIntent
+app.get('/api/stripe/payment-status/:intentId', async (req, res) => {
+    const { intentId } = req.params;
+    const companyId = req.query.company_id || '';
+    try {
+        const result = await stripePayments.confirmPayment(intentId, companyId);
+        res.json(result);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // Serve static files from the current directory
 app.use((req, res, next) => {

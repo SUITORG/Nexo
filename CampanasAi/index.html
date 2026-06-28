@@ -47,9 +47,12 @@
                     <div class="header-left" style="display: flex; align-items: center; gap: 1rem;">
                         <h2>Nueva Publicación</h2>
                         <div class="mode-switch">
-                            <button type="button" class="mode-btn active" id="btnModeAi">Ai</button>
-                            <button type="button" class="mode-btn" id="btnModeBd">BD</button>
-                            <button type="button" class="mode-btn" id="btnModeBdpr">BDPR</button>
+                            <button type="button" class="mode-btn active" id="btnModeAi" title="IA genera contenido automáticamente">Ai</button>
+                            <button type="button" class="mode-btn" id="btnModeBd" title="Carga empresa desde BD + IA">BD</button>
+                            <button type="button" class="mode-btn" id="btnModeBdpr" title="Previsualización manual sin IA">BDPR</button>
+                            <button type="button" class="mode-btn" id="btnModeImg" title="Video desde carpeta local + receta">IMG</button>
+                            <button type="button" class="mode-btn" id="btnModeBdsmt" title="Campañas basadas en tendencias reales">BDSMT</button>
+                            <button type="button" class="mode-btn" id="btnModeBdpv" title="Presentación de Video HTML">BDPV</button>
                         </div>
                     </div>
                     <span class="badge">Google Sheets</span>
@@ -119,6 +122,179 @@
                         <button type="button" id="clearBdPhotosBtn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.3); color: #ffcccc; border-radius: 4px; display: none; cursor: pointer;">Limpiar Fotos</button>
                     </div>
                     <div id="bdPhotosPreview" style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;"></div>
+                </div>
+
+                <!-- PARTE 2: LA RECETA (IMG de Imaginación) -->
+                <div id="recipeSection" class="recipe-section ai-assistant-section" style="display: none;">
+                    <div class="section-title">
+                        <span class="icon">🎬</span>
+                        <h3>PARTE 2: LA RECETA</h3>
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="recipeSelect">Plantilla de Receta</label>
+                        <select id="recipeSelect">
+                            <option value="">-- Cargando recetas... --</option>
+                        </select>
+                    </div>
+                    <div id="recipeDetails" style="display: none;">
+                        <div class="form-row" style="margin-top: 0.75rem;">
+                            <div class="input-wrapper">
+                                <label for="recipeOrden">Orden de las fotos</label>
+                                <select id="recipeOrden">
+                                    <option value="aleatorio">Aleatorio (Las mezcla)</option>
+                                    <option value="secuencial">Secuencial (Por nombre de archivo)</option>
+                                </select>
+                            </div>
+                            <div class="input-wrapper">
+                                <label for="recipeDuracion">Duración total del video</label>
+                                <select id="recipeDuracion">
+                                    <option value="30">30 segundos</option>
+                                    <option value="60">1 minuto</option>
+                                </select>
+                            </div>
+                            <div class="input-wrapper">
+                                <label for="recipeRitmo">Ritmo de las fotos</label>
+                                <select id="recipeRitmo">
+                                    <option value="musica">Sincronizado con música</option>
+                                    <option value="0.5">0.5 segundos por foto</option>
+                                    <option value="2">2 segundos por foto</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-top: 0.75rem;">
+                            <div class="input-wrapper">
+                                <label for="recipeFiltro">Estilo visual (Filtro)</label>
+                                <select id="recipeFiltro">
+                                    <option value="ninguno">Ninguno</option>
+                                    <option value="blanco_y_negro">Blanco y Negro</option>
+                                    <option value="colores_vivos">Colores Vivos</option>
+                                    <option value="vintage">Vintage</option>
+                                </select>
+                            </div>
+                            <div class="input-wrapper">
+                                <label for="recipeTransicion">Transición (Efecto de cambio)</label>
+                                <select id="recipeTransicion">
+                                    <option value="corte_brusco">Corte Brusco</option>
+                                    <option value="fundido">Fundido</option>
+                                    <option value="barrido_derecha">Barrido Derecha</option>
+                                    <option value="zoom">Zoom</option>
+                                </select>
+                            </div>
+                            <div class="input-wrapper">
+                                <label>Animación</label>
+                                <div class="toggle-group" style="margin-top: 0.5rem;">
+                                    <label class="switch">
+                                        <input type="checkbox" id="recipeAnimacion">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="toggle-info">
+                                        <span class="toggle-label" style="font-size: 0.85rem;">Activar animación</span>
+                                        <span class="toggle-desc">Zoom, blink o cambio de color</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem; border-top: 1px solid rgba(245,158,11,0.15); padding-top: 1rem;">
+                        <button type="button" id="agentBtn" class="secondary-btn" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc;">
+                            <span>🤖</span>
+                            <span>Buscar Tendencias</span>
+                            <div class="agent-loader loader" style="display: none;"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BDSMT Section: Trend-Based Marketing -->
+                <div id="bdsmtSection" class="ai-assistant-section" style="display: none;">
+                    <div class="section-title">
+                        <span class="icon">📊</span>
+                        <h3>BDSMT — Marketing Basado en Tendencias</h3>
+                    </div>
+                    <div class="form-row">
+                        <div class="input-wrapper">
+                            <label for="bdsmtSubNicho">Sub-nicho</label>
+                            <select id="bdsmtSubNicho">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="Instalación Residencial">Instalación Residencial</option>
+                                <option value="Instalación Comercial/Industrial">Instalación Comercial/Industrial</option>
+                                <option value="Mantenimiento y Reparación">Mantenimiento y Reparación</option>
+                                <option value="Venta de Equipos">Venta de Equipos</option>
+                                <option value="Off-Grid y Autoconsumo">Off-Grid y Autoconsumo</option>
+                                <option value="Financiamiento y Subsidios">Financiamiento y Subsidios</option>
+                                <option value="Innovación Tecnológica">Innovación Tecnológica</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="bdsmtRegion">Región</label>
+                            <input type="text" id="bdsmtRegion" placeholder="Ej: Nuevo León, México" value="Nuevo León, México">
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <button type="button" id="fetchTrendsBtn" class="secondary-btn" style="background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; width: 100%;">
+                            <span>🔍</span>
+                            <span>Buscar Tendencias</span>
+                            <div class="trends-loader loader" style="display: none;"></div>
+                        </button>
+                    </div>
+                    <div id="trendsContainer" style="display: none; margin-top: 1rem; max-height: 400px; overflow-y: auto;"></div>
+                </div>
+
+                <!-- BDPV Section: Presentación de Video HTML -->
+                <div id="bdpvSection" class="ai-assistant-section" style="display: none;">
+                    <div class="section-title">
+                        <span class="icon">🎞️</span>
+                        <h3>BDPV — Presentación de Video HTML</h3>
+                    </div>
+                    <div class="form-row">
+                        <div class="input-wrapper">
+                            <label>Skills a utilizar</label>
+                            <div id="bdpvSkillsContainer" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.3rem">
+                                <label class="switch" style="gap:0.4rem;flex-direction:row;width:auto;padding:0.3rem 0.6rem;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.08)">
+                                    <input type="checkbox" class="bdpv-skill" value="frontend-slides" checked>
+                                    <span style="font-size:0.75rem">🎨 frontend-slides</span>
+                                </label>
+                                <label class="switch" style="gap:0.4rem;flex-direction:row;width:auto;padding:0.3rem 0.6rem;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.08)">
+                                    <input type="checkbox" class="bdpv-skill" value="remotion-best-practices">
+                                    <span style="font-size:0.75rem">🎬 remotion</span>
+                                </label>
+                                <label class="switch" style="gap:0.4rem;flex-direction:row;width:auto;padding:0.3rem 0.6rem;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.08)">
+                                    <input type="checkbox" class="bdpv-skill" value="frontend-design" checked>
+                                    <span style="font-size:0.75rem">✨ design</span>
+                                </label>
+                            </div>
+                            <span style="font-size:0.65rem;color:var(--text-dim);display:block;margin-top:0.3rem">Selecciona las skills para definir el estilo y funcionalidad</span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="input-wrapper">
+                            <label for="bdpvSubNicho">Sub-nicho</label>
+                            <div style="display:flex;gap:0.3rem;flex-wrap:wrap">
+                                <select id="bdpvSubNicho" style="flex:2;min-width:150px">
+                                    <option value="">-- Desde BD --</option>
+                                </select>
+                                <input type="text" id="bdpvSubNichoText" placeholder="O escribe manual..." style="flex:1;min-width:120px">
+                            </div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="bdpvRegion">Región</label>
+                            <input type="text" id="bdpvRegion" placeholder="Ej: Nuevo León, México" value="Monterrey, N.L., México">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top:0.5rem">
+                        <div class="input-wrapper">
+                            <label style="display:flex;align-items:center;gap:0.5rem">
+                                <input type="checkbox" id="bdpvNoLogo" style="width:16px;height:16px">
+                                <span style="font-size:0.8rem">No usar logo</span>
+                            </label>
+                        </div>
+                        <div class="input-wrapper">
+                            <label style="display:flex;align-items:center;gap:0.5rem">
+                                <input type="checkbox" id="bdpvAutoPhotos" checked style="width:16px;height:16px">
+                                <span style="font-size:0.8rem">Auto-completar fotos (Unsplash + pool local)</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Configuración de Producción Avanzada (Movida hacia arriba) -->
@@ -291,6 +467,11 @@
                             <span class="gen-text">Generar con IA (Incluye Imágenes)</span>
                             <div class="gen-loader loader"></div>
                         </button>
+                        <button type="button" id="imaginationBtn" class="secondary-btn" style="flex: 2; display: none; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); color: #fbbf24;">
+                            <span>🎬</span>
+                            <span>Crear Video de Imaginación</span>
+                            <div class="img-loader loader" style="display: none;"></div>
+                        </button>
                         <button type="reset" id="clearBtn" class="secondary-btn form-clear-btn" style="flex: 1; background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.3); color: #ffcccc;">
                             🗑️ Limpiar
                         </button>
@@ -371,5 +552,6 @@
     </main>
 
     <script src="script.js"></script>
+    <script src="../PresentacionesVid/bdpv-handler.js"></script>
 </body>
 </html>

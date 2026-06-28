@@ -3,6 +3,8 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const supabase = require('./lib/supabase');
+const bdpvGenerator = require('../PresentacionesVid/bdpv-generator');
 
 const PORT = 8000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -77,7 +79,505 @@ const server = http.createServer((req, res) => {
         });
         return;
     }
-    
+
+    // ===== SUPABASE ENDPOINTS =====
+
+    // GET /api/industrias — lista industrias con nichos
+    if (pathname === '/api/industrias' && req.method === 'GET') {
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('industrias')
+                    .select('*, nichos(*)')
+                    .eq('activo', true)
+                    .order('categoria');
+
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data }));
+            } catch (e) {
+                serverLog('ERROR', '[SUPABASE] /api/industrias GET:', e.message);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // POST /api/industrias — crear industria + nichos
+    if (pathname === '/api/industrias' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { categoria, icono, descripcion, nichos } = JSON.parse(body);
+                const { data: industria, error: errInd } = await supabase
+                    .from('industrias')
+                    .insert({ categoria, icono, descripcion })
+                    .select()
+                    .single();
+
+                if (errInd) throw errInd;
+
+                if (nichos && nichos.length > 0) {
+                    const { error: errNichos } = await supabase
+                        .from('nichos')
+                        .insert(nichos.map(n => ({ ...n, industria_id: industria.id })));
+
+                    if (errNichos) throw errNichos;
+                }
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: industria }));
+            } catch (e) {
+                serverLog('ERROR', '[SUPABASE] /api/industrias POST:', e.message);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        });
+        return;
+    }
+
+    // PUT /api/industrias/:id — editar industria
+    const industriasMatch = pathname.match(/^\/api\/industrias\/(\d+)$/);
+    if (industriasMatch && req.method === 'PUT') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const id = parseInt(industriasMatch[1]);
+                const updates = JSON.parse(body);
+                const { data, error } = await supabase
+                    .from('industrias')
+                    .update(updates)
+                    .eq('id', id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data }));
+            } catch (e) {
+                serverLog('ERROR', '[SUPABASE] /api/industrias PUT:', e.message);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        });
+        return;
+    }
+
+    // GET /api/campanas — lista campañas desde Supabase
+    if (pathname === '/api/campanas' && req.method === 'GET') {
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('campanas')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data }));
+            } catch (e) {
+                serverLog('ERROR', '[SUPABASE] /api/campanas GET:', e.message);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // POST /api/campanas — guardar campaña en Supabase
+    if (pathname === '/api/campanas' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const campana = JSON.parse(body);
+                const { data, error } = await supabase
+                    .from('campanas')
+                    .insert({
+                        id: campana.id || `camp_${Date.now()}`,
+                        empresa: campana.empresa || '',
+                        nombre: campana.nombre || '',
+                        tema: campana.tema || '',
+                        formato: campana.formato || '',
+                        estado: campana.estado || 'pendiente',
+                        configuracion: campana.configuracion || {}
+                    })
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data }));
+            } catch (e) {
+                serverLog('ERROR', '[SUPABASE] /api/campanas POST:', e.message);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ===== RECETAS (IMG DE IMAGINACION) =====
+
+    // GET /api/recetas — lista recetas
+    if (pathname === '/api/recetas' && req.method === 'GET') {
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('recetas')
+                    .select('*')
+                    .order('nombre');
+
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data }));
+            } catch (e) {
+                serverLog('ERROR', '[SUPABASE] /api/recetas GET:', e.message);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // POST /api/video-imaginacion — genera video desde carpeta media + receta
+    if (pathname === '/api/video-imaginacion' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            const tmpDir = path.join(__dirname, `tmp_imaginacion_${Date.now()}`);
+            try {
+                const { texto, receta_id, logo_base64, formato, overrides } = JSON.parse(body);
+
+                // Obtener receta
+                let recipe;
+                if (receta_id) {
+                    const { data, error } = await supabase
+                        .from('recetas')
+                        .select('*')
+                        .eq('id', receta_id)
+                        .single();
+                    if (error) throw new Error('Receta no encontrada: ' + error.message);
+                    recipe = data;
+                } else {
+                    throw new Error('Se requiere receta_id');
+                }
+                if (overrides) Object.assign(recipe, overrides);
+
+                const mediaFolder = process.env.MEDIA_FOLDER;
+                if (!mediaFolder) throw new Error('MEDIA_FOLDER no configurado en .env');
+                if (!fs.existsSync(mediaFolder)) throw new Error(`La carpeta ${mediaFolder} no existe`);
+
+                // Escanear archivos
+                let files = fs.readdirSync(mediaFolder)
+                    .filter(f => /\.(jpg|jpeg|png|mp4|mpg|mpeg)$/i.test(f))
+                    .map(f => path.join(mediaFolder, f));
+
+                if (files.length === 0) throw new Error('No hay archivos compatibles en MEDIA_FOLDER');
+
+                // Ordenar
+                if (recipe.orden === 'aleatorio') {
+                    for (let i = files.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [files[i], files[j]] = [files[j], files[i]];
+                    }
+                }
+
+                // Filtrar solo imagenes para v1
+                const imageFiles = files.filter(f => /\.(jpg|jpeg|png)$/i.test(f));
+                if (imageFiles.length === 0) throw new Error('No hay imágenes (jpg/png) en MEDIA_FOLDER');
+
+                const selectedFiles = imageFiles.slice(0, 50);
+
+                // Calcular tiempo por slide
+                const totalDur = parseInt(recipe.duracion_total) || 30;
+                let timePerSlide;
+                if (recipe.ritmo === 'musica') {
+                    timePerSlide = totalDur / selectedFiles.length;
+                } else {
+                    const ritmoSec = parseFloat(recipe.ritmo) || 1;
+                    const totalWithRitmo = selectedFiles.length * ritmoSec;
+                    timePerSlide = totalWithRitmo > totalDur ? totalDur / selectedFiles.length : ritmoSec;
+                }
+                timePerSlide = Math.max(timePerSlide, 0.5);
+
+                fs.mkdirSync(tmpDir, { recursive: true });
+
+                // Dimensiones segun formato
+                const DIMS = {
+                    Post: { w: 1080, h: 1080 },
+                    Reel: { w: 1080, h: 1920 },
+                    Story: { w: 1080, h: 1920 },
+                    Banner: { w: 1200, h: 628 }
+                };
+                const dim = DIMS[formato] || DIMS.Reel;
+                const W = dim.w;
+                const H = dim.h;
+
+                // Logo temp
+                let logoPath = null;
+                if (logo_base64) {
+                    logoPath = path.join(tmpDir, 'logo.png');
+                    const b64 = logo_base64.replace(/^data:image\/\w+;base64,/, '');
+                    fs.writeFileSync(logoPath, b64, 'base64');
+                }
+
+                // Filtro de color
+                const colorFilter = {
+                    'blanco_y_negro': 'colorchannelmixer=.3:.4:.3:0:.3:.4:.3:0:.3:.4:.3',
+                    'colores_vivos': 'eq=saturation=2.0',
+                    'vintage': "curves=all='0/0 0.25/0.15 0.5/0.5 0.75/0.85 1/1',hue=s=0.5"
+                }[recipe.filtro] || null;
+
+                const { execSync } = require('child_process');
+                const fps = 24;
+
+                // Write text to file for drawtext (avoids escaping issues)
+                let textFilePath = null;
+                if (texto) {
+                    textFilePath = path.join(tmpDir, 'overlay_text.txt').replace(/\\/g, '/');
+                    fs.writeFileSync(textFilePath, texto, 'utf8');
+                }
+
+                // Generar segmentos individuales
+                const segments = [];
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const segPath = path.join(tmpDir, `seg_${i}.mp4`).replace(/\\/g, '/');
+
+                    let filters = `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,fps=${fps}`;
+                    if (colorFilter) filters += `,${colorFilter}`;
+                    if (textFilePath) {
+                        filters += `,drawtext=textfile=${textFilePath}:fontcolor=white:fontsize=48:x=(w-text_w)/2:y=h-th-100:enable=between(t,0,${timePerSlide})`;
+                    }
+                    filters += '[v0]';
+
+                    const imgPath = selectedFiles[i].replace(/\\/g, '/');
+                    let cmd;
+                    if (logoPath) {
+                        const logoPathFwd = logoPath.replace(/\\/g, '/');
+                        const overlayFilter = `[v0][1:v]overlay=10:10:enable=between(t,0,${timePerSlide})[out]`;
+                        cmd = `ffmpeg -y -loop 1 -t ${timePerSlide + 0.5} -i "${imgPath}" -i "${logoPathFwd}" -filter_complex "${filters};${overlayFilter}" -map "[out]" -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 23 "${segPath}"`;
+                    } else {
+                        cmd = `ffmpeg -y -loop 1 -t ${timePerSlide + 0.5} -i "${imgPath}" -filter_complex "${filters}" -map "[v0]" -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 23 "${segPath}"`;
+                    }
+
+                    serverLog('INFO', `[IMAGINACION] Segmento ${i+1}/${selectedFiles.length}...`);
+                    execSync(cmd, { timeout: 60000, shell: true, stdio: 'pipe' });
+                    segments.push(segPath);
+                }
+
+                // Concatenar con o sin transiciones
+                const outPath = path.join(__dirname, `imaginacion_${Date.now()}.mp4`);
+                let concatCmd;
+
+                if (segments.length === 1) {
+                    // Solo un segmento, copiar directamente
+                    concatCmd = `ffmpeg -y -i "${segments[0].replace(/\\/g, '/')}" -c copy "${outPath}"`;
+                } else if (recipe.transicion === 'corte_brusco') {
+                    const listPath = path.join(tmpDir, 'files.txt').replace(/\\/g, '/');
+                    const listContent = segments.map(s => `file '${s.replace(/'/g, "'\\''")}'`).join('\n');
+                    fs.writeFileSync(listPath, listContent);
+                    concatCmd = `ffmpeg -y -f concat -safe 0 -i "${listPath}" -c copy "${outPath}"`;
+                } else {
+                    const xfadeMap = { fundido: 'fade', barrido_derecha: 'slideright', zoom: 'zoomin' };
+                    const xfadeType = xfadeMap[recipe.transicion] || 'fade';
+                    const transDur = 0.5;
+                    const n = segments.length;
+
+                    let filterComplex;
+                    if (n === 1) {
+                        filterComplex = `nullsrc=s=${W}x${H},trim=duration=${timePerSlide}[vout]`;
+                    } else if (n === 2) {
+                        const offset = timePerSlide;
+                        filterComplex = `[0:v][1:v]xfade=transition=${xfadeType}:duration=${transDur}:offset=${offset}[vout]`;
+                    } else {
+                        let parts = [];
+                        for (let i = 1; i < n; i++) {
+                            const offset = timePerSlide * i;
+                            if (i === 1) {
+                                parts.push(`[0:v][1:v]xfade=transition=${xfadeType}:duration=${transDur}:offset=${offset}[vx1]`);
+                            } else {
+                                parts.push(`[vx${i-1}][${i}:v]xfade=transition=${xfadeType}:duration=${transDur}:offset=${offset}[vx${i}]`);
+                            }
+                        }
+                        filterComplex = parts.join(';');
+                    }
+
+                    const lastLabel = n <= 2 ? '[vout]' : `[vx${n-1}]`;
+                    const inputs = segments.map(s => `-i "${s}"`).join(' ');
+
+                    concatCmd = `ffmpeg -y ${inputs} -filter_complex "${filterComplex}" -map ${lastLabel} -pix_fmt yuv420p -c:v libx264 -preset ultrafast "${outPath}"`;
+                }
+
+                serverLog('INFO', `[IMAGINACION] Concatenando ${segments.length} segmentos...`);
+                execSync(concatCmd, { timeout: 120000, shell: true, stdio: 'pipe' });
+
+                const videoBase64 = fs.readFileSync(outPath).toString('base64');
+
+                // Limpiar
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+                if (fs.existsSync(outPath)) fs.unlinkSync(outPath);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', video: `data:video/mp4;base64,${videoBase64}` }));
+
+            } catch (e) {
+                serverLog('ERROR', `[IMAGINACION] ${e.message}`);
+                if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ===== AGENTE DE TENDENCIAS =====
+    if (pathname === '/api/agent/tendencias' && req.method === 'POST') {
+        (async () => {
+            try {
+                const agent = require('./scripts/agent-tendencias');
+                const resultados = await agent.ejecutarAgente(serverLog);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: resultados }));
+            } catch (e) {
+                serverLog('ERROR', `[AGENT] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // ===== TRENDS BDSMT =====
+
+    // POST /api/trends/fetch — busca tendencias reales (pytrends + Reddit)
+    if (pathname === '/api/trends/fetch' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { niche, subNiche, region } = JSON.parse(body);
+                const trendResearch = require('./scripts/trend-research');
+                const result = await trendResearch.fetchTrends(niche || '', subNiche || '', region || '');
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: result }));
+            } catch (e) {
+                serverLog('ERROR', `[TRENDS] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        });
+        return;
+    }
+
+    // POST /api/trends/generate — genera campaña basada en un trend seleccionado
+    if (pathname === '/api/trends/generate' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { trend, niche, subNiche, region, slides, template, platform, format, conciencia, empresa, phone } = JSON.parse(body);
+
+                const systemPrompt = `# PERSONA
+Actúa como un Copywriter Maestro en Conversión y Especialista en Branding dinámico.
+
+# CONTEXTO Y MERCADO
+- Empresa: ${empresa || 'Tu Marca'}.
+- Nicho: ${niche}${subNiche ? `, Sub-nicho: ${subNiche}` : ''}.
+- Región: ${region || 'México'}.
+- Tendencia detectada: "${trend.titulo}" — ${trend.descripcion} (Fuente: ${trend.fuente}).
+- Formato de Estrategia: ${template || 'storytelling'}.
+- Nivel de Conciencia del Cliente: ${conciencia || 'Consciente_Solucion'}.
+
+# INSTRUCCIONES
+- Usa la tendencia real detectada como base para el contenido.
+- Adapta el gancho al contexto regional de ${region || 'México'}.
+- Incluye datos locales y references de ${region || 'México'} cuando sea relevante.
+
+# PASOS (CHAIN OF THOUGHT)
+1. Define el ángulo narrativo según la tendencia y el nivel de conciencia.
+2. Redacta un post caption persuasivo con hashtags relevantes al nicho y la región.
+3. Estructura exactamente ${slides || 5} slides: (1. Gancho, 2. Contexto del Trend, 3. Valor/Problema, 4. Solución, 5. Cierre/CTA).
+
+# RESTRICCIONES (RAILS)
+- Idioma: Español de México/Latinoamérica.
+- MÁXIMO 30 palabras por slide en el Cuerpo.
+- **OBLIGATORIO**: Incluir el número de slide entre paréntesis al INICIO de cada título.
+- El contenido DEBE estar basado en la tendencia: "${trend.titulo}"
+
+# REGLAS VISUALES
+- **PROHIBIDO**: Frases como "a happy person", "looking at camera", "isolated on white".
+- **OBLIGATORIO**: Describe ángulos dramáticos, detalles técnicos o escenas de acción real.
+- **IDIOMA**: Prompt del campo "visual" en INGLÉS técnico de fotografía.
+
+# PLANTILLA DE SALIDA (JSON)
+{
+  "caption": "Texto del post con hashtags...",
+  "slides": [
+    { "title": "(1) Título", "body": "Cuerpo del slide...", "visual": "Professional photo of..." }
+  ]
+}
+
+# NOTAS IMPORTANTES
+- Genera exactamente ${slides || 5} slides.
+- El contenido DEBE ser relevante a ${niche} en ${region || 'México'}.`;
+
+                const userPrompt = `Generar campaña de ${slides || 5} slides para ${platform || 'Instagram'} en formato ${format || 'Post'}. Tendencia: "${trend.titulo}". CTA final: ${phone || 'Interacción en redes'}. ¡Responde estrictamente con JSON!`;
+
+                const messages = [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ];
+
+                const orModels = [
+                    "openrouter/free",
+                    "qwen/qwen3.6-35b-a3b:free",
+                    "minimax/minimax-m2.5:free",
+                    "google/gemini-flash-1.5",
+                    "deepseek/deepseek-v4-flash"
+                ];
+
+                let lastError = "No se recibieron errores.";
+                let generatedJson = null;
+                for (const m of orModels) {
+                    try {
+                        serverLog('INFO', `🤖 [BDSMT_TRY] Intentando con ${m}...`);
+                        const result = await callOpenRouter(m, messages, 0.7);
+                        serverLog('INFO', `✅ [BDSMT_SUCCESS] ${m} respondió correctamente.`);
+                        const rawContent = result.trim();
+                        const jsonStr = rawContent.startsWith('```') ? rawContent.replace(/```json|```/g, '') : rawContent;
+                        generatedJson = JSON.parse(jsonStr);
+                        break;
+                    } catch (err) {
+                        lastError = err.message;
+                        serverLog('WARN', `⚠️ [BDSMT_FAIL] ${m}: ${err.message}`);
+                        if (err.message.includes('ECONNRESET')) {
+                            await new Promise(r => setTimeout(r, 1000));
+                        }
+                    }
+                }
+
+                if (!generatedJson) {
+                    throw new Error(`Todos los modelos fallaron. Último error: ${lastError}`);
+                }
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: generatedJson }));
+            } catch (e) {
+                serverLog('ERROR', `[TRENDS GEN] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ===== FIN SUPABASE ENDPOINTS =====
+
     if (req.method === 'POST' && pathname.includes('/api/ai')) {
         let body = '';
         req.on('data', d => body += d);
@@ -91,12 +591,11 @@ const server = http.createServer((req, res) => {
 
                 // 📡 LISTA DE MODELOS (Priorizando Gratuitos y Estables)
                 const orModels = [
-                    "google/gemini-2.0-flash-exp:free",
-                    "google/gemma-4-31b:free",
-                    "meta-llama/llama-3.1-8b-instruct:free",
-                    "huggingfaceh4/zephyr-7b-beta:free",
+                    "openrouter/free",
+                    "qwen/qwen3.6-35b-a3b:free",
+                    "minimax/minimax-m2.5:free",
                     "google/gemini-flash-1.5",
-                    "anthropic/claude-3-haiku"
+                    "deepseek/deepseek-v4-flash"
                 ];
 
                 let lastError = "No se recibieron errores.";
@@ -188,6 +687,87 @@ const server = http.createServer((req, res) => {
                 serverLog('ERROR', "❌ Error en Google Imagen Server:", error.message);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: error.message }));
+            }
+        });
+        return;
+    }
+
+    // ===== BDPV ENDPOINTS =====
+
+    // POST /api/bdpv/generate — Genera presentación HTML
+    if (pathname === '/api/bdpv/generate' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const data = JSON.parse(body);
+                serverLog('INFO', `🎞️ [BDPV] Generando presentación para: ${data.company}`);
+
+                // Wrapper to call OpenRouter with the same pattern as /api/ai
+                const callAI = async (messages, temperature) => {
+                    const orModels = [
+                        "openrouter/free",
+                        "qwen/qwen3.6-35b-a3b:free",
+                        "minimax/minimax-m2.5:free",
+                        "google/gemini-flash-1.5",
+                        "deepseek/deepseek-v4-flash"
+                    ];
+                    let lastError = '';
+                    for (const m of orModels) {
+                        try {
+                            const result = await callOpenRouter(m, messages, temperature || 0.7);
+                            return result;
+                        } catch (err) {
+                            lastError = err.message;
+                            serverLog('WARN', `⚠️ [BDPV_AI] ${m}: ${err.message}`);
+                        }
+                    }
+                    // Try local fallback
+                    try {
+                        const msg = messages[messages.length - 1].content;
+                        return await callLocalLMS(msg);
+                    } catch (localErr) {
+                        throw new Error(`Todos los modelos fallaron. Último error: ${lastError}`);
+                    }
+                };
+
+                const result = await bdpvGenerator.generatePresentation(data, callAI);
+
+                if (result.success) {
+                    // Auto-open the file
+                    await bdpvGenerator.openPresentation(result.filePath);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        status: 'success',
+                        filename: result.filename,
+                        filePath: result.filePath
+                    }));
+                } else {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: result.error }));
+                }
+            } catch (e) {
+                serverLog('ERROR', `❌ [BDPV] Error: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // POST /api/bdpv/open — Abre archivo generado
+    if (pathname === '/api/bdpv/open' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { filePath } = JSON.parse(body);
+                await bdpvGenerator.openPresentation(filePath);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'ok' }));
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
             }
         });
         return;

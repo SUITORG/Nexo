@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <!-- Chart.js for Business Dashboard -->
+    <script src="https://js.stripe.com/v3/"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- AI Content Moderation (v16.7.24) -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
@@ -660,6 +661,10 @@
                                     onclick="app.ui.setPosPaymentMethod('Transferencia')">
                                     <i class="fas fa-university"></i> Transf.
                                 </button>
+                                <button type="button" class="pay-btn" data-value="Tarjeta"
+                                    onclick="app.ui.setPosPaymentMethod('Tarjeta')">
+                                    <i class="fas fa-credit-card"></i> Tarjeta
+                                </button>
                             </div>
                             <!-- Hidden input to maintain compatibility with existing logic -->
                             <input type="hidden" id="pos-pay-method" value="Efectivo">
@@ -671,6 +676,15 @@
                                 style="margin-top: 10px; background: #e3f2fd; padding:10px; border-radius:8px; font-size: 0.8rem; border: 1px solid #bbdefb;">
                                 <b>Datos de Transferencia:</b>
                                 <div id="pos-bank-details-text"></div>
+                            </div>
+                            <!-- Stripe Card Element (POS) -->
+                            <div id="pos-stripe-card-block" class="hidden"
+                                style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                                <p style="font-size:0.7rem; text-transform:uppercase; color:#6c757d; margin:0 0 8px 0;">
+                                    <i class="fas fa-lock"></i> Datos de Tarjeta
+                                </p>
+                                <div id="pos-stripe-element" style="padding: 10px; background: white; border: 1px solid #ced4da; border-radius: 6px;"></div>
+                                <div id="pos-stripe-errors" style="color: #dc3545; font-size: 0.75rem; margin-top: 6px;"></div>
                             </div>
                             <!-- CONTROL DE CAJA v5.7.1 -->
                             <div id="pos-cash-control"
@@ -1170,8 +1184,20 @@
                                     onclick="app.ui.setPublicPaymentMethod('Transferencia')">
                                     <i class="fas fa-university"></i> Transf.
                                 </button>
+                                <button type="button" class="pay-btn" data-value="Tarjeta"
+                                    onclick="app.ui.setPublicPaymentMethod('Tarjeta')">
+                                    <i class="fas fa-credit-card"></i> Tarjeta
+                                </button>
                             </div>
                             <input type="hidden" id="pay-method" value="Efectivo">
+                        </div>
+                        <!-- Stripe Card Element (hidden until Tarjeta selected) -->
+                        <div id="stripe-card-block" class="hidden" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 1px solid #dee2e6;">
+                            <p style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:#6c757d; margin:0 0 10px 0;">
+                                <i class="fas fa-lock"></i> Datos de Tarjeta
+                            </p>
+                            <div id="stripe-card-element" style="padding: 12px; background: white; border: 1px solid #ced4da; border-radius: 8px;"></div>
+                            <div id="stripe-card-errors" style="color: #dc3545; font-size: 0.8rem; margin-top: 8px;"></div>
                         </div>
                         <div id="bank-info-display" class="hidden"
                             style="background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #bbdefb; animation: fadeIn 0.3s;">

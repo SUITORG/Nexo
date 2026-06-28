@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>Test – Presentación</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-family:'DM Sans',sans-serif;background:#fff;color:#000}
+body{overflow:hidden;height:100vh}
+:root{
+  --blue:#003366;
+  --red:#cc0000;
+  --white:#fff;
+}
+#progress{position:fixed;top:0;left:0;height:4px;background:var(--blue);z-index:1000}
+#dots{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:1000}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,.3);cursor:pointer}
+.dot.active{background:var(--blue)}
+.slide{
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  padding:clamp(1rem,3vw,2rem);
+  gap:clamp(1rem,2vw,2rem);
+  transition:transform .5s ease;
+}
+.slide h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,4rem);color:var(--blue)}
+.slide h2{font-size:clamp(1.5rem,4vw,2.5rem);color:var(--red)}
+.slide p{font-size:clamp(1rem,2vw,1.5rem);line-height:1.6;text-align:center}
+.slide img{max-width:clamp(300px,80vw,600px);height:auto;border-radius:8px}
+.card{background:var(--white);border:1px solid #e0e0e0;border-radius:8px;padding:clamp(1rem,2vw,1.5rem);box-shadow:0 4px 6px rgba(0,0,0,.1);width:clamp(200px,30vw,250px)}
+.card h3{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.2rem,3vw,1.5rem);color:var(--blue);margin-bottom:0.5rem}
+.card p{font-size:clamp(0.9rem,1.5vw,1.2rem);color:#555}
+.grid{display:flex;gap:clamp(1rem,2vw,2rem);flex-wrap:wrap;justify-content:center}
+.number{position:fixed;bottom:20px;right:20px;font-size:clamp(1rem,2vw,1.5rem);color:rgba(0,0,0,.6)}
+#editBtn{position:fixed;top:20px;left:20px;background:var(--red);color:#fff;padding:0.5rem 1rem;border:none;border-radius:4px;cursor:pointer;font-size:clamp(0.9rem,1.5vw,1.2rem);user-select:none}
+@media (prefers-reduced-motion: reduce){
+  .slide{transition:none}
+}
+@media (max-height:700px){
+  .slide{font-size:0.9rem}
+}
+@media (max-height:600px){
+  .slide{font-size:0.8rem}
+}
+@media (max-height:500px){
+  .slide{font-size:0.7rem}
+}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease-out,transform .6s ease-out}
+.reveal.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="dots"></div>
+<div id="slides">
+  <!-- Slide 1: Portada -->
+  <section class="slide" data-index="0">
+    <h1 class="reveal">Test</h1>
+    <h2 class="reveal">Tecnologia — General — Monterrey</h2>
+    <img class="reveal" src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" alt="Oficina corporativa">
+  </section>
+  <!-- Slide 2: Introducción -->
+  <section class="slide" data-index="1">
+    <h1 class="reveal">Quiénes Somos</h1>
+    <p class="reveal">Somos una empresa de tecnología enfocada en soluciones sostenibles y eficientes para Monterrey y más allá.</p>
+    <img class="reveal" src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80" alt="Baterías de litio">
+  </section>
+  <!-- Slide 3: Servicios -->
+  <section class="slide" data-index="2">
+    <h1 class="reveal">Nuestros Servicios</h1>
+    <div class="grid">
+      <div class="card reveal"><h3>Energía Solar</h3><p>Instalaciones de paneles solares residenciales y comerciales.</p></div>
+      <div class="card reveal"><h3>Almacenamiento</h3><p>Baterías de litio de alta capacidad.</p></div>
+      <div class="card reveal"><h3>Consultoría</h3><p>Asesoría para optimizar consumo energético.</p></div>
+    </div>
+  </section>
+  <!-- Slide 4: Solución 1 -->
+  <section class="slide" data-index="3">
+    <h1 class="reveal">Energía Solar en el Techo</h1>
+    <img class="reveal" src="https://images.unsplash.com/photo-1581091226825-a6a2a5a0b1b0?w=800&q=80" alt="Energía solar techo">
+    <p class="reveal">Integra paneles solares directamente en la infraestructura.</p>
+    <p class="reveal"><strong>Pros:</strong> Reducción de facturas, energía limpia.</p>
+    <p class="reveal"><strong>Contras:</strong> Necesita espacio y mantenimiento.</p>
+  </section>
+  <!-- Slide 5: Solución 2 -->
+  <section class="slide" data-index="4">
+    <h1 class="reveal">Planta de Energía</h1>
+    <img class="reveal" src="https://images.unsplash.com/photo-1519552928909-672ca2c4d6a6?w=800&q=80" alt="Planta de energía">
+    <p class="reveal">Generación de energía a escala industrial.</p>
+    <p class="reveal"><strong>Pros:</strong> Alta capacidad, costos unitarios bajos.</p>
+    <p class="reveal"><strong>Contras:</strong> Alto consumo inicial, regulaciones.</p>
+  </section>
+  <!-- Slide 6: Solución 3 -->
+  <section class="slide" data-index="5">
+    <h1 class="reveal">Energía Eólica</h1>
+    <img class="reveal" src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&q=80" alt="Energía eólica">
+    <p class="reveal">Uso de turbinas eólicas para generación limpia.</p>
+    <p class="reveal"><strong>Pros:</strong> Renovable, bajo CO₂.</p>
+    <p class="reveal"><strong>Contras:</strong> Dependencia del viento, ruido.</p>
+  </section>
+  <!-- Slide 7: Comparativa -->
+  <section class="slide" data-index="6">
+    <h1 class="reveal">Comparativa Segmentos</h1>
+    <div class="grid">
+      <div class="card reveal"><h3>Negocios</h3><p>Energía Solar + Almacenamiento.</p></div>
+      <div class="card reveal"><h3>Residencias</h3><p>Paneles solares, baterías.</p></div>
+      <div class="card reveal"><h3>Industria</h3><p>Planta eólica + solar.</p></div>
+    </div>
+  </section>
+  <!-- Slide 8: Mejor Opción -->
+  <section class="slide" data-index="7">
+    <h1 class="reveal">Mejor Costo-Beneficio</h1>
+    <p class="reveal">Combinar paneles solares con baterías reduce costos y aumenta autonomía.</p>
+    <img class="reveal" src="https://images.unsplash.com/photo-1541888942125-2bb1070e7a07?w=800&q=80" alt="Construcción industrial">
+  </section>
+  <!-- Slide 9: Por qué Monterrey -->
+  <section class="slide" data-index="8">
+    <h1 class="reveal">¿Por qué Monterrey?</h1>
+    <p class="reveal">Ubicación estratégica, clima favorable y fuerte industria manufacturera.</p>
+    <img class="reveal" src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80" alt="Paneles solares">
+  </section>
+  <!-- Slide 10: Contacto -->
+  <section class="slide" data-index="9">
+    <h1 class="reveal">Contáctanos</h1>
+    <p class="reveal">Teléfono: (No especificado)</p>
+    <p class="reveal">Email: info@test.com</p>
+    <p class="reveal">Visítanos en Monterrey.</p>
+    <img class="reveal" src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" alt="Oficina corporativa">
+  </section>
+</div>
+<div id="editBtn" contenteditable="true" title="Editar contenido">✏️</div>
+<div class="number" id="slideNumber">01 / 10</div>
+<script>
+const slides=document.querySelectorAll('.slide');
+let current=0;
+const total=slides.length;
+const progress=document.getElementById('progress');
+const dots=document.getElementById('dots');
+const slideNumber=document.getElementById('slideNumber');
+function update(){slides.forEach((s,i)=>{s.style.transform=`translateY(-${current*100}vh)`;});progress.style.width=`${(current+1)/total*100}%`;dots.querySelectorAll('.dot').forEach((d,i)=>{d.classList.toggle('active',i===current);});slideNumber.textContent=`${String(current+1).padStart(2,'0')} / ${String(total).padStart(2,'0')};}
+for(let i=0;i<total;i++){const d=document.createElement('div');d.className='dot';d.addEventListener('click',()=>{current=i;update();});dots.appendChild(d);}
+function next(){if(current<total-1){current++;update();}}
+function prev(){if(current>0){current--;update();}}
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){next();}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){prev();}
+  if(e.ctrlKey&&e.key==='s'){e.preventDefault();localStorage.setItem('content',document.body.innerHTML);alert('Guardado');}
+});
+window.addEventListener('wheel',e=>{
+  if(e.deltaY>0){next();}else{prev();}
+});
+const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');}});},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+const editBtn=document.getElementById('editBtn');
+editBtn.addEventListener('blur',()=>{localStorage.setItem('content',document.body.innerHTML);});
+const saved=localStorage.getItem('content');
+if(saved){document.body.innerHTML=saved;update();}
+update();
+</script>
+</body>
+</html>

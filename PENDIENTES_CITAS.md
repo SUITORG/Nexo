@@ -25,3 +25,13 @@
 
 - [ ] Recordatorios automáticos 24h antes vía WhatsApp
 - [ ] Dashboard web para ver citas por empresa
+
+---
+
+# Pendientes — Migración CampanasAi a Supabase
+
+## 🔴 Pendiente de ti
+
+- [ ] **Redeployar GAS**: `clasp push` en `CampanasAi/` para activar el endpoint `sync_industrias`
+- [ ] Ejecutar: `node CampanasAi/scripts/sync-gas.js` para sincronizar industrias a Google Sheets (pestaña "Industrias")
+- [ ] Verificar que la pestaña "Industrias" apareció en el Google Sheet con los datos

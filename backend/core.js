@@ -6,15 +6,17 @@
 
 /** 
  * 🛠️ CONFIGURACIÓN DE SEGURIDAD (v16.10.27)
- * Ejecuta esta función SOLO UNA VEZ en tu editor de Google Apps Script 
- * para guardar tu llave de OpenRouter de forma segura.
+ * La llave se lee desde las Script Properties, configuradas vía .env.
+ * Para establecerla: PropertiesService.getScriptProperties().setProperty('OPENROUTER_API_KEY', 'sk-or-v1-...');
  */
 function setupOpenRouterKey() {
-  const key = "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";
-  PropertiesService.getScriptProperties().setProperty('OPENROUTER_API_KEY', key);
+  const key = PropertiesService.getScriptProperties().getProperty('OPENROUTER_API_KEY');
+  if (!key) {
+    Logger.log("❌ OPENROUTER_API_KEY no encontrada en Script Properties. Configúrala en .env");
+    return;
+  }
   PropertiesService.getScriptProperties().setProperty('USE_OPENROUTER', 'true');
-  Logger.log("✅ [SEGURIDAD] OPENROUTER_API_KEY guardada permanentemente en Script Properties.");
-  return "Llave guardada con éxito. Ya puedes borrar esta función o comentar la llave.";
+  Logger.log("✅ [SEGURIDAD] OPENROUTER_API_KEY ya configurada en Script Properties.");
 }
 
 

@@ -1,4 +1,74 @@
 app.pos = {
+    // =====================================================================
+    // 💳 STRIPE PAYMENT INTEGRATION (Frontend)
+    // =====================================================================
+    stripe: {
+        stripeInstance: null,
+        elements: null,
+        cardElement: null,
+        mounted: false,
+
+        init: async (companyId) => {
+            if (app.pos.stripe.stripeInstance) return;
+            try {
+                const res = await fetch(`/api/stripe/config?company_id=${companyId}`);
+                const config = await res.json();
+                if (!config.publishableKey) return;
+                app.pos.stripe.stripeInstance = Stripe(config.publishableKey);
+            } catch (e) {
+                console.error('Stripe init error:', e);
+            }
+        },
+
+        mountElement: (containerId) => {
+            if (!app.pos.stripe.stripeInstance) return;
+            if (app.pos.stripe.mounted) return;
+            const container = document.getElementById(containerId);
+            if (!container || container.hasChildNodes()) return;
+            app.pos.stripe.elements = app.pos.stripe.stripeInstance.elements();
+            app.pos.stripe.cardElement = app.pos.stripe.elements.create('card', {
+                style: {
+                    base: { fontSize: '16px', color: '#32325d', fontFamily: 'Arial, sans-serif' }
+                }
+            });
+            app.pos.stripe.cardElement.mount(`#${containerId}`);
+            app.pos.stripe.mounted = true;
+        },
+
+        unmount: () => {
+            if (app.pos.stripe.cardElement) {
+                app.pos.stripe.cardElement.unmount();
+                app.pos.stripe.cardElement = null;
+                app.pos.stripe.elements = null;
+                app.pos.stripe.mounted = false;
+            }
+        },
+
+        processPayment: async (amount, companyId) => {
+            if (!app.pos.stripe.stripeInstance || !app.pos.stripe.cardElement) {
+                throw new Error('Stripe no inicializado');
+            }
+            const res = await fetch('/api/stripe/create-payment-intent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, company_id: companyId })
+            });
+            const intent = await res.json();
+            if (!intent.clientSecret) throw new Error(intent.error || 'Error al crear pago');
+
+            const { error, paymentIntent } = await app.pos.stripe.stripeInstance.confirmCardPayment(
+                intent.clientSecret,
+                { payment_method: { card: app.pos.stripe.cardElement } }
+            );
+            if (error) throw new Error(error.message);
+
+            if (paymentIntent.status === 'succeeded') {
+                return { id: paymentIntent.id, status: 'succeeded' };
+            }
+            throw new Error('Pago no completado: ' + paymentIntent.status);
+        }
+    },
+
     addToCart: (id) => {
         const userRole = (app.state.currentUser?.id_rol || "").toString().toUpperCase();
         if (userRole === 'DELIVERY' || (app.state.currentUser?.nombre || "").toUpperCase().includes('REPARTIDOR')) {
@@ -36,8 +106,8 @@ app.pos = {
     clearCart: () => {
         app.state.cart = [];
         app.state.deliveryMethod = 'DOMICILIO';
-        app.state.currentLeadId = null; // Reset CRM match
-        // Reset Payment & Field Defaults
+        app.state.currentLeadId = null;
+        app.pos.stripe.unmount();
         app.ui.setPosPaymentMethod('Efectivo');
         const pFolio = document.getElementById('pos-pay-folio');
         if (pFolio) pFolio.value = '';
@@ -235,6 +305,24 @@ app.pos = {
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
             btn.disabled = true;
         }
+        // 💳 Stripe payment processing
+        let stripePaymentId = '';
+        if (method === 'Tarjeta') {
+            try {
+                const cartSubtotal = app.state.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+                const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+                const deliveryFee = isPickup ? 0 : (parseFloat(company?.costo_envio) || 0);
+                const cartTotal = cartSubtotal + deliveryFee;
+                await app.pos.stripe.init(app.state.companyId);
+                const result = await app.pos.stripe.processPayment(cartTotal, app.state.companyId);
+                stripePaymentId = result.id;
+                app.ui.updateConsole(`STRIPE_OK: ${result.id}`);
+            } catch (e) {
+                app.ui.updateConsole("STRIPE_FAIL", true);
+                if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+                return alert('Error de pago con tarjeta: ' + e.message);
+            }
+        }
         // 1. Create Lead (o buscar existente)
         const leadData = {
             id_empresa: app.state.companyId,
@@ -310,11 +398,11 @@ app.pos = {
                     id_empresa: app.state.companyId,
                     monto: cartTotal,
                     concepto: `Venta POS - ${name}`,
-                    metodo_pago: method,
-                    folio: confirmNum || "CAJA",
-                    referencia: isStaffSale ? "STAFF" : "CLIENTE-URL",
-                    pago_con: document.getElementById('pos-cash-input')?.value || 0,
-                    cambio: (document.getElementById('pos-cash-change')?.innerText || "$0.00").replace('$', '')
+                    metodo_pago: method === 'Tarjeta' ? 'Tarjeta Stripe' : method,
+                    folio: method === 'Tarjeta' ? stripePaymentId.slice(-8) : (confirmNum || "CAJA"),
+                    referencia: method === 'Tarjeta' ? `STRIPE:${stripePaymentId}` : (isStaffSale ? "STAFF" : "CLIENTE-URL"),
+                    pago_con: method === 'Tarjeta' ? cartTotal : (document.getElementById('pos-cash-input')?.value || 0),
+                    cambio: method === 'Tarjeta' ? 0 : (document.getElementById('pos-cash-change')?.innerText || "$0.00").replace('$', '')
                 },
                 stockUpdates: stockUpdates
             };
@@ -445,16 +533,17 @@ app.pos = {
 
             // 3. INSERTAR PAGO (Tabla Pagos usa PK compuesta: id_empresa + id_proyecto)
             console.log('🔵 [SUPABASE_CHECKOUT] 4/6 - Insertando Pago...');
+            const stripeMethod = method === 'Tarjeta';
             const paymentPayload = {
                 id_empresa: app.state.companyId,
                 id_proyecto: projectId,
                 monto: cartTotal,
-                metodo_pago: method,
-                folio: confirmNum || "CAJA",
-                referencia: isStaffSale ? "STAFF" : "CLIENTE-URL",
+                metodo_pago: stripeMethod ? 'Tarjeta Stripe' : method,
+                folio: stripeMethod ? stripePaymentId.slice(-8) : (confirmNum || "CAJA"),
+                referencia: stripeMethod ? `STRIPE:${stripePaymentId}` : (isStaffSale ? "STAFF" : "CLIENTE-URL"),
                 fecha_pago: new Date().toISOString(),
-                pago_con: parseFloat(document.getElementById('pos-cash-input')?.value || 0),
-                cambio: parseFloat((document.getElementById('pos-cash-change')?.innerText || "$0.00").replace('$', '') || 0)
+                pago_con: stripeMethod ? cartTotal : parseFloat(document.getElementById('pos-cash-input')?.value || 0),
+                cambio: stripeMethod ? 0 : parseFloat((document.getElementById('pos-cash-change')?.innerText || "$0.00").replace('$', '') || 0)
             };
             const paymentRes = await fetch(`${SB_URL}/rest/v1/Pagos`, {
                 method: 'POST',
@@ -480,9 +569,9 @@ app.pos = {
                 id_proyecto: projectId,
                 monto: cartTotal,
                 concepto: `Venta POS - ${name}`,
-                metodo_pago: method,
-                folio: confirmNum || "CAJA",
-                referencia: isStaffSale ? "STAFF" : "CLIENTE-URL",
+                metodo_pago: stripeMethod ? 'Tarjeta Stripe' : method,
+                folio: paymentPayload.folio,
+                referencia: paymentPayload.referencia,
                 fecha_pago: new Date().toISOString(),
                 activo: "TRUE",
                 pago_con: paymentPayload.pago_con,
@@ -589,13 +678,13 @@ app.pos = {
         const confirmBlock = document.getElementById('confirm-block');
         const bankDisplay = document.getElementById('bank-info-display');
         const bankText = document.getElementById('bank-details-text');
-        // Toggle NñÂ‚Â° ConfirmaciñÂƒÂ³n block
+        const stripeBlock = document.getElementById('stripe-card-block');
+        // Toggle blocks based on method
         if (confirmBlock) confirmBlock.classList.toggle('hidden', method !== 'Transferencia');
-        // Toggle & Populate Bank Info
+        if (stripeBlock) stripeBlock.classList.toggle('hidden', method !== 'Tarjeta');
         if (bankDisplay && bankText) {
             if (method === 'Transferencia') {
                 const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
-                // Support multiple casing formats for bank information
                 const bName = company.infobanco || company.Info_Banco || company.info_banco;
                 const bAcc = company.infocuenta || company.Info_Cuenta || company.info_cuenta || "Pendiente";
                 const bNom = company.infonom || company.InfoNom || company.info_nom || company.Info_Nom || "";
@@ -613,6 +702,9 @@ app.pos = {
             } else {
                 bankDisplay.classList.add('hidden');
             }
+        }
+        if (method === 'Tarjeta') {
+            app.pos.stripe.mountElement('stripe-card-element');
         }
     },
     openCheckout: () => {
@@ -900,11 +992,15 @@ app.pos = {
         const method = document.getElementById('pos-pay-method').value;
         const folioBlock = document.getElementById('pos-folio-container');
         const bankBlock = document.getElementById('pos-bank-info-display');
+        const stripeBlock = document.getElementById('pos-stripe-card-block');
+        const cashControl = document.getElementById('pos-cash-control');
         if (!folioBlock || !bankBlock) return;
 
         if (method === 'Transferencia') {
             folioBlock.classList.remove('hidden');
             bankBlock.classList.remove('hidden');
+            if (stripeBlock) stripeBlock.classList.add('hidden');
+            if (cashControl) cashControl.classList.remove('hidden');
             const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
             const bName = company?.infobanco || company?.Info_Banco || "Pendiente";
             const bAcc = company?.infocuenta || company?.Info_Cuenta || "";
@@ -912,9 +1008,19 @@ app.pos = {
         } else if (method === 'Terminal') {
             folioBlock.classList.remove('hidden');
             bankBlock.classList.add('hidden');
+            if (stripeBlock) stripeBlock.classList.add('hidden');
+            if (cashControl) cashControl.classList.remove('hidden');
+        } else if (method === 'Tarjeta') {
+            folioBlock.classList.add('hidden');
+            bankBlock.classList.add('hidden');
+            if (stripeBlock) stripeBlock.classList.remove('hidden');
+            if (cashControl) cashControl.classList.add('hidden');
+            app.pos.stripe.mountElement('pos-stripe-element');
         } else {
             folioBlock.classList.add('hidden');
             bankBlock.classList.add('hidden');
+            if (stripeBlock) stripeBlock.classList.add('hidden');
+            if (cashControl) cashControl.classList.remove('hidden');
         }
     },
 
@@ -922,6 +1028,7 @@ app.pos = {
         const select = document.getElementById('pos-pay-method');
         if (select) select.value = method;
         app.pos.togglePosFolio();
+        if (method !== 'Tarjeta') app.pos.stripe.unmount();
         // Sync Visual Buttons in Staff sidebar
         const sidebar = document.getElementById('pos-ticket-sidebar');
         if (sidebar) {
@@ -934,6 +1041,7 @@ app.pos = {
     setPublicPaymentMethod: (method) => {
         const select = document.getElementById('pay-method');
         if (select) select.value = method;
+        if (method !== 'Tarjeta') app.pos.stripe.unmount();
         if (app.pos.handlePayMethodChange) app.pos.handlePayMethodChange();
         // Sync Visual Buttons
         document.querySelectorAll('.pay-btn').forEach(btn => {

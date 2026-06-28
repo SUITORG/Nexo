@@ -390,19 +390,140 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Manejador del Switch AI / BD / BDPR
+    // Manejador del Switch AI / BD / BDPR / IMG
     document.getElementById('btnModeAi').addEventListener('click', () => setWorkMode('Ai'));
     document.getElementById('btnModeBd').addEventListener('click', () => setWorkMode('BD'));
     document.getElementById('btnModeBdpr').addEventListener('click', () => setWorkMode('BDPR'));
+    const btnModeImg = document.getElementById('btnModeImg');
+    if (btnModeImg) btnModeImg.addEventListener('click', () => setWorkMode('IMG'));
+    const btnModeBdsmt = document.getElementById('btnModeBdsmt');
+    if (btnModeBdsmt) btnModeBdsmt.addEventListener('click', () => setWorkMode('BDSMT'));
+    const btnModeBdpv = document.getElementById('btnModeBdpv');
+    if (btnModeBdpv) btnModeBdpv.addEventListener('click', () => setWorkMode('BDPV'));
+
+    // BDSMT: Buscar Tendencias button
+    const fetchTrendsBtn = document.getElementById('fetchTrendsBtn');
+    if (fetchTrendsBtn) {
+        fetchTrendsBtn.addEventListener('click', async () => {
+            const niche = aiIndustry.value;
+            if (!niche) {
+                showToast('❌ Selecciona un nicho/industria primero', 'error');
+                return;
+            }
+            const subNiche = document.getElementById('bdsmtSubNicho').value;
+            const region = document.getElementById('bdsmtRegion').value.trim() || 'México';
+
+            const trendsContainer = document.getElementById('trendsContainer');
+            const loader = document.querySelector('.trends-loader');
+
+            if (loader) loader.style.display = 'inline-block';
+            if (trendsContainer) {
+                trendsContainer.style.display = 'block';
+                trendsContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-dim);">🔍 Buscando tendencias en Google Trends y Reddit...</div>';
+            }
+
+            try {
+                const response = await fetch('/api/trends/fetch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ niche, subNiche, region })
+                });
+                const json = await response.json();
+                if (json.status !== 'success') throw new Error(json.message || 'Error');
+
+                const { trends } = json.data;
+                if (!trends || trends.length === 0) {
+                    trendsContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-dim);">😕 No se encontraron tendencias. Intenta con otro nicho o región.</div>';
+                    showToast('⚠️ No se encontraron tendencias', 'warning');
+                    if (loader) loader.style.display = 'none';
+                    return;
+                }
+
+                let html = `<div style="margin-bottom:0.5rem;font-size:0.75rem;color:var(--text-dim);">Selecciona una tendencia para usarla como tema:</div>`;
+                trends.forEach((t, i) => {
+                    const checked = i === 0 ? 'checked' : '';
+                    html += `
+                        <label class="trend-item" style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;margin-bottom:0.5rem;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:all 0.2s;">
+                            <input type="radio" name="trendSelect" value="${i}" ${checked} style="margin-top:0.25rem;accent-color:#6366f1;">
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-weight:600;font-size:0.85rem;color:var(--text);">${t.titulo}</div>
+                                <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.15rem;">${t.descripcion}</div>
+                                <div style="font-size:0.65rem;color:var(--primary);margin-top:0.25rem;">📡 ${t.fuente} ${t.score > 0 ? `· Score: ${t.score}` : ''}</div>
+                            </div>
+                        </label>
+                    `;
+                });
+
+                html += `<div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
+                    <button type="button" id="applyTrendBtn" class="secondary-btn" style="flex:1;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;padding:0.6rem;">
+                        ✅ Usar tendencia seleccionada
+                    </button>
+                </div>`;
+
+                trendsContainer.innerHTML = html;
+
+                // Apply selected trend
+                const applyBtn = document.getElementById('applyTrendBtn');
+                if (applyBtn) {
+                    applyBtn.addEventListener('click', () => {
+                        const selected = document.querySelector('input[name="trendSelect"]:checked');
+                        if (!selected) {
+                            showToast('❌ Selecciona una tendencia', 'error');
+                            return;
+                        }
+                        const idx = parseInt(selected.value);
+                        const trend = trends[idx];
+                        window.selectedTrend = trend;
+                        aiTheme.value = trend.titulo;
+                        trendsContainer.style.display = 'none';
+                        showToast('✅ Tendencia seleccionada: ' + trend.titulo.substring(0, 50) + '...', 'success');
+                    });
+                }
+
+                showToast(`📊 ${trends.length} tendencias encontradas`, 'success');
+            } catch (e) {
+                showToast('❌ Error buscando tendencias: ' + e.message, 'error');
+                if (trendsContainer) {
+                    trendsContainer.innerHTML = `<div style="text-align:center;padding:1rem;color:#ef4444;">❌ Error: ${e.message}</div>`;
+                }
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        });
+    }
 
     // Sincronizar estado inicial
     setWorkMode('Ai');
 
-    // Cargar clasificación de industrias
-    fetch('/config/industrias.json')
+    // Cargar clasificación de industrias desde Supabase
+    fetch('/api/industrias')
         .then(r => r.json())
-        .then(data => { initCategoriaLookup(data); showCategoriaHint(); updateEspecializacionSelect(); })
-        .catch(() => {});
+        .then(res => {
+            if (res.status !== 'success' || !res.data) throw new Error('API error');
+            const data = {
+                clasificacion: res.data.map(item => ({
+                    categoria: item.categoria,
+                    icono: item.icono || '',
+                    descripcion: item.descripcion || '',
+                    subclasificaciones: (item.nichos || []).map(n => ({
+                        valor: n.valor,
+                        etiqueta: n.etiqueta,
+                        sinonimos: n.sinonimos || [],
+                        especializaciones: n.especializaciones || []
+                    }))
+                }))
+            };
+            initCategoriaLookup(data);
+            showCategoriaHint();
+            updateEspecializacionSelect();
+        })
+        .catch(() => {
+            // Fallback: cargar JSON local si Supabase falla
+            fetch('/config/industrias.json')
+                .then(r => r.json())
+                .then(data => { initCategoriaLookup(data); showCategoriaHint(); updateEspecializacionSelect(); })
+                .catch(() => {});
+        });
 
     // Cargar historial al inicio
     fetchHistory();
@@ -410,11 +531,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listener para Refrescar Historial
     refreshHistoryBtn.addEventListener('click', fetchHistory);
 
+    // Event Listener para selección de receta (IMAGINACION)
+    const recipeSelect = document.getElementById('recipeSelect');
+    if (recipeSelect) {
+        recipeSelect.addEventListener('change', function() {
+            const details = document.getElementById('recipeDetails');
+            if (!this.value) { details.style.display = 'none'; return; }
+            details.style.display = 'block';
+            const val = this.value;
+            // Buscar receta en window.recetasData
+            const recetas = window.recetasData || [];
+            const recipe = recetas.find(r => r.id == val);
+            if (!recipe) return;
+            document.getElementById('recipeOrden').value = recipe.orden || 'aleatorio';
+            document.getElementById('recipeDuracion').value = recipe.duracion_total || '30';
+            document.getElementById('recipeRitmo').value = recipe.ritmo || 'musica';
+            document.getElementById('recipeFiltro').value = recipe.filtro || 'ninguno';
+            document.getElementById('recipeTransicion').value = recipe.transicion || 'corte_brusco';
+            document.getElementById('recipeAnimacion').checked = !!recipe.animacion;
+        });
+    }
+
     // Event Listener para Descargar Kit
     downloadBtn.addEventListener('click', downloadCampaignKit);
 
     // Event Listener para Generación IA
     generateBtn.addEventListener('click', generateAIContent);
+
+    // Event Listener para IMG de Imaginación
+    const imaginationBtn = document.getElementById('imaginationBtn');
+    if (imaginationBtn) imaginationBtn.addEventListener('click', generateImaginationVideo);
+
+    // Event Listener para Agente de Tendencias
+    const agentBtn = document.getElementById('agentBtn');
+    if (agentBtn) agentBtn.addEventListener('click', ejecutarAgente);
+
+    // Cargar recetas
+    loadRecetas();
 
     // Event Listener para Limpiar Formulario
     const clearBtn = document.getElementById('clearBtn');
@@ -476,6 +629,90 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function generateAIContent() {
+    // --- MODO BDPV: generar presentación HTML ---
+    if (currentMode === 'BDPV') {
+        const company = document.getElementById('companyName').value.trim();
+        if (!company) {
+            showToast('❌ Selecciona una empresa/marca', 'error');
+            return;
+        }
+        setAiLoading(true);
+        try {
+            // Collect BDPV data
+            const website = document.getElementById('webSite')?.value.trim() || '';
+            const phone = document.getElementById('contactPhone')?.value.trim() || '';
+            const logoFile = document.getElementById('companyLogoFile')?.files?.[0];
+            const logoUrl = document.getElementById('companyLogo')?.value.trim() || '';
+            const noLogo = document.getElementById('bdpvNoLogo')?.checked || false;
+            const region = document.getElementById('bdpvRegion')?.value.trim() || 'Monterrey, N.L., México';
+            const subNicho = document.getElementById('bdpvSubNicho')?.value || document.getElementById('bdpvSubNichoText')?.value.trim() || '';
+            const autoPhotos = document.getElementById('bdpvAutoPhotos')?.checked || false;
+            const industry = document.getElementById('aiIndustry')?.value || '';
+            const industryLabel = industry ? document.querySelector(`#aiIndustry option[value="${industry}"]`)?.textContent || industry : '';
+
+            // Get selected skills
+            const skills = Array.from(document.querySelectorAll('.bdpv-skill:checked')).map(cb => cb.value);
+
+            // Get uploaded photos
+            const photoFiles = window.bdUploadedPhotos || [];
+
+            // Build payload
+            const payload = {
+                company,
+                website,
+                phone,
+                logoUrl,
+                noLogo,
+                region,
+                subNicho,
+                autoPhotos,
+                industry: industryLabel,
+                skills,
+                photoCount: photoFiles.length
+            };
+
+            const BDPV_BASE = `http://${location.hostname}:8000`;
+            const res = await fetch(`${BDPV_BASE}/api/bdpv/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast(`✅ Presentación generada: ${data.filename}`, 'success');
+                // Show link to open the file
+                if (data.filePath) {
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.textContent = `📂 Abrir: ${data.filename}`;
+                    link.style.cssText = 'display:block;margin-top:0.5rem;color:#60a5fa;text-align:center;font-size:0.9rem';
+                    link.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        await fetch(`${BDPV_BASE}/api/bdpv/open`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filePath: data.filePath })
+                        });
+                    });
+                    captionField.value = `✅ Presentación generada: ${data.filename}`;
+                    // Append link after caption
+                    const parent = captionField.parentElement;
+                    const existing = parent.querySelector('.bdpv-open-link');
+                    if (existing) existing.remove();
+                    link.className = 'bdpv-open-link';
+                    parent.appendChild(link);
+                }
+            } else {
+                showToast(`❌ Error: ${data.error || 'Desconocido'}`, 'error');
+            }
+        } catch (e) {
+            showToast(`❌ Error de conexión: ${e.message}`, 'error');
+        }
+        setAiLoading(false);
+        return;
+    }
+
     // --- MODO BDPR: tomar texto pegado, mostrar preview, sin IA ---
     if (currentMode === 'BDPR') {
         const text = captionField.value.trim();
@@ -494,6 +731,66 @@ async function generateAIContent() {
             showToast('👁️ Vista previa generada', 'success');
         } catch (e) {
             showToast('❌ Error al generar preview: ' + e.message, 'error');
+        } finally {
+            setAiLoading(false);
+        }
+        return;
+    }
+
+    // --- MODO BDSMT: generar basado en tendencia seleccionada ---
+    if (currentMode === 'BDSMT') {
+        const trend = window.selectedTrend;
+        if (!trend) {
+            showToast('❌ Primero busca y selecciona una tendencia', 'error');
+            return;
+        }
+        const company = document.getElementById('companyName').value.trim();
+        if (!company) {
+            showToast('❌ Selecciona una empresa/marca', 'error');
+            return;
+        }
+        const niche = aiIndustry.value;
+        if (!niche) {
+            showToast('❌ Selecciona un nicho/industria', 'error');
+            return;
+        }
+        const subNiche = document.getElementById('bdsmtSubNicho').value;
+        const region = document.getElementById('bdsmtRegion').value.trim() || 'México';
+        const platform = document.querySelector('.platform-tab.active').dataset.platform;
+        const format = document.querySelector('.format-tab.active').dataset.format;
+        const slides = aiSlides.value || 5;
+        const template = aiTemplate.value || 'storytelling';
+        const conciencia = document.getElementById('aiConciencia').value || 'Consciente_Solucion';
+        const phone = document.getElementById('contactPhone').value.trim();
+
+        setAiLoading(true);
+        try {
+            const response = await fetch('/api/trends/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    trend,
+                    niche,
+                    subNiche,
+                    region,
+                    slides: parseInt(slides),
+                    template,
+                    platform,
+                    format,
+                    conciencia,
+                    empresa: company,
+                    phone
+                })
+            });
+
+            const json = await response.json();
+            if (json.status !== 'success') throw new Error(json.message || 'Error en el servidor');
+
+            captionField.value = json.data.caption;
+            await renderCarouselFromJson(json.data);
+            showToast('✨ Campaña basada en tendencia generada', 'success');
+        } catch (e) {
+            showToast('❌ BDSMT: ' + e.message, 'error');
         } finally {
             setAiLoading(false);
         }
@@ -1242,14 +1539,51 @@ function setWorkMode(mode) {
     const aiBtn = document.getElementById('btnModeAi');
     const bdBtn = document.getElementById('btnModeBd');
     const bdprBtn = document.getElementById('btnModeBdpr');
+    const imgBtn = document.getElementById('btnModeImg');
     const container = document.getElementById('companyInputContainer');
     const bdPhotosContainer = document.getElementById('bdPhotosContainer');
     const genText = document.querySelector('.gen-text');
     const magicIcon = document.querySelector('.magic-icon');
+    const recipeSection = document.getElementById('recipeSection');
+    const generateBtn = document.getElementById('generateBtn');
+    const imaginationBtn = document.getElementById('imaginationBtn');
+    const previewSection = document.getElementById('previewSection');
+    const bdsmtSection = document.getElementById('bdsmtSection');
+
+    // DOM references for show/hide
+    const aiSection = document.querySelector('.ai-assistant-section');
+    const webField = document.getElementById('webSite')?.closest('.input-group') || document.getElementById('webSite')?.parentElement?.parentElement;
+    const phoneField = document.getElementById('contactPhone')?.closest('.input-group') || document.getElementById('contactPhone')?.parentElement?.parentElement;
+    const captionGroup = document.getElementById('caption')?.closest('.input-group') || document.getElementById('caption')?.parentElement;
+    const mediaGroup = document.getElementById('mediaUrl')?.closest('.input-group') || document.getElementById('mediaUrl')?.parentElement;
+    const dateGroup = document.getElementById('postDate')?.closest('.input-group') || document.getElementById('postDate')?.parentElement;
+    const formatMenu = document.querySelector('.format-menu')?.closest('.input-group');
+    const platformMenu = document.querySelector('.platform-menu')?.closest('.input-group');
 
     aiBtn.classList.remove('active');
     bdBtn.classList.remove('active');
     if (bdprBtn) bdprBtn.classList.remove('active');
+    if (imgBtn) imgBtn.classList.remove('active');
+    const bdsmtBtn = document.getElementById('btnModeBdsmt');
+    if (bdsmtBtn) bdsmtBtn.classList.remove('active');
+    const bdpvBtn = document.getElementById('btnModeBdpv');
+    if (bdpvBtn) bdpvBtn.classList.remove('active');
+
+    // Reset all sections to visible first
+    document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
+        const g = el.closest('.input-group');
+        if (g) g.style.display = '';
+    });
+    [webField, phoneField, captionGroup, mediaGroup, dateGroup, aiSection, bdPhotosContainer].forEach(el => {
+        if (el) el.style.display = '';
+    });
+    if (generateBtn) generateBtn.style.display = '';
+    if (imaginationBtn) imaginationBtn.style.display = 'none';
+    if (recipeSection) recipeSection.style.display = 'none';
+    if (previewSection) previewSection.style.display = 'none';
+    if (bdsmtSection) bdsmtSection.style.display = 'none';
+    const bdpvSection = document.getElementById('bdpvSection');
+    if (bdpvSection) bdpvSection.style.display = 'none';
 
     if (mode === 'Ai') {
         aiBtn.classList.add('active');
@@ -1291,15 +1625,294 @@ function setWorkMode(mode) {
         if (genText) genText.textContent = 'Generar con IA (Incluye Imágenes)';
         if (magicIcon) magicIcon.textContent = '🪄';
         captionField.placeholder = 'La IA escribirá aquí...';
+        loadCompanies().then(() => setupCompanyAutoFill());
     } else if (mode === 'BDPR') {
         bdprBtn.classList.add('active');
         console.log("✏️ Modo actual: BD Personal/Manual");
         if (genText) genText.textContent = 'Previsualizar Campaña';
         if (magicIcon) magicIcon.textContent = '👁️';
         captionField.placeholder = 'Escribe o pega la campaña aquí...';
+        loadCompanies().then(() => setupCompanyAutoFill());
+    } else if (mode === 'IMG') {
+        if (imgBtn) imgBtn.classList.add('active');
+        console.log("🎬 Modo actual: IMG de Imaginación");
+
+        // Company field as text input (for comments/text)
+        container.innerHTML = `
+            <label for="companyName">Texto / Comentario</label>
+            <input type="text" id="companyName" placeholder="Texto para el video (opcional)...">
+        `;
+
+        // Show format & platform (determinan dimensiones del video)
+        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
+            const g = el.closest('.input-group');
+            if (g) g.style.display = '';
+        });
+
+        // Hide irrelevant sections
+        if (webField) webField.style.display = 'none';
+        if (phoneField) phoneField.style.display = 'none';
+        if (captionGroup) captionGroup.style.display = 'none';
+        if (mediaGroup) mediaGroup.style.display = 'none';
+        if (dateGroup) dateGroup.style.display = 'none';
+        if (aiSection) aiSection.style.display = 'none';
+        if (bdPhotosContainer) bdPhotosContainer.style.display = 'none';
+        if (generateBtn) generateBtn.style.display = 'none';
+        if (imaginationBtn) imaginationBtn.style.display = '';
+        if (recipeSection) recipeSection.style.display = 'block';
+        if (previewSection) previewSection.style.display = 'none';
+    } else if (mode === 'BDSMT') {
+        if (bdsmtBtn) bdsmtBtn.classList.add('active');
+        console.log("📊 Modo actual: BDSMT — Marketing Basado en Tendencias");
+
+        // Like BD/BDPR: company select + photos
+        if (bdPhotosContainer) {
+            bdPhotosContainer.style.display = 'block';
+            if (typeof window.updateBdPhotosLabel === 'function') window.updateBdPhotosLabel();
+        }
+
+        container.innerHTML = `
+            <label for="companyName">Empresa / Marca</label>
+            <select id="companyName">
+                <option value="">-- Cargando desde BD... --</option>
+            </select>
+        `;
+
+        // Show format & platform
+        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
+            const g = el.closest('.input-group');
+            if (g) g.style.display = '';
+        });
+
+        // Show BDSMT section, hide recipe, show generate button
+        if (bdsmtSection) bdsmtSection.style.display = 'block';
+        if (recipeSection) recipeSection.style.display = 'none';
+        if (previewSection) previewSection.style.display = 'none';
+        if (aiSection) aiSection.style.display = '';
+        if (generateBtn) generateBtn.style.display = '';
+
+        // Clear trends container on mode enter
+        const trendsContainer = document.getElementById('trendsContainer');
+        if (trendsContainer) {
+            trendsContainer.style.display = 'none';
+            trendsContainer.innerHTML = '';
+        }
+
+        // caption placeholder and generate button text
+        if (genText) genText.textContent = 'Generar con IA (Basado en Tendencia)';
+        if (magicIcon) magicIcon.textContent = '📊';
+        captionField.placeholder = 'La IA generará contenido basado en la tendencia...';
+
+        // Reset selected trend
+        window.selectedTrend = null;
+
+        loadCompanies().then(() => setupCompanyAutoFill());
+    } else if (mode === 'BDPV') {
+        if (bdpvBtn) bdpvBtn.classList.add('active');
+        console.log("🎞️ Modo actual: BDPV — Presentación de Video HTML");
+
+        // Same company select + photos as BD
+        if (bdPhotosContainer) {
+            bdPhotosContainer.style.display = 'block';
+            if (typeof window.updateBdPhotosLabel === 'function') window.updateBdPhotosLabel();
+        }
+        container.innerHTML = `
+            <label for="companyName">Empresa / Marca</label>
+            <select id="companyName">
+                <option value="">-- Cargando desde BD... --</option>
+            </select>
+        `;
+
+        // Hide format & platform (not used in BDPV)
+        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
+            const g = el.closest('.input-group');
+            if (g) g.style.display = 'none';
+        });
+
+        // Hide multimedia production (voice, music, video, animation)
+        const prodSection = document.querySelector('.production-options');
+        if (prodSection) prodSection.style.display = 'none';
+
+        // Hide caption, media, date (presentation generates its own content)
+        if (captionGroup) captionGroup.style.display = 'none';
+        if (mediaGroup) mediaGroup.style.display = 'none';
+        if (dateGroup) dateGroup.style.display = 'none';
+
+        // Show BDPV section, hide recipe & BDSMT
+        if (bdpvSection) bdpvSection.style.display = 'block';
+        if (recipeSection) recipeSection.style.display = 'none';
+        if (previewSection) previewSection.style.display = 'none';
+        if (bdsmtSection) bdsmtSection.style.display = 'none';
+
+        // AI assistant: only show industry/niche field
+        if (aiSection) aiSection.style.display = 'block';
+        // Hide conciencia, template, slides, theme within AI section
+        const aiFields = aiSection ? aiSection.querySelectorAll('.input-wrapper') : [];
+        aiFields.forEach((el, i) => {
+            // Show all then hide specific ones by label
+            el.style.display = '';
+            const lbl = el.querySelector('label');
+            if (lbl) {
+                const txt = lbl.textContent.trim();
+                if (txt.includes('Conciencia') || txt.includes('Plantilla') || txt.includes('Slides') || txt.includes('Tema')) {
+                    el.style.display = 'none';
+                }
+            }
+        });
+
+        // Show generate button
+        if (generateBtn) generateBtn.style.display = '';
+        if (genText) genText.textContent = '🎞️ Generar Presentación HTML';
+        if (magicIcon) magicIcon.textContent = '🎞️';
+        captionField.placeholder = 'La IA generará la presentación...';
+
+        // Load sub-nicho options from industrias
+        if (typeof window.loadBdpvSubNicho === 'function') window.loadBdpvSubNicho();
+
+        loadCompanies().then(() => setupCompanyAutoFill());
+    }
+}
+
+async function loadRecetas() {
+    try {
+        const res = await fetch('/api/recetas');
+        const json = await res.json();
+        if (json.status !== 'success' || !json.data) throw new Error('API error');
+        window.recetasData = json.data;
+        const select = document.getElementById('recipeSelect');
+        select.innerHTML = '<option value="">-- Seleccionar receta --</option>';
+        json.data.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.textContent = r.nombre;
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        console.warn('⚠️ No se pudieron cargar recetas:', e.message);
+        document.getElementById('recipeSelect').innerHTML = '<option value="">Error al cargar recetas</option>';
+    }
+}
+
+async function generateImaginationVideo() {
+    const empresa = document.getElementById('companyName').value.trim();
+    const recipeSelect = document.getElementById('recipeSelect');
+    const recipeId = recipeSelect.value;
+    if (!recipeId) {
+        showToast('❌ Selecciona una receta primero', 'error');
+        return;
     }
 
-    loadCompanies().then(() => setupCompanyAutoFill());
+    // Build overrides from form
+    const overrides = {
+        orden: document.getElementById('recipeOrden').value,
+        duracion_total: document.getElementById('recipeDuracion').value,
+        ritmo: document.getElementById('recipeRitmo').value,
+        filtro: document.getElementById('recipeFiltro').value,
+        transicion: document.getElementById('recipeTransicion').value,
+        animacion: document.getElementById('recipeAnimacion').checked
+    };
+
+    // Get logo if uploaded
+    let logo_base64 = null;
+    if (uploadedLogoDataUrl) {
+        logo_base64 = uploadedLogoDataUrl;
+    } else {
+        const logoUrl = document.getElementById('companyLogo').value.trim();
+        if (logoUrl && logoUrl.startsWith('data:')) {
+            logo_base64 = logoUrl;
+        }
+    }
+
+    const btn = document.getElementById('imaginationBtn');
+    const loader = btn?.querySelector('.img-loader');
+    const btnText = btn?.querySelector('span:last-child');
+    if (btn) btn.disabled = true;
+    if (loader) loader.style.display = 'inline-block';
+    if (btnText) btnText.textContent = 'Generando...';
+
+    showToast('🎬 Generando video de imaginación...', 'info');
+
+    const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
+    const platform = document.querySelector('.platform-tab.active')?.dataset?.platform || 'Instagram';
+
+    try {
+        const res = await fetch('/api/video-imaginacion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                texto: empresa,
+                receta_id: parseInt(recipeId),
+                logo_base64,
+                formato: format,
+                plataforma: platform,
+                overrides
+            })
+        });
+
+        const data = await res.json();
+        if (data.status !== 'success' || !data.video) {
+            throw new Error(data.error || 'Error del servidor');
+        }
+
+        // Download the video
+        const b64 = data.video.split(',')[1];
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const blob = new Blob([bytes], { type: 'video/mp4' });
+        const filename = empresa ? `imaginacion_${empresa.replace(/\s+/g, '_')}.mp4` : `imaginacion_${Date.now()}.mp4`;
+        downloadFile(URL.createObjectURL(blob), filename);
+        showToast('✅ Video de imaginación generado y descargado', 'success');
+    } catch (e) {
+        showToast(`❌ Error: ${e.message}`, 'error');
+        console.error(e);
+    } finally {
+        if (btn) btn.disabled = false;
+        if (loader) loader.style.display = 'none';
+        if (btnText) btnText.textContent = 'Crear Video de Imaginación';
+    }
+}
+
+async function ejecutarAgente() {
+    const btn = document.getElementById('agentBtn');
+    const loader = btn?.querySelector('.agent-loader');
+    const btnText = btn?.querySelector('span:last-child');
+    if (btn) btn.disabled = true;
+    if (loader) loader.style.display = 'inline-block';
+    if (btnText) btnText.textContent = 'Buscando tendencias...';
+
+    showToast('🤖 Agente buscando tendencias...', 'info');
+
+    try {
+        const res = await fetch('/api/agent/tendencias', { method: 'POST' });
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.message || 'Error del agente');
+
+        const datos = json.data;
+        const nuevas = datos.filter(d => d.receta.nueva);
+        const total = datos.length;
+
+        let msg = `✅ ${total} tendencias procesadas`;
+        if (nuevas.length > 0) {
+            msg += `, ${nuevas.length} receta${nuevas.length > 1 ? 's' : ''} nueva${nuevas.length > 1 ? 's' : ''} creada${nuevas.length > 1 ? 's' : ''}`;
+        }
+        showToast(msg, 'success');
+
+        // Mostrar resultados detallados en consola y toast
+        datos.forEach(d => {
+            console.log(`📌 ${d.tendencia.titulo} → ${d.receta.nombre}${d.receta.nueva ? ' 🆕' : ''}`);
+        });
+
+        // Recargar recetas si se crearon nuevas
+        if (nuevas.length > 0) {
+            setTimeout(loadRecetas, 1000);
+        }
+    } catch (e) {
+        showToast(`❌ ${e.message}`, 'error');
+        console.error(e);
+    } finally {
+        if (btn) btn.disabled = false;
+        if (loader) loader.style.display = 'none';
+        if (btnText) btnText.textContent = 'Buscar Tendencias';
+    }
 }
 
 function normalizeDriveUrl(url) {
@@ -1471,9 +2084,10 @@ function regenerateSlideImage(slideId, visual, industry, theme) {
     loadSlideImage(slideId, visual, industry, theme, Math.floor(Math.random() * 999999));
 }
 
-// --- ACTIVACIÓN DE BOTONES DE MODO (BD / AI) ---
+// --- ACTIVACIÓN DE BOTONES DE MODO ---
 document.getElementById('btnModeAi')?.addEventListener('click', () => setWorkMode('Ai'));
-document.getElementById('btnModeBd')?.addEventListener('click', () => setWorkMode('Bd'));
+document.getElementById('btnModeBd')?.addEventListener('click', () => setWorkMode('BD'));
+document.getElementById('btnModeBdpv')?.addEventListener('click', () => setWorkMode('BDPV'));
 
 // Carga inicial de empresas si está en modo BD
 loadCompanies();

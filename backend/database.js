@@ -24,6 +24,27 @@ function initializeDatabase(ss, output) {
   ];
   agents.forEach(a => ensureSeed(ss, "Prompts_IA", "id_agente", a.id_agente, a));
   
+  // 💳 Asegurar columnas Stripe en Config_Empresas y Pagos (v16.0.0)
+  var empresasSheet = ss.getSheetByName("Config_Empresas");
+  if (empresasSheet) {
+    var eHeaders = empresasSheet.getRange(1, 1, 1, empresasSheet.getLastColumn()).getValues()[0];
+    var stripeCols = ["stripe_activo", "stripe_public_key"];
+    stripeCols.forEach(function(col) {
+      if (eHeaders.indexOf(col) === -1) {
+        empresasSheet.getRange(1, empresasSheet.getLastColumn() + 1).setValue(col);
+      }
+    });
+  }
+  ["Pagos", "Proyectos_Pagos"].forEach(function(sheetName) {
+    var paySheet = ss.getSheetByName(sheetName);
+    if (paySheet) {
+      var pHeaders = paySheet.getRange(1, 1, 1, paySheet.getLastColumn()).getValues()[0];
+      if (pHeaders.indexOf("referencia_stripe") === -1) {
+        paySheet.getRange(1, paySheet.getLastColumn() + 1).setValue("referencia_stripe");
+      }
+    }
+  });
+
   // 🔐 Asegurar Tabla Config_Auth para Aislamiento (v15.9.7)
   const authKeys = { 
     token_id: "INIT_TOKEN", 

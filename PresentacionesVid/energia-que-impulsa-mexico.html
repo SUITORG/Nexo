@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energía que Impulsa México — Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   CSS CUSTOM PROPERTIES
+   =========================================== */
+:root {
+    --blue: #003366;
+    --blue-light: #004080;
+    --blue-dark: #002244;
+    --red: #cc0000;
+    --red-light: #e60000;
+    --white: #ffffff;
+    --bg: #ffffff;
+    --bg-alt: #f8f8f8;
+    --text: #1a1a1a;
+    --text-secondary: #666;
+    --border: #e0e0e0;
+    --shadow: rgba(0,0,0,0.08);
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --title-size: clamp(2rem, 6vw, 5rem);
+    --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+    --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+    --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+    --small-size: clamp(0.65rem, 1vw, 0.875rem);
+    --slide-padding: clamp(1rem, 4vw, 4rem);
+    --content-gap: clamp(0.5rem, 2vw, 2rem);
+    --element-gap: clamp(0.25rem, 1vw, 1rem);
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-normal: 0.6s;
+}
+
+/* ===========================================
+   VIEWPORT BASE STYLES
+   =========================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow-x: hidden; }
+html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+.slide {
+    width: 100vw; height: 100vh; height: 100dvh;
+    overflow: hidden; scroll-snap-align: start;
+    display: flex; flex-direction: column; position: relative;
+}
+.slide-content {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; max-height: 100%; overflow: hidden;
+    padding: var(--slide-padding);
+}
+.card, .container, .content-box {
+    max-width: min(90vw, 1100px); max-height: min(80vh, 700px);
+}
+.feature-list, .bullet-list { gap: clamp(0.4rem, 1vh, 1rem); }
+.feature-list li, .bullet-list li {
+    font-size: var(--body-size); line-height: 1.4;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+}
+img, .image-container {
+    max-width: 100%; max-height: min(50vh, 400px); object-fit: contain;
+}
+
+/* ===========================================
+   RESPONSIVE BREAKPOINTS
+   =========================================== */
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(0.75rem, 3vw, 2rem);
+        --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+        --title-size: clamp(1.5rem, 4.5vw, 3rem);
+        --h2-size: clamp(1rem, 3vw, 1.75rem);
+    }
+}
+@media (max-height: 600px) {
+    :root {
+        --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+        --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+        --title-size: clamp(1.2rem, 4vw, 2.2rem);
+        --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+    }
+    .nav-dots { display: none; }
+}
+@media (max-height: 500px) {
+    :root {
+        --slide-padding: clamp(0.4rem, 2vw, 1rem);
+        --title-size: clamp(1rem, 3.5vw, 1.8rem);
+        --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+        --body-size: clamp(0.65rem, 1vw, 0.85rem);
+    }
+}
+@media (max-width: 600px) {
+    :root { --title-size: clamp(1.5rem, 7vw, 2.5rem); }
+    .grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+    html { scroll-behavior: auto; }
+}
+
+/* ===========================================
+   PROGRESS BAR
+   =========================================== */
+.progress-bar {
+    position: fixed; top: 0; left: 0; width: 0;
+    height: 3px; background: var(--red); z-index: 9999;
+    transition: width 0.3s ease;
+}
+
+/* ===========================================
+   NAV DOTS
+   =========================================== */
+.nav-dots {
+    position: fixed; right: clamp(0.8rem, 2vw, 1.5rem);
+    top: 50%; transform: translateY(-50%); z-index: 9998;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.nav-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border); cursor: pointer; transition: all 0.3s ease;
+    border: none;
+}
+.nav-dot.active { background: var(--red); transform: scale(1.3); }
+.nav-dot:hover { background: var(--blue); }
+
+/* ===========================================
+   THEME: AZUL, ROJO, BLANCO
+   =========================================== */
+.bar-top {
+    position: absolute; top: 0; left: 0; width: 100%;
+    height: clamp(3px, 0.4vh, 5px); z-index: 5;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--blue) 33%, var(--white) 33%, var(--white) 66%, var(--red) 66%, var(--red) 100%);
+}
+.flag-line {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    width: clamp(3px, 0.3vw, 4px);
+    height: clamp(50px, 12vh, 100px); z-index: 5;
+    background: linear-gradient(180deg, var(--blue) 33%, var(--white) 33%, var(--white) 66%, var(--red) 66%);
+    border-radius: 0 2px 2px 0;
+}
+.slide-number {
+    position: absolute; bottom: clamp(0.8rem, 2vw, 1.5rem);
+    right: clamp(1rem, 3vw, 2.5rem);
+    font-size: var(--small-size); color: #bbb; z-index: 5;
+    font-family: var(--font-body);
+}
+
+/* ===========================================
+   REVEAL ANIMATIONS
+   =========================================== */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity var(--duration-normal) var(--ease-out-expo), transform var(--duration-normal) var(--ease-out-expo); }
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.reveal:nth-child(1) { transition-delay: 0.1s; }
+.reveal:nth-child(2) { transition-delay: 0.2s; }
+.reveal:nth-child(3) { transition-delay: 0.3s; }
+.reveal:nth-child(4) { transition-delay: 0.4s; }
+.reveal:nth-child(5) { transition-delay: 0.5s; }
+.reveal:nth-child(6) { transition-delay: 0.6s; }
+
+/* ===========================================
+   TITLE SLIDE
+   =========================================== */
+.title-slide { background: var(--bg); }
+.title-slide .bg-shape {
+    position: absolute; top: -20%; right: -10%;
+    width: clamp(300px, 50vw, 700px); height: clamp(300px, 50vw, 700px);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,51,102,0.06), transparent 70%);
+    pointer-events: none;
+}
+.title-slide .bg-shape-2 {
+    position: absolute; bottom: -10%; left: -5%;
+    width: clamp(200px, 30vw, 500px); height: clamp(200px, 30vw, 500px);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(204,0,0,0.05), transparent 70%);
+    pointer-events: none;
+}
+.badge-label {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: clamp(0.2rem, 0.4vw, 0.4rem) clamp(0.5rem, 1vw, 1.2rem);
+    border: 1.5px solid var(--red); border-radius: 100px;
+    font-size: clamp(0.5rem, 0.8vw, 0.7rem); color: var(--red);
+    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    font-family: var(--font-body);
+}
+.badge-label::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--red);
+}
+.title-main {
+    font-family: var(--font-display); font-size: clamp(2.5rem, 9vw, 6rem);
+    line-height: 0.92; letter-spacing: -0.02em;
+}
+.title-main .blue { color: var(--blue); }
+.title-main .red { color: var(--red); }
+.title-main .dark { color: var(--text); }
+.subtitle-main {
+    font-size: clamp(0.7rem, 1.2vw, 1rem); color: var(--text-secondary);
+    max-width: min(90%, 600px); font-weight: 400;
+    font-family: var(--font-body);
+}
+.location-tag {
+    display: flex; align-items: center; gap: clamp(0.3rem, 0.5vw, 0.5rem);
+    font-size: clamp(0.6rem, 0.9vw, 0.8rem); color: var(--text-secondary);
+    font-family: var(--font-body);
+}
+.dot-red { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+/* ===========================================
+   CONTENT SLIDES
+   =========================================== */
+.slide-title {
+    font-family: var(--font-display); font-size: var(--h2-size);
+    color: var(--blue); letter-spacing: -0.01em;
+    margin-bottom: var(--content-gap);
+}
+.slide-subtitle {
+    font-size: var(--small-size); color: var(--text-secondary);
+    font-family: var(--font-body); font-weight: 400;
+    margin-bottom: var(--content-gap); line-height: 1.5;
+}
+.card-item {
+    background: var(--bg-alt); border-radius: 12px; padding: clamp(0.8rem, 2vw, 1.5rem);
+    border-left: 3px solid var(--blue);
+}
+.card-item.red-border { border-left-color: var(--red); }
+.card-item h3 {
+    font-family: var(--font-body); font-weight: 700;
+    font-size: var(--h3-size); color: var(--text); margin-bottom: var(--element-gap);
+}
+.card-item p {
+    font-size: var(--body-size); color: var(--text-secondary);
+    line-height: 1.5;
+}
+.card-item ul { list-style: none; padding: 0; }
+.card-item ul li {
+    font-size: var(--body-size); color: var(--text-secondary);
+    line-height: 1.4; padding-left: 1.2em; position: relative; margin-bottom: calc(var(--element-gap) * 0.5);
+}
+.card-item ul li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 5px; height: 5px; border-radius: 50%; }
+.card-item.pros ul li::before { background: #2e7d32; }
+.card-item.cons ul li::before { background: var(--red); }
+.card-item-icon { font-size: clamp(1rem, 2.5vw, 1.8rem); margin-bottom: var(--element-gap); }
+
+/* Pros/Cons row */
+.procons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0.5rem, 1.5vw, 1.5rem); }
+@media (max-width: 700px) { .procons-grid { grid-template-columns: 1fr; } }
+
+/* Segment tags */
+.segment-tags { display: flex; gap: clamp(0.3rem, 0.6vw, 0.6rem); margin-top: var(--element-gap); flex-wrap: wrap; }
+.segment-tag {
+    padding: clamp(0.15rem, 0.3vw, 0.3rem) clamp(0.4rem, 0.8vw, 0.8rem);
+    border-radius: 100px; font-size: clamp(0.5rem, 0.7vw, 0.65rem);
+    font-weight: 500; font-family: var(--font-body);
+}
+.segment-tag.business { background: rgba(0,51,102,0.1); color: var(--blue); }
+.segment-tag.residential { background: rgba(0,51,102,0.06); color: var(--blue-dark); }
+.segment-tag.industrial { background: rgba(204,0,0,0.08); color: var(--red); }
+
+/* Image slide */
+.img-slide .slide-content { flex-direction: row; align-items: center; gap: clamp(1rem, 3vw, 3rem); }
+.img-slide .img-side { flex: 0 0 min(45%, 500px); }
+.img-slide .img-side img { width: 100%; height: auto; max-height: min(55vh, 420px); border-radius: 12px; object-fit: cover; box-shadow: 0 8px 32px var(--shadow); }
+.img-slide .text-side { flex: 1; }
+@media (max-width: 700px) {
+    .img-slide .slide-content { flex-direction: column; }
+    .img-slide .img-side { flex: 0 0 auto; width: 100%; max-width: 400px; }
+}
+
+/* Comparison highlight */
+.highlight-box {
+    background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+    border-radius: 16px; padding: clamp(1rem, 3vw, 2.5rem);
+    color: var(--white); text-align: center;
+    max-width: min(90vw, 700px); margin: 0 auto;
+}
+.highlight-box h3 {
+    font-family: var(--font-display); font-size: clamp(1.2rem, 3vw, 2.2rem);
+    letter-spacing: -0.01em;
+}
+.highlight-box p {
+    font-size: var(--body-size); color: rgba(255,255,255,0.85);
+    margin-top: var(--element-gap); line-height: 1.5;
+}
+.highlight-box .big-number {
+    font-family: var(--font-display); font-size: clamp(2rem, 6vw, 4rem);
+    color: var(--white); line-height: 1;
+}
+
+/* Stats row */
+.stats-row {
+    display: flex; gap: clamp(0.8rem, 2vw, 2rem); justify-content: center;
+    flex-wrap: wrap;
+}
+.stat-item { text-align: center; min-width: 120px; }
+.stat-item .num {
+    font-family: var(--font-display); font-size: clamp(1.5rem, 4vw, 3rem);
+    color: var(--red); line-height: 1;
+}
+.stat-item .label {
+    font-size: var(--small-size); color: var(--text-secondary);
+    margin-top: 0.3rem; font-family: var(--font-body);
+}
+
+/* CTA slide */
+.cta-slide { background: linear-gradient(135deg, var(--blue), var(--blue-dark)); }
+.cta-slide .slide-title { color: var(--white); }
+.cta-slide .subtitle-main { color: rgba(255,255,255,0.7); }
+.cta-info { display: flex; flex-direction: column; align-items: center; gap: var(--content-gap); }
+.cta-item {
+    display: flex; align-items: center; gap: 0.8rem;
+    font-size: var(--body-size); color: rgba(255,255,255,0.9);
+}
+.cta-item .icon { font-size: clamp(1rem, 2vw, 1.5rem); }
+
+/* ===========================================
+   EDIT MODE STYLES
+   =========================================== */
+.edit-hotzone {
+    position: fixed; top: 0; left: 0; width: 80px; height: 80px;
+    z-index: 10000; cursor: pointer;
+}
+.edit-toggle {
+    position: fixed; top: 10px; left: 10px; z-index: 10001;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    padding: 6px 14px; border: none; border-radius: 8px;
+    background: var(--blue); color: #fff; cursor: pointer;
+    font-size: 14px; font-family: var(--font-body);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+.edit-indicator {
+    position: fixed; top: 10px; right: 10px; z-index: 10001;
+    padding: 4px 12px; border-radius: 6px;
+    background: var(--red); color: #fff; font-size: 12px;
+    font-family: var(--font-body); display: none;
+}
+.edit-indicator.show { display: block; }
+
+/* ====================================
+   MISC
+   ==================================== */
+.flex-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: var(--element-gap); }
+.mt-2 { margin-top: var(--content-gap); }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Navigation Dots -->
+<nav class="nav-dots" id="navDots"></nav>
+
+<!-- Edit Mode Controls -->
+<div class="edit-hotzone" id="editHotzone"></div>
+<button class="edit-toggle" id="editToggle" title="Editar (E)">✏️ Editar</button>
+<div class="edit-indicator" id="editIndicator">✏️ Editando</div>
+
+<!-- ===========================================
+     SLIDE 1: TITLE
+     =========================================== -->
+<section class="slide title-slide" data-slide="1">
+    <div class="bar-top"></div>
+    <div class="flag-line"></div>
+    <div class="bg-shape"></div>
+    <div class="bg-shape-2"></div>
+    <div class="slide-content flex-center">
+        <div class="reveal badge-label">Almacenamiento & Producción</div>
+        <h1 class="reveal title-main">
+            <span class="blue">Energía</span> <span class="dark">que</span><br>
+            <span class="red">Impulsa México</span>
+        </h1>
+        <p class="reveal subtitle-main" style="margin-top:var(--content-gap)">
+            Soluciones energéticas en Plantas, Paneles Solares y Baterías de Litio<br>
+            para Negocios, Residencias e Industria
+        </p>
+        <div class="reveal location-tag" style="margin-top:var(--content-gap)">
+            <span class="dot-red"></span>
+            <span>Monterrey, N.L. — México</span>
+        </div>
+    </div>
+    <div class="slide-number">01 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 2: WHO WE ARE
+     =========================================== -->
+<section class="slide img-slide" data-slide="2">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <div class="img-side reveal">
+            <img src="https://images.unsplash.com/photo-1579389083078-4e7018379f82?w=800&q=80" alt="Equipo de energía trabajando" loading="lazy">
+        </div>
+        <div class="text-side reveal">
+            <p class="slide-subtitle">¿Quiénes somos?</p>
+            <h2 class="slide-title">Tu Socio Energético en Monterrey</h2>
+            <p style="font-size:var(--body-size);color:var(--text-secondary);line-height:1.5">
+                Empresa regiomontana especializada en <strong>almacenamiento y producción de energía</strong>.
+                Ofrecemos soluciones integrales desde plantas de energía hasta sistemas solares y baterías de litio.
+            </p>
+            <div class="stats-row" style="margin-top:var(--content-gap);gap:clamp(0.5rem,1.5vw,1.5rem)">
+                <div class="stat-item">
+                    <div class="num">+500</div>
+                    <div class="label">Proyectos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="num">+50</div>
+                    <div class="label">Clientes Indus.</div>
+                </div>
+                <div class="stat-item">
+                    <div class="num">15+</div>
+                    <div class="label">Años</div>
+                </div>
+                <div class="stat-item">
+                    <div class="num">NL</div>
+                    <div class="label">Monterrey</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">02 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 3: SOLUTIONS OVERVIEW
+     =========================================== -->
+<section class="slide" data-slide="3">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <p class="reveal slide-subtitle">Nuestra oferta</p>
+        <h2 class="reveal slide-title">Tres Soluciones, Un Objetivo</h2>
+        <div class="reveal grid" style="margin-top:var(--content-gap)">
+            <div class="card-item" style="border-left-color:var(--blue);">
+                <div class="card-item-icon">⚡</div>
+                <h3>Plantas de Energía</h3>
+                <p>Generación confiable con combustibles limpios y tecnologías eficientes para demanda continua.</p>
+                <div class="segment-tags">
+                    <span class="segment-tag business">Negocios</span>
+                    <span class="segment-tag industrial">Industria</span>
+                </div>
+            </div>
+            <div class="card-item" style="border-left-color:#2e7d32;">
+                <div class="card-item-icon">☀️</div>
+                <h3>Paneles Solares</h3>
+                <p>Sistemas fotovoltaicos de alto rendimiento adaptados al clima y radiación de Monterrey.</p>
+                <div class="segment-tags">
+                    <span class="segment-tag business">Negocios</span>
+                    <span class="segment-tag residential">Residencias</span>
+                    <span class="segment-tag industrial">Industria</span>
+                </div>
+            </div>
+            <div class="card-item" style="border-left-color:#e65100;">
+                <div class="card-item-icon">🔋</div>
+                <h3>Baterías de Litio</h3>
+                <p>Almacenamiento seguro y eficiente con celdas de última generación y sistemas de gestión inteligente.</p>
+                <div class="segment-tags">
+                    <span class="segment-tag business">Negocios</span>
+                    <span class="segment-tag residential">Residencias</span>
+                    <span class="segment-tag industrial">Industria</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">03 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 4: POWER PLANTS - CONCEPT
+     =========================================== -->
+<section class="slide img-slide" data-slide="4">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <div class="img-side reveal">
+            <img src="https://images.unsplash.com/photo-1519552928909-672ca2c4d6a6?w=800&q=80" alt="Planta de energía industrial" loading="lazy">
+        </div>
+        <div class="text-side reveal">
+            <p class="slide-subtitle">Solución 1</p>
+            <h2 class="slide-title">⚡ Plantas de Energía</h2>
+            <p style="font-size:var(--body-size);color:var(--text-secondary);line-height:1.6">
+                Plantas de generación para demanda continua, ideales para procesos productivos
+                que no pueden detenerse. Operamos con tecnologías eficientes y sistemas de
+                cogeneración que maximizan el aprovechamiento energético.
+            </p>
+            <div class="segment-tags" style="margin-top:var(--content-gap)">
+                <span class="segment-tag business">Negocios</span>
+                <span class="segment-tag industrial">Industria</span>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">04 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 5: POWER PLANTS - PROS & CONS
+     =========================================== -->
+<section class="slide" data-slide="5">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <p class="reveal slide-subtitle">⚡ Plantas de Energía</p>
+        <h2 class="reveal slide-title">Pros &amp; Contras por Segmento</h2>
+        <div class="reveal" style="margin-top:var(--element-gap);max-width:100%;overflow:hidden">
+            <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:clamp(0.4rem,1vw,1rem)">
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏢 Negocios</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>Independencia de CFE</li><li>Operación 24/7</li><li>Alta capacidad</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>Costo de combustible alto</li><li>Mantenimiento constante</li><li>Emisiones y ruido</li></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏠 Residencias</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>Respaldo total en cortes</li><li>Alta autonomía</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>Sobredimensionado</li><li>Costo prohibitivo</li><li>Almacenamiento de combustible</li></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏭 Industria</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>Máxima potencia continua</li><li>Calor de proceso</li><li>Operación crítica</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>Combustible costoso</li><li>Permisos ambientales</li><li>Ruido industrial</li></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="reveal" style="font-size:var(--small-size);color:var(--text-secondary);margin-top:var(--content-gap);text-align:center">
+            ❌ No recomendado para residencias · ✅ Ideal para industria pesada y negocios críticos
+        </p>
+    </div>
+    <div class="slide-number">05 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 6: SOLAR PANELS - CONCEPT
+     =========================================== -->
+<section class="slide img-slide" data-slide="6">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <div class="img-side reveal">
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80" alt="Paneles solares" loading="lazy">
+        </div>
+        <div class="text-side reveal">
+            <p class="slide-subtitle">Solución 2</p>
+            <h2 class="slide-title">☀️ Paneles Solares</h2>
+            <p style="font-size:var(--body-size);color:var(--text-secondary);line-height:1.6">
+                Aprovechamos la alta radiación solar de Monterrey (5.5 kWh/m²/día promedio)
+                con sistemas fotovoltaicos eficientes. Desde techos residenciales hasta
+                granjas solares industriales.
+            </p>
+            <div class="segment-tags" style="margin-top:var(--content-gap)">
+                <span class="segment-tag business">Negocios</span>
+                <span class="segment-tag residential">Residencias</span>
+                <span class="segment-tag industrial">Industria</span>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">06 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 7: SOLAR PANELS - PROS & CONS
+     =========================================== -->
+<section class="slide" data-slide="7">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <p class="reveal slide-subtitle">☀️ Paneles Solares</p>
+        <h2 class="reveal slide-title">Pros &amp; Contras por Segmento</h2>
+        <div class="reveal" style="margin-top:var(--element-gap);max-width:100%;overflow:hidden">
+            <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:clamp(0.4rem,1vw,1rem)">
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏢 Negocios</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>CFE reduce 40-60%</li><li>Deducción fiscal 100%</li><li>Vida útil 25+ años</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>Inversión inicial alta</li><li>No genera de noche</li><li>Espacio en techo</li></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏠 Residencias</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>Recibo de luz $0</li><li>Medición neta CFE</li><li>Plusvalía inmueble</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>$60-100K inversión</li><li>Techo adecuado</li><li>Sin batería, no hay noche</li></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏭 Industria</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>Ahorro millones/año</li><li>Energía limpia</li><li>Sustentabilidad corporativa</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>Gran terreno requerido</li><li>Variabilidad climática</li><li>Sin almacenamiento</li></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="reveal" style="font-size:var(--small-size);color:var(--text-secondary);margin-top:var(--content-gap);text-align:center">
+            ✅ Mejor opción para residencias · ✅ Excelente para negocios · ✅ Ideal con baterías
+        </p>
+    </div>
+    <div class="slide-number">07 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 8: LITHIUM BATTERIES - CONCEPT
+     =========================================== -->
+<section class="slide img-slide" data-slide="8">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <div class="img-side reveal">
+            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80" alt="Baterías de litio" loading="lazy">
+        </div>
+        <div class="text-side reveal">
+            <p class="slide-subtitle">Solución 3</p>
+            <h2 class="slide-title">🔋 Baterías de Litio</h2>
+            <p style="font-size:var(--body-size);color:var(--text-secondary);line-height:1.6">
+                Almacenamiento seguro con baterías de litio-ferrofosfato (LFP). Gestión
+                inteligente de carga/descarga, integración con paneles solares y respaldo
+                automático ante cortes de CFE.
+            </p>
+            <div class="segment-tags" style="margin-top:var(--content-gap)">
+                <span class="segment-tag business">Negocios</span>
+                <span class="segment-tag residential">Residencias</span>
+                <span class="segment-tag industrial">Industria</span>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">08 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 9: LITHIUM BATTERIES - PROS & CONS
+     =========================================== -->
+<section class="slide" data-slide="9">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <p class="reveal slide-subtitle">🔋 Baterías de Litio</p>
+        <h2 class="reveal slide-title">Pros &amp; Contras por Segmento</h2>
+        <div class="reveal" style="margin-top:var(--element-gap);max-width:100%;overflow:hidden">
+            <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:clamp(0.4rem,1vw,1rem)">
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏢 Negocios</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>Respaldo sin ruido</li><li>Peak shaving</li><li>Almacenan energía solar</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>Costo por kWh alto</li><li>10-15 años vida útil</li><li>Degradación gradual</li></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏠 Residencias</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>Independencia total</li><li>Sin gasolina ni ruido</li><li>Carga solar directa</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>$80-200K inversión</li><li>Capacidad limitada</li><li>Espacio interior</li></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-item">
+                    <h3 style="font-size:var(--body-size)">🏭 Industria</h3>
+                    <div class="procons-grid" style="margin-top:var(--element-gap)">
+                        <div class="card-item pros" style="padding:0.5rem;background:rgba(46,125,50,0.06);border-left-color:#2e7d32">
+                            <ul><li>Estabilización de red</li><li>Escalabilidad modular</li><li>Integración renovable</li></ul>
+                        </div>
+                        <div class="card-item cons" style="padding:0.5rem;background:rgba(204,0,0,0.04);border-left-color:var(--red)">
+                            <ul><li>Inversión multimillonaria</li><li>Gestión térmica</li><li>Espacio en piso</li></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="reveal" style="font-size:var(--small-size);color:var(--text-secondary);margin-top:var(--content-gap);text-align:center">
+            ✅ Complemento ideal para paneles solares · ✅ Silencioso y limpio · ❌ No es para alta demanda continua
+        </p>
+    </div>
+    <div class="slide-number">09 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 10: COMPARISON BY SEGMENT
+     =========================================== -->
+<section class="slide img-slide" data-slide="10">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <div class="img-side reveal">
+            <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80" alt="Energía renovable" loading="lazy">
+        </div>
+        <div class="text-side reveal">
+            <p class="slide-subtitle">Análisis</p>
+            <h2 class="slide-title">¿Qué Solución para Cada Quién?</h2>
+            <ul style="list-style:none;padding:0;margin-top:var(--element-gap)">
+                <li style="padding:clamp(0.4rem,0.8vw,0.8rem) 0;border-bottom:1px solid var(--border)">
+                    <strong style="color:var(--blue)">🏢 Negocios</strong> — <span style="font-size:var(--body-size);color:var(--text-secondary)">🥇 Solar + Baterías. Retorno 3-5 años. Planta solo si proceso crítico.</span>
+                </li>
+                <li style="padding:clamp(0.4rem,0.8vw,0.8rem) 0;border-bottom:1px solid var(--border)">
+                    <strong style="color:#2e7d32">🏠 Residencias</strong> — <span style="font-size:var(--body-size);color:var(--text-secondary)">🥇 Solar. Medición neta CFE. Recibo en $0 en 4-6 años.</span>
+                </li>
+                <li style="padding:clamp(0.4rem,0.8vw,0.8rem) 0">
+                    <strong style="color:var(--red)">🏭 Industria</strong> — <span style="font-size:var(--body-size);color:var(--text-secondary)">🥇 Híbrido: Solar + Planta + Baterías para máximo ahorro.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="slide-number">10 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 11: BEST COMBINATION
+     =========================================== -->
+<section class="slide" data-slide="11">
+    <div class="bar-top"></div>
+    <div class="slide-bg-img" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;overflow:hidden">
+        <img src="https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=1600&q=70" alt="" style="width:100%;height:100%;object-fit:cover;opacity:0.12" loading="lazy">
+    </div>
+    <div class="slide-content flex-center text-center" style="position:relative;z-index:1">
+        <p class="reveal slide-subtitle">Costo-Beneficio</p>
+        <h2 class="reveal slide-title">La Mejor Combinación</h2>
+        <div class="reveal highlight-box" style="margin-top:var(--content-gap)">
+            <div class="big-number">☀️ + 🔋</div>
+            <h3>Paneles Solares + Baterías de Litio</h3>
+            <p>
+                La combinación más rentable para el mercado mexicano: los paneles generan
+                energía limpia durante el día y las baterías almacenan el excedente para
+                la noche y picos de demanda. Recuperas tu inversión en <strong>3-6 años</strong>
+                y obtienes energía gratis por <strong>20+ años</strong>.
+            </p>
+        </div>
+        <div class="reveal stats-row" style="margin-top:var(--content-gap);gap:clamp(0.5rem,2vw,3rem)">
+            <div class="stat-item">
+                <div class="num" style="color:var(--blue);">40-70%</div>
+                <div class="label">Ahorro en CFE</div>
+            </div>
+            <div class="stat-item">
+                <div class="num" style="color:var(--blue);">3-6</div>
+                <div class="label">Años recuperación</div>
+            </div>
+            <div class="stat-item">
+                <div class="num" style="color:var(--blue);">95%</div>
+                <div class="label">Independencia energética</div>
+            </div>
+        </div>
+        <p class="reveal" style="font-size:var(--small-size);color:var(--text-secondary);margin-top:var(--content-gap);max-width:min(90%,600px)">
+            * Las plantas de energía se recomiendan solo para respaldo industrial crítico o
+            zonas sin acceso a la red eléctrica.
+        </p>
+    </div>
+    <div class="slide-number">11 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 12: WHY MONTERREY
+     =========================================== -->
+<section class="slide img-slide" data-slide="12">
+    <div class="bar-top"></div>
+    <div class="slide-content">
+        <div class="img-side reveal">
+            <img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&q=80" alt="Energía eólica y ciudad" loading="lazy">
+        </div>
+        <div class="text-side reveal">
+            <p class="slide-subtitle">Ubicación estratégica</p>
+            <h2 class="slide-title">¿Por qué Monterrey?</h2>
+            <ul style="list-style:none;padding:0;margin-top:var(--element-gap)">
+                <li style="padding:clamp(0.5rem,0.8vw,0.8rem) 0;border-bottom:1px solid var(--border)">
+                    <strong style="color:var(--blue)">☀️ Alta Radiación Solar</strong>
+                    <p style="font-size:var(--small-size);color:var(--text-secondary);margin-top:0.2rem">5.5 kWh/m²/día — uno de los mejores índices del país.</p>
+                </li>
+                <li style="padding:clamp(0.5rem,0.8vw,0.8rem) 0;border-bottom:1px solid var(--border)">
+                    <strong style="color:var(--red)">🏭 Hub Industrial</strong>
+                    <p style="font-size:var(--small-size);color:var(--text-secondary);margin-top:0.2rem">300+ parques industriales con tarifas CFE elevadas.</p>
+                </li>
+                <li style="padding:clamp(0.5rem,0.8vw,0.8rem) 0;border-bottom:1px solid var(--border)">
+                    <strong style="color:var(--blue)">📈 Tarifas al Alza</strong>
+                    <p style="font-size:var(--small-size);color:var(--text-secondary);margin-top:0.2rem">DAC y GDMTH suben 10-15% anual en la región.</p>
+                </li>
+                <li style="padding:clamp(0.5rem,0.8vw,0.8rem) 0">
+                    <strong style="color:var(--red)">🔌 Cortes Frecuentes</strong>
+                    <p style="font-size:var(--small-size);color:var(--text-secondary);margin-top:0.2rem">En verano la demanda supera la capacidad de transmisión.</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="slide-number">12 / 13</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 13: CTA / CONTACT
+     =========================================== -->
+<section class="slide cta-slide" data-slide="13">
+    <div class="bar-top"></div>
+    <div class="slide-content flex-center text-center">
+        <p class="reveal" style="font-size:var(--small-size);color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-body)">¿Listo para el cambio?</p>
+        <h2 class="reveal slide-title" style="color:var(--white);font-size:var(--title-size)">Energía que<br>Impulsa tu Negocio</h2>
+        <div class="reveal cta-info" style="margin-top:var(--content-gap)">
+            <div class="cta-item">
+                <span class="icon">📍</span>
+                <span>Monterrey, N.L. — México</span>
+            </div>
+            <div class="cta-item">
+                <span class="icon">📞</span>
+                <span>Agenda una consultoría gratuita</span>
+            </div>
+            <div class="cta-item">
+                <span class="icon">⚡</span>
+                <span>Te ayudamos a encontrar la combinación ideal para tu negocio</span>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number" style="color:rgba(255,255,255,0.4)">13 / 13</div>
+</section>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   =========================================== */
+class SlidePresentation {
+    constructor() {
+        this.slides = document.querySelectorAll('.slide');
+        this.totalSlides = this.slides.length;
+        this.setupObserver();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupWheelNav();
+        this.setupProgressBar();
+        this.setupNavDots();
+        this.updateSlide(0);
+    }
+
+    setupObserver() {
+        const opts = { threshold: 0.5 };
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    const idx = Array.from(this.slides).indexOf(e.target);
+                    this.updateSlide(idx);
+                }
+            });
+        }, opts);
+        this.slides.forEach(s => obs.observe(s));
+    }
+
+    updateSlide(idx) {
+        this.currentSlide = idx;
+        document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === idx);
+        });
+        const pct = ((idx + 1) / this.totalSlides) * 100;
+        document.getElementById('progressBar').style.width = pct + '%';
+    }
+
+    goTo(idx) {
+        if (idx >= 0 && idx < this.totalSlides) {
+            this.slides[idx].scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault(); this.goTo(this.currentSlide + 1);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault(); this.goTo(this.currentSlide - 1);
+            } else if (e.key === 'Home') {
+                e.preventDefault(); this.goTo(0);
+            } else if (e.key === 'End') {
+                e.preventDefault(); this.goTo(this.totalSlides - 1);
+            }
+        });
+    }
+
+    setupTouchNav() {
+        let startY = 0;
+        document.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            const diffY = startY - e.changedTouches[0].clientY;
+            if (Math.abs(diffY) > 50) {
+                diffY > 0 ? this.goTo(this.currentSlide + 1) : this.goTo(this.currentSlide - 1);
+            }
+        }, { passive: true });
+    }
+
+    setupWheelNav() {
+        let ticking = false;
+        document.addEventListener('wheel', (e) => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    e.deltaY > 0 ? this.goTo(this.currentSlide + 1) : this.goTo(this.currentSlide - 1);
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+
+    setupProgressBar() {
+        const bar = document.getElementById('progressBar');
+        document.addEventListener('scroll', () => {
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const pct = (window.scrollY / maxScroll) * 100;
+            bar.style.width = Math.min(pct, 100) + '%';
+        }, { passive: true });
+    }
+
+    setupNavDots() {
+        const container = document.getElementById('navDots');
+        for (let i = 0; i < this.totalSlides; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+            dot.setAttribute('aria-label', 'Ir a diapositiva ' + (i + 1));
+            dot.addEventListener('click', () => this.goTo(i));
+            container.appendChild(dot);
+        }
+    }
+}
+
+new SlidePresentation();
+
+/* ===========================================
+   INLINE EDITING
+   =========================================== */
+(function() {
+    let editMode = false;
+    const toggle = document.getElementById('editToggle');
+    const indicator = document.getElementById('editIndicator');
+    const hotzone = document.getElementById('editHotzone');
+    let hideTimeout = null;
+    let originalContents = [];
+
+    function enableEdit() {
+        editMode = true;
+        toggle.classList.add('active');
+        indicator.classList.add('show');
+        document.body.setAttribute('contenteditable', 'true');
+        document.body.style.cursor = 'text';
+    }
+
+    function disableEdit() {
+        editMode = false;
+        toggle.classList.remove('active');
+        indicator.classList.remove('show');
+        document.body.removeAttribute('contenteditable');
+        document.body.style.cursor = '';
+    }
+
+    function toggleEdit() {
+        editMode ? disableEdit() : enableEdit();
+    }
+
+    hotzone.addEventListener('mouseenter', () => {
+        clearTimeout(hideTimeout);
+        toggle.classList.add('show');
+    });
+    hotzone.addEventListener('mouseleave', () => {
+        hideTimeout = setTimeout(() => {
+            if (!editMode) toggle.classList.remove('show');
+        }, 400);
+    });
+    toggle.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); });
+    toggle.addEventListener('mouseleave', () => {
+        hideTimeout = setTimeout(() => {
+            if (!editMode) toggle.classList.remove('show');
+        }, 400);
+    });
+    hotzone.addEventListener('click', toggleEdit);
+    toggle.addEventListener('click', toggleEdit);
+    document.addEventListener('keydown', (e) => {
+        if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
+            toggleEdit();
+        }
+    });
+
+    // Auto-save to localStorage
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            const html = document.documentElement.outerHTML;
+            localStorage.setItem('presentacion-energia', html);
+            const msg = document.createElement('div');
+            msg.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#003366;color:#fff;padding:10px 24px;border-radius:8px;font:14px DM Sans,sans-serif;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.2)';
+            msg.textContent = '✓ Guardado automáticamente';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 2000);
+        }
+    });
+
+    // Load saved content on page load
+    const saved = localStorage.getItem('presentacion-energia');
+    if (saved) {
+        // Don't auto-restore to avoid overwriting, but let user know
+        console.log('Hay una versión guardada localmente. Presiona Ctrl+R para recargar o Ctrl+S para sobrescribir.');
+    }
+})();
+</script>
+</body>
+</html>

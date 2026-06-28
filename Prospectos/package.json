@@ -1,0 +1,14 @@
+{
+  "name": "prospectos",
+  "version": "1.0.0",
+  "description": "Prospector comercial para SuitOrg",
+  "main": "prospect.js",
+  "scripts": {
+    "start": "node prospect.js",
+    "list": "node prospect.js --list"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
+    "dotenv": "^17.4.1"
+  }
+}

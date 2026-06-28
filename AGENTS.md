@@ -1,104 +1,76 @@
-# AGENTS.md — SuitOrg Ecosystem Rules
+# AGENTS.md — SuitOrg
 
-## Architecture
-- **Frontend**: HTML/CSS/JS puro (sin frameworks). v16.7.28
-- **Backend**: Google Apps Script (GAS) modular en `backend/`. v15.9.9
-- **DB**: Híbrida — Google Sheets (primaria) + Supabase (en migración)
-- **CampanasAi**: Sub-proyecto CMS bajo `CampanasAi/`, servido en puerto 8000
+## Start here
+- Read `INDEX_FUNCIONES.md` to locate any function (file:line) before reading source files.
+- Reference `contexto.md` for architecture, conventions, glossary, and known errors.
 
-## Inmutable Rules (no romper)
+## Architecture (non-obvious)
+- 3 independent servers: `server.js` (Express, 3001), `CampanasAi/local-server-node.js` (http, 8000), `citas/index.js` (Express, 3002)
+- Dual backend: GAS (`backend/`) does core CRUD on Google Sheets; Node.js proxies to Supabase, Gemini, Stripe
+- Hybrid DB: 5 MASTER tables always in Sheets (`Config_Empresas`, `Usuarios`, `Config_Roles`, `Config_SEO`, `Prompts_IA`); PRIVATE tables migrate to Supabase per-tenant via `db_engine`
+- Two Supabase projects: backend `egyxgnlnzanxpqyuvmsg`, vision-audit `hmrpotibipxhsnowgjvq`
+- Frontend: vanilla JS SPA, hash routing (`#orbit`, `#pos`, `#home`, `#leads`, `#catalog`, `#agents`)
+- RBAC levels: DIOS(999), ADMIN(10), STAFF(5), DELIVERY(-)
+- Watchdog sync loop every 7.5s (`app.js`); inactivity timeout: visitors 5min, staff 8h, others 120s
+- CI/CD: clasp for GAS, GitHub Actions (push to `main` → GH Pages)
 
-### Multi-Tenant Isolation
-1. Toda query debe filtrar por `id_empresa`. Ningún negocio ve datos de otro.
-2. Tablas globales (`Config_Empresas`, `Config_Roles`, `Config_SEO`, etc.) son solo lectura para inquilinos.
-3. Tablas privadas (`Leads`, `Proyectos`, `Catalogo`) se filtran estrictamente por `id_empresa`.
+## Immutable rules
+1. All queries filter by `id_empresa` — no cross-tenant data
+2. Soft delete only: `activo = FALSE`, never physical DELETE
+3. Sequential IDs: `LEAD-XXX`, `ORD-XXX`, `PROD-XX`, `CLI-XXX` — no UUIDs
+4. Token `API_AUTH_TOKEN` required on all POST to GAS
+5. Use `no-cors` for GAS fetch (GAS rejects OPTIONS preflight)
+6. `activo` from Supabase arrives as lowercase `"true"` — normalize with `.toUpperCase().trim() === "TRUE"`
+7. No frontend frameworks — vanilla JS only
 
-### Backend (GAS)
-4. Backend dual: `backend/core.js` (orquestador maestro) y `CampanasAi/backend.gs` (CMS simple).
-5. Usar `LockService` para operaciones concurrentes (timeout 30s).
-6. No borrado físico — usar columna `activo` (TRUE/FALSE).
-7. IDs secuenciales: `LEAD-XXX`, `ORD-XXX`, `PROD-XX`. No UUIDs aleatorios.
-8. Token de seguridad requerido en todo POST al backend.
+## Exact commands
+```bash
+# Start dev servers (each in its own terminal)
+node server.js                          # port 3001
+node CampanasAi/local-server-node.js    # port 8000
+node citas/index.js                     # port 3002
 
-### Server (Node.js Express)
-9. `server.js` en raíz (puerto 3001) sirve el frontend multi-inquilino.
-10. `CampanasAi/local-server-node.js` (puerto 8000) sirve el CMS.
-11. Helmet activo con CSP estricta para seguridad.
-12. Endpoints protegidos: `/api/db/*` usa service_role key (bypass RLS), solo llamadas internas.
+# Deploy GAS (backend/)
+clasp push && clasp deploy
 
-### Frontend
-13. Archivos clave: `index.html` (SPA), `app.js` (orquestador), `js/modules/*` (módulos).
-14. Navegación por hash (`#orbit`, `#pos`, `#home`, etc.).
-15. Roles RBAC: DIOS (999), ADMIN (10), STAFF (5), DELIVERY.
-16. Inactividad: visitantes 5min → reset a Orbit. Staff con crédito DIARIO/GLOBAL → 8h, otros → 120s.
+# Regenerate function index (run after adding/renaming functions)
+node scripts/generate-index.js
 
-### Drive & Assets
-17. Logo: Google Picker API (configurado con API Key y Client ID) con fallback a URL manual.
-18. Fotos carrusel: subida local secuencial por slide (solo modos BD y BDPR).
+# Quick backup (WSL)
+zip -r "SUIT_$(date +%d%m%y)_WSL.zip" . -x "*/node_modules/*" "*/.git/*" "*.zip" "*/.agent/*"
 
-### CampanasAi (sub-proyecto)
-19. 3 modos: Ai (IA genera), BD (base datos + IA), BDPR (base datos + manual).
-20. Prompts de IA hardcodeados en `script.js:449-486` (no vienen de DB aún).
-21. Guardado a hoja `SMMC` en Google Sheets ID `1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8`.
+# Prospección comercial (independiente, con GOOGLE_MAPS_API_KEY en .env)
+node prospectos/prospect.js --list
+node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
+```
 
-### Seguridad
-22. `.env` contiene secrets (API keys, tokens). No exponer en código ni commits.
-23. Helmet CSP bloquea recursos no autorizados. Agregar dominios a `connect-src` y `img-src` si se integran nuevos servicios.
+## Known gotchas
+- **Hardcoded API keys**: `backend/core.js:13`, `CampanasAi/script.js:8-11`, `scripts/agents/vision-audit.js:14` — don't add more; use `.env`
+- **`service_role` key in client**: `CampanasAi/lib/supabase.js`, `citas/db/client.js` — bypasses RLS, treat as high risk
+- **`syncToSupabase` empty catch**: `backend/utils.js` — sync errors silently swallowed
+- **GAS URL hardcoded** in `local-server-node.js`, `ssg-engine.mjs`, `orchestrator_client.js` — update all on GAS redeploy
+- **`reel-generator.js:103`**: duplicate `generar()` method would stack overflow if called
+- **`confirmPayment`** (`conecionpagos/index.js`): only retrieves intent, does not confirm (misleading name)
+- **Model `gemini-1.5-flash` deprecated** — migrate to OpenRouter free models
+- **Stripe webhook** must be registered before `express.json()` in `server.js` (line 13)
+- **`no-cors` fetch to GAS** returns opaque response — can't read body on client side
+- No tests, lint, or typecheck exist — smoke test manually
 
-## Operational Rules for OpenCode
+## Workflow
+1. Find function in `INDEX_FUNCIONES.md` → read only that context
+2. Classify risk: touches multi-tenant, security, GAS, or Supabase? → high risk
+3. Apply change → run `node scripts/generate-index.js` if functions changed → commit with format `{emoji} {tipo}: {desc} (v{X.Y.Z})`
+4. Smoke test manually
 
-### Environment Policy
-24. **WSL es el entorno principal** para desarrollo y ejecución del proyecto.
-25. Usar WSL para: `npm install`, `npm run dev`, `npm test`, builds, lint, bash scripts, grep, sed, manejo principal de archivos y comandos git locales.
-26. Usar **GitHub** para: ramas remotas, pull requests, GitHub Actions, CI/CD, releases y revisión de workflows.
-27. Usar **Windows shell nativo** solo para tareas del host: abrir apps de Windows, Explorer, navegadores o herramientas exclusivas de Windows.
-28. No usar PowerShell/CMD como entorno por defecto para tareas principales del repo salvo instrucción explícita del usuario.
-29. Si el repo está accesible desde WSL, preferir siempre rutas Linux y ejecución dentro de WSL.
+## High-risk changes (always report before acting)
+- **Environment**: WSL / GitHub / Windows
+- **Files affected**
+- **Brief plan**
+- **Validation proposed**
+- **Risk level**: low / medium / high
+- **Confirmation required**: yes / no
 
-### Decision Rules
-30. Antes de ejecutar una acción, clasificarla explícitamente como: **WSL**, **GitHub** o **Windows**.
-31. Si una tarea toca código, dependencias, tests, build, scripts o git local, elegir primero **WSL**.
-32. Si una tarea toca colaboración remota, PRs, CI/CD o releases, elegir **GitHub**.
-33. Si una tarea solo existe en el host Windows, elegir **Windows shell** y explicar por qué no conviene hacerla desde WSL.
-
-### Change Workflow
-34. Antes de cambios medianos o de alto riesgo, informar:
-   - entorno elegido,
-   - archivos que serán modificados,
-   - plan de ejecución,
-   - validaciones que se correrán.
-35. No hacer refactors amplios sin aprobación explícita.
-36. No borrar archivos sin aprobación explícita.
-37. Preferir cambios pequeños, reversibles y con alcance mínimo.
-38. Si la solicitud es ambigua, pedir aclaración antes de modificar código crítico.
-
-### Validation Rules
-39. Después de editar, correr las validaciones disponibles y relevantes.
-40. Si existen scripts de lint, tests o build, ejecutarlos antes de dar por terminada la tarea.
-41. Si no existen tests, realizar smoke checks y reportar qué validación manual sigue pendiente.
-42. Si se cambian imports, rutas, módulos críticos o integración frontend/backend, validar explícitamente que no haya regresiones obvias.
-
-### Production Safety
-43. Si un cambio afecta producción, proponer primero estrategia de rollback.
-44. Nunca exponer secrets de `.env`, `service_role`, tokens o credenciales en código, logs, commits o respuestas.
-45. Si un cambio toca rutas, RBAC, `id_empresa`, autenticación, persistencia, CSP, Helmet, backend GAS o integración con Supabase, tratarlo como **alto riesgo** y requerir confirmación explícita.
-46. Antes de cambios de despliegue o integración, verificar impacto en:
-   - aislamiento multi-tenant,
-   - seguridad de tokens,
-   - compatibilidad con `server.js` y `CampanasAi/local-server-node.js`,
-   - CSP/Helmet,
-   - guardado en Google Sheets,
-   - llamadas internas a `/api/db/*`.
-
-### Subproject Scope
-47. Si se trabaja dentro de `CampanasAi/`, respetar sus reglas específicas y evitar asumir que el subproyecto comparte exactamente el mismo flujo que la raíz.
-48. Se recomienda agregar un `CampanasAi/AGENTS.md` si ese subproyecto empieza a tener reglas propias de build, pruebas o despliegue.
-
-### Expected Response Format for Risky Tasks
-49. En tareas medianas o críticas, responder primero con este formato:
-   - **Entorno recomendado**: WSL / GitHub / Windows
-   - **Archivos afectados**
-   - **Plan breve**
-   - **Validación propuesta**
-   - **Nivel de riesgo**: bajo / medio / alto
-   - **Confirmación requerida**: sí / no
+## Environment preference
+- **WSL** for: npm, node, git, bash scripts, grep, zip backups, clasp
+- **GitHub** for: remotes, PRs, Actions, releases
+- **Windows** only for: host-only tasks (browsers, Explorer, Windows-only tools)

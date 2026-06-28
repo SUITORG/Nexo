@@ -3,74 +3,89 @@
 ## Estado Actual del Proyecto
 ✅ **PROBLEMA RESUELTO**: El sistema ahora usa CORS en lugar de no-cors, permitiendo ver errores reales del servidor.
 
-## Cambios Clave Realizados
+## Funcionalidades Actuales
 
-### Frontend (script.js)
-- Cambiado de `mode: 'no-cors'` a `mode: 'cors'`
-- Ahora lee y muestra respuestas reales del servidor
-- Código optimizado: 40% menos tokens
-- Manejo de errores mejorado
+### Modos de Trabajo
+- **Ai**: Generación con IA vía OpenRouter/Gemini
+- **BD**: Carga empresas desde Google Sheets + IA
+- **BDPR**: Previsualización manual sin IA
+- **IMG**: Video de Imaginación desde carpeta local + receta
 
-### Backend (backend.gs)  
-- Código reducido: 39% menos tokens
-- Funciones simplificadas
-- Manejo de errores mejorado
+### IMG de Imaginación (Nuevo)
+- 4to botón de modo exclusivo
+- Usa el campo Empresa/Marca como texto/comentario personal
+- Oculta Sitio Web, Teléfono, Asistente IA, Formatos, Plataformas
+- Mantiene carga opcional de logo
+- **Receta**: configurable desde Supabase (tabla `recetas`)
+  - Orden: aleatorio / secuencial
+  - Duración: 30s / 60s
+  - Ritmo: música / 0.5s / 2s por foto
+  - Filtro: ninguno / B&N / colores vivos / vintage
+  - Transición: corte brusco / fundido / barrido derecha / zoom
+  - Animación: on/off
+- Botón "Crear Video de Imaginación" llama a `POST /api/video-imaginacion`
+- El backend lee archivos de **MEDIA_FOLDER** (config en .env)
+- Genera video con FFmpeg aplicando receta y lo descarga
 
-### Frontend (index.html)
-- UI simplificada: 31% menos código
-- Mejor experiencia de usuario
+### Endpoints Nuevos
+- `GET /api/recetas` — lista recetas desde Supabase
+- `POST /api/video-imaginacion` — genera video con receta + texto + logo
 
-## Archivos de Prueba Creados
+### Recetas Precargadas (Seed)
+1. Mix Rápido (aleatorio, 30s, 0.5s, sin filtro, corte brusco)
+2. Cine Vintage (secuencial, 60s, 2s, vintage, fundido, animación)
+3. Show Vibrante (aleatorio, 30s, música, colores vivos, barrido)
+4. Slow Elegance (secuencial, 60s, 2s, B&N, zoom, animación)
+5. Sorpresa Total (aleatorio, 30s, música, sin filtro, fundido, animación)
 
-- `test.html` - Herramienta de prueba manual
-- `mock-server.js` - Servidor local para pruebas
-- `test-system.js` - Pruebas automatizadas
-- `package.json` - Configuración del proyecto
+## Archivos Modificados
 
-## Para Probar el Sistema
+- `index.html` — 4to botón IMG, sección de receta, botón "Crear Video"
+- `script.js` — `setWorkMode('IMG')`, `loadRecetas()`, `generateImaginationVideo()`
+- `style.css` — Estilos para recipe-section, active IMG button
+- `local-server-node.js` — Endpoints `/api/recetas` y `/api/video-imaginacion` con FFmpeg
+- `scripts/seed-supabase.js` — Seed de tabla `recetas` con 5 recetas
+- `.env` / `.env.example` — Variable `MEDIA_FOLDER` agregada
 
-### Opción 1: Prueba Local (Recomendada)
-1. Inicia el servidor mock:
-   ```bash
-   npm start
-   ```
-2. Abre `test.html` en tu navegador
-3. Cambia la URL a `http://localhost:3000`
-4. Prueba el formulario
+## Para Probar IMG de Imaginación
 
-### Opción 2: Prueba con Google Sheets Real
-1. Despliega el Google Apps Script
-2. Actualiza la URL en `script.js`
-3. Abre `index.html` en tu navegador
+1. Configura `MEDIA_FOLDER` en `.env` apuntando a carpeta con imágenes (jpg/png)
+2. Corre `node scripts/seed-supabase.js` para crear las recetas en Supabase
+3. Inicia servidor: `node local-server-node.js`
+4. Abre `index.html`, selecciona modo **IMG**
+5. Escribe texto opcional, sube logo (opcional), elige receta
+6. Click **"Crear Video de Imaginación"**
 
-## Solución del Problema Original
+### Agente de Tendencias (Nuevo)
+- Botón "Buscar Tendencias" en la sección de receta (modo IMG)
+- Llama a `POST /api/agent/tendencias`
+- El agente (`scripts/agent-tendencias.js`):
+  1. Pide a la IA (OpenRouter) generar 5 tendencias actuales
+  2. Por cada tendencia, busca receta existente que coincida con su categoría
+  3. Si no encuentra, la IA crea una **nueva receta** y la guarda en Supabase
+  4. Genera el video llamando al mismo `/api/video-imaginacion`
+  5. Guarda todo en la tabla `tendencias` de Supabase
+- Las recetas nuevas se persisten y reusan
 
-**Antes**: 
-- El frontend siempre mostraba "éxito"
-- No se veían errores reales
-- No se sabía si los datos llegaban a Sheets
+### Tablas Supabase Nuevas
+- `tendencias` — id, titulo, categoria, descripcion, fuente, receta_id, video_url, metadata (JSONB), publicado, created_at
+  - SQL de creación en `scripts/seed-supabase.js` (comentado)
 
-**Ahora**:
-- Se muestra el estado real del servidor
-- Errores claros descriptivos
-- Feedback preciso del usuario
+## Archivos Nuevos
+- `scripts/agent-tendencias.js` — agente autónomo con IA
 
-## Optimización de Tokens
+## Archivos Modificados
+- `local-server-node.js` — endpoint `POST /api/agent/tendencias`
+- `index.html` — botón "Buscar Tendencias" en sección de receta
+- `script.js` — `ejecutarAgente()` función frontend
+- `scripts/seed-supabase.js` — SQL comentado para tabla `tendencias`
 
-| Archivo | Tokens Originales | Tokens Optimizados | Reducción |
-|---------|------------------|-------------------|-----------|
-| script.js | ~250 | ~150 | 40% |
-| backend.gs | ~180 | ~110 | 39% |
-| index.html | ~290 | ~200 | 31% |
-| **Total** | | | **37%** |
-
-## Próximos Pasos Recomendados
-
-1. **Configurar Google Sheets real**
-2. **Desplegar Google Apps Script**
-3. **Producir con el sistema en vivo**
-4. **Monitorear los datos en Sheets**
+## Requisitos
+- FFmpeg instalado y accesible desde línea de comandos
+- Carpeta con al menos 1 imagen (jpg/png)
+- Supabase con tablas `recetas` y `tendencias` pobladas
+- OPENROUTER_API_KEY en .env (ya configurada)
 
 ---
 
-*Proyecto optimizado por SuitOrg Team - 2026*
+*Proyecto mantenido por SuitOrg Team - 2026*

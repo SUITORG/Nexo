@@ -377,6 +377,40 @@ textarea {
     border-top: 1px solid var(--glass-border);
 }
 
+/* Recipe Section (IMG de Imaginacion) */
+.recipe-section {
+    background: rgba(245, 158, 11, 0.05);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.recipe-section .section-title h3 {
+    color: #fbbf24;
+}
+
+.recipe-section .input-wrapper {
+    margin-bottom: 1rem;
+}
+
+.recipe-section .input-wrapper label {
+    font-size: 0.75rem;
+    margin-bottom: 0.3rem;
+}
+
+/* IMG mode button active color */
+#btnModeImg.active {
+    background: #f59e0b;
+    color: #000;
+}
+
+/* Imagination button */
+#imaginationBtn:hover {
+    background: rgba(245, 158, 11, 0.25) !important;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
 /* AI Assistant Styles */
 .ai-assistant-section {
     background: rgba(99, 102, 241, 0.05);
@@ -977,6 +1011,29 @@ input:checked + .slider:before {
     color: var(--text-dim);
     font-size: 0.8rem;
     font-weight: 300;
+}
+
+.trend-item:hover {
+    background: rgba(99, 102, 241, 0.08) !important;
+    border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+.trend-item input[type="radio"]:checked + div {
+    color: var(--primary);
+}
+
+#trendsContainer {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+
+#trendsContainer::-webkit-scrollbar {
+    width: 4px;
+}
+
+#trendsContainer::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 4px;
 }
 
 @media (max-width: 480px) {
