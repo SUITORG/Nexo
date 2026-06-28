@@ -23,19 +23,16 @@ Object.assign(app, {
     // -------------------------------------------------------------------------
     monitor: {
         start: () => {
-            let syncCounter = 0;
-            setInterval(async () => {
+            // --- CHECK DE INACTIVIDAD (cada 10s) ---
+            setInterval(() => {
                 const now = Date.now();
                 const diff = (now - app.state.lastActivity) / 1000;
 
-                // --- PUBLIC INACTIVITY RESET (v4.7.2) ---
-                // Si es un visitante (sin login) y está inactivo por más de 5 min (300s)
-                // lo devolvemos al inicio (Orbit Hub)
                 if (!app.state.currentUser && diff > 300) {
                     if (window.location.hash && window.location.hash !== '#orbit') {
                         app.ui.updateConsole("RESET: Inactividad Visitante");
                         window.location.hash = '#orbit';
-                        location.reload(); // Hard reload to clear everything
+                        location.reload();
                         return;
                     }
                 }
@@ -47,21 +44,19 @@ Object.assign(app, {
                     app.ui.updateConsole(`TIMEOUT: ${timeoutLimit}s excedido.`, true);
                     alert(`Sesión cerrada por inactividad (${timeoutLimit}s).`);
                     app.auth.logout();
-                    return;
                 }
-                syncCounter++;
-                if (syncCounter >= 3) {
-                    syncCounter = 0;
-                    if (app.state._isUpdatingStatus) return;
-                    const success = await app.loadData();
-                    if (success) {
-                        if (app.ui.updateExternalOrderAlert) app.ui.updateExternalOrderAlert();
-                        if (window.location.hash === '#pos' || window.location.hash === '#pos-monitor') {
-                            if (app.ui.renderPOS) app.ui.renderPOS();
-                        }
+            }, 10000);
+            // --- SINCRONIZACIÓN DE DATOS (cada 30s) ---
+            setInterval(async () => {
+                if (app.state._isUpdatingStatus) return;
+                const success = await app.loadData();
+                if (success) {
+                    if (app.ui.updateExternalOrderAlert) app.ui.updateExternalOrderAlert();
+                    if (window.location.hash === '#pos' || window.location.hash === '#pos-monitor') {
+                        if (app.ui.renderPOS) app.ui.renderPOS();
                     }
                 }
-            }, 2500); // Sincronización cada 7.5s (v5.2.5 Optimized)
+            }, 30000);
         }
     }
 });

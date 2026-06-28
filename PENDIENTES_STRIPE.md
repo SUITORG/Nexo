@@ -16,15 +16,15 @@
 
 ## 🔴 Pendiente de ti (lo que no puedo automatizar)
 
-- [ ] **Crear cuenta Stripe** en https://stripe.com (gratis, 5 minutos)
-- [ ] Obtener tus **API Keys** en Dashboard > Developers > API Keys:
-      - `Public Key` (empieza con `pk_live_` o `pk_test_`)
-      - `Secret Key` (empieza con `sk_live_` o `sk_test_`)
-- [ ] Configurar en `.env`:
+- [x] **Crear cuenta Stripe** en https://stripe.com (gratis, 5 minutos)
+- [x] Obtener tus **API Keys** en Dashboard > Developers > API Keys:
+      - `Public Key` (pk_...)
+      - `Secret Key` (sk_...)
+- [x] Configurar en `.env`:
       ```
-      STRIPE_SECRET_KEY=sk_live_...
-      STRIPE_PUB_KEY=pk_live_...
-      STRIPE_WEBHOOK_SECRET=whsec_...
+      STRIPE_SECRET_KEY=sk_...
+      STRIPE_PUB_KEY=pk_...
+      # STRIPE_WEBHOOK_SECRET=whsec_... (pendiente)
       ```
 - [ ] (Opcional) Si quieres por negocio, agrega en `Config_Empresas` (Google Sheets):
       - `stripe_activo = TRUE` para negocios que acepten tarjeta

@@ -308,6 +308,11 @@ var app = {
 
                 if (app.pos && app.pos.loadCart) app.pos.loadCart();
                 app.checkBackendVersion();
+
+                // Cargar galería UNA SOLA VEZ al inicio (no en cada sync del watchdog)
+                if (app.state.companyId && app.loadGalleryFromStorage) {
+                    app.loadGalleryFromStorage(app.state.companyId);
+                }
             } else {
                 console.error("[INIT_FAILED] DATA_LOAD_FAILED");
                 alert(`Error de conexión con la base de datos.`);
@@ -365,20 +370,13 @@ var app = {
 
             // 🚀 ESTRATEGIA DE VELOCIDAD 1% (v16.7.14) - CARGA EN PARALELO
             // No esperamos uno por uno, pedimos todo al mismo tiempo
-            await Promise.all([
-                (async () => {
-                    if (dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
-                        const supabaseData = await app.loadFromSupabase(fetchId);
-                        app.data = { ...app.data, ...supabaseData };
-                        app.data.Config_Empresas = sanitizedMaster.Config_Empresas; 
-                        app.data.Usuarios = sanitizedMaster.Usuarios;
-                        app.state.dbEngine = 'SUPABASE';
-                    }
-                })(),
-                (async () => {
-                    if (app.loadGalleryFromStorage) await app.loadGalleryFromStorage(fetchId);
-                })()
-            ]);
+            if (dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
+                const supabaseData = await app.loadFromSupabase(fetchId);
+                app.data = { ...app.data, ...supabaseData };
+                app.data.Config_Empresas = sanitizedMaster.Config_Empresas; 
+                app.data.Usuarios = sanitizedMaster.Usuarios;
+                app.state.dbEngine = 'SUPABASE';
+            }
 
             if (app.ui && app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
             return true;
@@ -428,20 +426,27 @@ var app = {
      * EVASOL - STORAGE ENGINE (v16.7.13)
      * Automatización total para galerías sin copy-paste.
      */
+    _lastGalleryCompanyId: null,
     loadGalleryFromStorage: async (coId) => {
         if (!coId) return;
-            // Configuración desde el estado global (v16.7.17)
-            const SB_URL = app.sbUrl;
-            const SB_KEY = app.sbKey || (typeof SUIT_CONFIG !== 'undefined' ? SUIT_CONFIG.sbKey : '');
-            const bucket = 'galeria-privada';
-            const path = coId.toUpperCase();
+        // Cache: solo escanear UNA VEZ por empresa por sesión
+        if (app._lastGalleryCompanyId === coId) {
+            console.log(`📸 [STORAGE] Usando caché para ${coId} (ya escaneado)`);
+            return;
+        }
+        app._lastGalleryCompanyId = coId;
+        // Configuración desde el estado global (v16.7.17)
+        const SB_URL = app.sbUrl;
+        const SB_KEY = app.sbKey || (typeof SUIT_CONFIG !== 'undefined' ? SUIT_CONFIG.sbKey : '');
+        const bucket = 'galeria-privada';
+        const path = coId.toUpperCase();
 
-            if (!SB_URL || !SB_KEY) {
-                console.warn("⚠️ [STORAGE] Falta configuración de Supabase (URL/KEY)");
-                return;
-            }
+        if (!SB_URL || !SB_KEY) {
+            console.warn("⚠️ [STORAGE] Falta configuración de Supabase (URL/KEY)");
+            return;
+        }
 
-            console.log(`📸 [STORAGE] Escaneando bucket '${bucket}' para el tenant: ${path}...`);
+        console.log(`📸 [STORAGE] Escaneando bucket '${bucket}' para el tenant: ${path}...`);
 
             try {
             const res = await fetch(`${SB_URL}/storage/v1/object/list/${bucket}`, {
