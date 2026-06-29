@@ -251,7 +251,7 @@ app.post('/api/db/:table', async (req, res) => {
 app.post('/api/logs/error', async (req, res) => {
     const { message, source, lineno, colno, stack, url, companyId, userAgent } = req.body;
     try {
-        const detalle = {};
+        const detalle = { message: message || '' };
         if (source) detalle.source = source;
         if (lineno !== undefined) detalle.lineno = lineno;
         if (colno !== undefined) detalle.colno = colno;
