@@ -188,9 +188,51 @@ var app = {
             }
         }
     },
+    _lastErrorTime: 0,
     init: async () => {
         try {
             console.log("🚀 Iniciando Orquestador EVASOL...");
+
+            // Captura global de errores JS del navegador
+            // Se envian al server para almacenar en Logs (autopurga 24h)
+            window.onerror = (msg, src, line, col, err) => {
+                const now = Date.now();
+                if (now - app._lastErrorTime < 5000) return;
+                app._lastErrorTime = now;
+                const payload = {
+                    message: String(msg),
+                    source: src || '',
+                    lineno: line,
+                    colno: col,
+                    stack: err?.stack || '',
+                    url: window.location.href,
+                    companyId: app.state?.companyId || '',
+                    userAgent: navigator.userAgent
+                };
+                fetch('/api/logs/error', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(() => {});
+            };
+            window.addEventListener('unhandledrejection', (e) => {
+                const now = Date.now();
+                if (now - app._lastErrorTime < 5000) return;
+                app._lastErrorTime = now;
+                const reason = e.reason;
+                const payload = {
+                    message: String(reason?.message || reason || 'Unhandled Promise Rejection'),
+                    stack: reason?.stack || '',
+                    url: window.location.href,
+                    companyId: app.state?.companyId || '',
+                    userAgent: navigator.userAgent
+                };
+                fetch('/api/logs/error', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(() => {});
+            });
 
             // 0. Cargar recursos externos (.env)
             await app.loadEnvConfig();

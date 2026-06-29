@@ -245,6 +245,42 @@ app.post('/api/db/:table', async (req, res) => {
 });
 
 
+// CAPTURA DE ERRORES DEL FRONTEND (v16.7.30)
+// Los errores JS del navegador se almacenan en la tabla Logs con evento='FRONTEND_ERROR'
+// y se autodepuran cada 24h para no llenar la BD
+app.post('/api/logs/error', async (req, res) => {
+    const { message, source, lineno, colno, stack, url, companyId, userAgent } = req.body;
+    try {
+        const detalle = {};
+        if (source) detalle.source = source;
+        if (lineno !== undefined) detalle.lineno = lineno;
+        if (colno !== undefined) detalle.colno = colno;
+        if (stack) detalle.stack = stack;
+        if (url) detalle.url = url;
+        if (userAgent) detalle.userAgent = userAgent;
+        if (companyId) detalle.companyId = companyId;
+
+        await supabaseAdmin.from('Logs').insert({
+            evento: 'FRONTEND_ERROR',
+            usuario: 'BROWSER',
+            detalle: detalle,
+            id_empresa: companyId || 'BROWSER_GLOBAL'
+        });
+
+        // Autopurga: borrar errores de frontend mayores a 24h
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        await supabaseAdmin.from('Logs')
+            .delete()
+            .eq('evento', 'FRONTEND_ERROR')
+            .lt('fecha', yesterday);
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error('❌ [FRONTEND_ERROR_LOG]', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // UPLOAD PROXY - Usa service_role key para bypass RLS (v16.8.0)
 app.post('/api/storage/upload', express.json({ limit: '10mb' }), async (req, res) => {
     const { bucket, path, fileName, contentType, buffer } = req.body;
