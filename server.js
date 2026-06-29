@@ -264,6 +264,7 @@ app.post('/api/logs/error', async (req, res) => {
             evento: 'FRONTEND_ERROR',
             usuario: 'BROWSER',
             detalle: detalle,
+            fecha: new Date().toISOString(),
             id_empresa: companyId || 'BROWSER_GLOBAL'
         });
 
