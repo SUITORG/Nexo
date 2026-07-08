@@ -62,3 +62,6 @@ iniciar-suitorgstore.*
 CampanasAi/slideshow_*.mp4
 CampanasAi/tmp_slideshow_*/
 
+# ViRe (Remotion) render output
+SuitVidGenRemotion/out/
+

@@ -5,8 +5,8 @@ const CONFIG = {
     AI_URL: '/api/ai/generate', 
     HISTORY_URL: '/api/history', 
     TOKEN: 'SUITORG_SECURE_TOKEN_2026',
-    DRIVE_API_KEY: 'AIzaSyCWfxEjPwtOwAR7QQOscS0e-180st_W35Q',  // Google Cloud API Key (Picker API)
-    DRIVE_CLIENT_ID: '136483197929-6rma46r0oc4d1bp39ti7vr4s7vjvah3n.apps.googleusercontent.com',  // OAuth 2.0 Client ID
+    DRIVE_API_KEY: 'AIzaSyARtQDMaNnqUthixeFRH9-PB3ych4E7btI',  // Google Cloud API Key (Picker API)
+    DRIVE_CLIENT_ID: '136483197929-57qnp2q8q2fkt3i2aeae6ratk9scn9cl.apps.googleusercontent.com',  // OAuth 2.0 Client ID (CampanasAi Web Local)
     DRIVE_APP_ID: '136483197929'                               // Google Cloud Project Number
 };
 
@@ -21,6 +21,33 @@ let currentMode = 'Ai';
 let uploadedLogoDataUrl = null;
 let companyConfigs = [];
 let bdUploadedPhotos = [];
+
+// --- Scope global: funciones accesibles desde generateAIContent ---
+const INDUSTRIA_CATEGORIA = {};
+const ESPECIALIZACIONES = {};
+function getCategoriaIndustria(valor) {
+    return INDUSTRIA_CATEGORIA[valor] || '';
+}
+function getEspecializaciones(valor) {
+    return ESPECIALIZACIONES[valor] || [];
+}
+function updateEspecializacionSelect() {
+    const ind = aiIndustry.value;
+    const list = getEspecializaciones(ind);
+    aiEspecializacion.innerHTML = '<option value="">-- Especialización --</option>';
+    if (list.length > 0) {
+        list.forEach(esp => {
+            const opt = document.createElement('option');
+            opt.value = esp;
+            opt.textContent = esp;
+            aiEspecializacion.appendChild(opt);
+        });
+        aiEspecializacion.style.display = '';
+    } else {
+        aiEspecializacion.style.display = 'none';
+    }
+    aiEspecializacion.value = '';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar Elementos
@@ -75,8 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tornos_maquinado: 'el maquinado industrial', otro: 'tu industria'
     };
     const INDUSTRIAS_DATA = { clasificacion: [] };
-    const INDUSTRIA_CATEGORIA = {};
-    const ESPECIALIZACIONES = {};
     const initCategoriaLookup = (data) => {
         INDUSTRIAS_DATA.clasificacion = data.clasificacion;
         data.clasificacion.forEach(grupo => {
@@ -93,29 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
         Consciente_Producto: ['Por qué elegir ', 'La mejor opción en', 'Todo lo que necesitas saber sobre'],
         Mas_Consciente: ['Oferta exclusiva: ', 'Última oportunidad para', 'Descuento especial en']
     };
-    function getCategoriaIndustria(valor) {
-        return INDUSTRIA_CATEGORIA[valor] || '';
-    }
-    function getEspecializaciones(valor) {
-        return ESPECIALIZACIONES[valor] || [];
-    }
-    function updateEspecializacionSelect() {
-        const ind = aiIndustry.value;
-        const list = getEspecializaciones(ind);
-        aiEspecializacion.innerHTML = '<option value="">-- Especialización --</option>';
-        if (list.length > 0) {
-            list.forEach(esp => {
-                const opt = document.createElement('option');
-                opt.value = esp;
-                opt.textContent = esp;
-                aiEspecializacion.appendChild(opt);
-            });
-            aiEspecializacion.style.display = '';
-        } else {
-            aiEspecializacion.style.display = 'none';
-        }
-        aiEspecializacion.value = '';
-    }
     function suggestTheme() {
         const c = aiConciencia.value;
         const ind = aiIndustry.value;
@@ -279,56 +281,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openDrivePicker() {
-        const hasCreds = CONFIG.DRIVE_API_KEY && CONFIG.DRIVE_CLIENT_ID;
-        if (!hasCreds) {
-            showToast('⚠️ Configura DRIVE_API_KEY y DRIVE_CLIENT_ID en CONFIG para usar el explorador', 'warning');
-            showDriveModalFallback();
-            return;
-        }
-        setAiLoading(true);
-        loadGooglePickerAPI(() => {
-            if (typeof google === 'undefined' || !google.accounts?.oauth2) {
-                showToast('⚠️ Google Identity Services no cargó, usando método manual', 'warning');
-                setAiLoading(false);
-                showDriveModalFallback();
-                return;
-            }
-            const tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CONFIG.DRIVE_CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/drive.readonly',
-                callback: (tokenResponse) => {
-                    setAiLoading(false);
-                    if (tokenResponse.access_token) {
-                        const picker = new google.picker.PickerBuilder()
-                            .addView(google.picker.ViewId.DOCS_IMAGES)
-                            .addView(google.picker.ViewId.DOCS_VIDEOS)
-                            .setOAuthToken(tokenResponse.access_token)
-                            .setDeveloperKey(CONFIG.DRIVE_API_KEY)
-                            .setAppId(CONFIG.DRIVE_APP_ID || CONFIG.DRIVE_CLIENT_ID.split('-')[0])
-                            .setCallback((data) => {
-                                if (data.action === google.picker.Action.PICKED) {
-                                    const file = data.docs[0];
-                                    const url = `https://drive.google.com/uc?export=view&id=${file.id}`;
-                                    document.getElementById('companyLogo').value = url;
-                                    uploadedLogoDataUrl = null;
-                                    showToast(`✅ Logo seleccionado: ${file.name}`, 'success');
-                                }
-                            })
-                            .build();
-                        picker.setVisible(true);
-                    } else {
-                        showToast('❌ No se pudo autenticar con Google', 'error');
-                    }
-                },
-                error_callback: () => {
-                    setAiLoading(false);
-                    showToast('❌ Error de autenticación con Google', 'error');
-                }
-            });
-            tokenClient.requestAccessToken();
-        });
+        showDriveModalFallback();
     }
-
     function showDriveModalFallback() {
         if (driveModal) driveModal.style.display = 'flex';
         if (driveInput) driveInput.value = '';
@@ -400,6 +354,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnModeBdsmt) btnModeBdsmt.addEventListener('click', () => setWorkMode('BDSMT'));
     const btnModeBdpv = document.getElementById('btnModeBdpv');
     if (btnModeBdpv) btnModeBdpv.addEventListener('click', () => setWorkMode('BDPV'));
+    const btnModeViRe = document.getElementById('btnModeViRe');
+    if (btnModeViRe) btnModeViRe.addEventListener('click', () => setWorkMode('ViRe'));
+    const openVireStudioBtn = document.getElementById('openVireStudioBtn');
+    if (openVireStudioBtn) {
+        openVireStudioBtn.addEventListener('click', () => {
+            window.open('http://localhost:3004', '_blank');
+        });
+    }
 
     // BDSMT: Buscar Tendencias button
     const fetchTrendsBtn = document.getElementById('fetchTrendsBtn');
@@ -1549,6 +1511,8 @@ function setWorkMode(mode) {
     const imaginationBtn = document.getElementById('imaginationBtn');
     const previewSection = document.getElementById('previewSection');
     const bdsmtSection = document.getElementById('bdsmtSection');
+    const vireBtn = document.getElementById('btnModeViRe');
+    const vireSection = document.getElementById('vireSection');
 
     // DOM references for show/hide
     const aiSection = document.querySelector('.ai-assistant-section');
@@ -1568,6 +1532,7 @@ function setWorkMode(mode) {
     if (bdsmtBtn) bdsmtBtn.classList.remove('active');
     const bdpvBtn = document.getElementById('btnModeBdpv');
     if (bdpvBtn) bdpvBtn.classList.remove('active');
+    if (vireBtn) vireBtn.classList.remove('active');
 
     // Reset all sections to visible first
     document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
@@ -1584,6 +1549,7 @@ function setWorkMode(mode) {
     if (bdsmtSection) bdsmtSection.style.display = 'none';
     const bdpvSection = document.getElementById('bdpvSection');
     if (bdpvSection) bdpvSection.style.display = 'none';
+    if (vireSection) vireSection.style.display = 'none';
 
     if (mode === 'Ai') {
         aiBtn.classList.add('active');
@@ -1770,6 +1736,31 @@ function setWorkMode(mode) {
         if (typeof window.loadBdpvSubNicho === 'function') window.loadBdpvSubNicho();
 
         loadCompanies().then(() => setupCompanyAutoFill());
+    } else if (mode === 'ViRe') {
+        if (vireBtn) vireBtn.classList.add('active');
+        console.log("🎬 Modo actual: ViRe — Video con Remotion");
+
+        // Hide everything, show only ViRe section
+        if (webField) webField.style.display = 'none';
+        if (phoneField) phoneField.style.display = 'none';
+        if (captionGroup) captionGroup.style.display = 'none';
+        if (mediaGroup) mediaGroup.style.display = 'none';
+        if (dateGroup) dateGroup.style.display = 'none';
+        if (aiSection) aiSection.style.display = 'none';
+        if (bdPhotosContainer) bdPhotosContainer.style.display = 'none';
+        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
+            const g = el.closest('.input-group');
+            if (g) g.style.display = 'none';
+        });
+        const prodSection = document.querySelector('.production-options');
+        if (prodSection) prodSection.style.display = 'none';
+        if (generateBtn) generateBtn.style.display = 'none';
+        if (imaginationBtn) imaginationBtn.style.display = 'none';
+        if (recipeSection) recipeSection.style.display = 'none';
+        if (previewSection) previewSection.style.display = 'none';
+        if (bdsmtSection) bdsmtSection.style.display = 'none';
+        if (bdpvSection) bdpvSection.style.display = 'none';
+        if (vireSection) vireSection.style.display = 'block';
     }
 }
 
@@ -1959,8 +1950,11 @@ async function renderCarouselFromJson(data) {
     data.slides.forEach((slide, index) => {
         const slideEl = document.createElement('div');
         slideEl.className = `carousel-slide ${isReel ? 'reel-mode' : ''}`;
-        
+
         const slideId = `slide-img-${index}-${Date.now()}`;
+        const slideTitle = slide.title || `Slide ${index + 1}`;
+        const slideBody = slide.body || '';
+        const slideVisual = slide.visual || slide.image_prompt || 'Professional photo';
 
         slideEl.innerHTML = `
             <div id="loader-${slideId}" class="image-loading-state">
@@ -1971,8 +1965,8 @@ async function renderCarouselFromJson(data) {
             <div class="slide-image" id="${slideId}"></div>
             <div class="slide-overlay">
                 <div class="slide-controls" style="position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; z-index: 10;">
-                    <button class="voice-btn" onclick="speakText('${slide.body.replace(/'/g, "\\'")}', this)" title="Escuchar">🔊</button>
-                    <button class="refresh-img-btn" onclick="regenerateSlideImage('${slideId}', '${slide.visual.replace(/'/g, "\\'")}', '${industry}', '${theme}')" 
+                    <button class="voice-btn" onclick="speakText('${slideBody.replace(/'/g, "\\'")}', this)" title="Escuchar">🔊</button>
+                    <button class="refresh-img-btn" onclick="regenerateSlideImage('${slideId}', '${slideVisual.replace(/'/g, "\\'")}', '${industry}', '${theme}')"
                             style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); transition:all 0.3s;"
                             onmouseover="this.style.background='var(--primary)'; this.style.borderColor='var(--primary)';"
                             onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.borderColor='rgba(255,255,255,0.3)';"
@@ -1984,11 +1978,11 @@ async function renderCarouselFromJson(data) {
                             title="Descargar Video Animado">🎬</button>
                 </div>
                 <div class="slide-number">Slide ${index + 1}</div>
-                <div class="slide-title">${slide.title}</div>
-                <div class="slide-body">${slide.body}</div>
+                <div class="slide-title">${slideTitle}</div>
+                <div class="slide-body">${slideBody}</div>
                 <div class="slide-visual" style="font-size:0.65rem; background: rgba(255,255,0,0.15); border: 1px solid rgba(255,255,0,0.3); padding: 5px; border-radius: 4px; color: yellow; margin-top:0.5rem;">
                    <span id="source-${slideId}" style="float:right; opacity:0.7; border:1px solid; padding:1px 4px; border-radius:3px; font-size:0.5rem; margin-left:5px;">[Buscando...]</span>
-                   🎨 Concepto: ${slide.visual}
+                   🎨 Concepto: ${slideVisual}
                 </div>
             </div>
         `;
@@ -2088,6 +2082,7 @@ function regenerateSlideImage(slideId, visual, industry, theme) {
 document.getElementById('btnModeAi')?.addEventListener('click', () => setWorkMode('Ai'));
 document.getElementById('btnModeBd')?.addEventListener('click', () => setWorkMode('BD'));
 document.getElementById('btnModeBdpv')?.addEventListener('click', () => setWorkMode('BDPV'));
+document.getElementById('btnModeViRe')?.addEventListener('click', () => setWorkMode('ViRe'));
 
 // Carga inicial de empresas si está en modo BD
 loadCompanies();

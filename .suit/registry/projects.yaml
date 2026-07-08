@@ -1,0 +1,126 @@
+projects:
+  root:
+    path: ./
+    agents: .suit/registry/agents.yaml
+    skills: .suit/registry/skills.yaml
+    context:
+      - AGENTS.md
+      - contexto.md
+      - INDEX_FUNCIONES.md
+      - opencode.json
+    servers:
+      - name: main
+        path: server.js
+        port: 3001
+        type: express
+
+  campanas-ai:
+    path: CampanasAi/
+    agents: CampanasAi/AGENTS.md
+    skills:
+      - trend-analysis
+      - content-generation
+    context:
+      - CampanasAi/AGENTS.md
+      - CampanasAi/script.js
+      - CampanasAi/config/prompts.json
+      - CampanasAi/config/formatos.json
+      - CampanasAi/local-server-node.js
+      - CampanasAi/backend.gs
+    environment:
+      PORT: 8000
+      TYPE: cms
+    servers:
+      - name: cms
+        path: CampanasAi/local-server-node.js
+        port: 8000
+        type: http
+
+  citas:
+    path: citas/
+    agents: citas/AGENTS.md
+    skills:
+      - whatsapp-integration
+      - calendar-integration
+    context:
+      - citas/index.js
+      - citas/services/ai.js
+      - citas/handlers/actions.js
+      - citas/db/schema.sql
+    environment:
+      PORT: 3002
+      TYPE: service
+    servers:
+      - name: appointments
+        path: citas/index.js
+        port: 3002
+        type: express
+
+  vire:
+    name: "ViRe — Video con Remotion"
+    path: SuitVidGenRemotion/
+    description: "Módulo de generación de video profesional con Remotion. Crea composiciones animadas, presentaciones dinámicas y contenido multimedia programático desde React. Servido en puerto 3004."
+    skills:
+      - remotion-video
+      - javascript
+    context:
+      - SuitVidGenRemotion/src/Root.tsx
+      - SuitVidGenRemotion/src/Composition.tsx
+      - SuitVidGenRemotion/package.json
+    environment:
+      PORT: 3004
+      TYPE: remotion
+    servers:
+      - name: studio
+        path: SuitVidGenRemotion/
+        port: 3004
+        type: remotion
+
+  suit-cotizador:
+    name: "Portal de Cotización en Línea"
+    path: SuitCotizador/
+    description: "Calculadoras configurables por proceso/producto/servicio. Cotización autónoma → Lead/Proyecto/Orden. Habilitado solo si Config_Empresas.giro_especifico contiene ',1' al final (ej: 'Energía Solar,1'). Validación robusta contra nulos/vacíos."
+    db_engine: SUPABASE
+    dependencies:
+      - js/modules/public.js
+      - js/modules/admin.js
+      - backend/core.js
+      - backend/utils.js
+      - backend/ai_engine.js
+      - backend/DriveManager.js
+    skills:
+      - multi-tenant
+      - javascript
+      - cotizaciones-engine
+      - pdf-generation
+    context:
+      - AGENTS.md
+      - contexto.md
+      - INDEX_FUNCIONES.md
+      - js/modules/public.js
+      - js/modules/admin.js
+      - backend/core.js
+      - backend/utils.js
+      - backend/ai_engine.js
+      - backend/DriveManager.js
+      - server.js
+    tables:
+      - Cotizaciones
+      - Cotizacion_Detalle
+      - Procesos_Cotizacion
+      - Variables_Cotizacion
+      - Reglas_Precios
+      - Leads
+      - Proyectos
+      - Catalogo
+      - Clientes
+      - Config_Empresas
+    environment:
+      PORT: 3001
+      DB_ENGINE: SUPABASE
+      TYPE: feature
+    validation:
+      giro_field: "giro_especifico"
+      enable_pattern: ",1$"
+      fallback: false
+      error_message: "El giro de la empresa no tiene habilitado el módulo de cotizaciones"

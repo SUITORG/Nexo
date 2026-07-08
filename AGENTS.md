@@ -1,11 +1,77 @@
 # AGENTS.md — SuitOrg
 
+## SuitOS Integration (activated)
+
+This project runs on **SuitOS** — an Agent Operating System defined in `.suit/`. Every agent session must respect this hierarchy.
+
+### Knowledge Hierarchy (enforced)
+
+```
+.suit/ARCHITECTURE.md     ← System architecture (read first)
+     ↓
+AGENTS.md (root)          ← This file — immutable project rules
+     ↓
+AGENTS.md (subproject)    ← Project-specific rules (if exists)
+     ↓
+.suit/workflows/          ← Declarative process definitions (YAML)
+     ↓
+.suit/skills/             ← Reusable capability modules (YAML)
+     ↓
+Code                      ← Actual implementation files
+```
+
+No component may skip a level. Always load from top to bottom.
+
+## Activation Protocol (mandatory at session start)
+
+Before any operation, the agent MUST:
+
+1. Read `.suit/config/kernel.yaml` — system configuration and model preferences
+2. Read `.suit/ARCHITECTURE.md` — full SuitOS architecture (2384 lines)
+3. Read this file (AGENTS.md) — project rules below
+4. Read `.suit/INDEX.md` — to navigate SuitOS subsystems
+
+## Runtime Integration
+
+| Phase | What to do | Reference |
+|---|---|---|
+| **Classify request** | Query `.suit/registry/routing.yaml` for intent→workflow mapping | `routing.yaml` |
+| **Load context** | Use `.suit/loader/strategy.yaml` — pick minimal/standard/deep by task | `strategy.yaml` |
+| **Plan** | Use `.suit/planner/template.yaml` before writing code | `template.yaml` |
+| **Follow process** | Use workflow from `.suit/workflows/` matching the task | `workflows/` |
+| **Validate** | Run `.suit/reviewer/` checks (quick/standard/architecture/security) before commit | `profiles.yaml` |
+| **Record decisions** | Write ADR to `.suit/memory/decisions/` for architectural choices | `memory/` |
+| **Log** | Record execution in `.suit/telemetry/` following `schema.yaml` | `telemetry/` |
+
+## Registry quick reference
+
+- `.suit/registry/agents.yaml` — agent roles (architect, developer, reviewer, cotizador)
+- `.suit/registry/skills.yaml` — skill definitions (domain, language, process, tool)
+- `.suit/registry/workflows.yaml` — workflow index
+- `.suit/registry/projects.yaml` — subproject definitions and overrides
+- `.suit/registry/models.yaml` — AI model registry
+- `.suit/registry/permissions.yaml` — access control rules
+- `.suit/registry/routing.yaml` — intent-to-workflow mapping
+
+## Worker skills (`.suit/skills/`)
+
+| Category | Contents |
+|---|---|
+| `system/` | context-loader, index-navigator, registry-query |
+| `domain/` | multi-tenant, cotizaciones-engine, system-analysis, remotion-video |
+| `language/` | javascript, gas, sql |
+| `tool/` | web-search, git |
+| `process/` | code-review, security-audit, deployment, pdf-generation |
+
 ## Start here
-- Read `INDEX_FUNCIONES.md` to locate any function (file:line) before reading source files.
-- Reference `contexto.md` for architecture, conventions, glossary, and known errors.
+- Read `.suit/ARCHITECTURE.md` first (above) for system design
+- Read `INDEX_FUNCIONES.md` to locate any function (file:line) before reading source files
+- Reference `contexto.md` for architecture, conventions, glossary, and known errors
+- Use `.suit/loader/strategy.yaml` to determine what context to load
 
 ## Architecture (non-obvious)
-- 3 independent servers: `server.js` (Express, 3001), `CampanasAi/local-server-node.js` (http, 8000), `citas/index.js` (Express, 3002)
+- 4 independent servers: `server.js` (Express, 3001), `CampanasAi/local-server-node.js` (http, 8000), `citas/index.js` (Express, 3002), `SuitVidGenRemotion/` (Remotion Studio, 3004)
+- **ViRe** (`SuitVidGenRemotion/`): Módulo de video con Remotion. Usa `npm run dev` para abrir el estudio en puerto 3004.
 - Dual backend: GAS (`backend/`) does core CRUD on Google Sheets; Node.js proxies to Supabase, Gemini, Stripe
 - Hybrid DB: 5 MASTER tables always in Sheets (`Config_Empresas`, `Usuarios`, `Config_Roles`, `Config_SEO`, `Prompts_IA`); PRIVATE tables migrate to Supabase per-tenant via `db_engine`
 - Two Supabase projects: backend `egyxgnlnzanxpqyuvmsg`, vision-audit `hmrpotibipxhsnowgjvq`
@@ -29,6 +95,7 @@
 node server.js                          # port 3001
 node CampanasAi/local-server-node.js    # port 8000
 node citas/index.js                     # port 3002
+cd SuitVidGenRemotion && npm run dev    # port 3004 (Remotion Studio / ViRe)
 
 # Deploy GAS (backend/)
 clasp push && clasp deploy
@@ -56,11 +123,18 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 - **`no-cors` fetch to GAS** returns opaque response — can't read body on client side
 - No tests, lint, or typecheck exist — smoke test manually
 
-## Workflow
-1. Find function in `INDEX_FUNCIONES.md` → read only that context
-2. Classify risk: touches multi-tenant, security, GAS, or Supabase? → high risk
-3. Apply change → run `node scripts/generate-index.js` if functions changed → commit with format `{emoji} {tipo}: {desc} (v{X.Y.Z})`
-4. Smoke test manually
+## Workflow (SuitOS-aware)
+
+1. **Classify request** — query `.suit/registry/routing.yaml` for intent→workflow mapping
+2. **Load strategy** — use `.suit/loader/strategy.yaml` to load minimal context for the task
+3. **Plan** — use `.suit/planner/template.yaml` before writing code (skip for low-risk tasks)
+4. **Apply change** — follow workflow steps from `.suit/workflows/<workflow>.yaml`
+5. **Index** — run `node scripts/generate-index.js` if functions changed
+6. **Validate** — run `.suit/reviewer/profiles.yaml` checks matching risk level
+7. **Record** — write ADR to `.suit/memory/decisions/` for architectural choices
+8. **Commit** — format `{emoji} {tipo}: {desc} (v{X.Y.Z})`
+9. **Log** — record execution in `.suit/logs/` following telemetry schema
+10. **Smoke test manually**
 
 ## High-risk changes (always report before acting)
 - **Environment**: WSL / GitHub / Windows

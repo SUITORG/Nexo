@@ -53,6 +53,7 @@
                             <button type="button" class="mode-btn" id="btnModeImg" title="Video desde carpeta local + receta">IMG</button>
                             <button type="button" class="mode-btn" id="btnModeBdsmt" title="Campañas basadas en tendencias reales">BDSMT</button>
                             <button type="button" class="mode-btn" id="btnModeBdpv" title="Presentación de Video HTML">BDPV</button>
+                            <button type="button" class="mode-btn" id="btnModeViRe" title="Videos creados con Remotion">ViRe</button>
                         </div>
                     </div>
                     <span class="badge">Google Sheets</span>
@@ -238,6 +239,33 @@
                         </button>
                     </div>
                     <div id="trendsContainer" style="display: none; margin-top: 1rem; max-height: 400px; overflow-y: auto;"></div>
+                </div>
+
+                <!-- ViRe Section: Video con Remotion -->
+                <div id="vireSection" class="ai-assistant-section" style="display: none;">
+                    <div class="section-title">
+                        <span class="icon">🎬</span>
+                        <h3>ViRe — Videos con Remotion</h3>
+                    </div>
+                    <div style="padding: 1rem; text-align: center;">
+                        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1rem;">
+                            ViRe es el módulo de generación de video profesional con Remotion.
+                            Crea composiciones animadas, presentaciones dinámicas y contenido multimedia
+                            programático directamente desde código React.
+                        </p>
+                        <button type="button" id="openVireStudioBtn" class="secondary-btn" 
+                                style="background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; padding: 0.8rem 2rem; font-size: 1rem; width: 100%;">
+                            <span>🎬</span>
+                            <span>Abrir Remotion Studio</span>
+                        </button>
+                        <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-dim); text-align: left; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 8px;">
+                            <strong>📖 Instrucciones:</strong><br>
+                            1. Asegúrate de que el servidor Remotion esté corriendo<br>
+                            2. Ve a <code>SuitVidGenRemotion/</code> y ejecuta <code>npm run dev</code><br>
+                            3. El estudio se abrirá en <code>http://localhost:3004</code><br>
+                            4. Edita los componentes en <code>src/</code> para crear tus videos
+                        </div>
+                    </div>
                 </div>
 
                 <!-- BDPV Section: Presentación de Video HTML -->

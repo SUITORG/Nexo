@@ -1,0 +1,132 @@
+workflows:
+  feature:
+    path: .suit/workflows/feature.yaml
+    risk: medium
+    domain: code
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 8000
+    trigger_keywords:
+      - "implement"
+      - "add"
+      - "create"
+      - "feature"
+      - "nuevo"
+
+  bugfix:
+    path: .suit/workflows/bugfix.yaml
+    risk: medium
+    domain: code
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 6000
+    trigger_keywords:
+      - "bug"
+      - "error"
+      - "fix"
+      - "arreglar"
+      - "issue"
+
+  audit:
+    path: .suit/workflows/audit.yaml
+    risk: low
+    domain: system
+    requires_review: false
+    requires_planning: true
+    estimated_tokens: 12000
+    trigger_keywords:
+      - "audit"
+      - "review"
+      - "analyze"
+      - "diagnose"
+
+  docs:
+    path: .suit/workflows/docs.yaml
+    risk: low
+    domain: documentation
+    requires_review: false
+    requires_planning: false
+    estimated_tokens: 4000
+    trigger_keywords:
+      - "document"
+      - "readme"
+      - "documentation"
+      - "doc"
+
+  research:
+    path: .suit/workflows/research.yaml
+    risk: low
+    domain: knowledge
+    requires_review: false
+    requires_planning: false
+    estimated_tokens: 8000
+    trigger_keywords:
+      - "research"
+      - "investigate"
+      - "find"
+      - "search"
+
+  deploy:
+    path: .suit/workflows/deploy.yaml
+    risk: high
+    domain: operations
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 4000
+    trigger_keywords:
+      - "deploy"
+      - "release"
+      - "publish"
+      - "production"
+
+  review:
+    path: .suit/workflows/review.yaml
+    risk: low
+    domain: quality
+    requires_review: false
+    requires_planning: false
+    estimated_tokens: 8000
+    trigger_keywords:
+      - "review"
+      - "validate"
+      - "check"
+
+  migration:
+    path: .suit/workflows/migration.yaml
+    risk: high
+    domain: operations
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 10000
+    trigger_keywords:
+      - "migrate"
+      - "migration"
+      - "schema"
+
+  video-generation:
+    path: .suit/workflows/video-generation.yaml
+    risk: low
+    domain: media
+    requires_review: false
+    requires_planning: true
+    estimated_tokens: 6000
+    trigger_keywords:
+      - "video"
+      - "vire"
+      - "remotion"
+      - "render"
+      - "composición"
+
+  cotizador:
+    path: .suit/workflows/cotizador.yaml
+    risk: medium
+    domain: sales
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 10000
+    trigger_keywords:
+      - "cotizador"
+      - "cotización"
+      - "quote"
+      - "calculadora"
+      - "proceso"

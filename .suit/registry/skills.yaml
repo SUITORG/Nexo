@@ -1,0 +1,239 @@
+skills:
+  system-analysis:
+    description: "Analyze system architecture, identify patterns, detect issues"
+    version: 1.0.0
+    type: domain
+    domain: system
+    dependencies: []
+    triggers:
+      - "architecture review"
+      - "system audit"
+      - "technical debt analysis"
+    inputs:
+      - "source code files"
+      - "architecture docs"
+    outputs:
+      - "architecture report"
+      - "recommendations"
+    discoverable: true
+    context_hint:
+      - "contexto.md"
+      - "docs/contexto/arquitectura.md"
+
+  multi-tenant:
+    description: "Multi-tenant isolation rules and patterns"
+    version: 1.0.0
+    type: domain
+    domain: security
+    dependencies:
+      - system-analysis
+    triggers:
+      - "data isolation"
+      - "id_empresa"
+      - "RBAC"
+      - "giro_especifico"
+    inputs: []
+    outputs:
+      - "isolation validation"
+    discoverable: true
+    context_hint:
+      - "AGENTS.md"
+      - "backend/core.js"
+      - "backend/utils.js"
+
+  javascript:
+    description: "JavaScript/Node.js development"
+    version: 1.0.0
+    type: language
+    domain: code
+    dependencies: []
+    triggers:
+      - "js file"
+      - "node"
+      - "express"
+    inputs:
+      - "source files"
+    outputs:
+      - "modified files"
+    discoverable: true
+    context_hint:
+      - "js/modules/"
+
+  gas:
+    description: "Google Apps Script development"
+    version: 1.0.0
+    type: language
+    domain: code
+    dependencies:
+      - javascript
+    triggers:
+      - "gs file"
+      - "clasp"
+      - "google apps script"
+    inputs:
+      - "source files"
+    outputs:
+      - "modified files"
+    discoverable: true
+    context_hint:
+      - "backend/"
+      - "appsscript.json"
+
+  code-review:
+    description: "Code review according to project standards"
+    version: 1.0.0
+    type: process
+    domain: quality
+    dependencies:
+      - javascript
+    triggers:
+      - "pull request"
+      - "review request"
+    inputs:
+      - "diff"
+      - "changed files"
+    outputs:
+      - "review comments"
+    discoverable: true
+    context_hint:
+      - "AGENTS.md"
+      - "contexto.md"
+
+  security-audit:
+    description: "Security audit for hardcoded keys, CSP, RBAC"
+    version: 1.0.0
+    type: process
+    domain: security
+    dependencies: []
+    triggers:
+      - "security review"
+      - "vulnerability scan"
+    inputs:
+      - "source code"
+      - "config files"
+    outputs:
+      - "security report"
+    discoverable: true
+    context_hint:
+      - "server.js"
+      - "backend/*.js"
+      - ".env.example"
+
+  sql:
+    description: "SQL migrations and schema management"
+    version: 1.0.0
+    type: language
+    domain: database
+    dependencies: []
+    triggers:
+      - "migration"
+      - "schema"
+      - "supabase"
+    inputs:
+      - "migration files"
+    outputs:
+      - "SQL scripts"
+    discoverable: true
+    context_hint:
+      - "Documentacion/migracion_datos.js"
+      - "Documentacion/03-solucion-migracion.md"
+
+  deployment:
+    description: "Deployment procedures for GAS and GH Pages"
+    version: 1.0.0
+    type: process
+    domain: operations
+    dependencies:
+      - javascript
+    triggers:
+      - "deploy"
+      - "clasp"
+      - "release"
+    inputs: []
+    outputs:
+      - "deployment log"
+    discoverable: true
+    context_hint:
+      - ".github/workflows/deploy.yml"
+
+  cotizaciones-engine:
+    description: "Motor de cálculo para cotizaciones configurables por proceso, producto o servicio. Evalúa reglas de precio, variables dinámicas, y produce una cotización con folio que puede convertirse en Lead, Proyecto u Orden."
+    version: 1.0.0
+    type: domain
+    domain: sales
+    dependencies:
+      - javascript
+      - multi-tenant
+    triggers:
+      - "cotizacion"
+      - "cotización"
+      - "quote"
+      - "calcular"
+      - "precio"
+      - "proceso"
+      - "regla_precio"
+      - file_pattern: "SuitCotizador/**/*.js"
+      - file_pattern: "js/modules/cotizador.js"
+    inputs:
+      - "proceso_id"
+      - "variables_json"
+      - "id_empresa"
+    outputs:
+      - "cotizacion_calculada"
+      - "folio_cotizacion"
+    discoverable: true
+    context_hint:
+      - "backend/core.js"
+      - "backend/utils.js"
+      - "backend/ai_engine.js"
+      - "server.js"
+      - "js/modules/cotizador.js"
+
+  remotion-video:
+    description: "Generación de video profesional con Remotion. Crea composiciones animadas con React, renderiza MP4, integra audio, imágenes y transiciones."
+    version: 1.0.0
+    type: domain
+    domain: media
+    dependencies:
+      - javascript
+    triggers:
+      - "video generation"
+      - "remotion"
+      - "animated composition"
+      - "programmatic video"
+      - file_pattern: "SuitVidGenRemotion/**/*.tsx"
+      - file_pattern: "SuitVidGenRemotion/**/*.ts"
+    inputs:
+      - "composition parameters"
+      - "React components"
+    outputs:
+      - "rendered video (MP4)"
+      - "animated compositions"
+    discoverable: true
+    context_hint:
+      - "SuitVidGenRemotion/src/"
+      - "SuitVidGenRemotion/package.json"
+      - "https://www.remotion.dev/docs"
+
+  pdf-generation:
+    description: "Genera PDFs de cotizaciones usando backend/DriveManager.js. Almacena en Google Drive por tenant, enlace guardado en la cotización."
+    version: 1.0.0
+    type: process
+    domain: document
+    dependencies:
+      - javascript
+      - multi-tenant
+    triggers:
+      - "pdf"
+      - "imprimir"
+      - "descargar cotizacion"
+      - file_pattern: "backend/DriveManager.js"
+    inputs:
+      - "cotizacion_data"
+      - "id_empresa"
+    outputs:
+      - "pdf_url"
+      - "drive_file_id"
+    discoverable: true
+    context_hint:
+      - "backend/DriveManager.js"
