@@ -64,4 +64,9 @@ CampanasAi/tmp_slideshow_*/
 
 # ViRe (Remotion) render output
 SuitVidGenRemotion/out/
+SuitVidGenRemotion/.vire-props.json
+SuitVidGenRemotion/public/generated/
+
+# Mystery artifact files (zi*)
+zi*
 

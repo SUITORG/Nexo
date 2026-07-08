@@ -245,25 +245,25 @@
                 <div id="vireSection" class="ai-assistant-section" style="display: none;">
                     <div class="section-title">
                         <span class="icon">🎬</span>
-                        <h3>ViRe — Videos con Remotion</h3>
+                        <h3>ViRe — Video con Remotion</h3>
                     </div>
                     <div style="padding: 1rem; text-align: center;">
                         <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1rem;">
-                            ViRe es el módulo de generación de video profesional con Remotion.
-                            Crea composiciones animadas, presentaciones dinámicas y contenido multimedia
-                            programático directamente desde código React.
+                            ViRe genera videos profesionales desde un guion JSON con escenas, imágenes, voz y subtítulos.
                         </p>
                         <button type="button" id="openVireStudioBtn" class="secondary-btn" 
                                 style="background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; padding: 0.8rem 2rem; font-size: 1rem; width: 100%;">
                             <span>🎬</span>
                             <span>Abrir Remotion Studio</span>
                         </button>
-                        <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-dim); text-align: left; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 8px;">
-                            <strong>📖 Instrucciones:</strong><br>
-                            1. Asegúrate de que el servidor Remotion esté corriendo<br>
-                            2. Ve a <code>SuitVidGenRemotion/</code> y ejecuta <code>npm run dev</code><br>
-                            3. El estudio se abrirá en <code>http://localhost:3004</code><br>
-                            4. Edita los componentes en <code>src/</code> para crear tus videos
+                        <div style="margin-top: 0.8rem; font-size: 0.75rem; color: var(--text-dim); text-align: left; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 8px;">
+                            <strong>📖 Comandos rápidos:</strong><br>
+                            <code style="display:block;margin:4px 0;padding:4px 6px;background:rgba(0,0,0,0.3);border-radius:4px;">
+                            cd SuitVidGenRemotion && node scripts/render.js --guion examples/sample-script.json
+                            </code>
+                            <br>
+                            <strong>🎯 Ejemplo generado:</strong><br>
+                            <code>SuitVidGenRemotion/out/test_ape.mp4</code> — video demo de 15s con voz y subtítulos.
                         </div>
                     </div>
                 </div>
@@ -487,6 +487,20 @@
                     <div class="input-wrapper">
                         <label for="aiTheme">Tema de la publicación</label>
                         <input type="text" id="aiTheme" placeholder="Ej: Importancia del SEO en 2024">
+                    </div>
+
+                    <div class="input-wrapper" style="margin-top: 1rem;">
+                        <label for="modelSelect">🤖 Modelo de IA</label>
+                        <select id="modelSelect" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-main); border-radius: 8px;">
+                            <option value="deepseek/deepseek-v4-flash">⚡ DeepSeek V4 Flash — Rápido + Bueno (Recomendado)</option>
+                            <option value="qwen/qwen3.6-35b-a3b:free">🧠 Qwen 3.6 35B — Creativo en español</option>
+                            <option value="openrouter/free">🔄 OpenRouter Free — Rotativo rápido</option>
+                            <option value="meta-llama/llama-4-maverick:free">🦙 Llama 4 Maverick — Razonamiento</option>
+                            <option value="google/gemma-3-27b-it:free">💎 Gemma 3 27B — Instrucciones precisas</option>
+                            <option value="qwen/qwen-2.5-72b-instruct:free">👑 Qwen 2.5 72B — Máxima calidad (lento)</option>
+                            <option value="mistralai/mistral-small-3.1-24b-instruct:free">💨 Mistral Small — Ultra rápido</option>
+                        </select>
+                        <small style="color: var(--text-dim); font-size: 0.7rem; margin-top: 4px; display: block;" id="modelHint">⚡ DeepSeek V4 Flash — Rápido y gratis. El mejor para contenido.</small>
                     </div>
 
                     <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;">

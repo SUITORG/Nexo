@@ -1,0 +1,58 @@
+{
+  "format": "reel",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "empresa": "APE",
+  "tema": "Protección legal para empresas",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1.0
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "tiktok",
+    "language": "es"
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "duration": 3,
+      "title": "APE",
+      "subtitle": "Protección Legal Empresarial",
+      "animation": "fade_in",
+      "voice_text": "En APE, protegemos tu empresa con soluciones legales integrales."
+    },
+    {
+      "type": "text",
+      "duration": 4,
+      "title": "¿Sabías que...",
+      "body": "Un apagón eléctrico puede generar demandas millonarias contra tu negocio si no tienes la cobertura adecuada.",
+      "animation": "slide_up",
+      "image_prompt": "Professional law firm office with shocked business owner reading legal documents, dramatic lighting, cinematic",
+      "voice_text": "¿Sabías que un apagón eléctrico puede generar demandas millonarias contra tu negocio si no tienes la cobertura adecuada?"
+    },
+    {
+      "type": "product",
+      "duration": 5,
+      "title": "Protección 360",
+      "subtitle": "Para tu empresa",
+      "body": "Cobertura legal completa contra riesgos operativos, apagones, y responsabilidad civil.",
+      "price": "Desde $499/mes",
+      "image_prompt": "Professional legal document with shield icon, blue gradient background, 3D render style, corporate",
+      "animation": "ken_burns",
+      "voice_text": "Con nuestro plan de Protección 360, cubrimos tu empresa contra riesgos operativos, apagones y responsabilidad civil desde 499 pesos al mes."
+    },
+    {
+      "type": "outro",
+      "duration": 3,
+      "cta": "Contrata hoy",
+      "contact_info": "APE Servicios Legales",
+      "phone": "81 1234 5678",
+      "website": "www.ape.mx",
+      "animation": "fade_in",
+      "voice_text": "Contrata hoy y mantén tu empresa protegida. Visita www.ape.mx o llámanos al 81 1234 5678."
+    }
+  ]
+}
