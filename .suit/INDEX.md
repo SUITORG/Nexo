@@ -68,6 +68,9 @@
 | `suit-cotizador` | `SuitCotizador/` | SUPABASE | 3003 |
 | `suit-pedido-express` | `SuitPedidoExpress/` | SUPABASE | 3005 |
 | `suit-pos` | `SuitPos/` | SUPABASE | 3006 |
+| `suit-productos` | `SuitProductos/` | SUPABASE | 3007 |
+| `suit-inventarios` | `SuitInventarios/` | SUPABASE | 3008 |
+| `suit-bodega` | `SuitBodega/` | SUPABASE | 3009 |
 | `vire` | `SuitVidGenRemotion/` | - | 3004 |
 
 ## Memory
@@ -83,3 +86,4 @@
 | ID | Title | Date |
 |---|---|---|
 | ADR-004 | [Modo Flags 4-Partes + SuitPedidoExpress/SuitPos](memory/decisions/ADR-004-modo-flags.md) | 2026-07-09 |
+| ADR-005 | [Modo Flags 7-Partes + SuitProductos/SuitInventarios/SuitBodega](memory/decisions/ADR-005-modulo-prod-inv-bod.md) | 2026-07-09 |

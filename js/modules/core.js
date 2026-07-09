@@ -164,17 +164,20 @@ var app = {
             return new Date().toLocaleDateString('en-CA');
         },
         // --- MODO FLAGS (v7.0.0) ---
-        // Parsea el campo modo de Config_Empresas con formato VISIBILIDAD,STRIPE,EXPRESS,POS
-        // Ej: PROD,1,1,1 — partes faltantes default a 1 (retrocompatible)
+        // Parsea el campo modo de Config_Empresas con formato VISIBILIDAD,STRIPE,EXPRESS,POS,PRODUCTOS,INVENTARIOS,BODEGA
+        // Ej: PROD,1,1,1,1,1,1 — partes faltantes default a 1 (retrocompatible)
         parseModo: (company) => {
             const modo = (company?.modo || '').trim();
-            if (!modo) return { hub: 'PROD', stripe: false, express: true, pos: true };
+            if (!modo) return { hub: 'PROD', stripe: false, express: true, pos: true, productos: true, inventarios: true, bodega: true };
             const parts = modo.split(',');
             return {
                 hub: (parts[0] || 'PROD').trim(),
                 stripe: parts.length > 1 && parts[1].trim() === '1',
                 express: parts.length > 2 ? parts[2].trim() === '1' : true,
-                pos: parts.length > 3 ? parts[3].trim() === '1' : true
+                pos: parts.length > 3 ? parts[3].trim() === '1' : true,
+                productos: parts.length > 4 ? parts[4].trim() === '1' : true,
+                inventarios: parts.length > 5 ? parts[5].trim() === '1' : true,
+                bodega: parts.length > 6 ? parts[6].trim() === '1' : true
             };
         },
     },

@@ -150,9 +150,12 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
    | 3002 | SuitReservaciones |
    | 3003 | SuitCotizador |
    | 3004 | SuitVidGenRemotion (ViRe) |
-   | 3005 | SuitPedidoExpress |
-   | 3006 | SuitPos |
-   | 8000 | CampanasAi |
+    | 3005 | SuitPedidoExpress |
+    | 3006 | SuitPos |
+    | 3007 | SuitProductos |
+    | 3008 | SuitInventarios |
+    | 3009 | SuitBodega |
+    | 8000 | CampanasAi |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas
 6. Si el módulo tiene gate de UI (como `modo` flags o `usa_reservaciones`), documentarlo en `projects.yaml` bajo `frontend:`
 7. Escribir ADR en `.suit/memory/decisions/` explicando la decisión arquitectónica

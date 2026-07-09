@@ -174,6 +174,89 @@ projects:
         port: 3006
         type: express
 
+  suit-productos:
+    name: "Productos — Catálogo + Precios"
+    path: SuitProductos/
+    description: "Módulo de Productos: catálogo multi-categoría, precios, gestión de variantes. Supabase exclusivo — puerto 3007."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitProductos/index.js
+      - SuitProductos/package.json
+    frontend:
+      public: false
+      staff: true
+      staff_route: "#productos"
+      staff_gate: "modo PRODUCTOS=1"
+      staff_rbac: "ADMIN >= 10"
+    environment:
+      PORT: 3007
+      TYPE: service
+    servers:
+      - name: productos
+        path: SuitProductos/index.js
+        port: 3007
+        type: express
+    tables:
+      - Catalogo
+
+  suit-inventarios:
+    name: "Inventarios — Stock + Movimientos"
+    path: SuitInventarios/
+    description: "Módulo de Inventarios: control de stock, movimientos (entrada/salida/ajuste), historial. Supabase exclusivo — puerto 3008."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitInventarios/index.js
+      - SuitInventarios/package.json
+    frontend:
+      public: false
+      staff: true
+      staff_route: "#inventarios"
+      staff_gate: "modo INVENTARIOS=1"
+      staff_rbac: "ADMIN >= 10"
+    environment:
+      PORT: 3008
+      TYPE: service
+    servers:
+      - name: inventarios
+        path: SuitInventarios/index.js
+        port: 3008
+        type: express
+    tables:
+      - Inventario
+      - Movimientos_Inventario
+
+  suit-bodega:
+    name: "Bodega — Ubicaciones + Transferencias"
+    path: SuitBodega/
+    description: "Módulo de Bodega: gestión de ubicaciones físicas, transferencias entre bodegas. Supabase exclusivo — puerto 3009."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitBodega/index.js
+      - SuitBodega/package.json
+    frontend:
+      public: false
+      staff: true
+      staff_route: "#bodega"
+      staff_gate: "modo BODEGA=1"
+      staff_rbac: "ADMIN >= 10"
+    environment:
+      PORT: 3009
+      TYPE: service
+    servers:
+      - name: bodega
+        path: SuitBodega/index.js
+        port: 3009
+        type: express
+    tables:
+      - Bodegas
+      - Transferencias
+
   suit-cotizador:
     name: "Portal de Cotización en Línea"
     path: SuitCotizador/

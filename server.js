@@ -382,6 +382,18 @@ app.use(pedidoExpressApp);
 const posApp = require('./SuitPos/index');
 app.use(posApp);
 
+// Montar SuitProductos (catálogo + precios) — módulo nuevo
+const productosApp = require('./SuitProductos/index');
+app.use(productosApp);
+
+// Montar SuitInventarios (stock + movimientos) — módulo nuevo
+const inventariosApp = require('./SuitInventarios/index');
+app.use(inventariosApp);
+
+// Montar SuitBodega (ubicaciones + transferencias) — módulo nuevo
+const bodegaApp = require('./SuitBodega/index');
+app.use(bodegaApp);
+
 // =====================================================================
 // 💳 STRIPE PAYMENT ENDPOINTS
 // =====================================================================
