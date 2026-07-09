@@ -14,7 +14,7 @@ Esta tabla decide TODO. Vive en GSheets y también en Supabase.
 | `nomempresa` | texto | Nombre del negocio |
 | `db_engine` | GSHEETS, SUPABASE | De dónde lee los datos |
 | `habilitado` | TRUE, FALSE, vacío | Si el negocio está activo |
-| `modo` | PROD, HIDDEN | PROD=visible en Hub, HIDDEN=oculto |
+| `modo` | PROD, HIDDEN, PROD,1,1,1 | Formato: `VISIBILIDAD,STRIPE,EXPRESS,POS`. VISIBILIDAD: PROD=visible en Hub, HIDDEN=oculto. STRIPE: 1=Tarjeta activa. EXPRESS: 1=Pedido Express visible. POS: 1=POS en staff visible. Defaults de partes faltantes: STRIPE=0, EXPRESS=1, POS=1 |
 | `modo_sitio` | HYBRID, NOHYBRIDO, vacío | Si es tenant independiente (en pruebas) |
 | `es_principal` | TRUE, FALSE | Si es el tenant principal |
 | `origen_politicas` | ROL, USUARIO | De dónde saca los permisos |

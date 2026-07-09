@@ -1,0 +1,32 @@
+skill:
+  name: security-audit
+  display_name: "Security Audit"
+  version: 1.0.0
+  type: process
+  domain: security
+
+  dependencies: []
+
+  triggers:
+    - keyword: "security"
+    - keyword: "audit"
+    - keyword: "vulnerabilidad"
+    - file_pattern: "server.js"
+    - file_pattern: "backend/*.js"
+    - file_pattern: ".env.example"
+
+  context_hint:
+    - "server.js"
+    - "backend/*.js"
+    - ".env.example"
+
+  rules:
+    - id: sec-001
+      description: "No API keys hardcodeadas"
+      severity: error
+    - id: sec-002
+      description: "No service_role key en cliente"
+      severity: error
+    - id: sec-003
+      description: "Helmet CSP configurado"
+      severity: warning

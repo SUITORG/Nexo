@@ -1,0 +1,50 @@
+skill:
+  name: probador
+  display_name: "Probador — Smoke Test Agent"
+  version: 1.0.0
+  type: process
+  domain: quality
+
+  description: >
+    Read-only integration testing agent. Loads test suites from .suit/tests/*.yaml
+    and executes them against running servers. Tests include health checks,
+    endpoint smoke tests, CRUD flow verification, and auth/error handling.
+    Never modifies servers, data, or files. Reports results to .suit/logs/tests/.
+
+  dependencies:
+    - system-analysis
+
+  triggers:
+    - keyword: "prueba"
+    - keyword: "probador"
+    - keyword: "smoke test"
+    - keyword: "verifica"
+    - keyword: "test suite"
+    - keyword: "corre tests"
+    - file_pattern: ".suit/tests/*.yaml"
+
+  inputs:
+    - "suite name (cotizador, system)"
+    - "optional server filter"
+    - "optional test ID filter"
+
+  outputs:
+    - "console summary with pass/fail per test"
+    - "structured Markdown report in .suit/logs/tests/"
+
+  suites:
+    - name: cotizador
+      description: "SuitCotizador smoke tests (10 tests: health, empresa, procesos, calcular, CRUD admin)"
+      servers:
+        - localhost:3003
+    - name: system
+      description: "System-wide smoke tests (4 tests: main, citas, cms, proxy)"
+      servers:
+        - localhost:3001
+        - localhost:3002
+        - localhost:8000
+
+  context_hint:
+    - ".suit/tests/"
+    - "scripts/agents/probador.js"
+    - "AGENTS.md"

@@ -235,6 +235,15 @@ function handlePostAction(data, result) {
           output.msg = deleted ? "DELETE_SUCCESS: " + data.idValue + " removed" : "DELETE_FAIL: " + data.idValue + " NOT found";
         }
         break;
+      case "createReservation":
+        var res = data.reservation;
+        if (!res) { output.error = "MISSING_RESERVATION_DATA"; break; }
+        res.id = "RES-" + new Date().getTime();
+        res.status = res.status || "PENDIENTE";
+        appendRowMapped(ss, "Reservaciones", res);
+        output.success = true;
+        output.id = res.id;
+        break;
       default: output.error = "ACTION_WAITING: " + action;
     }
   } finally { lock.releaseLock(); }

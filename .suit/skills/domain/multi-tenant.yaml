@@ -1,0 +1,66 @@
+skill:
+  name: multi-tenant
+  display_name: "Multi-Tenant Isolation"
+  version: 1.0.0
+  type: domain
+  domain: security
+
+  description: >
+    Enforces multi-tenant data isolation rules for SuitOrg.
+    All queries must filter by id_empresa. No cross-tenant data access.
+    giro_especifico field controls feature access per tenant.
+
+  dependencies:
+    - javascript
+
+  triggers:
+    - keyword: "id_empresa"
+    - keyword: "tenant"
+    - keyword: "multi-tenant"
+    - keyword: "inquilino"
+    - keyword: "giro_especifico"
+    - keyword: "giro"
+    - file_pattern: "backend/*.js"
+    - file_pattern: "js/modules/*.js"
+    - file_pattern: "server.js"
+
+  context_hint:
+    - "AGENTS.md"
+    - "backend/core.js"
+    - "backend/utils.js"
+    - "contexto.md"
+
+  rules:
+    - id: mt-001
+      description: "All queries must filter by id_empresa"
+      severity: error
+
+    - id: mt-002
+      description: "No cross-tenant data access"
+      severity: error
+
+    - id: mt-003
+      description: "Soft delete only (activo=FALSE)"
+      severity: error
+
+    - id: mt-004
+      description: "Giro_especifico validation must be present for cotizador routes"
+      severity: error
+      check: "giro_especifico split by ',' last part equals '1'"
+
+    - id: mt-005
+      description: "Empty/null giro_especifico must NOT enable cotizador"
+      severity: error
+      check: "If null or empty string or less than 2 comma-separated parts, return false"
+
+  examples:
+    - scenario: "Validando giro_especifico para cotizador"
+      correct: |
+        var giro = empresa.giro_especifico || '';
+        if (!giro) return false;
+        var partes = giro.trim().split(',');
+        if (partes.length < 2) return false;
+        return partes[partes.length-1].trim() === '1';
+      incorrect: |
+        if (empresa.giro_especifico.includes(',1')) return true;
+        // No valida null, vacío, ni formato incorrecto

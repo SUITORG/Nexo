@@ -1,0 +1,17 @@
+skill:
+  name: web-search
+  display_name: "Web Search"
+  version: 1.0.0
+  type: tool
+  domain: knowledge
+
+  dependencies: []
+
+  triggers:
+    - keyword: "search"
+    - keyword: "research"
+    - keyword: "buscar"
+    - keyword: "google"
+    - keyword: "investigar"
+
+  context_hint: []

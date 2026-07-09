@@ -189,6 +189,40 @@ skills:
       - "server.js"
       - "js/modules/cotizador.js"
 
+  reservations-engine:
+    description: "Motor de reservaciones vía WhatsApp + Google Calendar. Detecta intención con IA, agenda/reprograma/cancela citas, maneja lista de espera, y sincroniza con Google Calendar. Nivel 1 = solo WhatsApp, Nivel 2 = + Calendar."
+    version: 1.0.0
+    type: domain
+    domain: service
+    dependencies:
+      - javascript
+      - multi-tenant
+    triggers:
+      - "reservacion"
+      - "cita"
+      - "agendar"
+      - "appointment"
+      - "schedule"
+      - "calendar"
+      - "whatsapp booking"
+      - file_pattern: "SuitReservaciones/**/*.js"
+      - file_pattern: "citas/**/*.js"
+    inputs:
+      - "incoming WhatsApp message"
+      - "empresa config"
+    outputs:
+      - "confirmed appointment"
+      - "calendar event"
+      - "waitlist entry"
+    discoverable: true
+    context_hint:
+      - "SuitReservaciones/index.js"
+      - "SuitReservaciones/handlers/webhook.js"
+      - "SuitReservaciones/handlers/actions.js"
+      - "SuitReservaciones/services/ai.js"
+      - "SuitReservaciones/services/calendar.js"
+      - "SuitReservaciones/db/schema.sql"
+
   remotion-video:
     description: "Generación de video profesional con Remotion. Crea composiciones animadas con React, renderiza MP4, integra audio, imágenes y transiciones."
     version: 1.0.0

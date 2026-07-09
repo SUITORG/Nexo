@@ -1,0 +1,44 @@
+workflow:
+  name: review
+  display_name: "Code Review"
+  description: "Read-only code analysis using reportero agent. Scans files against reviewer/profiles.yaml profiles."
+  risk: low
+  domain: quality
+
+  entry:
+    requires_planning: false
+    requires_confirmation: false
+    required_context:
+      - AGENTS.md
+      - .suit/reviewer/profiles.yaml
+    required_skills:
+      - code-review
+      - security-audit
+
+  steps:
+    - id: classify
+      description: "Determine target file and review profile from user request"
+      action: read
+      produces: scope.txt
+
+    - id: run_reportero
+      description: "Execute reportero agent: node scripts/agents/reportero.js --file <target> --profile <profile>"
+      action: run
+      command: "node scripts/agents/reportero.js --file {{file}} --profile {{profile}}"
+      validation:
+        - "Script exits with code 0"
+        - "Report generated in .suit/logs/review/"
+
+    - id: present
+      description: "Present findings to user. No changes are made (read-only agent)."
+      action: read
+      produces: review_report.md
+      validation:
+        - "User reviews findings"
+        - "No files modified by reportero"
+
+  exit:
+    validation:
+      - "Report saved to .suit/logs/review/"
+    notifies:
+      - telemetry

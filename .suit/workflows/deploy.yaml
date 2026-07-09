@@ -1,0 +1,63 @@
+workflow:
+  name: deploy
+  display_name: "Deployment"
+  description: "Deploy to production (GAS, GH Pages, servers)"
+  risk: high
+  domain: operations
+
+  entry:
+    requires_planning: true
+    requires_confirmation: true
+    required_context:
+      - AGENTS.md
+      - contexto.md
+    required_skills:
+      - javascript
+      - deployment
+    forbidden_if:
+      - "Uncommitted changes in working directory"
+
+  steps:
+    - id: preflight
+      description: "Check deployment readiness"
+      action: validate
+      validation:
+        - "All tests pass (or manual smoke test)"
+        - "INDEX_FUNCIONES.md is up to date"
+        - "No uncommitted changes"
+        - "Version bumped"
+
+    - id: backup
+      description: "Create pre-deployment backup"
+      action: run
+      command: "zip -r SUIT_predeploy_$(date +%d%m%y_%H%M).zip . -x '*/node_modules/*' '*/.git/*' '*.zip'"
+
+    - id: deploy_gas
+      description: "Deploy GAS backend"
+      action: run
+      command: "clasp push && clasp deploy"
+      condition: "if backend/ files changed"
+      validation:
+        - "Deployment version matches expected"
+
+    - id: deploy_frontend
+      description: "Deploy frontend to GH Pages"
+      action: run
+      command: "git push origin main"
+      condition: "if frontend files changed"
+      validation:
+        - "Push succeeded"
+
+    - id: verify
+      description: "Verify deployment is live"
+      action: test
+      validation:
+        - "Servers respond on expected ports"
+        - "Key endpoints return 200"
+
+  exit:
+    validation:
+      - "Deployment verified"
+      - "Backup exists"
+    notifies:
+      - telemetry

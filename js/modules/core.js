@@ -162,7 +162,21 @@ var app = {
         getDate: () => {
             // Formato estándar YYYY-MM-DD para campos base
             return new Date().toLocaleDateString('en-CA');
-        }
+        },
+        // --- MODO FLAGS (v7.0.0) ---
+        // Parsea el campo modo de Config_Empresas con formato VISIBILIDAD,STRIPE,EXPRESS,POS
+        // Ej: PROD,1,1,1 — partes faltantes default a 1 (retrocompatible)
+        parseModo: (company) => {
+            const modo = (company?.modo || '').trim();
+            if (!modo) return { hub: 'PROD', stripe: false, express: true, pos: true };
+            const parts = modo.split(',');
+            return {
+                hub: (parts[0] || 'PROD').trim(),
+                stripe: parts.length > 1 && parts[1].trim() === '1',
+                express: parts.length > 2 ? parts[2].trim() === '1' : true,
+                pos: parts.length > 3 ? parts[3].trim() === '1' : true
+            };
+        },
     },
     loadEnvConfig: async () => {
         try {
@@ -302,18 +316,24 @@ var app = {
                 const hasUrlParam = !!coParam;
 
                 // If it's the first visit follow the "Main Biz" rule (v5.3.7)
-                // REFUERZO v6.2.7: El parámetro 'co' manda sobre cualquier otra lógica de inicio
-                if (!hasUrlParam && mainBiz) {
+                // DELAY v16.7.29: Muestra el hub con burbujas 8s antes de redirigir
+                const hasVisited = !!sessionStorage.getItem('suit_visited');
+                if (!hasUrlParam && mainBiz && !hasVisited) {
                     const currentHash = window.location.hash;
                     if (!currentHash || currentHash === "" || currentHash === "#orbit") {
                         const mode = (mainBiz.modo_sitio || 'HUB').toString().toUpperCase();
                         if (mode !== 'HUB') {
-                            console.log("🚀 Redirección Automática a Empresa Principal:", mainBiz.id_empresa);
-                            app.state.companyId = mainBiz.id_empresa;
-                            company = mainBiz;
-                            // En lugar de ensuciar con #home, mantenemos la URL limpia si tiene alias
-                            const dest = company.alias_seo ? `/${company.alias_seo}` : `/#home`;
-                            window.history.replaceState({}, '', dest);
+                            console.log("🌌 Mostrando hub 8s antes de redirigir a:", mainBiz.id_empresa);
+                            app.state.companyId = null;
+                            window.location.hash = '#orbit';
+                            if (app.ui && app.ui.renderOrbit) app.ui.renderOrbit();
+                            if (app._hubTimer) clearTimeout(app._hubTimer);
+                            app._hubTimer = setTimeout(() => {
+                                console.log("🚀 Redirección Automática a Empresa Principal:", mainBiz.id_empresa);
+                                sessionStorage.setItem('suit_visited', '1');
+                                app.switchCompany(mainBiz.id_empresa);
+                            }, 8000);
+                            return;
                         }
                     }
                 }
@@ -415,10 +435,31 @@ var app = {
             if (dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
                 const supabaseData = await app.loadFromSupabase(fetchId);
                 app.data = { ...app.data, ...supabaseData };
-                app.data.Config_Empresas = sanitizedMaster.Config_Empresas; 
+                const sbCompanies = supabaseData.Config_Empresas || [];
+                if (sbCompanies.length > 0) {
+                    const gasCopy = [...sanitizedMaster.Config_Empresas];
+                    sbCompanies.forEach(sb => {
+                        const idx = gasCopy.findIndex(gc => String(gc.id_empresa).toUpperCase() === String(sb.id_empresa).toUpperCase());
+                        if (idx >= 0) gasCopy[idx] = { ...gasCopy[idx], ...sb };
+                    });
+                    app.data.Config_Empresas = gasCopy;
+                } else {
+                    app.data.Config_Empresas = sanitizedMaster.Config_Empresas;
+                }
                 app.data.Usuarios = sanitizedMaster.Usuarios;
                 app.state.dbEngine = 'SUPABASE';
             }
+
+            // Normalize usa_reservaciones once at load time (0/1/2)
+            app.data.Config_Empresas.forEach(c => {
+                const raw = c.usa_reservaciones;
+                if (raw == null || raw === '') {
+                    c.usa_reservaciones = 0;
+                } else {
+                    const s = String(raw).trim().toUpperCase();
+                    c.usa_reservaciones = s === '2' ? 2 : (s === 'TRUE' || s === '1') ? 1 : 0;
+                }
+            });
 
             if (app.ui && app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
             return true;
@@ -437,7 +478,7 @@ var app = {
             'Proyectos_Materiales', 'Prompts_IA', 'Logs_Chat_IA',
             'Memoria_IA_Snapshots', 'Logs', 'Config_Galeria',
             'Empresa_Galeria', 'Empresa_Documentos', 'Reservaciones',
-            'Config_SEO', 'Config_Paginas', 'Cuotas_Pagos', 'Config_IA_Notebooks'
+            'Config_Empresas', 'Config_SEO', 'Config_Paginas', 'Cuotas_Pagos', 'Config_IA_Notebooks'
         ];
 
         const results = {};
@@ -532,6 +573,8 @@ var app = {
         }
     },
     switchCompany: async (newId) => {
+        sessionStorage.setItem('suit_visited', '1');
+        if (app._hubTimer) { clearTimeout(app._hubTimer); app._hubTimer = null; }
         // 1. Mostrar Loader de Transición
         const loader = document.getElementById('transition-loader');
         if (loader) {

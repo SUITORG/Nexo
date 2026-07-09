@@ -1,0 +1,79 @@
+version: 1.0.0
+
+events:
+  execution_started:
+    fields:
+      - session_id: uuid
+      - timestamp: datetime
+      - workflow: string
+      - project: string
+      - model: string
+      - user_request: string
+      - estimated_tokens: integer
+
+  execution_completed:
+    fields:
+      - session_id: uuid
+      - timestamp: datetime
+      - workflow: string
+      - project: string
+      - model: string
+      - duration_ms: integer
+      - tokens_used:
+          input: integer
+          output: integer
+          total: integer
+      - files_modified:
+          - path: string
+            operation: string
+            lines_added: integer
+            lines_removed: integer
+      - steps_completed: integer
+      - status: success|fail|partial
+
+  error_occurred:
+    fields:
+      - session_id: uuid
+      - timestamp: datetime
+      - workflow: string
+      - step: string
+      - error_type: string
+      - error_message: string
+      - affected_file: string
+
+  review_completed:
+    fields:
+      - session_id: uuid
+      - timestamp: datetime
+      - profile: string
+      - status: pass|fail|warning
+      - failed_checks:
+          - id: string
+            details: string
+      - warnings:
+          - id: string
+            details: string
+
+  skill_loaded:
+    fields:
+      - session_id: uuid
+      - skill: string
+      - version: string
+      - context_size: integer
+      - load_time_ms: integer
+
+  registry_query:
+    fields:
+      - session_id: uuid
+      - query_type: string
+      - result_count: integer
+      - query_time_ms: integer
+
+  giro_validation:
+    fields:
+      - session_id: uuid
+      - timestamp: datetime
+      - id_empresa: string
+      - giro_value: string
+      - valid: boolean
+      - reason: string

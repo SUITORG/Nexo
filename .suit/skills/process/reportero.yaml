@@ -1,0 +1,42 @@
+skill:
+  name: reportero
+  display_name: "Reportero — Code Reviewer Agent"
+  version: 1.0.0
+  type: process
+  domain: quality
+
+  description: >
+    Read-only code analysis agent. Scans JavaScript/Node.js files for issues
+    using profiles from reviewer/profiles.yaml (quick/standard/architecture/security).
+    Finds hardcoded secrets, debug code, complexity problems, duplication,
+    error-handling gaps, dead code, consistency issues, and coupling problems.
+    Never modifies files. Always saves structured Markdown reports to .suit/logs/review/.
+
+  dependencies:
+    - code-review
+    - security-audit
+
+  triggers:
+    - keyword: "revisa"
+    - keyword: "reportero"
+    - keyword: "analiza"
+    - keyword: "audita"
+    - keyword: "code review"
+    - keyword: "find issues"
+    - file_pattern: "*.js"
+    - file_pattern: "*.mjs"
+    - file_pattern: "*.gs"
+
+  inputs:
+    - "target file path"
+    - "profile name (quick|standard|architecture|security)"
+
+  outputs:
+    - "console summary with findings"
+    - "structured Markdown report in .suit/logs/review/"
+
+  context_hint:
+    - ".suit/reviewer/profiles.yaml"
+    - "scripts/agents/reportero.js"
+    - "AGENTS.md"
+    - "contexto.md"

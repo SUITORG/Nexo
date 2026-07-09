@@ -19,19 +19,26 @@ function runMasterSeeds(ss) {
     if (headers.indexOf("id_empresa") === -1) cat.insertColumnAfter(1).getRange(1, 2).setValue("id_empresa");
   }
 
+  // Semilla: PFM - Pollo Frito Metroplex (Stripe activo)
+  ensureSeed(ss, "Config_Empresas", "id_empresa", "PFM", {
+    id_empresa: "PFM", nomempresa: "Pollo Frito Metroplex", tipo_negocio: "Alimentos", slogan: "El mejor crunch!",
+    color_tema: "#d32f2f", accent_color: "#ffc107", logo_url: "https://drive.google.com/uc?export=view&id=1vs8kAaRpIg9IWT75RiTidkp_KdzwzADJ",
+    usa_features_estandar: "FALSE", habilitado: "TRUE", modo: "PROD,1", db_engine: "SUPABASE", usa_soporte_ia: "TRUE", autodepuracion: 60,     usa_reservaciones: 1
+  });
+
   // Semilla: PA PER - Padrón Pérez (v15.0.0)
   ensureSeed(ss, "Config_Empresas", "id_empresa", "PAPER", {
     id_empresa: "PAPER", nomempresa: "PA PER", tipo_negocio: "Consultoría Patrimonial", slogan: "Patrimonio Personal",
     mensaje1: "MAXIMIZA TU PENSIÓN IMSS SIN PAGAR POR ADELANTADO", mensaje2: "Firma Padrón Pérez | Estrategia de Retiro",
     descripcion: "Especialistas en Modalidad 40 y blindaje patrimonial para pensionados.",
     color_tema: "#001f3f", accent_color: "#FFD700", logo_url: "https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH",
-    usa_features_estandar: "FALSE", habilitado: "TRUE", modo: "PROD", db_engine: "SUPABASE", usa_soporte_ia: "TRUE", autodepuracion: 60, usa_reservaciones: "TRUE"
+    usa_features_estandar: "FALSE", habilitado: "TRUE", modo: "PROD", db_engine: "SUPABASE", usa_soporte_ia: "TRUE", autodepuracion: 60, usa_reservaciones: 1
   });
 
   // Semilla: EVASOL (Motor Estándar)
   ensureSeed(ss, "Config_Empresas", "id_empresa", "EVASOL", {
     id_empresa: "EVASOL", nomempresa: "EVASOL", tipo_negocio: "Energía Solar", slogan: "Energía para tu vida",
-    color_tema: "#2e7d32", accent_color: "#ffa000", usa_features_estandar: "TRUE", habilitado: "TRUE", modo: "PROD", db_engine: "GSHEETS", usa_soporte_ia: "TRUE"
+    color_tema: "#2e7d32", accent_color: "#ffa000", usa_features_estandar: "TRUE", habilitado: "TRUE", modo: "PROD",     db_engine: "SUPABASE", usa_soporte_ia: "TRUE"
   });
 
   const secureAdminPass = PropertiesService.getScriptProperties().getProperty('ADMIN_PAPER_PASS') || "paper_admin_v1";

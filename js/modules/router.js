@@ -60,6 +60,17 @@ app.router = {
                 return;
             }
         }
+
+        // RESERVACIONES GATE: Block if usa_reservaciones < 1
+        if (hash === '#reservations') {
+            const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+            const level = company?.usa_reservaciones ?? 0;
+            if (level < 1) {
+                console.warn("🛡️ Acceso denegado: Reservaciones desactivadas para esta empresa.");
+                window.location.hash = '#home';
+                return;
+            }
+        }
         // LÓGICA DE VISIBILIDAD POR HASH
         const viewMap = {
             '#home': 'view-home',
@@ -77,7 +88,9 @@ app.router = {
             '#staff-pos': 'view-staff-pos',
             '#pos': 'view-pos',
             '#reports': 'view-reports',
-            '#vault': 'view-vault'
+            '#vault': 'view-vault',
+            '#cotizador': 'view-cotizador',
+            '#cotizador/admin': 'view-cotizador'
         };
         const targetId = viewMap[hash];
         if (targetId) {
@@ -120,6 +133,13 @@ app.router = {
         }
 
         if (hash === '#food-app-area') {
+            const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+            const modoFlags = app.utils.parseModo(company);
+            if (!modoFlags.express) {
+                console.warn("🛡️ Pedido Express desactivado para esta empresa (modo flag).");
+                window.location.hash = '#home';
+                return;
+            }
             const foodArea = document.getElementById('food-app-area');
             if (foodArea) foodArea.style.display = 'block';
             if (app.ui.renderFoodMenu) app.ui.renderFoodMenu();
@@ -137,8 +157,24 @@ app.router = {
         if (hash === '#catalog' && app.ui && app.ui.renderCatalog) app.ui.renderCatalog();
         if (hash === '#knowledge' && app.ui && app.ui.renderKnowledge) app.ui.renderKnowledge();
         if (hash === '#reservations' && app.ui && app.ui.renderReservations) app.ui.renderReservations();
-        if (hash === '#staff-pos' && app.ui && app.ui.renderStaffPOS) app.ui.renderStaffPOS();
+        if (hash === '#staff-pos' && app.ui && app.ui.renderStaffPOS) {
+            const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+            const modoFlags = app.utils.parseModo(company);
+            if (!modoFlags.pos) {
+                console.warn("🛡️ POS desactivado para esta empresa (modo flag).");
+                window.location.hash = '#home';
+                return;
+            }
+            app.ui.renderStaffPOS();
+        }
         if (hash === '#pos' && app.ui && app.ui.renderPOS) {
+            const posCompany = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+            const posModoFlags = app.utils.parseModo(posCompany);
+            if (!posModoFlags.pos) {
+                console.warn("🛡️ POS desactivado para esta empresa (modo flag).");
+                window.location.hash = '#home';
+                return;
+            }
             const user = app.state.currentUser;
             const userRole = (user?.id_rol || user?.rol || "").toString().trim().toUpperCase();
             const deliveryKeywords = ['DELIVERY', 'REPARTIDOR', 'CHOFER', 'DRIVER', 'MOTO', 'RIDER'];
@@ -152,6 +188,21 @@ app.router = {
         if (hash === '#contact' && app.ui && app.ui.renderContact) app.ui.renderContact();
         if (hash === '#reports' && app.ui && app.ui.handleReportTypeChange) app.ui.handleReportTypeChange();
         if (hash === '#vault' && app.vault?.refresh) app.vault.refresh();
+        if (hash === '#cotizador' || hash === '#cotizador/admin') {
+            var coId = app.state.companyId;
+            if (!coId) {
+                if (app.ui && app.ui.showToast) app.ui.showToast('Selecciona una empresa primero', 'warning');
+                window.location.hash = '#home';
+                return;
+            }
+            var cotDiv = document.getElementById('view-cotizador');
+            var cont = document.getElementById('cotizador-content');
+            if (cotDiv) cotDiv.classList.remove('hidden');
+            var isAdmin = hash === '#cotizador/admin';
+            var src = 'http://localhost:3003/?empresa=' + encodeURIComponent(coId);
+            if (isAdmin) src += '&admin=1';
+            if (cont) cont.innerHTML = '<iframe src="' + src + '" style="width:100%;height:600px;border:none;border-radius:12px;" allow="clipboard-read; clipboard-write"></iframe>';
+        }
 
         // Control del botón flotante de WhatsApp
         const waFloat = document.getElementById('whatsapp-float');

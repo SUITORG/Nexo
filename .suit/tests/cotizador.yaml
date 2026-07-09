@@ -1,0 +1,101 @@
+suite:
+  name: cotizador
+  display_name: "SuitCotizador Smoke Tests"
+  description: "Verifica que el servidor 3003 y sus endpoints principales responden correctamente"
+  servers:
+    - name: cotizador
+      url: http://localhost:3003
+      type: express
+      path: SuitCotizador/server.js
+
+  config:
+    timeout: 30000
+
+  tests:
+    - id: health
+      description: "Servidor cotizador responde"
+      request:
+        method: GET
+        path: /
+      expect:
+        status: 200
+
+    - id: empresa-listar
+      description: "Listado de empresas disponibles"
+      request:
+        method: GET
+        path: /api/empresa/listar
+      expect:
+        status: 200
+        body_is_array: true
+
+    - id: procesos-prpt
+      description: "Procesos de cotizacion para PRPT"
+      request:
+        method: GET
+        path: /api/cotizador/procesos
+        query:
+          id_empresa: PRPT
+      expect:
+        status: 200
+        body_is_array: true
+
+    - id: variables-prpt
+      description: "Variables de cotizacion para PRPT"
+      request:
+        method: GET
+        path: /api/cotizador/variables
+        query:
+          id_empresa: PRPT
+          id_proceso: PROC-PRPT-001
+      expect:
+        status: 200
+        body_is_array: true
+
+    - id: reglas-prpt
+      description: "Reglas de precio para PRPT"
+      request:
+        method: GET
+        path: /api/cotizador/reglas
+        query:
+          id_empresa: PRPT
+          id_proceso: PROC-PRPT-001
+      expect:
+        status: 200
+        body_is_array: true
+
+    - id: calcular
+      description: "Calcular cotizacion - flujo feliz (timeout 30s por GAS fallback)"
+      request:
+        method: POST
+        path: /api/cotizador/calcular
+        timeout: 35000
+        query:
+          id_empresa: PRPT
+        body:
+          id_empresa: PRPT
+          id_proceso: PROC-PRPT-001
+          variables:
+            personas: 25
+            kids: 10
+            horas: 4
+      expect:
+        status: 200
+
+    - id: calcular_sin_auth
+      description: "Calcular sin id_empresa devuelve 400 (middleware)"
+      request:
+        method: POST
+        path: /api/cotizador/calcular
+        body:
+          id_proceso: PROC-PRPT-001
+      expect:
+        status: 400
+
+    - id: 404
+      description: "Ruta inexistente da 404"
+      request:
+        method: GET
+        path: /api/ruta-inexistente-xyz
+      expect:
+        status: 404

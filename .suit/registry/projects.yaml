@@ -40,8 +40,7 @@ projects:
     path: citas/
     agents: citas/AGENTS.md
     skills:
-      - whatsapp-integration
-      - calendar-integration
+      - reservations-engine
     context:
       - citas/index.js
       - citas/services/ai.js
@@ -50,11 +49,61 @@ projects:
     environment:
       PORT: 3002
       TYPE: service
+    status: deprecated
+    migration: SuitReservaciones/
     servers:
       - name: appointments
         path: citas/index.js
         port: 3002
         type: express
+
+  suitreservaciones:
+    path: SuitReservaciones/
+    description: "Módulo de Reservaciones con WhatsApp + Google Calendar. Reemplaza citas/. Niveles: 1 (WhatsApp), 2 (+ Calendar)."
+    skills:
+      - reservations-engine
+      - javascript
+      - multi-tenant
+    context:
+      - SuitReservaciones/index.js
+      - SuitReservaciones/services/ai.js
+      - SuitReservaciones/handlers/actions.js
+      - SuitReservaciones/handlers/webhook.js
+      - SuitReservaciones/db/schema.sql
+      - SuitReservaciones/package.json
+    frontend:
+      public: true
+      public_route: "#home (botón en hero)"
+      public_gate: "usa_reservaciones >= 1"
+      staff: true
+      staff_route: "#reservations"
+      staff_gate: "usa_reservaciones >= 1 AND modulos_visibles CONTAINS 'reservations'"
+      staff_rbac: "STAFF >= 5, ADMIN >= 10"
+      api_endpoints:
+        - "POST /api/reservaciones (público)"
+        - "PATCH /api/reservaciones/:id (staff)"
+        - "GET /api/reservaciones (staff)"
+        - "GET /api/clientes (staff)"
+    environment:
+      PORT: 3002
+      TYPE: service
+    servers:
+      - name: appointments
+        path: SuitReservaciones/index.js
+        port: 3002
+        type: express
+    tables:
+      - Reservaciones
+      - clientes
+      - lista_espera
+      - Logs_Chat_IA
+      - Config_Empresas
+    validation:
+      field: "usa_reservaciones"
+      values:
+        0: "desactivado"
+        1: "WhatsApp básico"
+        2: "WhatsApp + Calendar"
 
   vire:
     name: "ViRe — Video con Remotion"
@@ -75,6 +124,55 @@ projects:
         path: SuitVidGenRemotion/
         port: 3004
         type: remotion
+
+  suit-pedido-express:
+    name: "Pedido Express — Menú Digital + Órdenes"
+    path: SuitPedidoExpress/
+    description: "Módulo de Pedido Express: menú digital, carrito, checkout. Scaffold inicial — puerto 3005."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitPedidoExpress/index.js
+      - SuitPedidoExpress/package.json
+    frontend:
+      public: true
+      public_route: "#food-app-area"
+      public_gate: "modo EXPRESS=1 AND tipo_negocio IN (ALIMENTOS,COMIDA,RESTAURANTE,FOOD)"
+      staff: false
+    environment:
+      PORT: 3005
+      TYPE: service
+    servers:
+      - name: pedido-express
+        path: SuitPedidoExpress/index.js
+        port: 3005
+        type: express
+
+  suit-pos:
+    name: "POS — Punto de Venta + Monitoreo"
+    path: SuitPos/
+    description: "Módulo de POS: venta en mostrador, monitoreo de órdenes, Stripe. Scaffold inicial — puerto 3006."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitPos/index.js
+      - SuitPos/package.json
+    frontend:
+      public: false
+      staff: true
+      staff_route: "#staff-pos, #pos"
+      staff_gate: "modo POS=1 AND modulos_visibles CONTAINS 'pos' OR 'staff-pos'"
+      staff_rbac: "STAFF >= 2"
+    environment:
+      PORT: 3006
+      TYPE: service
+    servers:
+      - name: pos
+        path: SuitPos/index.js
+        port: 3006
+        type: express
 
   suit-cotizador:
     name: "Portal de Cotización en Línea"

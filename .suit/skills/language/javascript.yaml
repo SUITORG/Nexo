@@ -1,0 +1,37 @@
+skill:
+  name: javascript
+  display_name: "JavaScript/Node.js Development"
+  version: 1.0.0
+  type: language
+  domain: code
+
+  dependencies: []
+
+  triggers:
+    - keyword: "js"
+    - keyword: "node"
+    - keyword: "express"
+    - file_pattern: "*.js"
+    - file_pattern: "*.mjs"
+
+  context_hint:
+    - "js/modules/"
+
+  rules:
+    - id: js-001
+      description: "No var declarations (use let/const)"
+      severity: warning
+      note: "Proyecto legacy usa var - mantener consistencia con archivo existente"
+
+    - id: js-002
+      description: "Async/await preferred over .then()"
+      severity: warning
+
+    - id: js-003
+      description: "No console.log in production code"
+      severity: warning
+
+    - id: js-004
+      description: "Comprobar que index.html tenga el script cargado"
+      severity: error
+      check: "If new js/modules/*.js file, add <script> tag in index.html"

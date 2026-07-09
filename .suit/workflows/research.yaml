@@ -1,0 +1,42 @@
+workflow:
+  name: research
+  display_name: "Research Task"
+  description: "Gather information, analyze trends, investigate topics"
+  risk: low
+  domain: knowledge
+
+  entry:
+    requires_planning: false
+    requires_confirmation: false
+    required_context:
+      - AGENTS.md
+    required_skills:
+      - web-search
+
+  steps:
+    - id: define_query
+      description: "Define research question and scope"
+      action: read
+      produces: query.md
+
+    - id: gather
+      description: "Search and collect information"
+      action: search
+      skills:
+        - web-search
+        - trend-analysis
+      validation:
+        - "Multiple sources consulted"
+
+    - id: synthesize
+      description: "Synthesize findings into structured report"
+      action: write
+      produces: research_report.md
+      validation:
+        - "Report is structured and actionable"
+
+  exit:
+    validation:
+      - "Report saved"
+    notifies:
+      - telemetry

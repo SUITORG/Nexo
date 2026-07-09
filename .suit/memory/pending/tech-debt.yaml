@@ -1,0 +1,100 @@
+tech_debt:
+  - id: TD-001
+    description: "API keys hardcodeadas en backend/core.js:13"
+    severity: high
+    related_files:
+      - "backend/core.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-002
+    description: "API keys hardcodeadas en CampanasAi/script.js:8-11"
+    severity: high
+    related_files:
+      - "CampanasAi/script.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-003
+    description: "service_role key en cliente (CampanasAi/lib/supabase.js, citas/db/client.js)"
+    severity: high
+    related_files:
+      - "CampanasAi/lib/supabase.js"
+      - "citas/db/client.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-004
+    description: "syncToSupabase catch vacío en backend/utils.js"
+    severity: medium
+    related_files:
+      - "backend/utils.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-005
+    description: "GAS URL hardcodeada en local-server-node.js, ssg-engine.mjs, orchestrator_client.js"
+    severity: medium
+    related_files:
+      - "CampanasAi/local-server-node.js"
+      - "scripts/ssg-engine.mjs"
+      - "scripts/orchestrator_client.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-006
+    description: "Modelo gemini-1.5-flash deprecated - migrar a OpenRouter free"
+    severity: high
+    related_files:
+      - "backend/ai_engine.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-007
+    description: "No hay tests automatizados"
+    severity: medium
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-008
+    description: "No hay lint/typecheck"
+    severity: low
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-009
+    description: "No hay sistema de logging centralizado"
+    severity: medium
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-010
+    description: "No hay rate limiting en endpoints públicos (server.js, local-server-node.js)"
+    severity: medium
+    related_files:
+      - "server.js"
+      - "CampanasAi/local-server-node.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-011
+    description: "No hay staging/pre-producción ni rollback documentado"
+    severity: low
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-012
+    description: "SuitCotizador: migración Supabase pendiente de aplicar"
+    severity: medium
+    related_files:
+      - "Documentacion/migrations/001_suit_cotizador.sql"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-013
+    description: "SuitCotizador: procesos y reglas de precio base para estándares México pendientes de crear"
+    severity: medium
+    related_files:
+      - "Documentacion/migrations/001_suit_cotizador.sql"
+    created: "2026-07-05"
+    status: open

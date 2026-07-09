@@ -1,0 +1,48 @@
+plan:
+  task: "{{user_request}}"
+  workflow: "{{workflow_name}}"
+  project: "{{project_name}}"
+  risk: "low|medium|high"
+
+  analysis:
+    summary: "Brief description of what needs to happen"
+    impact:
+      - "List of affected areas"
+    dependencies:
+      - "Any prerequisites or order constraints"
+    giro_validation: "Required if project is suit-cotizador"
+
+  files:
+    read:
+      - path: "file.js"
+        reason: "Need to understand existing implementation"
+        lines: "45-120"
+    write:
+      - path: "file.js"
+        operation: "modify|create|delete"
+        estimated_lines: 30
+
+  supabase_migration:
+    required: false
+    sql_file: "Documentacion/migrations/{{migration_name}}.sql"
+    tables_affected: []
+    rls_policies: []
+
+  validation:
+    steps:
+      - "npm run lint"
+      - "Check for syntax errors"
+      - "Verify id_empresa filtering"
+      - "Verify giro_especifico validation"
+    expected_outcomes:
+      - "Feature works without breaking existing functionality"
+
+  rollback:
+    strategy: "git checkout|manual revert|restore from backup"
+    command: "git checkout -- {{modified_files}}"
+    backup_before: true
+
+  estimated_cost:
+    input_tokens: 5000
+    output_tokens: 2000
+    model: "claude-sonnet-4"

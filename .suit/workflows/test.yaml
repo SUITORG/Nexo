@@ -1,0 +1,43 @@
+workflow:
+  name: test
+  display_name: "Smoke Test"
+  description: "Run integration test suites using probador agent. Executes .suit/tests/*.yaml suites against running servers."
+  risk: low
+  domain: quality
+
+  entry:
+    requires_planning: false
+    requires_confirmation: false
+    required_context:
+      - AGENTS.md
+      - .suit/tests/
+    required_skills:
+      - system-analysis
+
+  steps:
+    - id: identify_suite
+      description: "Determine which test suite to run (cotizador, system, or all)"
+      action: read
+      produces: suite_name.txt
+
+    - id: run_probador
+      description: "Execute probador agent: node scripts/agents/probador.js --suite <name>"
+      action: run
+      command: "node scripts/agents/probador.js --suite {{suite}}"
+      validation:
+        - "Script exits cleanly"
+        - "Report generated in .suit/logs/tests/"
+
+    - id: present
+      description: "Present test results to user. No changes are made (read-only agent)."
+      action: read
+      produces: test_report.md
+      validation:
+        - "User reviews results"
+        - "No servers or files modified by probador"
+
+  exit:
+    validation:
+      - "Report saved to .suit/logs/tests/"
+    notifies:
+      - telemetry

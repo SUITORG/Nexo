@@ -1,0 +1,24 @@
+skill:
+  name: pdf-generation
+  display_name: "Generación de PDFs"
+  version: 1.0.0
+  type: process
+  domain: document
+
+  description: >
+    Genera PDFs de cotizaciones usando backend/DriveManager.js.
+    Almacena en Google Drive por tenant, enlace guardado en Cotizaciones.pdf_url.
+
+  dependencies:
+    - javascript
+    - multi-tenant
+
+  triggers:
+    - keyword: "pdf"
+    - keyword: "imprimir"
+    - keyword: "descargar cotizacion"
+    - file_pattern: "backend/DriveManager.js"
+
+  context_hint:
+    - "backend/DriveManager.js"
+    - "server.js"

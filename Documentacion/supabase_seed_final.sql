@@ -16,8 +16,8 @@ INSERT INTO public."Config_Empresas" (
 )
 SELECT 'PFM', 'Punto Fresón del Mar', 'Alimentos', 'La frescura del mar en tu mesa',
     '#0077b6', '',
-    'FALSE', 'TRUE', 'PROD', 'SUPABASE',
-    'FALSE', 'FALSE', 0
+    'FALSE', 'TRUE', 'PROD,1', 'SUPABASE',
+    'FALSE', 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM public."Config_Empresas" WHERE id_empresa = 'PFM');
 
 INSERT INTO public."Config_Empresas" (
@@ -29,7 +29,7 @@ INSERT INTO public."Config_Empresas" (
 SELECT 'PAPER', 'PA PER', 'Servicios', 'Patrimonio Personal',
     '#001f3f', 'https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH',
     'FALSE', 'TRUE', 'PROD', 'SUPABASE',
-    'TRUE', 'TRUE', 0
+    'TRUE', 1, 0
 WHERE NOT EXISTS (SELECT 1 FROM public."Config_Empresas" WHERE id_empresa = 'PAPER');
 
 INSERT INTO public."Config_Empresas" (
@@ -40,8 +40,8 @@ INSERT INTO public."Config_Empresas" (
 )
 SELECT 'EVASOL', 'EVASOL', 'Servicios', 'Energía para tu vida',
     '#2e7d32', '',
-    'TRUE', 'TRUE', 'PROD', 'GSHEETS',
-    'TRUE', 'FALSE', 0
+    'TRUE', 'TRUE', 'PROD', 'SUPABASE',
+    'TRUE', 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM public."Config_Empresas" WHERE id_empresa = 'EVASOL');
 
 -- ─────────────────────────────────────────────

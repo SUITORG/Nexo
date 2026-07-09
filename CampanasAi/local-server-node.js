@@ -5,10 +5,14 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const supabase = require('./lib/supabase');
 const bdpvGenerator = require('../PresentacionesVid/bdpv-generator');
+const { MODELS, DEFAULT_MODEL } = require('./models-config');
 
 const PORT = 8000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzlNe28j7yJObxqfCyUg595Zeg1IjsMMjOZyf8KOK5pkCYU-zYFJrsyzwsJhNFjZy1v-A/exec';
+
+// Modelo activo (cambiable desde el frontend)
+let activeModel = DEFAULT_MODEL;
 
 // --- LOG BUFFER COMPARTIDO ---
 const logBuffer = [];
@@ -33,6 +37,8 @@ const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
 
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
@@ -65,17 +71,56 @@ const server = http.createServer((req, res) => {
     if (pathname === '/api/save' && req.method === 'POST') {
         let body = '';
         req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const gasRes = await fetchWithRedirects(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body
+                });
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', message: 'Guardado en Google Sheets' }));
+            } catch (e) {
+                serverLog('ERROR', `[SAVE] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ===== MODEL SELECTOR ENDPOINTS =====
+
+    // GET /api/models — listar modelos disponibles
+    if (pathname === '/api/models' && req.method === 'GET') {
+        const modelsList = Object.entries(MODELS).map(([id, m]) => ({
+            id, ...m, active: id === activeModel
+        }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ models: modelsList, active: activeModel }));
+        return;
+    }
+
+    // POST /api/models/select — cambiar modelo activo
+    if (pathname === '/api/models/select' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
         req.on('end', () => {
-            const options = {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            };
-            const gasReq = https.request(GAS_URL, options, (gasRes) => {
-                res.writeHead(gasRes.statusCode);
-                gasRes.pipe(res);
-            });
-            gasReq.write(body);
-            gasReq.end();
+            try {
+                const { modelId } = JSON.parse(body);
+                if (!MODELS[modelId]) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Modelo no válido' }));
+                    return;
+                }
+                activeModel = modelId;
+                serverLog('INFO', `🤖 Modelo cambiado a: ${MODELS[modelId].name}`);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, active: activeModel, name: MODELS[modelId].name }));
+            } catch (e) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: e.message }));
+            }
         });
         return;
     }
@@ -351,7 +396,8 @@ const server = http.createServer((req, res) => {
                     let filters = `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,fps=${fps}`;
                     if (colorFilter) filters += `,${colorFilter}`;
                     if (textFilePath) {
-                        filters += `,drawtext=textfile=${textFilePath}:fontcolor=white:fontsize=48:x=(w-text_w)/2:y=h-th-100:enable=between(t,0,${timePerSlide})`;
+                        const escapedPath = textFilePath.replace(/'/g, "'\\''");
+                        filters += `,drawtext=textfile='${escapedPath}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=h-th-100:enable=between(t,0,${timePerSlide})`;
                     }
                     filters += '[v0]';
 
@@ -583,20 +629,20 @@ Actúa como un Copywriter Maestro en Conversión y Especialista en Branding din�
         req.on('data', d => body += d);
         req.on('end', async () => {
             try {
-                const { messages, temperature } = JSON.parse(body);
-                
+                const { messages, temperature, model: reqModel } = JSON.parse(body);
+
                 if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY.length < 10) {
                     throw new Error("La OPENROUTER_API_KEY parece estar vacía o incompleta en el archivo .env");
                 }
 
-                // 📡 LISTA DE MODELOS (Priorizando Gratuitos y Estables)
+                // 📡 Modelo del request > activeModel > fallback
+                if (reqModel && MODELS[reqModel]) activeModel = reqModel;
                 const orModels = [
+                    activeModel,
+                    "deepseek/deepseek-v4-flash",
                     "openrouter/free",
-                    "qwen/qwen3.6-35b-a3b:free",
-                    "minimax/minimax-m2.5:free",
-                    "google/gemini-flash-1.5",
-                    "deepseek/deepseek-v4-flash"
-                ];
+                    "qwen/qwen3.6-35b-a3b:free"
+                ].filter((v, i, a) => a.indexOf(v) === i); // dedup
 
                 let lastError = "No se recibieron errores.";
                 for (const m of orModels) {
@@ -969,7 +1015,16 @@ Actúa como un Copywriter Maestro en Conversión y Especialista en Branding din�
     let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
     fs.readFile(filePath, (err, content) => {
         if (err) { res.writeHead(404); res.end('Not Found'); }
-        else { res.writeHead(200); res.end(content); }
+        else {
+            const ext = path.extname(filePath).toLowerCase();
+            const mimeTypes = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
+            res.writeHead(200, {
+                'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+                'Cross-Origin-Opener-Policy': 'same-origin',
+                'Cross-Origin-Embedder-Policy': 'credentialless'
+            });
+            res.end(content);
+        }
     });
 });
 

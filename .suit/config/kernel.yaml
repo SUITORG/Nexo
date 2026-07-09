@@ -1,0 +1,56 @@
+kernel:
+  version: "0.1.0"
+  name: "SuitOS"
+  description: "Agent Operating System for SuitOrg"
+
+  # Registry paths
+  registry:
+    agents: .suit/registry/agents.yaml
+    skills: .suit/registry/skills.yaml
+    workflows: .suit/registry/workflows.yaml
+    projects: .suit/registry/projects.yaml
+    models: .suit/registry/models.yaml
+    permissions: .suit/registry/permissions.yaml
+    routing: .suit/registry/routing.yaml
+
+  # Load strategies
+  loader:
+    strategy_file: .suit/loader/strategy.yaml
+    cache_dir: .suit/cache
+    index_file: INDEX_FUNCIONES.md
+
+  # Planner
+  planner:
+    template: .suit/planner/template.yaml
+
+  # Dispatcher
+  dispatcher:
+    entrypoint: .suit/dispatcher/entrypoint.md
+
+  # Reviewer
+  reviewer:
+    profiles: .suit/reviewer/profiles.yaml
+
+  # Telemetry
+  telemetry:
+    schema: .suit/telemetry/schema.yaml
+    log_dir: .suit/logs
+
+  # Default model for each domain
+  model_preferences:
+    code: deepseek-flash
+    architecture: claude-sonnet
+    review: claude-sonnet
+    research: deepseek-flash
+    fallback: openrouter-fallback
+
+  # Project-specific overrides
+  project_overrides:
+    suit-cotizador:
+      default_workflow: cotizador
+      required_skills:
+        - cotizaciones-engine
+        - pdf-generation
+        - multi-tenant
+      model: deepseek-flash
+      giro_validation_required: true

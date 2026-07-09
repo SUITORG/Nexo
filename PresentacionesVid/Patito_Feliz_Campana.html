@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Patito Feliz — El Primer Vuelo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:#fef7e9;color:#2d2d2d;overflow-x:hidden}
+:root{
+  --yellow:#f5c542;
+  --yellow-light:#fef7e9;
+  --orange:#f09b3e;
+  --blue:#4a90d9;
+  --green:#7bc67e;
+  --pink:#e88d9f;
+  --dark:#2d2d2d;
+  --soft:#fff8ee;
+}
+.deck{display:flex;flex-direction:column;scroll-snap-type:y mandatory}
+.slide{
+  flex:0 0 100vh;scroll-snap-align:start;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:2rem;text-align:center;position:relative;
+}
+.slide .content{max-width:85%;z-index:2;position:relative}
+.slide h1{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,10vw,6rem);
+  color:var(--dark);line-height:1;margin:0.5rem 0;letter-spacing:2px;
+}
+.slide h2{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,6vw,4rem);
+  color:var(--dark);margin:0.3rem 0;
+}
+.slide p{font-size:clamp(1.1rem,2.5vw,1.6rem);margin:1rem 0;line-height:1.4;font-weight:400;color:#444}
+.slide .subtitle{font-size:clamp(1rem,1.8vw,1.3rem);color:#888;margin-top:-0.3rem}
+.slide .emoji-big{font-size:clamp(4rem,12vw,8rem);display:block;margin-bottom:0.5rem}
+.bg-pattern{position:absolute;inset:0;z-index:0;overflow:hidden}
+.bg-pattern span{
+  position:absolute;font-size:clamp(3rem,10vw,8rem);opacity:0.08;
+  animation:float 20s infinite ease-in-out;
+}
+@keyframes float{
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  50%{transform:translateY(-30px) rotate(10deg)}
+}
+.slide-img{
+  width:100%;max-width:500px;height:clamp(200px,40vh,350px);
+  object-fit:cover;border-radius:20px;margin:1rem auto;
+  box-shadow:0 10px 40px rgba(0,0,0,0.1);display:block;
+}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:1rem}
+.card{
+  background:white;padding:1.2rem;border-radius:16px;text-align:center;
+  box-shadow:0 4px 15px rgba(0,0,0,0.06);transition:transform .3s;
+}
+.card:hover{transform:translateY(-5px)}
+.card .icon{font-size:2.5rem;display:block;margin-bottom:0.3rem}
+.card h3{font-size:1rem;margin:0.3rem 0;color:var(--dark)}
+.card p{font-size:0.85rem;color:#666;margin:0}
+.cta-btn{
+  display:inline-block;margin-top:1.5rem;padding:1rem 2.5rem;
+  background:var(--yellow);color:var(--dark);border:none;border-radius:50px;
+  font-family:'DM Sans',sans-serif;font-size:1.2rem;font-weight:700;
+  cursor:pointer;text-decoration:none;
+  box-shadow:0 4px 20px rgba(245,197,66,0.4);transition:all .3s;
+}
+.cta-btn:hover{transform:scale(1.05);box-shadow:0 6px 30px rgba(245,197,66,0.6)}
+#progress{
+  position:fixed;top:0;left:0;height:6px;
+  background:linear-gradient(90deg,var(--yellow),var(--orange));
+  width:0%;z-index:1000;transition:width .3s;border-radius:0 3px 3px 0;
+}
+.nav-dots{
+  position:fixed;top:50%;right:20px;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:10px;z-index:100;
+}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#ddd;cursor:pointer;transition:all .3s;border:2px solid transparent;
+}
+.dot.active{background:var(--yellow);border-color:var(--orange);transform:scale(1.4)}
+@media (max-width:600px){
+  .slide{padding:1.5rem}
+  .cards{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="deck">
+
+  <!-- SLIDE 0: Portada -->
+  <section class="slide" style="background:linear-gradient(135deg,#fef7e9 0%,#fce4c8 100%)">
+    <div class="bg-pattern">
+      <span style="top:10%;left:5%">🦆</span>
+      <span style="top:60%;right:8%;animation-delay:3s">⭐</span>
+      <span style="bottom:15%;left:20%;animation-delay:6s">🌈</span>
+      <span style="top:30%;right:25%;animation-delay:9s">🖍️</span>
+      <span style="bottom:30%;left:60%;animation-delay:12s">🧸</span>
+    </div>
+    <div class="content">
+      <span class="emoji-big">🦆</span>
+      <h1>Patito Feliz</h1>
+      <p class="subtitle">Kinder · Educación Infantil · Monterrey</p>
+      <p style="font-size:1.4rem;color:#666;margin-top:0.5rem"><em>"Donde empiezan los sueños"</em></p>
+      <div style="margin-top:2rem;display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap">
+        <span style="background:white;padding:0.5rem 1.2rem;border-radius:30px;font-size:0.9rem">📸 Reel</span>
+        <span style="background:white;padding:0.5rem 1.2rem;border-radius:30px;font-size:0.9rem">🎬 Instagram</span>
+        <span style="background:white;padding:0.5rem 1.2rem;border-radius:30px;font-size:0.9rem">💛 Viral</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 1: Hook Emocional -->
+  <section class="slide" style="background:#fff8ee">
+    <div class="content">
+      <span class="emoji-big">🤝</span>
+      <h2 style="color:var(--blue)">Llegó tímido...</h2>
+      <p>Mano pequeña sudando. Corazón de mamá latiendo fuerte.<br><strong>El primer día es el más difícil.</strong></p>
+      <img class="slide-img" src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80" alt="niño en kinder" loading="lazy">
+    </div>
+  </section>
+
+  <!-- SLIDE 2: El descubrimiento -->
+  <section class="slide" style="background:linear-gradient(135deg,#e8f5e9 0%,#f1f8e9 100%)">
+    <div class="content">
+      <span class="emoji-big">🦆</span>
+      <h2 style="color:var(--green)">Un patito cambia todo</h2>
+      <p>El patito de goma amarillo aparece.<br>Los ojos del niño se iluminan.<br><strong>Ya no está solo.</strong></p>
+      <img class="slide-img" src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80" alt="juguete infantil" loading="lazy">
+    </div>
+  </section>
+
+  <!-- SLIDE 3: La aventura -->
+  <section class="slide" style="background:linear-gradient(135deg,#fff3e0 0%,#fbe9e7 100%)">
+    <div class="content">
+      <span class="emoji-big">🎨</span>
+      <h2 style="color:var(--orange)">Manos en la arena</h2>
+      <p>El patito nada en un mar de arena.<br>El niño descubre texturas, colores, amigos.<br><strong>Aquí cada día es una aventura.</strong></p>
+      <img class="slide-img" src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=600&q=80" alt="niños jugando arena" loading="lazy">
+    </div>
+  </section>
+
+  <!-- SLIDE 4: Amistad -->
+  <section class="slide" style="background:linear-gradient(135deg,#fce4ec 0%,#f3e5f5 100%)">
+    <div class="content">
+      <span class="emoji-big">🤗</span>
+      <h2 style="color:var(--pink)">Nace la confianza</h2>
+      <p>El patito viaja de mano en mano.<br>Risas, abrazos, miradas cómplices.<br><strong>El niño ya no mira hacia atrás.</strong></p>
+      <img class="slide-img" src="https://images.unsplash.com/photo-1524503033411-c9566986fc8f?w=600&q=80" alt="niños felices" loading="lazy">
+    </div>
+  </section>
+
+  <!-- SLIDE 5: Valores -->
+  <section class="slide" style="background:#fef7e9">
+    <div class="content">
+      <span class="emoji-big">💛</span>
+      <h2 style="color:var(--yellow)">En Patito Feliz</h2>
+      <div class="cards">
+        <div class="card"><span class="icon">🔒</span><h3>Seguridad</h3><p>Instalaciones diseñadas para su protección</p></div>
+        <div class="card"><span class="icon">📚</span><h3>Aprendizaje</h3><p>Método lúdico que despierta la curiosidad</p></div>
+        <div class="card"><span class="icon">💚</span><h3>Amor</h3><p>Cada niño recibe atención personalizada</p></div>
+        <div class="card"><span class="icon">👩‍🏫</span><h3>Expertas</h3><p>Educadoras certificadas con vocación</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: Cierre emocional -->
+  <section class="slide" style="background:linear-gradient(135deg,#e3f2fd 0%,#e8eaf6 100%)">
+    <div class="content">
+      <span class="emoji-big">🕊️</span>
+      <h2 style="color:var(--blue)">Hoy ya vuela solo</h2>
+      <p>Papá lo recoge. El niño corre a sus brazos.<br>Pero voltea a ver el salón... y sonríe.<br><strong>Porque mañana quiere volver.</strong></p>
+      <img class="slide-img" src="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=600&q=80" alt="niño feliz" loading="lazy">
+    </div>
+  </section>
+
+  <!-- SLIDE 7: CTA -->
+  <section class="slide" style="background:linear-gradient(135deg,#f5c542 0%,#f09b3e 100%)">
+    <div class="content">
+      <span class="emoji-big" style="font-size:clamp(3rem,8vw,5rem)">🦆</span>
+      <h1 style="color:white;text-shadow:0 2px 10px rgba(0,0,0,0.1)">Agenda una visita</h1>
+      <p style="color:white;font-size:1.3rem">Descubre por qué Patito Feliz es el lugar<br>donde tu hijo volará alto.</p>
+      <a class="cta-btn" href="#" onclick="alert('📞 Contáctanos: 81 1234 5678')">📅 Quiero conocerlos</a>
+      <div style="margin-top:1.5rem;display:flex;gap:1rem;justify-content:center;font-size:0.9rem;color:rgba(255,255,255,0.8)">
+        <span>📍 Monterrey, N.L.</span>
+        <span>📱 81 1234 5678</span>
+      </div>
+      <p style="margin-top:1.5rem;font-size:0.8rem;color:rgba(255,255,255,0.6)">#PatitoFeliz #PrimerVuelo #KinderAmoroso #MaternidadReal</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="nav-dots">
+  <span class="dot" data-index="0"></span>
+  <span class="dot" data-index="1"></span>
+  <span class="dot" data-index="2"></span>
+  <span class="dot" data-index="3"></span>
+  <span class="dot" data-index="4"></span>
+  <span class="dot" data-index="5"></span>
+  <span class="dot" data-index="6"></span>
+  <span class="dot" data-index="7"></span>
+</div>
+
+<script>
+const totalSlides=8;let current=0;
+const deck=document.querySelector('.deck');
+const progress=document.getElementById('progress');
+const dots=document.querySelectorAll('.dot');
+function updateProgress(){progress.style.width=((current+1)/totalSlides*100)+'%'}
+function setSlide(i){
+  if(i<0||i>=totalSlides)return;
+  current=i;updateProgress();
+  dots.forEach(d=>d.classList.toggle('active',+d.dataset.index===current));
+}
+function next(){setSlide(current+1)}
+function prev(){setSlide(current-1)}
+window.addEventListener('wheel',e=>{if(e.deltaY>0)next();else prev()})
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='PageDown')next()
+  else if(e.key==='ArrowUp'||e.key==='PageUp')prev()
+})
+dots.forEach(d=>d.addEventListener('click',()=>setSlide(+d.dataset.index)))
+setSlide(0)
+</script>
+</body>
+</html>

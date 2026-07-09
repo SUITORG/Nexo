@@ -1,0 +1,74 @@
+agents:
+  architect:
+    description: "System architecture analysis and design"
+    domain: system
+    risk_level: high
+    required_skills:
+      - system-analysis
+      - multi-tenant
+    required_reviewers:
+      - security
+      - architecture
+    max_tokens: 8000
+    temperature: 0.2
+
+  developer:
+    description: "Code implementation and refactoring"
+    domain: code
+    risk_level: medium
+    required_skills:
+      - javascript
+      - gas
+    required_reviewers:
+      - style
+    max_tokens: 16000
+    temperature: 0.3
+
+  reviewer:
+    description: "Code and architecture review"
+    domain: quality
+    risk_level: low
+    required_skills:
+      - code-review
+      - security-audit
+    required_reviewers: []
+    max_tokens: 16000
+    temperature: 0.1
+
+  cotizador:
+    description: "Specialized agent for quotation engine, pricing rules, and PDF generation"
+    domain: sales
+    risk_level: medium
+    required_skills:
+      - cotizaciones-engine
+      - pdf-generation
+      - javascript
+      - multi-tenant
+    required_reviewers:
+      - security
+      - style
+    max_tokens: 12000
+    temperature: 0.2
+
+  reportero:
+    description: "Read-only code reviewer. Scans files against reviewer/profiles.yaml, finds issues, proposes improvements. Never modifies code."
+    domain: quality
+    risk_level: low
+    required_skills:
+      - code-review
+      - security-audit
+      - system-analysis
+    required_reviewers: []
+    max_tokens: 16000
+    temperature: 0.1
+
+  probador:
+    description: "Read-only smoke tester. Runs integration test suites from .suit/tests/*.yaml against running servers. Verifies endpoints, flows, and regressions. Never modifies code or data."
+    domain: quality
+    risk_level: low
+    required_skills:
+      - system-analysis
+      - javascript
+    required_reviewers: []
+    max_tokens: 12000
+    temperature: 0.1

@@ -1,0 +1,73 @@
+skill:
+  name: cotizaciones-engine
+  display_name: "Motor de Cotizaciones"
+  version: 1.0.0
+  type: domain
+  domain: sales
+
+  description: >
+    Motor de cálculo para cotizaciones configurables por proceso, producto o servicio.
+    Evalúa reglas de precio, variables dinámicas, y produce una cotización con folio
+    que puede convertirse en Lead, Proyecto u Orden.
+    Estándares México: IVA 16%, folio COT-XXX secuencial, vigencia configurable.
+
+  dependencies:
+    - javascript
+    - multi-tenant
+
+  triggers:
+    - keyword: "cotizacion"
+    - keyword: "cotización"
+    - keyword: "quote"
+    - keyword: "calcular"
+    - keyword: "precio"
+    - keyword: "proceso"
+    - keyword: "regla_precio"
+    - keyword: "COT-"
+    - file_pattern: "SuitCotizador/**/*.js"
+    - file_pattern: "js/modules/cotizador.js"
+
+  context_hint:
+    - "backend/core.js"
+    - "backend/utils.js"
+    - "backend/ai_engine.js"
+    - "server.js"
+    - "js/modules/cotizador.js"
+    - "Documentacion/migrations/001_suit_cotizador.sql"
+
+  rules:
+    - id: cot-001
+      description: "Toda cotización pertenece a un id_empresa (multi-tenant)"
+      severity: error
+
+    - id: cot-002
+      description: "Folio COT-XXX secuencial por empresa"
+      severity: error
+
+    - id: cot-003
+      description: "Reglas de precio evaluadas ANTES de calcular total"
+      severity: error
+
+    - id: cot-004
+      description: "Variables obligatorias validadas antes de calcular"
+      severity: error
+
+    - id: cot-005
+      description: "Giro_especifico validado en cada endpoint"
+      severity: error
+
+    - id: cot-006
+      description: "IVA 16% estándar México"
+      severity: warning
+      default: true
+
+    - id: cot-007
+      description: "Cotización puede convertirse a Lead/Proyecto/Orden"
+      severity: warning
+
+  validation:
+    - "server-side calculation (no confiar en datos del cliente)"
+    - "Reglas_Precios evaluadas en orden de prioridad"
+    - "Variables_Cotizacion respetan tipo definido (numero/porcentaje/select/booleano)"
+    - "Soft delete (activo) en todas las tablas"
+    - "IDs secuenciales (COT-XXX, LEAD-XXX, ORD-XXX)"

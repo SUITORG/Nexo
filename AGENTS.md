@@ -136,6 +136,27 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 9. **Log** — record execution in `.suit/logs/` following telemetry schema
 10. **Smoke test manually**
 
+## Standard for new modules (SuitReservaciones pattern)
+
+Al crear un nuevo módulo independiente, seguir este procedimiento:
+
+1. Crear carpeta con `package.json`, `index.js` (Express server), `db/client.js`, `handlers/`, `services/`
+2. `index.js` debe exportar la app: `module.exports = app;` al final del archivo
+3. Montar en `server.js` vía `require` + `app.use()`
+4. Elegir puerto único — registry actual:
+   | Puerto | Módulo |
+   |---|---|
+   | 3001 | Main server.js |
+   | 3002 | SuitReservaciones |
+   | 3003 | SuitCotizador |
+   | 3004 | SuitVidGenRemotion (ViRe) |
+   | 3005 | SuitPedidoExpress |
+   | 3006 | SuitPos |
+   | 8000 | CampanasAi |
+5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas
+6. Si el módulo tiene gate de UI (como `modo` flags o `usa_reservaciones`), documentarlo en `projects.yaml` bajo `frontend:`
+7. Escribir ADR en `.suit/memory/decisions/` explicando la decisión arquitectónica
+
 ## High-risk changes (always report before acting)
 - **Environment**: WSL / GitHub / Windows
 - **Files affected**
@@ -148,3 +169,13 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 - **WSL** for: npm, node, git, bash scripts, grep, zip backups, clasp
 - **GitHub** for: remotes, PRs, Actions, releases
 - **Windows** only for: host-only tasks (browsers, Explorer, Windows-only tools)
+
+## Syntax validation (mandatory after every JS edit)
+
+After editing any `.js` file, the agent MUST run:
+```
+node --check <file>
+```
+This catches syntax errors (unclosed braces, dangling commas, missing brackets) before they reach the browser. Run it for every JS file modified. If the file is part of a module (`type:"module"` in package.json) or uses ES module syntax, use the appropriate check. For vanilla JS (no imports/exports), `node --check` works directly.
+
+Ignore this rule for `.json`, `.css`, `.html`, `.yaml`, `.md` files.

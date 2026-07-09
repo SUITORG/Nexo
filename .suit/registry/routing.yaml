@@ -108,6 +108,17 @@ routing:
       workflow: cotizador
       priority: 15
 
+    - patterns:
+        - "reservacion"
+        - "cita"
+        - "agendar"
+        - "appointment"
+        - "schedule"
+        - "whatsapp booking"
+        - "lista de espera"
+      workflow: reservacion
+      priority: 15
+
   overrides:
     - if:
         project: campanas-ai
@@ -134,6 +145,13 @@ routing:
       agent: developer
       skills_override:
         - remotion-video
+
+    - if:
+        project: suitreservaciones
+      agent: developer
+      skills_override:
+        - reservations-engine
+        - javascript
 
     - if:
         keyword: "vire"

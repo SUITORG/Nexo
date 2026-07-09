@@ -1,11 +1,18 @@
 {
   "mcpServers": {
     "supabase": {
+      "command": "node",
+      "args": ["scripts/mcp-supabase.js"]
+    },
+    "whatsapp": {
       "command": "npx",
-      "args": ["-y", "@supabase/mcp-server"],
+      "args": ["wappmcp", "mcp"],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_d685801616a2ebc70e51aeb099a9aa7c2731c556"
+        "WAPPMCP_DATA_DIR": "~/.wappmcp"
       }
+    },
+    "higgsfield": {
+      "url": "https://mcp.higgsfield.ai/mcp"
     }
   }
 }

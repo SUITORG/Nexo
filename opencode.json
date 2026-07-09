@@ -1,0 +1,41 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/deepseek-v4-flash-free",
+  "mcp": {
+    "higgsfield": {
+      "url": "https://mcp.higgsfield.ai/mcp"
+    }
+  },
+  "customCommands": [
+    {
+      "name": "suit",
+      "description": "SuitOS Agent Operating System — consult registry, load workflows, run validations",
+      "prompt": "Consult SuitOS system. Action: {{action}} (registry|workflow|validate|memory|plan)"
+    },
+    {
+      "name": "suit:registry",
+      "description": "Query the SuitOS registry — agents, skills, workflows, projects, models, routing",
+      "prompt": "Read .suit/registry/{{query}}.yaml and summarize its contents. Query: {{query}}"
+    },
+    {
+      "name": "suit:workflow",
+      "description": "Load a SuitOS workflow definition for the current task",
+      "prompt": "Read .suit/workflows/{{workflow}}.yaml and use it as the process for this task. Workflow: {{workflow}}"
+    },
+    {
+      "name": "suit:validate",
+      "description": "Run SuitOS review profile checks on the current changes",
+      "prompt": "Load .suit/reviewer/profiles.yaml, select the {{profile}} profile, and run its checks on the changes made. Profile: {{profile}}"
+    },
+    {
+      "name": "suit:memory",
+      "description": "Write an Architecture Decision Record to SuitOS memory",
+      "prompt": "Write a new ADR to .suit/memory/decisions/ADR-{{number}}-{{title}}.md following SuitOS conventions. Title: {{title}}, Decision: {{decision}}"
+    },
+    {
+      "name": "suit:plan",
+      "description": "Create a SuitOS execution plan using planner template",
+      "prompt": "Load .suit/planner/template.yaml, create a plan for this task, and present it for approval before executing. Task: {{task}}"
+    }
+  ]
+}

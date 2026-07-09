@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Presentación Patito Feliz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#003366;
+  --accent:#cc0000;
+  --bg:#ffffff;
+  --gap:clamp(1rem,3vw,2rem);
+  --title-size:clamp(2rem,8vw,4rem);
+  --body-size:clamp(1rem,2.5vw,1.5rem);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  height:100%;
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--primary);
+  overflow-x:hidden;
+}
+:root{
+  --gap:clamp(1rem,3vw,2rem);
+  --title-size:clamp(2rem,8vw,4rem);
+  --body-size:clamp(1rem,2.5vw,1.5rem);
+}
+*{
+  scroll-behavior:smooth;
+}
+.deck{
+  display:flex;
+  flex-direction:column;
+  scroll-snap-type:y mandatory;
+}
+.slide{
+  flex:0 0 100vh;
+  scroll-snap-align:start;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:var(--gap);
+  text-align:center;
+  position:relative;
+}
+.slide::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.0);
+}
+.slide .content{
+  max-width:80%;
+  z-index:1;
+}
+.slide h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:var(--title-size);
+  margin:0.5rem 0;
+  color:var(--primary);
+}
+.slide h2{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1.5rem,5vw,2.5rem);
+  margin:0.5rem 0;
+  color:var(--primary);
+}
+.slide p{
+  font-size:var(--body-size);
+  margin:0.8rem 0;
+  line-height:1.4;
+}
+.slide .number{
+  position:absolute;
+  bottom:10px;
+  right:10px;
+  font-size:0.9rem;
+  color:#555;
+}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:var(--gap);
+  margin-top:var(--gap);
+}
+.card{
+  background:#f5f5f5;
+  padding:var(--gap);
+  border-radius:8px;
+  text-align:center;
+}
+.card h3{
+  margin:0.3rem 0;
+  font-size:clamp(1rem,2vw,1.3rem);
+}
+.card p{
+  font-size:var(--body-size);
+}
+.nav-dots{
+  position:fixed;
+  top:50%;
+  left:20px;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#bbb;
+  cursor:pointer;
+}
+.dot.active{
+  background:var(--accent);
+}
+#progress{
+  position:fixed;
+  top:0;
+  left:0;
+  height:5px;
+  background:var(--accent);
+  width:0%;
+  z-index:1000;
+  transition:width .3s;
+}
+.edit-btn{
+  margin-top:1rem;
+  padding:0.5rem 1rem;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:var(--body-size);
+}
+.editable{
+  margin-top:0.5rem;
+  padding:0.5rem;
+  border:1px solid #ccc;
+  border-radius:4px;
+  min-height:2rem;
+  width:80%;
+  font-size:var(--body-size);
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:0s!important;transition-duration:0s!important;}
+}
+@media (max-height:700px){
+  .slide{padding:clamp(0.8rem,2vw,1rem);}
+}
+@media (max-height:600px){
+  .slide{padding:clamp(0.6rem,1.5vw,0.8rem);}
+}
+@media (max-height:500px){
+  .slide{padding:clamp(0.5rem,1vw,0.6rem);}
+}
+.reveal{
+  opacity:0;
+  transform:translateY(20px);
+  transition:opacity .6s ease-out,transform .6s ease-out;
+}
+.reveal.reveal{
+  opacity:1;
+  transform:none;
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="deck">
+  <section class="slide" data-index="0"><div class="content"><h1>Patito Feliz</h1><p class="subtitle">Educación Infantil — Educación Infantil, Guardería — Monterrey, N.L., México</p></div></section>
+  <section class="slide" data-index="1"><div class="content"><h2>Quiénes Somos</h2><p>Somos una guardería comprometida con el desarrollo integral de los niños, ofreciendo un entorno seguro y estimulante.</p><img src="https://images.unsplash.com/photo-1541888942125-2bb1070e7a07?w=800&q=80" alt="Construcción industrial" loading="lazy"></div></section>
+  <section class="slide" data-index="2"><div class="content"><h2>Nuestros Servicios</h2><div class="cards"><div class="card"><h3>Guardería</h3><p>Cuidado amoroso y atención personalizada.</p></div><div class="card"><h3>Preescolar</h3><p>Desarrollo temprano con metodologías lúdicas.</p></div><div class="card"><h3>Actividades</h3><p>Juego, arte y movimiento para potenciar habilidades.</p></div></div></div></section>
+  <section class="slide" data-index="3"><div class="content"><h2>Guardería Integral</h2><p><strong>Pros:</strong> Ambiente seguro, personal certificado, horarios flexibles.</p><p><strong>Contras:</strong> Cupos limitados, costo medio.</p><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" alt="Oficina corporativa" loading="lazy"></div></section>
+  <section class="slide" data-index="4"><div class="content"><h2>Preescolar Bilingüe</h2><p><strong>Pros:</strong> Enfoque multilingüe, preparación académica.</p><p><strong>Contras:</strong> Requiere mayor inversión.</p><img src="https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&q=80" alt="Instalación solar" loading="lazy"></div></section>
+  <section class="slide" data-index="5"><div class="content"><h2>Actividades Extracurriculares</h2><p><strong>Pros:</strong> Desarrollo de habilidades sociales, divertido.</p><p><strong>Contras:</strong> Horarios fijos, disponibilidad.</p><img src="https://images.unsplash.com/photo-1579389083078-4e7018379f82?w=800&q=80" alt="Equipo de trabajo" loading="lazy"></div></section>
+  <section class="slide" data-index="6"><div class="content"><h2>Comparativa por Segmento</h2><p><strong>Negocios:</strong> Soluciones personalizadas para oficinas.</p><p><strong>Residencias:</strong> Instalaciones compactas y estéticas.</p><p><strong>Industria:</strong> Sistemas de alta capacidad y robustez.</p></div></section>
+  <section class="slide" data-index="7"><div class="content"><h2>Mejor Combinación Costo‑Beneficio</h2><p>Recomendamos la opción de Preescolar Bilingüe con actividades extracurriculares, ofreciendo alto valor educativo a un costo competitivo.</p></div></section>
+  <section class="slide" data-index="8"><div class="content"><h2>¿Por qué Monterrey?</h2><p>Datos locales: población en crecimiento, alta demanda de educación temprana, infraestructura robusta que facilita la expansión de nuestras instalaciones.</p><img src="https://images.unsplash.com/photo-1581091226825-a6a2a5a0b1b0?w=800&q=80" alt="Energía solar techo" loading="lazy"></div></section>
+  <section class="slide" data-index="9"><div class="content"><h2>Contacto</h2><p>Teléfono: (no especificado)</p><p>Ubicación: Monterrey, N.L., México</p><button class="edit-btn">✏️ Editar</button><div class="editable" contenteditable="false">Información de contacto editable aquí.</div></div></section>
+  <section class="slide" data-index="10"><div class="content"><h2>Nuestro Enfoque</h2><p>Pedagogía basada en el juego, atención personalizada y colaboración con familias para potenciar el desarrollo integral.</p></div></section>
+  <section class="slide" data-index="11"><div class="content"><h2>Más Información</h2><p>Visítanos en nuestras redes o agenda una cita para conocer más sobre nuestras opciones.</p></div></section>
+</div>
+<div class="nav-dots">
+  <span class="dot" data-index="0"></span>
+  <span class="dot" data-index="1"></span>
+  <span class="dot" data-index="2"></span>
+  <span class="dot" data-index="3"></span>
+  <span class="dot" data-index="4"></span>
+  <span class="dot" data-index="5"></span>
+  <span class="dot" data-index="6"></span>
+  <span class="dot" data-index="7"></span>
+  <span class="dot" data-index="8"></span>
+  <span class="dot" data-index="9"></span>
+  <span class="dot" data-index="10"></span>
+  <span class="dot" data-index="11"></span>
+</div>
+<script>
+const totalSlides=12;
+let current=0;
+const deck=document.querySelector('.deck');
+const progress=document.getElementById('progress');
+const dots=document.querySelectorAll('.dot');
+function updateProgress(){
+  progress.style.width=((current+1)/totalSlides*100)+'%';
+}
+function setSlide(index){
+  if(index<0||index>=totalSlides) return;
+  current=index;
+  deck.querySelectorAll('.slide').forEach((s,i)=>s.classList.toggle('active',i===current));
+  updateProgress();
+  dots.forEach(d=>d.classList.toggle('active',+d.dataset.index===current));
+}
+function next(){ setSlide(current+1); }
+function prev(){ setSlide(current-1); }
+window.addEventListener('wheel',e=>{
+  if(e.deltaY>0) next();
+  else prev();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='PageDown') next();
+  else if(e.key==='ArrowUp'||e.key==='PageUp') prev();
+});
+dots.forEach(d=>d.addEventListener('click',()=>setSlide(+d.dataset.index));
+document.querySelector('.edit-btn').addEventListener('click',()=>{
+  const editable=document.querySelector('.editable');
+  editable.contentEditable='true';
+  editable.focus();
+});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='s'){
+    const editable=document.querySelector('.editable');
+    if(editable.contentEditable==='true'){
+      const data=editable.innerHTML;
+      localStorage.setItem('editableContent',data);
+      alert('Datos guardados');
+    }
+  }
+});
+deck.addEventListener('scroll',()=>{});
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.classList.add('reveal');
+    }
+  });
+},{threshold:0.15});
+document.querySelectorAll('.slide').forEach(s=>observer.observe(s));
+setSlide(0);
+</script>
+</body>
+</html>

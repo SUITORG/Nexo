@@ -520,6 +520,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listener para Generación IA
     generateBtn.addEventListener('click', generateAIContent);
 
+    // Model Selector
+    const modelSelect = document.getElementById('modelSelect');
+    const modelHint = document.getElementById('modelHint');
+    const modelDescriptions = {
+        'deepseek/deepseek-v4-flash': '⚡ DeepSeek V4 Flash — Rápido y gratis. El mejor para contenido.',
+        'qwen/qwen3.6-35b-a3b:free': '🧠 Qwen 3.6 35B — Creativo en español. Textos largos.',
+        'openrouter/free': '🔄 OpenRouter Free — Rápido pero variable.',
+        'meta-llama/llama-4-maverick:free': '🦙 Llama 4 Maverick — Bueno para razonamiento.',
+        'google/gemma-3-27b-it:free': '💎 Gemma 3 27B — Sigue instrucciones bien.',
+        'qwen/qwen-2.5-72b-instruct:free': '👑 Qwen 2.5 72B — Máxima calidad, más lento.',
+        'mistralai/mistral-small-3.1-24b-instruct:free': '💨 Mistral Small — Ultra rápido, tareas simples.'
+    };
+    if (modelSelect) {
+        modelSelect.addEventListener('change', async () => {
+            const selected = modelSelect.value;
+            if (modelHint) modelHint.textContent = modelDescriptions[selected] || '';
+            try {
+                await fetch('/api/models/select', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ modelId: selected })
+                });
+                showToast(`🤖 Modelo: ${modelSelect.options[modelSelect.selectedIndex].text.split('—')[0].trim()}`, 'success');
+            } catch (e) { console.log('Model select error:', e); }
+        });
+    }
+
     // Event Listener para IMG de Imaginación
     const imaginationBtn = document.getElementById('imaginationBtn');
     if (imaginationBtn) imaginationBtn.addEventListener('click', generateImaginationVideo);
@@ -853,6 +880,7 @@ Actúa como un Copywriter Maestro en Conversión y Especialista en Branding din�
     const userPrompt = `Generar campaña de ${slides} slides para ${platform} en formato ${format}. CTA final: ${phone || 'Interacción en redes'}. ¡Responde estrictamente con JSON!`;
 
     try {
+        const selectedModel = document.getElementById('modelSelect')?.value || 'deepseek/deepseek-v4-flash';
         const response = await fetch(CONFIG.AI_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -861,7 +889,8 @@ Actúa como un Copywriter Maestro en Conversión y Especialista en Branding din�
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
                 ],
-                temperature: 0.7
+                temperature: 0.7,
+                model: selectedModel
             })
         });
 

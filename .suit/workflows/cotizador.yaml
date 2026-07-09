@@ -1,0 +1,129 @@
+workflow:
+  name: cotizador
+  display_name: "Cotizador Module Development"
+  description: "Develop or modify the SuitCotizador quotation engine"
+  risk: medium
+  domain: sales
+
+  entry:
+    requires_planning: true
+    requires_confirmation: true
+    required_context:
+      - AGENTS.md
+      - contexto.md
+      - INDEX_FUNCIONES.md
+    required_skills:
+      - cotizaciones-engine
+      - pdf-generation
+      - multi-tenant
+    forbidden_if:
+      - "No AGENTS.md loaded"
+
+  steps:
+    - id: analyze
+      description: "Analyze requirements: proceso, variables, reglas, flujo"
+      action: read
+      skills:
+        - cotizaciones-engine
+        - system-analysis
+      validation:
+        - "Understand the calculation flow and pricing rules"
+
+    - id: plan
+      description: "Create implementation plan with Supabase schema changes"
+      action: plan
+      skills:
+        - cotizaciones-engine
+        - sql
+      produces: plan.yaml
+      validation:
+        - "Plan includes Supabase migration if schema changes"
+        - "Giro validation included in all endpoints"
+
+    - id: implement_backend
+      description: "Implement Supabase functions and API routes"
+      action: write
+      skills:
+        - sql
+        - javascript
+        - multi-tenant
+      validation:
+        - "RLS policies on all new tables (id_empresa)"
+        - "giro_especifico validation in every endpoint"
+        - "Reglas_Precios evaluated before total calculation"
+        - "Folio COT-XXX generated server-side"
+        - "No hardcoded secrets"
+
+    - id: implement_frontend
+      description: "Implement frontend module (#cotizador route)"
+      action: write
+      skills:
+        - javascript
+        - cotizaciones-engine
+      validation:
+        - "Variables validated before calculation"
+        - "Error handling for invalid giro"
+        - "PDF download works"
+
+    - id: pdf_generation
+      description: "Implement PDF generation via DriveManager"
+      action: write
+      skills:
+        - pdf-generation
+      validation:
+        - "PDF stored in Google Drive per tenant"
+        - "PDF URL saved in Cotizaciones.pdf_url"
+
+    - id: convert_flow
+      description: "Implement Cotización → Lead/Proyecto/Orden conversion"
+      action: write
+      skills:
+        - cotizaciones-engine
+      validation:
+        - "Creates Lead with reference to cotización"
+        - "Creates Proyecto with reference to cotización"
+        - "Creates Orden with reference to cotización"
+        - "Cotizaciones.estatus = 'convertida'"
+
+    - id: index
+      description: "Update function index"
+      action: run
+      command: "node scripts/generate-index.js"
+      condition: "if new functions added or renamed"
+      validation:
+        - "INDEX_FUNCIONES.md regenerated"
+
+    - id: validate
+      description: "Run full validation pipeline"
+      action: review
+      validation:
+        - "multi-tenant profile passes"
+        - "cotizador-rules profile passes"
+        - "security profile passes"
+
+    - id: commit
+      description: "Commit changes"
+      action: git
+      command: "git add . && git commit -m '{emoji} {type}: {desc} (v{version})'"
+      condition: "user confirms"
+      validation:
+        - "Commit message follows convention"
+
+  exit:
+    validation:
+      - "INDEX_FUNCIONES.md is updated"
+      - "No debug code left"
+      - "Supabase migration applied (if any)"
+      - "Giro validation tested on enabled and disabled tenants"
+      - "Smoke test: create cotización → download PDF → convert to Lead"
+    requires_commit: true
+    notifies:
+      - memory/decisions
+      - telemetry
+
+  config:
+    allowed_models:
+      - claude-sonnet
+      - deepseek-flash
+    max_steps_without_confirmation: 2
+    auto_rollback_on_failure: true

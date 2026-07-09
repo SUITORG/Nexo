@@ -117,6 +117,22 @@ workflows:
       - "render"
       - "composición"
 
+  reservacion:
+    path: .suit/workflows/reservacion.yaml
+    risk: medium
+    domain: service
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 8000
+    trigger_keywords:
+      - "reservacion"
+      - "cita"
+      - "agendar"
+      - "appointment"
+      - "schedule"
+      - "whatsapp booking"
+      - "usa_reservaciones"
+
   cotizador:
     path: .suit/workflows/cotizador.yaml
     risk: medium

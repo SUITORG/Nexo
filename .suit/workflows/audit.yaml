@@ -1,0 +1,46 @@
+workflow:
+  name: audit
+  display_name: "System Audit"
+  description: "Analyze architecture, security, performance, or code quality"
+  risk: low
+  domain: system
+
+  entry:
+    requires_planning: false
+    requires_confirmation: false
+    required_context:
+      - AGENTS.md
+      - contexto.md
+      - .suit/memory/bugs/*.md
+    required_skills:
+      - system-analysis
+      - security-audit
+
+  steps:
+    - id: scope
+      description: "Define audit scope (which module, which concern)"
+      action: read
+      produces: scope.yaml
+
+    - id: analyze
+      description: "Analyze code, config, and architecture"
+      action: read+analyze
+      skills:
+        - system-analysis
+        - security-audit
+      validation:
+        - "All relevant files examined"
+
+    - id: report
+      description: "Produce audit report with findings and recommendations"
+      action: write
+      target: .suit/reports/
+      produces: audit_report.md
+      validation:
+        - "Report is actionable (not just descriptive)"
+
+  exit:
+    validation:
+      - "Report saved to .suit/reports/"
+    notifies:
+      - telemetry

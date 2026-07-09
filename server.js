@@ -7,7 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Stripe módulo de pagos
-const stripePayments = require('./conecionpagos/index');
+const stripePayments = require('./Conecionpagos/index');
 
 // Stripe Webhook (debe ir ANTES de express.json() para recibir raw body)
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -36,11 +36,11 @@ app.use(helmet({
             "default-src": ["'self'"],
             "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.googleapis.com", "https://kit.fontawesome.com", "https://cdn.jsdelivr.net", "https://js.stripe.com"],
             "script-src-attr": ["'unsafe-inline'"],
-            "connect-src": ["'self'", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://openrouter.ai", "https://ka-f.fontawesome.com", "https://*.googleusercontent.com", "https://api.stripe.com"],
+            "connect-src": ["'self'", "http://localhost:3003", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://openrouter.ai", "https://ka-f.fontawesome.com", "https://*.googleusercontent.com", "https://api.stripe.com", "https://cdn.jsdelivr.net"],
             "img-src": ["'self'", "data:", "https://loremflickr.com", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://*.googleusercontent.com", "https://*.stripe.com"],
             "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://kit.fontawesome.com", "https://cdnjs.cloudflare.com"],
             "font-src": ["'self'", "https://fonts.gstatic.com", "https://ka-f.fontawesome.com", "https://cdnjs.cloudflare.com"],
-            "frame-src": ["'self'", "https://*.google.com", "https://*.googleusercontent.com", "https://js.stripe.com"],
+            "frame-src": ["'self'", "http://localhost:3003", "https://*.google.com", "https://*.googleusercontent.com", "https://js.stripe.com"],
             "upgrade-insecure-requests": [],
         },
     },
@@ -370,6 +370,18 @@ app.post('/api/webhook/citas', (req, res) => {
 const citasApp = require('./citas/index');
 app.use(citasApp);
 
+// Montar SuitReservaciones (webhook WhatsApp + API) — módulo migrado
+const reservacionesApp = require('./SuitReservaciones/index');
+app.use(reservacionesApp);
+
+// Montar SuitPedidoExpress (menú digital + órdenes) — módulo nuevo
+const pedidoExpressApp = require('./SuitPedidoExpress/index');
+app.use(pedidoExpressApp);
+
+// Montar SuitPos (POS + monitor) — módulo nuevo
+const posApp = require('./SuitPos/index');
+app.use(posApp);
+
 // =====================================================================
 // 💳 STRIPE PAYMENT ENDPOINTS
 // =====================================================================
@@ -410,15 +422,43 @@ app.get('/api/stripe/payment-status/:intentId', async (req, res) => {
     }
 });
 
+// =====================================================================
+// 📋 COTIZADOR API — Proxy al standalone SuitCotizador (puerto 3003)
+// =====================================================================
+const http = require('http');
+function proxyCotizador(req, res) {
+  var opts = {
+    hostname: '127.0.0.1',
+    port: 3003,
+    path: '/api' + req.path.replace('/api/cotizador', '/api/cotizador') + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : ''),
+    method: req.method,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  var proxyReq = http.request(opts, function(proxyRes) {
+    var body = '';
+    proxyRes.on('data', function(chunk) { body += chunk; });
+    proxyRes.on('end', function() {
+      res.status(proxyRes.statusCode).type('json').send(body);
+    });
+  });
+  proxyReq.on('error', function() {
+    res.status(502).json({ error: 'SuitCotizador no disponible (puerto 3003)' });
+  });
+  if (req.body && Object.keys(req.body).length > 0) proxyReq.write(JSON.stringify(req.body));
+  proxyReq.end();
+}
+app.all('/api/cotizador/*', proxyCotizador);
+
 // Serve static files from the current directory
 app.use((req, res, next) => {
     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
     next();
 });
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { etag: false, lastModified: false }));
 
 // For SPA routing
 app.get('*', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 

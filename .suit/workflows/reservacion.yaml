@@ -1,0 +1,59 @@
+# Reservaciones Workflow — SuitReservaciones
+# Niveles: 0=off, 1=WhatsApp, 2=WhatsApp+Calendar
+workflow:
+  name: "Reservación / Appointment Booking"
+  domain: service
+  risk: medium
+  estimated_tokens: 8000
+
+  triggers:
+    - "usa_reservaciones migration"
+    - "whatsapp booking logic"
+    - "appointment scheduling"
+    - "google calendar sync"
+    - "waitlist management"
+
+  steps:
+    - id: classify
+      name: "Classify request"
+      description: "Identify intent: schema change, runtime gating, or new feature"
+
+    - id: context
+      name: "Load context"
+      files:
+        - SuitReservaciones/index.js
+        - SuitReservaciones/handlers/webhook.js
+        - SuitReservaciones/handlers/actions.js
+        - SuitReservaciones/services/ai.js
+        - SuitReservaciones/services/calendar.js
+        - SuitReservaciones/services/whatsapp.js
+        - SuitReservaciones/db/client.js
+        - SuitReservaciones/db/schema.sql
+        - SuitReservaciones/package.json
+        - Documentacion/migracion_supabase.sql
+        - .suit/registry/skills.yaml
+        - .suit/registry/projects.yaml
+
+    - id: plan
+      name: "Plan changes"
+      template: .suit/planner/template.yaml
+
+    - id: implement
+      name: "Implement changes"
+      rules:
+        - "usa_reservaciones INTEGER: 0=off, 1=WhatsApp, 2=+Calendar"
+        - "Gate webhook at reservacionesLevel < 1"
+        - "DB migration must use ALTER COLUMN with USING clause"
+        - "Seeds must use 0/1 integers"
+
+    - id: validate
+      name: "Validate"
+      checks:
+        - "usa_reservaciones is INTEGER everywhere"
+        - "webhook returns 403 when level < 1"
+        - "calendar is skipped when level < 2"
+        - "all existing data migrated safely"
+
+    - id: record
+      name: "Record decision"
+      adr: true

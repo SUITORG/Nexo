@@ -197,6 +197,7 @@ app.public = {
         const bizType = (company.tipo_negocio || "").toString().toUpperCase();
         const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
         const isPersonal = bizType.includes("MARCA PERSONAL");
+        const modoFlags = app.utils.parseModo(company);
 
         // --- COREOGRAFÍA DINÁMICA DE CAPAS (v14.7.0) ---
         const viewHome = document.getElementById('view-home');
@@ -761,10 +762,14 @@ app.public = {
                                 ${(() => {
                         const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
                         const usesAi = !rawAi.endsWith(',NO') && (rawAi.includes('TRUE') || rawAi.includes('/') || rawAi.includes(',') || rawAi.includes('GPT') || rawAi.includes('GEMINI'));
-                        return usesAi ? `
-                                     <button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
-                                         <i class="fas fa-robot"></i> CONSULTAR
-                                     </button>` : '';
+                        const hasReservations = company.usa_reservaciones >= 1;
+                        if (!usesAi && !hasReservations) return '';
+                        let btns = '';
+                        if (usesAi) {
+                            btns += `<button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')"><i class="fas fa-robot"></i> CONSULTAR</button>`;
+                        }
+
+                        return btns;
                     })()}
                             </div>
                         </div>
@@ -784,7 +789,7 @@ app.public = {
         if (subEl && !heroBanner.innerHTML.includes('hero-actions-dynamic')) subEl.innerText = company.mensaje1 || company.descripcion || "Bienvenido.";
 
         if (actions && !isPersonal && !heroBanner.innerHTML.includes('hero-actions-dynamic')) {
-            let btns = isFood ?
+            let btns = (isFood && modoFlags.express) ?
                 `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
                 `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar Ahora</button>`;
 
@@ -800,6 +805,7 @@ app.public = {
             const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
             const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
             const showHub = siteMode === "HUB" || (siteMode !== "WHITE" && !isIsolated);
+            const hasReservations = company.usa_reservaciones >= 1;
 
             // --- MOTOR DE MENÚ DINÁMICO (v8.2.0) ---
             const dynamicPages = (app.data.Config_Paginas || []).filter(p => {
@@ -839,8 +845,9 @@ app.public = {
                 ${(showHub) ? '<li><a href="#orbit" title="Portal/Explorar"><i class="fas fa-compass"></i></a></li>' : ''}
                 <li><a href="#home">Inicio</a></li>
                 ${dynamicLinksHtml}
-                ${isFood ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
+                ${(isFood && modoFlags.express) ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
                 ${company.formulario ? `<li><a href="#contact">Contacto</a></li>` : ''}
+                ${hasReservations && !isFood ? '<li><a href="javascript:void(0)" onclick="app.public.showReservationModal()">Agendar Cita</a></li>' : ''}
                 <li><a href="#login" class="nav-login-btn"><i class="fas fa-user-lock"></i> Staff</a></li>
             `;
         }
@@ -984,25 +991,52 @@ app.public = {
             }
         };
 
-        try {
-            const response = await fetch(app.apiUrl, {
-                method: 'POST',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify(data)
-            });
-            const res = await response.json();
-            if (res.success) {
-                alert("¡Cita agendada con éxito! Te contactaremos por WhatsApp.");
-                document.getElementById('reservation-modal').classList.add('hidden');
-            } else {
-                throw new Error(res.error || "Error desconocido");
+        const engine = app.state.dbEngine || 'GSHEETS';
+        let saved = false;
+
+        // SUPABASE mode: try local Supabase endpoint first
+        if (engine === 'SUPABASE') {
+            try {
+                const localRes = await fetch('/api/reservaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data.reservation)
+                });
+                const localResult = await localRes.json();
+                if (localResult.ok) saved = true;
+                else console.warn('[RESERVE] Local endpoint:', localResult.error);
+            } catch (e) {
+                console.warn('[RESERVE] Local endpoint error:', e.message);
             }
-        } catch (err) {
-            alert("Error al reservar: " + err.message);
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
         }
+
+        // GSHEETS mode or Supabase fallback: always go through GAS
+        if (!saved) {
+            try {
+                const response = await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(data)
+                });
+                const res = await response.json();
+                if (res.success) saved = true;
+                else throw new Error(res.error || "Error desconocido");
+            } catch (gasErr) {
+                alert("Error al reservar: " + gasErr.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return;
+            }
+        }
+
+        alert("¡Cita agendada con éxito! Te contactaremos por WhatsApp.");
+        document.getElementById('reservation-modal').classList.add('hidden');
+
+        await app.loadData();
+        if (app.admin && app.admin.renderReservations) app.admin.renderReservations();
+
+        btn.innerText = originalText;
+        btn.disabled = false;
     },
 
     renderSEO: () => {
@@ -1326,7 +1360,8 @@ app.public = {
         container.innerHTML = '';
         const companies = (app.data.Config_Empresas || []).filter(co => {
             const isHabil = (co.habilitado === 'TRUE' || co.habilitado === true || co.habilitado === "1");
-            const isProd = (co.modo === 'PROD');
+            const modoBase = (co.modo || '').split(',')[0].trim();
+            const isProd = (modoBase === 'PROD');
             // Nota: En la Órbita se ven todos los activos/producción. El aislamiento (is_isolated)
             // solo afecta la salida del sitio hacia el Hub una vez dentro.
             return isHabil && isProd;
@@ -2180,7 +2215,7 @@ app.public = {
             formulario: 'TRUE',
             usa_soporte_ia: 'FALSE',
             usa_qr_sitio: 'FALSE',
-            usa_reservaciones: 'FALSE'
+            usa_reservaciones: '0'
         };
 
         try {

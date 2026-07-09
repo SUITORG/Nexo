@@ -1,0 +1,84 @@
+permissions:
+  roles:
+    architect:
+      allowed_workflows:
+        - audit
+        - review
+        - docs
+      allowed_projects:
+        - root
+      max_risk: high
+
+    developer:
+      allowed_workflows:
+        - feature
+        - bugfix
+        - docs
+        - research
+      allowed_projects:
+        - root
+        - campanas-ai
+        - citas
+        - suit-cotizador
+      max_risk: medium
+
+    operator:
+      allowed_workflows:
+        - deploy
+        - migration
+        - bugfix
+      allowed_projects:
+        - root
+      max_risk: high
+
+    researcher:
+      allowed_workflows:
+        - research
+        - audit
+      allowed_projects:
+        - root
+        - campanas-ai
+      max_risk: low
+
+    cotizador:
+      allowed_workflows:
+        - feature
+        - bugfix
+        - cotizador
+      allowed_projects:
+        - suit-cotizador
+      max_risk: medium
+
+  rules:
+    - operation: "modify_gas_backend"
+      requires_role: developer
+      requires_review:
+        - security
+        - architecture
+      notify: true
+
+    - operation: "modify_server_routing"
+      requires_role: operator
+      requires_review:
+        - security
+        - architecture
+      notify: true
+
+    - operation: "modify_multi_tenant"
+      requires_role: architect
+      requires_review:
+        - security
+      notify: true
+
+    - operation: "access_cotizador"
+      requires_role: cotizador
+      requires_giro_validation: true
+      requires_review: []
+      notify: false
+
+    - operation: "modify_cotizador_tables"
+      requires_role: developer
+      requires_review:
+        - security
+        - architecture
+      notify: true

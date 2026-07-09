@@ -1,0 +1,56 @@
+suite:
+  name: system
+  display_name: "System-Wide Smoke Tests"
+  description: "Verifica que los servidores principales del ecosistema responden"
+  servers:
+    - name: main
+      url: http://localhost:3001
+      type: express
+      path: server.js
+    - name: citas
+      url: http://localhost:3002
+      type: express
+      path: citas/index.js
+    - name: cms
+      url: http://localhost:8000
+      type: http
+      path: CampanasAi/local-server-node.js
+
+  tests:
+    - id: server-main
+      description: "Servidor principal (3001) responde"
+      request:
+        method: GET
+        path: /
+        server: main
+      expect:
+        status: 200
+
+    - id: server-citas
+      description: "Servidor citas (3002) responde"
+      request:
+        method: GET
+        path: /
+        server: citas
+      expect:
+        status: 200
+
+    - id: server-cms
+      description: "Servidor CampanasAi (8000) responde"
+      request:
+        method: GET
+        path: /
+        server: cms
+      expect:
+        status: 200
+
+    - id: cotizador-proxy
+      description: "Proxy /api/cotizador/* desde main (3001)"
+      request:
+        method: GET
+        path: /api/cotizador/procesos
+        server: main
+        params:
+          id_empresa: PRPT
+      expect:
+        status: 200

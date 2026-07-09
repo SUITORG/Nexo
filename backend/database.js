@@ -101,7 +101,158 @@ function ensureSeed(ss, sheetName, idCol, idVal, dataObj) {
     appendRowMapped(ss, sheetName, dataObj);
     console.log("🌱 Semilla insertada: " + idVal);
   } else {
-    // 🛡️ PROTECCIÓN DE DATOS: Si ya existe, NO sobreescribimos los cambios manuales del usuario.
     console.log("🛡️ Registro protegido (Ya existe): " + idVal);
   }
+}
+
+function autoCrearRegistrosSUDO(ss, idEmpresa, nombreEmpresa) {
+  if (!idEmpresa || !idEmpresa.toString().trim()) return;
+  idEmpresa = idEmpresa.toString().trim().toUpperCase();
+  nombreEmpresa = (nombreEmpresa || idEmpresa).toString().trim();
+  var email = 'admin@' + idEmpresa.toLowerCase() + '.com';
+  var fecha = new Date().toISOString();
+
+  var rolesSheet = ss.getSheetByName("Config_Roles");
+  if (rolesSheet) {
+    var rolExistente = false;
+    var rData = rolesSheet.getDataRange().getValues();
+    var rHeaders = rData[0].map(function(h) { return String(h).toLowerCase().trim().replace(/\s+/g, '_'); });
+    var rRoleIdx = rHeaders.indexOf('id_rol');
+    var rEmpIdx = rHeaders.indexOf('id_empresa');
+    if (rRoleIdx !== -1 && rEmpIdx !== -1) {
+      for (var i = 1; i < rData.length; i++) {
+        if (String(rData[i][rEmpIdx]).trim().toUpperCase() === idEmpresa &&
+            String(rData[i][rRoleIdx]).trim().toUpperCase() === 'SUDO') {
+          rolExistente = true;
+          break;
+        }
+      }
+    }
+    if (!rolExistente) {
+      appendRowMapped(ss, "Config_Roles", {
+        id_rol: "SUDO",
+        id_empresa: idEmpresa,
+        nivel_acceso: 999,
+        modulos_visibles: "pos,leads,projects,catalog,cotizador,reports,vault,quotas",
+        creditos_base: 99999,
+        activo: "TRUE",
+        fecha_creacion: fecha
+      });
+      console.log("✅ Rol SUDO creado para " + idEmpresa);
+    }
+  }
+
+  var userSheet = ss.getSheetByName("Usuarios");
+  if (!userSheet) return;
+  var userExistente = false;
+  var uData = userSheet.getDataRange().getValues();
+  var uHeaders = uData[0].map(function(h) { return String(h).toLowerCase().trim().replace(/\s+/g, '_'); });
+  var uEmpIdx = uHeaders.indexOf('id_empresa');
+  var uNameIdx = uHeaders.indexOf('username');
+  if (uEmpIdx !== -1 && uNameIdx !== -1) {
+    for (var j = 1; j < uData.length; j++) {
+      if (String(uData[j][uEmpIdx]).trim().toUpperCase() === idEmpresa &&
+          String(uData[j][uNameIdx]).trim().toLowerCase() === 'sudo') {
+        userExistente = true;
+        break;
+      }
+    }
+  }
+  if (!userExistente) {
+    appendRowMapped(ss, "Usuarios", {
+      id_empresa: idEmpresa,
+      nombre: "Super Admin",
+      email: email,
+      username: "sudo",
+      password: "Sudo1234.",
+      nivel_acceso: 999,
+      id_rol: "SUDO",
+      activo: "TRUE",
+      fecha_creacion: fecha
+    });
+    console.log("✅ Usuario SUDO creado para " + idEmpresa + " (" + email + ")");
+  }
+}
+
+function onEdit(e) {
+  if (!e || !e.range) return;
+  var ss = e.source;
+  var sheet = e.range.getSheet();
+  var sheetName = sheet.getName();
+  if (sheetName !== "Config_Empresas") return;
+  var row = e.range.getRow();
+  if (row < 2) return;
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var headerMap = {};
+  for (var h = 0; h < headers.length; h++) {
+    headerMap[String(headers[h]).toLowerCase().trim().replace(/\s+/g, '_')] = h;
+  }
+  var idColIdx = headerMap['id_empresa'];
+  if (idColIdx === undefined) return;
+  var rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var nuevoId = String(rowData[idColIdx] || "").trim();
+  if (!nuevoId) return;
+  var nameColIdx = headerMap['nomempresa'];
+  var nuevoNombre = nameColIdx !== undefined ? String(rowData[nameColIdx] || "").trim() : nuevoId;
+  autoCrearRegistrosSUDO(ss, nuevoId, nuevoNombre);
+}
+
+function onOpen() {
+  try {
+    var ui = SpreadsheetApp.getUi();
+    ui.createMenu('SuitOrg')
+      .addItem('Activar SUDO para todas las empresas', 'aplicarSUDOaTodas')
+      .addSeparator()
+      .addItem('Generar SUDO para empresa activa', 'generarSUDOparaSeleccion')
+      .addToUi();
+  } catch(e) {}
+}
+
+function avisar(msg) {
+  try { SpreadsheetApp.getUi().alert(msg); } catch(e) { console.log(msg); }
+}
+
+function aplicarSUDOaTodas() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) ss = getSS();
+  var sheet = ss.getSheetByName("Config_Empresas");
+  if (!sheet) { avisar("No existe la hoja Config_Empresas"); return; }
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0].map(function(h) { return String(h).toLowerCase().trim().replace(/\s+/g, '_'); });
+  var idIdx = headers.indexOf('id_empresa');
+  var nameIdx = headers.indexOf('nomempresa');
+  if (idIdx === -1) { avisar("No se encontró columna id_empresa"); return; }
+  for (var i = 1; i < data.length; i++) {
+    var idEmp = String(data[i][idIdx] || "").trim();
+    if (!idEmp) continue;
+    var nomEmp = nameIdx !== -1 ? String(data[i][nameIdx] || "").trim() : idEmp;
+    autoCrearRegistrosSUDO(ss, idEmp, nomEmp);
+  }
+  avisar("SUDO aplicado a todas las empresas. Revisa Usuarios y Config_Roles.");
+}
+
+function generarSUDOparaSeleccion() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) ss = getSS();
+  var sheet = ss.getActiveSheet();
+  if (sheet.getName() !== "Config_Empresas") {
+    avisar("Selecciona una celda en la hoja Config_Empresas");
+    return;
+  }
+  var row = sheet.getActiveRange().getRow();
+  if (row < 2) { avisar("Selecciona una fila de datos (no el encabezado)"); return; }
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var headerMap = {};
+  for (var h = 0; h < headers.length; h++) {
+    headerMap[String(headers[h]).toLowerCase().trim().replace(/\s+/g, '_')] = h;
+  }
+  var idIdx = headerMap['id_empresa'];
+  var nameIdx = headerMap['nomempresa'];
+  if (idIdx === undefined) { avisar("No se encontró columna id_empresa"); return; }
+  var rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var idEmp = String(rowData[idIdx] || "").trim();
+  if (!idEmp) { avisar("La celda id_empresa está vacía"); return; }
+  var nomEmp = nameIdx !== undefined ? String(rowData[nameIdx] || "").trim() : idEmp;
+  autoCrearRegistrosSUDO(ss, idEmp, nomEmp);
+  avisar("SUDO generado para " + idEmp + ". Revisa Usuarios y Config_Roles.");
 }

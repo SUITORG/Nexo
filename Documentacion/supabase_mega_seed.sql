@@ -19,20 +19,20 @@ VALUES
   (
     'PFM', 'Punto Fresón del Mar', 'Estándar', 'La frescura del mar en tu mesa',
     '#0077b6', '#f4a261', '',
-    TRUE, TRUE, 'PROD', 'SUPABASE',
-    FALSE, FALSE
+    TRUE, TRUE, 'PROD,1', 'SUPABASE',
+    FALSE, 0
   ),
   (
     'PAPER', 'PA PER', 'Consultoría Patrimonial', 'Patrimonio Personal',
     '#001f3f', '#FFD700', 'https://drive.google.com/uc?id=11GOSsHDaO-JmtcKd9J5Io5J8aYbcQHOH',
     FALSE, TRUE, 'PROD', 'SUPABASE',
-    TRUE, TRUE
+    TRUE, 1
   ),
   (
     'EVASOL', 'EVASOL', 'Energía Solar', 'Energía para tu vida',
     '#2e7d32', '#ffa000', '',
-    TRUE, TRUE, 'PROD', 'GSHEETS',
-    TRUE, FALSE
+    TRUE, TRUE, 'PROD', 'SUPABASE',
+    TRUE, 0
   )
 ON CONFLICT (id_empresa) DO NOTHING;
 
