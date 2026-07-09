@@ -71,6 +71,7 @@
 | `suit-productos` | `SuitProductos/` | SUPABASE | 3007 |
 | `suit-inventarios` | `SuitInventarios/` | SUPABASE | 3008 |
 | `suit-bodega` | `SuitBodega/` | SUPABASE | 3009 |
+| `suit-ai` | `SuitAI/` | - | 3010 |
 | `vire` | `SuitVidGenRemotion/` | - | 3004 |
 
 ## Memory
@@ -87,3 +88,4 @@
 |---|---|---|
 | ADR-004 | [Modo Flags 4-Partes + SuitPedidoExpress/SuitPos](memory/decisions/ADR-004-modo-flags.md) | 2026-07-09 |
 | ADR-005 | [Modo Flags 7-Partes + SuitProductos/SuitInventarios/SuitBodega](memory/decisions/ADR-005-modulo-prod-inv-bod.md) | 2026-07-09 |
+| ADR-006 | [SuitAI — Model Discovery + Auto-Routing + Circuit Breaker](memory/decisions/ADR-006-suit-ai.md) | 2026-07-09 |

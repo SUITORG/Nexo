@@ -257,6 +257,37 @@ projects:
       - Bodegas
       - Transferencias
 
+  suit-ai:
+    name: "SuitAI — Model Discovery + Auto-Routing + Circuit Breaker"
+    path: SuitAI/
+    description: "Módulo de IA: auto-descubre modelos gratis de OpenRouter y OpenCode Zen, prueba conectividad, rutea mensajes al mejor disponible con circuit breaker. Puerto 3010."
+    skills:
+      - javascript
+      - multi-tenant
+      - system-analysis
+    context:
+      - SuitAI/index.js
+      - SuitAI/handlers/api.js
+      - SuitAI/services/modelScanner.js
+      - SuitAI/services/modelRouter.js
+      - SuitAI/services/circuitBreaker.js
+    frontend:
+      public: true
+      public_route: "POST /api/ai/chat (público)"
+      public_gate: "ninguno — disponible para todas las empresas"
+      staff: true
+      staff_route: "#ai-models (futuro)"
+      staff_rbac: "ADMIN >= 10"
+    environment:
+      PORT: 3010
+      TYPE: service
+    servers:
+      - name: ai
+        path: SuitAI/index.js
+        port: 3010
+        type: express
+    tables: []
+
   suit-cotizador:
     name: "Portal de Cotización en Línea"
     path: SuitCotizador/

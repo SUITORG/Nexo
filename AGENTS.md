@@ -155,6 +155,7 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
     | 3007 | SuitProductos |
     | 3008 | SuitInventarios |
     | 3009 | SuitBodega |
+    | 3010 | SuitAI |
     | 8000 | CampanasAi |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas
 6. Si el módulo tiene gate de UI (como `modo` flags o `usa_reservaciones`), documentarlo en `projects.yaml` bajo `frontend:`

@@ -98,3 +98,31 @@ tech_debt:
       - "Documentacion/migrations/001_suit_cotizador.sql"
     created: "2026-07-05"
     status: open
+
+  - id: TD-014
+    description: "APIs de subsistemas sin autenticación (SuitReservaciones, SuitPedidoExpress, SuitPos, SuitProductos, SuitInventarios, SuitBodega, SuitCotizador) — cualquier endpoint es accesible sin token vía /api/*. Propuesta: middleware JWT gateway centralizado en server.js o aislamiento por puerto con reverse proxy."
+    severity: critical
+    related_files:
+      - "server.js"
+      - "SuitReservaciones/index.js"
+      - "SuitPedidoExpress/index.js"
+      - "SuitPos/index.js"
+      - "SuitProductos/index.js"
+      - "SuitInventarios/index.js"
+      - "SuitBodega/index.js"
+      - "SuitCotizador/index.js"
+      - "citas/index.js"
+    created: "2026-07-09"
+    status: open
+
+  - id: TD-015
+    description: "service_role key expuesta en db/client.js de todos los módulos nuevos — bypass total de RLS. Extensión de TD-003 para SuitPedidoExpress/db/client.js, SuitPos/db/client.js, SuitProductos/db/client.js, SuitInventarios/db/client.js, SuitBodega/db/client.js"
+    severity: high
+    related_files:
+      - "SuitPedidoExpress/db/client.js"
+      - "SuitPos/db/client.js"
+      - "SuitProductos/db/client.js"
+      - "SuitInventarios/db/client.js"
+      - "SuitBodega/db/client.js"
+    created: "2026-07-09"
+    status: open

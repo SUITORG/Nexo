@@ -180,6 +180,24 @@ var app = {
                 bodega: parts.length > 6 ? parts[6].trim() === '1' : true
             };
         },
+        // --- AI CONFIG (v8.0.0) ---
+        // Normaliza usa_soporte_ia + agent_enabled en un solo objeto
+        // Devuelve { enabled, models[], hasAudit } independientemente del formato del campo
+        parseAiConfig: (biz) => {
+            const raw = (biz?.usa_soporte_ia || biz?.agent_enabled || '').toString();
+            const upper = raw.toUpperCase();
+            const hasComma = raw.includes(',');
+            const hasSlash = raw.includes('/');
+            const hasModelKeyword = hasSlash || hasComma || upper.includes('GEMINI') || upper.includes('GPT') || upper.includes('QWEN');
+            const isExplicitlyOff = upper.startsWith('FALSE') || upper.endsWith(',NO');
+            const enabled = !isExplicitlyOff && (upper === 'TRUE' || hasModelKeyword || upper === '');
+            const models = raw.split(',').map(m => m.trim()).filter(m => {
+                const u = m.toUpperCase();
+                return m && !['TRUE', 'FALSE', 'NO', ''].includes(u);
+            });
+            const hasAudit = (biz?.agent_enabled || '').toString().toUpperCase() === 'TRUE';
+            return { enabled, models, hasAudit, raw };
+        },
     },
     loadEnvConfig: async () => {
         try {

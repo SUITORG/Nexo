@@ -366,6 +366,10 @@ app.post('/api/webhook/citas', (req, res) => {
     res.json({ received: true });
 });
 
+// Montar SuitAI (model discovery + auto-routing + circuit breaker) — debe ir ANTES de /api/ai/* sueltos
+const suitAiApp = require('./SuitAI/index');
+app.use(suitAiApp);
+
 // Montar módulo de Citas (webhook WhatsApp + API)
 const citasApp = require('./citas/index');
 app.use(citasApp);
