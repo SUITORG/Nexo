@@ -114,6 +114,12 @@
 - [ ] Higgsfield AI: autenticar (`higgsfield auth login`), probar generación de imagen
 - [ ] Notion API: explorar casos de uso, crear skill de opencode
 
+### SuitOS Core — MCP Skills
+
+- [ ] **Telegram Bot API**: obtener token de @BotFather, agregar a `.env` como `TELEGRAM_BOT_API_TOKEN`, probar `npx telegram-bot-mcp-server`
+- [ ] **ManyChat API**: obtener API key de ManyChat (Settings → API), agregar a `.env` como `MANYCHAT_API_KEY`, probar `npx github:fabienbutz/manychat-mcp`
+- [ ] Probar que `npm run registry:server` expone ambas skills en `POST /mcp/v1/tools/list`
+
 ### Georreferenciación
 
 - [ ] **v5.2.6**: Localización inteligente (capturar ubicación del visitante para auto-llenado)

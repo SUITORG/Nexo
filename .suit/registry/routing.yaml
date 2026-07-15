@@ -119,6 +119,22 @@ routing:
       workflow: reservacion
       priority: 15
 
+    - patterns:
+        - "prospeccion"
+        - "prospectos"
+        - "oportunidades comerciales"
+        - "empresas potenciales"
+        - "buscar clientes"
+        - "leads comerciales"
+        - "monterrey empresas"
+        - "negocios monterrey"
+      workflow: prospeccion
+      priority: 10
+      agent: developer
+      skills_override:
+        - prospeccion-ia-monterrey
+        - google-places-business-finder
+
   overrides:
     - if:
         project: campanas-ai

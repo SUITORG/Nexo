@@ -1,0 +1,70 @@
+[
+  {
+    "image": "slide_1_hamburguesas_metroplex.jpg",
+    "image_path": "/tmp/suitcvlo_test/slide_1_hamburguesas_metroplex.jpg",
+    "captured_at": null,
+    "gps_lat": null,
+    "gps_lng": null,
+    "address": null,
+    "billboards": [
+      {
+        "bbox": [
+          0,
+          202,
+          450,
+          495
+        ],
+        "confidence": 0.9,
+        "method": "contour",
+        "format": "valla",
+        "area_ratio": 0.488,
+        "ocr_text": "El Pollo M\u00e1s Codiciado! Nuestro pollo ala parrilla es el m\u00e1s sabroso y jugoso de toda la ciudad. iS\u00f3lo quedan unas porciones disponibles!",
+        "brand": "pollo",
+        "campaign_type": "general",
+        "campaign_detail": "El Pollo M\u00e1s Codiciado! Nuestro pollo ala parrilla es el m\u00e1s sabroso y jugoso de"
+      },
+      {
+        "bbox": [
+          0,
+          0,
+          450,
+          309
+        ],
+        "confidence": 0.9,
+        "method": "contour",
+        "format": "valla",
+        "area_ratio": 0.514,
+        "ocr_text": "",
+        "brand": "unknown",
+        "campaign_type": "general",
+        "campaign_detail": ""
+      }
+    ]
+  },
+  {
+    "image": "slide_3_ape.jpg",
+    "image_path": "/tmp/suitcvlo_test/slide_3_ape.jpg",
+    "captured_at": null,
+    "gps_lat": null,
+    "gps_lng": null,
+    "address": null,
+    "billboards": [
+      {
+        "bbox": [
+          35,
+          369,
+          415,
+          505
+        ],
+        "confidence": 0.29,
+        "method": "contour",
+        "format": "valla",
+        "area_ratio": 0.144,
+        "ocr_text": "Invierte en energ\u00eda limpia. Llama al 528112710091.",
+        "brand": "unknown",
+        "campaign_type": "general",
+        "campaign_detail": "Invierte en energ\u00eda limpia. Llama al 528112710091."
+      }
+    ]
+  }
+]

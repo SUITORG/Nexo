@@ -1,0 +1,12 @@
+{
+  "name": "suit-tts",
+  "version": "1.0.0",
+  "description": "Texto a voz con gTTS (Google Text-to-Speech)",
+  "main": "scripts/tts.py",
+  "scripts": {
+    "start": "python scripts/tts.py"
+  },
+  "dependencies": {
+    "gTTS": "^2.5.0"
+  }
+}

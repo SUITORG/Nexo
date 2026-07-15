@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "whatsapp": {
+      "command": "npx",
+      "args": ["-y", "wweb-mcp"],
+      "env": {
+        "WHATSAPP_TARGET_NUMBER": "528110463721@s.whatsapp.net"
+      }
+    }
+  }
+}

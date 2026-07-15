@@ -1,0 +1,116 @@
+workflows:
+  feature:
+    path: workflows/feature.yaml
+    risk: medium
+    domain: code
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 8000
+    trigger_keywords:
+      - "implement"
+      - "add"
+      - "create"
+      - "feature"
+      - "nuevo"
+
+  bugfix:
+    path: workflows/bugfix.yaml
+    risk: medium
+    domain: code
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 6000
+    trigger_keywords:
+      - "bug"
+      - "error"
+      - "fix"
+      - "arreglar"
+      - "issue"
+
+  audit:
+    path: workflows/audit.yaml
+    risk: low
+    domain: system
+    requires_review: false
+    requires_planning: true
+    estimated_tokens: 12000
+    trigger_keywords:
+      - "audit"
+      - "review"
+      - "analyze"
+      - "diagnose"
+
+  docs:
+    path: workflows/docs.yaml
+    risk: low
+    domain: documentation
+    requires_review: false
+    requires_planning: false
+    estimated_tokens: 4000
+    trigger_keywords:
+      - "document"
+      - "readme"
+      - "documentation"
+      - "doc"
+
+  research:
+    path: workflows/research.yaml
+    risk: low
+    domain: knowledge
+    requires_review: false
+    requires_planning: false
+    estimated_tokens: 8000
+    trigger_keywords:
+      - "research"
+      - "investigate"
+      - "find"
+      - "search"
+
+  deploy:
+    path: workflows/deploy.yaml
+    risk: high
+    domain: operations
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 4000
+    trigger_keywords:
+      - "deploy"
+      - "release"
+      - "publish"
+      - "production"
+
+  review:
+    path: workflows/review.yaml
+    risk: low
+    domain: quality
+    requires_review: false
+    requires_planning: false
+    estimated_tokens: 8000
+    trigger_keywords:
+      - "review"
+      - "validate"
+      - "check"
+
+  migration:
+    path: workflows/migration.yaml
+    risk: high
+    domain: operations
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 10000
+    trigger_keywords:
+      - "migrate"
+      - "migration"
+      - "schema"
+
+  test:
+    path: workflows/test.yaml
+    risk: low
+    domain: quality
+    requires_review: false
+    requires_planning: true
+    estimated_tokens: 6000
+    trigger_keywords:
+      - "test"
+      - "smoke"
+      - "probador"

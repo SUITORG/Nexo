@@ -1,0 +1,117 @@
+Actúa como un Software Architect.
+
+Analiza únicamente la carpeta: C:\Users\rojo-\Downloads\SUITORGSTORE01
+
+
+Tu objetivo NO es documentar el proyecto, sino extraer la esencia reutilizable para incorporarla a SuitOS Core.
+
+Identifica únicamente:
+
+- Arquitecturas reutilizables.
+- Patrones de diseño.
+- Convenciones.
+- Agentes potenciales.
+- Skills reutilizables.
+- Flujos de trabajo.
+- MCP útiles.
+- Plantillas.
+- Buenas prácticas.
+- Automatizaciones.
+- Estándares de código.
+- Decisiones que puedan servir a futuros proyectos.
+
+Ignora la lógica de negocio específica.
+
+Entrega el resultado en una sección llamada "Candidatos para SuitOS Core", ordenada por impacto (Alto, Medio y Bajo), explicando brevemente por qué cada elemento debería formar parte del Core. 
++ Thought: 880ms
+→Read SUITORGSTORE01 
++ Thought: 1.2s
+→Read SUITORGSTORE01\.suit 
+→Read SUITORGSTORE01\.opencode 
+→Read SUITORGSTORE01\.agent 
+→Read SUITORGSTORE01\.agents 
+→Read SUITORGSTORE01\.claude 
+→Read SUITORGSTORE01\backend 
+→Read SUITORGSTORE01\js 
+→Read SUITORGSTORE01\package.json 
+↳ Loaded SUITORGSTORE01\AGENTS.md
+→Read SUITORGSTORE\opencode.json 
++ Thought: 699ms
+→Read SUITORGSTORE01\.suit\ARCHITECTURE.md [limit=200]
+→Read SUITORGSTORE01\.suit\INDEX.md 
+→Read SUITORGSTORE01\.suit\skills 
+→Read SUITORGSTORE01\.suit\workflows 
+→Read SUITORGSTORE01\.suit\config 
+→Read SUITORGSTORE01\.suit\registry 
+→Read SUITORGSTORE01\.suit\loader 
+→Read SUITORGSTORE01\.suit\planner 
+→Read SUITORGSTORE01\.suit\reviewer 
+→Read SUITORGSTORE01\.suit\memory 
+→Read SUITORGSTORE01\.suit\dispatcher 
+→Read SUITORGSTORE01\.suit\telemetry 
++ Thought: 542ms
+→Read SUITORGSTORE01\.suit\config\kernel.yaml 
+→Read SUITORGSTORE01\.suit\registry\routing.yaml 
+→Read SUITORGSTORE01\.suit\registry\agents.yaml 
+→Read SUITORGSTORE01\.suit\registry\skills.yaml 
+→Read SUITORGSTORE01\.suit\registry\workflows.yaml 
+→Read SUITORGSTORE01\.suit\registry\projects.yaml 
+→Read SUITORGSTORE01\.suit\registry\models.yaml 
+→Read SUITORGSTORE01\.suit\registry\permissions.yaml 
+→Read SUITORGSTORE01\.suit\planner\template.yaml 
+→Read SUITORGSTORE01\.suit\loader\strategy.yaml 
+→Read SUITORGSTORE01\.suit\reviewer\profiles.yaml 
+→Read SUITORGSTORE01\.suit\telemetry\schema.yaml 
+→Read SUITORGSTORE01\.suit\dispatcher\entrypoint.md 
++ Thought: 546ms
+✓General Task — Explore SuitOS skills and workflows
+↳ 69 toolcalls · 5m 57s
+✓General Task — Explore Suit subproject structures
+↳ 36 toolcalls · 1m 22s
+✓General Task — Explore config files and patterns
+↳ 28 toolcalls · 30.3s
+ctrl+x down view subagents
++ Thought: 14.5s
+A continuación, el análisis completo de SUITORGSTORE01 para SuitOS Core:
+Candidatos para SuitOS Core
+🔴 ALTO IMPACTO
+#	Elemento	Justificación Core
+1	SuitOS Kernel (.suit/)	El sistema operativo de agentes completo: registry declarativo (agents, skills, workflows, projects, models, routing, permissions), dispatcher (intent→workflow), loader (context strategies), planner (template), reviewer (perfiles de validación), telemetry (event schema), memory (ADRs + patrones + bugs). Es un meta-sistema agnóstico a tool/model que cualquier proyecto puede adoptar para estructurar su interacción con IA.
+2	Patrón de Módulo Microservicio	Template SuitXxx/ con package.json (express + supabase + dotenv), index.js (exporta app, require.main === module para standalone o montaje), db/client.js, handlers/, services/. Es el scaffold más prolífico del proyecto (SuitReservaciones, SuitAI, SuitPos, SuitPedidoExpress, SuitProductos, SuitInventarios, SuitBodega).
+3	Sistema de Aislamiento Multi-Tenant	Reglas inmutables codificadas: toda query filtra por id_empresa, soft delete (activo=FALSE), IDs secuenciales tipo LEAD-XXX (no UUIDs), feature gates vía giro_especifico. No es lógica de negocio — es un patrón de seguridad replicable en cualquier app SaaS.
+4	Arquitectura de Backend Dual	Separación clara: GAS (backend/) para operaciones síncronas sobre Google Sheets, Node.js Express para Supabase/Gemini/Stripe. Abstracción db_engine que permite migración progresiva sin reescribir frontends. Cualquier proyecto con migración de datos legacy se beneficia.
+5	Sistema de Validación por Perfiles	reviewer/profiles.yaml define 4 niveles (quick/standard/architecture/security) con checks detectables automáticamente: secrets hardcodeados, debug, filtrado multi-tenant, soft delete, IDs secuenciales, CSP. No depende del dominio — es un pipeline de calidad universal.
+6	Registry Declarativo + Routing	registry/routing.yaml mapea intenciones del usuario ("fix", "implement", "deploy") a workflows con prioridad. registry/agents.yaml define roles con skills requeridas, reviewers y config de modelo. registry/permissions.yaml restringe operaciones por rol. Es el "kernel de kernel" — orquesta cualquier interacción con IA.
+🟡 MEDIO IMPACTO
+#	Elemento	Justificación Core
+7	Jerarquía de Conocimiento	Orden de carga forzado: ARCHITECTURE.md → AGENTS.md (raíz) → AGENTS.md (subproyecto) → Workflows → Skills → Código. Garantiza contexto correcto antes de tocar código. Replicable en cualquier repo que use agentes de IA.
+8	Estrategias de Carga de Contexto	loader/strategy.yaml con 3 niveles (minimal/standard/deep) que definen qué archivos cargar según el tipo de tarea, con presupuesto de tokens. Crucial para eficiencia de agentes en proyectos grandes.
+9	Registro de Modelos de AI	registry/models.yaml — catálogo agnóstico a provider con costo, capacidades, ventana de contexto, fallback chain. Permite cambiar de modelo sin tocar código.
+10	Esquema de Telemetría	telemetry/schema.yaml define 7 eventos canónicos (execution_started, execution_completed, error_occurred, review_completed, skill_loaded, registry_query, giro_validation). Proporciona observabilidad sin depender de servicios externos.
+11	Plantilla de Planificación	planner/template.yaml estructura cualquier ejecución: análisis, archivos afectados, migraciones, validación, rollback, costo estimado. Reduce errores en tareas complejas.
+12	Arquitectura Multi-Provider	.suit/ es tool-agnostic, .agent/ (Claude Code), .opencode/, .claude/ son tool-specific. El mismo .suit/ funciona con Claude, OpenCode, Cursor, cualquier tool. Sin vendor lock-in.
+13	MCP Server Config Estandarizada	mcp.json con servidores pre-configurados: Supabase, WhatsApp (wweb-mcp), Google Sheets (mcp-gsheets), Playwright, Filesystem. Cualquier proyecto que necesite estos servicios los obtiene zero-config.
+14	Estrategia de Base de Datos Híbrida	Tablas globales (Config_Empresas, Config_Roles, etc.) siempre en Sheets + tablas privadas migran a Supabase. Con migración progresiva documentada. Patrón replicable para proyectos que crecen de prototipo a producción.
+15	Agentes Read-Only (Probador + Reportero)	Agentes especializados que analizan código (reportero) y ejecutan smoke tests (probador) sin modificar nada. Patrón de "quality gate" que previene cambios accidentales.
+16	Workflows Declarativos (YAML)	11 workflows definidos (feature, bugfix, audit, deploy, review, research, video-generation, cotizador, reservacion, prospection, test) con steps, validaciones, entry/exit gates, condiciones. Framework portable para proceso de desarrollo.
+17	Convención de Commits	Formato {emoji} {tipo}: {desc} (v{X.Y.Z}) con tipos semánticos. Mínimo pero estandarizado.
+18	Sistema de Puertos y Proyectos	registry/projects.yaml centraliza metadatos de cada módulo: ruta, puerto, skills, frontend gates, tablas, dependencias, validación por giro. Single source of truth para arquitectura distribuida.
+🟢 BAJO IMPACTO
+#	Elemento	Justificación Core
+19	Feature Flags por Módulo	app.utils.parseModo() con parser centralizado de flags posicionales. Útil pero acoplado a la estructura de Config_Empresas.
+20	Watchdog Sync Loop	Sincronización cada 30s con timeouts de inactividad diferenciados. Patrón simple para apps en tiempo real.
+21	Auto-descubrimiento de Dependencias Externas	SuitFFmpeg/scripts/verify.js + findFFmpeg() que detecta rutas no estándar. Wrapper genérico para CLI dependencies.
+22	Circuit Breaker (SuitAI)	Pattern: 3 fallos consecutivos → cooldown 5min → auto-recuperación. Útil para cualquier integración con APIs externas.
+23	INDEX_FUNCIONES.md Auto-generado	Índice de funciones archivo:línea para navegación eficiente de tokens. Script scripts/generate-index.js para regeneración.
+24	Seeds + SUDO Auto-creación	Patrón ensureSeed() + autoCrearRegistrosSUDO() que bootstrapea tenants nuevos al crearse en Sheets.
+25	Giro Validation como Feature Gate	Campo multi-propósito giro_especifico que controla acceso a módulos. Patrón de "license key" simple sin infraestructura.
+26	Skills Versionados	Cada skill en registry/skills.yaml tiene version: semver, dependencies[], triggers[], context_hint[]. Trazabilidad completa de capacidades del sistema.
+27	GitHub Actions Config Generator	Pipeline CI/CD que inyecta secrets vía env + tr -d sanitization. Patrón portable para despliegue frontend.
+28	Auto-limpieza de Logs (30 días)	runAutoPurge() función GAS que purga registros >30 días. Sencillo pero replicable.
+Conclusión para SuitOS Core
+Los elementos de ALTO impacto (1-6) forman el kernel del sistema operativo en sí mismo — sin ellos, no hay SuitOS. Recomendaría que el Core empaquete:
+1. .suit/ como template canon — el esqueleto de directorios y archivos YAML es el MVP de SuitOS Core.
+2. SuitXxx/ como microservice blueprint — genera scaffolds con create-suit-module <name>.
+3. routing.yaml + agents.yaml + permissions.yaml como el "dispatcher runtime" que orquesta agentes.
+4. reviewer/profiles.yaml como el pipeline de validación default.
+Los elementos de MEDIO impacto son biblioteca estándar (opcionales pero recomendados). Los de BAJO son utilerías que pueden añadirse on-demand.

@@ -1,0 +1,36 @@
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || {{PORT}};
+
+// --- Auth middleware hook (stub — configure per project) ---
+function authMiddleware(req, res, next) {
+  const token = req.headers.authorization;
+  if (!token) {
+    return res.status(401).json({ error: 'Authorization header required' });
+  }
+  // Replace with your own auth logic
+  // const valid = await validateToken(token);
+  // if (!valid) return res.status(403).json({ error: 'Invalid token' });
+  next();
+}
+
+app.use(cors());
+app.use(express.json());
+
+// Public health endpoint (no auth)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', module: '{{MODULE_NAME}}', version: '1.0.0' });
+});
+
+// Protected routes
+const api = require('./handlers/api');
+app.use('/api', authMiddleware, api);
+
+app.listen(PORT, () => {
+  console.log(`[{{MODULE_NAME}}] listening on port ${PORT}`);
+});
+
+module.exports = app;

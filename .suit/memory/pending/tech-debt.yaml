@@ -13,7 +13,9 @@ tech_debt:
     related_files:
       - "CampanasAi/script.js"
     created: "2026-07-05"
-    status: open
+    status: fixed
+    fixed_date: "2026-07-10"
+    fix: "Moved to /api/config/client endpoint. Secrets loaded async from server."
 
   - id: TD-003
     description: "service_role key en cliente (CampanasAi/lib/supabase.js, citas/db/client.js)"
@@ -124,5 +126,17 @@ tech_debt:
       - "SuitProductos/db/client.js"
       - "SuitInventarios/db/client.js"
       - "SuitBodega/db/client.js"
+    created: "2026-07-09"
+    status: open
+
+  - id: TD-016
+    description: "Probar SuitAI en vivo: arrancar server.js, configurar OPENROUTER_API_KEY y OPENCODE_API_KEY en .env, probar GET /api/ai/models, POST /api/ai/chat, verificar circuit breaker con modelo falso, verificar fallback a Google Gemini."
+    severity: medium
+    related_files:
+      - "SuitAI/index.js"
+      - "SuitAI/services/modelScanner.js"
+      - "SuitAI/services/modelRouter.js"
+      - "SuitAI/services/circuitBreaker.js"
+      - ".env"
     created: "2026-07-09"
     status: open

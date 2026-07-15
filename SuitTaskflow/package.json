@@ -1,0 +1,16 @@
+{
+  "name": "suittaskflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TaskFlow — Gestor de tareas personal con SuitOS Core",
+  "scripts": {
+    "start": "node backend/server.js",
+    "seed": "node backend/seed.js",
+    "check": "node --check backend/server.js && node --check backend/seed.js && node --check src/app.js",
+    "smoke": "node ../SuitOSCore/agents/probador/probador.js --suite health",
+    "registry:server": "cd ../SuitOSCore && node tooling/build-registry.js --server --watch --mcp"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

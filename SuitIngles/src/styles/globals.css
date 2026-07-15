@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --color-surface: #1a1a1a;
+  --color-surface-2: #242424;
+  --color-surface-3: #2e2e2e;
+  --color-border: #3a3a3a;
+  --color-text-secondary: #a0a0a0;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a3a transparent;
+}
+
+.topic-item {
+  @apply px-3 py-1.5 text-sm cursor-pointer rounded-md transition-colors;
+}
+.topic-item:hover {
+  @apply bg-neutral-800 text-neutral-100;
+}
+.topic-item.active {
+  @apply bg-neutral-700 text-white font-medium;
+}
+
+.badge-cefr {
+  @apply inline-flex items-center justify-center text-[10px] font-bold px-1.5 py-0.5 rounded;
+  min-width: 26px;
+}
+
+.conversation-line {
+  @apply p-2.5 rounded-lg text-sm leading-relaxed;
+}
+.conversation-line.speaker-a {
+  @apply bg-blue-950/40 border-l-2 border-blue-500 ml-0 mr-8;
+}
+.conversation-line.speaker-b {
+  @apply bg-green-950/40 border-l-2 border-green-500 ml-8 mr-0;
+}
+
+.grammar-note {
+  @apply bg-amber-950/20 border border-amber-800/30 rounded-lg p-3;
+}
+
+.word-card {
+  @apply bg-surface-2 border border-border rounded-lg p-3 transition-colors;
+}
+.word-card:hover {
+  @apply border-neutral-600;
+}

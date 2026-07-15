@@ -1,0 +1,55 @@
+strategies:
+  minimal:
+    description: "Load only AGENTS.md hierarchy + workflow definition"
+    token_budget: 2000
+    includes:
+      - "AGENTS.md"
+      - "{{project}}/AGENTS.md"
+      - "workflows/{{workflow}}.yaml"
+    excludes:
+      - "node_modules"
+      - ".git"
+      - "*.zip"
+      - "media/*"
+    use_case:
+      - research
+      - quick-review
+
+  standard:
+    description: "Full context for feature development"
+    token_budget: 8000
+    includes:
+      - "AGENTS.md"
+      - "{{project}}/AGENTS.md"
+      - "INDEX.md"
+      - "workflows/{{workflow}}.yaml"
+      - "skills/{{skill}}/*.yaml"
+      - "{{project_context_files}}"
+    excludes:
+      - "node_modules"
+      - ".git"
+      - "*.zip"
+      - "media/*"
+    use_case:
+      - feature
+      - bugfix
+
+  deep:
+    description: "Comprehensive context for architecture or audit"
+    token_budget: 20000
+    includes:
+      - "AGENTS.md"
+      - "{{project}}/AGENTS.md"
+      - "INDEX.md"
+      - "workflows/{{workflow}}.yaml"
+      - "skills/{{skill}}/*.yaml"
+      - "{{project_context_files}}"
+      - "memory/decisions/*.md"
+      - "memory/patterns/*.md"
+    excludes:
+      - "node_modules"
+      - ".git"
+    use_case:
+      - audit
+      - migration
+      - deploy

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "suitos-registry": {
+      "command": "node",
+      "args": ["../SuitOSCore/tooling/build-registry.js", "--server", "--watch"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  }
+}

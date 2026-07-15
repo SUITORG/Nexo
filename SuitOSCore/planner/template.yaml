@@ -1,0 +1,70 @@
+# Planner — SuitOS Core
+# Combines: plan template + governance contract (safe mode)
+
+plan:
+  task: "{{user_request}}"
+  workflow: "{{workflow_name}}"
+  project: "{{project_name}}"
+  risk: "low|medium|high"
+
+  governance:
+    mode: "safe"
+    rules:
+      - id: gov-001
+        description: "No code changes without an approved plan"
+        procedure:
+          1. "Propose a numbered Work Plan with specific files and steps"
+          2. "Ask: 'Do you approve this plan? Reply exactly with APPROVED or REJECTED.'"
+          3. "Only if user replies APPROVED may you execute changes"
+
+      - id: gov-002
+        description: "Read budget — max 3 files without explicit escalation"
+        procedure:
+          1. "Declare how many files you will read and how many you will modify"
+          2. "If reading >3 files, first ask for GLOBAL_APPROVAL"
+          3. "Escalate: 'This requires reading X files. Reply GLOBAL_APPROVAL to proceed.'"
+
+      - id: gov-003
+        description: "Closing summary after every execution"
+        output:
+          - "Workflows consulted and skipped (and why)"
+          - "Risk level respected"
+          - "Files modified (list)"
+          - "Files read"
+          - "Invariants verified"
+          - "Suggestions for next steps"
+
+  analysis:
+    summary: "Brief description of what needs to happen"
+    impact:
+      - "List of affected areas"
+    dependencies:
+      - "Any prerequisites or order constraints"
+
+  files:
+    read:
+      - path: "file.js"
+        reason: "Understand existing implementation"
+        lines: "45-120"
+    write:
+      - path: "file.js"
+        operation: "modify|create|delete"
+        estimated_lines: 30
+
+  validation:
+    steps:
+      - "Check syntax (node --check <file>)"
+      - "Check for hardcoded secrets"
+      - "Verify tenant isolation if applicable"
+    expected_outcomes:
+      - "Feature works without breaking existing functionality"
+
+  rollback:
+    strategy: "git checkout | manual revert | restore from backup"
+    command: "git checkout -- {{modified_files}}"
+    backup_before: true
+
+  estimated_cost:
+    input_tokens: 5000
+    output_tokens: 2000
+    model: "claude-sonnet-4"

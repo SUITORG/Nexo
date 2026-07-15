@@ -1,0 +1,9 @@
+{
+  "name": "suit-video-assembly",
+  "version": "1.0.0",
+  "description": "Ensambla video final con imágenes, voz, música y subtítulos",
+  "main": "scripts/assembly.py",
+  "scripts": {
+    "start": "python scripts/assembly.py"
+  }
+}

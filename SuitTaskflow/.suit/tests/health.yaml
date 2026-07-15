@@ -1,0 +1,21 @@
+suite:
+  name: Health Checks
+  config:
+    timeout: 10000
+  servers:
+    - name: taskflow
+      url: http://localhost:3030
+  tests:
+    - id: health-main
+      description: "Servidor responde"
+      request:
+        path: /api/health
+      expect:
+        status: 200
+        body_contains: "ok"
+    - id: health-tasks
+      description: "API de tareas responde"
+      request:
+        path: /api/tasks
+      expect:
+        status: 200

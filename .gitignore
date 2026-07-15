@@ -20,6 +20,7 @@ out/
 *.rar
 *.7z
 BACKUP_*/
+_LEGACY_BACKUPS/
 temp/
 tmp/
 .temp/

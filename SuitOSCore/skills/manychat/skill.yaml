@@ -1,0 +1,71 @@
+skill:
+  name: manychat
+  display_name: "ManyChat API"
+  version: 1.0.0
+  type: tool
+  domain: marketing
+
+  description: "Integración con ManyChat API. Gestionar subscribers, tags, custom fields, flows y mensajes. Requiere ManyChat PRO."
+
+  package: github:fabienbutz/manychat-mcp
+  install: "npx github:fabienbutz/manychat-mcp"
+  env_vars:
+    - MANYCHAT_API_KEY
+
+  tools:
+    - id: page_get_info
+      description: "Obtener información de la página/bot"
+    - id: tag_list
+      description: "Listar todos los tags"
+    - id: tag_create
+      description: "Crear un tag nuevo"
+    - id: tag_delete
+      description: "Eliminar un tag"
+    - id: custom_field_list
+      description: "Listar custom fields"
+    - id: custom_field_create
+      description: "Crear custom field"
+    - id: bot_field_list
+      description: "Listar bot fields"
+    - id: bot_field_set
+      description: "Asignar valor a bot field"
+    - id: flow_list
+      description: "Listar flows/automatizaciones"
+    - id: subscriber_get
+      description: "Obtener subscriber por ID"
+    - id: subscriber_find
+      description: "Buscar subscriber por nombre/email/teléfono"
+    - id: subscriber_create
+      description: "Crear subscriber nuevo"
+    - id: subscriber_update
+      description: "Actualizar subscriber existente"
+    - id: subscriber_add_tag
+      description: "Asignar tag a subscriber"
+    - id: subscriber_remove_tag
+      description: "Quitar tag de subscriber"
+    - id: subscriber_set_custom_field
+      description: "Asignar custom field a subscriber"
+    - id: send_content
+      description: "Enviar contenido dinámico (texto, botones, imágenes)"
+    - id: send_text
+      description: "Enviar mensaje de texto simple"
+    - id: send_flow
+      description: "Ejecutar flow para un subscriber"
+
+  triggers:
+    - keyword: "manychat"
+    - keyword: "chatbot"
+    - keyword: "flow"
+    - keyword: "subscriber"
+    - keyword: "tag"
+    - keyword: "marketing automation"
+
+  examples:
+    - scenario: "Listar flows disponibles"
+      correct: 'flow_list()'
+    - scenario: "Ejecutar flow para subscriber"
+      correct: 'send_flow(subscriber_id: "123", flow_ns: "flow2026_ns_12345")'
+    - scenario: "Crear tag y asignarlo"
+      correct: |
+        tag_create(name: "vip")
+        subscriber_add_tag(subscriber_id: "123", tag_name: "vip")

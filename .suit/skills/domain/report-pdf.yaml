@@ -1,0 +1,10 @@
+name: report-pdf
+description: SuitCVLO — generate PDF report from detections
+commands:
+  - curl "http://localhost:3011/reports/pdf?user_id={user_id}" --output report.pdf
+inputs:
+  - name: user_id
+    type: string
+    default: default
+    description: User ID filter
+output: PDF file

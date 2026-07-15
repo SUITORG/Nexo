@@ -1,0 +1,10 @@
+name: geo-exif
+description: SuitCVLO — extract EXIF metadata and reverse geocode with Nominatim
+commands:
+  - python -c "from geo.metadata import extract_exif; print(extract_exif('{path}'))"
+  - python -c "from geo.geocode import reverse_geocode; print(reverse_geocode({lat}, {lng}))"
+inputs:
+  - name: path
+    type: string
+    description: Image file path
+output: EXIF data as dict (GPS, date, camera)

@@ -1,0 +1,38 @@
+# Core
+ultralytics>=8.3.0
+opencv-python>=4.10.0
+Pillow>=10.0
+
+# OCR
+easyocr>=1.7
+
+# Geo
+exifread>=3.0.0
+
+# DB
+supabase>=2.0
+
+# API
+fastapi[standard]
+uvicorn[standard]
+httpx
+
+# Dashboard
+streamlit>=1.35
+
+# Report
+reportlab>=4.0
+
+# Utils
+python-dotenv>=1.0
+requests
+
+# v0.2+ Billboard pipeline
+scikit-image>=0.22
+
+# v0.3+ Capture (install gphoto2 CLI separately)
+# gphoto2 via system package: sudo apt install gphoto2
+pynmea2>=1.18
+
+# v0.4+ Export
+pyarrow>=14.0

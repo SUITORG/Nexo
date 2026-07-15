@@ -336,3 +336,16 @@ projects:
       enable_pattern: ",1$"
       fallback: false
       error_message: "El giro de la empresa no tiene habilitado el módulo de cotizaciones"
+
+  suit-ffmpeg:
+    name: "SuitFFmpeg — Wrapper FFmpeg"
+    path: SuitFFmpeg/
+    description: "Wrapper local para FFmpeg. Auto-detecta ruta del sistema. Usado por SuitCampanas (animate, slideshow, video-imaginacion, video-produce)."
+    skills:
+      - javascript
+    context:
+      - SuitFFmpeg/README.md
+      - SuitFFmpeg/scripts/verify.js
+    environment:
+      TYPE: tool
+    notes: "FFmpeg v8.1.1 via WinGet. Ruta auto-detectada o configurable via FFMPEG_PATH en .env"

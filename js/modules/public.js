@@ -873,7 +873,9 @@ app.public = {
             const h1Val = pageData.h1 || content.h1 || content.titulo || "Información";
             const h2Val = pageData.h2 || pageData.subtitulo || content.h2 || content.subtitulo || "";
             const h3Val = pageData.h3 || content.h3 || content.h2_1 || "";
-            const pVal = pageData.p || pageData.descripcion || content.p_intro || content.texto || content.descripcion || "";
+            const pIntro = content.p_intro || "";
+            const pTexto = content.texto || "";
+            const pVal = pIntro + (pIntro && pTexto ? "<br><br>" : "") + pTexto || pageData.descripcion || "";
 
             const h2 = document.getElementById('story-h2');
             const h3 = document.getElementById('story-h3');
@@ -896,6 +898,25 @@ app.public = {
             finalBodyHtml = finalBodyHtml.replace(/\{(\s)*\"@(context|type)\"[\s\S]*?\}/gim, "");
             
             if (body) body.innerHTML = finalBodyHtml;
+
+            // FAQ dinámico desde contenido_json (preguntas_frecuentes)
+            if (content.preguntas_frecuentes && Array.isArray(content.preguntas_frecuentes)) {
+                let existingFaq = document.getElementById('dynamic-faq-section');
+                if (existingFaq) existingFaq.remove();
+                const faqDiv = document.createElement('div');
+                faqDiv.id = 'dynamic-faq-section';
+                faqDiv.style.marginTop = '2rem';
+                let faqHtml = '<h3 style="margin-bottom:1rem">Preguntas Frecuentes</h3>';
+                content.preguntas_frecuentes.forEach((q) => {
+                    if (!q.pregunta || !q.respuesta) return;
+                    faqHtml += `<details style="margin-bottom:0.75rem;padding:1rem;border:1px solid #e0e0e0;border-radius:8px">
+                        <summary style="font-weight:600;cursor:pointer;color:var(--color-tema,#001f3f)">${q.pregunta}</summary>
+                        <p style="margin-top:0.5rem">${q.respuesta}</p>
+                    </details>`;
+                });
+                faqDiv.innerHTML = faqHtml;
+                body.parentNode.insertBefore(faqDiv, body.nextSibling);
+            }
 
             if (img) {
                 const targetId = String(app.state.companyId || "").trim().toUpperCase();

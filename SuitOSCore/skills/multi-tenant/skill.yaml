@@ -1,0 +1,30 @@
+skill:
+  name: multi-tenant
+  display_name: "Multi-Tenant Isolation"
+  version: 1.0.0
+  type: domain
+  domain: security
+  description: "Enforces multi-tenant data isolation. All queries must filter by tenant_id. No cross-tenant data access. Soft delete only."
+  dependencies:
+    - javascript
+  triggers:
+    - keyword: "tenant_id"
+    - keyword: "tenant"
+    - keyword: "multi-tenant"
+    - keyword: "isolation"
+    - file_pattern: "handlers/*.js"
+    - file_pattern: "services/*.js"
+    - file_pattern: "db/*.js"
+  rules:
+    - id: mt-001
+      description: "All queries must filter by tenant_id"
+      severity: error
+    - id: mt-002
+      description: "No cross-tenant data access"
+      severity: error
+    - id: mt-003
+      description: "Soft delete only (activo=FALSE)"
+      severity: error
+    - id: mt-004
+      description: "Tenant from auth token, never from client payload"
+      severity: error

@@ -1,0 +1,9 @@
+name: panoramic-ocr
+description: SuitCVLO — detect billboards, run OCR, classify text
+commands:
+  - python -c "from detector.ocr import OCRReader; r=OCRReader(); print(r.extract_text(cv2.imread('{path}')))"
+inputs:
+  - name: path
+    type: string
+    description: Image file path
+output: Extracted text and classification category

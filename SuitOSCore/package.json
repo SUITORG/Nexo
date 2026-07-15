@@ -1,0 +1,23 @@
+{
+  "name": "suitos-core",
+  "version": "1.0.0",
+  "description": "Portable Agent OS Kernel — registry, dispatcher, loader, planner, ai-router, scaffold, agents, tooling",
+  "private": false,
+  "main": "index.js",
+  "bin": {
+    "create-suit-module": "scaffold/create-suit-module/index.js",
+    "generate-index": "tooling/generate-index.js",
+    "mcp-shim": "tooling/mcp-bridge/shim.js",
+    "reportero": "agents/reportero/reportero.js",
+    "probador": "agents/probador/probador.js",
+    "registry-server": "tooling/build-registry.js"
+  },
+  "scripts": {
+    "registry:build": "node tooling/build-registry.js --mcp",
+    "registry:verify": "node tooling/build-registry.js --verify",
+    "registry:server": "node tooling/build-registry.js --server --watch --mcp",
+    "check": "node --check ai-router/modelScanner.js && node --check ai-router/modelRouter.js && node --check ai-router/circuitBreaker.js && node --check tooling/generate-index.js && node --check tooling/mcp-bridge/shim.js && node tooling/build-registry.js --validate"
+  },
+  "keywords": ["suitos", "agent-os", "mcp", "ai-router", "scaffold"],
+  "license": "MIT"
+}

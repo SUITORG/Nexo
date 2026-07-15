@@ -1,0 +1,12 @@
+{
+  "name": "suit-music",
+  "version": "1.0.0",
+  "description": "Generador de música de fondo",
+  "main": "scripts/music.py",
+  "scripts": {
+    "start": "python scripts/music.py"
+  },
+  "dependencies": {
+    "pydub": "^0.25.1"
+  }
+}

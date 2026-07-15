@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SuitTest — CRUD Contactos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --primary: #1a1a2e;
+      --accent: #e94560;
+      --text: #1a1a2e;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-lg: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .app-header { background: var(--primary); color: #fff; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+    .app-header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+    .app-header h1 small { font-weight: 400; opacity: 0.6; font-size: 0.8rem; margin-left: 0.5rem; }
+    .status-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; padding: 0.3rem 0.75rem; border-radius: 100px; background: rgba(255,255,255,0.12); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+    .status-dot.off { background: #ef4444; }
+    .container { max-width: 1040px; margin: 0 auto; padding: 1.5rem 2rem; }
+    .toolbar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .toolbar label { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); }
+    .toolbar input { flex: 1; min-width: 180px; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.875rem; font-family: inherit; background: var(--surface); color: var(--text); }
+    .toolbar input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,26,46,0.1); }
+    .tenant-tag { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.75rem; border-radius: 100px; background: var(--accent); color: #fff; }
+    .count-badge { font-size: 0.75rem; color: var(--text-secondary); background: var(--surface); padding: 0.3rem 0.75rem; border-radius: 100px; border: 1px solid var(--border); }
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.15s; }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #2d2d5e; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { background: #d63852; }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface); color: var(--text); }
+    .btn-icon { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.9rem; }
+    .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .form-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+    .form-card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .form-group { margin-bottom: 0.75rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.25rem; }
+    .form-group input, .form-group textarea { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.875rem; font-family: inherit; background: var(--surface); color: var(--text); }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,26,46,0.1); }
+    .form-group textarea { resize: vertical; min-height: 56px; }
+    .form-error { color: var(--accent); font-size: 0.8rem; margin-bottom: 0.75rem; }
+    .form-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { text-align: left; padding: 0.75rem 1rem; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--border); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    td.actions { display: flex; gap: 0.35rem; }
+    .empty-state { text-align: center; padding: 3rem 1.5rem; color: var(--text-secondary); }
+    .empty-state p { margin-top: 0.5rem; font-size: 0.9rem; }
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--primary); color: #fff; padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.875rem; box-shadow: var(--shadow-lg); opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--accent); }
+    .footer { text-align: center; padding: 1.5rem; font-size: 0.75rem; color: var(--text-secondary); }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } .container { padding: 1rem; } }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <h1>SuitTest <small>CRUD Contactos · SuitOS Core</small></h1>
+    <div class="status-badge">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Verificando...</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="toolbar">
+      <label for="tenantInput">Tenant</label>
+      <input type="text" id="tenantInput" value="empresa-001" placeholder="X-Tenant-ID">
+      <span class="tenant-tag" id="tenantTag">empresa-001</span>
+      <span class="count-badge" id="countBadge">0 contactos</span>
+      <button class="btn btn-primary" id="btnNuevo">+ Nuevo</button>
+    </div>
+
+    <div id="formContainer" style="display:none;">
+      <div class="form-card">
+        <h2 id="formTitle">Nuevo Contacto</h2>
+        <div id="formError" class="form-error"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Nombre</label><input type="text" id="inputNombre" placeholder="Nombre completo"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="inputEmail" placeholder="email@ejemplo.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Teléfono</label><input type="text" id="inputTelefono" placeholder="+52 555 123 4567"></div>
+          <div class="form-group"><label>Notas</label><input type="text" id="inputNotas" placeholder="Notas opcionales"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="btnGuardar">Guardar</button>
+          <button class="btn btn-ghost" id="btnCancelar">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Notas</th><th></th></tr></thead>
+        <tbody id="tablaBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyMsg">
+        <div style="font-size:2rem; opacity:0.3;">📭</div>
+        <p>No hay contactos activos para este tenant.</p>
+      </div>
+    </div>
+
+    <div class="footer">SuitOS Core · Multi-tenant · Soft Delete · IDs secuenciales</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
