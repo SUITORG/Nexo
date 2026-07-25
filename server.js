@@ -128,7 +128,7 @@ app.post('/api/ai/generate', (req, res) => {
 
     const options = {
         hostname: 'generativelanguage.googleapis.com',
-        path: `/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        path: `/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -159,44 +159,6 @@ app.post('/api/ai/generate', (req, res) => {
         });
     });
 
-    proxyReq.on('error', (e) => res.status(500).json({ error: e.message }));
-    proxyReq.write(postData);
-    proxyReq.end();
-});
-
-// CHAT ENDPOINT PARA AGENTES (v16.8.0) - Same engine as /api/ai/generate
-app.post('/api/ai/chat', (req, res) => {
-    const { messages } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: "GOOGLE_GEMINI_KEY no configurada." });
-
-    const prompt = messages[messages.length - 1].content;
-    const postData = JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-    });
-
-    const options = {
-        hostname: 'generativelanguage.googleapis.com',
-        path: `/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
-    };
-
-    const proxyReq = https.request(options, (proxyRes) => {
-        let body = '';
-        proxyRes.on('data', (chunk) => body += chunk);
-        proxyRes.on('end', () => {
-            try {
-                const responseData = JSON.parse(body);
-                if (proxyRes.statusCode !== 200) return res.status(proxyRes.statusCode).json(responseData);
-                const aiText = responseData.candidates[0].content.parts[0].text;
-                res.json({ choices: [{ message: { content: aiText } }] });
-            } catch (e) {
-                res.status(500).json({ error: "Error en respuesta de Google" });
-            }
-        });
-    });
     proxyReq.on('error', (e) => res.status(500).json({ error: e.message }));
     proxyReq.write(postData);
     proxyReq.end();
@@ -398,6 +360,10 @@ app.use(inventariosApp);
 const bodegaApp = require('./SuitBodega/index');
 app.use(bodegaApp);
 
+// Montar SuitMistral (chat completion + historial) — módulo nuevo
+const mistralApp = require('./SuitMistral/index');
+app.use(mistralApp);
+
 // =====================================================================
 // 💳 STRIPE PAYMENT ENDPOINTS
 // =====================================================================
@@ -465,12 +431,213 @@ function proxyCotizador(req, res) {
 }
 app.all('/api/cotizador/*', proxyCotizador);
 
+// SuitChatTG health proxy (port 3011)
+app.get('/api/service-health/telegram', (req, res) => {
+    const http = require('http');
+    http.get('http://localhost:3011/api/health', (proxyRes) => {
+        let body = '';
+        proxyRes.on('data', (chunk) => body += chunk);
+        proxyRes.on('end', () => {
+            res.status(proxyRes.statusCode).type('json').send(body);
+        });
+    }).on('error', (e) => {
+        res.json({ status: 'error', error: e.message });
+    });
+});
+
 // Serve static files from the current directory
 app.use((req, res, next) => {
     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
     next();
 });
 app.use(express.static(__dirname, { etag: false, lastModified: false }));
+
+// SuitOpComer — Google Places API (requiere API key del usuario, free tier $200/mes)
+app.post('/api/suitopcomer/places', async (req, res) => {
+    const { apiKey, niche, location, limit } = req.body;
+    if (!apiKey || !niche || !location) return res.status(400).json({ error: 'Faltan parámetros: apiKey, niche, location' });
+    try {
+        const maxResults = Math.min(parseInt(limit) || 5, 20);
+        const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(niche + ' in ' + location)}&key=${encodeURIComponent(apiKey)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+            return res.status(400).json({ ok: false, error: 'Google Places error: ' + data.status + ' - ' + (data.error_message || '') });
+        }
+        const places = (data.results || []).slice(0, parseInt(limit) || 5);
+        const results = [];
+        for (const place of places) {
+            const detailUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,rating,user_ratings_total&key=${encodeURIComponent(apiKey)}`;
+            const detailRes = await fetch(detailUrl);
+            const detail = await detailRes.json();
+            const d = detail.result || {};
+            results.push({
+                nombre: d.name || place.name,
+                contacto: d.formatted_phone_number || '',
+                giro: (d.types || []).filter(t => !t.includes('_')).join(', ') || place.types?.[0] || '',
+                web: d.website || '',
+                tamano: d.user_ratings_total ? (d.user_ratings_total > 100 ? 'Mediana' : 'Pequeña') : 'Desconocido',
+                direccion: d.formatted_address || place.formatted_address || '',
+                rating: d.rating || place.rating || '',
+                reviews: d.user_ratings_total || place.user_ratings_total || 0
+            });
+        }
+        res.json({ ok: true, empresas: results });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+// SuitOpComer — Scraping puro (sin API key)
+app.get('/api/suitopcomer/scrape', async (req, res) => {
+    const { niche, location, limit } = req.query;
+    if (!niche || !location) return res.status(400).json({ error: 'Faltan parámetros: niche, location' });
+    try {
+        const maxResults = Math.min(parseInt(limit) || 5, 20);
+        const query = encodeURIComponent(`${niche} in ${location}`);
+        const url = `https://www.google.com/search?q=${query}&num=${maxResults}`;
+        const response = await fetch(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        });
+        const html = await response.text();
+        const results = [];
+        const nameRegex = /<h3[^>]*>(.*?)<\/h3>/gi;
+        const linkRegex = /<a[^>]*href="(https?:\/\/[^"]+)"[^>]*>(.*?)<\/a>/gi;
+        let match;
+        const names = [];
+        while ((match = nameRegex.exec(html)) !== null) {
+            const name = match[1].replace(/<[^>]+>/g, '').trim();
+            if (name && name.length > 2) names.push(name);
+        }
+        const links = [];
+        while ((match = linkRegex.exec(html)) !== null) {
+            const url = match[1];
+            const text = match[2].replace(/<[^>]+>/g, '').trim();
+            if (url.startsWith('http') && text.length > 2) links.push({ url, text });
+        }
+        const empresas = [];
+        for (let i = 0; i < Math.min(names.length, parseInt(limit) || 5); i++) {
+            empresas.push({
+                nombre: names[i],
+                web: links.find(l => l.text.includes(names[i].slice(0, 10)))?.url || '',
+                fuente: 'scraping'
+            });
+        }
+        res.json({ ok: true, empresas, fuente: 'scraping' });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+// =====================================================================
+// 📊 SUITMARKET — US Market Dashboard Proxy (Yahoo Finance v8)
+// =====================================================================
+const yahooQuoteCache = new Map();
+const YAHOO_CACHE_TTL = 15000; // 15s cache
+
+function yahooFetch(url) {
+    return new Promise((resolve, reject) => {
+        https.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try { resolve(JSON.parse(data)); }
+                catch (e) { reject(new Error('Invalid JSON from Yahoo')); }
+            });
+        }).on('error', reject);
+    });
+}
+
+// Fetch single symbol via v8 chart API and normalize to quote-like object
+async function fetchQuoteV8(symbol) {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+    const data = await yahooFetch(url);
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (!meta) return null;
+    const price = meta.regularMarketPrice;
+    const prevClose = meta.chartPreviousClose || meta.previousClose;
+    const change = prevClose ? price - prevClose : 0;
+    const changePct = prevClose ? (change / prevClose) * 100 : 0;
+    return {
+        symbol: meta.symbol,
+        shortName: meta.shortName || meta.symbol,
+        longName: meta.longName || meta.shortName || meta.symbol,
+        regularMarketPrice: price,
+        regularMarketChange: Math.round(change * 100) / 100,
+        regularMarketChangePercent: Math.round(changePct * 100) / 100,
+        regularMarketDayHigh: meta.regularMarketDayHigh,
+        regularMarketDayLow: meta.regularMarketDayLow,
+        regularMarketVolume: meta.regularMarketVolume,
+        regularMarketTime: meta.regularMarketTime,
+        currency: meta.currency,
+        exchangeName: meta.exchangeName,
+        fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh,
+        fiftyTwoWeekLow: meta.fiftyTwoWeekLow,
+    };
+}
+
+// GET /api/market/quotes?symbols=AAPL,MSFT,SPY — v8 chart API, parallel fetch
+app.get('/api/market/quotes', async (req, res) => {
+    const { symbols } = req.query;
+    if (!symbols) return res.status(400).json({ error: 'symbols requerido' });
+
+    const cacheKey = symbols.split(',').sort().join(',');
+    const cached = yahooQuoteCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < YAHOO_CACHE_TTL) {
+        return res.json(cached.data);
+    }
+
+    try {
+        const symbolList = symbols.split(',').map(s => s.trim()).filter(Boolean);
+        const results = await Promise.allSettled(symbolList.map(s => fetchQuoteV8(s)));
+        const quotes = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
+        yahooQuoteCache.set(cacheKey, { data: quotes, ts: Date.now() });
+        res.json(quotes);
+    } catch (e) {
+        console.error('[MARKET_QUOTE_ERROR]', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/market/movers — top gainers del día (v8 fallback: combine ETFs+commodities sorted by gain)
+app.get('/api/market/movers', async (req, res) => {
+    try {
+        // v7 screener is now auth-gated; use v8 chart for a watchlist of popular US stocks
+        const watchlist = 'NVDA,TSLA,AAPL,MSFT,AMZN,GOOGL,META,AMD,NFLX,PLTR';
+        const symbolList = watchlist.split(',');
+        const results = await Promise.allSettled(symbolList.map(s => fetchQuoteV8(s)));
+        const quotes = results
+            .filter(r => r.status === 'fulfilled' && r.value)
+            .map(r => r.value)
+            .sort((a, b) => (b.regularMarketChangePercent || 0) - (a.regularMarketChangePercent || 0));
+        res.json(quotes);
+    } catch (e) {
+        console.error('[MARKET_MOVERS_ERROR]', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/market/news — financial news headlines
+app.get('/api/market/news', async (req, res) => {
+    try {
+        const url = 'https://query2.finance.yahoo.com/v1/finance/search?q=stock+market&quotesCount=0&newsCount=15&enableFuzzyQuery=false';
+        const data = await yahooFetch(url);
+        const news = (data?.news || []).map(n => ({
+            title: n.title,
+            link: n.link,
+            publisher: n.publisher,
+            providerPublishTime: n.providerPublishTime
+        }));
+        res.json(news);
+    } catch (e) {
+        console.error('[MARKET_NEWS_ERROR]', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // For SPA routing
 app.get('*', (req, res) => {

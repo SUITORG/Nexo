@@ -70,7 +70,7 @@ Before any operation, the agent MUST:
 - Use `.suit/loader/strategy.yaml` to determine what context to load
 
 ## Architecture (non-obvious)
-- 4 independent servers: `server.js` (Express, 3001), `CampanasAi/local-server-node.js` (http, 8000), `citas/index.js` (Express, 3002), `SuitVidGenRemotion/` (Remotion Studio, 3004)
+- 4 independent servers: `server.js` (Express, 3001), `SuitCampanas/local-server-node.js` (http, 8000), `citas/index.js` (Express, 3002), `SuitVidGenRemotion/` (Remotion Studio, 3004)
 - **ViRe** (`SuitVidGenRemotion/`): Módulo de video con Remotion. Usa `npm run dev` para abrir el estudio en puerto 3004.
 - Dual backend: GAS (`backend/`) does core CRUD on Google Sheets; Node.js proxies to Supabase, Gemini, Stripe
 - Hybrid DB: 5 MASTER tables always in Sheets (`Config_Empresas`, `Usuarios`, `Config_Roles`, `Config_SEO`, `Prompts_IA`); PRIVATE tables migrate to Supabase per-tenant via `db_engine`
@@ -93,7 +93,7 @@ Before any operation, the agent MUST:
 ```bash
 # Start dev servers (each in its own terminal)
 node server.js                          # port 3001
-node CampanasAi/local-server-node.js    # port 8000
+node SuitCampanas/local-server-node.js    # port 8000
 node citas/index.js                     # port 3002
 cd SuitVidGenRemotion && npm run dev    # port 3004 (Remotion Studio / ViRe)
 
@@ -103,8 +103,8 @@ clasp push && clasp deploy
 # Regenerate function index (run after adding/renaming functions)
 node scripts/generate-index.js
 
-# Quick backup (WSL)
-zip -r "SUIT_$(date +%d%m%y)_WSL.zip" . -x "*/node_modules/*" "*/.git/*" "*.zip" "*/.agent/*"
+# Backup rápido (WSL) — excluye node_modules de subproyectos, .venv, etc.
+bash scripts/backup.sh
 
 # Prospección comercial (independiente, con GOOGLE_MAPS_API_KEY en .env)
 node prospectos/prospect.js --list
@@ -112,8 +112,8 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 ```
 
 ## Known gotchas
-- **Hardcoded API keys**: `backend/core.js:13`, `CampanasAi/script.js:8-11`, `scripts/agents/vision-audit.js:14` — don't add more; use `.env`
-- **`service_role` key in client**: `CampanasAi/lib/supabase.js`, `citas/db/client.js` — bypasses RLS, treat as high risk
+- **Hardcoded API keys**: `backend/core.js:13`, `SuitCampanas/script.js:8-11`, `scripts/agents/vision-audit.js:14` — don't add more; use `.env`
+- **`service_role` key in client**: `SuitCampanas/lib/supabase.js`, `citas/db/client.js` — bypasses RLS, treat as high risk
 - **`syncToSupabase` empty catch**: `backend/utils.js` — sync errors silently swallowed
 - **GAS URL hardcoded** in `local-server-node.js`, `ssg-engine.mjs`, `orchestrator_client.js` — update all on GAS redeploy
 - **`reel-generator.js:103`**: duplicate `generar()` method would stack overflow if called

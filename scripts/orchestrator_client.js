@@ -39,7 +39,7 @@ function callByUrl(url, payload) {
 }
 
 async function run() {
-  const url = 'https://script.google.com/macros/s/AKfycbyfPJqKphhEhdjd1NWa4mDG3D_hwE_H2dalTPsCDzMp6qMB10vDurTMgxKSWSbKlG15/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbzhWR6LoS7wirxWPhQBZIZJ2ynuQHa_VYzrIILR5rasOuCSE55Fk4f3M07fCmnyzEwN/exec';
   const token = 'PROTON-77-X';
   const args = process.argv.slice(2);
   const subAction = args[0];

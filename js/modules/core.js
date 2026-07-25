@@ -182,7 +182,8 @@ var app = {
         },
         // --- AI CONFIG (v8.0.0) ---
         // Normaliza usa_soporte_ia + agent_enabled en un solo objeto
-        // Devuelve { enabled, models[], hasAudit } independientemente del formato del campo
+        // Devuelve { enabled, models[], hasAudit, telegramLink } independientemente del formato del campo
+        // agent_enabled acepta: TRUE[,https://t.me/bot?start=EMPRESA]
         parseAiConfig: (biz) => {
             const raw = (biz?.usa_soporte_ia || biz?.agent_enabled || '').toString();
             const upper = raw.toUpperCase();
@@ -190,13 +191,74 @@ var app = {
             const hasSlash = raw.includes('/');
             const hasModelKeyword = hasSlash || hasComma || upper.includes('GEMINI') || upper.includes('GPT') || upper.includes('QWEN');
             const isExplicitlyOff = upper.startsWith('FALSE') || upper.endsWith(',NO');
-            const enabled = !isExplicitlyOff && (upper === 'TRUE' || hasModelKeyword || upper === '');
+            const enabled = !isExplicitlyOff && upper !== '' && (upper === 'TRUE' || hasModelKeyword);
             const models = raw.split(',').map(m => m.trim()).filter(m => {
                 const u = m.toUpperCase();
                 return m && !['TRUE', 'FALSE', 'NO', ''].includes(u);
             });
             const hasAudit = (biz?.agent_enabled || '').toString().toUpperCase() === 'TRUE';
-            return { enabled, models, hasAudit, raw };
+            // --- TELEGRAM LINK desde agent_enabled (v1.0.0) ---
+            // Formato: "TRUE,https://t.me/bot?start=EMPRESA"
+            const agentRaw = (biz?.agent_enabled || '').toString();
+            const agentParts = agentRaw.split(',');
+            const telegramLink = agentParts.length > 1 && agentParts[1].trim().startsWith('https://t.me/')
+                ? agentParts[1].trim()
+                : '';
+            return { enabled, models, hasAudit, raw, telegramLink };
+        },
+        // --- SOCIAL LINKS PARSER (v17.0.0) ---
+        // Convierte un string separado por comas con URLs/usuarios de redes sociales
+        // en un array de {url, platform, icon, color, className}
+        parseSocialLinks: (rrss) => {
+            if (!rrss || typeof rrss !== 'string') return [];
+            const platforms = [
+                { patterns: ['facebook.com', 'fb.com', 'fb.me'], name: 'facebook', icon: 'fa-facebook-f', color: '#1877F2' },
+                { patterns: ['instagram.com', 'instagr.am'], name: 'instagram', icon: 'fa-instagram', color: '#E4405F' },
+                { patterns: ['tiktok.com', 'vm.tiktok.com'], name: 'tiktok', icon: 'fa-tiktok', color: '#000000' },
+                { patterns: ['youtube.com', 'youtu.be'], name: 'youtube', icon: 'fa-youtube', color: '#FF0000' },
+                { patterns: ['linkedin.com'], name: 'linkedin', icon: 'fa-linkedin-in', color: '#0A66C2' },
+                { patterns: ['twitter.com', 'x.com'], name: 'twitter', icon: 'fa-x-twitter', color: '#000000' },
+            ];
+            return rrss.split(',').map(function(entry) {
+                var url = entry.trim();
+                if (!url) return null;
+                var lower = url.toLowerCase();
+                var match = null;
+                for (var i = 0; i < platforms.length; i++) {
+                    for (var j = 0; j < platforms[i].patterns.length; j++) {
+                        if (lower.indexOf(platforms[i].patterns[j]) !== -1) {
+                            match = platforms[i];
+                            break;
+                        }
+                    }
+                    if (match) break;
+                }
+                if (match) return { url: url, platform: match.name, icon: match.icon, color: match.color, className: match.name };
+                return { url: url, platform: 'link', icon: 'fa-link', color: '#666', className: 'link' };
+            }).filter(function(item) { return item !== null; });
+        },
+        // --- GET SOCIAL LINKS (v17.0.0) ---
+        // Obtiene las redes sociales desde company, priorizando rrss unificado
+        // con fallback a los campos individuales legacy
+        getSocialLinks: (company) => {
+            if (!company) return [];
+            if (company.rrss && company.rrss.toString().trim()) {
+                return app.utils.parseSocialLinks(company.rrss.toString().trim());
+            }
+            var links = [];
+            var legacy = [
+                { field: 'rsface', platform: 'facebook', icon: 'fa-facebook-f', color: '#1877F2', className: 'facebook' },
+                { field: 'rsinsta', platform: 'instagram', icon: 'fa-instagram', color: '#E4405F', className: 'instagram' },
+                { field: 'rstik', platform: 'tiktok', icon: 'fa-tiktok', color: '#000000', className: 'tiktok' },
+                { field: 'rsyt', platform: 'youtube', icon: 'fa-youtube', color: '#FF0000', className: 'youtube' },
+            ];
+            for (var k = 0; k < legacy.length; k++) {
+                var val = company[legacy[k].field];
+                if (val && val.toString().trim()) {
+                    links.push({ url: val.toString().trim(), platform: legacy[k].platform, icon: legacy[k].icon, color: legacy[k].color, className: legacy[k].className });
+                }
+            }
+            return links;
         },
     },
     loadEnvConfig: async () => {
@@ -455,13 +517,21 @@ var app = {
             // No esperamos uno por uno, pedimos todo al mismo tiempo
             if (dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
                 const supabaseData = await app.loadFromSupabase(fetchId);
+                const gasPromptsIA = finalData.Prompts_IA || [];
                 app.data = { ...app.data, ...supabaseData };
+                if ((!app.data.Prompts_IA || app.data.Prompts_IA.length === 0) && gasPromptsIA.length > 0) {
+                    app.data.Prompts_IA = gasPromptsIA;
+                }
                 const sbCompanies = supabaseData.Config_Empresas || [];
                 if (sbCompanies.length > 0) {
                     const gasCopy = [...sanitizedMaster.Config_Empresas];
                     sbCompanies.forEach(sb => {
                         const idx = gasCopy.findIndex(gc => String(gc.id_empresa).toUpperCase() === String(sb.id_empresa).toUpperCase());
-                        if (idx >= 0) gasCopy[idx] = { ...gasCopy[idx], ...sb };
+                        if (idx >= 0) {
+                            Object.keys(sb).forEach(key => {
+                                if (sb[key] != null) gasCopy[idx][key] = sb[key];
+                            });
+                        }
                     });
                     app.data.Config_Empresas = gasCopy;
                 } else {

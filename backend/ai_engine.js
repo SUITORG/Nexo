@@ -1,13 +1,21 @@
 /* SuitOrg Backend - AI Engine Module (v16.1.9 - INTELIGENCIA DINÁMICA) */
 
+// Proveedores OpenAI-compatible adicionales (v16.2.0) - mismo shape request/response que OpenRouter
+const OPENAI_COMPAT_PROVIDERS = {
+  groq: { baseUrl: "https://api.groq.com/openai/v1", keyProp: "GROQ_API_KEY" },
+  cerebras: { baseUrl: "https://api.cerebras.ai/v1", keyProp: "CEREBRAS_API_KEY" },
+  nvidia: { baseUrl: "https://integrate.api.nvidia.com/v1", keyProp: "NVIDIA_NIM_API_KEY" },
+  mistral: { baseUrl: "https://api.mistral.ai/v1", keyProp: "MISTRAL_API_KEY" }
+};
+
 function runGeminiInference(data, output) {
   const geminiKey = (PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY') || "").trim();
   const openRouterKey = (PropertiesService.getScriptProperties().getProperty('OPENROUTER_API_KEY') || "").trim();
   const effectiveORKey = openRouterKey || geminiKey;
-  
+
   // 📡 PASO 1: Obtener lista de modelos (Prioridad)
   // Viene de Config_Empresas.usa_soporte_ia
-  let modelsToTry = (data.ai_config || "gemini-1.5-flash").split(',').map(m => m.trim()).filter(Boolean);
+  let modelsToTry = (data.ai_config || "gemini-1.5-flash").split(',').map(m => m.trim()).filter(m => m && !['TRUE','FALSE','NO'].includes(m.toUpperCase()));
   
   // Si no hay lista, cargamos fallback de seguridad
   if (modelsToTry.length === 0) modelsToTry = ["gemini-1.5-flash", "gemini-pro"];
@@ -27,15 +35,37 @@ function runGeminiInference(data, output) {
   // 📡 PASO 2: Bucle de Resiliencia (Fallback secuencial)
   for (var i = 0; i < modelsToTry.length; i++) {
     var mName = modelsToTry[i];
+    var mClean = mName;
     try {
       console.log(`🤖 [IA_ENGINE] Intentando con: ${mName}...`);
-      
-      // Deteminar si es OpenRouter (contiene / o no empieza por gemini)
-      const isOpenRouter = mName.includes("/") || !mName.toLowerCase().startsWith("gemini");
-      
+
+      // --- ROTACIÓN MULTI-PROVEEDOR (v16.2.0): prefijo explícito "proveedor:modelo" ---
+      const sepIdx = mName.indexOf(":");
+      const prefix = sepIdx > -1 ? mName.slice(0, sepIdx) : "";
+      const rest = sepIdx > -1 ? mName.slice(sepIdx + 1) : mName;
+
+      let mode; // 'gemini' | 'openrouter' | 'openai_compat'
+      if (prefix === "gemini") { mode = "gemini"; mClean = rest; }
+      else if (prefix === "openrouter") { mode = "openrouter"; mClean = rest; }
+      else if (OPENAI_COMPAT_PROVIDERS[prefix]) { mode = "openai_compat"; mClean = rest; }
+      else {
+        // Sin prefijo reconocido: heurístico legacy (compatibilidad con configs existentes)
+        const isOpenRouterLegacy = mName.includes("/") || !mName.toLowerCase().startsWith("gemini");
+        mode = isOpenRouterLegacy ? "openrouter" : "gemini";
+        mClean = mName;
+      }
+
       let url, payload, headers;
-      
-      if (isOpenRouter) {
+
+      if (mode === "openai_compat") {
+        // --- CONFIG PROVEEDOR OPENAI-COMPATIBLE (Groq/Cerebras/NVIDIA NIM/Mistral) ---
+        const provider = OPENAI_COMPAT_PROVIDERS[prefix];
+        const pKey = (PropertiesService.getScriptProperties().getProperty(provider.keyProp) || "").trim();
+        if (!pKey) { console.warn(`⏭️ Saltando ${prefix}: Sin API Key (${provider.keyProp})`); continue; }
+        url = provider.baseUrl + "/chat/completions";
+        headers = { "Authorization": "Bearer " + pKey, "Content-Type": "application/json" };
+        payload = JSON.stringify({ model: mClean, messages: chatMessages });
+      } else if (mode === "openrouter") {
         // --- CONFIG OPENROUTER ---
         if (!effectiveORKey) { console.warn("⏭️ Saltando OpenRouter: Sin API Key"); continue; }
         url = "https://openrouter.ai/api/v1/chat/completions";
@@ -46,19 +76,19 @@ function runGeminiInference(data, output) {
           "Content-Type": "application/json"
         };
         payload = JSON.stringify({
-          model: mName,
+          model: mClean,
           messages: chatMessages
         });
       } else {
         // --- CONFIG GEMINI DIRECTO ---
         if (!geminiKey) { console.warn("⏭️ Saltando Gemini: Sin API Key"); continue; }
-        
-        let mClean = mName.replace("models/", "");
+
+        mClean = mClean.replace("models/", "");
         // 🧪 NORMALIZACIÓN AGRESIVA (Lo que funcionó en v16.1.4)
         if (mClean.includes("gemini-1.5-flash") && !mClean.includes("-latest")) {
           mClean = "gemini-1.5-flash-latest";
         }
-        
+
         console.log(`📡 [IA_ENGINE] Invocando Gemini v1beta: ${mClean}`);
         url = `https://generativelanguage.googleapis.com/v1beta/models/${mClean}:generateContent?key=${geminiKey}`;
         headers = { "Content-Type": "application/json" };
@@ -75,9 +105,9 @@ function runGeminiInference(data, output) {
       if (responseCode === 200) {
         const json = JSON.parse(content);
         // Extraer texto según el formato del API
-        output.answer = isOpenRouter ? json.choices[0].message.content : json.candidates[0].content.parts[0].text;
-        output.success = true; 
-        output.active_model = mClean; 
+        output.answer = (mode === "gemini") ? json.candidates[0].content.parts[0].text : json.choices[0].message.content;
+        output.success = true;
+        output.active_model = mClean;
         console.log(`✅ [IA_ENGINE] Éxito con: ${mClean}`);
         return;
       }

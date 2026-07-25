@@ -345,14 +345,29 @@ function processTransactionGSheets(ss, data, output, isBackup) {
 
 function syncToSupabase(ss, coId) {
   const SB_KEY = PropertiesService.getScriptProperties().getProperty('SUPABASE_KEY');
-  if(!SB_KEY) return;
-  ['Catalogo', 'Leads', 'Proyectos'].forEach(t => {
+  if (!SB_KEY) return;
+  const SB_URL = PropertiesService.getScriptProperties().getProperty('SUPABASE_URL') || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
+  const TABLES = [
+    'Prompts_IA', 'Config_Empresas', 'Config_SEO', 'Config_Paginas',
+    'Catalogo', 'Leads', 'Proyectos', 'Pagos',
+    'Proyectos_Pagos', 'Proyectos_Etapas', 'Proyectos_Bitacora', 'Proyectos_Materiales',
+    'Config_Flujo_Proyecto', 'Logs_Chat_IA', 'Memoria_IA_Snapshots',
+    'Config_Galeria', 'Empresa_Galeria', 'Empresa_Documentos', 'Reservaciones',
+    'Logs', 'Cuotas_Pagos'
+  ];
+  TABLES.forEach(function(t) {
     try {
       var d = getSheetData(ss, t, coId);
-      if (d.length) UrlFetchApp.fetch(`https://hmrpotibipxhsnowgjvq.supabase.co/rest/v1/${t}`, {
-        method: "post", contentType: "application/json", headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Prefer": "resolution=merge-duplicates" },
-        payload: JSON.stringify(d)
-      });
-    } catch (e) {}
+      if (d.length) {
+        var res = UrlFetchApp.fetch(SB_URL + '/rest/v1/' + t, {
+          method: 'post', contentType: 'application/json',
+          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'resolution=merge-duplicates' },
+          payload: JSON.stringify(d), muteHttpExceptions: true
+        });
+        Logger.log('[SYNC] ' + t + ': ' + d.length + ' rows → ' + res.getResponseCode());
+      }
+    } catch (e) {
+      Logger.log('[SYNC_ERROR] ' + t + ': ' + e.message);
+    }
   });
 }

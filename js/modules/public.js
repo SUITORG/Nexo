@@ -8,12 +8,10 @@ app.public = {
         const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
         const content = document.getElementById('about-content');
         if (content && company) {
-            // Social Links HTML
-            let socialHtml = '';
-            if (company.rsface) socialHtml += `<a href="${company.rsface}" target="_blank" style="color:#1877F2; font-size:1.5rem;"><i class="fab fa-facebook"></i></a>`;
-            if (company.rsinsta) socialHtml += `<a href="${company.rsinsta}" target="_blank" style="color:#E4405F; font-size:1.5rem;"><i class="fab fa-instagram"></i></a>`;
-            if (company.rstik) socialHtml += `<a href="${company.rstik}" target="_blank" style="color:#000000; font-size:1.5rem;"><i class="fab fa-tiktok"></i></a>`;
-            if (company.rsyt) socialHtml += `<a href="${company.rsyt}" target="_blank" style="color:#FF0000; font-size:1.5rem;"><i class="fab fa-youtube"></i></a>`;
+            const socialLinks = app.utils.getSocialLinks(company);
+            let socialHtml = socialLinks.map(function(s) {
+                return '<a href="' + s.url + '" target="_blank" style="color:' + s.color + '; font-size:1.5rem;"><i class="fab ' + s.icon + '"></i></a>';
+            }).join('');
 
             content.innerHTML = `
                 <div style="text-align: center; margin-bottom: 20px;">
@@ -421,12 +419,17 @@ app.public = {
                                                     CONTACTAR
                                                 </button>
                                                 ${(() => {
-                        const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
-                        const usesAi = !rawAi.endsWith(',NO') && (rawAi === 'TRUE' || rawAi.includes(','));
-                        return usesAi ? `
-                                                    <button class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
-                                                        IA
-                                                    </button>` : '';
+                        const aiCfg = app.utils.parseAiConfig(company);
+                        const tgParts = (company.agent_enabled || '').toString().split(',');
+                        const tgLink = tgParts.length > 1 && tgParts[1].trim().startsWith('https://t.me/') ? tgParts[1].trim() : '';
+                        let btnsHtml = '';
+                        if (tgLink) {
+                            btnsHtml += `<a href="${tgLink}" target="_blank" class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,136,204,0.3); border:none; cursor:pointer; background:#0088cc; color:#fff; text-align:center; text-decoration:none; display:inline-block;"><i class="fab fa-telegram-plane"></i> CHAT</a>`;
+                        }
+                        if (aiCfg.enabled) {
+                            btnsHtml += `<button class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('${app.agents.getAgentIdForCompany(company) || 'AGT-PAPER-IMSS'}')">IA</button>`;
+                        }
+                        return btnsHtml;
                     })()}
                                             </div>
 
@@ -760,13 +763,18 @@ app.public = {
                                     CONTACTAR
                                 </button>
                                 ${(() => {
+                        const tgParts = (company.agent_enabled || '').toString().split(',');
+                        const tgLink = tgParts.length > 1 && tgParts[1].trim().startsWith('https://t.me/') ? tgParts[1].trim() : '';
                         const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
                         const usesAi = !rawAi.endsWith(',NO') && (rawAi.includes('TRUE') || rawAi.includes('/') || rawAi.includes(',') || rawAi.includes('GPT') || rawAi.includes('GEMINI'));
                         const hasReservations = company.usa_reservaciones >= 1;
-                        if (!usesAi && !hasReservations) return '';
+                        if (!usesAi && !hasReservations && !tgLink) return '';
                         let btns = '';
+                        if (tgLink) {
+                            btns += `<a href="${tgLink}" target="_blank" class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,136,204,0.3); border:none; cursor:pointer; background:#0088cc; color:#fff; text-decoration:none; display:inline-block;"><i class="fab fa-telegram-plane"></i> CHAT</a>`;
+                        }
                         if (usesAi) {
-                            btns += `<button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')"><i class="fas fa-robot"></i> CONSULTAR</button>`;
+                            btns += `<button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('${app.agents.getAgentIdForCompany(company) || 'AGT-PAPER-IMSS'}')"><i class="fas fa-robot"></i> CONSULTAR</button>`;
                         }
 
                         return btns;
@@ -793,10 +801,15 @@ app.public = {
                 `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
                 `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar Ahora</button>`;
 
+            const tgParts = (company.agent_enabled || '').toString().split(',');
+            const tgLink = tgParts.length > 1 && tgParts[1].trim().startsWith('https://t.me/') ? tgParts[1].trim() : '';
             const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
             const usesAi = !rawAi.endsWith(',NO') && (rawAi.includes('TRUE') || rawAi.includes('/') || rawAi.includes(',') || rawAi.includes('GPT') || rawAi.includes('GEMINI'));
+            if (tgLink) {
+                btns += `<a href="${tgLink}" target="_blank" class="btn-primary" style="background:#0088cc; color:#fff; margin-left:10px; text-decoration:none;"><i class="fab fa-telegram-plane"></i> CHAT</a>`;
+            }
             if (usesAi) {
-                btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('AGT-PAPER-IMSS')"><i class="fas fa-robot"></i> Consultar AI</button>`;
+                btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('${app.agents.getAgentIdForCompany(company) || 'AGT-PAPER-IMSS'}')"><i class="fas fa-robot"></i> Consultar AI</button>`;
             }
             actions.innerHTML = btns;
         }
@@ -1598,11 +1611,11 @@ app.public = {
         const container = document.getElementById('footer-links-container');
         if (!container) return;
 
-        let socialHtml = '';
-        if (company.rsface) socialHtml += `<a href="${company.rsface}" target="_blank" class="social-icon facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>`;
-        if (company.rsinsta) socialHtml += `<a href="${company.rsinsta}" target="_blank" class="social-icon instagram" title="Instagram"><i class="fab fa-instagram"></i></a>`;
-        if (company.rstik) socialHtml += `<a href="${company.rstik}" target="_blank" class="social-icon tiktok" title="TikTok"><i class="fab fa-tiktok"></i></a>`;
-        if (company.rsyt) socialHtml += `<a href="${company.rsyt}" target="_blank" class="social-icon youtube" title="YouTube"><i class="fab fa-youtube"></i></a>`;
+        const socialLinks = app.utils.getSocialLinks(company);
+        let socialHtml = socialLinks.map(function(s) {
+            var title = s.platform.charAt(0).toUpperCase() + s.platform.slice(1);
+            return '<a href="' + s.url + '" target="_blank" class="social-icon ' + s.className + '" title="' + title + '"><i class="fab ' + s.icon + '"></i></a>';
+        }).join('');
 
         const showForm = company.formulario === 'TRUE' || company.formulario === true;
 

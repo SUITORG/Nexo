@@ -137,14 +137,20 @@ app.ui = {
                     repairBtn.id = 'sb-ai-repair';
                     repairBtn.className = 'fa-solid fa-screwdriver-wrench';
                     repairBtn.style.cssText = 'font-size: 0.6rem; color: rgba(255,255,255,0.4); cursor: pointer; margin-left: 5px; transition: 0.3s;';
-                    repairBtn.title = 'Reparación de Emergencia IA';
+                    repairBtn.title = 'Estado de Servicios';
                     repairBtn.onmouseover = () => repairBtn.style.color = '#fff';
                     repairBtn.onmouseout = () => repairBtn.style.color = 'rgba(255,255,255,0.4)';
-                    repairBtn.onclick = () => app.agents.triggerMicroAuthRepair();
+                    repairBtn.onclick = () => {
+                        const services = app.state._lastServiceResults || [];
+                        if (services.length === 0) { app.agents.checkAllServices(); return; }
+                        const lines = services.map(s => `${s.ok ? '✅' : '❌'} ${s.name}`).join('\n');
+                        const ok = services.filter(s => s.ok).length;
+                        alert(`Estado de Servicios\n${lines}\n\n${ok}/3 operativos`);
+                    };
                     aiContainer.appendChild(repairBtn);
                 }
 
-                if (app.agents?.checkAiHealth) app.agents.checkAiHealth();
+                if (app.agents?.checkAllServices) app.agents.checkAllServices();
             } else {
                 aiContainer.classList.add('hidden');
             }
@@ -445,7 +451,7 @@ app.ui = {
             const res = await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'syncSupabase', id_empresa: app.state.companyId, token: app.apiToken })
+                body: JSON.stringify({ action: 'syncToSupabase', id_empresa: app.state.companyId, token: app.apiToken })
             });
             const data = await res.json();
             if (data.success) {

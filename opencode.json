@@ -1,41 +1,77 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "opencode/deepseek-v4-flash-free",
+  "instructions": [
+    "AGENTS.md",
+    ".suit/ARCHITECTURE.md",
+    ".suit/INDEX.md"
+  ],
   "mcp": {
     "higgsfield": {
+      "type": "remote",
       "url": "https://mcp.higgsfield.ai/mcp"
+    },
+    "supabase": {
+      "type": "local",
+      "command": ["node", "scripts/mcp-supabase.js"],
+      "enabled": true
+    },
+    "google-sheets": {
+      "type": "local",
+      "command": ["npx", "-y", "mcp-gsheets@latest"],
+      "enabled": true,
+      "env": {
+        "GOOGLE_PROJECT_ID": "suitorg00",
+        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\rojo-\\Downloads\\SUITORGSTORE01\\google-credentials.json"
+      }
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": true
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"],
+      "enabled": true
+    },
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "enabled": true
     }
   },
-  "customCommands": [
-    {
-      "name": "suit",
+  "command": {
+    "suit": {
       "description": "SuitOS Agent Operating System — consult registry, load workflows, run validations",
-      "prompt": "Consult SuitOS system. Action: {{action}} (registry|workflow|validate|memory|plan)"
+      "template": "Consult SuitOS system. Action: {{action}} (registry|workflow|validate|memory|plan)"
     },
-    {
-      "name": "suit:registry",
+    "suit:registry": {
       "description": "Query the SuitOS registry — agents, skills, workflows, projects, models, routing",
-      "prompt": "Read .suit/registry/{{query}}.yaml and summarize its contents. Query: {{query}}"
+      "template": "Read .suit/registry/{{query}}.yaml and summarize its contents. Query: {{query}}"
     },
-    {
-      "name": "suit:workflow",
+    "suit:workflow": {
       "description": "Load a SuitOS workflow definition for the current task",
-      "prompt": "Read .suit/workflows/{{workflow}}.yaml and use it as the process for this task. Workflow: {{workflow}}"
+      "template": "Read .suit/workflows/{{workflow}}.yaml and use it as the process for this task. Workflow: {{workflow}}"
     },
-    {
-      "name": "suit:validate",
+    "suit:validate": {
       "description": "Run SuitOS review profile checks on the current changes",
-      "prompt": "Load .suit/reviewer/profiles.yaml, select the {{profile}} profile, and run its checks on the changes made. Profile: {{profile}}"
+      "template": "Load .suit/reviewer/profiles.yaml, select the {{profile}} profile, and run its checks on the changes made. Profile: {{profile}}"
     },
-    {
-      "name": "suit:memory",
+    "suit:memory": {
       "description": "Write an Architecture Decision Record to SuitOS memory",
-      "prompt": "Write a new ADR to .suit/memory/decisions/ADR-{{number}}-{{title}}.md following SuitOS conventions. Title: {{title}}, Decision: {{decision}}"
+      "template": "Write a new ADR to .suit/memory/decisions/ADR-{{number}}-{{title}}.md following SuitOS conventions. Title: {{title}}, Decision: {{decision}}"
     },
-    {
-      "name": "suit:plan",
+    "suit:plan": {
       "description": "Create a SuitOS execution plan using planner template",
-      "prompt": "Load .suit/planner/template.yaml, create a plan for this task, and present it for approval before executing. Task: {{task}}"
+      "template": "Load .suit/planner/template.yaml, create a plan for this task, and present it for approval before executing. Task: {{task}}"
+    },
+    "suit:commit": {
+      "description": "Hace un git add, diff y commit desde WSL con formato SuitOS: {emoji} {tipo}: {desc} (v{X.Y.Z})",
+      "template": "Ejecuta en WSL: git status, git diff, git add -A (excluye secrets), y git commit -m '{emoji} {tipo}: {desc} (v{X.Y.Z})'. Tipo puede ser feature|bugfix|docs|refactor|chore. Si falta tipo o desc, pidelos. Mensaje: {{message}}"
     }
-  ]
+  }
 }

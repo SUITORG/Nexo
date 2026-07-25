@@ -98,7 +98,7 @@ function handlePostAction(data, result) {
   try {
     switch (action) {
       case "repairDatabase": initializeDatabase(ss, output); output.success = true; break;
-      case "askGemini": 
+      case "askGemini":
         var coData = getSheetData(ss, "Config_Empresas", data.id_empresa || "SYSTEM");
         if (coData && coData.length > 0) data.ai_config = coData[0].usa_soporte_ia;
         runGeminiInference(data, output); 
@@ -210,6 +210,15 @@ function handlePostAction(data, result) {
         data.ticket.fecha = new Date();
         appendRowMapped(ss, "Logs_Consultas_SOP", data.ticket);
         output.success = true; break;
+      case "updateRow":
+        if (data.table && data.matchField && data.matchValue && data.updates) {
+          updateRowMapped(ss, data.table, data.matchField, data.matchValue, data.updates);
+          output.success = true;
+        } else {
+          output.success = false;
+          output.error = "MISSING_PARAMS: table, matchField, matchValue, updates";
+        }
+        break;
       case "orchestrate":
         // 🔒 PUENTE UNIVERSAL ANTIGRAVITY (v15.9.6)
         if (data.token !== "PROTON-77-X") { output.error = "ERROR_AUTH: Orchestration Denied"; break; }
@@ -243,6 +252,54 @@ function handlePostAction(data, result) {
         appendRowMapped(ss, "Reservaciones", res);
         output.success = true;
         output.id = res.id;
+        break;
+      case "getAll":
+        CONFIG.GLOBAL_TABLES.forEach(t => { try { output[t] = getSheetData(ss, t); } catch (err) { output[t] = []; } });
+        var coId2 = data.id_empresa ? String(data.id_empresa).trim() : "";
+        if (coId2 && coId2 !== "SuitOrg") {
+          CONFIG.PRIVATE_TABLES.forEach(t => { try { output[t] = getSheetData(ss, t, coId2); } catch (err) { output[t] = []; } });
+        }
+        output.success = true;
+        break;
+      case "syncToSupabase":
+        if (typeof syncToSupabase === 'function') {
+          syncToSupabase(ss, data.id_empresa);
+          output.success = true;
+          output.msg = "SYNC_COMPLETE for " + data.id_empresa;
+        } else {
+          output.error = "syncToSupabase not found";
+        }
+        break;
+      case "migrateRRSS":
+        var sheet = ss.getSheetByName("Config_Empresas");
+        if (!sheet) { output.error = "SHEET_NOT_FOUND"; break; }
+        var sData = sheet.getDataRange().getValues();
+        if (sData.length < 2) { output.success = true; output.msg = "NO_DATA"; break; }
+        var sHeaders = sData[0].map(function(h) { return String(h).toLowerCase().trim().replace(/\s+/g, '_'); });
+        var rrssIdx = sHeaders.indexOf('rrss');
+        var rsfaceIdx = sHeaders.indexOf('rsface');
+        var rsinstaIdx = sHeaders.indexOf('rsinsta');
+        var rstikIdx = sHeaders.indexOf('rstik');
+        var rsytIdx = sHeaders.indexOf('rsyt');
+        if (rrssIdx === -1) {
+          var lastCol = sData[0].length;
+          sheet.getRange(1, lastCol + 1).setValue('rrss');
+          sHeaders.push('rrss');
+          rrssIdx = lastCol;
+        }
+        var updated = 0;
+        for (var r = 1; r < sData.length; r++) {
+          var parts = [];
+          if (rsfaceIdx !== -1 && sData[r][rsfaceIdx]) parts.push(String(sData[r][rsfaceIdx]).trim());
+          if (rsinstaIdx !== -1 && sData[r][rsinstaIdx]) parts.push(String(sData[r][rsinstaIdx]).trim());
+          if (rstikIdx !== -1 && sData[r][rstikIdx]) parts.push(String(sData[r][rstikIdx]).trim());
+          if (rsytIdx !== -1 && sData[r][rsytIdx]) parts.push(String(sData[r][rsytIdx]).trim());
+          var merged = parts.join(',');
+          if (merged) { sheet.getRange(r + 1, rrssIdx + 1).setValue(merged); updated++; }
+        }
+        output.success = true;
+        output.updated = updated;
+        output.msg = "RRSS_MIGRATED: " + updated + " rows";
         break;
       default: output.error = "ACTION_WAITING: " + action;
     }

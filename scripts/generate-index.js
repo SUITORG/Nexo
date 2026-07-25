@@ -17,7 +17,7 @@ const EXCLUDE_DIRS = new Set(['node_modules', '_LEGACY_BACKUPS', '.git', 'tmp', 
 const FILE_CATEGORIES = [
   { prefix: 'js/modules/', label: 'js/modules/' },
   { prefix: 'backend/', label: 'backend/' },
-  { prefix: 'CampanasAi/', label: 'CampanasAi/' },
+  { prefix: 'SuitCampanas/', label: 'SuitCampanas/' },
   { prefix: 'citas/', label: 'citas/' },
   { prefix: 'scripts/', label: 'scripts/' },
   { prefix: 'Documentacion/', label: 'Documentacion/' },

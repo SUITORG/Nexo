@@ -65,9 +65,9 @@ function parseOpenRouterModels(data) {
   return data.data
     .filter(m => {
       const p = m.pricing || {};
-      const promptPrice = parseFloat(p.prompt) || Infinity;
-      const completionPrice = parseFloat(p.completion) || Infinity;
-      return promptPrice === 0 && completionPrice === 0;
+      const promptPrice = p.prompt !== undefined && p.prompt !== null ? parseFloat(p.prompt) : Infinity;
+      const completionPrice = p.completion !== undefined && p.completion !== null ? parseFloat(p.completion) : Infinity;
+      return (promptPrice === 0 && completionPrice === 0) || (promptPrice <= 0.00001 && completionPrice <= 0.00001);
     })
     .map(m => ({
       id: m.id,
@@ -144,7 +144,10 @@ async function verifyModels(models) {
 }
 
 const FALLBACK_MODELS = [
-  { id: 'google/gemini-1.5-flash', provider: 'google', source: 'fallback', endpoint: null, context_length: 32000 }
+  { id: 'google/gemini-flash-latest', provider: 'google', source: 'fallback', endpoint: null, context_length: 32000 },
+  { id: 'meta-llama/llama-3.3-70b-instruct', provider: 'openrouter', source: 'openrouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', context_length: 128000 },
+  { id: 'google/gemma-4-31b-it:free', provider: 'openrouter', source: 'openrouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', context_length: 32000 },
+  { id: 'nvidia/nemotron-3-nano-30b-a3b:free', provider: 'openrouter', source: 'openrouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', context_length: 32000 }
 ];
 
 async function scan(force) {
@@ -180,4 +183,4 @@ function clearCache() {
   modelCache = { models: [], lastScan: 0, scanning: false };
 }
 
-module.exports = { scan, getCached, clearCache };
+module.exports = { scan, getCached, clearCache, get lastScan() { return modelCache.lastScan; } };

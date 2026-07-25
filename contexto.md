@@ -26,7 +26,7 @@
 ```
 SUITORGSTORE01/
 ├── backend/              → GAS: core (orquestador), database, utils, ai_engine, DriveManager, seeds_master
-├── CampanasAi/           → CMS marketing: frontend SPA, server Node 8000, generadores, scripts, config
+├── SuitCampanas/         → CMS marketing: frontend SPA, server Node 8000, generadores, scripts, config
 ├── citas/                → Módulo citas: Express 3002, webhook WhatsApp, handlers, servicios (AI/Calendar/Notifier)
 ├── conecionpagos/        → Módulo Stripe: multi-tenant PaymentIntents, webhooks
 ├── js/modules/           → Frontend SPA: core, router, auth, ui, public, pos, admin, agents, config, events

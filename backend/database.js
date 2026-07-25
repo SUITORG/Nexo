@@ -20,6 +20,19 @@ function initializeDatabase(ss, output) {
       prompt_base: "Eres el ALMA de Martha Padrón de PA PER. No eres un bot administrativo, eres una ESTRATEGA DE CONFIANZA. \n\n" +
                    "TONO: Fluido y empático. Nunca pidas datos sin antes generar confianza.", 
       id_empresa: "PAPER", activo: "TRUE" 
+    },
+    {
+      id_agente: "AGT-ROOMMATENL", nombre: "Huizcro",
+      prompt_base: "Eres Huizcro, el asistente virtual de RoommateNL. Tu personalidad es amigable, profesional y servicial.\n\n" +
+                   "MISIÓN: Ayudar a los clientes a encontrar la habitación ideal, responder dudas sobre precios, ubicación y servicios, y recopilar sus datos de contacto (nombre, teléfono, email) para que un asesor los contacte.\n\n" +
+                   "REGLAS:\n" +
+                   "- Preséntate siempre como Huizcro al inicio de la conversación.\n" +
+                   "- Sé cálido y natural, como un concierge de confianza.\n" +
+                   "- No inventes precios ni disponibilidad que no estén en el contexto.\n" +
+                   "- Cuando tengas nombre + teléfono, confirma que un asesor se comunicará pronto.\n" +
+                   "- Si el usuario comparte datos, responde con [LEAD] nombre, teléfono, email para que el sistema los registre.\n\n" +
+                   "TONO: Conversacional, empático, servicial. Habla en español neutro.",
+      id_empresa: "ROOMMATENL", activo: "TRUE"
     }
   ];
   agents.forEach(a => ensureSeed(ss, "Prompts_IA", "id_agente", a.id_agente, a));
@@ -59,10 +72,19 @@ function initializeDatabase(ss, output) {
   const leadsSheet = ss.getSheetByName("Leads");
   if (leadsSheet) {
     const h = leadsSheet.getRange(1, 1, 1, leadsSheet.getLastColumn()).getValues()[0];
-    const missing = ["id_visitante", "id_conversacion", "apellido", "edad", "fecha_nacimiento", "semanas_cotizadas", "referido_por", "nss", "curp", "rfc", "hora_llamada"].filter(f => h.indexOf(f) === -1);
+    const missing = ["id_visitante", "id_conversacion", "apellido", "edad", "fecha_nacimiento", "semanas_cotizadas", "referido_por", "nss", "curp", "rfc", "hora_llamada", "current_phase", "suit_index"].filter(f => h.indexOf(f) === -1);
     missing.forEach(f => {
       leadsSheet.insertColumnAfter(leadsSheet.getLastColumn()).getRange(1, leadsSheet.getLastColumn()+1).setValue(f);
     });
+  }
+
+  // Asegurar columna billing_type en Catalogo (v16.7.28)
+  const catSheet = ss.getSheetByName("Catalogo");
+  if (catSheet) {
+    const catH = catSheet.getRange(1, 1, 1, catSheet.getLastColumn()).getValues()[0];
+    if (catH.indexOf("billing_type") === -1) {
+      catSheet.insertColumnAfter(catSheet.getLastColumn()).getRange(1, catSheet.getLastColumn()+1).setValue("billing_type");
+    }
   }
 
   output.info = "Arquitectura Modular v15.9.0 ONLINE | Semillas Maestras Sincronizadas.";

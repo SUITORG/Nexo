@@ -24,8 +24,8 @@ function callDirectGoogle(messages) {
       generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
     });
     const opts = {
-      hostname: 'generativelanguage.googleapis.com',
-      path: `/v1/models/gemini-1.5-flash:generateContent?key=${FALLBACK_GEMINI_KEY}`,
+        hostname: 'generativelanguage.googleapis.com',
+        path: `/v1beta/models/gemini-flash-latest:generateContent?key=${FALLBACK_GEMINI_KEY}`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
     };
@@ -38,8 +38,8 @@ function callDirectGoogle(messages) {
         try {
           const json = JSON.parse(data);
           const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          circuitBreaker.recordSuccess('google/gemini-1.5-flash', Date.now() - start);
-          resolve({ model: 'google/gemini-1.5-flash', content: text, latency: Date.now() - start });
+          circuitBreaker.recordSuccess('google/gemini-flash-latest', Date.now() - start);
+          resolve({ model: 'google/gemini-flash-latest', content: text, latency: Date.now() - start });
         } catch (e) {
           reject(new Error('Failed to parse Gemini response'));
         }
@@ -114,11 +114,11 @@ async function route(messages) {
       errors.push(`${m.id} (circuit open)`);
       continue;
     }
-    if (m.source === 'fallback' && m.id === 'google/gemini-1.5-flash') {
+    if (m.source === 'fallback' && m.id === 'google/gemini-flash-latest') {
       try {
         return await callDirectGoogle(messages);
       } catch (e) {
-        errors.push(`google/gemini-1.5-flash: ${e.message}`);
+        errors.push(`google/gemini-flash-latest: ${e.message}`);
         continue;
       }
     }
@@ -137,7 +137,7 @@ async function route(messages) {
   try {
     return await callDirectGoogle(messages);
   } catch (e) {
-    errors.push(`google/gemini-1.5-flash: ${e.message}`);
+    errors.push(`google/gemini-flash-latest: ${e.message}`);
   }
 
   throw new Error(`All models failed:\n${errors.join('\n')}`);

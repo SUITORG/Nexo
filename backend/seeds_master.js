@@ -79,7 +79,7 @@ function runMasterSeeds(ss) {
   const chatLogsSheet = ss.getSheetByName("Logs_Chat_IA");
   if (!chatLogsSheet) {
     const s = ss.insertSheet("Logs_Chat_IA");
-    s.appendRow(["id_conversacion", "id_visitante", "id_empresa", "agente_id", "role", "content", "fecha_hora"]);
+    s.appendRow(["id_conversacion", "id_visitante", "id_empresa", "agente_id", "role", "content", "fecha_hora", "phase"]);
   }
 
   // Semilla: Config_IA_Notebooks (v16.1.0)

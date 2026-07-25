@@ -9,7 +9,7 @@ import https from 'https';
 
 // 1. Configuración (Detectada del sistema)
 const CONFIG = {
-    apiUrl: 'https://script.google.com/macros/s/AKfycbyTbapadaRfLsyaH086si09RR4dAIeHe955x7UFhtpE1ma7oUTkqizZvBwGod4QINkl/exec',
+    apiUrl: 'https://script.google.com/macros/s/AKfycbzhWR6LoS7wirxWPhQBZIZJ2ynuQHa_VYzrIILR5rasOuCSE55Fk4f3M07fCmnyzEwN/exec',
     apiToken: 'PROTON-77-X',
     outputDir: './dist', // Directorio para los archivos generados
     template: 'index.html',
