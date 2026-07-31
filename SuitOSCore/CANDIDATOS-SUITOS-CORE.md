@@ -1,6 +1,6 @@
 # Candidatos para SuitOS Core
 
-> Análisis arquitectónico de `SUITORGSTORE01` con un único objetivo: extraer lo **reutilizable** — arquitecturas, patrones, convenciones, agentes, skills, flujos, MCPs, plantillas, buenas prácticas, automatizaciones, estándares y decisiones — para incorporarlo a un **SuitOS Core** independiente del negocio. La lógica de negocio específica (POS, cotizaciones, CampanasAI, reservaciones, etc.) queda fuera a propósito.
+> Análisis arquitectónico de `suitorg` con un único objetivo: extraer lo **reutilizable** — arquitecturas, patrones, convenciones, agentes, skills, flujos, MCPs, plantillas, buenas prácticas, automatizaciones, estándares y decisiones — para incorporarlo a un **SuitOS Core** independiente del negocio. La lógica de negocio específica (POS, cotizaciones, CampanasAI, reservaciones, etc.) queda fuera a propósito.
 >
 > **Método:** 5 exploraciones paralelas sobre: (1) el scaffold de los módulos `Suit*`, (2) el estado real de `.suit/registry` + ADRs, (3) los ~20 workflows de `.agent/`, (4) las herramientas de `scripts/`, (5) las configuraciones de `.claude/`, `.opencode/` y `AGENTS.md`. Cada candidato está anclado a su ruta de origen.
 

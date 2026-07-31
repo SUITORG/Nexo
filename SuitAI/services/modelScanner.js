@@ -6,6 +6,7 @@ let modelCache = { models: [], lastScan: 0, scanning: false };
 
 const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models?max_price=0&sort=latency-low-to-high';
 const OPENCODE_ZEN_MODELS_URL = 'https://opencode.ai/zen/v1/models';
+const OMNIROUTE_BASE_URL = process.env.OMNIROUTE_BASE_URL || 'http://localhost:20128/v1';
 
 function fetchJson(url, apiKey) {
   return new Promise((resolve, reject) => {
@@ -100,6 +101,27 @@ function parseOpenCodeZenModels(data) {
     }));
 }
 
+function parseOmniRouteModels(data) {
+  if (!data || !Array.isArray(data.data)) return [];
+  return data.data
+    .filter(m => {
+      if (m.type) return false; // descarta embedding/image/rerank/video, solo modelos de chat
+      const idLower = (m.id || '').toLowerCase();
+      const nameLower = (m.name || '').toLowerCase();
+      return idLower.includes('free') || nameLower.includes('free') || nameLower.includes('🆓');
+    })
+    .map(m => ({
+      id: m.id,
+      name: m.name || m.id,
+      provider: 'omniroute',
+      source: 'omniroute',
+      endpoint: `${OMNIROUTE_BASE_URL}/chat/completions`,
+      context_length: m.context_length || 0,
+      latency_ms: null,
+      last_verified: null
+    }));
+}
+
 async function scanOpenRouter() {
   try {
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -126,11 +148,24 @@ async function scanOpenCodeZen() {
   }
 }
 
+async function scanOmniRoute() {
+  try {
+    const apiKey = process.env.OMNIROUTE_API_KEY;
+    const data = await fetchJson(`${OMNIROUTE_BASE_URL}/models`, apiKey);
+    return parseOmniRouteModels(data);
+  } catch (e) {
+    console.error('[SCANNER] OmniRoute scan failed:', e.message);
+    return [];
+  }
+}
+
 async function verifyModels(models) {
   const results = [];
   for (const m of models) {
     const apiKey = m.source === 'openrouter'
       ? process.env.OPENROUTER_API_KEY
+      : m.source === 'omniroute'
+      ? process.env.OMNIROUTE_API_KEY
       : process.env.OPENCODE_API_KEY;
     if (!apiKey) { results.push({ ...m, latency_ms: null, last_verified: null }); continue; }
     const ping = await pingModel(m.endpoint, apiKey, m.id);
@@ -158,8 +193,8 @@ async function scan(force) {
   }
   modelCache.scanning = true;
   try {
-    const [orModels, ocModels] = await Promise.all([scanOpenRouter(), scanOpenCodeZen()]);
-    let all = [...orModels, ...ocModels];
+    const [orModels, ocModels, omniModels] = await Promise.all([scanOpenRouter(), scanOpenCodeZen(), scanOmniRoute()]);
+    let all = [...orModels, ...ocModels, ...omniModels];
     if (all.length === 0) {
       console.warn('[SCANNER] No free models found from any provider, using fallback');
       all = FALLBACK_MODELS;
@@ -168,7 +203,7 @@ async function scan(force) {
     }
     modelCache.models = all;
     modelCache.lastScan = now;
-    console.log(`[SCANNER] Scanned ${all.length} free models (${orModels.length} OR, ${ocModels.length} OCZ)`);
+    console.log(`[SCANNER] Scanned ${all.length} free models (${orModels.length} OR, ${ocModels.length} OCZ, ${omniModels.length} OmniRoute)`);
     return all;
   } finally {
     modelCache.scanning = false;

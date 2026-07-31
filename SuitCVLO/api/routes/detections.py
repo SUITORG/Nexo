@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from db.local import LocalStore
 from db.supabase import SupabaseStore
+from api.auth import verify_token
 
-router = APIRouter(prefix="/detections", tags=["detections"])
+router = APIRouter(prefix="/detections", tags=["detections"], dependencies=[Depends(verify_token)])
 local_db = LocalStore()
 cloud_db = SupabaseStore()
 

@@ -1,6 +1,6 @@
 # CLAUDE.md — Manual de Trabajo para Claude Code
 
-> Este archivo rige cómo Claude Code debe operar en **SuitOrgStore01**. No reemplaza `ARCHITECTURE.md` ni `.suit/` — los referencia.
+> Este archivo rige cómo Claude Code debe operar en **suitorg**. No reemplaza `ARCHITECTURE.md` ni `.suit/` — los referencia.
 
 ## 1. Qué es SuitOS
 

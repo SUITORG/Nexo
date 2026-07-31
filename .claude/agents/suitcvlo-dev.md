@@ -21,7 +21,7 @@ Architect and developer for the SuitCVLO computer vision project.
 - `.suit/skills/domain/report-pdf.yaml`
 
 ## Project location
-`SuitCVLO/` inside SuitOrgStore01 (parent repo).
+`SuitCVLO/` inside suitorg (parent repo).
 Python venv at `SuitCVLO/.venv/`.
 
 ## Key files

@@ -1,0 +1,31 @@
+workflow:
+  name: configurador-estilos
+  display_name: "Configurador de Estilos Visuales (VIDE)"
+  description: "TUI interactiva para consultar los estilos visuales (categorías y sub-estilos) que usa VIDE, leídos en vivo desde Supabase (video_categorias_estilo / video_subestilos)."
+  risk: low
+  domain: tools
+
+  entry:
+    requires_planning: false
+    requires_confirmation: false
+    required_context:
+      - Documentacion/migrations/003_video_estilos.sql
+      - .suit/memory/decisions/ADR-014-estilos-visuales-vide.md
+    required_skills:
+      - javascript
+
+  steps:
+    - id: launch_tui
+      description: "Lanzar TUI interactiva con blessed, conectada a Supabase"
+      action: run
+      command: "node scripts/configurador-estilos.js"
+      validation:
+        - "TUI carga categorías reales desde video_categorias_estilo"
+        - "Al elegir una categoría, muestra sus sub-estilos reales"
+        - "Vuelve a categorías con '← Volver a categorías'"
+
+  exit:
+    validation:
+      - "Usuario puede navegar categorías → sub-estilos y ver keywords_ia/tendencia_base"
+    notifies:
+      - telemetry

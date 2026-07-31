@@ -381,7 +381,7 @@ skills:
       - "trend report"
     discoverable: true
     context_hint:
-      - "CampanasAi/config/tendencias.json"
+      - "SuitCampanas/config/tendencias.json"
 ```
 
 **Auto-discovery mechanism:**
@@ -526,24 +526,26 @@ projects:
         type: express
 
   campanas-ai:
-    path: CampanasAi/
-    agents: CampanasAi/AGENTS.md
+    path: SuitCampanas/
+    agents: SuitCampanas/CLAUDE.md
     skills:
       - trend-analysis
       - content-generation
+      - javascript
     context:
-      - CampanasAi/AGENTS.md         # (if it existed — recommended)
-      - CampanasAi/script.js
-      - CampanasAi/config/prompts.json
-      - CampanasAi/config/formatos.json
-      - CampanasAi/local-server-node.js
-      - CampanasAi/backend.gs
+      - SuitCampanas/CLAUDE.md
+      - SuitCampanas/script.js
+      - SuitCampanas/config/prompts.json
+      - SuitCampanas/config/formatos.json
+      - SuitCampanas/local-server-node.js
+      - SuitCampanas/backend.gs
+      - SuitCampanas/CODE_INDEX.md
     environment:
       PORT: 8000
       TYPE: cms
     servers:
       - name: cms
-        path: CampanasAi/local-server-node.js
+        path: SuitCampanas/local-server-node.js
         port: 8000
         type: http
 
@@ -883,11 +885,11 @@ orchestration:
     - content-generation
   context_to_load:
     - AGENTS.md
-    - CampanasAi/AGENTS.md
+    - SuitCampanas/CLAUDE.md
     - contexto.md
     - INDEX_FUNCIONES.md
-    - CampanasAi/script.js (relevant functions only)
-    - CampanasAi/config/prompts.json
+    - SuitCampanas/script.js (relevant functions only)
+    - SuitCampanas/config/prompts.json
   reviewers:
     - security
     - architecture
@@ -1991,12 +1993,12 @@ USER: "Agrega un nuevo campo 'telefono' al formulario de leads en el módulo Cam
 #### Step 2: Loader
 ```
 1. Strategy: standard (feature workflow)
-2. Load AGENTS.md (root) + CampanasAi/AGENTS.md (subproject)
+2. Load AGENTS.md (root) + SuitCampanas/CLAUDE.md (subproject)
 3. Load contexto.md (architecture reference)
 4. Load INDEX_FUNCIONES.md (locate form functions)
 5. Load .suit/workflows/feature.yaml
 6. Load .suit/skills/javascript.yaml, .suit/skills/content-generation.yaml
-7. From INDEX_FUNCIONES, find: CampanasAi/script.js lines 677 (getFormData), 711 (validateFormData)
+7. From INDEX_FUNCIONES, find: SuitCampanas/script.js lines 677 (getFormData), 711 (validateFormData)
 8. Read ONLY those sections of script.js
 9. Load campanas-ai context from projects.yaml: local-server-node.js, config/prompts.json
 10. Output: optimized context (~5000 tokens vs ~50000 for full project)
@@ -2004,16 +2006,16 @@ USER: "Agrega un nuevo campo 'telefono' al formulario de leads en el módulo Cam
 
 #### Step 3: Planner
 ```
-1. Analyze: "Add phone field to leads form in CampanasAi"
+1. Analyze: "Add phone field to leads form in SuitCampanas"
 2. Identify files:
-   - READ: CampanasAi/script.js (getFormData, validateFormData)
-   - WRITE: CampanasAi/script.js (modify getFormData, modify validateFormData)
+   - READ: SuitCampanas/script.js (getFormData, validateFormData)
+   - WRITE: SuitCampanas/script.js (modify getFormData, modify validateFormData)
 3. Risk: low (single field, no multi-tenant impact, no backend change)
 4. Validation:
    - Verify form still submits correctly
    - Check phone validation
    - Update INDEX_FUNCIONES.md if function signatures changed
-5. Rollback: git checkout -- CampanasAi/script.js
+5. Rollback: git checkout -- SuitCampanas/script.js
 6. Output: plan
 ```
 
@@ -2048,14 +2050,14 @@ USER: "Agrega un nuevo campo 'telefono' al formulario de leads en el módulo Cam
 1. Record: execution_completed
 2. Tokens used: ~4500 input, ~800 output
 3. Duration: ~45s
-4. Files modified: 1 (CampanasAi/script.js)
+4. Files modified: 1 (SuitCampanas/script.js)
 5. Steps completed: 4
 6. Status: success
 ```
 
 #### Step 8: Response to User
 ```
-"✅ Campo 'teléfono' agregado al formulario de leads en CampanasAi.
+"✅ Campo 'teléfono' agregado al formulario de leads en SuitCampanas.
 - Modificado: getFormData (línea 677) para incluir el campo
 - Modificado: validateFormData (línea 711) para validar formato de 10 dígitos
 - INDEX_FUNCIONES.md actualizado

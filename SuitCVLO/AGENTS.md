@@ -1,24 +1,26 @@
-# AGENTS.md — SuitCVLO v0.1
+# AGENTS.md — SuitCVLO v0.6
 
 ## Versiones
 
 | Versión | Estado | Qué incluye |
 |---------|--------|-------------|
 | v0.1 | ✅ Hecho | Detección básica, OCR, SQLite, API, dashboard |
-| v0.2 | ⏳ Pendiente | Pipeline billboard: perspective, brand, campaign, format |
+| v0.2 | ✅ Hecho | Pipeline billboard: perspective, brand, campaign, format |
 | v0.3 | 📅 Futuro | Captura Canon R50 + GPS + multicámara |
-| v0.4 | 📅 Futuro | Dataset export (CSV/GeoJSON) |
+| v0.4 | ✅ Hecho | Dataset export (CSV/GeoJSON/PDF) + CR3 GPS parser |
 | v0.5 | 📅 Futuro | Automatización full route |
+| v0.6 | 📅 Pendiente | Entrenamiento YOLO personalizado (billboard custom model) |
 
 Ver `README.md` para roadmap detallado.
 
-## Architecture (v0.1)
-- **Backend**: Python 3.12+, FastAPI (puerto 3011), Streamlit dashboard
-- **Detection**: YOLOv8n via Ultralytics + EasyOCR para billboards
-- **Geo**: EXIF (exifread) + Nominatim OSM (gratis, sin API key)
+## Architecture (v0.4)
+- **Backend**: Python 3.12+, FastAPI (puerto 3011), frontend web vanilla JS
+- **Detection**: YOLOv8n via Ultralytics + Contour fallback + EasyOCR
+- **Geo**: EXIF (exifread + fallback TIFF para CR3), Nominatim OSM (gratis, rate-limited)
+- **CR3 GPS**: Parser ISOBMFF propio (no requiere exiftool ni internet)
 - **DB**: Híbrida — SQLite (local, siempre) + Supabase (cloud, batch sync)
-- **Frontend**: Streamlit dashboard (prototipo rápido)
-- **CLI**: `detect.py` con 3 modos: webcam / photo / video
+- **Frontend**: HTML/CSS/JS vanilla, hash routing, API key auth
+- **Export**: CSV, GeoJSON, PDF (ReportLab), catalog dedup
 
 ## Immutable Rules
 

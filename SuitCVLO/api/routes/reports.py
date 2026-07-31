@@ -1,11 +1,12 @@
 from io import BytesIO
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from fastapi.responses import StreamingResponse
+from api.auth import verify_token
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from db.local import LocalStore
 
-router = APIRouter(prefix="/reports", tags=["reports"])
+router = APIRouter(prefix="/reports", tags=["reports"], dependencies=[Depends(verify_token)])
 local_db = LocalStore()
 
 

@@ -133,6 +133,89 @@ skills:
     rules:
       description: "Tenant from auth token, never from client payload"
       severity: "error"
+  frontend:
+    name: "frontend"
+    display_name: "Frontend UI Development"
+    version: "1.0.0"
+    type: "language"
+    domain: "ui"
+    description: "HTML, CSS, vanilla JS DOM manipulation, hash routing, SPA patterns, event handling, template rendering."
+    dependencies:
+      - "javascript"
+    triggers:
+      - "file_pattern: *.html"
+      - "file_pattern: *.css"
+      - "file_pattern: js/modules/*.js"
+      - "keyword: ui"
+      - "keyword: pagina"
+      - "keyword: boton"
+      - "keyword: componente"
+      - "keyword: vista"
+      - "keyword: template"
+      - "keyword: hash route"
+      - "keyword: dom"
+    inputs:
+      - "HTML files"
+      - "CSS files"
+      - "JS module files"
+    outputs:
+      - "modified UI files"
+    discoverable: true
+  backend:
+    name: "backend"
+    display_name: "Backend API Development"
+    version: "1.0.0"
+    type: "language"
+    domain: "code"
+    description: "Express API design, middleware, auth, DB access, CRUD handlers, services, Supabase/GAS integration."
+    dependencies:
+      - "javascript"
+      - "multi-tenant"
+    triggers:
+      - "file_pattern: handlers/*.js"
+      - "file_pattern: services/*.js"
+      - "file_pattern: db/*.js"
+      - "file_pattern: backend/*.js"
+      - "keyword: api"
+      - "keyword: endpoint"
+      - "keyword: middleware"
+      - "keyword: crud"
+      - "keyword: supabase"
+      - "keyword: gas"
+    inputs:
+      - "handler files"
+      - "service files"
+      - "db client files"
+    outputs:
+      - "API endpoints"
+      - "database queries"
+    discoverable: true
+  responsive-design:
+    name: "responsive-design"
+    display_name: "Responsive Design"
+    version: "1.0.0"
+    type: "domain"
+    domain: "ui"
+    description: "CSS media queries, mobile-first layout, flexbox/grid, viewport meta, touch targets, responsive typography and spacing."
+    dependencies:
+      - "frontend"
+    triggers:
+      - "file_pattern: *.css"
+      - "file_pattern: style_*.css"
+      - "keyword: responsive"
+      - "keyword: movil"
+      - "keyword: tablet"
+      - "keyword: layout"
+      - "keyword: mobile first"
+      - "keyword: media query"
+      - "keyword: flexbox"
+      - "keyword: grid"
+    inputs:
+      - "CSS files"
+      - "HTML files"
+    outputs:
+      - "responsive styles"
+    discoverable: true
   telegram-bot:
     name: "telegram-bot"
     display_name: "Telegram Bot API"

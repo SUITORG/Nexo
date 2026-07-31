@@ -91,6 +91,32 @@ workflows:
       - "validate"
       - "check"
 
+  configurador-formatos:
+    path: .suit/workflows/configurador-formatos.yaml
+    risk: low
+    domain: tools
+    requires_review: false
+    requires_planning: false
+    trigger_keywords:
+      - "configurador"
+      - "formatos"
+      - "redes sociales"
+      - "medidas"
+      - "compatibilidad formatos"
+
+  configurador-estilos:
+    path: .suit/workflows/configurador-estilos.yaml
+    risk: low
+    domain: tools
+    requires_review: false
+    requires_planning: false
+    trigger_keywords:
+      - "estilos visuales"
+      - "categorias estilo"
+      - "sub-estilos"
+      - "director"
+      - "video_categorias_estilo"
+
   migration:
     path: .suit/workflows/migration.yaml
     risk: high

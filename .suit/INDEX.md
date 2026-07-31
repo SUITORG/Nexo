@@ -15,6 +15,7 @@
 | `registry/models.yaml` | AI model registry |
 | `registry/permissions.yaml` | Access control |
 | `registry/routing.yaml` | Intent-to-workflow mapping |
+| `registry/tools.yaml` | Suit* Tools Catalog (SuitMusic, SuitTTS, SuitSubtitles, SuitVideoAssembly, etc.) |
 
 ## Workflows
 | File | Purpose |
@@ -62,7 +63,7 @@
 | ID | Path | DB Engine | Port |
 |---|---|---|---|
 | `root` | `./` | Hybrid | 3001 |
-| `campanas-ai` | `CampanasAi/` | GSHEETS + SUPABASE | 8000 |
+| `campanas-ai` | `SuitCampanas/` | GSHEETS + SUPABASE | 8000 |
 | `citas` | `citas/` | SUPABASE | 3002 (deprecated) |
 | `suitreservaciones` | `SuitReservaciones/` | SUPABASE | 3002 |
 | `suit-cotizador` | `SuitCotizador/` | SUPABASE | 3003 |
@@ -73,6 +74,7 @@
 | `suit-bodega` | `SuitBodega/` | SUPABASE | 3009 |
 | `suit-ai` | `SuitAI/` | - | 3010 |
 | `vire` | `SuitVidGenRemotion/` | - | 3004 |
+| `suit-chat-tg` | `SuitChatTG/` | GSHEETS | 3011 |
 
 ## Memory
 | Directory | Purpose |
@@ -89,3 +91,4 @@
 | ADR-004 | [Modo Flags 4-Partes + SuitPedidoExpress/SuitPos](memory/decisions/ADR-004-modo-flags.md) | 2026-07-09 |
 | ADR-005 | [Modo Flags 7-Partes + SuitProductos/SuitInventarios/SuitBodega](memory/decisions/ADR-005-modulo-prod-inv-bod.md) | 2026-07-09 |
 | ADR-006 | [SuitAI — Model Discovery + Auto-Routing + Circuit Breaker](memory/decisions/ADR-006-suit-ai.md) | 2026-07-09 |
+| ADR-007 | [SuitChatTG — Chatbot Telegram con IA, Leads y Memoria](memory/decisions/ADR-007-suit-chat-tg.md) | 2026-07-21 |

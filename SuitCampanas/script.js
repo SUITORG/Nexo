@@ -1,14 +1,46 @@
 // CMS Frontend Logic - Campañas AI
 // Generador Inteligente con soporte para IA y Google Sheets
 
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function parseLogoUrlField(value) {
+    if (!value) return { logoUrl: '', avatarUrl: '' };
+    const trimmed = value.trim();
+    if (!trimmed.includes(',')) return { logoUrl: trimmed, avatarUrl: '' };
+    if (trimmed.startsWith('data:')) {
+        const match = trimmed.match(/^(data:[^,]+;base64,[^,]+),?(.*)/);
+        if (match) return { logoUrl: match[1], avatarUrl: match[2] || '' };
+    }
+    const lastComma = trimmed.lastIndexOf(',');
+    return { logoUrl: trimmed.substring(0, lastComma).trim(), avatarUrl: trimmed.substring(lastComma + 1).trim() };
+}
+
 const CONFIG = {
-    AI_URL: '/api/ai/generate', 
-    HISTORY_URL: '/api/history', 
+    AI_URL: '/api/ai/generate',
+    HISTORY_URL: '/api/history',
     CAMPANAS_URL: '/api/campanas',
     PROMPTS_API: '/api/prompts/',
     DRIVE_API_KEY: '',
     DRIVE_CLIENT_ID: '',
     DRIVE_APP_ID: ''
+};
+
+// Plantilla narrativa derivada del nivel de conciencia cuando el usuario no elige
+// una explícitamente — compartido por generateAIContent() (carrusel) y
+// generateVideJson() (VIDE), para que ambos generadores de IA sigan la misma regla.
+const TEMPLATE_MAP = {
+    'Inconsciente': 'Storytelling (Narrativo)',
+    'Consciente_Problema': 'Enfocado en el Dolor (Agitar Problema)',
+    'Consciente_Solucion': 'Técnico / Educativo',
+    'Consciente_Producto': 'Vende a la Mente (Inspirador/Urgente)',
+    'Mas_Consciente': 'Oferta Directa / CTA Agresivo',
+    'audio_podcast': 'Podcast / Formato Auditivo',
+    'visual_infografia': 'Visual / Infografía Persuasiva'
 };
 
 // Load public config from server (no secrets exposed)
@@ -158,7 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
         logistica_transporte: 'la logística', agropecuario: 'la agricultura',
         bienes_raices: 'el sector inmobiliario', jardineria_paisajismo: 'el paisajismo',
         analisis_clinicos: 'el laboratorio clínico', veterinaria: 'la veterinaria',
-        guarderia_infantil: 'la guardería'
+        guarderia_infantil: 'la guardería',
+        electrodomesticos_premium: 'los electrodomésticos y bienes de consumo premium'
     };
 
     // Mapeo de industrias a nichos
@@ -248,6 +281,10 @@ document.addEventListener('DOMContentLoaded', () => {
             { valor: 'actividades_extracurriculares', etiqueta: 'Actividades Extracurriculares' },
             { valor: 'psicologia_infantil', etiqueta: 'Psicología y Desarrollo Infantil' },
             { valor: 'eventos_infantiles', etiqueta: 'Eventos y Fiestas Infantiles' }
+        ],
+        electrodomesticos_premium: [
+            { valor: 'robots_cocina_multifuncion', etiqueta: 'Robots de Cocina Multifunción' },
+            { valor: 'estilo_vida_saludable', etiqueta: 'Estilo de Vida Saludable' }
         ],
         otro: [
             { valor: 'otro', etiqueta: 'Otro' }
@@ -467,10 +504,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (drivePreview) {
                 if (url && url.match(/drive\.google\.com|uc\?|lh3\.googleusercontent\.com/)) {
                     const imgUrl = normalizeDriveUrl(url);
-                    drivePreview.innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain;" onerror="this.parentElement.innerHTML='<p style=color:red;font-size:0.7rem;>No se pudo previsualizar</p>'">`;
                     drivePreview.style.display = 'block';
+                    drivePreview.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.style.cssText = 'width:100%; height:100%; object-fit:contain;';
+                    img.onerror = function() { this.parentElement.textContent = 'No se pudo previsualizar'; };
+                    drivePreview.appendChild(img);
                 } else if (raw) {
-                    drivePreview.innerHTML = `<img src="${raw}" style="width:100%; height:100%; object-fit:contain;" onerror="this.parentElement.innerHTML='<p style=color:red;font-size:0.7rem;>No se pudo previsualizar</p>'">`;
+                    drivePreview.style.display = 'block';
+                    drivePreview.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = raw;
+                    img.style.cssText = 'width:100%; height:100%; object-fit:contain;';
+                    img.onerror = function() { this.parentElement.textContent = 'No se pudo previsualizar'; };
+                    drivePreview.appendChild(img);
                     drivePreview.style.display = 'block';
                 } else {
                     drivePreview.style.display = 'none';
@@ -528,95 +576,106 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Búsqueda de tendencias (nicho/industria + sub-nicho/región, siempre desde
+    // los mismos campos compartidos) que aplica al tema compartido #aiTheme —
+    // extraído para que tanto BDSMT como VIDE puedan usar el mismo botón/lógica
+    // apuntando a su propio contenedor de resultados.
+    async function buscarTendencias(containerId, loaderEl) {
+        const niche = aiNicho ? aiNicho.value : aiIndustry.value;
+        if (!niche) {
+            showToast('❌ Selecciona un nicho/industria primero', 'error');
+            return;
+        }
+        const subNiche = document.getElementById('bdsmtSubNicho')?.value || '';
+        const region = document.getElementById('bdsmtRegion')?.value?.trim() || 'México';
+        const trendsContainer = document.getElementById(containerId);
+
+        if (loaderEl) loaderEl.style.display = 'inline-block';
+        if (trendsContainer) {
+            trendsContainer.style.display = 'block';
+            trendsContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-dim);">🔍 Buscando tendencias en Google Trends y Reddit...</div>';
+        }
+
+        try {
+            const response = await fetch('/api/trends/fetch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ niche, subNiche, region })
+            });
+            const json = await response.json();
+            if (json.status !== 'success') throw new Error(json.message || 'Error');
+
+            const { trends } = json.data;
+            if (!trends || trends.length === 0) {
+                trendsContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-dim);">😕 No se encontraron tendencias. Intenta con otro nicho o región.</div>';
+                showToast('⚠️ No se encontraron tendencias', 'warning');
+                return;
+            }
+
+            let html = `<div style="margin-bottom:0.5rem;font-size:0.75rem;color:var(--text-dim);">Selecciona una tendencia para usarla como tema:</div>`;
+            trends.forEach((t, i) => {
+                const checked = i === 0 ? 'checked' : '';
+                const titulo = escapeHtml(t.titulo);
+                const desc = escapeHtml(t.descripcion);
+                const fuente = escapeHtml(t.fuente);
+                html += `
+                    <label class="trend-item" style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;margin-bottom:0.5rem;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:all 0.2s;">
+                        <input type="radio" name="trendSelect-${containerId}" value="${i}" ${checked} style="margin-top:0.25rem;accent-color:#6366f1;">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:600;font-size:0.85rem;color:var(--text);">${titulo}</div>
+                            <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.15rem;">${desc}</div>
+                            <div style="font-size:0.65rem;color:var(--primary);margin-top:0.25rem;">📡 ${fuente} ${t.score > 0 ? `· Score: ${escapeHtml(String(t.score))}` : ''}</div>
+                        </div>
+                    </label>
+                `;
+            });
+
+            html += `<div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
+                <button type="button" class="secondary-btn apply-trend-btn" style="flex:1;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;padding:0.6rem;">
+                    ✅ Usar tendencia seleccionada
+                </button>
+            </div>`;
+
+            trendsContainer.innerHTML = html;
+
+            const applyBtn = trendsContainer.querySelector('.apply-trend-btn');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    const selected = trendsContainer.querySelector(`input[name="trendSelect-${containerId}"]:checked`);
+                    if (!selected) {
+                        showToast('❌ Selecciona una tendencia', 'error');
+                        return;
+                    }
+                    const idx = parseInt(selected.value);
+                    const trend = trends[idx];
+                    window.selectedTrend = trend;
+                    aiTheme.value = trend.titulo;
+                    trendsContainer.style.display = 'none';
+                    showToast('✅ Tendencia seleccionada: ' + trend.titulo.substring(0, 50) + '...', 'success');
+                });
+            }
+
+            showToast(`📊 ${trends.length} tendencias encontradas`, 'success');
+        } catch (e) {
+            showToast('❌ Error buscando tendencias: ' + e.message, 'error');
+            if (trendsContainer) {
+                trendsContainer.innerHTML = `<div style="text-align:center;padding:1rem;color:#ef4444;">❌ Error: ${e.message}</div>`;
+            }
+        } finally {
+            if (loaderEl) loaderEl.style.display = 'none';
+        }
+    }
+
     // BDSMT: Buscar Tendencias button
     const fetchTrendsBtn = document.getElementById('fetchTrendsBtn');
     if (fetchTrendsBtn) {
-        fetchTrendsBtn.addEventListener('click', async () => {
-            const niche = aiNicho ? aiNicho.value : aiIndustry.value;
-            if (!niche) {
-                showToast('❌ Selecciona un nicho/industria primero', 'error');
-                return;
-            }
-            const subNiche = document.getElementById('bdsmtSubNicho').value;
-            const region = document.getElementById('bdsmtRegion').value.trim() || 'México';
+        fetchTrendsBtn.addEventListener('click', () => buscarTendencias('trendsContainer', fetchTrendsBtn.querySelector('.trends-loader')));
+    }
 
-            const trendsContainer = document.getElementById('trendsContainer');
-            const loader = document.querySelector('.trends-loader');
-
-            if (loader) loader.style.display = 'inline-block';
-            if (trendsContainer) {
-                trendsContainer.style.display = 'block';
-                trendsContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-dim);">🔍 Buscando tendencias en Google Trends y Reddit...</div>';
-            }
-
-            try {
-                const response = await fetch('/api/trends/fetch', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ niche, subNiche, region })
-                });
-                const json = await response.json();
-                if (json.status !== 'success') throw new Error(json.message || 'Error');
-
-                const { trends } = json.data;
-                if (!trends || trends.length === 0) {
-                    trendsContainer.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-dim);">😕 No se encontraron tendencias. Intenta con otro nicho o región.</div>';
-                    showToast('⚠️ No se encontraron tendencias', 'warning');
-                    if (loader) loader.style.display = 'none';
-                    return;
-                }
-
-                let html = `<div style="margin-bottom:0.5rem;font-size:0.75rem;color:var(--text-dim);">Selecciona una tendencia para usarla como tema:</div>`;
-                trends.forEach((t, i) => {
-                    const checked = i === 0 ? 'checked' : '';
-                    html += `
-                        <label class="trend-item" style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;margin-bottom:0.5rem;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:all 0.2s;">
-                            <input type="radio" name="trendSelect" value="${i}" ${checked} style="margin-top:0.25rem;accent-color:#6366f1;">
-                            <div style="flex:1;min-width:0;">
-                                <div style="font-weight:600;font-size:0.85rem;color:var(--text);">${t.titulo}</div>
-                                <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.15rem;">${t.descripcion}</div>
-                                <div style="font-size:0.65rem;color:var(--primary);margin-top:0.25rem;">📡 ${t.fuente} ${t.score > 0 ? `· Score: ${t.score}` : ''}</div>
-                            </div>
-                        </label>
-                    `;
-                });
-
-                html += `<div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
-                    <button type="button" id="applyTrendBtn" class="secondary-btn" style="flex:1;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;padding:0.6rem;">
-                        ✅ Usar tendencia seleccionada
-                    </button>
-                </div>`;
-
-                trendsContainer.innerHTML = html;
-
-                // Apply selected trend
-                const applyBtn = document.getElementById('applyTrendBtn');
-                if (applyBtn) {
-                    applyBtn.addEventListener('click', () => {
-                        const selected = document.querySelector('input[name="trendSelect"]:checked');
-                        if (!selected) {
-                            showToast('❌ Selecciona una tendencia', 'error');
-                            return;
-                        }
-                        const idx = parseInt(selected.value);
-                        const trend = trends[idx];
-                        window.selectedTrend = trend;
-                        aiTheme.value = trend.titulo;
-                        trendsContainer.style.display = 'none';
-                        showToast('✅ Tendencia seleccionada: ' + trend.titulo.substring(0, 50) + '...', 'success');
-                    });
-                }
-
-                showToast(`📊 ${trends.length} tendencias encontradas`, 'success');
-            } catch (e) {
-                showToast('❌ Error buscando tendencias: ' + e.message, 'error');
-                if (trendsContainer) {
-                    trendsContainer.innerHTML = `<div style="text-align:center;padding:1rem;color:#ef4444;">❌ Error: ${e.message}</div>`;
-                }
-            } finally {
-                if (loader) loader.style.display = 'none';
-            }
-        });
+    // VIDE: mismo buscador de tendencias, aplica al mismo #aiTheme que ya lee generateVideJson()
+    const videFetchTrendsBtn = document.getElementById('videFetchTrendsBtn');
+    if (videFetchTrendsBtn) {
+        videFetchTrendsBtn.addEventListener('click', () => buscarTendencias('videTrendsContainer', videFetchTrendsBtn.querySelector('.trends-loader')));
     }
 
     // Sincronizar estado inicial
@@ -682,6 +741,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listener para Descargar Kit
     downloadBtn.addEventListener('click', downloadCampaignKit);
 
+    // Event Listener para Generar Video desde carrusel
+    const generateVideoBtn = document.getElementById('generateVideoBtn');
+    generateVideoBtn.addEventListener('click', generateVideoFromCarousel);
+
     // Event Listener para Generación IA
     generateBtn.addEventListener('click', generateAIContent);
 
@@ -723,6 +786,59 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listener para VIDE (Suite Completa)
     const videGenerateBtn = document.getElementById('videGenerateBtn');
     if (videGenerateBtn) videGenerateBtn.addEventListener('click', generateVideVideo);
+    // Event Listener para ViRe (Remotion, motor independiente de VIDE)
+    const vireGenerateBtn = document.getElementById('vireGenerateBtn');
+    if (vireGenerateBtn) vireGenerateBtn.addEventListener('click', generateViReVideo);
+    const videGenerateJsonBtn = document.getElementById('videGenerateJsonBtn');
+    if (videGenerateJsonBtn) videGenerateJsonBtn.addEventListener('click', generateVideJson);
+
+    // VIDE: Guion mode toggle (texto / JSON)
+    const videGuionMode = document.getElementById('videGuionMode');
+    const videJsonMode = document.getElementById('videJsonMode');
+    const videGuion = document.getElementById('videGuion');
+    const videGuionJson = document.getElementById('videGuionJson');
+    if (videGuionMode) {
+        videGuionMode.addEventListener('click', () => {
+            videGuion.style.display = '';
+            videGuionJson.style.display = 'none';
+            videGuionMode.style.background = 'rgba(99,102,241,0.15)';
+            videGuionMode.style.borderColor = 'rgba(99,102,241,0.4)';
+            videGuionMode.style.color = '#a5b4fc';
+            videJsonMode.style.background = 'rgba(255,255,255,0.05)';
+            videJsonMode.style.borderColor = 'var(--glass-border)';
+            videJsonMode.style.color = 'var(--text-dim)';
+        });
+    }
+    if (videJsonMode) {
+        videJsonMode.addEventListener('click', () => {
+            videGuion.style.display = 'none';
+            videGuionJson.style.display = '';
+            videJsonMode.style.background = 'rgba(99,102,241,0.15)';
+            videJsonMode.style.borderColor = 'rgba(99,102,241,0.4)';
+            videJsonMode.style.color = '#a5b4fc';
+            videGuionMode.style.background = 'rgba(255,255,255,0.05)';
+            videGuionMode.style.borderColor = 'var(--glass-border)';
+            videGuionMode.style.color = 'var(--text-dim)';
+        });
+    }
+
+    if (videGuionJson) {
+        videGuionJson.addEventListener('input', () => syncVideFieldsFromJson(videGuionJson.value));
+    }
+
+    const videDurationInput = document.getElementById('videDuration');
+    if (videDurationInput && aiSlides) {
+        videDurationInput.addEventListener('input', () => {
+            const seconds = parseInt(videDurationInput.value) || 0;
+            if (seconds <= 0) return;
+            // ~7.5s/escena es un ritmo razonable (el schema del guion ya pide 4-15s por escena);
+            // solo sugiere — el usuario puede ajustar #aiSlides libremente después.
+            const suggested = Math.min(10, Math.max(1, Math.round(seconds / 7.5)));
+            aiSlides.value = suggested;
+        });
+    }
+
+    // VIDE: company datalist — no extra sync needed (free text)
 
     // Cargar recetas
     loadRecetas();
@@ -993,16 +1109,7 @@ async function generateAIContent() {
     let template = aiTemplate.value;
     
     if (!template) {
-        const templateMap = {
-            'Inconsciente': 'Storytelling (Narrativo)',
-            'Consciente_Problema': 'Enfocado en el Dolor (Agitar Problema)',
-            'Consciente_Solucion': 'Técnico / Educativo',
-            'Consciente_Producto': 'Vende a la Mente (Inspirador/Urgente)',
-            'Mas_Consciente': 'Oferta Directa / CTA Agresivo',
-            'audio_podcast': 'Podcast / Formato Auditivo',
-            'visual_infografia': 'Visual / Infografía Persuasiva'
-        };
-        template = templateMap[conciencia];
+        template = TEMPLATE_MAP[conciencia];
     }
 
     const slides = aiSlides.value;
@@ -1019,6 +1126,10 @@ async function generateAIContent() {
     } else {
         lengthRule = "- MÁXIMO 30 palabras por slide en el Cuerpo. Sé claro y directo.";
     }
+
+    // Ocultar botón de video de generación anterior
+    const prevVideoBtn = document.getElementById('generateVideoBtn');
+    if (prevVideoBtn) prevVideoBtn.style.display = 'none';
 
     if (!company) {
         showToast('❌ Escribe el nombre de la empresa/marca arriba', 'error');
@@ -1094,6 +1205,14 @@ async function generateAIContent() {
         
         // 2. Renderizar el carrusel usando la nueva función JSON
         await renderCarouselFromJson(generatedJson);
+        
+        // Mostrar botón de video y auto-generar si el toggle está activo
+        const videoBtn = document.getElementById('generateVideoBtn');
+        videoBtn.style.display = 'inline-flex';
+        const autoVideo = document.getElementById('enableVideo')?.checked;
+        if (autoVideo) {
+            setTimeout(() => generateVideoFromCarousel(), 500);
+        }
         
         showToast('✨ ¡Contenido Maestro Generado!', 'success');
 
@@ -1183,6 +1302,30 @@ function showToast(message, type) {
 }
 
 async function renderCarouselPreview(text) {
+    // Si el contenido pegado es un JSON de guion VIDE ({config, escenas:[...]}),
+    // NO es texto de campaña libre: el split por regex de abajo lo trocea mal
+    // porque palabras como "Slide"/números aparecen dentro de los valores del JSON.
+    // Normalizamos escenas -> slides y delegamos en el render JSON-aware existente.
+    const trimmed = text.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+            const parsed = JSON.parse(trimmed);
+            const escenas = Array.isArray(parsed) ? parsed : parsed.escenas;
+            if (Array.isArray(escenas)) {
+                previewSection.style.display = 'block';
+                const slides = escenas.map(s => ({
+                    title: s.titulo || s.title || '',
+                    body: s.texto || s.body || '',
+                    visual: s.visual || s.image_prompt || ''
+                }));
+                await renderCarouselFromJson({ slides });
+                return;
+            }
+        } catch (_) {
+            // No era JSON válido: seguimos con el parseo de texto plano de abajo
+        }
+    }
+
     carouselContainer.innerHTML = '';
     previewSection.style.display = 'block';
 
@@ -1241,23 +1384,61 @@ async function renderCarouselPreview(text) {
         ];
 
         const slideId = `slide-${index}-${seed}`;
-        slideEl.innerHTML = `
-            <div id="loader-${slideId}" class="image-loading-state">
-                <div class="clock-loader"></div>
-                <div class="loading-text">GENERANDO IMAGEN...</div>
-            </div>
-            ${finalLogoUrl ? `<img src="${finalLogoUrl}" class="slide-logo" alt="logo">` : ''}
-            <div class="slide-image" id="${slideId}"></div>
-            <div class="slide-overlay">
-                <div class="voice-player">
-                    <button class="voice-btn" onclick="speakText('${body.replace(/'/g, "\\'")}', this)" title="Escuchar Texto y Música">🔊</button>
-                </div>
-                <div class="slide-number">Slide ${index + 1}</div>
-                <div class="slide-title">${title}</div>
-                <div class="slide-body">${body}</div>
-                ${visual ? `<div class="slide-visual">📸 Imagen: ${visual}</div>` : ''}
-            </div>
-        `;
+        slideEl.textContent = '';
+        const loaderDiv = document.createElement('div');
+        loaderDiv.id = `loader-${slideId}`;
+        loaderDiv.className = 'image-loading-state';
+        loaderDiv.innerHTML = '<div class="clock-loader"></div><div class="loading-text">GENERANDO IMAGEN...</div>';
+        slideEl.appendChild(loaderDiv);
+
+        if (finalLogoUrl) {
+            const logoImg = document.createElement('img');
+            logoImg.src = finalLogoUrl;
+            logoImg.className = 'slide-logo';
+            logoImg.alt = 'logo';
+            slideEl.appendChild(logoImg);
+        }
+
+        const slideImage = document.createElement('div');
+        slideImage.className = 'slide-image';
+        slideImage.id = slideId;
+        slideEl.appendChild(slideImage);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'slide-overlay';
+        const voicePlayer = document.createElement('div');
+        voicePlayer.className = 'voice-player';
+        const voiceBtn = document.createElement('button');
+        voiceBtn.className = 'voice-btn';
+        voiceBtn.title = 'Escuchar Texto y Música';
+        voiceBtn.textContent = '\u{1F50A}';
+        voiceBtn.addEventListener('click', function() { speakText(body, this); });
+        voicePlayer.appendChild(voiceBtn);
+        overlay.appendChild(voicePlayer);
+
+        const slideNum = document.createElement('div');
+        slideNum.className = 'slide-number';
+        slideNum.textContent = `Slide ${index + 1}`;
+        overlay.appendChild(slideNum);
+
+        const slideTitle = document.createElement('div');
+        slideTitle.className = 'slide-title';
+        slideTitle.textContent = title;
+        overlay.appendChild(slideTitle);
+
+        const slideBody = document.createElement('div');
+        slideBody.className = 'slide-body';
+        slideBody.textContent = body;
+        overlay.appendChild(slideBody);
+
+        if (visual) {
+            const slideVisual = document.createElement('div');
+            slideVisual.className = 'slide-visual';
+            slideVisual.textContent = `📸 Imagen: ${visual}`;
+            overlay.appendChild(slideVisual);
+        }
+
+        slideEl.appendChild(overlay);
         carouselContainer.appendChild(slideEl);
 
         // Usar foto local si existe, si no usar fallbacks de IA
@@ -1398,14 +1579,31 @@ function renderHistory(items) {
         // Si no hay imagen, usar una por defecto basada en el tema o pollinations
         const imageUrl = item.mediaurl || `https://image.pollinations.ai/prompt/${encodeURIComponent(item.status || 'social media')}?width=300&height=200&seed=1&nologo=true`;
 
-        card.innerHTML = `
-            <div class="history-card-image" style="background-image: url('${imageUrl}')"></div>
-            <div class="history-card-content">
-                <div class="history-card-meta">${item.status || 'General'}</div>
-                <div class="history-card-title">${title}</div>
-                <div class="history-card-date">📅 ${date}</div>
-            </div>
-        `;
+        card.textContent = '';
+        const cardImg = document.createElement('div');
+        cardImg.className = 'history-card-image';
+        cardImg.style.backgroundImage = `url('${imageUrl}')`;
+        card.appendChild(cardImg);
+
+        const cardContent = document.createElement('div');
+        cardContent.className = 'history-card-content';
+
+        const cardMeta = document.createElement('div');
+        cardMeta.className = 'history-card-meta';
+        cardMeta.textContent = item.status || 'General';
+        cardContent.appendChild(cardMeta);
+
+        const cardTitle = document.createElement('div');
+        cardTitle.className = 'history-card-title';
+        cardTitle.textContent = title;
+        cardContent.appendChild(cardTitle);
+
+        const cardDate = document.createElement('div');
+        cardDate.className = 'history-card-date';
+        cardDate.textContent = `📅 ${date}`;
+        cardContent.appendChild(cardDate);
+
+        card.appendChild(cardContent);
         historyContainer.appendChild(card);
     });
 }
@@ -1571,6 +1769,97 @@ async function downloadCampaignKit() {
     downloadBtn.innerHTML = originalHTML;
 }
 
+async function generateVideoFromCarousel() {
+    const slides = document.querySelectorAll('.carousel-slide');
+    if (slides.length === 0) {
+        showToast('❌ No hay carrusel para convertir en video', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('generateVideoBtn');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="loader" style="display:inline-block; margin-right:8px; width:16px; height:16px;"></div> VIDEO...';
+
+    const progress = document.getElementById('videoProgress');
+    const fill = document.getElementById('videoProgressFill');
+    const text = document.getElementById('videoProgressText');
+    progress.style.display = 'flex';
+
+    showToast(`🎬 Generando video desde ${slides.length} slides...`, 'info');
+
+    try {
+        const effect = document.getElementById('animationEffect')?.value || 'zoom';
+        const totalDuration = parseInt(document.getElementById('animationDuration')?.value) || 15;
+        const perSlideDuration = Math.max(1, Math.ceil(totalDuration / slides.length));
+        const activeFormat = document.querySelector('.format-tab.active')?.dataset.format || 'Post';
+        const isVertical = (activeFormat === 'Reel' || activeFormat === 'Story' || activeFormat === 'TikTok');
+
+        const kitImages = [];
+        for (let i = 0; i < slides.length; i++) {
+            const slide = slides[i];
+            const uiEls = slide.querySelectorAll('.voice-player, .slide-controls, .slide-visual, .slide-number');
+            uiEls.forEach(el => el.style.visibility = 'hidden');
+
+            const titleTag = slide.querySelector('.slide-title');
+            let originalTitle = "";
+            if (titleTag) {
+                originalTitle = titleTag.innerText;
+                titleTag.innerText = originalTitle.replace(/^\s*\(\d+\)\s*[-.:]?\s*/, '');
+            }
+
+            try {
+                const canvas = await html2canvas(slide, {
+                    scale: 1.5, useCORS: true, allowTaint: true, backgroundColor: '#0f172a'
+                });
+                kitImages.push(canvas.toDataURL('image/jpeg', 0.9));
+                const pct = Math.round(((i + 1) / slides.length) * 60);
+                fill.style.width = pct + '%';
+                text.textContent = `Capturando slide ${i+1}/${slides.length}`;
+            } finally {
+                uiEls.forEach(el => el.style.visibility = 'visible');
+                if (titleTag && originalTitle) titleTag.innerText = originalTitle;
+            }
+        }
+
+        fill.style.width = '65%';
+        text.textContent = 'Ensamblando video con FFmpeg...';
+        btn.innerHTML = '<div class="loader" style="display:inline-block; margin-right:8px; width:16px; height:16px;"></div> 🚀 ENSAMBLANDO...';
+
+        const resp = await fetch('/api/slideshow', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ images: kitImages, effect, duration: perSlideDuration, transition: 'fade', vertical: isVertical })
+        });
+
+        fill.style.width = '90%';
+        text.textContent = 'Finalizando...';
+
+        const data = await resp.json();
+        if (data.status === 'success' && data.video) {
+            const b64 = data.video.split(',')[1];
+            const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            const blob = new Blob([bytes], { type: 'video/mp4' });
+            const company = (document.getElementById('companyName').value || 'campana').replace(/\s+/g, '_').toLowerCase();
+            downloadFile(URL.createObjectURL(blob), `video_${company}_${Date.now()}.mp4`);
+            fill.style.width = '100%';
+            text.textContent = '✅ Video listo!';
+            showToast('✅ ¡Video generado y descargado!', 'success');
+        } else {
+            throw new Error(data.error || 'Error del servidor');
+        }
+    } catch (e) {
+        showToast(`⚠️ Error generando video: ${e.message}`, 'error');
+        console.error(e);
+        fill.style.width = '0%';
+        text.textContent = `❌ Error: ${e.message}`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        setTimeout(() => { progress.style.display = 'none'; }, 5000);
+    }
+}
+
 function downloadFile(url, filename) {
     const link = document.createElement('a');
     link.href = url;
@@ -1704,26 +1993,37 @@ async function loadCompanies() {
 }
 
 function populateCompanySelect() {
-    const select = document.getElementById('companyName');
-    if (!select || select.tagName !== 'SELECT') return;
-    select.innerHTML = '<option value="">-- Seleccionar Empresa --</option>';
+    const input = document.getElementById('companyName');
+    const list = document.getElementById('companyList');
+    if (!input || !list) return;
+    list.innerHTML = '';
     companyConfigs.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.nomempresa;
-        opt.textContent = c.nomempresa;
-        select.appendChild(opt);
+        list.appendChild(opt);
     });
 }
 
+
+
 function setupCompanyAutoFill() {
-    const select = document.getElementById('companyName');
-    if (!select) return;
+    const input = document.getElementById('companyName');
+    if (!input) return;
+    // ponytail: called after every mode switch; without this guard each call created
+    // a brand-new closure and removeEventListener(handler) was a no-op (different
+    // reference), so listeners stacked and autofill ran N times per keystroke.
+    if (input.dataset.autofillBound === '1') {
+        if (input.value.trim()) input.dispatchEvent(new Event('input'));
+        return;
+    }
+    input.dataset.autofillBound = '1';
     const handler = (e) => {
-        const empresaSeleccionada = e.target.value;
-        const selected = companyConfigs.find(c => c.nomempresa === empresaSeleccionada);
+        const val = e.target.value;
+        const valNorm = val.trim().toLowerCase();
+        const selected = companyConfigs.find(c => c.nomempresa.trim().toLowerCase() === valNorm);
 
         if (selected) {
-            console.log("🔍 [BD] Datos encontrados para:", empresaSeleccionada, selected);
+            console.log("🔍 [BD] Datos encontrados para:", val, selected);
             const findVal = (keys) => {
                 const foundKey = Object.keys(selected).find(k =>
                     keys.some(key => k.toLowerCase().includes(key.toLowerCase()))
@@ -1731,29 +2031,37 @@ function setupCompanyAutoFill() {
                 return foundKey ? selected[foundKey] : null;
             };
 
-            const logo = findVal(['logo_url', 'logo']);
-            document.getElementById('companyLogo').value = normalizeDriveUrl(logo || "");
+            const rawLogo = findVal(['logo_url', 'logo']);
+            if (rawLogo) {
+                const p = parseLogoUrlField(rawLogo);
+                const logoNorm = p.logoUrl ? normalizeDriveUrl(p.logoUrl) : '';
+                const avatarNorm = p.avatarUrl ? normalizeDriveUrl(p.avatarUrl) : '';
+                document.getElementById('companyLogo').value = avatarNorm ? `${logoNorm},${avatarNorm}` : logoNorm;
+            } else {
+                document.getElementById('companyLogo').value = '';
+            }
 
             const tel = findVal(['telefonowhastapp', 'telefonowhasapp', 'telefono', 'tel', 'whatsapp', 'whas']);
             document.getElementById('contactPhone').value = tel || "";
 
-            const web = findVal(['enlace_oficial', 'url_oficial', 'website', 'enlace']) || "";
-            document.getElementById('webSite').value = (web && web.toString().startsWith('http')) ? web : "";
+            const webStr = (findVal(['enlace_oficial', 'url_oficial', 'website', 'enlace']) || '').toString().trim();
+            document.getElementById('webSite').value = webStr ? (webStr.startsWith('http') ? webStr : `https://${webStr}`) : '';
 
             const color = findVal(['color_tema', 'color', 'tema']);
             if (color) {
                 document.documentElement.style.setProperty('--primary', color);
                 document.documentElement.style.setProperty('--primary-hover', color + 'dd');
-                showToast(`Configuración de ${empresaSeleccionada} cargada`, 'success');
+                showToast(`Configuración de ${val} cargada`, 'success');
             }
-        } else {
-            document.getElementById('companyLogo').value = "";
-            document.getElementById('contactPhone').value = "";
-            document.getElementById('webSite').value = "";
+            fetchEstilosVisuales();
         }
+        // Don't clear fields on custom input — user may be typing their own business
     };
-    select.removeEventListener('change', handler);
-    select.addEventListener('change', handler);
+    input.removeEventListener('input', handler);
+    input.addEventListener('input', handler);
+    if (input.value.trim()) {
+        handler({ target: input });
+    }
 }
 
 function setWorkMode(mode) {
@@ -1783,8 +2091,8 @@ function setWorkMode(mode) {
     const captionGroup = document.getElementById('caption')?.closest('.input-group') || document.getElementById('caption')?.parentElement;
     const mediaGroup = document.getElementById('mediaUrl')?.closest('.input-group') || document.getElementById('mediaUrl')?.parentElement;
     const dateGroup = document.getElementById('postDate')?.closest('.input-group') || document.getElementById('postDate')?.parentElement;
-    const formatMenu = document.querySelector('.format-menu')?.closest('.input-group');
-    const platformMenu = document.querySelector('.platform-menu')?.closest('.input-group');
+    const formatMenu = document.querySelector('.format-tab')?.closest('.input-group');
+    const platformMenu = document.querySelector('.platform-tab')?.closest('.input-group');
 
     aiBtn.classList.remove('active');
     bdBtn.classList.remove('active');
@@ -1798,9 +2106,8 @@ function setWorkMode(mode) {
     if (videBtn) videBtn.classList.remove('active');
 
     // Reset all sections to visible first
-    document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
-        const g = el.closest('.input-group');
-        if (g) g.style.display = '';
+    document.querySelectorAll('.input-group-row:has(.mode-switch) .input-group').forEach(el => {
+        el.style.display = '';
     });
     [webField, phoneField, captionGroup, mediaGroup, dateGroup, aiSection, bdPhotosContainer].forEach(el => {
         if (el) el.style.display = '';
@@ -1826,28 +2133,17 @@ function setWorkMode(mode) {
         if (bdPhotosInput) bdPhotosInput.value = '';
         if (bdPhotosPreview) bdPhotosPreview.innerHTML = '';
         if (clearBdPhotosBtn) clearBdPhotosBtn.style.display = 'none';
-        container.innerHTML = `
-            <label for="companyName">Empresa / Marca</label>
-            <input type="text" id="companyName" placeholder="Nombre de la marca..." required>
-        `;
         if (genText) genText.textContent = 'Generar con IA (Incluye Imágenes)';
         if (magicIcon) magicIcon.textContent = '🪄';
         captionField.placeholder = 'La IA escribirá aquí...';
         return;
     }
 
-    // BD y BDPR comparten: select de empresa y fotos de carrusel
+    // BD y BDPR comparten: fotos de carrusel
     if (bdPhotosContainer) {
         bdPhotosContainer.style.display = 'block';
         if (typeof window.updateBdPhotosLabel === 'function') window.updateBdPhotosLabel();
     }
-
-    container.innerHTML = `
-        <label for="companyName">Empresa / Marca</label>
-        <select id="companyName">
-            <option value="">-- Cargando desde BD... --</option>
-        </select>
-    `;
 
     if (mode === 'BD') {
         bdBtn.classList.add('active');
@@ -1869,19 +2165,16 @@ function setWorkMode(mode) {
 
         // Company field as text input (for comments/text)
         container.innerHTML = `
-            <label for="companyName">Texto / Comentario</label>
-            <input type="text" id="companyName" placeholder="Texto para el video (opcional)...">
+            <label for="companyName">Texto para overlay del video</label>
+            <input type="text" id="companyName" placeholder="Escribe el texto que aparecerá en el video...">
         `;
 
         // Show format & platform (determinan dimensiones del video)
-        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
-            const g = el.closest('.input-group');
-            if (g) g.style.display = '';
+        document.querySelectorAll('.input-group-row:has(.mode-switch) .input-group').forEach(el => {
+            el.style.display = '';
         });
 
         // Hide irrelevant sections
-        if (webField) webField.style.display = 'none';
-        if (phoneField) phoneField.style.display = 'none';
         if (captionGroup) captionGroup.style.display = 'none';
         if (mediaGroup) mediaGroup.style.display = 'none';
         if (dateGroup) dateGroup.style.display = 'none';
@@ -1901,17 +2194,9 @@ function setWorkMode(mode) {
             if (typeof window.updateBdPhotosLabel === 'function') window.updateBdPhotosLabel();
         }
 
-        container.innerHTML = `
-            <label for="companyName">Empresa / Marca</label>
-            <select id="companyName">
-                <option value="">-- Cargando desde BD... --</option>
-            </select>
-        `;
-
         // Show format & platform
-        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
-            const g = el.closest('.input-group');
-            if (g) g.style.display = '';
+        document.querySelectorAll('.input-group-row:has(.mode-switch) .input-group').forEach(el => {
+            el.style.display = '';
         });
 
         // Show BDSMT section, hide recipe, show generate button
@@ -1941,22 +2226,15 @@ function setWorkMode(mode) {
         if (bdpvBtn) bdpvBtn.classList.add('active');
         console.log("🎞️ Modo actual: BDPV — Presentación de Video HTML");
 
-        // Same company select + photos as BD
+        // Same company photos as BD
         if (bdPhotosContainer) {
             bdPhotosContainer.style.display = 'block';
             if (typeof window.updateBdPhotosLabel === 'function') window.updateBdPhotosLabel();
         }
-        container.innerHTML = `
-            <label for="companyName">Empresa / Marca</label>
-            <select id="companyName">
-                <option value="">-- Cargando desde BD... --</option>
-            </select>
-        `;
 
         // Hide format & platform (not used in BDPV)
-        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
-            const g = el.closest('.input-group');
-            if (g) g.style.display = 'none';
+        document.querySelectorAll('.input-group-row:has(.mode-switch) .input-group').forEach(g => {
+            g.style.display = 'none';
         });
 
         // Hide multimedia production (voice, music, video, animation)
@@ -2005,16 +2283,13 @@ function setWorkMode(mode) {
         console.log("🎬 Modo actual: ViRe — Video con Remotion");
 
         // Hide everything, show only ViRe section
-        if (webField) webField.style.display = 'none';
-        if (phoneField) phoneField.style.display = 'none';
         if (captionGroup) captionGroup.style.display = 'none';
         if (mediaGroup) mediaGroup.style.display = 'none';
         if (dateGroup) dateGroup.style.display = 'none';
         if (aiSection) aiSection.style.display = 'none';
         if (bdPhotosContainer) bdPhotosContainer.style.display = 'none';
-        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
-            const g = el.closest('.input-group');
-            if (g) g.style.display = 'none';
+        document.querySelectorAll('.input-group-row:has(.mode-switch) .input-group').forEach(g => {
+            g.style.display = 'none';
         });
         const prodSection = document.querySelector('.production-options');
         if (prodSection) prodSection.style.display = 'none';
@@ -2029,23 +2304,7 @@ function setWorkMode(mode) {
         if (videBtn) videBtn.classList.add('active');
         console.log("🎬 Modo actual: VIDE — Suite Completa de Video");
 
-        // Company field as select (from Config_Empresas)
-        container.innerHTML = `
-            <label for="companyName">Empresa / Marca</label>
-            <select id="companyName">
-                <option value="">-- Cargando desde BD... --</option>
-            </select>
-        `;
-
-        // Show format & platform
-        document.querySelectorAll('.format-menu, .platform-menu').forEach(el => {
-            const g = el.closest('.input-group');
-            if (g) g.style.display = '';
-        });
-
-        // Hide irrelevant sections
-        if (webField) webField.style.display = 'none';
-        if (phoneField) phoneField.style.display = 'none';
+        // Hide main form sections — VIDE tiene los suyos propios
         if (captionGroup) captionGroup.style.display = 'none';
         if (mediaGroup) mediaGroup.style.display = 'none';
         if (dateGroup) dateGroup.style.display = 'none';
@@ -2059,8 +2318,6 @@ function setWorkMode(mode) {
         if (bdpvSection) bdpvSection.style.display = 'none';
         if (vireSection) vireSection.style.display = 'none';
         if (videSection) videSection.style.display = 'block';
-
-        // Load companies for Config_Empresas
         loadCompanies().then(() => setupCompanyAutoFill());
     }
 }
@@ -2163,28 +2420,423 @@ async function generateImaginationVideo() {
     }
 }
 
+// Keeps #videDuration honest: the guion's own scene timing is what actually
+// gets rendered, so pasting/generating a JSON with a different total should
+// update the duration field instead of leaving a stale, conflicting number.
+function syncVideFieldsFromJson(jsonText) {
+    try {
+        const parsed = JSON.parse(jsonText);
+        const escenas = Array.isArray(parsed) ? parsed : parsed.escenas;
+        if (!Array.isArray(escenas) || escenas.length === 0) return;
+        const total = escenas.reduce((acc, s, i) => acc + (s.duracion || 5) + (i < escenas.length - 1 ? (s.pausa_final || 0.5) : 0), 0);
+        const durationInput = document.getElementById('videDuration');
+        if (durationInput && total > 0) durationInput.value = Math.round(total);
+        // Slides is a ceiling/guide for the AI now, not a hard count (see prompt
+        // rule below), so the real scene count can differ from what was asked —
+        // reflect it back instead of leaving a stale number in the field.
+        const slidesInput = document.getElementById('aiSlides');
+        if (slidesInput) slidesInput.value = escenas.length;
+    } catch (_) { /* invalid/partial JSON mid-paste — leave fields as-is */ }
+}
+
+let estiloVisualData = null;
+let estiloVisualSeleccionado = null;
+
+async function fetchEstilosVisuales() {
+    const empresa = document.getElementById('companyName')?.value?.trim();
+    if (!empresa) return;
+    try {
+        const res = await fetch(`/api/estilos-visuales?empresa=${encodeURIComponent(empresa)}`);
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.error || 'Error');
+        estiloVisualData = json.data;
+        showStyleSelector(estiloVisualData, empresa);
+    } catch (e) {
+        console.warn('[ESTILOS] No se pudieron cargar:', e.message);
+    }
+}
+
+// Dos niveles en vez de mostrar las 12 sub-estilos de una vez (ocupaba mucho
+// espacio): primero las 4 categorías, al elegir una se ven solo sus 3 sub-estilos.
+// Mismo patrón cascada que Industria→Nicho (populateNichos()): categoría
+// primero, sub-estilo se llena al elegir una — reemplaza los botones sueltos.
+function showStyleSelector(categorias, empresa) {
+    const wrapper = document.getElementById('estiloVisualWrapper');
+    const subWrapper = document.getElementById('estiloSubWrapper');
+    const catSelect = document.getElementById('videEstiloCategoria');
+    const subSelect = document.getElementById('videEstiloSub');
+    const info = document.getElementById('autoStyleInfo');
+    if (!wrapper || !catSelect || !subSelect) return;
+    wrapper.style.display = '';
+
+    catSelect.innerHTML = '<option value="">🤖 Automático (Director)</option>' +
+        categorias.map(c => `<option value="${c.slug}">${c.icono || '📁'} ${c.nombre}</option>`).join('');
+
+    catSelect.onchange = () => {
+        const cat = categorias.find(c => c.slug === catSelect.value);
+        if (!cat) {
+            subWrapper.style.display = 'none';
+            estiloVisualSeleccionado = null;
+            autoPickStyleByTrend(empresa).then(r => {
+                if (r) { estiloVisualSeleccionado = r; info.textContent = `Director seleccionó: ${r.cat} → ${r.sub}`; }
+            });
+            return;
+        }
+        subWrapper.style.display = '';
+        subSelect.innerHTML = '<option value="">-- Seleccionar --</option>' +
+            (cat.subestilos || []).map(s => `<option value="${s.slug}">${s.nombre}</option>`).join('');
+        estiloVisualSeleccionado = null;
+        info.textContent = '';
+    };
+
+    subSelect.onchange = () => {
+        const cat = categorias.find(c => c.slug === catSelect.value);
+        const sub = cat?.subestilos.find(s => s.slug === subSelect.value);
+        if (!sub) { estiloVisualSeleccionado = null; info.textContent = ''; return; }
+        estiloVisualSeleccionado = { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia };
+        info.textContent = `${cat.nombre} → ${sub.nombre}: ${sub.descripcion || ''}`;
+    };
+
+    catSelect.value = '';
+    subWrapper.style.display = 'none';
+
+    autoPickStyleByTrend(empresa).then(r => {
+        if (r) {
+            estiloVisualSeleccionado = r;
+            info.textContent = `Director seleccionó: ${r.cat} → ${r.sub}`;
+        }
+    });
+}
+
+async function autoPickStyleByTrend(empresa) {
+    try {
+        const res = await fetch(`/api/tendencias-estilo?empresa=${encodeURIComponent(empresa)}`);
+        const json = await res.json();
+        if (json.status === 'success' && json.data.length > 0) {
+            const top = json.data[0];
+            for (const cat of (estiloVisualData || [])) {
+                for (const sub of (cat.subestilos || [])) {
+                    if (sub.id === top.id_subestilo) {
+                        return { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia };
+                    }
+                }
+            }
+        }
+    } catch (_) {}
+    if (estiloVisualData && estiloVisualData.length > 0) {
+        const fallback = estiloVisualData.find(c => c.slug === 'latino-virales')
+                      || estiloVisualData.find(c => c.slug === 'edits-beat')
+                      || estiloVisualData[0];
+        if (fallback && fallback.subestilos.length > 0) {
+            const sub = fallback.subestilos[0];
+            return { id: sub.id, cat: fallback.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia };
+        }
+    }
+    return null;
+}
+
+// Phone digits read as one giant number by TTS ("ochenta y un mil...") sound
+// wrong — spacing them in pairs makes it read naturally, like a person would say it.
+function formatPhoneForSpeech(phone) {
+    const digits = (phone || '').replace(/\D/g, '');
+    if (!digits) return '';
+    return digits.match(/.{1,2}/g).join(' ');
+}
+
+// === VIDE: Generar JSON desde Contenido + Datos ===
+async function generateVideJson() {
+    const company = document.getElementById('companyName')?.value?.trim() || '';
+    const website = document.getElementById('webSite')?.value?.trim() || '';
+    const logoField = document.getElementById('companyLogo')?.value?.trim() || '';
+    const parsedLogoUrl = parseLogoUrlField(logoField);
+    const phone = document.getElementById('contactPhone')?.value?.trim() || '';
+    const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
+    const platform = document.querySelector('.platform-tab.active')?.dataset?.platform || 'Instagram';
+    const style = document.getElementById('videStyle')?.value || 'energetic';
+    const duration = document.getElementById('videDuration')?.value || '30';
+    const conciencia = document.getElementById('aiConciencia')?.value || '';
+    const industria = document.getElementById('aiIndustry')?.value || '';
+    const nicho = document.getElementById('aiNicho')?.value || '';
+    const especializacion = document.getElementById('aiEspecializacion')?.value || '';
+    // Misma regla que generateAIContent(): si no elige plantilla, se deriva del
+    // nivel de conciencia en vez de dejar "Automático" sin ningún criterio real.
+    const template = document.getElementById('aiTemplate')?.value || TEMPLATE_MAP[conciencia] || '';
+    const slides = document.getElementById('aiSlides')?.value || '3';
+    const theme = document.getElementById('aiTheme')?.value?.trim() || '';
+
+    const modules = [];
+    if (document.getElementById('moduleImages')?.checked) modules.push('Imágenes');
+    if (document.getElementById('enableVoice')?.checked) modules.push('Voz TTS');
+    if (document.getElementById('enableMusic')?.checked) modules.push('Música');
+    if (document.getElementById('moduleSubtitles')?.checked) modules.push('Subtítulos');
+    if (document.getElementById('enableVideo')?.checked) modules.push('Auto-Video');
+    if (document.getElementById('enableAnimation')?.checked) modules.push('Animación');
+
+    if (!company && !theme) {
+        showToast('❌ Completa al menos el nombre de la empresa o el tema de la publicación.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('videGenerateJsonBtn');
+    const loader = btn?.querySelector('.vide-json-loader');
+    if (btn) btn.disabled = true;
+    if (loader) loader.style.display = 'inline-block';
+
+    showToast('🤖 Generando JSON del guion con IA...', 'info');
+
+    const bpmMap = { energetic: 140, relaxing: 80, professional: 100, cinematic: 110 };
+    const suggestedBpm = bpmMap[style] || 100;
+
+    // Dimensiones reales por formato (mismo mapeo que FMT_DIMS en local-server-node.js):
+    // el video final SIEMPRE respeta el formato seleccionado por el usuario al descargar,
+    // sin importar lo que diga este campo — se incluye solo para que el guion generado
+    // sea internamente consistente/veraz con lo que realmente se va a producir.
+    const FMT_RES = { Post: { ancho: 1080, alto: 1080 }, Reel: { ancho: 1080, alto: 1920 }, Story: { ancho: 1080, alto: 1920 }, Banner: { ancho: 1200, alto: 628 } };
+    const res = FMT_RES[format] || FMT_RES.Reel;
+
+    const estiloStr = estiloVisualSeleccionado && estiloVisualSeleccionado.keywords
+        ? `${estiloVisualSeleccionado.cat}/${estiloVisualSeleccionado.sub}: ${estiloVisualSeleccionado.keywords}`
+        : (estiloVisualSeleccionado ? `${estiloVisualSeleccionado.cat}/${estiloVisualSeleccionado.sub}` : '');
+
+    // Catálogo real (Supabase) en vez de dejar que la IA improvise un pattern
+    // interrupt libre cada vez — "GENERAL" es el respaldo si el nicho no tiene
+    // entradas propias todavía.
+    let catalogoInterrupts = '';
+    try {
+        const resPI = await fetch(`/api/pattern-interrupts?nicho=${encodeURIComponent(nicho || 'GENERAL')}`);
+        const jsonPI = await resPI.json();
+        if (jsonPI.status === 'success' && jsonPI.data.length > 0) {
+            catalogoInterrupts = jsonPI.data.map(p => `- (${p.tipo}) ${p.descripcion}`).join('\n');
+        }
+    } catch (_) { /* sin catálogo disponible, la IA improvisa como antes */ }
+
+    const prompt = `Eres un generador de guiones publicitarios de alto impacto visual y conversión. Respondes EXCLUSIVAMENTE con un objeto JSON válido según el schema indicado.
+
+Genera el guion publicitario completo en JSON en formato ${format} para ${platform}.
+
+ESTRUCTURA DEL JSON REQUERIDO:
+{
+  "config": {
+    "duracion_total": (número, en segundos. Debe ser ${duration} o menos),
+    "musica": { "estilo": "${style}", "bpm": ${suggestedBpm}, "volumen": 0.8 },
+    "fps": 24,
+    "resolucion": { "ancho": ${res.ancho}, "alto": ${res.alto} }
+  },
+  "escenas": [
+    {
+      "id": 1,
+      "titulo": "Nombre/rol de la escena (ej. Hook, Desarrollo, Cierre)",
+      "texto": "Texto que se leerá en voz alta para esta escena (speech, conversacional)",
+      "visual": "Descripción cinematográfica detallada para generar imagen con IA: entorno, colores, ángulo, iluminación, composición — evita descripciones genéricas",
+      "texto_overlay": "Frase corta y llamativa que aparecerá en pantalla (máx 60 caracteres)",
+      "duracion": (segundos que dura esta escena, entre 4 y 15),
+      "pausa_inicial": (segundos de pausa antes de la escena, 0.3 a 1.0),
+      "pausa_final": (segundos de pausa después de la escena, 0.3 a 1.0),
+      "animacion": "zoom_in" | "ken_burns" | "fade" | "none",
+      "musica_local": null | "energetic" | "relaxing" | "professional" | "cinematic",
+      "pattern_interrupt": "(solo escena 1) acción o sonido disruptivo en los primeros 1.5s",
+      "camara": { "plano": "Close-up | Medium Shot | Extreme Close-up | POV", "movimiento": "Whip Zoom | Static | Tracking Shot | Tilt Up/Down" },
+      "sfx": "Efecto de sonido puntual de la escena (Whoosh, Glitch, Pop, Bass drop) o null"
+    }
+  ]
+}
+
+DATOS DE LA EMPRESA:
+- Nombre: ${company || '(no especificado)'}
+- Sitio web: ${website || '(no especificado)'}
+- Teléfono (escribir el número exactamente así en el texto hablado, en pares, para que se lea natural): ${formatPhoneForSpeech(phone) || '(no especificado)'}
+- Logo URL: ${parsedLogoUrl.logoUrl || '(no especificado)'}
+- Avatar URL: ${parsedLogoUrl.avatarUrl || '(no especificado)'}
+
+CONFIGURACIÓN DEL VIDEO:
+- Estilo musical global: ${style}
+- Duración total objetivo: ${duration}s
+- Formato/dimensiones finales: ${format} (${res.ancho}x${res.alto}) — no cambia aunque el contenido sugiera otra cosa.
+- Nivel de conciencia del mercado: ${conciencia || 'No especificado'}
+- Industria: ${industria || '(no especificada)'}
+- Nicho: ${nicho || '(no especificado)'}
+- Especialización: ${especializacion || '(no especificada)'}
+- Tipo de plantilla narrativa: ${template || 'Automático'}
+- Cantidad de escenas de referencia: ${slides} (aproximado, no un límite — decide tú la cantidad real)
+- Tema de la publicación: ${theme || '(no especificado)'}
+- Módulos activos: ${modules.join(', ') || 'ninguno'}
+
+ESTILO VISUAL (OBLIGATORIO):
+Aplica el estilo visual "${estiloStr}" en cada escena: el "visual" de cada escena y el "texto_overlay" deben usar la estética, paleta y tratamiento visual de este estilo. No generes imágenes genéricas.
+
+ANCLA DE IDENTIDAD VISUAL (OBLIGATORIO — método Pareto 20/80):
+Antes de escribir las escenas, define UNA sola dirección y aplícala en TODAS, no una distinta por escena:
+- Ritmo de montaje: cortes rápidos (<1.5s, "camara.movimiento" tipo Whip Zoom/Tracking) para conciencia alta/CTA, o plano secuencia más pausado (Static/Tilt) para conciencia baja/narrativa.
+- Dirección de luz/color: elige una y sostenla en "visual" de cada escena (ej. Teal & Orange cinematográfico, alto contraste dramático, o iluminación nativa/orgánica tipo redes sociales) — coherente con "${estiloStr || template || 'el tono general'}".
+
+ARQUETIPO DE COMUNICACIÓN (OBLIGATORIO):
+Elige UNO para todo el guion y sostenlo en el tono de "texto": **El Mentor** (autoridad, datos, enseña) si la marca/tema pide credibilidad técnica; **El Antagonista** (desafía una creencia popular del nicho) si "${conciencia || 'No especificado'}" es baja (Inconsciente/Consciente_Problema) y conviene un choque de opinión; **El Par** (experiencia compartida, cercanía) si el objetivo es conexión/confianza. No mezcles arquetipos entre escenas.
+
+ALINEACIÓN PSICOLÓGICA (OBLIGATORIO):
+Adapta el gancho de la escena 1, el ángulo narrativo de "texto"/"texto_overlay" y el tono de todo el guion al estado mental exacto del cliente (${conciencia || 'No especificado'}) según esta técnica concreta:
+- Inconsciente → requiere CHOQUE VISUAL: abre con algo inesperado/perturbador, el cliente ni sabe que tiene el problema.
+- Consciente_Problema → requiere EMPATÍA/HISTORIA: valida el dolor con una narrativa relatable antes de ofrecer nada.
+- Consciente_Solucion / Consciente_Producto / Mas_Consciente → requiere PRUEBA/DEMOSTRACIÓN: muestra el producto/resultado funcionando, datos concretos, sin rodeos.
+Combínalo con la estrategia "${template || 'Automático'}". Define primero ángulo+arquetipo mentalmente y luego escribe cada escena siguiéndolos — no generes un guion genérico que ignore estas condiciones.
+${catalogoInterrupts ? `\nCATÁLOGO DE PATTERN INTERRUPTS DISPONIBLES (usa uno de estos en la escena 1 si aplica, en vez de improvisar uno genérico):\n${catalogoInterrupts}\n` : ''}
+REGLAS DE RETENCIÓN CINEMATOGRÁFICA (OBLIGATORIAS):
+1. Tú decides cuántas escenas necesita la historia — ${slides} es solo una referencia aproximada, no un límite fijo: usa más o menos según lo que el contenido y los ${duration}s realmente pidan. No rellenes con escenas de relleno ni cortes ideas a la mitad para ajustar a un número. Cada escena con TODOS los campos del schema.
+2. La SUMA de duracion de todas las escenas + pausa_inicial + pausa_final debe ser aprox ${duration} segundos. No puede exceder ${duration}.
+3. ESCENA 1 (HOOK): obligatorio un "pattern_interrupt" (del catálogo si hay uno disponible arriba, si no, uno propio) y un "texto_overlay" contraintuitivo alineado con "${conciencia || 'No especificado'}".
+4. Cada escena define explícitamente "camara.plano", "camara.movimiento" y "sfx" — no dejes "visual" en descripciones genéricas, y respeta la Ancla de Identidad Visual definida arriba en las 4.
+5. "animacion" elige según el ritmo: zoom_in para impacto (conciencia más alta / CTA), ken_burns para narrativa (conciencia baja / storytelling), fade para transición suave.
+6. "musica_local" solo si una escena necesita un estilo distinto al global; si no, null.
+7. La última escena debe incluir un Call to Value (CTV) explícito con los datos de contacto (teléfono, web). Si dice el teléfono en voz alta, escríbelo en pares exactamente como viene arriba (ej. "52 81 10 46 37 21"), nunca como un número corrido.
+8. Serás penalizado si el guion no es 100% relevante al tema "${theme || industria || 'la empresa'}" y a la industria/nicho especificados.
+9. PROHIBIDO describir texto legible, letreros, carteles, etiquetas, nombres de producto/marca escritos, o cualquier escritura dentro de "visual" — los modelos de imagen no pueden renderizar texto correctamente y siempre sale ilegible/inventado. Describe el entorno, objetos y composición sin pedir texto visible en ningún lado de la escena.
+10. Responde SOLO con el JSON, sin markdown, sin explicaciones.`;
+
+    try {
+        const response = await fetch(CONFIG.AI_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages: [
+                    { role: 'system', content: 'Eres un generador de guiones publicitarios. Siempre respondes exclusivamente con JSON válido siguiendo el schema exacto proporcionado.' },
+                    { role: 'user', content: prompt }
+                ],
+                temperature: 0.7,
+                model: 'openrouter/free'
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Error ${response.status}`);
+        }
+
+        const data = await response.json();
+        let rawContent = data.choices[0].message.content.trim();
+        rawContent = rawContent.replace(/```json|```/g, '').trim();
+
+        let parsed;
+        try {
+            parsed = JSON.parse(rawContent);
+        } catch (e) {
+            throw new Error('La IA no devolvió JSON válido. Intenta de nuevo.');
+        }
+
+        // Normalize old format → new format
+        if (Array.isArray(parsed)) {
+            parsed = {
+                config: {
+                    duracion_total: parseInt(duration),
+                    musica: { estilo: style, bpm: suggestedBpm, volumen: 0.3 },
+                    fps: 24,
+                    resolucion: { ancho: 1080, alto: 1920 }
+                },
+                escenas: parsed.map((s, i) => ({
+                    id: i + 1,
+                    titulo: s.titulo || s.title || `Escena ${i + 1}`,
+                    texto: s.texto || s.text || s.body || '',
+                    visual: s.visual || '',
+                    texto_overlay: s.texto_overlay || s.titulo || s.title || '',
+                    duracion: s.duracion || Math.floor(parseInt(duration) / parsed.length),
+                    pausa_inicial: s.pausa_inicial || 0.5,
+                    pausa_final: s.pausa_final || 0.5,
+                    animacion: s.animacion || 'fade',
+                    musica_local: s.musica_local || null
+                }))
+            };
+        }
+
+        const jsonStr = JSON.stringify(parsed, null, 2);
+
+        const jsonTextarea = document.getElementById('videGuionJson');
+        if (jsonTextarea) {
+            jsonTextarea.value = jsonStr;
+            jsonTextarea.style.display = '';
+        }
+        syncVideFieldsFromJson(jsonStr);
+        const textTextarea = document.getElementById('videGuion');
+        if (textTextarea) textTextarea.style.display = 'none';
+
+        const jsonModeBtn = document.getElementById('videJsonMode');
+        const textModeBtn = document.getElementById('videGuionMode');
+        if (jsonModeBtn) {
+            jsonModeBtn.style.background = 'rgba(99,102,241,0.15)';
+            jsonModeBtn.style.borderColor = 'rgba(99,102,241,0.4)';
+            jsonModeBtn.style.color = '#a5b4fc';
+        }
+        if (textModeBtn) {
+            textModeBtn.style.background = 'rgba(255,255,255,0.05)';
+            textModeBtn.style.borderColor = 'var(--glass-border)';
+            textModeBtn.style.color = 'var(--text-dim)';
+        }
+
+        showToast('✅ JSON generado y listo para editar', 'success');
+    } catch (e) {
+        showToast(`❌ Error: ${e.message}`, 'error');
+        console.error(e);
+    } finally {
+        if (btn) btn.disabled = false;
+        if (loader) loader.style.display = 'none';
+    }
+}
+
 // === VIDE: Suite Completa de Video ===
 async function generateVideVideo() {
-    const company = document.getElementById('companyName')?.value?.trim();
-    const guion = document.getElementById('videGuion')?.value?.trim();
+    const company = document.getElementById('companyName')?.value?.trim() || '';
+    if (!company) {
+        showToast('❌ Escribe o selecciona una empresa/marca en DATOS / NEGOCIO', 'error');
+        document.getElementById('companyName')?.focus();
+        return;
+    }
+
+    // Resolve guion: text mode or JSON mode
+    const isJsonMode = document.getElementById('videGuionJson')?.style.display !== 'none';
+    let guion;
+    if (isJsonMode) {
+        const jsonText = document.getElementById('videGuionJson')?.value?.trim();
+        if (!jsonText) {
+            showToast('❌ Pega el JSON del guion', 'error');
+            document.getElementById('videGuionJson')?.focus();
+            return;
+        }
+        try {
+            const parsed = JSON.parse(jsonText);
+            guion = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            showToast('❌ JSON inválido: ' + e.message, 'error');
+            return;
+        }
+    } else {
+        guion = document.getElementById('videGuion')?.value?.trim();
+        if (!guion) {
+            showToast('❌ Escribe un guion para el video', 'error');
+            document.getElementById('videGuion')?.focus();
+            return;
+        }
+    }
+
     const style = document.getElementById('videStyle')?.value || 'energetic';
     const duration = parseInt(document.getElementById('videDuration')?.value) || 30;
+    const voice = document.getElementById('videVoice')?.value || 'es-MX-DaliaNeural';
 
-    if (!company) {
-        showToast('❌ Selecciona una empresa/marca', 'error');
-        return;
-    }
-    if (!guion) {
-        showToast('❌ Escribe un guion para el video', 'error');
-        document.getElementById('videGuion')?.focus();
-        return;
-    }
-
-    // Collect selected modules
-    const modules = Array.from(document.querySelectorAll('.vide-module:checked')).map(cb => cb.value);
+    // Collect selected modules from unified Producción Multimedia
+    const modules = [];
+    if (document.getElementById('moduleImages')?.checked) modules.push('images');
+    if (document.getElementById('enableVoice')?.checked) modules.push('voice');
+    if (document.getElementById('enableMusic')?.checked) modules.push('music');
+    if (document.getElementById('moduleSubtitles')?.checked) modules.push('subtitles');
     if (modules.length === 0) {
         showToast('❌ Selecciona al menos un módulo', 'error');
         return;
+    }
+
+    let logoUrlValue = '';
+    let avatarUrlValue = '';
+    if (uploadedLogoDataUrl) {
+        logoUrlValue = uploadedLogoDataUrl;
+    } else {
+        const parsedLogo = parseLogoUrlField(document.getElementById('companyLogo')?.value?.trim() || '');
+        logoUrlValue = parsedLogo.logoUrl;
+        avatarUrlValue = parsedLogo.avatarUrl;
     }
 
     const btn = document.getElementById('videGenerateBtn');
@@ -2223,9 +2875,14 @@ async function generateVideVideo() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 empresa: company,
+                sitio_web: document.getElementById('webSite')?.value?.trim() || '',
+                logo_url: logoUrlValue,
+                avatar_url: avatarUrlValue,
+                telefono: document.getElementById('contactPhone')?.value?.trim() || '',
                 guion,
                 style,
                 duration,
+                voice,
                 modules,
                 format,
                 platform
@@ -2249,6 +2906,16 @@ async function generateVideVideo() {
             downloadFile(URL.createObjectURL(blob), filename);
             updateProgress(100, '¡Completado!', `Video: ${filename}`);
             showToast('✅ Video completo generado y descargado', 'success');
+
+            // Alimenta al Director con uso real: un video generado de verdad con
+            // este estilo cuenta como la señal de tendencia más honesta que hay.
+            if (estiloVisualSeleccionado?.id && company) {
+                fetch('/api/tendencias-estilo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_subestilo: estiloVisualSeleccionado.id, empresa: company })
+                }).catch(() => {});
+            }
         } else if (data.steps) {
             updateProgress(100, 'Pasos completados', null);
             data.steps.forEach(s => {
@@ -2264,6 +2931,92 @@ async function generateVideVideo() {
         if (btn) btn.disabled = false;
         if (loader) loader.style.display = 'none';
         if (btnText) btnText.textContent = 'Generar Video Completo';
+    }
+}
+
+async function generateViReVideo() {
+    const company = document.getElementById('companyName')?.value?.trim() || '';
+    if (!company) {
+        showToast('❌ Escribe o selecciona una empresa/marca en DATOS / NEGOCIO', 'error');
+        document.getElementById('companyName')?.focus();
+        return;
+    }
+
+    const guion = document.getElementById('vireGuionJson')?.value?.trim();
+    if (!guion) {
+        showToast('❌ Pega el JSON del guion (escenas)', 'error');
+        document.getElementById('vireGuionJson')?.focus();
+        return;
+    }
+    try {
+        JSON.parse(guion);
+    } catch (e) {
+        showToast('❌ JSON inválido: ' + e.message, 'error');
+        return;
+    }
+
+    const duration = parseInt(document.getElementById('vireDuration')?.value) || 30;
+    const enableMusic = document.getElementById('vireEnableMusic')?.checked || false;
+    const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
+
+    const btn = document.getElementById('vireGenerateBtn');
+    const loader = btn?.querySelector('.vire-loader');
+    const btnText = btn?.querySelector('span:last-child');
+    const progressDiv = document.getElementById('vireProgress');
+    const resultDiv = document.getElementById('vireResult');
+
+    if (btn) btn.disabled = true;
+    if (loader) loader.style.display = 'inline-block';
+    if (btnText) btnText.textContent = 'Renderizando...';
+    if (progressDiv) progressDiv.style.display = 'block';
+    if (resultDiv) { resultDiv.style.display = 'none'; resultDiv.innerHTML = ''; }
+
+    showToast('🎬 Renderizando con ViRe (Remotion)... puede tardar varios minutos', 'info');
+
+    try {
+        const res = await fetch('/api/vire-produce', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                empresa: company,
+                sitio_web: document.getElementById('webSite')?.value?.trim() || '',
+                telefono: document.getElementById('contactPhone')?.value?.trim() || '',
+                guion,
+                duration,
+                format,
+                enableMusic
+            })
+        });
+
+        const data = await res.json();
+        if (data.status !== 'success') {
+            throw new Error(data.error || 'Error del servidor');
+        }
+
+        if (data.video) {
+            const b64 = data.video.split(',')[1];
+            const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            const blob = new Blob([bytes], { type: 'video/mp4' });
+            const filename = `vire_${company.replace(/\s+/g, '_')}_${Date.now()}.mp4`;
+            downloadFile(URL.createObjectURL(blob), filename);
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<div style="font-size:0.8rem;color:#4ade80;">✅ Video generado: ${filename}</div>`;
+            }
+            showToast('✅ Video ViRe generado y descargado', 'success');
+        }
+    } catch (e) {
+        showToast(`❌ Error ViRe: ${e.message}`, 'error');
+        console.error(e);
+        if (resultDiv) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<div style="font-size:0.8rem;color:#f87171;">❌ ${e.message}</div>`;
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+        if (loader) loader.style.display = 'none';
+        if (btnText) btnText.textContent = 'Generar con ViRe';
+        if (progressDiv) progressDiv.style.display = 'none';
     }
 }
 
@@ -2347,8 +3100,9 @@ async function renderCarouselFromJson(data) {
     carouselContainer.innerHTML = '';
     const format = document.querySelector('.format-tab.active').dataset.format;
     const isReel = (format === 'Reel' || format === 'Story');
-    const rawLogoUrl = normalizeDriveUrl(document.getElementById('companyLogo').value.trim());
-    const userLogoUrl = await resolveLogoUrl(rawLogoUrl);
+    const parsedLogo = parseLogoUrlField(document.getElementById('companyLogo').value.trim());
+    const userLogoUrl = parsedLogo.logoUrl ? await resolveLogoUrl(normalizeDriveUrl(parsedLogo.logoUrl)) : null;
+    const userAvatarUrl = parsedLogo.avatarUrl ? await resolveLogoUrl(normalizeDriveUrl(parsedLogo.avatarUrl)) : null;
     const industry = aiNicho ? aiNicho.value : aiIndustry.value;
     const theme = aiTheme.value;
 
@@ -2361,36 +3115,99 @@ async function renderCarouselFromJson(data) {
         const slideBody = slide.body || '';
         const slideVisual = slide.visual || slide.image_prompt || 'Professional photo';
 
-        slideEl.innerHTML = `
-            <div id="loader-${slideId}" class="image-loading-state">
-                <div class="clock-loader"></div>
-                <div class="loading-text">BUSCANDO MEJOR OPCIÓN...</div>
-            </div>
-            ${userLogoUrl ? `<img src="${userLogoUrl}" class="slide-logo" alt="logo">` : ''}
-            <div class="slide-image" id="${slideId}"></div>
-            <div class="slide-overlay">
-                <div class="slide-controls" style="position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; z-index: 10;">
-                    <button class="voice-btn" onclick="speakText('${slideBody.replace(/'/g, "\\'")}', this)" title="Escuchar">🔊</button>
-                    <button class="refresh-img-btn" onclick="regenerateSlideImage('${slideId}', '${slideVisual.replace(/'/g, "\\'")}', '${industry}', '${theme}')"
-                            style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); transition:all 0.3s;"
-                            onmouseover="this.style.background='var(--primary)'; this.style.borderColor='var(--primary)';"
-                            onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.borderColor='rgba(255,255,255,0.3)';"
-                            title="Cambiar Foto">🔄</button>
-                    <button class="anim-btn" onclick="downloadAnimatedVideo('${slideId}', '${index}')"
-                            style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.3); color:#fbbf24; width:35px; height:35px; border-radius:50%; cursor:pointer; display:${document.getElementById('enableAnimation')?.checked ? 'flex' : 'none'}; align-items:center; justify-content:center; backdrop-filter:blur(5px); transition:all 0.3s; font-size:0.8rem;"
-                            onmouseover="this.style.background='var(--accent-color)'; this.style.borderColor='var(--accent-color)';"
-                            onmouseout="this.style.background='rgba(245,158,11,0.2)'; this.style.borderColor='rgba(245,158,11,0.3)';"
-                            title="Descargar Video Animado">🎬</button>
-                </div>
-                <div class="slide-number">Slide ${index + 1}</div>
-                <div class="slide-title">${slideTitle}</div>
-                <div class="slide-body">${slideBody}</div>
-                <div class="slide-visual" style="font-size:0.65rem; background: rgba(255,255,0,0.15); border: 1px solid rgba(255,255,0,0.3); padding: 5px; border-radius: 4px; color: yellow; margin-top:0.5rem;">
-                   <span id="source-${slideId}" style="float:right; opacity:0.7; border:1px solid; padding:1px 4px; border-radius:3px; font-size:0.5rem; margin-left:5px;">[Buscando...]</span>
-                   🎨 Concepto: ${slideVisual}
-                </div>
-            </div>
-        `;
+        slideEl.textContent = '';
+        const loaderDiv2 = document.createElement('div');
+        loaderDiv2.id = `loader-${slideId}`;
+        loaderDiv2.className = 'image-loading-state';
+        loaderDiv2.innerHTML = '<div class="clock-loader"></div><div class="loading-text">BUSCANDO MEJOR OPCIÓN...</div>';
+        slideEl.appendChild(loaderDiv2);
+
+        if (userLogoUrl) {
+            const logoImg2 = document.createElement('img');
+            logoImg2.src = userLogoUrl;
+            logoImg2.className = 'slide-logo';
+            logoImg2.alt = 'logo';
+            slideEl.appendChild(logoImg2);
+        }
+
+        if (userAvatarUrl) {
+            const avatarImg2 = document.createElement('img');
+            avatarImg2.src = userAvatarUrl;
+            avatarImg2.className = 'slide-avatar';
+            avatarImg2.alt = 'avatar';
+            avatarImg2.style.cssText = 'position:absolute;bottom:100px;right:15px;width:70px;height:70px;border-radius:50%;border:3px solid rgba(255,255,255,0.8);object-fit:cover;z-index:10;box-shadow:0 4px 15px rgba(0,0,0,0.3);';
+            slideEl.appendChild(avatarImg2);
+        }
+
+        const slideImage2 = document.createElement('div');
+        slideImage2.className = 'slide-image';
+        slideImage2.id = slideId;
+        slideEl.appendChild(slideImage2);
+
+        const overlay2 = document.createElement('div');
+        overlay2.className = 'slide-overlay';
+
+        const controls = document.createElement('div');
+        controls.className = 'slide-controls';
+        controls.style.cssText = 'position:absolute;top:1rem;right:1rem;display:flex;gap:0.5rem;z-index:10;';
+
+        const voiceBtn2 = document.createElement('button');
+        voiceBtn2.className = 'voice-btn';
+        voiceBtn2.title = 'Escuchar';
+        voiceBtn2.textContent = '\u{1F50A}';
+        voiceBtn2.addEventListener('click', function() { speakText(slideBody, this); });
+        controls.appendChild(voiceBtn2);
+
+        const refreshBtn = document.createElement('button');
+        refreshBtn.className = 'refresh-img-btn';
+        refreshBtn.title = 'Cambiar Foto';
+        refreshBtn.textContent = '\u{1F504}';
+        Object.assign(refreshBtn.style, { background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', width: '35px', height: '35px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)', transition: 'all 0.3s' });
+        refreshBtn.addEventListener('mouseenter', function() { this.style.background = 'var(--primary)'; this.style.borderColor = 'var(--primary)'; });
+        refreshBtn.addEventListener('mouseleave', function() { this.style.background = 'rgba(255,255,255,0.2)'; this.style.borderColor = 'rgba(255,255,255,0.3)'; });
+        refreshBtn.addEventListener('click', function() { regenerateSlideImage(slideId, slideVisual, industry, theme); });
+        controls.appendChild(refreshBtn);
+
+        const animBtn = document.createElement('button');
+        animBtn.className = 'anim-btn';
+        animBtn.title = 'Descargar Video Animado';
+        animBtn.textContent = '\u{1F3AC}';
+        const animDisplay = document.getElementById('enableAnimation')?.checked ? 'flex' : 'none';
+        Object.assign(animBtn.style, { background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24', width: '35px', height: '35px', borderRadius: '50%', cursor: 'pointer', display: animDisplay, alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)', transition: 'all 0.3s', fontSize: '0.8rem' });
+        animBtn.addEventListener('mouseenter', function() { this.style.background = 'var(--accent-color)'; this.style.borderColor = 'var(--accent-color)'; });
+        animBtn.addEventListener('mouseleave', function() { this.style.background = 'rgba(245,158,11,0.2)'; this.style.borderColor = 'rgba(245,158,11,0.3)'; });
+        animBtn.addEventListener('click', function() { downloadAnimatedVideo(slideId, index); });
+        controls.appendChild(animBtn);
+        overlay2.appendChild(controls);
+
+        const slideNum2 = document.createElement('div');
+        slideNum2.className = 'slide-number';
+        slideNum2.textContent = `Slide ${index + 1}`;
+        overlay2.appendChild(slideNum2);
+
+        const slideTitle2 = document.createElement('div');
+        slideTitle2.className = 'slide-title';
+        slideTitle2.textContent = slideTitle;
+        overlay2.appendChild(slideTitle2);
+
+        const slideBody2 = document.createElement('div');
+        slideBody2.className = 'slide-body';
+        slideBody2.textContent = slideBody;
+        overlay2.appendChild(slideBody2);
+
+        const slideVisual2 = document.createElement('div');
+        slideVisual2.className = 'slide-visual';
+        slideVisual2.style.cssText = 'font-size:0.65rem;background:rgba(255,255,0,0.15);border:1px solid rgba(255,255,0,0.3);padding:5px;border-radius:4px;color:yellow;margin-top:0.5rem;';
+        const sourceSpan = document.createElement('span');
+        sourceSpan.id = `source-${slideId}`;
+        sourceSpan.style.cssText = 'float:right;opacity:0.7;border:1px solid;padding:1px 4px;border-radius:3px;font-size:0.5rem;margin-left:5px;';
+        sourceSpan.textContent = '[Buscando...]';
+        slideVisual2.appendChild(sourceSpan);
+        const conceptText = document.createTextNode(`🎨 Concepto: ${slideVisual}`);
+        slideVisual2.appendChild(conceptText);
+        overlay2.appendChild(slideVisual2);
+
+        slideEl.appendChild(overlay2);
         carouselContainer.appendChild(slideEl);
 
         // --- VECTOR MAESTRO DE FUENTES AGRESIVO ---
@@ -2490,7 +3307,7 @@ document.getElementById('btnModeBdpv')?.addEventListener('click', () => setWorkM
 document.getElementById('btnModeViRe')?.addEventListener('click', () => setWorkMode('ViRe'));
 
 // Carga inicial de empresas si está en modo BD
-loadCompanies();
+loadCompanies().then(() => { setupCompanyAutoFill(); fetchEstilosVisuales(); });
 
 // --- ANIMACIÓN DE FOTO (FFmpeg backend) ---
 async function downloadAnimatedVideo(slideId, index) {
@@ -2568,7 +3385,7 @@ async function fetchLogs() {
         const logs = await res.json();
         const el = document.getElementById('logContent');
         if (!el) return;
-        el.innerHTML = logs.map(l => `<div>${l}</div>`).join('');
+        el.innerHTML = logs.map(l => `<div>${escapeHtml(l)}</div>`).join('');
         el.scrollTop = el.scrollHeight;
     } catch (e) { /* servidor no disponible */ }
 }

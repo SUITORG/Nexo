@@ -46,7 +46,7 @@ Es un ecosistema multi-capa diseñado para la gestión integral de negocios alim
 ## 3. Mapa de Carpetas
 
 ```
-SUITORGSTORE01/
+suitorg/
 │
 ├── backend/                      → Google Apps Script (GAS) backend principal
 │   ├── core.js                   → Orquestador maestro (doGet/doPost)

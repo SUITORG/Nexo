@@ -41,7 +41,7 @@ function initializeDatabase(ss, output) {
   var empresasSheet = ss.getSheetByName("Config_Empresas");
   if (empresasSheet) {
     var eHeaders = empresasSheet.getRange(1, 1, 1, empresasSheet.getLastColumn()).getValues()[0];
-    var stripeCols = ["stripe_activo", "stripe_public_key"];
+    var stripeCols = ["stripe_activo", "stripe_public_key", "usa_estilos_visuales"];
     stripeCols.forEach(function(col) {
       if (eHeaders.indexOf(col) === -1) {
         empresasSheet.getRange(1, empresasSheet.getLastColumn() + 1).setValue(col);

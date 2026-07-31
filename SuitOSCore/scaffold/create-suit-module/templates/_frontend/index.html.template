@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{MODULE_NAME}}</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav id="navbar">
+    <h1>{{MODULE_NAME}}</h1>
+    <div id="nav-links">
+      <a href="#home">Inicio</a>
+      <a href="#items">Items</a>
+    </div>
+  </nav>
+
+  <main id="app">
+    <div id="view-home" class="view active">
+      <h2>Inicio</h2>
+      <p>API Health: <span id="health-status">verificando...</span></p>
+    </div>
+    <div id="view-items" class="view">
+      <h2>Items</h2>
+      <button id="btn-refresh">Refrescar</button>
+      <ul id="items-list"></ul>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

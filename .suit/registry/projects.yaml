@@ -15,24 +15,27 @@ projects:
         type: express
 
   campanas-ai:
-    path: CampanasAi/
-    agents: CampanasAi/AGENTS.md
+    path: SuitCampanas/
+    agents: SuitCampanas/CLAUDE.md
     skills:
       - trend-analysis
       - content-generation
+      - javascript
+      - comfy-ui
     context:
-      - CampanasAi/AGENTS.md
-      - CampanasAi/script.js
-      - CampanasAi/config/prompts.json
-      - CampanasAi/config/formatos.json
-      - CampanasAi/local-server-node.js
-      - CampanasAi/backend.gs
+      - SuitCampanas/CLAUDE.md
+      - SuitCampanas/script.js
+      - SuitCampanas/config/prompts.json
+      - SuitCampanas/config/formatos.json
+      - SuitCampanas/local-server-node.js
+      - SuitCampanas/backend.gs
+      - SuitCampanas/CODE_INDEX.md
     environment:
       PORT: 8000
       TYPE: cms
     servers:
       - name: cms
-        path: CampanasAi/local-server-node.js
+        path: SuitCampanas/local-server-node.js
         port: 8000
         type: http
 
@@ -349,3 +352,46 @@ projects:
     environment:
       TYPE: tool
     notes: "FFmpeg v8.1.1 via WinGet. Ruta auto-detectada o configurable via FFMPEG_PATH en .env"
+
+  suit-chat-tg:
+    name: "SuitChatTG — Chatbot Telegram multi-inquilino"
+    path: SuitChatTG/
+    description: "Chatbot con IA para Telegram. Recoge Leads, mantiene memoria persistente (Memoria_IA_Snapshots), y usa prompts desde Prompts_IA vía GAS backend. id_empresa=ROOMATENL por defecto."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitChatTG/index.js
+      - SuitChatTG/handlers/telegram.js
+      - SuitChatTG/handlers/ai.js
+      - SuitChatTG/handlers/leads.js
+      - SuitChatTG/handlers/memory.js
+      - SuitChatTG/db/gas-client.js
+      - backend/core.js
+      - backend/utils.js
+    frontend:
+      public: true
+      public_route: "#chat-tg (enlace tipo t.me/tu_bot?start=ROOMATENL)"
+      public_gate: "usa_agente_ai = TRUE AND agent_enabled = TRUE"
+      staff: true
+      staff_route: "#admin-chat-tg"
+      staff_gate: "usa_soporte_ia activo"
+      staff_rbac: "ADMIN >= 10"
+      api_endpoints:
+        - "GET /api/health"
+        - "GET /api/sessions"
+        - "GET /api/link"
+    environment:
+      PORT: 3011
+      TYPE: service
+    servers:
+      - name: telegram-bot
+        path: SuitChatTG/index.js
+        port: 3011
+        type: express
+    tables:
+      - Leads
+      - Memoria_IA_Snapshots
+      - Logs_Chat_IA
+      - Prompts_IA
+      - Config_Empresas

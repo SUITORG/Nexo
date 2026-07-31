@@ -7,6 +7,8 @@ from pipeline.extractor import BillboardExtractor
 from pipeline.brand import BrandExtractor
 from pipeline.campaign import CampaignExtractor
 from pipeline.format import FormatClassifier
+from pipeline.models import BillboardRecord
+from pipeline.utils import extract_zip
 from detector.ocr import OCRReader
 from geo.metadata import extract_exif
 from geo.geocode import reverse_geocode
@@ -19,7 +21,8 @@ from export.report import generate_pdf
 
 def main():
     parser = argparse.ArgumentParser(description="SuitCVLO v0.4 — OOH Billboard Pipeline")
-    parser.add_argument("--input", "-i", type=str, required=True, help="Image path or directory")
+    parser.add_argument("--input", "-i", type=str, help="Image path or directory")
+    parser.add_argument("--zip", type=str, help="Path to .zip file with images")
     parser.add_argument("--output", "-o", type=str, default="./output", help="Output directory")
     parser.add_argument("--save", action="store_true", help="Save to local DB")
     parser.add_argument("--user", "-u", type=str, default="default", help="User ID")
@@ -30,9 +33,31 @@ def main():
     parser.add_argument("--catalog", action="store_true", help="Generate deduplicated billboard catalog")
     args = parser.parse_args()
 
-    input_path = Path(args.input)
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.zip:
+        zip_path = Path(args.zip)
+        if not zip_path.suffix.lower() == ".zip":
+            print("Error: --zip must point to a .zip file")
+            return
+        extract_dir = output_dir / zip_path.stem
+        print(f"Extracting {zip_path.name} → {extract_dir}/")
+        images = extract_zip(zip_path, extract_dir)
+        if not images:
+            print("No images found in zip")
+            return
+        print(f"  Extracted {len(images)} images")
+    elif args.input:
+        input_path = Path(args.input)
+        images = [input_path] if input_path.is_file() else sorted(input_path.glob("*.[jJ][pP][gG]")) + \
+                  sorted(input_path.glob("*.[jJ][pP][eE][gG]")) + sorted(input_path.glob("*.[pP][nN][gG]"))
+        if not images:
+            print("No images found")
+            return
+    else:
+        print("Error: provide --input (file/dir) or --zip (archive)")
+        return
 
     extractor = BillboardExtractor()
     brand_ext = BrandExtractor()
@@ -40,13 +65,6 @@ def main():
     format_cls = FormatClassifier()
     ocr = OCRReader()
     local_db = LocalStore() if args.save else None
-
-    images = [input_path] if input_path.is_file() else sorted(input_path.glob("*.[jJ][pP][gG]")) + \
-              sorted(input_path.glob("*.[jJ][pP][eE][gG]")) + sorted(input_path.glob("*.[pP][nN][gG]"))
-
-    if not images:
-        print("No images found")
-        return
 
     all_results = []
     for img_path in images:
@@ -88,7 +106,7 @@ def main():
 def process_image(img_path, extractor, brand_ext, campaign_ext, format_cls, ocr, local_db, output_dir, args):
     print(f"\n--- {img_path.name} ---")
     meta = extract_exif(img_path)
-    geo = reverse_geocode(meta.get("gps_lat"), meta.get("gps_lng")) if meta.get("gps_lat") else None
+    geo = reverse_geocode(meta.get("gps_lat"), meta.get("gps_lng"))
     billboards, annotated = extractor.extract(img_path)
     billboard_results = []
     for i, bb in enumerate(billboards):
@@ -109,18 +127,17 @@ def process_image(img_path, extractor, brand_ext, campaign_ext, format_cls, ocr,
         print(f"    OCR: {text[:100] if text else '(none)'}")
         print(f"    Brand: {brand}")
         print(f"    Campaign: {campaign_type} — {campaign_detail}")
-        billboard_entry = {
-            "bbox": bbox,
-            "confidence": bb["confidence"],
-            "method": bb.get("detection_method", "yolo"),
-            "format": fmt,
-            "area_ratio": bb.get("area_ratio", 0),
-            "ocr_text": text,
-            "brand": brand,
-            "campaign_type": campaign_type,
-            "campaign_detail": campaign_detail,
-        }
-        billboard_results.append(billboard_entry)
+        billboard_results.append(BillboardRecord(
+            bbox=bbox,
+            confidence=bb["confidence"],
+            method=bb.get("detection_method", "yolo"),
+            format=fmt,
+            area_ratio=bb.get("area_ratio", 0),
+            ocr_text=text,
+            brand=brand,
+            campaign_type=campaign_type,
+            campaign_detail=campaign_detail,
+        ).to_dict())
         if args.draw:
             corrected_path = output_dir / f"{img_path.stem}_billboard_{i}.jpg"
             cv2.imwrite(str(corrected_path), corrected)
@@ -133,7 +150,8 @@ def process_image(img_path, extractor, brand_ext, campaign_ext, format_cls, ocr,
         "captured_at": meta.get("captured_at"),
         "gps_lat": meta.get("gps_lat"),
         "gps_lng": meta.get("gps_lng"),
-        "address": geo["address"] if geo else None,
+        "address": geo["address"],
+        "address_error": geo.get("address_error"),
         "billboards": billboard_results,
     }
     if local_db:
@@ -144,7 +162,8 @@ def process_image(img_path, extractor, brand_ext, campaign_ext, format_cls, ocr,
                 "captured_at": meta.get("captured_at"),
                 "gps_lat": meta.get("gps_lat"),
                 "gps_lng": meta.get("gps_lng"),
-                "address": geo["address"] if geo else None,
+                "address": geo["address"],
+                "address_error": geo.get("address_error"),
                 "detected_objects": [{"label": bb.get("brand", bb.get("format")), "confidence": bb["confidence"]}],
                 "is_panoramic": True,
                 "panoramic_type": "billboard",

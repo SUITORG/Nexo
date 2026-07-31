@@ -40,9 +40,11 @@ workflow:
       skills:
         - javascript
         - gas
+        - ponytail-ladder
       validation:
         - "Fix is syntactically correct"
         - "No collateral damage"
+        - "Fix is minimal — touches only what's needed to resolve the bug"
 
     - id: verify_fix
       description: "Verify the bug is fixed and no regressions"

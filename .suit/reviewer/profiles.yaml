@@ -63,6 +63,15 @@ profiles:
         checks:
           - "New IDs follow PREFIX-NNN pattern"
 
+      - id: overengineering
+        description: "Detect over-engineered code (abstractions, dead code, unnecessary dependencies)"
+        severity: warning
+        checks:
+          - "No unused imports or variables"
+          - "No speculative abstractions (classes/interfaces not yet needed)"
+          - "No unnecessary dependencies added"
+          - "No wrapper/proxy layers that add no value"
+
       - id: cotizador-rules
         description: "Cotizador pricing rules validated"
         severity: error

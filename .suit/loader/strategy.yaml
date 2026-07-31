@@ -50,7 +50,7 @@ strategies:
       - ".suit/memory/decisions/*.md"
       - ".suit/memory/patterns/*.md"
       - ".suit/memory/bugs/*.md"
-      - ".agent/lecciones.md"
+      - ".suit/memory/lecciones.yaml"
     excludes:
       - "node_modules"
       - ".git"

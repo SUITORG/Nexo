@@ -1,0 +1,84 @@
+-
+  leccion: "el usuario prefiere respuestas concisas"
+  fecha: "2026-07-21"
+  contexto: "suitorg"
+-
+  leccion: "Verificar sintaxis con node --check antes de confirmar un fix"
+  fecha: "2026-01-28"
+  contexto: "Gestión de Código"
+-
+  leccion: "Evitar duplicación de variables const en scopes largos — causa SyntaxError"
+  fecha: "2026-01-28"
+  contexto: "Gestión de Código"
+-
+  leccion: "IDs duplicados en HTML son invisibles para el compilador pero mortales para el Router"
+  fecha: "2026-01-28"
+  contexto: "Diagnóstico"
+-
+  leccion: "Estética BK-Style: border-radius 20px, tarjetas compactas (132px), botones flotantes"
+  fecha: "2026-01-21"
+  contexto: "UI / PFM"
+-
+  leccion: "WhatsApp en Header 1 lado izquierdo como botón integrado (no flotante)"
+  fecha: "2026-01-21"
+  contexto: "UI / Header"
+-
+  leccion: "Nunca ocultar Config_SEO aunque el tema sea comida — el SEO es prioritario"
+  fecha: "2026-01-21"
+  contexto: "SEO"
+-
+  leccion: "Preferir carruseles horizontales con pestañas sobre grids verticales en catálogos"
+  fecha: "2026-01-21"
+  contexto: "UI / Catálogo"
+-
+  leccion: "staff-pos genera ventas; POS (Monitor) da seguimiento a órdenes y cocina"
+  fecha: "2026-01-21"
+  contexto: "RBAC / POS"
+-
+  leccion: "Costo de envío configurable desde Config_Empresas.costo_envio con selector automático"
+  fecha: "2026-01-21"
+  contexto: "Checkout"
+-
+  leccion: "Stock visible solo para STAFF logueado; ocultar para invitados"
+  fecha: "2026-01-21"
+  contexto: "Privacidad"
+-
+  leccion: "NO BUBBLES FOUND = fallo de sincronización; mostrar UI amigable con reintento"
+  fecha: "2026-01-21"
+  contexto: "Orbit Hub"
+-
+  leccion: "Preguntas informales (cómo estás, terminaste) responder breve sin iniciar procesos"
+  fecha: "2026-01-22"
+  contexto: "Comunicación"
+-
+  leccion: "Versión simplificada en barra de estado: solo número (ej. v3.5.2)"
+  fecha: "2026-01-23"
+  contexto: "UI / Barra Estado"
+-
+  leccion: "Al renombrar funciones estándar, hacer replace global en todo el proyecto"
+  fecha: "2026-01-23"
+  contexto: "Refactor"
+-
+  leccion: "getLastColumn() devuelve 0 en hojas vacías — validar antes de getRange"
+  fecha: "2026-01-24"
+  contexto: "Google Sheets API"
+-
+  leccion: "Filas semi-vacías rompen getLastRow() — incluir limpieza de filas fantasma"
+  fecha: "2026-01-24"
+  contexto: "Google Sheets API"
+-
+  leccion: "Todo en UTF-8. Prohibido scripts externos para encoding. Usar sanitizeString nativo"
+  fecha: "2026-01-24"
+  contexto: "Global / Encoding"
+-
+  leccion: "Centralizar barra-estado, body y footer en estandar-landing.md para control unificado"
+  fecha: "2026-01-25"
+  contexto: "Landing Page"
+-
+  leccion: "Incluir compactación (deleteRows) en mantenimiento para mitigar crecimiento de Sheets"
+  fecha: "2026-01-25"
+  contexto: "Backend / Mantenimiento"
+-
+  leccion: "El usuario prefiere respuestas cortas con contenido técnico sustancial"
+  fecha: "2026-01-27"
+  contexto: "Comunicación Terminal"

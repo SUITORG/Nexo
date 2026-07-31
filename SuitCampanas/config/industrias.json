@@ -166,6 +166,21 @@
       ]
     },
     {
+      "categoria": "Electrodomésticos y Bienes de Consumo Premium",
+      "icono": "🔌",
+      "descripcion": "Robots de cocina, línea blanca, automatización culinaria para el hogar",
+      "subclasificaciones": [
+        {
+          "valor": "robots_cocina_multifuncion", "etiqueta": "Robots de Cocina Multifunción", "sinonimos": ["thermomix", "robot de cocina", "cocina inteligente", "tm7", "tm6", "electrodoméstico premium"],
+          "especializaciones": ["Asesoría de cocina inteligente", "Automatización culinaria", "Recetas guiadas", "Comparativa de modelos", "Batch cooking", "Estilo de vida saludable"]
+        },
+        {
+          "valor": "estilo_vida_saludable", "etiqueta": "Estilo de Vida Saludable", "sinonimos": ["bienestar", "comida saludable", "nutrición", "cocina sana", "vida fitness"],
+          "especializaciones": ["Alimentación saludable", "Meal prep semanal", "Nutrición con robot de cocina", "Dietas personalizadas", "Cocina sin procesados"]
+        }
+      ]
+    },
+    {
       "categoria": "Otros",
       "icono": "📦",
       "descripcion": "Industrias no clasificadas en las categorías anteriores",

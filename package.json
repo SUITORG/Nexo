@@ -10,6 +10,8 @@
   "dependencies": {
     "@mistralai/mistralai": "^2.5.0",
     "@supabase/supabase-js": "^2.106.2",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
     "chrome-devtools-mcp": "^0.23.0",
     "dotenv": "^17.4.1",
     "express": "^4.22.1",

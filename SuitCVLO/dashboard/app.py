@@ -1,3 +1,4 @@
+import json
 import streamlit as st
 import pandas as pd
 from pathlib import Path
@@ -17,7 +18,7 @@ with tab1:
     if dets:
         df = pd.DataFrame(dets)
         df["detected_objects"] = df["detected_objects"].apply(
-            lambda x: ", ".join([d["label"] for d in eval(x)]) if isinstance(x, str) else ""
+            lambda x: ", ".join([d["label"] for d in json.loads(x)]) if isinstance(x, str) else ""
         )
         st.dataframe(df, use_container_width=True)
         cols = st.columns([1, 1])

@@ -34,10 +34,19 @@
         <div id="previewSection" class="preview-section glass-card" style="display: none;">
             <div class="section-header">
                 <h3>👁️ Vista Previa del Carrusel</h3>
-                <button type="button" id="downloadBtn" class="download-btn">📥 Descargar Kit</button>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                    <button type="button" id="generateVideoBtn" class="video-btn" style="display:none;">🎬 Generar Video</button>
+                    <button type="button" id="downloadBtn" class="download-btn">📥 Descargar Kit</button>
+                </div>
             </div>
             <div id="carouselContainer" class="carousel-container">
                 <!-- Los slides se cargarán aquí dinámicamente -->
+            </div>
+            <div id="videoProgress" class="video-progress" style="display:none; margin-top:0.75rem;">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="videoProgressFill" style="width:0%"></div>
+                </div>
+                <span id="videoProgressText" style="font-size:0.75rem; color:var(--text-dim);">Preparando...</span>
             </div>
         </div>
 
@@ -64,10 +73,10 @@
                     <div class="input-group full-width">
                         <div class="mode-switch" style="display:flex; align-items:center; gap:1rem;">
                             <h3 style="font-size:0.75rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin:0; opacity:0.7; white-space:nowrap;">Fmt</h3>
-                            <button type="button" class="format-tab active" data-format="Post">📸 Post</button>
-                            <button type="button" class="format-tab" data-format="Reel">🎬 Reel</button>
-                            <button type="button" class="format-tab" data-format="Story">📱 Story</button>
-                            <button type="button" class="format-tab" data-format="Banner">🖼️ Banner</button>
+                            <button type="button" class="format-tab active" data-format="Post" title="1080×1080px (1:1) — Vitrina principal del perfil, contenido permanente educativo/de valor">📸 Post</button>
+                            <button type="button" class="format-tab" data-format="Reel" title="1080×1920px (9:16) — Formato vertical dinámico para descubrir nueva audiencia. Recomendado 60-90s">🎬 Reel</button>
+                            <button type="button" class="format-tab" data-format="Story" title="1080×1920px (9:16) — Contenido efímero (24h), fidelización diaria. Recomendado 15-60s por fragmento">📱 Story</button>
+                            <button type="button" class="format-tab" data-format="Banner" title="1200×628px — Imagen horizontal fija, identidad de marca (solo imagen, sin video)">🖼️ Banner</button>
                         </div>
                     </div>
                 </div>
@@ -76,39 +85,46 @@
                     <div class="input-group full-width">
                         <div class="mode-switch" style="display:flex; align-items:center; gap:1rem;">
                             <h3 style="font-size:0.75rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin:0; opacity:0.7; white-space:nowrap;">Red</h3>
-                            <button type="button" class="platform-tab active" data-platform="Instagram">📸 Instagram</button>
-                            <button type="button" class="platform-tab" data-platform="Facebook">👥 Facebook</button>
-                            <button type="button" class="platform-tab" data-platform="TikTok">🎵 TikTok</button>
-                            <button type="button" class="platform-tab" data-platform="LinkedIn">💼 LinkedIn</button>
-                            <button type="button" class="platform-tab" data-platform="Twitter/X">🐦 X</button>
+                            <button type="button" class="platform-tab active" data-platform="Instagram" title="Formatos disponibles: Reel, Story, Post">📸 Instagram</button>
+                            <button type="button" class="platform-tab" data-platform="Facebook" title="Formatos disponibles: Reel, Story, Post, Banner (todos)">👥 Facebook</button>
+                            <button type="button" class="platform-tab" data-platform="TikTok" title="Formato disponible: solo Reel — video corto vertical, hasta 10 min">🎵 TikTok</button>
+                            <button type="button" class="platform-tab" data-platform="LinkedIn" title="Formatos disponibles: Story, Post, Banner — prioriza contenido profesional/educativo">💼 LinkedIn</button>
+                            <button type="button" class="platform-tab" data-platform="Twitter/X" title="Formatos disponibles: Post, Banner">🐦 X</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="input-group-row two-cols responsive-cols" style="margin-bottom: 1.5rem; flex-wrap: wrap;">
-                    <div class="input-group" id="companyInputContainer" style="min-width: 250px; flex: 1.5;">
-                        <label for="companyName">Empresa / Marca</label>
-                        <input type="text" id="companyName" placeholder="Nombre de la marca..." required>
+                <!-- DATOS / NEGOCIO — Sección fija para todos los modos -->
+                <div class="datos-negocio-section" style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+                        <span style="font-size:1.1rem;">📋</span>
+                        <h3 style="font-size:0.8rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin:0;">DATOS / NEGOCIO</h3>
                     </div>
-                    <div class="input-group" style="min-width: 250px; flex: 1;">
-                        <label for="webSite">Sitio Web / Enlace Oficial</label>
-                        <input type="url" id="webSite" placeholder="https://tuempresa.com">
-                    </div>
-                </div>
-
-                <div class="input-group-row two-cols responsive-cols" style="margin-bottom: 1.5rem; flex-wrap: wrap;">
-                    <div class="input-group" style="min-width: 250px; flex: 1.5;">
-                        <label>Logo (Subir archivo o URL)</label>
-                        <div class="logo-inputs-container" style="display: flex; gap: 0.2rem; align-items: center; flex-wrap: wrap;">
-                            <input type="file" id="companyLogoFile" accept="image/*" style="flex:1; min-width: 120px; padding: 0.4rem; font-size: 0.75rem;">
-                            <span style="color: var(--text-dim); font-size: 0.7rem;">O</span>
-                            <input type="url" id="companyLogo" placeholder="URL logo..." style="flex:2; min-width: 140px;">
-                            <button type="button" id="driveLogoBtn" title="Explorar Google Drive" style="width:32px; height:32px; min-width:32px; margin:0; padding:0; background:rgba(66,133,244,0.15); border:1px solid rgba(66,133,244,0.3); border-radius:6px; color:#4285f4; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center;">📁</button>
+                    <div class="input-group-row two-cols responsive-cols" style="flex-wrap: wrap; gap:0.5rem;">
+                        <div class="input-group" id="companyInputContainer" style="min-width: 220px; flex: 1.5;">
+                            <label for="companyName">Empresa / Marca</label>
+                            <input type="text" id="companyName" placeholder="Nombre de la marca..." list="companyList" required>
+                            <datalist id="companyList"></datalist>
+                        </div>
+                        <div class="input-group" style="min-width: 220px; flex: 1;">
+                            <label for="webSite">Sitio Web / Enlace Oficial</label>
+                            <input type="url" id="webSite" placeholder="https://tuempresa.com">
                         </div>
                     </div>
-                    <div class="input-group" style="min-width: 200px; flex: 1;">
-                        <label for="contactPhone">Teléfono (WhatsApp)</label>
-                        <input type="text" id="contactPhone" placeholder="Ej: +52...">
+                    <div class="input-group-row two-cols responsive-cols" style="flex-wrap: wrap; gap:0.5rem; margin-top:0.5rem;">
+                        <div class="input-group" style="min-width: 220px; flex: 1.5;">
+                            <label>Logo (Subir archivo o URL)</label>
+                            <div class="logo-inputs-container" style="display: flex; gap: 0.2rem; align-items: center; flex-wrap: wrap;">
+                                <input type="file" id="companyLogoFile" accept="image/*" style="flex:1; min-width: 120px; padding: 0.4rem; font-size: 0.75rem;">
+                                <span style="color: var(--text-dim); font-size: 0.7rem;">O</span>
+                                <input type="url" id="companyLogo" placeholder="URL logo..." style="flex:2; min-width: 140px;">
+                                <button type="button" id="driveLogoBtn" title="Explorar Google Drive" style="width:32px; height:32px; min-width:32px; margin:0; padding:0; background:rgba(66,133,244,0.15); border:1px solid rgba(66,133,244,0.3); border-radius:6px; color:#4285f4; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center;">📁</button>
+                            </div>
+                        </div>
+                        <div class="input-group" style="min-width: 180px; flex: 1;">
+                            <label for="contactPhone">Teléfono (WhatsApp)</label>
+                            <input type="text" id="contactPhone" placeholder="Ej: +52...">
+                        </div>
                     </div>
                 </div>
 
@@ -238,105 +254,53 @@
                     <div id="trendsContainer" style="display: none; margin-top: 1rem; max-height: 400px; overflow-y: auto;"></div>
                 </div>
 
-                <!-- VIDE Section: Suite Completa de Video -->
-                <div id="videSection" class="ai-assistant-section" style="display: none;">
-                    <div class="section-title">
-                        <span class="icon">🎬</span>
-                        <h3>VIDE — Suite Completa de Video</h3>
-                    </div>
-                    <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:1rem;">
-                        Genera un video completo desde un guion: Imágenes + Voz + Música + Subtítulos + Ensamble final.
-                    </p>
-
-                    <!-- Guion Input -->
-                    <div class="input-wrapper" style="margin-bottom: 1rem;">
-                        <label for="videGuion">Guion del Video</label>
-                        <textarea id="videGuion" rows="6" placeholder="Escribe tu guion aquí...&#10;&#10;Ejemplo:&#10;Escena 1: Bienvenida - Hola, somos tu marca favorita&#10;Escena 2: Producto - Nuestro producto revolucionario&#10;Escena 3: CTA - Contáctanos hoy mismo" style="width:100%; padding:0.6rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
-                    </div>
-
-                    <!-- Módulos Toggle -->
-                    <div class="input-wrapper" style="margin-bottom: 1rem;">
-                        <label>Módulos a Utilizar</label>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-top:0.5rem;">
-                            <label class="switch" style="gap:0.4rem;flex-direction:row;width:auto;padding:0.5rem 0.6rem;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.08)">
-                                <input type="checkbox" class="vide-module" value="images" checked>
-                                <span style="font-size:0.75rem">🖼️ Imágenes (SD)</span>
-                            </label>
-                            <label class="switch" style="gap:0.4rem;flex-direction:row;width:auto;padding:0.5rem 0.6rem;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.08)">
-                                <input type="checkbox" class="vide-module" value="voice" checked>
-                                <span style="font-size:0.75rem">🔊 Voz (TTS)</span>
-                            </label>
-                            <label class="switch" style="gap:0.4rem;flex-direction:row;width:auto;padding:0.5rem 0.6rem;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.08)">
-                                <input type="checkbox" class="vide-module" value="music" checked>
-                                <span style="font-size:0.75rem">🎵 Música</span>
-                            </label>
-                            <label class="switch" style="gap:0.4rem;flex-direction:row;width:auto;padding:0.5rem 0.6rem;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.08)">
-                                <input type="checkbox" class="vide-module" value="subtitles" checked>
-                                <span style="font-size:0.75rem">📝 Subtítulos</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Configuración Avanzada -->
-                    <div class="input-wrapper" style="margin-bottom: 1rem;">
-                        <label for="videStyle">Estilo del Video</label>
-                        <select id="videStyle" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
-                            <option value="relaxing">🧘 Relajante (Lento, suave)</option>
-                            <option value="energetic" selected>⚡ Energético (Rápido, vibrante)</option>
-                            <option value="professional">💼 Profesional (Corporativo)</option>
-                            <option value="cinematic">🎬 Cinematográfico (Épico)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-wrapper" style="margin-bottom: 1rem;">
-                        <label for="videDuration">Duración Objetivo (segundos)</label>
-                        <input type="number" id="videDuration" value="30" min="10" max="300" step="5" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div id="videProgress" style="display:none; margin-bottom:1rem;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
-                            <span id="videProgressLabel" style="font-size:0.75rem; color:var(--text-dim);">Preparando...</span>
-                            <span id="videProgressPct" style="font-size:0.75rem; color:var(--primary);">0%</span>
-                        </div>
-                        <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
-                            <div id="videProgressBar" style="width:0%; height:100%; background:var(--primary); border-radius:3px; transition:width 0.3s;"></div>
-                        </div>
-                        <div id="videSteps" style="margin-top:0.5rem; font-size:0.7rem; color:var(--text-dim);"></div>
-                    </div>
-
-                    <!-- Generate Button -->
-                    <button type="button" id="videGenerateBtn" class="secondary-btn" style="width:100%; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:#a5b4fc; padding:0.8rem; font-size:0.95rem;">
-                        <span>🎬</span>
-                        <span>Generar Video Completo</span>
-                        <div class="vide-loader loader" style="display:none;"></div>
-                    </button>
-                </div>
-
-                <!-- ViRe Section: Video con Remotion -->
+                <!-- ViRe Section: Video con Remotion (motor independiente de VIDE/FFmpeg) -->
                 <div id="vireSection" class="ai-assistant-section" style="display: none;">
                     <div class="section-title">
                         <span class="icon">🎬</span>
                         <h3>ViRe — Video con Remotion</h3>
                     </div>
-                    <div style="padding: 1rem; text-align: center;">
+                    <div style="padding: 1rem;">
                         <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1rem;">
-                            ViRe genera videos profesionales desde un guion JSON con escenas, imágenes, voz y subtítulos.
+                            ViRe genera videos con Remotion desde un guion JSON con escenas (imágenes, voz y subtítulos). Usa empresa/teléfono/sitio de la sección DATOS / NEGOCIO.
                         </p>
-                        <button type="button" id="openVireStudioBtn" class="secondary-btn" 
-                                style="background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; padding: 0.8rem 2rem; font-size: 1rem; width: 100%;">
-                            <span>🎬</span>
-                            <span>Abrir Remotion Studio</span>
-                        </button>
-                        <div style="margin-top: 0.8rem; font-size: 0.75rem; color: var(--text-dim); text-align: left; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 8px;">
-                            <strong>📖 Comandos rápidos:</strong><br>
-                            <code style="display:block;margin:4px 0;padding:4px 6px;background:rgba(0,0,0,0.3);border-radius:4px;">
-                            cd SuitVidGenRemotion && node scripts/render.js --guion examples/sample-script.json
-                            </code>
-                            <br>
-                            <strong>🎯 Ejemplo generado:</strong><br>
-                            <code>SuitVidGenRemotion/out/test_ape.mp4</code> — video demo de 15s con voz y subtítulos.
+
+                        <div class="input-wrapper" style="margin-bottom:0.8rem;">
+                            <label for="vireGuionJson">Guion JSON (escenas)</label>
+                            <textarea id="vireGuionJson" rows="6" placeholder='{"escenas":[{"titulo":"Bienvenida","texto":"Hola, somos tu marca","visual":"foto profesional de producto","duracion":5}]}' style="width:100%; padding:0.6rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
                         </div>
+
+                        <div style="display:flex; gap:0.8rem; margin-bottom:0.8rem;">
+                            <div class="input-wrapper" style="flex:1;">
+                                <label for="vireDuration">Duración Objetivo (segundos)</label>
+                                <input type="number" id="vireDuration" value="30" min="10" max="300" step="5" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
+                            </div>
+                            <div class="input-wrapper" style="flex:1; justify-content:flex-end;">
+                                <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                                    <input type="checkbox" id="vireEnableMusic">
+                                    <span style="font-size:0.85rem;">🎵 Música de fondo</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Progress / Status -->
+                        <div id="vireProgress" style="display:none; margin-bottom:1rem;">
+                            <span id="vireProgressLabel" style="font-size:0.75rem; color:var(--text-dim);">Renderizando con Remotion (puede tardar varios minutos)...</span>
+                        </div>
+
+                        <button type="button" id="vireGenerateBtn" class="secondary-btn" style="width:100%; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:#a5b4fc; padding:0.8rem; font-size:0.95rem; margin-bottom:0.8rem;">
+                            <span>🎬</span>
+                            <span>Generar con ViRe</span>
+                            <div class="vire-loader loader" style="display:none;"></div>
+                        </button>
+
+                        <div id="vireResult" style="display:none; margin-bottom:0.8rem;"></div>
+
+                        <button type="button" id="openVireStudioBtn" class="secondary-btn"
+                                style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-dim); padding: 0.6rem 1rem; font-size: 0.8rem; width: 100%;">
+                            <span>🛠️</span>
+                            <span>Abrir Remotion Studio (avanzado)</span>
+                        </button>
                     </div>
                 </div>
 
@@ -406,22 +370,42 @@
                     <div class="toggles-grid">
                         <div class="toggle-group">
                             <label class="switch">
-                                <input type="checkbox" id="enableVoice">
+                                <input type="checkbox" id="moduleImages" checked>
                                 <span class="slider round"></span>
                             </label>
                             <div class="toggle-info">
-                                <span class="toggle-label">Generar Voz (IA)</span>
+                                <span class="toggle-label">🖼️ Imágenes (SD)</span>
+                                <span class="toggle-desc">Genera imágenes con IA para cada escena</span>
+                            </div>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="switch">
+                                <input type="checkbox" id="enableVoice" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <div class="toggle-info">
+                                <span class="toggle-label">🔊 Voz (TTS)</span>
                                 <span class="toggle-desc">Convierte el texto en audio profesional</span>
                             </div>
                         </div>
                         <div class="toggle-group">
                             <label class="switch">
-                                <input type="checkbox" id="enableMusic">
+                                <input type="checkbox" id="enableMusic" checked>
                                 <span class="slider round"></span>
                             </label>
                             <div class="toggle-info">
-                                <span class="toggle-label">Música de Fondo</span>
-                                <span class="toggle-desc">Añade pista rítmica según el tema</span>
+                                <span class="toggle-label">🎵 Música</span>
+                                <span class="toggle-desc">Añade pista rítmica según el estilo</span>
+                            </div>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="switch">
+                                <input type="checkbox" id="moduleSubtitles" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <div class="toggle-info">
+                                <span class="toggle-label">📝 Subtítulos</span>
+                                <span class="toggle-desc">Subtítulos sincronizados con la voz</span>
                             </div>
                         </div>
                         <div class="toggle-group">
@@ -430,7 +414,7 @@
                                 <span class="slider round"></span>
                             </label>
                             <div class="toggle-info">
-                                <span class="toggle-label">Auto-Video (Short/Reel)</span>
+                                <span class="toggle-label">▶️ Auto-Video (Short/Reel)</span>
                                 <span class="toggle-desc">Ensambla clips y texto automáticamente</span>
                             </div>
                         </div>
@@ -440,7 +424,7 @@
                                 <span class="slider round"></span>
                             </label>
                             <div class="toggle-info">
-                                <span class="toggle-label">Animación de Foto</span>
+                                <span class="toggle-label">🖼️ Animación de Foto</span>
                                 <span class="toggle-desc">Zoom, blink o cambio de color</span>
                             </div>
                         </div>
@@ -448,6 +432,7 @@
                     <div id="animationOptions" style="display: none; margin-top:0.75rem; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                         <label style="font-size:0.75rem; color:var(--text-dim);">Efecto:</label>
                         <select id="animationEffect" style="padding:0.3rem 0.6rem; font-size:0.75rem; border-radius:6px; background:rgba(15,23,42,0.5); border:1px solid var(--glass-border); color:white; flex:1; min-width:120px;">
+                            <option value="none">🚫 Sin Efecto</option>
                             <option value="zoom">Zoom In</option>
                             <option value="ken_burns">Ken Burns (zoom out)</option>
                             <option value="blink">Blink / Parpadeo</option>
@@ -496,6 +481,7 @@
                                 <option value="analisis_clinicos">🔬 Análisis Clínicos y Laboratorio</option>
                                 <option value="veterinaria">🐾 Veterinaria y Cuidado Animal</option>
                                 <option value="guarderia_infantil">👶 Guardería y Cuidado Infantil</option>
+                                <option value="electrodomesticos_premium">🔌 Electrodomésticos y Bienes de Consumo Premium</option>
                                 <option value="otro">📦 Otro</option>
                             </select>
                         </div>
@@ -510,6 +496,44 @@
                             <select id="aiEspecializacion" style="display:none;">
                                 <option value="">-- Especialización --</option>
                             </select>
+                        </div>
+                        <!-- Video Style & Duration (shared across modes) -->
+                        <div class="input-wrapper">
+                            <label for="videStyle">Estilo Musical</label>
+                            <select id="videStyle" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
+                                <option value="relaxing">🧘 Relajante (Lento, suave)</option>
+                                <option value="energetic" selected>⚡ Energético (Rápido, vibrante)</option>
+                                <option value="professional">💼 Profesional (Corporativo)</option>
+                                <option value="cinematic">🎬 Cinematográfico (Épico)</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper" id="estiloVisualWrapper" style="display:none;">
+                            <label for="videEstiloCategoria">Estilo Visual</label>
+                            <select id="videEstiloCategoria">
+                                <option value="">🤖 Automático (Director)</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper" id="estiloSubWrapper" style="display:none;">
+                            <label for="videEstiloSub">Sub-estilo</label>
+                            <select id="videEstiloSub">
+                                <option value="">-- Seleccionar --</option>
+                            </select>
+                            <div id="autoStyleInfo" style="font-size:0.75rem; color:var(--text-dim); margin-top:4px;"></div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="videVoice">Voz (Edge TTS neuronal)</label>
+                            <select id="videVoice" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
+                                <option value="es-MX-DaliaNeural" selected>🇲🇽 Dalia (Mujer, México)</option>
+                                <option value="es-MX-JorgeNeural">🇲🇽 Jorge (Hombre, México)</option>
+                                <option value="es-ES-ElviraNeural">🇪🇸 Elvira (Mujer, España)</option>
+                                <option value="es-ES-AlvaroNeural">🇪🇸 Álvaro (Hombre, España)</option>
+                                <option value="es-AR-ElenaNeural">🇦🇷 Elena (Mujer, Argentina)</option>
+                                <option value="es-AR-TomasNeural">🇦🇷 Tomás (Hombre, Argentina)</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="videDuration">Duración Objetivo (segundos)</label>
+                            <input type="number" id="videDuration" value="30" min="10" max="300" step="5" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
                         </div>
                         <div class="input-wrapper">
                             <label for="aiTemplate">Tipo de Plantilla</label>
@@ -535,6 +559,12 @@
                         </div>
                     </div>
 
+                    <button type="button" id="videFetchTrendsBtn" class="secondary-btn" style="width:100%;margin-bottom:0.6rem;padding:0.4rem 0.6rem;font-size:0.75rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;">
+                        <span>🔍</span>
+                        <span>Buscar Tendencias (usar como tema)</span>
+                        <div class="trends-loader loader" style="display:none;width:12px;height:12px;border-width:2px;margin-left:4px;"></div>
+                    </button>
+                    <div id="videTrendsContainer" style="display:none;margin-bottom:0.6rem;max-height:300px;overflow-y:auto;"></div>
                     <div class="input-wrapper">
                         <label for="aiTheme">Tema de la publicación</label>
                         <input type="text" id="aiTheme" placeholder="Ej: Importancia del SEO en 2024">
@@ -569,6 +599,52 @@
                             🗑️ Limpiar
                         </button>
                     </div>
+                </div>
+
+                <!-- VIDE Section: Suite Completa de Video -->
+                <div id="videSection" class="ai-assistant-section" style="display: none;">
+                    <div class="section-title">
+                        <span class="icon">🎬</span>
+                        <h3>VIDE — Suite Completa de Video</h3>
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:1rem;">
+                        Genera un video completo desde un guion: Imágenes + Voz + Música + Subtítulos + Ensamble final.
+                    </p>
+
+                    <!-- Guion Input -->
+                    <div class="input-wrapper" style="margin-bottom: 1rem;">
+                        <label for="videGuion">Guion del Video</label>
+                        <div style="display:flex;gap:0.4rem;margin-bottom:0.4rem;flex-wrap:wrap">
+                            <button type="button" id="videGuionMode" class="secondary-btn" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;flex:1;">📝 Texto</button>
+                            <button type="button" id="videJsonMode" class="secondary-btn" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-dim);flex:1;">📄 Pegar JSON</button>
+                            <button type="button" id="videGenerateJsonBtn" class="secondary-btn" style="padding:0.3rem 0.6rem;font-size:0.7rem;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.5);color:#6ee7b7;flex:1;">
+                                <span>🤖</span>
+                                <span>Generar JSON</span>
+                                <div class="vide-json-loader loader" style="display:none;width:14px;height:14px;border-width:2px;margin-left:4px;"></div>
+                            </button>
+                        </div>
+                        <textarea id="videGuion" rows="6" placeholder="Escribe tu guion aquí...&#10;&#10;Ejemplo:&#10;Escena 1: Bienvenida - Hola, somos tu marca favorita&#10;Escena 2: Producto - Nuestro producto revolucionario&#10;Escena 3: CTA - Contáctanos hoy mismo" style="width:100%; padding:0.6rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
+                        <textarea id="videGuionJson" rows="6" placeholder='Pega tu JSON aquí...&#10;&#10;Ejemplo:&#10;[&#10;  {"scene": 1, "title": "Bienvenida", "text": "Hola...", "visual": "..."},&#10;  {"scene": 2, "title": "Producto", "text": "...", "visual": "..."}&#10;]' style="width:100%; padding:0.6rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; resize:vertical; font-family:inherit; display:none;"></textarea>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="videProgress" style="display:none; margin-bottom:1rem;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+                            <span id="videProgressLabel" style="font-size:0.75rem; color:var(--text-dim);">Preparando...</span>
+                            <span id="videProgressPct" style="font-size:0.75rem; color:var(--primary);">0%</span>
+                        </div>
+                        <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                            <div id="videProgressBar" style="width:0%; height:100%; background:var(--primary); border-radius:3px; transition:width 0.3s;"></div>
+                        </div>
+                        <div id="videSteps" style="margin-top:0.5rem; font-size:0.7rem; color:var(--text-dim);"></div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button type="button" id="videGenerateBtn" class="secondary-btn" style="width:100%; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:#a5b4fc; padding:0.8rem; font-size:0.95rem;">
+                        <span>🎬</span>
+                        <span>Generar Video Completo</span>
+                        <div class="vide-loader loader" style="display:none;"></div>
+                    </button>
                 </div>
 
                 <div class="input-group">

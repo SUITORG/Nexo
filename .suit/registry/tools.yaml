@@ -1,0 +1,160 @@
+# Suit* Tools Catalog
+# Each entry: path, entry point(s), purpose, integration status
+# ---
+# status values:
+#   ✅ usado     = actively called from project code
+#   ⚠️ parcial   = partially used or used inline instead of calling the tool
+#   ❌ no usado  = available but not integrated
+
+tools:
+
+  SuitMusic:
+    path: ../SuitMusic/
+    entry: scripts/music.py
+    purpose: Generar música de fondo con numpy+Librosa
+    cli: python scripts/music.py -o <out.wav> -d <dur_s> -b <bpm> -s <style>
+    params: duración, BPM, estilo (energetic/relaxing/professional/cinematic)
+    output: WAV mono
+    status: ✅ usado
+    used_in: local-server-node.js (línea ~1280, VIDE pipeline)
+
+  SuitTTS:
+    path: ../SuitTTS/
+    entry: scripts/tts.py
+    purpose: Text-to-Speech vía gTTS (Google)
+    cli: python scripts/tts.py -t "<texto>" -o <out.mp3> -l es
+    output: MP3
+    status: ⚠️ parcial
+    note: VIDE llama gTTS inline en vez de invocar SuitTTS. Misma librería.
+
+  SuitSubtitles:
+    path: ../SuitSubtitles/
+    entry: scripts/subtitles.py
+    purpose: Transcribir audio a SRT vía Whisper (audio→texto)
+    cli: python scripts/subtitles.py <audio> -o <out.srt> -l es -m base
+    output: SRT
+    status: ❌ no usado
+    note: En VIDE se necesita lo inverso (texto→SRT), no Whisper.
+
+  SuitVideoAssembly:
+    path: ../SuitVideoAssembly/
+    entry: scripts/assembly.py
+    purpose: Ensamblar video (imágenes + voz + música + subtítulos → MP4)
+    cli: python scripts/assembly.py --images <dir/> --audio <mix.aac> --subtitles <subs.srt> -o <out.mp4>
+    output: MP4 (H.264 + AAC)
+    status: ❌ no usado
+    note: VIDE usa FFmpeg inline. SuitVideoAssembly podría reemplazar todo el bloque de ensamble.
+
+  SuitStableDiffusion:
+    path: ../SuitStableDiffusion/
+    entry: scripts/generate.js (node)
+    purpose: Generar imágenes con Stable Diffusion (local o Colab)
+    cli: node scripts/generate.js --prompt "<text>" -o <out.png>
+    output: PNG
+    status: ❌ no usado
+    note: VIDE usa Pollinations API. SuitStableDiffusion permitiría generación local sin API.
+
+  SuitComfyUI:
+    path: (external — ComfyUI standalone)
+    entry: http://127.0.0.1:8188
+    purpose: Generación de imágenes, video y audio con Stable Diffusion + ControlNet + AnimateDiff vía MCP
+    mcp_server: comfyui
+    cli: npx -y comfyui-mcp (MCP over stdio)
+    capabilities:
+      - image: text2img, img2img, ControlNet (OpenPose, Depth, Canny), Flux, SDXL
+      - video: AnimateDiff, Stable Video Diffusion, frame interpolation
+      - audio: SFX generation, multi-track mixing (via custom nodes)
+      - effects: glitch, transitions, whip zoom, color grading
+    params: prompt, negative_prompt, seed, steps, cfg, model, controlnet
+    output: PNG / MP4 / WAV
+    status: ❌ no usado
+    launcher: C:\Users\rojo-\Downloads\ComfyUI_CPU.bat (port 8188, CPU mode)
+    install: C:\Users\rojo-\AppData\Local\Programs\ComfyUI1\
+    note: Tiene checkpoint v1-5 compartido. Sin workflows guardados para video publicitario aún.
+
+  SuitFFmpeg:
+    path: ../SuitFFmpeg/
+    entry: scripts/verify.js
+    purpose: Verificar instalación de FFmpeg en el sistema
+    cli: node scripts/verify.js
+    status: ❌ no usado
+    note: local-server-node.js busca FFmpeg por PATH o env.FFMPEG_PATH.
+
+  # ── Módulos de producto (no herramientas de pipeline) ──
+
+  SuitCampanas:
+    path: ../SuitCampanas/
+    purpose: CMS campañas + generación de contenido (frontend + server)
+    note: Proyecto principal donde corre VIDE.
+
+  SuitReservaciones:
+    path: ../SuitReservaciones/
+    purpose: Sistema de citas / reservaciones (Express, port 3002)
+
+  SuitCotizador:
+    path: ../SuitCotizador/
+    purpose: Motor de cotizaciones (Express, port 3003)
+
+  SuitVidGenRemotion:
+    path: ../SuitVidGenRemotion/
+    purpose: Video con Remotion Studio (port 3004)
+
+  SuitPedidoExpress:
+    path: ../SuitPedidoExpress/
+    purpose: Pedidos express (Express, port 3005)
+
+  SuitPos:
+    path: ../SuitPos/
+    purpose: Punto de venta (Express, port 3006)
+
+  SuitProductos:
+    path: ../SuitProductos/
+    purpose: Catálogo de productos (Express, port 3007)
+
+  SuitInventarios:
+    path: ../SuitInventarios/
+    purpose: Inventarios (Express, port 3008)
+
+  SuitBodega:
+    path: ../SuitBodega/
+    purpose: Gestión de bodega (Express, port 3009)
+
+  SuitAI:
+    path: ../SuitAI/
+    purpose: Model Discovery + Auto-Routing + Circuit Breaker (Express, port 3010)
+
+  SuitChatTG:
+    path: ../SuitChatTG/
+    purpose: Chatbot Telegram con IA y leads
+
+  SuitCVLO:
+    path: ../SuitCVLO/
+    purpose: Visión por computadora (YOLOv8) + dashboard
+
+  SuitWhatsapp:
+    path: ../SuitWhatsapp/
+    purpose: Integración WhatsApp WebJS
+
+  SuitIngles:
+    path: ../SuitIngles/
+    purpose: App web para aprender inglés (Vite + TS)
+
+  SuitOSCore:
+    path: ../SuitOSCore/
+    purpose: Agent Operating System kernel (dispatcher, registry, loader)
+
+  SuitTaskflow:
+    path: ../SuitTaskflow/
+    purpose: Task runner con agentes
+
+  SuitTest:
+    path: ../SuitTest/
+    purpose: Test suite autónoma con agentes
+
+  SuitMistral:
+    path: ../SuitMistral/
+    purpose: Proxy/api Mistral AI
+
+  SuitSolve:
+    path: ../SuitSolve/
+    purpose: Documentos de soluciones y guías

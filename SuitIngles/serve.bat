@@ -1,13 +1,15 @@
 @echo off
-echo ========================================
-echo   SuitIngles - Servidor Local
-echo ========================================
+title SuitIngles - Servidor local
+cd /d "%~dp0"
+
+echo ============================================
+echo   SuitIngles - Servidor local
+echo ============================================
 echo.
-echo Abriendo navegador...
-start http://localhost:3000
+echo Iniciando servidor con PowerShell...
+echo (no necesita Node ni ningun programa adicional)
 echo.
-echo Servidor corriendo en http://localhost:3000
-echo Presiona Ctrl+C para detener.
-echo.
-cd /d "%~dp0dist"
-npx serve -l 3000 -s
+
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0serve.ps1"
+
+pause

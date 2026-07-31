@@ -19,7 +19,7 @@
       "args": ["-y", "mcp-gsheets@latest"],
       "env": {
         "GOOGLE_PROJECT_ID": "suitorg00",
-        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\rojo-\\Downloads\\SUITORGSTORE01\\google-credentials.json"
+        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\rojo-\\Downloads\\suitorg\\google-credentials.json"
       }
     },
     "playwright": {
@@ -28,7 +28,7 @@
     },
     "suitcvlo-filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\rojo-\\Downloads\\SUITORGSTORE01\\SuitCVLO"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\rojo-\\Downloads\\suitorg\\SuitCVLO"]
     },
     "telegram-bot": {
       "command": "npx",
@@ -42,6 +42,14 @@
       "args": ["-y", "github:fabienbutz/manychat-mcp"],
       "env": {
         "MANYCHAT_API_KEY": "${MANYCHAT_API_KEY}"
+      }
+    },
+    "comfyui": {
+      "command": "npx",
+      "args": ["-y", "comfyui-mcp"],
+      "env": {
+        "COMFYUI_HOST": "127.0.0.1",
+        "COMFYUI_PORT": "8188"
       }
     },
     "chrome-devtools": {

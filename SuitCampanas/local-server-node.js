@@ -4,12 +4,16 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const supabase = require('./lib/supabase');
+const { createClient } = require('@supabase/supabase-js');
+const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+    : supabase;
 const bdpvGenerator = require('../PresentacionesVid/bdpv-generator');
-const { MODELS, DEFAULT_MODEL } = require('./models-config');
+const { MODELS, DEFAULT_MODEL, toOmniRouteId } = require('./models-config');
 
 const PORT = 8000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzlNe28j7yJObxqfCyUg595Zeg1IjsMMjOZyf8KOK5pkCYU-zYFJrsyzwsJhNFjZy1v-A/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhWR6LoS7wirxWPhQBZIZJ2ynuQHa_VYzrIILR5rasOuCSE55Fk4f3M07fCmnyzEwN/exec';
 
 // --- FFMPEG PATH (auto-detect or from .env) ---
 function findFFmpeg() {
@@ -33,6 +37,202 @@ function findFFmpeg() {
 }
 const FFMPEG_PATH = findFFmpeg();
 console.log(`[FFmpeg] Ruta: ${FFMPEG_PATH}`);
+// ffprobe lives next to ffmpeg in the same bin/ folder on every install layout
+// this project has seen (WinGet, manual, PATH) — derive it instead of a
+// second auto-detect routine.
+const FFPROBE_PATH = FFMPEG_PATH === 'ffmpeg' ? 'ffprobe' : FFMPEG_PATH.replace(/ffmpeg(\.exe)?$/i, 'ffprobe$1');
+
+const { spawnSync } = require('child_process');
+
+function getAudioDurationSec(filePath) {
+    try {
+        const result = spawnSync(FFPROBE_PATH, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', filePath], { timeout: 15000 });
+        const val = parseFloat(result.stdout?.toString().trim());
+        return isNaN(val) ? null : val;
+    } catch (e) {
+        return null;
+    }
+}
+
+function ffmpeg(args, opts = {}) {
+    const result = spawnSync(FFMPEG_PATH, args, {
+        timeout: opts.timeout || 60000,
+        stdio: opts.stdio || 'pipe',
+        maxBuffer: 50 * 1024 * 1024
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) {
+        const stderr = result.stderr?.toString() || '';
+        // FFmpeg's stderr always starts with a ~15-20 line version/build banner;
+        // the actual error is at the END. Truncating from the start (old behavior)
+        // hid every real error message behind the banner. Take the tail instead.
+        const tail = stderr.split('\n').slice(-15).join('\n').trim();
+        throw new Error(`FFmpeg error (${result.status}): ${tail.substring(0, 1000)}`);
+    }
+    return result;
+}
+
+// Escapes a filesystem path for safe use as an FFmpeg filtergraph option value
+// (drawtext=textfile=..., subtitles=filename=...). On Windows, an unescaped
+// drive-letter colon (C:\...) is parsed as a filter key/value separator and
+// breaks (or crashes) the filter — see .suit/memory/bugs/videos-multiples-fallas.md.
+function escapeFfmpegPath(p) {
+    return p.replace(/\\/g, '/').replace(/:/g, '\\:');
+}
+
+// Default font for drawtext: without an explicit fontfile, this FFmpeg build's
+// fontconfig lookup segfaults (access violation) on this Windows host instead
+// of erroring gracefully. FFMPEG_FONT_PATH in .env overrides the detected font.
+let _defaultFontFile;
+function getDefaultFontFile() {
+    if (_defaultFontFile !== undefined) return _defaultFontFile;
+    const candidates = [
+        process.env.FFMPEG_FONT_PATH,
+        'C:/Windows/Fonts/arial.ttf',
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/System/Library/Fonts/Supplemental/Arial.ttf',
+    ].filter(Boolean);
+    _defaultFontFile = candidates.find(c => fs.existsSync(c)) || null;
+    return _defaultFontFile;
+}
+
+// Greedy word-wrap to a max line width (chars), never splitting a word mid-way.
+function wrapWords(text, maxCharsPerLine) {
+    const words = text.split(/\s+/).filter(Boolean);
+    const lines = [];
+    let current = '';
+    for (const word of words) {
+        const candidate = current ? `${current} ${word}` : word;
+        if (candidate.length > maxCharsPerLine && current) {
+            lines.push(current);
+            current = word;
+        } else {
+            current = candidate;
+        }
+    }
+    if (current) lines.push(current);
+    return lines;
+}
+
+// Fits text into a pixel-width box for drawtext: wraps by word, shrinks
+// fontsize as a fallback if it still doesn't fit in maxLines, and truncates
+// with an ellipsis as a last resort — drawtext itself has no auto-wrap or
+// auto-fit, so without this a long AI-generated title/caption just renders
+// past the edge of the frame instead of clipping gracefully.
+function fitOverlayText(text, maxWidthPx, baseFontsize, minFontsize, maxLines) {
+    let fontsize = baseFontsize;
+    let lines = [];
+    while (true) {
+        const maxCharsPerLine = Math.max(4, Math.floor(maxWidthPx / (fontsize * 0.55)));
+        lines = wrapWords(text, maxCharsPerLine);
+        if (lines.length <= maxLines || fontsize <= minFontsize) break;
+        fontsize -= 8;
+    }
+    if (lines.length > maxLines) {
+        const maxCharsPerLine = Math.max(4, Math.floor(maxWidthPx / (fontsize * 0.55)));
+        lines = lines.slice(0, maxLines);
+        let last = lines[maxLines - 1].replace(/\s+$/, '');
+        if (last.length > maxCharsPerLine - 1) last = last.slice(0, maxCharsPerLine - 1);
+        lines[maxLines - 1] = last + '…';
+    }
+    return { text: lines.join('\n'), fontsize };
+}
+
+// Output dimensions per format — shared by image generation (so Pollinations
+// renders the right aspect ratio up front) and the FFmpeg assembly step.
+const FMT_DIMS = {
+    Post: { w: 1080, h: 1080 },
+    Reel: { w: 1080, h: 1920 },
+    Story: { w: 1080, h: 1920 },
+    Banner: { w: 1200, h: 628 }
+};
+
+// Real playback length of a scene list: sum of per-scene durations plus the
+// inter-scene pause (pausa_final never applies after the last scene, matching
+// how the FFmpeg assembly actually inserts pause segments below).
+function computeRealDuration(scenes) {
+    return scenes.reduce((acc, s, i) => acc + (s.duracion || 5) + (i < scenes.length - 1 ? (s.pausa_final || 0.5) : 0), 0);
+}
+
+// Parses a guion (JSON {config,escenas}, JSON array, or plain text) into a
+// normalized scenes[] + videoConfig, shared by /api/video-produce (VIDE/FFmpeg)
+// and /api/vire-produce (ViRe/Remotion) so both engines read the exact same guion.
+function parseGuionScenes(guion, duration, style) {
+    let scenes = [];
+    let videoConfig = {
+        duracion_total: parseInt(duration) || 30,
+        musica: { estilo: style || 'energetic', bpm: 140, volumen: 0.8 },
+        fps: 24,
+        resolucion: { ancho: 1080, alto: 1920 }
+    };
+    try {
+        const parsed = JSON.parse(guion);
+        if (parsed.config) {
+            videoConfig = { ...videoConfig, ...parsed.config };
+        }
+        if (Array.isArray(parsed)) {
+            scenes = parsed.map((s, i) => ({
+                id: i + 1,
+                title: s.titulo || s.title || s.titulo_escena || `Escena ${i + 1}`,
+                body: s.texto || s.text || s.body || s.descripcion || '',
+                visual: s.visual || '',
+                texto_overlay: s.texto_overlay || s.titulo || s.title || `Escena ${i + 1}`,
+                duracion: s.duracion || Math.floor((videoConfig.duracion_total || 30) / parsed.length),
+                pausa_inicial: s.pausa_inicial || 0.5,
+                pausa_final: s.pausa_final || 0.5,
+                animacion: s.animacion || 'fade',
+                musica_local: s.musica_local || null,
+                camara: s.camara || null,
+                pattern_interrupt: s.pattern_interrupt || '',
+                sfx: s.sfx || null
+            }));
+        } else if (parsed.escenas && Array.isArray(parsed.escenas)) {
+            scenes = parsed.escenas.map((s, i) => ({
+                id: s.id || i + 1,
+                title: s.titulo || s.title || s.titulo_escena || `Escena ${i + 1}`,
+                body: s.texto || s.text || s.body || s.descripcion || '',
+                visual: s.visual || '',
+                texto_overlay: s.texto_overlay || s.titulo || s.title || `Escena ${i + 1}`,
+                duracion: s.duracion || Math.floor((videoConfig.duracion_total || 30) / parsed.escenas.length),
+                pausa_inicial: s.pausa_inicial || 0.5,
+                pausa_final: s.pausa_final || 0.5,
+                animacion: s.animacion || 'fade',
+                musica_local: s.musica_local || null,
+                camara: s.camara || null,
+                pattern_interrupt: s.pattern_interrupt || '',
+                sfx: s.sfx || null
+            }));
+        } else {
+            throw new Error('JSON sin estructura de escenas');
+        }
+    } catch (_) {
+        scenes = guion.split(/\n(?=Escena|Scene|\d+\.|\*)/i)
+            .filter(s => s.trim().length > 5)
+            .map((s, i) => {
+                const lines = s.trim().split('\n').filter(l => l.trim());
+                return {
+                    id: i + 1,
+                    title: lines[0]?.replace(/^(Escena|Scene|\d+)[\.\:\-\s]*/i, '').trim() || `Escena ${i + 1}`,
+                    body: lines.slice(1).join(' ').trim() || lines[0]?.trim() || '',
+                    visual: '',
+                    texto_overlay: '',
+                    duracion: Math.floor((videoConfig.duracion_total || 30) / Math.max(scenes.length || 3, 1)),
+                    pausa_inicial: 0.5,
+                    pausa_final: 0.5,
+                    animacion: 'fade',
+                    musica_local: null
+                };
+            });
+    }
+    // Real duration wins: it's what actually gets rendered (sum of the scenes'
+    // own timing). The UI's duration field/AI's config.duracion_total are only
+    // fallbacks for the plain-text path where scenes have no explicit timing —
+    // otherwise a stale UI value would silently starve music generation of the
+    // seconds the guion actually needs.
+    videoConfig.duracion_total = computeRealDuration(scenes) || parseInt(duration) || videoConfig.duracion_total;
+    videoConfig.musica.estilo = style || videoConfig.musica.estilo;
+    return { scenes, videoConfig };
+}
 
 // --- PROMPTS CACHE (desde Prompts_IA) ---
 let promptsCache = {};
@@ -62,7 +262,10 @@ function normalizeDriveUrl(url) {
 const server = http.createServer((req, res) => {
     serverLog('REQ', `${req.method} ${req.url}`);
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    const origin = req.headers.origin || '';
+    const allowedOrigins = ['http://localhost:8000', 'http://127.0.0.1:8000', 'null'];
+    const allowed = allowedOrigins.includes(origin) || origin.endsWith('.suitorg.com');
+    if (allowed) res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
@@ -97,11 +300,32 @@ const server = http.createServer((req, res) => {
 
     // 🔄 PROXY DE CONFIGURACIÓN (Empresas)
     if (pathname.includes('/api/config')) {
-        const configUrl = GAS_URL.includes('?') ? (GAS_URL + '&action=config') : (GAS_URL + '?action=config');
-        serverLog('INFO', "🏢 [PROXY] Solicitando /api/config a Google...");
+        // Usa action=getAll del backend principal de SuitOrg para obtener Config_Empresas real
+        const configUrl = GAS_URL.includes('?') ? (GAS_URL + '&action=getAll') : (GAS_URL + '?action=getAll');
+        serverLog('INFO', "🏢 [PROXY] Solicitando Config_Empresas vía getAll...");
         fetchWithRedirects(configUrl, (data, statusCode) => {
-            res.writeHead(statusCode, { 'Content-Type': 'application/json' });
-            res.end(data);
+            try {
+                const parsed = JSON.parse(data);
+                if (parsed.Config_Empresas && Array.isArray(parsed.Config_Empresas)) {
+                    const companies = parsed.Config_Empresas.map(c => ({
+                        nomempresa: c.nomempresa || c.nombre_empresa || '',
+                        logo_url: c.logo_url || '',
+                        telefonowhastapp: c.telefonowhatsapp || c.telefonowhastapp || '',
+                        enlace_oficial: c.enlace_oficial || c.website || '',
+                        color_tema: c.color_tema || '#2563eb',
+                        id_empresa: c.id_empresa || ''
+                    })).filter(c => c.nomempresa);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'success', message: 'Configuraciones cargadas', data: companies }));
+                    return;
+                }
+            } catch (_) {}
+            serverLog('WARN', "⚠️ GAS no disponible, usando datos mock de respaldo");
+            const mockData = [
+                { nomempresa: 'Mi Empresa Demo', logo_url: '', telefonowhastapp: '8112345678', enlace_oficial: 'https://ejemplo.com', color_tema: '#2563eb', id_empresa: 'DEMO' }
+            ];
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'success', message: 'Configuraciones cargadas (respaldo)', data: mockData }));
         });
         return;
     }
@@ -170,7 +394,7 @@ const server = http.createServer((req, res) => {
     if (pathname === '/api/industrias' && req.method === 'GET') {
         (async () => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseAdmin
                     .from('industrias')
                     .select('*, nichos(*)')
                     .eq('activo', true)
@@ -195,7 +419,7 @@ const server = http.createServer((req, res) => {
         req.on('end', async () => {
             try {
                 const { categoria, icono, descripcion, nichos } = JSON.parse(body);
-                const { data: industria, error: errInd } = await supabase
+                const { data: industria, error: errInd } = await supabaseAdmin
                     .from('industrias')
                     .insert({ categoria, icono, descripcion })
                     .select()
@@ -204,7 +428,7 @@ const server = http.createServer((req, res) => {
                 if (errInd) throw errInd;
 
                 if (nichos && nichos.length > 0) {
-                    const { error: errNichos } = await supabase
+                    const { error: errNichos } = await supabaseAdmin
                         .from('nichos')
                         .insert(nichos.map(n => ({ ...n, industria_id: industria.id })));
 
@@ -231,7 +455,7 @@ const server = http.createServer((req, res) => {
             try {
                 const id = parseInt(industriasMatch[1]);
                 const updates = JSON.parse(body);
-                const { data, error } = await supabase
+                const { data, error } = await supabaseAdmin
                     .from('industrias')
                     .update(updates)
                     .eq('id', id)
@@ -291,6 +515,7 @@ const server = http.createServer((req, res) => {
                         modo: campana.modo || '',
                         contenido: campana.contenido || campana.caption || '',
                         estado: campana.estado || 'pendiente',
+                        activo: true,
                         configuracion: campana.configuracion || {},
                         metadata: campana.metadata || {}
                     }, { onConflict: 'id' })
@@ -421,15 +646,15 @@ const server = http.createServer((req, res) => {
                     'vintage': "curves=all='0/0 0.25/0.15 0.5/0.5 0.75/0.85 1/1',hue=s=0.5"
                 }[recipe.filtro] || null;
 
-                const { execSync } = require('child_process');
                 const fps = 24;
 
                 // Write text to file for drawtext (avoids escaping issues)
                 let textFilePath = null;
                 if (texto) {
-                    textFilePath = path.join(tmpDir, 'overlay_text.txt').replace(/\\/g, '/');
+                    textFilePath = path.join(tmpDir, 'overlay_text.txt');
                     fs.writeFileSync(textFilePath, texto, 'utf8');
                 }
+                const defaultFont = getDefaultFontFile();
 
                 // Generar segmentos individuales
                 const segments = [];
@@ -439,23 +664,22 @@ const server = http.createServer((req, res) => {
                     let filters = `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,fps=${fps}`;
                     if (colorFilter) filters += `,${colorFilter}`;
                     if (textFilePath) {
-                        const escapedPath = textFilePath.replace(/'/g, "'\\''");
-                        filters += `,drawtext=textfile='${escapedPath}':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=h-th-100:enable=between(t,0,${timePerSlide})`;
+                        const escapedPath = escapeFfmpegPath(textFilePath);
+                        filters += `,drawtext=textfile='${escapedPath}'`;
+                        if (defaultFont) filters += `:fontfile='${escapeFfmpegPath(defaultFont)}'`;
+                        filters += `:fontcolor=white:fontsize=48:x=(w-text_w)/2:y=h-th-100:enable=between(t,0,${timePerSlide})`;
                     }
                     filters += '[v0]';
 
                     const imgPath = selectedFiles[i].replace(/\\/g, '/');
-                    let cmd;
+                    serverLog('INFO', `[IMAGINACION] Segmento ${i+1}/${selectedFiles.length}...`);
                     if (logoPath) {
                         const logoPathFwd = logoPath.replace(/\\/g, '/');
                         const overlayFilter = `[v0][1:v]overlay=10:10:enable=between(t,0,${timePerSlide})[out]`;
-                        cmd = `"${FFMPEG_PATH}" -y -loop 1 -t ${timePerSlide + 0.5} -i "${imgPath}" -i "${logoPathFwd}" -filter_complex "${filters};${overlayFilter}" -map "[out]" -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 23 "${segPath}"`;
+                        ffmpeg(['-y', '-loop', '1', '-t', String(timePerSlide + 0.5), '-i', imgPath, '-i', logoPathFwd, '-filter_complex', `${filters};${overlayFilter}`, '-map', '[out]', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'ultrafast', '-crf', '23', segPath]);
                     } else {
-                        cmd = `"${FFMPEG_PATH}" -y -loop 1 -t ${timePerSlide + 0.5} -i "${imgPath}" -filter_complex "${filters}" -map "[v0]" -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 23 "${segPath}"`;
+                        ffmpeg(['-y', '-loop', '1', '-t', String(timePerSlide + 0.5), '-i', imgPath, '-filter_complex', filters, '-map', '[v0]', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'ultrafast', '-crf', '23', segPath]);
                     }
-
-                    serverLog('INFO', `[IMAGINACION] Segmento ${i+1}/${selectedFiles.length}...`);
-                    execSync(cmd, { timeout: 60000, shell: true, stdio: 'pipe' });
                     segments.push(segPath);
                 }
 
@@ -464,13 +688,12 @@ const server = http.createServer((req, res) => {
                 let concatCmd;
 
                 if (segments.length === 1) {
-                    // Solo un segmento, copiar directamente
-                    concatCmd = `"${FFMPEG_PATH}" -y -i "${segments[0].replace(/\\/g, '/')}" -c copy "${outPath}"`;
+                    ffmpeg(['-y', '-i', segments[0].replace(/\\/g, '/'), '-c', 'copy', outPath]);
                 } else if (recipe.transicion === 'corte_brusco') {
                     const listPath = path.join(tmpDir, 'files.txt').replace(/\\/g, '/');
-                    const listContent = segments.map(s => `file '${s.replace(/'/g, "'\\''")}'`).join('\n');
+                    const listContent = segments.map(s => `file '${s}'`).join('\n');
                     fs.writeFileSync(listPath, listContent);
-                    concatCmd = `"${FFMPEG_PATH}" -y -f concat -safe 0 -i "${listPath}" -c copy "${outPath}"`;
+                    ffmpeg(['-y', '-f', 'concat', '-safe', '0', '-i', listPath, '-c', 'copy', outPath]);
                 } else {
                     const xfadeMap = { fundido: 'fade', barrido_derecha: 'slideright', zoom: 'zoomin' };
                     const xfadeType = xfadeMap[recipe.transicion] || 'fade';
@@ -497,14 +720,13 @@ const server = http.createServer((req, res) => {
                     }
 
                     const lastLabel = n <= 2 ? '[vout]' : `[vx${n-1}]`;
-                    const inputs = segments.map(s => `-i "${s}"`).join(' ');
+                    const inputsArgs = segments.flatMap(s => ['-i', s]);
 
-                    concatCmd = `"${FFMPEG_PATH}" -y ${inputs} -filter_complex "${filterComplex}" -map ${lastLabel} -pix_fmt yuv420p -c:v libx264 -preset ultrafast "${outPath}"`;
+                    const concatArgs = ['-y', ...inputsArgs, '-filter_complex', filterComplex, '-map', lastLabel, '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-preset', 'ultrafast', outPath];
+                    ffmpeg(concatArgs, { timeout: 120000 });
                 }
 
-                serverLog('INFO', `[IMAGINACION] Concatenando ${segments.length} segmentos...`);
-                execSync(concatCmd, { timeout: 120000, shell: true, stdio: 'pipe' });
-
+                serverLog('INFO', `[IMAGINACION] Concatenación completada (${segments.length} segmentos)`);
                 const videoBase64 = fs.readFileSync(outPath).toString('base64');
 
                 // Limpiar
@@ -582,17 +804,12 @@ const server = http.createServer((req, res) => {
     if (pathname === '/api/sync/prompts' && req.method === 'POST') {
         (async () => {
             try {
-                const https = require('https');
                 const syncUrl = GAS_URL + '?action=getAll';
                 const gasData = await new Promise((resolve, reject) => {
-                    https.get(syncUrl, (res) => {
-                        let body = '';
-                        res.on('data', d => body += d);
-                        res.on('end', () => {
-                            try { resolve(JSON.parse(body)); }
-                            catch (e) { reject(new Error('GAS parse error')); }
-                        });
-                    }).on('error', reject);
+                    fetchWithRedirects(syncUrl, (body) => {
+                        try { resolve(JSON.parse(body)); }
+                        catch (e) { reject(new Error('GAS parse error: ' + body.substring(0, 200))); }
+                    });
                 });
                 const rows = gasData?.Prompts_IA || gasData?.data?.Prompts_IA || [];
                 let count = 0;
@@ -635,6 +852,15 @@ const server = http.createServer((req, res) => {
                 const { niche, subNiche, region } = JSON.parse(body);
                 const trendResearch = require('./scripts/trend-research');
                 const result = await trendResearch.fetchTrends(niche || '', subNiche || '', region || '');
+                // Respaldo con IA real (genérico al nicho pedido) si pytrends/Reddit
+                // no trajeron suficiente — ver generateAITrendFallback().
+                if (result.trends.length < 3) {
+                    const existingTitles = new Set(result.trends.map(t => t.titulo.toLowerCase()));
+                    const aiTrends = await generateAITrendFallback(niche || '', subNiche || '', region || '');
+                    for (const t of aiTrends) {
+                        if (!existingTitles.has(t.titulo.toLowerCase())) result.trends.push(t);
+                    }
+                }
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ status: 'success', data: result }));
             } catch (e) {
@@ -685,13 +911,9 @@ const server = http.createServer((req, res) => {
                     { role: 'user', content: userPrompt }
                 ];
 
-                const orModels = [
-                    "openrouter/free",
-                    "qwen/qwen3.6-35b-a3b:free",
-                    "minimax/minimax-m2.5:free",
-                    "google/gemini-flash-1.5",
-                    "deepseek/deepseek-v4-flash"
-                ];
+                const orModels = ["openrouter/free", "deepseek/deepseek-v4-flash"]
+                    .map(toOmniRouteId)
+                    .filter((v, i, a) => a.indexOf(v) === i); // dedup tras traducir al id real de OmniRoute
 
                 let lastError = "No se recibieron errores.";
                 let generatedJson = null;
@@ -743,12 +965,9 @@ const server = http.createServer((req, res) => {
 
                 // 📡 Modelo del request > activeModel > fallback (per-request, no mutate global)
                 const requestModel = (reqModel && MODELS[reqModel]) ? reqModel : activeModel;
-                const orModels = [
-                    requestModel,
-                    "deepseek/deepseek-v4-flash",
-                    "openrouter/free",
-                    "qwen/qwen3.6-35b-a3b:free"
-                ].filter((v, i, a) => a.indexOf(v) === i); // dedup
+                const orModels = [requestModel, "deepseek/deepseek-v4-flash"]
+                    .map(toOmniRouteId)
+                    .filter((v, i, a) => a.indexOf(v) === i); // dedup tras traducir al id real de OmniRoute
 
                 let lastError = "No se recibieron errores.";
                 for (const m of orModels) {
@@ -976,10 +1195,8 @@ const server = http.createServer((req, res) => {
                 }
                 serverLog('INFO', `[ANIMATE] Filter: ${filter}`);
 
-                const { execSync } = require('child_process');
-                const cmd = `"${FFMPEG_PATH}" -y -loop 1 -i "${imgPath}" -vf "${filter}" -c:v libx264 -t ${dur} -pix_fmt yuv420p "${outPath}"`;
                 serverLog('INFO', `[ANIMATE] Ejecutando: ${FFMPEG_PATH} ... (timeout 30s)`);
-                const output = execSync(cmd, { timeout: 30000, shell: true, stdio: 'ignore' });
+                ffmpeg(['-y', '-loop', '1', '-i', imgPath, '-vf', filter, '-c:v', 'libx264', '-t', String(dur), '-pix_fmt', 'yuv420p', outPath], { timeout: 30000 });
                 serverLog('INFO', `[ANIMATE] ✅ FFmpeg OK. Video generado: ${outPath}`);
 
                 const videoBase64 = fs.readFileSync(outPath).toString('base64');
@@ -1020,7 +1237,6 @@ const server = http.createServer((req, res) => {
                 const fps = 24;
                 const W = vertical ? 1080 : 1920;
                 const H = vertical ? 1920 : 1080;
-                const { execSync } = require('child_process');
 
                 tmpDir = path.join(__dirname, `tmp_slideshow_${Date.now()}`);
                 fs.mkdirSync(tmpDir, { recursive: true });
@@ -1037,7 +1253,9 @@ const server = http.createServer((req, res) => {
                     const imgPath = imgPaths[i].replace(/\\/g, '/');
 
                     let vf;
-                    if (effect === 'blink') {
+                    if (effect === 'none' || effect === 'static') {
+                        vf = `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black`;
+                    } else if (effect === 'blink') {
                         vf = `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,fade=t=in:st=0:d=0.3,fade=t=out:st=${dur - 0.3}:d=0.3`;
                     } else if (effect === 'color_shift') {
                         vf = `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,hue=H=50*sin(2*PI*t/${dur}):s=1`;
@@ -1048,8 +1266,7 @@ const server = http.createServer((req, res) => {
                         vf = `zoompan=z='${zExpr}':d=${dur * fps}:s=${W}x${H}:fps=${fps},fade=t=in:st=0:d=0.3,fade=t=out:st=${dur - 0.3}:d=0.3`;
                     }
 
-                    const segCmd = `"${FFMPEG_PATH}" -y -loop 1 -t ${dur} -i "${imgPath}" -vf "${vf}" -c:v libx264 -pix_fmt yuv420p -preset ultrafast -an "${segPath}"`;
-                    execSync(segCmd, { timeout: 60000, shell: true, stdio: 'pipe' });
+                    ffmpeg(['-y', '-loop', '1', '-t', String(dur), '-i', imgPath, '-vf', vf, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'ultrafast', '-an', segPath]);
                     segments.push(segPath);
                 }
 
@@ -1059,9 +1276,9 @@ const server = http.createServer((req, res) => {
                     fs.copyFileSync(segments[0], outPath);
                 } else {
                     const concatFile = path.join(tmpDir, 'concat.txt');
-                    const listContent = segments.map(s => `file '${s.replace(/\\/g, '/')}'`).join('\n');
+                    const listContent = segments.map(s => `file '${s}'`).join('\n');
                     fs.writeFileSync(concatFile, listContent);
-                    execSync(`"${FFMPEG_PATH}" -y -f concat -safe 0 -i "${concatFile}" -c copy "${outPath}"`, { timeout: 60000, shell: true, stdio: 'pipe' });
+                    ffmpeg(['-y', '-f', 'concat', '-safe', '0', '-i', concatFile, '-c', 'copy', outPath]);
                 }
 
                 serverLog('INFO', `[SLIDESHOW] ✅ Video generado: ${outPath}`);
@@ -1089,6 +1306,26 @@ const server = http.createServer((req, res) => {
     if (pathname === '/api/proxy-image' && req.method === 'GET') {
         const url = parsedUrl.searchParams.get('url');
         if (!url) { res.writeHead(400); res.end(JSON.stringify({ error: 'Falta url' })); return; }
+
+        // SSRF protection: only allow known image hosts
+        const allowedHosts = [
+            'lh3.googleusercontent.com', 'lh4.googleusercontent.com', 'lh5.googleusercontent.com', 'lh6.googleusercontent.com',
+            'drive.google.com', 'docs.google.com',
+            'ssl.gstatic.com', 'www.gstatic.com',
+            'firebasestorage.googleapis.com',
+            'images.unsplash.com', 'via.placeholder.com',
+            'upload.wikimedia.org',
+            'i.ytimg.com', 'img.youtube.com'
+        ];
+        try {
+            const parsedTarget = new URL(url);
+            if (!allowedHosts.includes(parsedTarget.hostname) && !parsedTarget.hostname.endsWith('.supabase.co')) {
+                serverLog('WARN', `[PROXY-IMG] Dominio no permitido: ${parsedTarget.hostname}`);
+                res.writeHead(403); res.end(JSON.stringify({ error: 'Dominio no permitido' })); return;
+            }
+        } catch (e) {
+            res.writeHead(400); res.end(JSON.stringify({ error: 'URL inválida' })); return;
+        }
 
         function fetchFollowingRedirects(targetUrl, redirectCount, cb) {
             if (redirectCount > 10) return cb(new Error('Demasiados redirects'));
@@ -1134,7 +1371,7 @@ const server = http.createServer((req, res) => {
         req.on('data', d => body += d);
         req.on('end', async () => {
             try {
-                const { empresa, guion, style, duration, modules, format, platform } = JSON.parse(body);
+                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, duration, modules, format, platform, voice } = JSON.parse(body);
                 serverLog('INFO', `[VIDE] Iniciando para: ${empresa} (${modules.join(', ')})`);
 
                 const tmpDir = path.join(__dirname, `tmp_vide_${Date.now()}`);
@@ -1144,33 +1381,134 @@ const server = http.createServer((req, res) => {
                 const imagesDir = path.join(tmpDir, 'images');
                 fs.mkdirSync(imagesDir, { recursive: true });
 
-                // Parse guion into scenes
-                const scenes = guion.split(/\n(?=Escena|Scene|\d+\.|\*)/i)
-                    .filter(s => s.trim().length > 5)
-                    .map((s, i) => {
-                        const lines = s.trim().split('\n').filter(l => l.trim());
-                        return {
-                            title: lines[0]?.replace(/^(Escena|Scene|\d+)[\.\:\-\s]*/i, '').trim() || `Escena ${i + 1}`,
-                            body: lines.slice(1).join(' ').trim() || lines[0]?.trim() || ''
-                        };
-                    });
+                // Parse guion into scenes (supports new {config,escenas}, old array, and text)
+                const { scenes, videoConfig } = parseGuionScenes(guion, duration, style);
+
+                // Hoisted out of the 'images' block: referenced later during final
+                // assembly (avatar overlay on the finished video) which runs even
+                // when 'images' wasn't the block that downloaded it.
+                let avatarPath = null;
 
                 if (modules.includes('images')) {
                     serverLog('INFO', `[VIDE] Generando ${scenes.length} imágenes...`);
                     steps.push(`Imágenes: ${scenes.length} escenas detectadas`);
 
+                    // Download logo if available
+                    let logoPath = null;
+                    if (logo_url) {
+                        if (logo_url.startsWith('data:')) {
+                            logoPath = path.join(tmpDir, 'logo.png');
+                            const b64 = logo_url.replace(/^data:image\/\w+;base64,/, '');
+                            fs.writeFileSync(logoPath, b64, 'base64');
+                            steps.push('✅ Logo cargado (data URL)');
+                        } else if (logo_url.startsWith('http')) {
+                            try {
+                                const logoRes = await fetch(logo_url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+                                if (logoRes.ok) {
+                                    logoPath = path.join(tmpDir, 'logo.png');
+                                    const logoBuf = Buffer.from(await logoRes.arrayBuffer());
+                                    fs.writeFileSync(logoPath, logoBuf);
+                                    steps.push('✅ Logo descargado');
+                                }
+                            } catch (e) {
+                                serverLog('WARN', `[VIDE] Error descargando logo: ${e.message}`);
+                            }
+                        }
+                    }
+
+                    // Download avatar if available
+                    if (avatar_url) {
+                        if (avatar_url.startsWith('data:')) {
+                            avatarPath = path.join(tmpDir, 'avatar.png');
+                            const b64 = avatar_url.replace(/^data:image\/\w+;base64,/, '');
+                            fs.writeFileSync(avatarPath, b64, 'base64');
+                            steps.push('✅ Avatar cargado (data URL)');
+                        } else if (avatar_url.startsWith('http')) {
+                            try {
+                                const avatarRes = await fetch(avatar_url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+                                if (avatarRes.ok) {
+                                    avatarPath = path.join(tmpDir, 'avatar.png');
+                                    const avatarBuf = Buffer.from(await avatarRes.arrayBuffer());
+                                    fs.writeFileSync(avatarPath, avatarBuf);
+                                    steps.push('✅ Avatar descargado');
+                                }
+                            } catch (e) {
+                                serverLog('WARN', `[VIDE] Error descargando avatar: ${e.message}`);
+                            }
+                        }
+                    }
+
                     // Generate images using Pollinations AI (free, no API key)
+                    const imgDim = FMT_DIMS[format] || FMT_DIMS.Reel;
                     for (let i = 0; i < scenes.length; i++) {
                         const scene = scenes[i];
-                        const prompt = `${scene.title} ${scene.body}`.substring(0, 200);
+                        // Cinematic direction (camara/pattern_interrupt), when the guion trae esos
+                        // campos, se antepone a "visual" para que realmente influya en la imagen
+                        // en vez de quedarse como metadata sin efecto.
+                        const camaraHint = scene.camara ? `${scene.camara.plano || ''} shot, ${scene.camara.movimiento || ''} camera movement, ` : '';
+                        const interruptHint = scene.pattern_interrupt ? `${scene.pattern_interrupt}, ` : '';
+                        // Belt-and-suspenders against garbled invented text: diffusion models
+                        // can't render legible text/names reliably, so even if the guion prompt
+                        // slips one in, block it here too — cheap, and this is the last point
+                        // before the image actually gets generated.
+                        const prompt = camaraHint + interruptHint + (scene.visual ? scene.visual + ' -- ' : '') + `${scene.title} ${scene.body}`.substring(0, 200) + ', no text, no readable signage, no logos, no writing';
                         const seed = Math.floor(Math.random() * 1000000);
-                        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1920&seed=${seed}&nologo=true`;
+                        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${imgDim.w}&height=${imgDim.h}&seed=${seed}&nologo=true&model=flux`;
 
                         try {
                             const imgRes = await fetch(imgUrl);
-                            const imgBuf = await imgRes.buffer();
-                            const imgPath = path.join(imagesDir, `scene_${i}.png`);
+                            const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+                            let imgPath = path.join(imagesDir, `scene_${i}.png`);
                             fs.writeFileSync(imgPath, imgBuf);
+                            // Overlay logo on the image (top-left) and avatar (bottom-left circle)
+                            let hasOverlays = false;
+                            let overlayInputs = [];
+                            let overlayFilters = [];
+                            let overlayCount = 1;
+
+                            let lastOverlayLabel = '0:v';
+
+                            if (logoPath && fs.existsSync(logoPath)) {
+                                overlayInputs.push('-i', logoPath);
+                                // Fixed 120x120 footprint (fit + transparent pad) regardless of the
+                                // logo's own aspect ratio, so the chip behind it is a known size.
+                                overlayFilters.push(`[${overlayCount}:v]scale=120:120:force_original_aspect_ratio=decrease,pad=120:120:(ow-iw)/2:(oh-ih)/2:color=black@0[logo_scaled]`);
+                                // Semi-transparent chip behind the logo so it stays visible
+                                // regardless of the AI-generated background under it.
+                                // White chip, not black: most logos (like this one) are dark-inked
+                                // and vanish against a dark semi-transparent backing — white/light
+                                // is the safe default regardless of the logo's own colors.
+                                overlayFilters.push(`[${lastOverlayLabel}]drawbox=x=10:y=10:w=140:h=140:color=white@0.85:t=fill[logo_chip]`);
+                                overlayFilters.push(`[logo_chip][logo_scaled]overlay=20:20[with_logo]`);
+                                lastOverlayLabel = 'with_logo';
+                                overlayCount++;
+                                hasOverlays = true;
+                            }
+
+                            if (avatarPath && fs.existsSync(avatarPath)) {
+                                overlayInputs.push('-i', avatarPath);
+                                overlayFilters.push(`[${overlayCount}:v]scale=120:120,format=rgba,geq=r='r(X,Y)':a='if(lte(sqrt((X-60)^2+(Y-60)^2),60),255,0)'[avatar_circle]`);
+                                overlayFilters.push(`[${lastOverlayLabel}][avatar_circle]overlay=20:H-h-20[with_avatar]`);
+                                lastOverlayLabel = 'with_avatar';
+                                overlayCount++;
+                                hasOverlays = true;
+                            }
+
+                            if (hasOverlays) {
+                                const overlayImgPath = path.join(imagesDir, `scene_${i}_overlay.png`);
+                                try {
+                                    const filterStr = overlayFilters.join(';');
+                                    // -map target must match whichever overlay ran LAST (logo-only ends
+                                    // at [with_logo]; hardcoding [with_avatar] failed FFmpeg every time
+                                    // a scene had no avatar configured, which is the common case).
+                                    const ffmpegArgs = ['-y', '-i', imgPath, ...overlayInputs, '-filter_complex', filterStr, '-map', `[${lastOverlayLabel}]`, overlayImgPath];
+                                    ffmpeg(ffmpegArgs);
+                                    fs.unlinkSync(imgPath);
+                                    fs.renameSync(overlayImgPath, imgPath);
+                                } catch (overlayErr) {
+                                    serverLog('WARN', `[VIDE] Error overlay: ${overlayErr.message}`);
+                                }
+                            }
                             steps.push(`✅ Imagen ${i + 1}/${scenes.length}: ${scene.title.substring(0, 30)}`);
                         } catch (e) {
                             serverLog('WARN', `[VIDE] Error imagen ${i}: ${e.message}`);
@@ -1181,29 +1519,42 @@ const server = http.createServer((req, res) => {
                 if (modules.includes('voice')) {
                     serverLog('INFO', `[VIDE] Generando voz...`);
                     // Generate voice using all scene text
-                    const fullText = scenes.map(s => `${s.title}. ${s.body}`).join('. ');
-                    const voicePath = path.join(tmpDir, 'voice.wav');
+                    const fullText = scenes.map(s => s.body).filter(Boolean).join('. ');
+                    const voicePath = path.join(tmpDir, 'voice.mp3');
 
-                    try {
-                        // Use gTTS via Python
-                        const { execSync } = require('child_process');
-                        const ttsScript = `import sys; from gtts import gTTS; import os; tts = gTTS(text=sys.argv[1], lang='es'); tts.save(sys.argv[2].replace('.wav', '.mp3'))`;
-                        execSync(`python -c "${ttsScript.replace(/"/g, '\\"')}" "${fullText.replace(/"/g, '\\"')}" "${voicePath}"`, { timeout: 60000 });
-                        steps.push('✅ Voz generada con gTTS');
-                    } catch (e) {
-                        serverLog('WARN', `[VIDE] Error TTS: ${e.message}`);
-                        steps.push(`⚠️ Voz no generada: ${e.message}`);
+                    if (fullText) {
+                        // Edge TTS (voces neuronales de Microsoft, gratis, sin API key) — mucho
+                        // menos robótico que gTTS. "python -m edge_tts" reusa la misma
+                        // resolución de 'python' que ya usaba gTTS, evitando un nuevo punto de
+                        // falla de PATH (ver ADR-009, el bug de PATH de FFmpeg).
+                        const edgeResult = spawnSync('python', ['-m', 'edge_tts', '--voice', voice || 'es-MX-DaliaNeural', '--text', fullText, '--write-media', voicePath], { timeout: 60000 });
+                        if (edgeResult.status === 0 && fs.existsSync(voicePath)) {
+                            steps.push('✅ Voz generada (Edge TTS neuronal)');
+                        } else {
+                            serverLog('WARN', `[VIDE] Edge TTS falló, usando gTTS de respaldo: ${(edgeResult.stderr?.toString() || '').slice(-300)}`);
+                            try {
+                                const ttsScript = `import sys; from gtts import gTTS; tts = gTTS(text=sys.argv[1], lang='es'); tts.save(sys.argv[2])`;
+                                spawnSync('python', ['-c', ttsScript, fullText, voicePath], { timeout: 60000 });
+                                steps.push(fs.existsSync(voicePath) ? '✅ Voz generada con gTTS (respaldo)' : '⚠️ Voz no generada');
+                            } catch (e) {
+                                serverLog('WARN', `[VIDE] Error TTS respaldo: ${e.message}`);
+                                steps.push(`⚠️ Voz no generada: ${e.message}`);
+                            }
+                        }
+                    } else {
+                        steps.push('⚠️ Voz no generada: el guion no tiene texto narrado ("texto" vacío en todas las escenas)');
                     }
                 }
 
                 if (modules.includes('music')) {
                     serverLog('INFO', `[VIDE] Generando música...`);
                     try {
-                        const { execSync } = require('child_process');
                         const musicPath = path.join(tmpDir, 'music.wav');
-                        const bpm = style === 'energetic' ? 140 : style === 'relaxing' ? 80 : 100;
+                        const musicStyle = videoConfig.musica.estilo || style || 'energetic';
+                        const bpm = videoConfig.musica.bpm || (musicStyle === 'energetic' ? 140 : musicStyle === 'relaxing' ? 80 : 100);
+                        const musicDuration = videoConfig.duracion_total || parseInt(duration) || 30;
                         const musicScript = path.join(__dirname, '../SuitMusic/scripts/music.py');
-                        execSync(`python "${musicScript}" -o "${musicPath}" -d ${duration} -b ${bpm} -s ${style}`, { timeout: 30000 });
+                        spawnSync('python', [musicScript, '-o', musicPath, '-d', String(musicDuration), '-b', String(bpm), '-s', musicStyle], { timeout: 30000 });
                         steps.push('✅ Música de fondo generada');
                     } catch (e) {
                         serverLog('WARN', `[VIDE] Error música: ${e.message}`);
@@ -1211,51 +1562,208 @@ const server = http.createServer((req, res) => {
                     }
                 }
 
+                // Generate subtitles SRT if enabled (uses per-scene timing)
+                let srtPath = null;
+                if (modules.includes('subtitles')) {
+                    try {
+                        srtPath = path.join(tmpDir, 'subtitles.srt');
+                        let srtContent = '';
+                        let currentTime = 0;
+                        scenes.forEach((s, i) => {
+                            const startSec = currentTime;
+                            const endSec = startSec + (s.duracion || 5);
+                            currentTime = endSec + (s.pausa_final || 0);
+                            const srtTime = (sec) => {
+                                const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+                                const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+                                const secs = String(Math.floor(sec % 60)).padStart(2, '0');
+                                const ms = String(Math.floor((sec % 1) * 1000)).padStart(3, '0');
+                                return `${h}:${m}:${secs},${ms}`;
+                            };
+                            const subText = (s.body || s.title || '').substring(0, 80);
+                            srtContent += `${i + 1}\n${srtTime(startSec)} --> ${srtTime(endSec)}\n${subText}\n\n`;
+                        });
+                        fs.writeFileSync(srtPath, srtContent);
+                        steps.push('✅ Subtítulos generados');
+                    } catch (e) {
+                        serverLog('WARN', `[VIDE] Error subtítulos: ${e.message}`);
+                    }
+                }
+
+                // NOTA: VIDE ya NO intenta ViRe/Remotion internamente (ver /api/vire-produce
+                // para ese motor, ahora separado). VIDE es siempre FFmpeg — predecible, y usa
+                // los mismos fixes de animaciones/overlays/subtítulos siempre, sin ser
+                // reemplazado en silencio por otro motor.
+
                 // Assemble video with FFmpeg
                 serverLog('INFO', `[VIDE] Ensamblando video final...`);
                 const outPath = path.join(tmpDir, `vide_final_${Date.now()}.mp4`);
 
                 try {
-                    const { execSync } = require('child_process');
                     const imageFiles = fs.readdirSync(imagesDir).filter(f => f.endsWith('.png')).sort();
                     const voiceFile = path.join(tmpDir, 'voice.mp3');
                     const musicFile = path.join(tmpDir, 'music.wav');
+                    const mixedAudio = path.join(tmpDir, 'mixed_audio.aac');
 
-                    if (imageFiles.length > 0) {
-                        const timePerSlide = duration / imageFiles.length;
-                        const fps = 24;
+                    // Mix audio sources (voice + music)
+                    const audioSources = [];
+                    if (fs.existsSync(voiceFile)) audioSources.push(voiceFile);
+                    if (fs.existsSync(musicFile)) audioSources.push(musicFile);
 
-                        // Create slideshow from images
+                    if (audioSources.length > 1) {
+                        // audioSources is always [voice, music] in that order when both exist
+                        // (push order above). amix's default normalize=1 divides every stream
+                        // by the input count regardless of content, which on top of an already
+                        // quiet music bed made it nearly inaudible under narration — explicit
+                        // per-stream volume + normalize=0 makes the mix predictable and lets
+                        // musica.volumen (parsed but never applied before) actually mean something.
+                        // Bumped again after real measurement: raw music source averages
+                        // -19dB, voice averages similar — at the old 0.5x multiplier music
+                        // sat ~6dB under voice and was easy to miss under speech. Voice
+                        // trimmed slightly too so music has room without fighting for it.
+                        const musicVolume = (videoConfig.musica && videoConfig.musica.volumen) || 0.8;
+                        const filterComplex = `[0:a]volume=0.9[voice_v];[1:a]volume=${musicVolume}[music_v];[voice_v][music_v]amix=inputs=2:duration=longest:dropout_transition=2:normalize=0[aout]`;
+                        const amixCmd = ['-y', ...audioSources.map(s => ['-i', s]).flat(), '-filter_complex', filterComplex, '-map', '[aout]', '-ac', '2', mixedAudio];
+                        ffmpeg(amixCmd);
+                        steps.push('✅ Audio mezclado (voz + música)');
+                    } else if (audioSources.length === 1) {
+                        ffmpeg(['-y', '-i', audioSources[0], '-c:a', 'aac', mixedAudio]);
+                        steps.push('✅ Audio listo');
+                    }
+
+                    // If the actual narration ended up longer than the guion's planned
+                    // scene durations (a common AI estimation miss), stretch the last
+                    // scene so the video isn't shorter than the voice — otherwise the
+                    // audio/video merge below (video's length wins) would cut the
+                    // narration off mid-sentence instead of finishing it.
+                    if (fs.existsSync(voiceFile)) {
+                        const voiceDur = getAudioDurationSec(voiceFile);
+                        const plannedDur = computeRealDuration(scenes);
+                        if (voiceDur && voiceDur > plannedDur && scenes.length > 0) {
+                            scenes[scenes.length - 1].duracion += (voiceDur - plannedDur) + 0.5;
+                        }
+                    }
+
+                    if (imageFiles.length === 0) {
+                        steps.push('❌ No se generaron imágenes');
+                    } else {
+                        const fps = videoConfig.fps || 24;
+                        const dim = FMT_DIMS[format] || FMT_DIMS.Reel;
+                        const VW = dim.w;
+                        const VH = dim.h;
+
+                        // Create slideshow from images: each scene has own duration + pausas + text overlay
                         const concatFile = path.join(tmpDir, 'concat.txt');
                         const segments = [];
 
+                        // Contact overlay (phone/website), top-right, present on every scene like
+                        // logo/avatar — same text on all segments, so write it once up front.
+                        const contactText = [telefono ? `Tel: ${telefono}` : '', sitio_web ? sitio_web.replace(/^https?:\/\//, '') : ''].filter(Boolean).join('   ·   ');
+                        let contactFilePath = null;
+                        let contactFitted = null;
+                        if (contactText) {
+                            contactFitted = fitOverlayText(contactText, VW * 0.55, 28, 20, 2);
+                            contactFilePath = path.join(tmpDir, 'contact.txt');
+                            fs.writeFileSync(contactFilePath, contactFitted.text, 'utf8');
+                        }
+
                         for (let i = 0; i < imageFiles.length; i++) {
-                            const segPath = path.join(tmpDir, `seg_${i}.mp4`);
+                            const scene = scenes[i] || {};
                             const imgPath = path.join(imagesDir, imageFiles[i]).replace(/\\/g, '/');
-                            const cmd = `"${FFMPEG_PATH}" -y -loop 1 -t ${timePerSlide} -i "${imgPath}" -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,fps=${fps}" -c:v libx264 -pix_fmt yuv420p -preset ultrafast "${segPath}"`;
-                            execSync(cmd, { timeout: 60000, shell: true, stdio: 'pipe' });
+                            const segDuration = scene.duracion || 5;
+                            const overlayText = scene.texto_overlay || scene.title || '';
+                            const anim = scene.animacion || 'fade';
+                            const animFrames = Math.max(1, Math.round(segDuration * fps));
+
+                            // Build video filter: scale + pad + scene animation + optional text overlay
+                            let vf = `scale=${VW}:${VH}:force_original_aspect_ratio=decrease,pad=${VW}:${VH}:(ow-iw)/2:(oh-ih)/2`;
+                            if (anim === 'zoom_in') {
+                                const zStep = (0.3 / animFrames).toFixed(6);
+                                vf += `,zoompan=z='min(zoom+${zStep},1.3)':d=${animFrames}:s=${VW}x${VH}:fps=${fps}`;
+                            } else if (anim === 'ken_burns') {
+                                const zStep = (0.3 / animFrames).toFixed(6);
+                                vf += `,zoompan=z='if(lte(zoom,1.0),1.3,max(1.0,zoom-${zStep}))':d=${animFrames}:s=${VW}x${VH}:fps=${fps}`;
+                            } else if (anim === 'fade') {
+                                const fadeDur = Math.min(0.4, segDuration / 2);
+                                vf += `,fps=${fps},fade=t=in:st=0:d=${fadeDur},fade=t=out:st=${Math.max(segDuration - fadeDur, 0)}:d=${fadeDur}`;
+                            } else {
+                                vf += `,fps=${fps}`;
+                            }
+                            if (overlayText) {
+                                const fitted = fitOverlayText(overlayText, VW - 160, 64, 40, 2);
+                                const textFilePath = path.join(tmpDir, `overlay_${i}.txt`);
+                                fs.writeFileSync(textFilePath, fitted.text, 'utf8');
+                                vf += `,drawtext=textfile='${escapeFfmpegPath(textFilePath)}'`;
+                                const videFont = getDefaultFontFile();
+                                if (videFont) vf += `:fontfile='${escapeFfmpegPath(videFont)}'`;
+                                vf += `:fontcolor=white:fontsize=${fitted.fontsize}:x=(w-text_w)/2:y=h*0.80:shadowcolor=black:shadowx=3:shadowy=3:box=1:boxcolor=black@0.55:boxborderw=15:line_spacing=8:text_align=C`;
+                            }
+
+                            if (contactFilePath) {
+                                vf += `,drawtext=textfile='${escapeFfmpegPath(contactFilePath)}'`;
+                                const contactFont = getDefaultFontFile();
+                                if (contactFont) vf += `:fontfile='${escapeFfmpegPath(contactFont)}'`;
+                                vf += `:fontcolor=white:fontsize=${contactFitted.fontsize}:x=w-text_w-20:y=20:shadowcolor=black:shadowx=2:shadowy=2:box=1:boxcolor=black@0.45:boxborderw=8`;
+                            }
+
+                            const segPath = path.join(tmpDir, `seg_${i}.mp4`);
+                            // -t as OUTPUT option (after -vf): with zoompan, -t as an INPUT option
+                            // multiplies frames (default image loop rate x zoompan d), producing
+                            // segments 100x too long. As an output option it correctly truncates.
+                            ffmpeg(['-y', '-loop', '1', '-i', imgPath, '-vf', vf, '-t', String(segDuration), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'ultrafast', segPath]);
                             segments.push(segPath);
+
+                            // Add pause after scene (black frame)
+                            const pauseAfter = scene.pausa_final || 0.5;
+                            if (pauseAfter > 0 && i < imageFiles.length - 1) {
+                                const pausePath = path.join(tmpDir, `pause_${i}.mp4`);
+                                ffmpeg(['-y', '-f', 'lavfi', '-i', `color=c=black:s=${VW}x${VH}:d=${pauseAfter}`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'ultrafast', pausePath]);
+                                segments.push(pausePath);
+                            }
                         }
 
                         // Concat segments
                         const listContent = segments.map(s => `file '${s}'`).join('\n');
                         fs.writeFileSync(concatFile, listContent);
-                        execSync(`"${FFMPEG_PATH}" -y -f concat -safe 0 -i "${concatFile}" -c copy "${outPath}"`, { timeout: 60000, shell: true, stdio: 'pipe' });
+                        ffmpeg(['-y', '-f', 'concat', '-safe', '0', '-i', concatFile, '-c', 'copy', outPath]);
+                        // ponytail: avatar is already baked into every scene image below
+                        // (per-scene overlay, before concat) — a second pass here on the
+                        // concatenated video was a duplicate compositing the same avatar
+                        // twice (visible as a doubled circle once avatarPath stopped crashing).
 
-                        // Add audio if available
-                        if (fs.existsSync(voiceFile)) {
+                        // Add mixed audio if available
+                        if (fs.existsSync(mixedAudio)) {
                             const finalPath = path.join(tmpDir, 'vide_with_audio.mp4');
                             try {
-                                execSync(`"${FFMPEG_PATH}" -y -i "${outPath}" -i "${voiceFile}" -c:v copy -c:a aac -shortest "${finalPath}"`, { timeout: 60000, shell: true, stdio: 'pipe' });
+                                // Video's own length (driven by the guion's scene durations) is
+                                // authoritative. apad pads audio with silence if it's shorter
+                                // (voice finishes before the last scene ends); -shortest then
+                                // trims to the video's length either way instead of the old
+                                // behavior of chopping the WHOLE video down to audio's length.
+                                ffmpeg(['-y', '-i', outPath, '-i', mixedAudio, '-filter_complex', '[1:a]apad[aout]', '-map', '0:v', '-map', '[aout]', '-c:v', 'copy', '-c:a', 'aac', '-shortest', finalPath]);
                                 fs.unlinkSync(outPath);
                                 fs.renameSync(finalPath, outPath);
-                                steps.push('✅ Audio mezclado');
                             } catch (e) {
                                 serverLog('WARN', `[VIDE] Error mezclando audio: ${e.message}`);
                             }
                         }
 
-                        steps.push(`✅ Video ensamblado: ${imageFiles.length} escenas, ${duration}s`);
+                        // Burn subtitles if enabled
+                        if (srtPath && fs.existsSync(srtPath)) {
+                            const subbedPath = path.join(tmpDir, 'vide_subtitled.mp4');
+                            try {
+                                const srtEscaped = escapeFfmpegPath(srtPath);
+                                ffmpeg(['-y', '-i', outPath, '-vf', `subtitles=filename='${srtEscaped}'`, '-c:a', 'copy', subbedPath]);
+                                fs.unlinkSync(outPath);
+                                fs.renameSync(subbedPath, outPath);
+                                steps.push('✅ Subtítulos incrustados');
+                            } catch (e) {
+                                serverLog('WARN', `[VIDE] Error subtítulos FFmpeg: ${e.message}`);
+                            }
+                        }
+
+                        const totalVideoTime = computeRealDuration(scenes);
+                        steps.push(`✅ Video ensamblado: ${imageFiles.length} escenas, ${Math.round(totalVideoTime)}s total`);
                     }
                 } catch (e) {
                     serverLog('ERROR', `[VIDE] Error FFmpeg: ${e.message}`);
@@ -1271,9 +1779,12 @@ const server = http.createServer((req, res) => {
                     res.end(JSON.stringify({ status: 'success', video: `data:video/mp4;base64,${videoBase64}`, steps }));
                 } else {
                     // Return steps only
+                    const hasErrors = steps.some(s => s.includes('❌'));
+                    const responseStatus = hasErrors ? 'error' : 'success';
+                    const responseMessage = hasErrors ? 'El video no pudo generarse' : 'Proceso completado (sin video)';
                     fs.rmSync(tmpDir, { recursive: true, force: true });
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ status: 'success', steps }));
+                    res.writeHead(hasErrors ? 500 : 200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: responseStatus, message: responseMessage, steps }));
                 }
 
             } catch (e) {
@@ -1282,6 +1793,269 @@ const server = http.createServer((req, res) => {
                 res.end(JSON.stringify({ status: 'error', error: e.message }));
             }
         });
+        return;
+    }
+
+    // ===== ViRe: VIDEO CON REMOTION (motor independiente de VIDE/FFmpeg) =====
+    if (pathname === '/api/vire-produce' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            let tmpDir = null;
+            try {
+                const { empresa, sitio_web, telefono, guion, style, duration, format, enableMusic } = JSON.parse(body);
+                serverLog('INFO', `[ViRe] Iniciando para: ${empresa}`);
+
+                const vireDir = path.join(__dirname, '../SuitVidGenRemotion');
+                const vireRenderScript = path.join(vireDir, 'scripts/render.js');
+                if (!fs.existsSync(vireRenderScript)) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: `ViRe no está instalado (no se encontró ${vireRenderScript})` }));
+                    return;
+                }
+
+                tmpDir = path.join(__dirname, `tmp_vire_${Date.now()}`);
+                fs.mkdirSync(tmpDir, { recursive: true });
+
+                const { scenes, videoConfig } = parseGuionScenes(guion, duration, style);
+
+                // Música de fondo opcional (mismo generador que usa VIDE)
+                let musicFilePath = null;
+                if (enableMusic) {
+                    try {
+                        musicFilePath = path.join(tmpDir, 'music.wav');
+                        const musicStyle = videoConfig.musica.estilo || style || 'energetic';
+                        const bpm = videoConfig.musica.bpm || (musicStyle === 'energetic' ? 140 : musicStyle === 'relaxing' ? 80 : 100);
+                        const musicDuration = videoConfig.duracion_total || parseInt(duration) || 30;
+                        const musicScript = path.join(__dirname, '../SuitMusic/scripts/music.py');
+                        spawnSync('python', [musicScript, '-o', musicFilePath, '-d', String(musicDuration), '-b', String(bpm), '-s', musicStyle], { timeout: 30000 });
+                    } catch (e) {
+                        serverLog('WARN', `[ViRe] Música no generada: ${e.message}`);
+                    }
+                }
+
+                // Map guion scenes -> ViRe scene types
+                const vireScenes = scenes.map((s, i) => {
+                    const isFirst = i === 0;
+                    const isLast = i === scenes.length - 1;
+
+                    if (isFirst && scenes.length > 2) {
+                        return {
+                            type: 'intro',
+                            duration: s.duracion || 5,
+                            animation: 'fade_in',
+                            title: s.title || 'Video',
+                            subtitle: s.body ? s.body.substring(0, 100) : undefined,
+                            voice_text: s.body || s.title || '',
+                        };
+                    } else if (isLast && scenes.length > 2) {
+                        return {
+                            type: 'outro',
+                            duration: s.duracion || 5,
+                            animation: 'fade_in',
+                            cta: s.body || '¡Contáctanos!',
+                            contact_info: telefono || undefined,
+                            website: sitio_web || undefined,
+                            voice_text: s.body || s.title || '',
+                        };
+                    } else {
+                        return {
+                            type: 'text',
+                            duration: s.duracion || 5,
+                            animation: s.animacion === 'fade' ? 'fade_in' : 'slide_up',
+                            title: s.title || undefined,
+                            body: s.body || '',
+                            image_prompt: s.visual || `${s.title || ''} ${s.body || ''}`.substring(0, 200),
+                            voice_text: s.body || s.title || '',
+                        };
+                    }
+                });
+
+                const fmtMap = { Post: 'post', Reel: 'story', Story: 'story', Banner: 'custom' };
+                const vireFmt = fmtMap[format] || 'story';
+                const vireFps = videoConfig.fps || 24;
+
+                const vireScript = {
+                    format: vireFmt,
+                    width: 1080,
+                    height: vireFmt === 'post' ? 1080 : vireFmt === 'custom' ? 1200 : 1920,
+                    fps: vireFps,
+                    empresa: empresa || '',
+                    tema: 'vide',
+                    voice: { provider: 'edge_tts', voice: 'es-MX-DaliaNeural', speed: 1.0 },
+                    background_music: (musicFilePath && fs.existsSync(musicFilePath)) ? musicFilePath : undefined,
+                    subtitles: { enabled: true, style: 'classic' },
+                    scenes: vireScenes,
+                };
+
+                const vireScriptPath = path.join(tmpDir, 'vire_script.json');
+                const vireOutputPath = path.join(tmpDir, 'vire_output.mp4');
+                fs.writeFileSync(vireScriptPath, JSON.stringify(vireScript, null, 2));
+
+                serverLog('INFO', `[ViRe] 🎬 Renderizando (${vireScenes.length} escenas, formato ${vireFmt})...`);
+                const vireResult = spawnSync('node', [
+                    vireRenderScript,
+                    '--guion', vireScriptPath,
+                    '--output', vireOutputPath,
+                    '--empresa', empresa || 'ViRe',
+                    '--auto'
+                ], {
+                    cwd: vireDir,
+                    timeout: 600000,
+                    stdio: 'pipe',
+                    maxBuffer: 50 * 1024 * 1024,
+                });
+
+                if (vireResult.status === 0 && fs.existsSync(vireOutputPath)) {
+                    serverLog('INFO', `[ViRe] ✅ Video renderizado`);
+                    const videoBase64 = fs.readFileSync(vireOutputPath).toString('base64');
+                    fs.rmSync(tmpDir, { recursive: true, force: true });
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'success', video: `data:video/mp4;base64,${videoBase64}`, renderer: 'vire' }));
+                } else {
+                    const stderr = vireResult.stderr?.toString() || '';
+                    const tail = stderr.split('\n').slice(-15).join('\n').trim();
+                    serverLog('ERROR', `[ViRe] ❌ Render falló (exit ${vireResult.status}): ${tail.substring(0, 800)}`);
+                    fs.rmSync(tmpDir, { recursive: true, force: true });
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: `ViRe falló: ${tail.substring(0, 500)}` }));
+                }
+            } catch (e) {
+                serverLog('ERROR', `[ViRe] ${e.message}`);
+                if (tmpDir && fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // 🎨 ESTILOS VISUALES ENDPOINT (VIDE)
+    if (pathname === '/api/estilos-visuales' && req.method === 'GET') {
+        const empresa = parsedUrl.searchParams.get('empresa') || 'ALL';
+        (async () => {
+            try {
+                const { data: cats, error: errCats } = await supabaseAdmin
+                    .from('video_categorias_estilo')
+                    .select('*')
+                    .or(`id_empresa.eq.${empresa},id_empresa.eq.ALL`)
+                    .eq('activo', true)
+                    .order('id');
+                if (errCats) throw errCats;
+                const ids = cats.map(c => c.id);
+                const { data: subs, error: errSubs } = await supabaseAdmin
+                    .from('video_subestilos')
+                    .select('*')
+                    .in('id_categoria', ids)
+                    .or(`id_empresa.eq.${empresa},id_empresa.eq.ALL`)
+                    .eq('activo', true)
+                    .order('id');
+                if (errSubs) throw errSubs;
+                const estilos = cats.map(c => ({
+                    ...c,
+                    subestilos: (subs || []).filter(s => s.id_categoria === c.id)
+                }));
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' });
+                res.end(JSON.stringify({ status: 'success', data: estilos }));
+            } catch (e) {
+                serverLog('ERROR', `[ESTILOS] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // 📊 TENDENCIAS DE ESTILOS ENDPOINT (director) — lee uso real por empresa
+    if (pathname === '/api/tendencias-estilo' && req.method === 'GET') {
+        const empresa = parsedUrl.searchParams.get('empresa') || 'ALL';
+        (async () => {
+            try {
+                // Filtra por id_empresa de la propia tabla de tendencias (uso real de
+                // ESTA empresa), no de video_subestilos (que siempre es 'ALL' porque
+                // los sub-estilos son compartidos) — ese filtro nunca hubiera
+                // encontrado nada para ninguna empresa real.
+                const { data, error } = await supabaseAdmin
+                    .from('video_tendencias_estilo')
+                    .select(`
+                        puntuacion, fecha, fuente,
+                        id_subestilo,
+                        video_subestilos!inner(id, nombre, slug, keywords_ia, id_categoria)
+                    `)
+                    .eq('id_empresa', empresa)
+                    .gte('fecha', new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0])
+                    .order('puntuacion', { ascending: false });
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' });
+                res.end(JSON.stringify({ status: 'success', data: data || [] }));
+            } catch (e) {
+                serverLog('ERROR', `[TENDENCIAS] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // 📈 REGISTRAR USO REAL DE UN ESTILO (alimenta al Director — "tendencia" =
+    // lo que esta empresa realmente elige/genera, no una señal externa)
+    if (pathname === '/api/tendencias-estilo' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', () => {
+            (async () => {
+                try {
+                    const { id_subestilo, empresa } = JSON.parse(body);
+                    if (!id_subestilo || !empresa) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ status: 'error', error: 'id_subestilo y empresa son requeridos' }));
+                        return;
+                    }
+                    const fecha = new Date().toISOString().split('T')[0];
+                    const { data: existing } = await supabaseAdmin
+                        .from('video_tendencias_estilo')
+                        .select('id, puntuacion')
+                        .eq('id_subestilo', id_subestilo)
+                        .eq('id_empresa', empresa)
+                        .eq('fecha', fecha)
+                        .maybeSingle();
+                    if (existing) {
+                        await supabaseAdmin.from('video_tendencias_estilo').update({ puntuacion: existing.puntuacion + 1 }).eq('id', existing.id);
+                    } else {
+                        await supabaseAdmin.from('video_tendencias_estilo').insert({ id_subestilo, id_empresa: empresa, fecha, puntuacion: 1, fuente: 'uso_real' });
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'success' }));
+                } catch (e) {
+                    serverLog('ERROR', `[TENDENCIAS-POST] ${e.message}`);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: e.message }));
+                }
+            })();
+        });
+        return;
+    }
+
+    // 🎯 CATÁLOGO DE PATTERN INTERRUPTS (por nicho, con 'GENERAL' de respaldo)
+    if (pathname === '/api/pattern-interrupts' && req.method === 'GET') {
+        const nicho = parsedUrl.searchParams.get('nicho') || 'GENERAL';
+        (async () => {
+            try {
+                const { data, error } = await supabaseAdmin
+                    .from('video_pattern_interrupts')
+                    .select('*')
+                    .or(`nicho.eq.${nicho},nicho.eq.GENERAL`)
+                    .eq('activo', true)
+                    .order('id');
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' });
+                res.end(JSON.stringify({ status: 'success', data: data || [] }));
+            } catch (e) {
+                serverLog('ERROR', `[PATTERN-INTERRUPTS] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        })();
         return;
     }
 
@@ -1335,7 +2109,7 @@ const server = http.createServer((req, res) => {
 
 async function callOpenRouter(model, messages, temperature = 0.7) {
     try {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch('http://localhost:20128/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
@@ -1347,7 +2121,8 @@ async function callOpenRouter(model, messages, temperature = 0.7) {
             body: JSON.stringify({
                 model: model,
                 messages: messages,
-                temperature: temperature
+                temperature: temperature,
+                stream: false
             })
         });
 
@@ -1366,6 +2141,36 @@ async function callOpenRouter(model, messages, temperature = 0.7) {
     } catch (error) {
         throw error;
     }
+}
+
+// Respaldo real cuando pytrends/Reddit devuelven pocos resultados — antes era
+// texto hardcodeado sobre paneles solares (dejado de otro cliente) que salía
+// igual sin importar el nicho real buscado. Ahora es una llamada de IA de
+// verdad, genérica, con el nicho/sub-nicho/región reales inyectados.
+async function generateAITrendFallback(niche, subNiche, region) {
+    const messages = [
+        { role: 'system', content: 'Eres un investigador de tendencias de contenido para redes sociales. Respondes EXCLUSIVAMENTE con un array JSON válido, nada de texto fuera de él.' },
+        { role: 'user', content: `Genera 5 ideas de tendencias ACTUALES y REALISTAS para el nicho/industria "${niche || 'general'}"${subNiche ? `, sub-nicho: "${subNiche}"` : ''}, región: ${region || 'México'}.
+Deben ser específicas de ESE nicho — no genéricas ni de otro giro.
+Responde SOLO: [{"titulo": "...", "descripcion": "...", "score": (60-95, número)}]` }
+    ];
+    const orModels = ["openrouter/free", "deepseek/deepseek-v4-flash"]
+        .map(toOmniRouteId)
+        .filter((v, i, a) => a.indexOf(v) === i);
+
+    for (const m of orModels) {
+        try {
+            const result = await callOpenRouter(m, messages, 0.7);
+            const jsonStr = result.trim().replace(/```json|```/g, '');
+            const parsed = JSON.parse(jsonStr);
+            if (Array.isArray(parsed)) {
+                return parsed.map(t => ({ titulo: t.titulo, descripcion: t.descripcion || '', fuente: 'IA (respaldo)', score: t.score || 70 }));
+            }
+        } catch (e) {
+            serverLog('WARN', `⚠️ [TRENDS_AI_FALLBACK] ${m}: ${e.message}`);
+        }
+    }
+    return [];
 }
 
 async function callLocalLMS(prompt) {
@@ -1456,17 +2261,12 @@ server.listen(PORT, () => {
     // Auto-sync de Prompts_IA cada 5 minutos
     setInterval(async () => {
         try {
-            const https = require('https');
             const syncUrl = GAS_URL + '?action=getAll';
             const gasData = await new Promise((resolve, reject) => {
-                https.get(syncUrl, (res) => {
-                    let body = '';
-                    res.on('data', d => body += d);
-                    res.on('end', () => {
-                        try { resolve(JSON.parse(body)); }
-                        catch (e) { reject(new Error('GAS parse error')); }
-                    });
-                }).on('error', reject);
+                fetchWithRedirects(syncUrl, (body) => {
+                    try { resolve(JSON.parse(body)); }
+                    catch (e) { reject(new Error('GAS parse error: ' + body.substring(0, 200))); }
+                });
             });
             const rows = gasData?.Prompts_IA || gasData?.data?.Prompts_IA || [];
             let count = 0;

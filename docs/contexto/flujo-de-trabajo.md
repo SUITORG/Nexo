@@ -55,9 +55,9 @@ zip -r "SUIT_${DATE_STR}_WSL.zip" . -x "*/node_modules/*" "*/.git/*" "*.zip" "*/
 
 | Entorno | Propósito | Ubicación |
 |---|---|---|
-| Desarrollo local | WSL 2 en Windows | `C:\Users\rojo-\Downloads\SUITORGSTORE01` |
+| Desarrollo local | WSL 2 en Windows | `C:\Users\rojo-\Downloads\suitorg` |
 | Producción (GAS) | Google Script runtime | `script.google.com` (ID: `1pSFYiYl_blIOzZ_kBSYDB-2CRjx6b44LENqkodgmqg_QI7e5S4WwpiJS`) |
-| Producción (Frontend) | GitHub Pages | `suitorgstore01.github.io` (asumido del workflow) |
+| Producción (Frontend) | GitHub Pages | `suitorg.github.io` (asumido del workflow) |
 
 [PENDIENTE: No hay definición de ambiente de staging/pre-producción. Todo cambio va directo a producción.]
 [PENDIENTE: No hay proceso documentado de rollback más allá de restaurar desde _LEGACY_BACKUPS/.]

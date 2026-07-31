@@ -78,37 +78,16 @@ function extractTrends(raw, niche) {
     return trends;
 }
 
-function extractTrendsFromIA(niche, subNiche, region) {
-    const base = niche || 'energía solar';
-    const sub = subNiche || '';
-    const reg = region || 'México';
-    const suggestions = [
-        { titulo: `Paneles solares en ${reg}: ¿Cuánto cuesta instalarlos realmente?`, descripcion: `Guía de precios y ahorro para ${sub} en ${reg}`, fuente: 'Sugerido', score: 100 },
-        { titulo: `${sub} en ${reg}: Lo que nadie te dice antes de comprar`, descripcion: `Errores comunes al elegir ${base.toLowerCase()} en ${reg}`, fuente: 'Sugerido', score: 90 },
-        { titulo: `CFE y paneles solares en ${reg}: Mitos y realidades`, descripcion: `Lo que realmente pasa con tu recibo de luz después de instalar ${base.toLowerCase()}`, fuente: 'Sugerido', score: 85 },
-        { titulo: `${sub}: ¿Vale la pena en 2026? Casos reales en ${reg}`, descripcion: `Testimonios y ahorros documentados de ${base.toLowerCase()} en ${reg}`, fuente: 'Sugerido', score: 80 },
-        { titulo: `Financiamiento para ${base.toLowerCase()} en ${reg}: Opciones y requisitos`, descripcion: `Créditos, programas y subsidios para instalar ${base.toLowerCase()} en ${reg}`, fuente: 'Sugerido', score: 75 },
-    ];
-    return suggestions;
-}
-
 async function fetchTrends(niche, subNiche, region) {
     const cached = readCache(niche, region);
     if (cached) return cached;
 
     const raw = await fetchPythonTrends(niche, region);
-    let trends = extractTrends(raw, niche);
+    const trends = extractTrends(raw, niche);
 
-    if (trends.length < 3) {
-        const iaFallback = extractTrendsFromIA(niche, subNiche, region);
-        const existingTitles = new Set(trends.map(t => t.titulo.toLowerCase()));
-        for (const fb of iaFallback) {
-            if (!existingTitles.has(fb.titulo.toLowerCase())) {
-                trends.push(fb);
-            }
-        }
-    }
-
+    // Respaldo cuando hay pocos resultados reales (pytrends/Reddit) ya no vive
+    // aquí como texto hardcodeado — lo hace local-server-node.js con una
+    // llamada de IA real (generateAITrendFallback), genérica al nicho pedido.
     const result = { trends: trends.slice(0, 10), raw };
     writeCache(niche, region, result);
     return result;

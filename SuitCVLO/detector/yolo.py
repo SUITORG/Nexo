@@ -1,6 +1,7 @@
 import cv2
 from ultralytics import YOLO
 from config import YOLO_MODEL, CONFIDENCE
+from pipeline.utils import read_image
 
 
 class YOLODetector:
@@ -24,7 +25,7 @@ class YOLODetector:
         return detections, results.plot()
 
     def detect_image(self, image_path):
-        frame = cv2.imread(str(image_path))
+        frame = read_image(image_path)
         if frame is None:
             raise ValueError(f"Cannot read image: {image_path}")
         return self.detect_frame(frame)

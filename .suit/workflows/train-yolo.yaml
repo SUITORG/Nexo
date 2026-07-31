@@ -1,0 +1,80 @@
+# SuitOS Workflow — Custom YOLO Billboard Training (SuitCVLO v0.6)
+workflow:
+  name: train-yolo
+  display_name: "Custom YOLO Billboard Training"
+  description: "Train a custom YOLO model to detect billboards (panoramic, wall, busstop, furniture, other)"
+  risk: medium
+  domain: ml
+  project: suitcvlo
+
+  entry:
+    requires_planning: false
+    requires_confirmation: true
+    required_context:
+      - SuitCVLO/AGENTS.md
+      - SuitCVLO/config.py
+      - SuitCVLO/.env
+    required_skills:
+      - yolo-training
+      - python
+    forbidden_if:
+      - "No images in SuitCVLO/uploads/"
+
+  steps:
+    - id: export_pseudo_labels
+      description: "Export existing pipeline detections as YOLO-format pseudo-labels"
+      action: run
+      command: "python tools/export_yolo.py --source uploads --output dataset_yolo --min-conf 0.3"
+      validation:
+        - "dataset_yolo/images/train/ contains images"
+        - "dataset_yolo/labels/train/ contains .txt files"
+
+    - id: download_public_datasets
+      description: "Download public billboard datasets (Roboflow)"
+      action: run
+      command: "python tools/download_datasets.py --output external_datasets --roboflow-api-key $ROBOFLOW_API_KEY"
+      condition: "if ROBOFLOW_API_KEY is set"
+      validation:
+        - "external_datasets/ contains downloaded data"
+
+    - id: prepare_dataset
+      description: "Merge, split, and prepare final dataset"
+      action: run
+      command: "python tools/prepare_dataset.py --input dataset_yolo --merge-dir external_datasets --output dataset_yolo_final --augment"
+      validation:
+        - "dataset_yolo_final/dataset.yaml exists"
+        - "dataset_yolo_final/images/train/ has images"
+        - "dataset_yolo_final/images/val/ has images"
+
+    - id: train
+      description: "Train custom YOLO model via transfer learning"
+      action: run
+      command: "python tools/train.py --data dataset_yolo_final/dataset.yaml --epochs 200 --batch 16 --device 0"
+      condition: "GPU available; fall back to Colab notebook"
+      validation:
+        - "runs/train/exp/weights/best.pt exists"
+
+    - id: evaluate
+      description: "Evaluate trained model on validation set"
+      action: run
+      command: "python tools/evaluate.py --model runs/train/exp/weights/best.pt --data dataset_yolo_final/dataset.yaml"
+      validation:
+        - "mAP@50 > 0.5 (acceptable) or mAP@50 > 0.7 (production-ready)"
+
+    - id: integrate
+      description: "Update .env to use custom model"
+      action: edit
+      target: SuitCVLO/.env
+      edit:
+        key: YOLO_MODEL
+        value: "runs/train/exp/weights/best.pt"
+      validation:
+        - "YOLO_MODEL points to existing best.pt"
+
+  exit:
+    validation:
+      - "Custom model detects billboards with higher accuracy than generic yolov8n.pt"
+      - "Pipeline uses new model by default"
+    notifies:
+      - .suit/memory/decisions/
+      - .suit/telemetry/

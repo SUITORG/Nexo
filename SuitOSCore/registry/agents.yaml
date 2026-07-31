@@ -44,6 +44,20 @@ agents:
       - "system-analysis"
     max_tokens: 16000
     temperature: 0.1
+  fullstack-dev:
+    description: "Full-stack development — frontend UI, backend API, and responsive design. Auto-selects skill based on file patterns and intent."
+    domain: "code"
+    risk_level: "medium"
+    required_skills:
+      - "frontend"
+      - "backend"
+      - "responsive-design"
+      - "javascript"
+      - "multi-tenant"
+    required_reviewers:
+      - "style"
+    max_tokens: 16000
+    temperature: 0.3
   probador:
     description: "Read-only smoke tester. Runs integration test suites from YAML definitions against running servers. Never modifies code or data."
     domain: "quality"

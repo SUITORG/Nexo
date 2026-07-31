@@ -42,12 +42,14 @@ workflow:
         - javascript
         - gas
         - domain-specific
+        - ponytail-ladder
       validation:
         - "Syntax is valid"
         - "No hardcoded secrets"
         - "id_empresa filtered where applicable"
         - "Soft delete only"
         - "giro_especifico validated for cotizador"
+        - "Code is minimal — no speculative abstractions, unused imports, or over-engineering"
 
     - id: index
       description: "Update function index"

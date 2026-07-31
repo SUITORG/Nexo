@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const crypto = require('crypto');
 
 const TTS_BASE = 'https://translate.google.com/translate_tts';
 const MAX_CHARS = 180;
@@ -45,7 +46,11 @@ async function generateVoice(text, options = {}) {
     index = 0,
   } = options;
 
-  const fileName = `voice_${index}.mp3`;
+  // Cache key must depend on content (text+lang+speed), not just scene index:
+  // with an index-only key, a stale audio file from a previous unrelated
+  // guion is silently reused for the "same" scene position on every render.
+  const contentHash = crypto.createHash('md5').update(`${text}|${lang}|${speed}`).digest('hex').slice(0, 10);
+  const fileName = `voice_${index}_${contentHash}.mp3`;
   const destPath = outputDir ? path.join(outputDir, fileName) : null;
 
   if (destPath && fs.existsSync(destPath)) {

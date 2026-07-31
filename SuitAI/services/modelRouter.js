@@ -124,6 +124,8 @@ async function route(messages) {
     }
     const apiKey = m.source === 'openrouter'
       ? process.env.OPENROUTER_API_KEY
+      : m.source === 'omniroute'
+      ? process.env.OMNIROUTE_API_KEY
       : process.env.OPENCODE_API_KEY;
     if (!apiKey) { errors.push(`${m.id} (no API key)`); continue; }
     try {

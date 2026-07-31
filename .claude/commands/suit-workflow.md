@@ -1,0 +1,1 @@
+SuitOS Workflow Loader. Pregúntale al usuario qué workflow necesita feature, bugfix, audit, review, research, deploy, migration, cotizador. Lee `.suit/workflows/{workflow}.yaml` y úsalo como proceso para la tarea actual, siguiendo sus pasos, validaciones y condiciones.

@@ -30,6 +30,9 @@ requests
 # v0.2+ Billboard pipeline
 scikit-image>=0.22
 
+# Raw image support (CR3, ARW, DNG, etc.)
+rawpy>=0.27
+
 # v0.3+ Capture (install gphoto2 CLI separately)
 # gphoto2 via system package: sudo apt install gphoto2
 pynmea2>=1.18

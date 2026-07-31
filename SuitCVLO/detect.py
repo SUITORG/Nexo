@@ -9,6 +9,7 @@ from detector.ocr import OCRReader
 from geo.metadata import extract_exif
 from geo.geocode import reverse_geocode
 from db.local import LocalStore
+from pipeline.utils import read_image
 
 
 def main():
@@ -82,7 +83,7 @@ def run_photo(image_path, detector, panoramic_cls, ocr_reader, local_db, args):
     billboards = is_billboard_candidate(detections, frame_area)
 
     if billboards:
-        frame = cv2.imread(str(image_path))
+        frame = read_image(image_path)
         texts = ocr_reader.extract_from_crops(frame, billboards)
         pano_text = " | ".join([t["text"] for t in texts]) if texts else None
         classification = ocr_reader.classify_text(pano_text or "") if pano_text else None
@@ -105,7 +106,9 @@ def run_photo(image_path, detector, panoramic_cls, ocr_reader, local_db, args):
     print(f"  Classification: {classification}")
     print(f"  Captured: {meta.get('captured_at', 'unknown')}")
     print(f"  GPS: {meta.get('gps_lat')}, {meta.get('gps_lng')}")
-    print(f"  Address: {geo['address'] if geo else 'N/A'}")
+    addr = geo["address"]
+    addr_err = geo.get("address_error")
+    print(f"  Address: {addr or 'N/A'}{' (' + addr_err + ')' if addr_err and addr_err != 'no_gps' else ''}")
 
     if local_db:
         max_conf = max([d["confidence"] for d in detections], default=0)
@@ -115,7 +118,8 @@ def run_photo(image_path, detector, panoramic_cls, ocr_reader, local_db, args):
             "captured_at": meta.get("captured_at"),
             "gps_lat": meta.get("gps_lat"),
             "gps_lng": meta.get("gps_lng"),
-            "address": geo["address"] if geo else None,
+            "address": geo["address"],
+            "address_error": geo.get("address_error"),
             "detected_objects": detections,
             "is_panoramic": pano_type is not None or len(billboards) > 0,
             "panoramic_type": pano_type or ("billboard" if billboards else None),

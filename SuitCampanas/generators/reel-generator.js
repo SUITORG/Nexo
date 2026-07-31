@@ -100,7 +100,7 @@ class ReelGenerator {
   }
 
   // Generar títulos concisos
-  generar(numero) {
+  generarTitulo(numero) {
     const titulos = [
       "Error Común", "El Problema", "Por Qué Falla", "Analogía",
       "Solución Proceso", "Implementación", "Beneficios", "CTA"

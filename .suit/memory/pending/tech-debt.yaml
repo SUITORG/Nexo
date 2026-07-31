@@ -129,6 +129,40 @@ tech_debt:
     created: "2026-07-09"
     status: open
 
+  - id: FT-001
+    description: "Integrar ComfyUI como motor de generación visual/audio para VIDE. Incluye: diseñar workflows ComfyUI (text2img+ControlNet, AnimateDiff para b-roll, SFX, ensamblaje multicapa), conectar generateVideJson()→MCP comfyui, actualizar schema JSON con pattern_interrupt/camara/sfx/b-roll, y registrar en .suit/registry/ como tool oficial."
+    severity: medium
+    type: feature
+    related_files:
+      - ".suit/registry/tools.yaml"    # ✅ ya registrado
+      - ".suit/registry/skills.yaml"   # ✅ ya registrado
+      - ".mcp.json"                    # ✅ ya registrado
+      - "opencode.json"                # ✅ ya registrado
+      - ".suit/registry/projects.yaml" # ✅ ya registrado
+      - "SuitCampanas/local-server-node.js"
+      - "SuitCampanas/script.js"
+      - ".suit/workflows/video-avanzado.yaml"
+    dependencies:
+      - "ComfyUI corriendo (puerto 8188, modo CPU)"
+      - "comfyui-mcp vía npx (configurado global y proyecto)"
+      - "Workflows ComfyUI .json para cada operación (diseñar)"
+    created: "2026-07-30"
+    status: deferred
+    defer_reason: "Solo el paso 1 (registro en .mcp.json) está hecho. Pausado por la misma razón que FT-002: priorizar la prueba manual del pipeline VIDE ya mejorado antes de invertir en el resto (workflows ComfyUI, conectar generateVideJson())."
+
+  - id: FT-002
+    description: "Automatizar edición de video profesional vía DaVinci Resolve controlado por MCP desde SuitCampanas (color grading real, mezcla de audio avanzada, transiciones complejas) — evaluado como alternativa/complemento a las mejoras incrementales de FFmpeg (ver B1-B17 y mejoras de calidad #1/#2 en .suit/memory/bugs/videos-multiples-fallas.md). Rompe la automatización 100%-servidor actual: agrega dependencia de una NLE de escritorio + scripting, y probablemente un paso semi-manual."
+    severity: low
+    type: feature
+    related_files: []
+    dependencies:
+      - "DaVinci Resolve instalado localmente (usuario confirma que sí lo tiene)"
+      - "DaVinci Resolve scripting API (Python/Lua) — validar alcance real en la edición gratuita antes de comprometerse"
+      - "MCP wrapper para DaVinci (no existe uno oficial conocido; habría que construirlo o evaluar opciones de la comunidad)"
+    created: "2026-07-30"
+    status: deferred
+    defer_reason: "Se prioriza que el usuario haga la prueba manual del pipeline VIDE ya mejorado esta sesión (avatarPath, GAS, duración/audio, logo/avatar+contraste, overlay de contacto, wrap de texto, voz neuronal Edge TTS, dimensiones/modelo de imagen) antes de invertir en esta integración, de mayor alcance y riesgo. Si la prueba muestra gaps que FFmpeg genuinamente no puede resolver (color grading, mezcla compleja), esta es la vía a retomar."
+
   - id: TD-016
     description: "Probar SuitAI en vivo: arrancar server.js, configurar OPENROUTER_API_KEY y OPENCODE_API_KEY en .env, probar GET /api/ai/models, POST /api/ai/chat, verificar circuit breaker con modelo falso, verificar fallback a Google Gemini."
     severity: medium

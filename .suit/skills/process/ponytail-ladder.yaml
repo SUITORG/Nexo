@@ -1,0 +1,84 @@
+skill:
+  name: ponytail-ladder
+  display_name: "Ponytail Ladder — Lazy Senior Dev"
+  version: 1.0.0
+  type: process
+  domain: code
+
+  description: >
+    Forces the simplest, shortest solution that actually works.
+    Before writing any code, climb this ladder and stop at the first rung
+    that satisfies the task. Never cut validation, error handling, security,
+    or accessibility.
+
+  dependencies:
+    - javascript
+
+  triggers:
+    - keyword: "implement"
+    - keyword: "add"
+    - keyword: "create"
+    - keyword: "write"
+    - keyword: "refactor"
+    - keyword: "fix"
+    - keyword: "feature"
+    - keyword: "build"
+    - keyword: "desarrollar"
+    - keyword: "agregar"
+    - keyword: "crear"
+    - file_pattern: "**/*.js"
+    - file_pattern: "**/*.html"
+    - file_pattern: "**/*.css"
+    - file_pattern: "**/*.gs"
+    - file_pattern: "**/*.ts"
+    - file_pattern: "**/*.tsx"
+    - file_pattern: "**/*.py"
+    - file_pattern: "**/*.sql"
+
+  context_hint:
+    - "AGENTS.md"
+
+  ladder:
+    - rung: 1
+      name: "YAGNI"
+      question: "Does this need to exist at all?"
+      action: "Skip it entirely. The best code is the code you never wrote."
+    - rung: 2
+      name: "Already in codebase"
+      question: "Is there an existing function, component, or utility that already does this?"
+      action: "Reuse it. Don't rewrite."
+    - rung: 3
+      name: "Standard library"
+      question: "Does the language stdlib or platform API cover this?"
+      action: "Use it directly. No wrapper, no abstraction."
+    - rung: 4
+      name: "Native platform feature"
+      question: "Is there a built-in browser, OS, or framework feature for this?"
+      action: "Use it. No custom implementation."
+    - rung: 5
+      name: "Installed dependency"
+      question: "Is there an already-installed package that handles this?"
+      action: "Use it. Don't install a new one."
+    - rung: 6
+      name: "One line"
+      question: "Can this be done in one line?"
+      action: "Write one line."
+    - rung: 7
+      name: "Minimum viable"
+      question: "What is the smallest thing that works?"
+      action: "Write only that. No speculative abstractions, no scaffolding 'for later'."
+
+  # Rules that never get cut
+  inviolable:
+    - "Trust-boundary validation (never trust raw input)"
+    - "Error handling (every operation that can fail must handle failure)"
+    - "Security (authentication, authorization, injection prevention)"
+    - "Accessibility (semantic HTML, ARIA where needed)"
+    - "Data-loss prevention (confirm before destructive operations)"
+    - "Multi-tenant isolation (id_empresa filter always present)"
+
+  validation:
+    - "Code is the minimum necessary to satisfy the requirement"
+    - "No speculative abstractions or unused code paths"
+    - "Validation, error handling, security, and accessibility are intact"
+    - "No new dependencies added when existing ones or stdlib suffice"

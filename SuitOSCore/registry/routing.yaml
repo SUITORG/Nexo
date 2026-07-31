@@ -7,6 +7,59 @@ routing:
         - "new functionality"
       workflow: feature
       priority: 10
+      agent: fullstack-dev
+
+    - patterns:
+        - "ui"
+        - "pagina"
+        - "vista"
+        - "componente"
+        - "boton"
+        - "formulario"
+        - "tabla html"
+        - "modal"
+        - "sidebar"
+        - "navbar"
+        - "header"
+        - "footer"
+      workflow: feature
+      priority: 15
+      agent: fullstack-dev
+      skills_override:
+        - frontend
+        - responsive-design
+
+    - patterns:
+        - "api"
+        - "endpoint"
+        - "handler"
+        - "crud"
+        - "middleware"
+        - "consulta"
+        - "supabase"
+        - "base de datos"
+        - "servicio"
+      workflow: feature
+      priority: 15
+      agent: fullstack-dev
+      skills_override:
+        - backend
+        - multi-tenant
+
+    - patterns:
+        - "responsive"
+        - "movil"
+        - "layout"
+        - "adaptar"
+        - "media query"
+        - "celular"
+        - "tablet"
+      workflow: feature
+      priority: 15
+      agent: fullstack-dev
+      skills_override:
+        - responsive-design
+        - frontend
 
     - patterns:
         - "fix"
@@ -91,4 +144,4 @@ routing:
   overrides:
     - if:
         workflow: feature
-      agent: developer
+      agent: fullstack-dev

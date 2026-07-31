@@ -26,7 +26,7 @@ workflow:
       command: "cd SuitVidGenRemotion && npx remotion render MyComp out/video.mp4"
     - id: 5
       name: "Integrar con CampanasAi"
-      action: "Copiar video renderizado a CampanasAi/media/ para uso en campañas"
+      action: "Copiar video renderizado a SuitCampanas/media/ para uso en campañas"
   validation:
     - "Ejecutar `npm run build` en SuitVidGenRemotion/"
     - "Verificar que el video se renderiza sin errores"

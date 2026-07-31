@@ -68,14 +68,19 @@ def generate_pdf(results, catalog, output_path):
     if results:
         write_line("=== Per-Image Detail ===", "Helvetica-Bold", 12)
         for r in results:
-            write_line(f"  {r.get('image', '?')}", "Helvetica", 10)
-            if r.get("address"):
-                write_line(f"    Location: {r['address'][:80]}", size=9, indent=10)
+            img = r.get('image', '?')
+            orig = r.get('original_filename') or img
+            fecha = (r.get('captured_at') or '?')[:10]
+            addr = (r.get('address') or '?')[:60]
+            write_line(f"  {orig} | {fecha}", "Helvetica", 10)
+            if addr != '?':
+                write_line(f"    Location: {addr}", size=9, indent=10)
             for bb in r.get("billboards", []):
                 brand = bb.get("brand", "?")
                 fmt = bb.get("format", "?")
                 campaign = bb.get("campaign_detail", "")[:60]
-                write_line(f"    -> {brand} | {fmt} | {campaign}", size=9, indent=10)
+                cat = bb.get("campaign_type", "")[:20]
+                write_line(f"    -> {brand} | {fmt} | {cat} | {campaign}", size=9, indent=10)
             y -= 5
 
     # Catalog (unique billboards)

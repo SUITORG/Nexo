@@ -9,8 +9,8 @@
     "registry:verify": "cd ../SuitOSCore && node tooling/build-registry.js --verify",
     "registry:server": "cd ../SuitOSCore && node tooling/build-registry.js --server --watch --mcp",
     "check": "node --check backend/server.js && node --check src/app.js",
-    "test": "node ../SuitOSCore/agents/probador/probador.js --suite health",
-    "smoke": "node ../SuitOSCore/agents/probador/probador.js --suite health"
+    "test": "node ../SuitOSCore/scripts/agents/probador.js --suite health",
+    "smoke": "node ../SuitOSCore/scripts/agents/probador.js --suite health"
   },
   "dependencies": {
     "express": "^4.18.2"

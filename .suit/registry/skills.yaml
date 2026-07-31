@@ -249,6 +249,62 @@ skills:
       - "SuitVidGenRemotion/package.json"
       - "https://www.remotion.dev/docs"
 
+  ponytail-ladder:
+    description: "Forces the simplest, shortest solution that works. YAGNI ladder: skip → reuse → stdlib → native → dependency → one line → minimum viable."
+    version: 1.0.0
+    type: process
+    domain: code
+    dependencies:
+      - javascript
+    triggers:
+      - "implement"
+      - "add"
+      - "create"
+      - "write"
+      - "refactor"
+      - "fix"
+      - "feature"
+      - file_pattern: "**/*.js"
+      - file_pattern: "**/*.html"
+      - file_pattern: "**/*.css"
+      - file_pattern: "**/*.ts"
+    inputs:
+      - "source files"
+    outputs:
+      - "minimal code"
+    discoverable: true
+    context_hint:
+      - "AGENTS.md"
+
+  comfy-ui:
+    description: "Generación de imágenes, video y audio con ComfyUI (Stable Diffusion + ControlNet + AnimateDiff). Control de cámara vía OpenPose, efectos de video (glitch, transiciones), b-roll con video-to-video, SFX programáticos."
+    version: 1.0.0
+    type: tool
+    domain: media
+    dependencies:
+      - javascript
+    triggers:
+      - "image generation"
+      - "stable diffusion"
+      - "comfyui"
+      - "controlnet"
+      - "animate diff"
+      - "sfx"
+      - "b-roll"
+      - "pattern interrupt"
+      - file_pattern: "SuitCampanas/local-server-node.js"
+    inputs:
+      - "prompt"
+      - "workflow JSON (ComfyUI API format)"
+    outputs:
+      - "generated image (PNG)"
+      - "generated video (MP4)"
+      - "generated audio (WAV)"
+    discoverable: true
+    context_hint:
+      - "http://127.0.0.1:8188"
+      - "https://github.com/nicholasgriffintn/comfyui-mcp"
+
   pdf-generation:
     description: "Genera PDFs de cotizaciones usando backend/DriveManager.js. Almacena en Google Drive por tenant, enlace guardado en la cotización."
     version: 1.0.0

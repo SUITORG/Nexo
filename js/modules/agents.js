@@ -139,7 +139,7 @@ app.agents = {
                 return;
             }
             const idleSeconds = (Date.now() - app.state._lastChatActivity) / 1000;
-            if (idleSeconds > 180) { // 3 minutos
+            if (idleSeconds > 360) { // 6 minutos
                 if (app.state.currentAgent) {
                     app.agents.addMessageToUI('ai', `Sesión pausada por inactividad. Estaré aquí si necesitas algo más.`);
                     app.agents.closeChat();
@@ -434,7 +434,7 @@ app.agents = {
                     setTimeout(() => app.agents.saveMemory(vid, "Resumen parcial: " + summary.substring(0, 400)), 1000); // fire-and-forget
                 }
 
-                if (app.state.chatHistory.length >= 8) {
+                if (app.state.chatHistory.length >= 16) {
                     const currentId = (app.state.companyId || "").trim().toUpperCase();
                     const company = app.data.Config_Empresas.find(c => (c.id_empresa || "").toUpperCase() === currentId);
 

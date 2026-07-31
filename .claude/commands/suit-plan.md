@@ -1,0 +1,1 @@
+SuitOS Planner. Pregúntale al usuario qué tarea va a realizar. Lee `.suit/planner/template.yaml`, crea un plan estructurado con análisis de impacto, archivos involucrados, riesgo, validación y rollback. PRESENTA EL PLAN AL USUARIO PARA APROBACIÓN antes de ejecutar cualquier cambio.

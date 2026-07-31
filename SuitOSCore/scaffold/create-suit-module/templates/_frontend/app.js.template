@@ -1,0 +1,50 @@
+const API = '/api'
+
+async function apiFetch(path, options = {}) {
+  const token = localStorage.getItem('token')
+  const headers = { 'Content-Type': 'application/json', ...options.headers }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(`${API}${path}`, { ...options, headers })
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  return res.json()
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+  const view = document.getElementById(`view-${id}`)
+  if (view) view.classList.add('active')
+}
+
+async function checkHealth() {
+  try {
+    const data = await apiFetch('/health')
+    document.getElementById('health-status').textContent = `✅ ${data.status} (${data.module} v${data.version})`
+  } catch {
+    document.getElementById('health-status').textContent = '❌ Sin conexión'
+  }
+}
+
+async function loadItems() {
+  try {
+    const data = await apiFetch('/items')
+    const list = document.getElementById('items-list')
+    list.innerHTML = (Array.isArray(data) ? data : data.data || []).map(item =>
+      `<li>${item.name || item.id || JSON.stringify(item)}</li>`
+    ).join('')
+  } catch {
+    document.getElementById('items-list').innerHTML = '<li>Error al cargar</li>'
+  }
+}
+
+function initRouter() {
+  const hash = location.hash.slice(1) || 'home'
+  showView(hash)
+  if (hash === 'home') checkHealth()
+  if (hash === 'items') loadItems()
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initRouter()
+  window.addEventListener('hashchange', initRouter)
+  document.getElementById('btn-refresh')?.addEventListener('click', loadItems)
+})

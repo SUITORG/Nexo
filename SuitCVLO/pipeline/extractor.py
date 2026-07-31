@@ -2,21 +2,22 @@ import cv2
 import numpy as np
 from pathlib import Path
 from detector.yolo import YOLODetector
+from pipeline.utils import read_image
 
 
 class BillboardExtractor:
-    MIN_AREA_RATIO = 0.02
-    MIN_BILLBOARD_CONFIDENCE = 0.2
-    BILLBOARD_ASPECT_MIN = 1.3
-    BILLBOARD_ASPECT_MAX = 6.0
-    HORIZON_RATIO = 0.35
-    TEXTURE_STD_THRESHOLD = 30
+    MIN_AREA_RATIO = 0.008
+    MIN_BILLBOARD_CONFIDENCE = 0.15
+    BILLBOARD_ASPECT_MIN = 1.0
+    BILLBOARD_ASPECT_MAX = 8.0
+    HORIZON_RATIO = 0.15
+    TEXTURE_STD_THRESHOLD = 15
 
     def __init__(self, detector=None):
         self.detector = detector or YOLODetector()
 
     def extract(self, image_path):
-        frame = cv2.imread(str(image_path))
+        frame = read_image(image_path)
         if frame is None:
             raise ValueError(f"Cannot read: {image_path}")
         h, w = frame.shape[:2]
@@ -60,28 +61,40 @@ class BillboardExtractor:
 
     def _find_billboard_contours(self, frame, frame_area, h, w):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (3, 3), 0)
-        edges = cv2.Canny(blurred, 20, 100)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-        closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-        contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         candidates = []
-        for c in contours:
-            x, y, bw, bh = cv2.boundingRect(c)
-            area = bw * bh
-            area_ratio = area / frame_area
-            aspect = bw / max(bh, 1)
-            center_y = y + bh / 2
-            above_horizon = center_y < h * (1 - self.HORIZON_RATIO)
-            if (area_ratio >= self.MIN_AREA_RATIO
-                and self.BILLBOARD_ASPECT_MIN <= aspect <= self.BILLBOARD_ASPECT_MAX
-                and above_horizon
-                and self._has_texture(gray[y:y+bh, x:x+bw])):
+        margin = 5
+
+        strategies = [
+            ("canny_relaxed", cv2.Canny(cv2.GaussianBlur(gray, (3, 3), 0), 10, 50)),
+            ("canny_normal", cv2.Canny(cv2.GaussianBlur(gray, (3, 3), 0), 20, 100)),
+        ]
+
+        for name, edges in strategies:
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+            closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+            contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for c in contours:
+                x, y, bw, bh = cv2.boundingRect(c)
+                area = bw * bh
+                area_ratio = area / frame_area
+                if area_ratio < self.MIN_AREA_RATIO:
+                    continue
+                if area_ratio > 0.60:
+                    continue
+                aspect = bw / max(bh, 1)
+                if not (self.BILLBOARD_ASPECT_MIN <= aspect <= self.BILLBOARD_ASPECT_MAX):
+                    continue
+                center_y = y + bh / 2
+                if not (center_y < h * (1 - self.HORIZON_RATIO)):
+                    continue
+                if not self._has_texture(gray[y:y+bh, x:x+bw]):
+                    continue
                 candidates.append({
                     "bbox": [x, y, x+bw, y+bh],
                     "confidence": round(min(area_ratio * 2, 0.9), 2),
-                    "method": "contour",
+                    "method": f"contour_{name}",
                 })
+
         return candidates
 
     def _has_texture(self, region):

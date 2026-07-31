@@ -14,13 +14,12 @@ BRAND_KEYWORDS = {
     # Fast food / restaurants
     "mcdonalds": ["mcdonald", "mcdonalds", "mccafe", "happy meal"],
     "burger king": ["burger king", "whopper", "king"],
-    "kfc": ["kfc", "kentucky", "colonel"],
+    "kfc": ["kfc", "kentucky", "colonel", "pollo frito"],
     "starbucks": ["starbucks", "starbuck"],
     "dominos": ["domino", "dominos"],
     "pizza hut": ["pizza hut", "pizzahut"],
     "little caesars": ["little caesars", "litt caesar"],
     "pollo": ["pollo", "pollos"],
-    "kfc": ["pollo frito", "kentucky"],
     "subway": ["subway", "sub way"],
     "oxxo": ["oxxo", "oxxo"],
     # Tech
@@ -55,7 +54,6 @@ BRAND_KEYWORDS = {
     "hextar": ["hextar"],
     "coppel": ["coppel"],
     "elektra": ["elektra"],
-    "liverpool": ["liverpool"],
     "palacio de hierro": ["palacio de hierro"],
     # Finance
     "bbva": ["bbva", "bbva bancomer"],
@@ -70,7 +68,6 @@ BRAND_KEYWORDS = {
     "adidas": ["adidas"],
     "liverpool": ["liverpool"],
     "home depot": ["home depot", "home depot"],
-    "hextar": ["hextar", "hex tar"],
 }
 
 UNKNOWN_BRAND = "unknown"

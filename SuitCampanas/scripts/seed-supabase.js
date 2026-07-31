@@ -1,6 +1,11 @@
-const supabase = require('../lib/supabase');
+const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
 const industriasPath = path.join(__dirname, '../config/industrias.json');
 const { clasificacion } = JSON.parse(fs.readFileSync(industriasPath, 'utf8'));
@@ -25,7 +30,8 @@ async function seed() {
       .insert({
         categoria: cat.categoria,
         icono: cat.icono || '📦',
-        descripcion: cat.descripcion || ''
+        descripcion: cat.descripcion || '',
+        activo: true
       })
       .select()
       .single();

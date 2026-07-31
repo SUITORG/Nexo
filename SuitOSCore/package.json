@@ -1,10 +1,11 @@
 {
   "name": "suitos-core",
-  "version": "1.0.0",
-  "description": "Portable Agent OS Kernel — registry, dispatcher, loader, planner, ai-router, scaffold, agents, tooling",
+  "version": "1.1.0",
+  "description": "Portable Agent OS Kernel — registry, dispatcher, loader, planner, ai-router, scaffold, agents, tooling, CLI",
   "private": false,
   "main": "index.js",
   "bin": {
+    "suitos": "cli/suitos.js",
     "create-suit-module": "scaffold/create-suit-module/index.js",
     "generate-index": "tooling/generate-index.js",
     "mcp-shim": "tooling/mcp-bridge/shim.js",
@@ -13,11 +14,12 @@
     "registry-server": "tooling/build-registry.js"
   },
   "scripts": {
+    "suitos": "node cli/suitos.js",
     "registry:build": "node tooling/build-registry.js --mcp",
     "registry:verify": "node tooling/build-registry.js --verify",
     "registry:server": "node tooling/build-registry.js --server --watch --mcp",
-    "check": "node --check ai-router/modelScanner.js && node --check ai-router/modelRouter.js && node --check ai-router/circuitBreaker.js && node --check tooling/generate-index.js && node --check tooling/mcp-bridge/shim.js && node tooling/build-registry.js --validate"
+    "check": "node --check ai-router/modelScanner.js && node --check ai-router/modelRouter.js && node --check ai-router/circuitBreaker.js && node --check tooling/generate-index.js && node --check tooling/mcp-bridge/shim.js && node tooling/build-registry.js --validate && node cli/suitos.js --help"
   },
-  "keywords": ["suitos", "agent-os", "mcp", "ai-router", "scaffold"],
+  "keywords": ["suitos", "agent-os", "mcp", "ai-router", "scaffold", "cli"],
   "license": "MIT"
 }

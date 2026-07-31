@@ -75,8 +75,11 @@ python capture.py --route --interval 5s --output ./capturas/
 - [x] Reporte PDF resumen de toda la carpeta
 
 ```bash
-# Todo en uno:
+# Desde carpeta de fotos:
 python pipeline.py --input ./ruta_fotos/ --export both --catalog --report
+
+# Desde un .zip:
+python pipeline.py --zip ./fotos.zip --export both --catalog --report --draw
 
 # Archivos generados en ./output/:
 #   dataset_ooh.csv           ← Dataset completo para vender
@@ -99,6 +102,47 @@ python pipeline.py --input ./ruta_fotos/ --export both --catalog --report
 ```bash
 python suitcvlo.py --mode full --route hoy --output ./dataset/
 ```
+
+---
+
+### 🏋️ v0.6 — Entrenamiento YOLO personalizado *(pendiente)*
+
+**Problema**: YOLOv8n preentrenado en COCO no reconoce billboards. El sistema lo compensa con heurísticas + contornos, pero con falsos positivos y detecciones perdidas.
+
+**Solución**: Auto-etiquetar un dataset desde las propias detecciones del sistema + exportar en formato YOLO → entrenar un modelo custom que reconozca anuncios directo.
+
+- [ ] Botón "Exportar dataset YOLO" en frontend (extrae fotos + bounding boxes + clases de SQLite)
+- [ ] Estructura `dataset_yolo/` con `images/{train,val}/` y `labels/{train,val}/`
+- [ ] Notebook Colab pre-escrito (entrenar con GPU gratis)
+- [ ] Script local `train_yolo.py` (entrenar sin Colab, CPU/GPU local)
+- [ ] Integración: tras entrenar, reemplazar `yolov8n.pt` por `best.pt`
+- [ ] Evaluación: comparar precisión antes/después del fine-tune
+
+**Dataset YOLO**:
+```
+dataset_yolo/
+├── images/
+│   ├── train/          ← 80% de las fotos con anuncios (de tus subidas)
+│   └── val/            ← 20% aparte para validar
+├── labels/
+│   ├── train/          ← .txt por foto, uno por billboard: "0 x_center y_center w h"
+│   └── val/
+├── dataset.yaml        ← nc: 1, names: ['billboard']
+└── README.md
+```
+
+```bash
+# Exportar dataset desde las detecciones existentes
+python tools/export_yolo.py --output ./dataset_yolo/
+
+# Entrenar (GPU recomienda Colab, CPU local funciona lento)
+python tools/train_yolo.py --data ./dataset_yolo/dataset.yaml --epochs 100
+
+# Usar el modelo entrenado
+# .env: YOLO_MODEL=runs/detect/train/weights/best.pt
+```
+
+**Dependencias extra**: `ultralytics` (ya instalado), Google Colab (opcional)
 
 ---
 
@@ -146,17 +190,40 @@ source .venv/bin/activate
 # 2. Pipeline completo: carpeta de fotos → dataset vendible
 python pipeline.py --input ./ruta_fotos/ --draw --json --export both --catalog --report --user cliente1
 
+# O desde un .zip:
+python pipeline.py --zip ./fotos.zip --export both --catalog --report
+
 # 3. O una foto individual rápida
 python detect.py --source photo --input ejemplo.jpg --save
 
 # 4. Ver dashboard
 streamlit run dashboard/app.py
 
-# 5. Iniciar API (subir fotos por HTTP)
+# 5. Iniciar servidor web (API + Frontend)
 python -m api.main
+# Abre http://localhost:3011/ en el navegador
 ```
 
-### Output del pipeline
+Luego abres **http://localhost:3011/** en el navegador y ves la interfaz web:
+
+- **Arrastra una foto** (.jpg, .png, .webp) y la procesa al instante
+- **Arrastra un .zip** y muestra barra de progreso mientras procesa todas las imágenes
+- **Resultados**: tabla con marca, formato, campaña, confianza, texto OCR
+- **Descargas**: botones para exportar CSV, GeoJSON y PDF
+
+### API endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST /upload` | Subir foto individual (síncrono) |
+| `POST /upload/zip` | Subir .zip (asíncrono → devuelve job_id) |
+| `GET /upload/zip/status/{id}` | Estado del procesamiento batch |
+| `GET /upload/zip/result/{id}` | Resultados del batch |
+| `GET /detections` | Todas las detecciones en DB |
+| `GET /reports/pdf` | Reporte PDF |
+| `GET /health` | Health check |
+
+### Output del pipeline (CLI)
 
 ```
 output/
@@ -165,6 +232,7 @@ output/
 ├── catalogo_anuncios.csv        ← Anuncios únicos (sin repetir)
 ├── reporte_ooh.pdf              ← Reporte imprimible
 ├── pipeline_results.json        ← Datos crudos
+├── *_extracted/                 ← Extraídos de .zip (se conservan)
 ├── *_billboard_0.jpg            ← Anuncio enderezado
 └── *_annotated.jpg              ← Foto con detecciones
 ```

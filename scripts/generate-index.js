@@ -50,23 +50,34 @@ function extractFunctions(filePath) {
   const functions = [];
 
   const patterns = [
+    // async function name( params )
+    /^\s*async\s+function\s+(\w+)\s*\(/,
     // function name( params )
     /^\s*function\s+(\w+)\s*\(/,
+    // const/fn name = async ( or = async function(
+    /^\s*(?:const|let|var|fn)\s+(\w+)\s*=\s*async\s*(?:\(|function\s*\()/,
     // const/fn name = ( or name => or function(
     /^\s*(?:const|let|var|fn)\s+(\w+)\s*=\s*(?:\(|[\w]+\s*=>|function\s*\()/,
-    // name: ( params ) => or name: function(  (object methods)
-    /^\s*(\w+)\s*:\s*(?:\(|async\s*\(|function\s*\()/,
-    // app.method = ( or app.method = function(
-    /^\s*app\.(\w+(?:\.\w+)*)\s*=\s*(?:\(|async\s*\(|function\s*\()/,
+    // name: async ( params ) => or name: function(
+    /^\s*(\w+)\s*:\s*(?:async\s*\(|\(|function\s*\()/,
+    // module.exports.{name} = { or module.exports = { name: function
+    /^\s*module\.exports\s*=\s*\{/,
+    /^\s*module\.exports\.(\w+)\s*=\s*(?:async\s*\(|\(|function|[\w]+)/,
+    // app.method = async ( or app.method = (
+    /^\s*app\.(\w+(?:\.\w+)*)\s*=\s*(?:async\s*\(|\(|async\s*function|function\s*\()/,
+
   ];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     // Skip lines that are clearly NOT function definitions
     if (line.includes('||') && line.includes('?')) continue; // ternary expressions
-    if (/=\s*\(/.test(line) && !/=>/.test(line) && !/function/.test(line)) continue; // destructuring
-    if (/getElementById|querySelector|appendChild|createElement/.test(line)) continue;
+    if (/=\s*\(/.test(line) && !/=>/.test(line) && !/function/.test(line) && !/async/.test(line)) continue;
+    if (/getElementById|querySelector|appendChild|createElement|addEventListener|\.value\s*=/.test(line)) continue;
+    if (/\.onclick|\.onsubmit|\.style\./.test(line)) continue;
     if (line.trimStart().startsWith('//') || line.trimStart().startsWith('*')) continue;
+    // Skip object literal keys that look like method names but aren't (e.g. inside config objects)
+    if (/^\s*["']?\w+["']?\s*:\s*["']/.test(line) && !/=>/.test(line) && !/\(/.test(line)) continue;
 
     for (const pattern of patterns) {
       const match = line.match(pattern);

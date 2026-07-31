@@ -7,7 +7,7 @@
 ```
 Actúa como Software Architect y ejecutas la construcción de SuitOS Core:
 un kernel de agentes portable, independiente de cualquier lógica de negocio,
-que vive en C:\Users\rojo-\Downloads\SUITORGSTORE01\SuitOSCore\ y que otros
+que vive en C:\Users\rojo-\Downloads\suitorg\SuitOSCore\ y que otros
 proyectos (dentro o fuera de este repo) puedan consumir sin copiar/pegar código.
 
 ANTES DE EMPEZAR
@@ -96,7 +96,7 @@ más que solo esta monorepo usa. Decide y justifica UNO de estos dos caminos
       principalmente orquestación/decisión, no solo utilidades de código.
 
 Sea cual sea el camino, el resultado final debe cumplir: un proyecto NUEVO,
-en una carpeta fuera de SUITORGSTORE01, puede obtener scaffold de módulo,
+en una carpeta fuera de suitorg, puede obtener scaffold de módulo,
 routing de IA con fallback, y los agentes reportero/probador SIN copiar
 ningún archivo de este repo a mano.
 
@@ -109,8 +109,8 @@ FASES DE TRABAJO
 3. Implementar el mecanismo de "llamable desde otros sistemas" elegido
    arriba.
 4. Escribir un README.md dentro de SuitOSCore/ (audiencia: un equipo que
-   nunca vio SUITORGSTORE01) explicando cómo consumir cada pieza.
-5. Crear al menos UN proyecto de prueba fuera de SUITORGSTORE01 (puede ser
+   nunca vio suitorg) explicando cómo consumir cada pieza.
+5. Crear al menos UN proyecto de prueba fuera de suitorg (puede ser
    una carpeta temporal) que consuma SuitOSCore/ end-to-end: generar un
    módulo con el scaffold, hacer una llamada de routing de IA con fallback
    simulado, y correr probador.js contra un endpoint dummy. Esto es la
@@ -129,7 +129,7 @@ CRITERIOS DE ACEPTACIÓN
 - [ ] Existe un README que un tercero externo a este repo podría seguir sin
       contexto adicional.
 - [ ] El proyecto de prueba del paso 5 corrió sin tocar ni un archivo
-      dentro de SUITORGSTORE01/ (fuera de SuitOSCore/).
+      dentro de suitorg/ (fuera de SuitOSCore/).
 - [ ] reportero.js corrió sobre SuitOSCore/ y no hay hallazgos de severidad
       "error" sin resolver.
 

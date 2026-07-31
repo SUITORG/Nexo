@@ -14,7 +14,7 @@ suite:
     - name: cms
       url: http://localhost:8000
       type: http
-      path: CampanasAi/local-server-node.js
+      path: SuitCampanas/local-server-node.js
 
   tests:
     - id: server-main
