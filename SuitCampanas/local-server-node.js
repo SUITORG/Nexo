@@ -13,7 +13,22 @@ const { MODELS, DEFAULT_MODEL, toOmniRouteId } = require('./models-config');
 
 const PORT = 8000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhWR6LoS7wirxWPhQBZIZJ2ynuQHa_VYzrIILR5rasOuCSE55Fk4f3M07fCmnyzEwN/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzlNe28j7yJObxqfCyUg595Zeg1IjsMMjOZyf8KOK5pkCYU-zYFJrsyzwsJhNFjZy1v-A/exec';
+
+// OmniRoute (gateway local de modelos IA, puerto 20128). En WSL2 no se alcanza vía
+// localhost (la IP del host Windows es la del gateway NAT), así que se resuelve al arranque.
+const OMNIROUTE_BASE = (() => {
+    try {
+        if (process.env.OMNIROUTE_URL) return process.env.OMNIROUTE_URL;
+        const osr = fs.readFileSync('/proc/sys/kernel/osrelease', 'utf8').toLowerCase();
+        if (osr.includes('microsoft')) {
+            const { execSync } = require('child_process');
+            const gw = execSync("ip route show default | awk '{print $3}'", { encoding: 'utf8', timeout: 3000 }).trim();
+            if (gw) return `http://${gw}:20128`;
+        }
+    } catch (e) { /* no WSL o sin iproute2 → localhost */ }
+    return 'http://localhost:20128';
+})();
 
 // --- FFMPEG PATH (auto-detect or from .env) ---
 function findFFmpeg() {
@@ -174,10 +189,10 @@ function parseGuionScenes(guion, duration, style) {
             scenes = parsed.map((s, i) => ({
                 id: i + 1,
                 title: s.titulo || s.title || s.titulo_escena || `Escena ${i + 1}`,
-                body: s.texto || s.text || s.body || s.descripcion || '',
-                visual: s.visual || '',
-                texto_overlay: s.texto_overlay || s.titulo || s.title || `Escena ${i + 1}`,
-                duracion: s.duracion || Math.floor((videoConfig.duracion_total || 30) / parsed.length),
+                body: s.texto || s.text || s.body || s.descripcion || s.spoken || '',
+                visual: s.visual || s.shot || '',
+                texto_overlay: s.texto_overlay || s.titulo || s.title || s.overlay || `Escena ${i + 1}`,
+                duracion: s.duracion || s.duration_seconds || Math.floor((videoConfig.duracion_total || 30) / parsed.length),
                 pausa_inicial: s.pausa_inicial || 0.5,
                 pausa_final: s.pausa_final || 0.5,
                 animacion: s.animacion || 'fade',
@@ -190,10 +205,10 @@ function parseGuionScenes(guion, duration, style) {
             scenes = parsed.escenas.map((s, i) => ({
                 id: s.id || i + 1,
                 title: s.titulo || s.title || s.titulo_escena || `Escena ${i + 1}`,
-                body: s.texto || s.text || s.body || s.descripcion || '',
-                visual: s.visual || '',
-                texto_overlay: s.texto_overlay || s.titulo || s.title || `Escena ${i + 1}`,
-                duracion: s.duracion || Math.floor((videoConfig.duracion_total || 30) / parsed.escenas.length),
+                body: s.texto || s.text || s.body || s.descripcion || s.spoken || '',
+                visual: s.visual || s.shot || '',
+                texto_overlay: s.texto_overlay || s.titulo || s.title || s.overlay || `Escena ${i + 1}`,
+                duracion: s.duracion || s.duration_seconds || Math.floor((videoConfig.duracion_total || 30) / parsed.escenas.length),
                 pausa_inicial: s.pausa_inicial || 0.5,
                 pausa_final: s.pausa_final || 0.5,
                 animacion: s.animacion || 'fade',
@@ -259,6 +274,262 @@ function normalizeDriveUrl(url) {
     return url;
 }
 
+// --- BRIEF → brief_normalizado (ver .suit/memory/pending/plan-briefmarker-mediaplanner.md) ---
+// El campo `tipo_negocio` de Config_Empresas es un pipe-delimited de hasta 18 campos.
+// Parser tolerante: nunca truena, nunca bloquea, nunca reescribe el campo original.
+const BRIEF_LIST_FIELDS = {
+    dolor: 'dolor',
+    pcp: 'promesa_beneficio_prueba',
+    pbm: 'promesa_beneficio_prueba',
+    lavtfu: 'activos',
+    lapvtfu: 'activos',
+    objecion: 'objeciones',
+    competidores: 'competidores'
+};
+// Campos cuyo key ya es su destino en brief_normalizado (no mapeado arriba).
+function parseBrief(tipoNegocioRaw) {
+    const brief = { etiqueta_legado: '' };
+    if (!tipoNegocioRaw || typeof tipoNegocioRaw !== 'string') return brief;
+    const segments = tipoNegocioRaw.split('|');
+    brief.etiqueta_legado = (segments[0] || '').trim();
+    for (let i = 1; i < segments.length; i++) {
+        const seg = segments[i].trim();
+        if (!seg) continue;
+        const colon = seg.indexOf(':');
+        if (colon < 0) continue;
+        const key = seg.slice(0, colon).trim().toLowerCase();
+        let value = seg.slice(colon + 1).trim();
+        if (!value) continue;
+        // Campos de lista (split por coma, filtra vacíos)
+        if (BRIEF_LIST_FIELDS[key]) {
+            const arr = value.split(',').map(s => s.trim()).filter(Boolean);
+            if (arr.length) brief[BRIEF_LIST_FIELDS[key]] = arr;
+            continue;
+        }
+        // Mapeos puntuales según spec de la tabla de 18 campos
+        if (key === 'galeria') { brief.usa_galeria = value.toLowerCase().includes('si_galeria'); continue; }
+        if (key === 'vendes') { brief.producto = value; continue; }
+        if (key === 'lograr') { brief.objetivo = value; continue; }
+        if (key === 'vivir') { brief.canal_principal = value; continue; }
+        if (key === 'pm') {
+            const parts = value.split(',').map(s => s.trim()).filter(Boolean);
+            brief.precio_margen = { precio: parts[0] || '', margen: parts[1] || '' };
+            continue;
+        }
+        if (key === 'ps') { brief.prueba_social = value; continue; }
+        if (key === 'rlp') { brief.restricciones_legales = value; continue; }
+        // Resto: industria, nicho, especializacion, audiencia, tono, competidores(no), etc.
+        brief[key] = value;
+    }
+    return brief;
+}
+
+// Trae la fila de Config_Empresas por id_empresa desde el backend GAS (action=config).
+// Reusa el mismo deployment que /api/history y /api/save — el CMS CampanasAi.
+async function fetchEmpresaRow(idEmpresa) {
+    const url = GAS_URL.includes('?') ? (GAS_URL + '&action=config') : (GAS_URL + '?action=config');
+    const gasBody = await new Promise((resolve, reject) => {
+        fetchWithRedirects(url, (data, statusCode) => {
+            try { resolve(JSON.parse(data)); } catch (e) { reject(new Error('GAS config parse error: ' + String(data).substring(0, 200))); }
+        });
+    });
+    const rows = gasBody?.data || [];
+    return rows.find(c => String(c.id_empresa || '').toLowerCase() === String(idEmpresa || '').toLowerCase())
+        || rows.find(c => String(c.nomempresa || '').toLowerCase() === String(idEmpresa || '').toLowerCase())
+        || null;
+}
+
+// Carga un prompt de Prompts_IA por id_agente (mismo mecanismo que /api/prompts/:id).
+async function loadPromptById(promptId) {
+    const { data, error } = await supabase
+        .from('Prompts_IA')
+        .select('prompt_base')
+        .eq('id_agente', promptId)
+        .eq('habilitado', 'TRUE')
+        .limit(1);
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('Prompt ' + promptId + ' no encontrado en Prompts_IA');
+    return data[0].prompt_base;
+}
+
+// Llama a la IA con el patrón de fallback de modelos del resto del server y
+// fuerza salida JSON (quita fences markdown). Tira error si todos fallan.
+async function callAIJson(systemContent, userContent, temperature = 0.7) {
+    // Antes el respaldo era [activeModel, "deepseek/deepseek-v4-flash"] — como
+    // activeModel YA es deepseek-v4-flash por default, tras deduplicar quedaba
+    // un solo modelo real, y cada 429 reintentaba el mismo modelo saturado.
+    // Qwen/Gemma no sirven como respaldo: models-config.js documenta que solo
+    // "deepseek/deepseek-v4-flash" y "openrouter/free" tienen mapeo verificado
+    // en OmniRoute (oc/deepseek-v4-flash-free y auto/best-free) — cualquier otro
+    // cae a "auto/best-fast", que en la práctica devolvió modelos no soportados
+    // (401) o agotó su propio límite de reintentos ("Maximum combo retry limit
+    // reached"). openrouter/free sí es un fallback real y distinto.
+    const orModels = [activeModel, "openrouter/free"]
+        .map(toOmniRouteId)
+        .filter((v, i, a) => a.indexOf(v) === i);
+    const messages = [
+        { role: 'system', content: systemContent },
+        { role: 'user', content: userContent }
+    ];
+    let lastError = 'No se recibieron errores.';
+    for (const m of orModels) {
+        try {
+            const result = await callOpenRouter(m, messages, temperature);
+            const cleaned = result.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+            return JSON.parse(cleaned);
+        } catch (err) {
+            lastError = err.message;
+            serverLog('WARN', `⚠️ [AI_JSON] ${m}: ${err.message}`);
+            // 429 (rate limit): cambiar de modelo no ayuda si es el mismo gateway/IP
+            // el que está limitado — hay que esperar más que un simple ECONNRESET.
+            if (err.message.includes('429') || err.message.toLowerCase().includes('rate limit')) {
+                await new Promise(r => setTimeout(r, 5000));
+            } else if (err.message.includes('ECONNRESET')) {
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+    }
+    throw new Error('Todos los modelos fallaron al generar JSON. Último error: ' + lastError);
+}
+
+// --- MEDIA PLANNER / BRIEFMARKER (pipeline Brief → MediaPlanner → BriefMarker) ---
+// Genera el plan_de_medios desde brief_normalizado (1 llamada de IA, barata).
+async function generateMediaPlan(idEmpresa, fallbacks = {}) {
+    const empresaRow = await fetchEmpresaRow(idEmpresa);
+    const briefRaw = (empresaRow && (empresaRow.tipo_negocio || empresaRow.tiponegocio)) || '';
+    const brief = parseBrief(briefRaw);
+    if (!brief.industria && fallbacks.industria) brief.industria = fallbacks.industria;
+    if (!brief.nicho && fallbacks.nicho) brief.nicho = fallbacks.nicho;
+    if (!brief.especializacion && fallbacks.especializacion) brief.especializacion = fallbacks.especializacion;
+
+    const prompt = await loadPromptById('CAMP-MEDIAPLANNER');
+    const systemContent = prompt.includes('{') && prompt.includes('}') ? prompt : 'Eres un media planner senior. Respondes EXCLUSIVAMENTE con un objeto JSON válido, sin texto fuera de él.';
+    const userContent = `Brief normalizado del anunciante (JSON):\n${JSON.stringify(brief, null, 2)}\n\nGenera el plan de medios completo como JSON válido.`;
+
+    const planDeMedios = await callAIJson(systemContent, userContent, 0.5);
+    const totalSlots = (planDeMedios.campaigns || []).reduce((acc, c) => acc + (c.content_slots?.length || 0), 0);
+    const planId = `plan_${Date.now()}`;
+    const { data, error } = await supabase
+        .from('planes_medios')
+        .insert({
+            id: planId,
+            id_empresa: idEmpresa || null,
+            empresa: (empresaRow && empresaRow.nomempresa) || '',
+            brief_raw: briefRaw,
+            brief_normalizado: brief,
+            plan_de_medios: planDeMedios,
+            estado: 'pendiente_revision',
+            total_slots: totalSlots
+        })
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+}
+
+// Procesa cada content_slot del plan con BriefMarker (N llamadas, caras — cap 12).
+async function approveMediaPlan(planId, estiloVisual = null) {
+    const { data: plan, error } = await supabase
+        .from('planes_medios')
+        .select('*')
+        .eq('id', planId)
+        .single();
+    if (error) throw new Error('Plan no encontrado: ' + error.message);
+
+    const campaigns = plan.plan_de_medios?.campaigns || [];
+    const slots = [];
+    for (const camp of campaigns) {
+        for (const slot of (camp.content_slots || [])) {
+            slots.push({ ...slot, campaign_id: camp.id || camp.nombre || 'campaign', campaign_nombre: camp.nombre || '' });
+        }
+    }
+    // Cap de seguridad: máx 12, prioridad alta primero
+    const prioRank = { alta: 0, media: 1, baja: 2 };
+    slots.sort((a, b) => (prioRank[a.priority] ?? 1) - (prioRank[b.priority] ?? 1));
+    const capped = slots.slice(0, 12);
+
+    // Idempotente: reintentar (aprobar de nuevo el mismo plan) no vuelve a pagar
+    // ni regenerar las piezas que ya salieron bien — solo reintenta las que
+    // fallaron o nunca se procesaron (ej. tras un 429 de rate limit a mitad).
+    const { data: existentes } = await supabase
+        .from('piezas_creativas')
+        .select('slot_id, estado')
+        .eq('plan_id', planId);
+    const yaGeneradas = new Set((existentes || []).filter(p => p.estado === 'generado').map(p => p.slot_id));
+    const pendientes = capped.filter(slot => !yaGeneradas.has(slot.id || ''));
+
+    const prompt = await loadPromptById('CAMP-BRIEFMARKER');
+    const brief = plan.brief_normalizado || {};
+    // El estilo se fija en la PRIMERA aprobación y se reusa en reintentos — sin
+    // esto, un reintento tras un 429 a mitad del lote (ver ADR-021) podía
+    // aplicar un estilo distinto al de las piezas ya generadas del mismo plan,
+    // dejando una campaña con visual mezclado sin que nadie lo pidiera.
+    const estiloAAplicar = plan.estilo_visual || estiloVisual || null;
+    if (!plan.estilo_visual && estiloVisual) {
+        await supabase.from('planes_medios').update({ estilo_visual: estiloVisual }).eq('id', planId);
+    }
+    // Estilo visual resuelto (Director o elección manual del usuario). Solo
+    // controla la piel visual, nunca el copy — ver plan-pieza-a-video.md Parte 2.
+    const estiloTxt = estiloAAplicar
+        ? `\n\nDIRECCIÓN VISUAL A APLICAR: ${estiloAAplicar.cat} → ${estiloAAplicar.sub} (${estiloAAplicar.nombre}). Keywords: ${estiloAAplicar.keywords || 'N/A'}.
+IMPORTANTE: esta dirección SOLO controla "visual_style", "editing" y "scenes[].shot" de cada escena (fotografía real, animación, meme, caricatura, ilustración, etc. — lo que indiquen las keywords). NO cambies el copy: "hook", "pain_point", "solution", "benefit", "proof", "cta", "emotion" ni "scenes[].spoken"/"scenes[].overlay" deben seguir sirviendo la misma estrategia de venta, solo con otra piel visual.`
+        : '';
+    let generadas = 0, errores = 0;
+    for (const [i, slot] of pendientes.entries()) {
+        // Espaciado entre llamadas — sin esto, ráfaguear varias llamadas seguidas
+        // agota el rate limit gratuito de OpenRouter tras las primeras ~4
+        // (visto en vivo: 4 generadas, 8 con error 429 "Rate limit exceeded").
+        if (i > 0) await new Promise(r => setTimeout(r, 3000));
+        const userContent = `Slot a producir:\n${JSON.stringify({ ...slot, brief: { audiencia: brief.audiencia, tono: brief.tono, objetivo: brief.objetivo, producto: brief.producto } }, null, 2)}${estiloTxt}\n\nGenera el JSON creativo completo de esta pieza según el schema.`;
+        try {
+            const creative = await callAIJson(prompt, userContent, 0.7);
+            const { error: insErr } = await supabase
+                .from('piezas_creativas')
+                .upsert({
+                    id: `pieza_${planId}_${slot.id || generadas}`,
+                    plan_id: planId,
+                    campaign_id: slot.campaign_id,
+                    slot_id: slot.id || String(generadas),
+                    format: slot.format || '',
+                    channel: slot.channel || '',
+                    goal: slot.goal || '',
+                    priority: slot.priority || '',
+                    creative_json: creative,
+                    estado: 'generado',
+                    error_message: null
+                }, { onConflict: 'id' });
+            if (insErr) throw insErr;
+            generadas++;
+        } catch (e) {
+            errores++;
+            serverLog('WARN', `[BRIEFMARKER] Slot ${slot.id} falló: ${e.message}`);
+            await supabase
+                .from('piezas_creativas')
+                .upsert({
+                    id: `pieza_${planId}_${slot.id || 'err_' + errores}`,
+                    plan_id: planId,
+                    campaign_id: slot.campaign_id,
+                    slot_id: slot.id || String(errores),
+                    format: slot.format || '',
+                    channel: slot.channel || '',
+                    goal: slot.goal || '',
+                    priority: slot.priority || '',
+                    creative_json: {},
+                    estado: 'error',
+                    error_message: String(e.message).substring(0, 500)
+                }, { onConflict: 'id' });
+        }
+    }
+    await supabase.from('planes_medios').update({ estado: 'aprobado', updated_at: new Date().toISOString() }).eq('id', planId);
+    return {
+        plan_id: planId,
+        piezas_generadas: generadas,
+        piezas_error: errores,
+        sin_procesar: slots.length - capped.length,
+        piezas_generadas_total: yaGeneradas.size + generadas
+    };
+}
+
 const server = http.createServer((req, res) => {
     serverLog('REQ', `${req.method} ${req.url}`);
 
@@ -300,20 +571,22 @@ const server = http.createServer((req, res) => {
 
     // 🔄 PROXY DE CONFIGURACIÓN (Empresas)
     if (pathname.includes('/api/config')) {
-        // Usa action=getAll del backend principal de SuitOrg para obtener Config_Empresas real
-        const configUrl = GAS_URL.includes('?') ? (GAS_URL + '&action=getAll') : (GAS_URL + '?action=getAll');
-        serverLog('INFO', "🏢 [PROXY] Solicitando Config_Empresas vía getAll...");
+        // action=config del backend CMS CampanasAi devuelve Config_Empresas real
+        // (getAll era del backend SUITSTORE01, no existe en este deployment).
+        const configUrl = GAS_URL.includes('?') ? (GAS_URL + '&action=config') : (GAS_URL + '?action=config');
+        serverLog('INFO', "🏢 [PROXY] Solicitando Config_Empresas vía action=config...");
         fetchWithRedirects(configUrl, (data, statusCode) => {
             try {
                 const parsed = JSON.parse(data);
-                if (parsed.Config_Empresas && Array.isArray(parsed.Config_Empresas)) {
-                    const companies = parsed.Config_Empresas.map(c => ({
+                if (parsed.data && Array.isArray(parsed.data)) {
+                    const companies = parsed.data.map(c => ({
                         nomempresa: c.nomempresa || c.nombre_empresa || '',
                         logo_url: c.logo_url || '',
                         telefonowhastapp: c.telefonowhatsapp || c.telefonowhastapp || '',
                         enlace_oficial: c.enlace_oficial || c.website || '',
                         color_tema: c.color_tema || '#2563eb',
-                        id_empresa: c.id_empresa || ''
+                        id_empresa: c.id_empresa || '',
+                        tipo_negocio: c.tipo_negocio || ''
                     })).filter(c => c.nomempresa);
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ status: 'success', message: 'Configuraciones cargadas', data: companies }));
@@ -322,7 +595,7 @@ const server = http.createServer((req, res) => {
             } catch (_) {}
             serverLog('WARN', "⚠️ GAS no disponible, usando datos mock de respaldo");
             const mockData = [
-                { nomempresa: 'Mi Empresa Demo', logo_url: '', telefonowhastapp: '8112345678', enlace_oficial: 'https://ejemplo.com', color_tema: '#2563eb', id_empresa: 'DEMO' }
+                { nomempresa: 'Mi Empresa Demo', logo_url: '', telefonowhastapp: '8112345678', enlace_oficial: 'https://ejemplo.com', color_tema: '#2563eb', id_empresa: 'DEMO', tipo_negocio: '' }
             ];
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ status: 'success', message: 'Configuraciones cargadas (respaldo)', data: mockData }));
@@ -336,13 +609,19 @@ const server = http.createServer((req, res) => {
         req.on('data', d => body += d);
         req.on('end', async () => {
             try {
-                const gasRes = await fetchWithRedirects(GAS_URL, {
+                // fetchWithRedirects(url, callback) es GET-only (usa https.get internamente
+                // y trata el 2do argumento como función) — pasarle un objeto {method:'POST',...}
+                // como si fuera el callback lo invocaba como función al llegar la respuesta y
+                // tiraba una excepción sin capturar que mataba el proceso entero. fetch() nativo
+                // sí soporta POST con body, igual que ya se usa en callOpenRouter() más abajo.
+                const gasRes = await fetch(GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: body
                 });
+                const gasData = await gasRes.text();
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ status: 'success', message: 'Guardado en Google Sheets' }));
+                res.end(JSON.stringify({ status: 'success', message: 'Guardado en Google Sheets', gasResponse: gasData }));
             } catch (e) {
                 serverLog('ERROR', `[SAVE] ${e.message}`);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -517,7 +796,8 @@ const server = http.createServer((req, res) => {
                         estado: campana.estado || 'pendiente',
                         activo: true,
                         configuracion: campana.configuracion || {},
-                        metadata: campana.metadata || {}
+                        metadata: campana.metadata || {},
+                        contenido_json: campana.contenido_json || {}
                     }, { onConflict: 'id' })
                     .select()
                     .single();
@@ -531,6 +811,145 @@ const server = http.createServer((req, res) => {
                 res.end(JSON.stringify({ status: 'error', message: e.message }));
             }
         });
+        return;
+    }
+
+    // ===== MEDIA PLANNER / BRIEFMARKER =====
+
+    // POST /api/media-plan/generate — Brief → MediaPlanner → plan_de_medios (1 llamada IA)
+    if (pathname === '/api/media-plan/generate' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { id_empresa, industria_fallback, nicho_fallback, especializacion_fallback } = JSON.parse(body);
+                if (!id_empresa) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', message: 'id_empresa es requerido' }));
+                    return;
+                }
+                serverLog('INFO', `[MEDIAPLANNER] Generando plan para empresa ${id_empresa}...`);
+                const plan = await generateMediaPlan(id_empresa, {
+                    industria: industria_fallback, nicho: nicho_fallback, especializacion: especializacion_fallback
+                });
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: plan }));
+            } catch (e) {
+                serverLog('ERROR', `[MEDIAPLANNER] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        });
+        return;
+    }
+
+    // POST /api/media-plan/:id/aprobar — BriefMarker por cada content_slot (N llamadas IA)
+    const aprobarMatch = pathname.match(/^\/api\/media-plan\/([^/]+)\/aprobar$/);
+    if (aprobarMatch && req.method === 'POST') {
+        (async () => {
+            let body = '';
+            req.on('data', d => body += d);
+            req.on('end', async () => {
+                try {
+                    const parsedBody = body ? JSON.parse(body) : {};
+                    serverLog('INFO', `[BRIEFMARKER] Aprobando plan ${aprobarMatch[1]}...`);
+                    const result = await approveMediaPlan(aprobarMatch[1], parsedBody.estilo_visual || null);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'success', data: result }));
+                } catch (e) {
+                    serverLog('ERROR', `[BRIEFMARKER] ${e.message}`);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', message: e.message }));
+                }
+            });
+        })();
+        return;
+    }
+
+    // POST /api/media-plan/:id/rechazar — solo cambia estado
+    const rechazarMatch = pathname.match(/^\/api\/media-plan\/([^/]+)\/rechazar$/);
+    if (rechazarMatch && req.method === 'POST') {
+        (async () => {
+            try {
+                const { error } = await supabase
+                    .from('planes_medios')
+                    .update({ estado: 'rechazado', updated_at: new Date().toISOString() })
+                    .eq('id', rechazarMatch[1]);
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: { plan_id: rechazarMatch[1], estado: 'rechazado' } }));
+            } catch (e) {
+                serverLog('ERROR', `[MEDIAPLANNER] Rechazar: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // GET /api/media-plan/:id/piezas — lista las piezas de un plan (id, format,
+    // channel, goal, estado, creative_json) para el botón "🎬 Generar Video" por pieza.
+    const piezasMatch = pathname.match(/^\/api\/media-plan\/([^/]+)\/piezas$/);
+    if (piezasMatch && req.method === 'GET') {
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('piezas_creativas')
+                    .select('id, campaign_id, slot_id, format, channel, goal, priority, estado, creative_json')
+                    .eq('plan_id', piezasMatch[1])
+                    .order('slot_id');
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: data || [] }));
+            } catch (e) {
+                serverLog('ERROR', `[MEDIAPLANNER] Listar piezas: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // GET /api/media-plan/recientes — últimos planes para "Retomar Plan de Medios"
+    if (pathname === '/api/media-plan/recientes' && req.method === 'GET') {
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('planes_medios')
+                    .select('id, empresa, id_empresa, estado, total_slots, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: data || [] }));
+            } catch (e) {
+                serverLog('ERROR', `[MEDIAPLANNER] Listar recientes: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // GET /api/media-plan/:id — plan completo (retomar / reabrir uno existente)
+    const planDetailMatch = pathname.match(/^\/api\/media-plan\/([^/]+)$/);
+    if (planDetailMatch && req.method === 'GET') {
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('planes_medios')
+                    .select('*')
+                    .eq('id', planDetailMatch[1])
+                    .single();
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data }));
+            } catch (e) {
+                serverLog('ERROR', `[MEDIAPLANNER] Obtener plan: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
         return;
     }
 
@@ -2109,7 +2528,7 @@ const server = http.createServer((req, res) => {
 
 async function callOpenRouter(model, messages, temperature = 0.7) {
     try {
-        const response = await fetch('http://localhost:20128/v1/chat/completions', {
+        const response = await fetch(`${OMNIROUTE_BASE}/v1/chat/completions`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${OPENROUTER_API_KEY}`,

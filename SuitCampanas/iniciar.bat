@@ -9,7 +9,8 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8000') do (
 timeout /t 1 /nobreak >nul
 
 echo Iniciando servidor CampanasAi...
-start "SuitCampanas" cmd /c "node local-server-node.js & pause"
+start /min "SuitCampanas" cmd /c "mode con: cols=80 lines=20 & node local-server-node.js & pause"
 timeout /t 2 /nobreak >nul
 start chrome http://localhost:8000
 echo Servidor corriendo en http://localhost:8000
+exit

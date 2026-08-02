@@ -16,6 +16,18 @@
         {
           "valor": "consultoria_coaching", "etiqueta": "Consultoría y Coaching", "sinonimos": ["coaching", "mentoría", "consultor", "marca personal", "desarrollo profesional"],
           "especializaciones": ["Marca Personal", "Coaching Ejecutivo", "Mentoría", "Consultoría Empresarial", "Desarrollo Organizacional", "Speaker / Conferencista"]
+        },
+        {
+          "valor": "agencias_marketing", "etiqueta": "Agencias de Marketing", "sinonimos": ["marketing", "publicidad", "branding", "redes sociales", "mercadeo", "agencia digital"],
+          "especializaciones": ["Marketing digital", "Branding", "Redes sociales", "Publicidad pagada"]
+        },
+        {
+          "valor": "seguros", "etiqueta": "Seguros", "sinonimos": ["seguro", "aseguradora", "agente de seguros", "póliza", "insurance"],
+          "especializaciones": ["Seguros de vida", "Seguros de auto", "Seguros de gastos médicos", "Seguros empresariales"]
+        },
+        {
+          "valor": "recursos_humanos", "etiqueta": "Recursos Humanos", "sinonimos": ["reclutamiento", "RRHH", "capital humano", "nómina", "headhunter", "rh"],
+          "especializaciones": ["Reclutamiento", "Nómina", "Capacitación", "Evaluación de desempeño"]
         }
       ]
     },
@@ -35,6 +47,14 @@
         {
           "valor": "salud_bienestar", "etiqueta": "Salud y Bienestar", "sinonimos": ["wellness", "nutrición", "fitness", "terapia", "holístico"],
           "especializaciones": ["Psicología", "Nutrición", "Fisioterapia", "Terapias Alternativas", "Medicina Funcional", "Mindfulness"]
+        },
+        {
+          "valor": "gimnasios", "etiqueta": "Gimnasios y Fitness", "sinonimos": ["gimnasio", "fitness", "crossfit", "yoga", "pilates", "entrenamiento", "gym"],
+          "especializaciones": ["Entrenamiento personal", "CrossFit", "Yoga y Pilates", "Nutrición deportiva"]
+        },
+        {
+          "valor": "opticas", "etiqueta": "Ópticas", "sinonimos": ["óptica", "lentes", "anteojos", "examen de la vista", "optometría", "lentes de contacto"],
+          "especializaciones": ["Exámenes de la vista", "Lentes de contacto", "Lentes de sol", "Armazones"]
         }
       ]
     },
@@ -99,6 +119,18 @@
         {
           "valor": "inmobiliarias", "etiqueta": "Inmobiliarias", "sinonimos": ["bienes raíces", "propiedades", "renta", "venta de casas", "desarrollo inmobiliario"],
           "especializaciones": ["Venta de Propiedades", "Rentas", "Desarrollo Inmobiliario", "Avalúos", "Hipotecas"]
+        },
+        {
+          "valor": "tiendas_conveniencia", "etiqueta": "Tiendas de Conveniencia y Abarrotes", "sinonimos": ["abarrotes", "mini súper", "tienda de la esquina", "conveniencia", "miscelánea", "farmacia de conveniencia"],
+          "especializaciones": ["Abarrotes", "Mini súper", "Farmacias de conveniencia", "Productos regionales"]
+        },
+        {
+          "valor": "boutiques_moda", "etiqueta": "Boutiques de Moda", "sinonimos": ["ropa", "moda", "boutique", "calzado", "accesorios", "clothing", "fashion"],
+          "especializaciones": ["Ropa de dama", "Ropa de caballero", "Calzado", "Accesorios"]
+        },
+        {
+          "valor": "florerias", "etiqueta": "Florerías", "sinonimos": ["flores", "florería", "arreglos florales", "ramo", "floristería"],
+          "especializaciones": ["Arreglos florales", "Eventos", "Decoración", "Envíos"]
         }
       ]
     },
@@ -118,6 +150,18 @@
         {
           "valor": "hoteles_turismo", "etiqueta": "Hoteles y Turismo", "sinonimos": ["hotelería", "viajes", "hospedaje", "vacaciones", "alojamiento"],
           "especializaciones": ["Hotelería", "Agencias de Viajes", "Turismo de Aventura", "Alojamiento Boutique", "Turismo Corporativo"]
+        },
+        {
+          "valor": "taquerias", "etiqueta": "Taquerías y Antojitos", "sinonimos": ["tacos", "taquería", "tortas", "garnachas", "comida callejera", "antojitos", "sopes"],
+          "especializaciones": ["Tacos", "Tortas", "Garnachas", "Comida callejera"]
+        },
+        {
+          "valor": "cafeterias", "etiqueta": "Cafeterías de Especialidad", "sinonimos": ["café", "cafetería", "barismo", "espresso", "coffee", "café de origen"],
+          "especializaciones": ["Café de origen", "Barismo", "Té", "Repostería para café"]
+        },
+        {
+          "valor": "juguerias", "etiqueta": "Juguerías y Smoothies", "sinonimos": ["jugos", "juguería", "smoothies", "licuados", "bebidas naturales", "desayunos saludables"],
+          "especializaciones": ["Jugos naturales", "Smoothies", "Desayunos saludables"]
         }
       ]
     },
@@ -162,6 +206,14 @@
         {
           "valor": "mascotas", "etiqueta": "Mascotas", "sinonimos": ["animales", "perros", "gatos", "veterinaria", "pet"],
           "especializaciones": ["Veterinaria", "Alimentos", "Accesorios", "Pet Grooming", "Guardería Canina"]
+        },
+        {
+          "valor": "tiendas_mascotas", "etiqueta": "Tiendas de Mascotas", "sinonimos": ["tienda de mascotas", "pet shop", "alimento premium", "accesorios para mascotas"],
+          "especializaciones": ["Alimentos premium", "Accesorios", "Juguetes", "Medicamentos"]
+        },
+        {
+          "valor": "entrenamiento_canino", "etiqueta": "Entrenamiento Canino", "sinonimos": ["adiestramiento", "entrenador de perros", "obediencia canina", "dog trainer", "adiestrador"],
+          "especializaciones": ["Obediencia básica", "Modificación de conducta", "Adiestramiento profesional"]
         }
       ]
     },
@@ -177,6 +229,90 @@
         {
           "valor": "estilo_vida_saludable", "etiqueta": "Estilo de Vida Saludable", "sinonimos": ["bienestar", "comida saludable", "nutrición", "cocina sana", "vida fitness"],
           "especializaciones": ["Alimentación saludable", "Meal prep semanal", "Nutrición con robot de cocina", "Dietas personalizadas", "Cocina sin procesados"]
+        }
+      ]
+    },
+    {
+      "categoria": "Hogar y Servicios del Hogar",
+      "icono": "🏠",
+      "descripcion": "Servicios para el hogar: lavandería, limpieza, reparaciones y jardinería",
+      "subclasificaciones": [
+        {
+          "valor": "lavanderia_tintoreria", "etiqueta": "Lavandería y Tintorería", "sinonimos": ["lavandería", "tintorería", "lavado de ropa", "laundry", "dry cleaning", "lavado y planchado", "lavandería industrial"],
+          "especializaciones": ["Lavandería autoservicio", "Lavandería a domicilio", "Tintorería premium", "Lavandería industrial", "Planchado y vapor"]
+        },
+        {
+          "valor": "limpieza_hogar", "etiqueta": "Limpieza del Hogar y Oficinas", "sinonimos": ["limpieza", "aseo", "servicio de limpieza", "house cleaning", "sanitización", "desinfección"],
+          "especializaciones": ["Limpieza residencial", "Limpieza de oficinas", "Desinfección y sanitización", "Limpieza post-obra"]
+        },
+        {
+          "valor": "reparaciones_hogar", "etiqueta": "Reparaciones del Hogar", "sinonimos": ["plomería", "electricista", "pintura", "carpintería", "mantenimiento del hogar", "reparaciones"],
+          "especializaciones": ["Plomería", "Instalaciones eléctricas", "Pintura", "Carpintería", "Aire acondicionado"]
+        },
+        {
+          "valor": "jardineria", "etiqueta": "Jardinería y Paisajismo", "sinonimos": ["jardinería", "paisajismo", "jardines", "poda", "riego", "landscaping"],
+          "especializaciones": ["Mantenimiento de jardines", "Diseño de paisaje", "Poda y fertilización", "Riego automatizado"]
+        }
+      ]
+    },
+    {
+      "categoria": "Belleza y Estética",
+      "icono": "💇",
+      "descripcion": "Salones, barberías, estética y spa",
+      "subclasificaciones": [
+        {
+          "valor": "salones_belleza", "etiqueta": "Salones de Belleza", "sinonimos": ["salón de belleza", "estética capilar", "corte de cabello", "tinte", "peinados", "beauty salon"],
+          "especializaciones": ["Cortes y peinados", "Colorimetría", "Tintes y mechas", "Alisados"]
+        },
+        {
+          "valor": "barberias", "etiqueta": "Barberías", "sinonimos": ["barbería", "corte de pelo", "barba", "afeitado", "barber shop"],
+          "especializaciones": ["Cortes de cabello", "Arreglo de barba", "Afeitado clásico", "Diseño de cejas"]
+        },
+        {
+          "valor": "estetica_unas", "etiqueta": "Estética y Uñas", "sinonimos": ["uñas", "manicure", "pedicure", "pestañas", "cejas", "acrílicas", "nail art"],
+          "especializaciones": ["Manicure y pedicure", "Uñas acrílicas", "Extensión de pestañas", "Micropigmentación de cejas"]
+        },
+        {
+          "valor": "spa_masajes", "etiqueta": "Spa y Masajes", "sinonimos": ["spa", "masajes", "masoterapia", "relajación", "facial", "hidroterapia"],
+          "especializaciones": ["Masajes relajantes", "Masajes reductivos", "Tratamientos faciales", "Hidroterapia"]
+        }
+      ]
+    },
+    {
+      "categoria": "Autos y Movilidad",
+      "icono": "🚗",
+      "descripcion": "Talleres, lavado de autos y refaccionarias",
+      "subclasificaciones": [
+        {
+          "valor": "talleres_mecanicos", "etiqueta": "Talleres Mecánicos", "sinonimos": ["taller mecánico", "mecánica", "automotriz", "mantenimiento de autos", "hójalatería", "pintura automotriz", "auto shop"],
+          "especializaciones": ["Mantenimiento preventivo", "Diagnóstico computarizado", "Frenos", "Transmisión", "Hojalatería y pintura"]
+        },
+        {
+          "valor": "lavado_detallado_autos", "etiqueta": "Lavado y Detallado de Autos", "sinonimos": ["lavado de autos", "car wash", "detallado", "pulido", "encerado", "polarizado"],
+          "especializaciones": ["Lavado a domicilio", "Detallado interior", "Pulido y encerado", "Polarizado"]
+        },
+        {
+          "valor": "refaccionarias", "etiqueta": "Refaccionarias", "sinonimos": ["refacciones", "autopartes", "llantas", "aceites", "lubricantes", "repuestos"],
+          "especializaciones": ["Refacciones nacionales", "Refacciones importadas", "Llantas", "Aceites y lubricantes"]
+        }
+      ]
+    },
+    {
+      "categoria": "Eventos y Entretenimiento",
+      "icono": "🎉",
+      "descripcion": "Salones de eventos, banquetes, fotografía y video",
+      "subclasificaciones": [
+        {
+          "valor": "salones_eventos", "etiqueta": "Salones de Eventos", "sinonimos": ["salón de eventos", "fiestas", "bodas", "XV años", "eventos corporativos", "quinceañeras", "banquetes"],
+          "especializaciones": ["Bodas", "XV años", "Eventos corporativos", "Fiestas infantiles"]
+        },
+        {
+          "valor": "banquetes_catering", "etiqueta": "Banquetes y Catering", "sinonimos": ["banquetes", "catering", "buffet", "meseros", "coctelería", "servicio de alimentos para eventos"],
+          "especializaciones": ["Buffets", "Catering corporativo", "Meseros y logística", "Coctelería"]
+        },
+        {
+          "valor": "fotografia_video", "etiqueta": "Fotografía y Video", "sinonimos": ["fotógrafo", "fotografía", "video", "videografía", "drones", "sesión de fotos"],
+          "especializaciones": ["Fotografía de eventos", "Video profesional", "Drones", "Sesiones de marca"]
         }
       ]
     },

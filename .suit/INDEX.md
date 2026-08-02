@@ -27,6 +27,8 @@
 | `workflows/research.yaml` | Information gathering |
 | `workflows/deploy.yaml` | Production deployment |
 | `workflows/cotizador.yaml` | Cotizador module development |
+| `workflows/video-generation.yaml` | Video con Remotion (ViRe) |
+| `workflows/video-generation-comfyui.yaml` | Video con ComfyUI + FFmpeg (SuitComfy) |
 
 ## Skills
 | Directory | Contents |
@@ -75,6 +77,7 @@
 | `suit-ai` | `SuitAI/` | - | 3010 |
 | `vire` | `SuitVidGenRemotion/` | - | 3004 |
 | `suit-chat-tg` | `SuitChatTG/` | GSHEETS | 3011 |
+| `suit-comfy` | `SuitComfy/` | - (ComfyUI + FFmpeg, local) | 3012 |
 
 ## Memory
 | Directory | Purpose |
@@ -92,3 +95,4 @@
 | ADR-005 | [Modo Flags 7-Partes + SuitProductos/SuitInventarios/SuitBodega](memory/decisions/ADR-005-modulo-prod-inv-bod.md) | 2026-07-09 |
 | ADR-006 | [SuitAI — Model Discovery + Auto-Routing + Circuit Breaker](memory/decisions/ADR-006-suit-ai.md) | 2026-07-09 |
 | ADR-007 | [SuitChatTG — Chatbot Telegram con IA, Leads y Memoria](memory/decisions/ADR-007-suit-chat-tg.md) | 2026-07-21 |
+| ADR-018 | [SuitComfy — Imagen + Video con ComfyUI local (CPU) + FFmpeg](memory/decisions/ADR-018-suitcomfy.md) | 2026-07-31 |

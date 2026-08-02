@@ -353,6 +353,38 @@ projects:
       TYPE: tool
     notes: "FFmpeg v8.1.1 via WinGet. Ruta auto-detectada o configurable via FFMPEG_PATH en .env"
 
+  suit-comfy:
+    name: "SuitComfy — Imagen + Video con ComfyUI (local, gratis)"
+    path: SuitComfy/
+    description: "Módulo de generación de imagen con ComfyUI (SD1.5 + LoRA LCM, corre en CPU) y ensamblaje de video profesional con FFmpeg (Ken Burns + crossfade). 100% local, sin GPU NVIDIA. Aislado de SuitCampanas y ViRe. ComfyUI en puerto 8188."
+    skills:
+      - comfy-ui
+      - javascript
+    context:
+      - SuitComfy/README.md
+      - SuitComfy/AGENTS.md
+      - SuitComfy/index.js
+      - SuitComfy/workflows/txt2img-lcm.json
+    environment:
+      PORT: 3012
+      TYPE: service
+      COMFYUI_URL: http://127.0.0.1:8188
+    servers:
+      - name: suitcomfy
+        path: SuitComfy/index.js
+        port: 3012
+        type: express
+    api_endpoints:
+      - "GET /api/health"
+      - "POST /api/image (genera 1 imagen con parámetros)"
+      - "POST /api/video (genera N escenas + ensambla MP4 con FFmpeg)"
+    hardware:
+      gpu: none
+      notes: "CPU-only. Imagen LCM 512² ≈ 1-2 min; video 4 escenas ≈ 5-15 min."
+    dependencies:
+      - ComfyUI Desktop (http://127.0.0.1:8188, --cpu)
+      - FFmpeg v8.1.1 (WinGet)
+
   suit-chat-tg:
     name: "SuitChatTG — Chatbot Telegram multi-inquilino"
     path: SuitChatTG/

@@ -23,6 +23,7 @@ function parseLogoUrlField(value) {
 const CONFIG = {
     AI_URL: '/api/ai/generate',
     HISTORY_URL: '/api/history',
+    SAVE_URL: '/api/save',
     CAMPANAS_URL: '/api/campanas',
     PROMPTS_API: '/api/prompts/',
     DRIVE_API_KEY: '',
@@ -85,6 +86,7 @@ let currentMode = 'Ai';
 let uploadedLogoDataUrl = null;
 let companyConfigs = [];
 let bdUploadedPhotos = [];
+let lastGeneratedContent = null;
 
 // --- Scope global: funciones accesibles desde generateAIContent ---
 const INDUSTRIA_CATEGORIA = {};
@@ -194,102 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
         electrodomesticos_premium: 'los electrodomésticos y bienes de consumo premium'
     };
 
-    // Mapeo de industrias a nichos
-    const INDUSTRIAS_NICHOS = {
-        servicios_profesionales: [
-            { valor: 'abogados', etiqueta: 'Abogados' },
-            { valor: 'despachos_contables', etiqueta: 'Despachos Contables' }
-        ],
-        salud_bienestar: [
-            { valor: 'clinicas_medicas', etiqueta: 'Clínicas Médicas' },
-            { valor: 'dentistas', etiqueta: 'Dentistas' },
-            { valor: 'salud_bienestar', etiqueta: 'Salud y Bienestar' },
-            { valor: 'terapia_fisica_rehabilitacion', etiqueta: 'Terapia Física y Rehabilitación' },
-            { valor: 'nutricion_dietetica', etiqueta: 'Nutrición y Dietética' }
-        ],
-        tecnologia: [
-            { valor: 'software', etiqueta: 'Software' },
-            { valor: 'tecnologia', etiqueta: 'Tecnología' },
-            { valor: 'desarrollo_web_mobile', etiqueta: 'Desarrollo Web y Móvil' },
-            { valor: 'ciberseguridad', etiqueta: 'Ciberseguridad' }
-        ],
-        industria_manufactura: [
-            { valor: 'construccion', etiqueta: 'Construcción' },
-            { valor: 'manufacturera', etiqueta: 'Industria Manufacturera' },
-            { valor: 'tornos_maquinado', etiqueta: 'Tornos y Maquinado' }
-        ],
-        energia: [
-            { valor: 'energia_solar', etiqueta: 'Energía Solar' },
-            { valor: 'almacenamiento_energia', etiqueta: 'Almacenamiento de Energía' }
-        ],
-        comercio_ventas: [
-            { valor: 'ecommerce', etiqueta: 'E-commerce' },
-            { valor: 'inmobiliarias', etiqueta: 'Inmobiliarias' },
-            { valor: 'venta_en_linea_ecommerce', etiqueta: 'Venta en Línea / Marketplace' }
-        ],
-        alimentos_hospitalidad: [
-            { valor: 'restaurantes', etiqueta: 'Restaurantes y Comida Rápida' },
-            { valor: 'pastelerias', etiqueta: 'Pastelerías' },
-            { valor: 'hoteles_turismo', etiqueta: 'Hoteles y Turismo' },
-            { valor: 'restaurante_cafeteria', etiqueta: 'Restaurante y Cafetería' },
-            { valor: 'hoteleria_turismo', etiqueta: 'Hotelería y Turismo' }
-        ],
-        educacion: [
-            { valor: 'educacion', etiqueta: 'Educación' }
-        ],
-        logistica_transporte: [
-            { valor: 'logistica_transporte', etiqueta: 'Logística y Transporte' }
-        ],
-        agropecuario: [
-            { valor: 'agricultura', etiqueta: 'Agricultura' }
-        ],
-        mascotas: [
-            { valor: 'mascotas', etiqueta: 'Mascotas' }
-        ],
-        bienes_raices: [
-            { valor: 'venta_renta_residencial', etiqueta: 'Venta y Renta Residencial' },
-            { valor: 'venta_renta_comercial', etiqueta: 'Venta y Renta Comercial' },
-            { valor: 'desarrollo_inmobiliario', etiqueta: 'Desarrollo Inmobiliario' },
-            { valor: 'fideicomiso_inmobiliario', etiqueta: 'Fideicomiso y Inversión' },
-            { valor: 'administracion_propiedades', etiqueta: 'Administración de Propiedades' }
-        ],
-        jardineria_paisajismo: [
-            { valor: 'diseño_paisajismo', etiqueta: 'Diseño de Paisajismo' },
-            { valor: 'mantenimiento_jardines', etiqueta: 'Mantenimiento de Jardines' },
-            { valor: 'arboricultura', etiqueta: 'Arboricultura' },
-            { valor: 'jardines_verticales', etiqueta: 'Jardines Verticales y Techos Verdes' },
-            { valor: 'vivero_plantas', etiqueta: 'Vivero y Plantas' }
-        ],
-        analisis_clinicos: [
-            { valor: 'laboratorio_clinico', etiqueta: 'Laboratorio Clínico' },
-            { valor: 'laboratorio_especializado', etiqueta: 'Laboratorio Especializado' },
-            { valor: 'diagnostico_imagen', etiqueta: 'Diagnóstico por Imagen' },
-            { valor: 'medicina_preventiva', etiqueta: 'Medicina Preventiva y Chequeos' },
-            { valor: 'diagnostico_molecular', etiqueta: 'Diagnóstico Molecular y PCR' }
-        ],
-        veterinaria: [
-            { valor: 'veterinaria_general', etiqueta: 'Veterinaria General' },
-            { valor: 'veterinaria_especialista', etiqueta: 'Veterinaria Especialista' },
-            { valor: 'grooming_peluqueria', etiqueta: 'Grooming y Peluquería' },
-            { valor: 'hotel_mascotas', etiqueta: 'Hotel y Guardería de Mascotas' },
-            { valor: 'adiestramiento_comportamiento', etiqueta: 'Adiestramiento y Comportamiento' },
-            { valor: 'pet_shop_accesorios', etiqueta: 'Pet Shop y Accesorios' }
-        ],
-        guarderia_infantil: [
-            { valor: 'guarderia', etiqueta: 'Guardería' },
-            { valor: 'educacion_preescolar', etiqueta: 'Educación Preescolar' },
-            { valor: 'actividades_extracurriculares', etiqueta: 'Actividades Extracurriculares' },
-            { valor: 'psicologia_infantil', etiqueta: 'Psicología y Desarrollo Infantil' },
-            { valor: 'eventos_infantiles', etiqueta: 'Eventos y Fiestas Infantiles' }
-        ],
-        electrodomesticos_premium: [
-            { valor: 'robots_cocina_multifuncion', etiqueta: 'Robots de Cocina Multifunción' },
-            { valor: 'estilo_vida_saludable', etiqueta: 'Estilo de Vida Saludable' }
-        ],
-        otro: [
-            { valor: 'otro', etiqueta: 'Otro' }
-        ]
-    };
     const INDUSTRIAS_DATA = { clasificacion: [] };
     const initCategoriaLookup = (data) => {
         INDUSTRIAS_DATA.clasificacion = data.clasificacion;
@@ -298,6 +204,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 INDUSTRIA_CATEGORIA[sub.valor] = grupo.categoria;
                 ESPECIALIZACIONES[sub.valor] = sub.especializaciones || [];
             });
+        });
+    };
+    const populateIndustrias = () => {
+        if (!aiIndustry) return;
+        aiIndustry.innerHTML = '<option value="">-- Seleccionar Industria --</option>';
+        INDUSTRIAS_DATA.clasificacion.forEach(grupo => {
+            const opt = document.createElement('option');
+            opt.value = grupo.id !== undefined ? String(grupo.id) : grupo.categoria;
+            opt.textContent = `${grupo.icono || '📁'} ${grupo.categoria}`;
+            aiIndustry.appendChild(opt);
         });
     };
     const CONCIENCIA_SUGGEST = {
@@ -311,7 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const c = aiConciencia.value;
         const ind = aiIndustry.value;
         const nicho = aiNicho ? aiNicho.value : '';
-        const indLabel = INDUSTRY_LABELS[nicho] || INDUSTRY_LABELS[ind] || 'tu sector';
+        const indOption = aiIndustry.selectedOptions[0];
+        const indLabel = INDUSTRY_LABELS[nicho] || INDUSTRY_LABELS[ind]
+            || (indOption && indOption.textContent.replace(/^[^\s]+\s/, '')) || 'tu sector';
         const esp = aiEspecializacion.value;
         const phrases = CONCIENCIA_SUGGEST[c] || ['Estrategia para'];
         const phrase = phrases[Math.floor(Math.random() * phrases.length)];
@@ -322,7 +240,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function populateNichos() {
         const ind = aiIndustry.value;
-        const nichos = INDUSTRIAS_NICHOS[ind] || [];
+        const grupo = INDUSTRIAS_DATA.clasificacion.find(g => (g.id !== undefined ? String(g.id) : g.categoria) === ind);
+        const nichos = grupo ? grupo.subclasificaciones : [];
         aiNicho.innerHTML = '<option value="">-- Seleccionar Nicho --</option>';
         nichos.forEach(n => {
             const opt = document.createElement('option');
@@ -688,6 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.status !== 'success' || !res.data) throw new Error('API error');
             const data = {
                 clasificacion: res.data.map(item => ({
+                    id: item.id,
                     categoria: item.categoria,
                     icono: item.icono || '',
                     descripcion: item.descripcion || '',
@@ -700,6 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }))
             };
             initCategoriaLookup(data);
+            populateIndustrias();
             showCategoriaHint();
             updateEspecializacionSelect();
         })
@@ -707,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fallback: cargar JSON local si Supabase falla
             fetch('/config/industrias.json')
                 .then(r => r.json())
-                .then(data => { initCategoriaLookup(data); showCategoriaHint(); updateEspecializacionSelect(); })
+                .then(data => { initCategoriaLookup(data); populateIndustrias(); showCategoriaHint(); updateEspecializacionSelect(); })
                 .catch(() => {});
         });
 
@@ -786,6 +707,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listener para VIDE (Suite Completa)
     const videGenerateBtn = document.getElementById('videGenerateBtn');
     if (videGenerateBtn) videGenerateBtn.addEventListener('click', generateVideVideo);
+    // Event Listener para Brief → MediaPlanner → BriefMarker (botón propio en VIDE)
+    const videMediaPlanBtn = document.getElementById('videMediaPlanBtn');
+    if (videMediaPlanBtn) videMediaPlanBtn.addEventListener('click', generateMediaPlanFromUI);
+    // Event Listener para retomar un plan de medios viejo por id
+    const videResumePlanBtn = document.getElementById('videResumePlanBtn');
+    if (videResumePlanBtn) videResumePlanBtn.addEventListener('click', listRecentPlans);
     // Event Listener para ViRe (Remotion, motor independiente de VIDE)
     const vireGenerateBtn = document.getElementById('vireGenerateBtn');
     if (vireGenerateBtn) vireGenerateBtn.addEventListener('click', generateViReVideo);
@@ -873,16 +800,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let supaOk = false;
 
         try {
-            // 1. Enviar a GAS (Google Sheets)
-            const fetchOptions = {
+            // 1. Enviar a GAS (Google Sheets) — vía /api/save (el proxy que de
+            // verdad reenvía el POST a Apps Script). Antes apuntaba a
+            // /api/history, que solo hace GET y descarta cualquier body — nunca
+            // guardaba nada, pero con mode:'no-cors' la respuesta es opaca y
+            // gasOk quedaba en true sin importar qué pasara realmente.
+            const gasRes = await fetch(CONFIG.SAVE_URL, {
                 method: 'POST',
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'text/plain' }, 
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
-            };
-            await fetch(CONFIG.HISTORY_URL, fetchOptions);
-            gasOk = true;
-            console.log('📡 [GAS_SENT]: Los datos fueron enviados (modo opaco)');
+            });
+            const gasJson = await gasRes.json();
+            gasOk = gasJson.status === 'success';
+            console.log(gasOk ? '📡 [GAS_SENT]: Guardado en Sheets' : `⚠️ [GAS_ERROR]: ${gasJson.message}`);
         } catch (error) {
             console.warn('GAS fallback:', error.message);
         }
@@ -912,7 +842,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         voice: formData.options?.voice || false,
                         music: formData.options?.music || false,
                         video: formData.options?.video || false
-                    }
+                    },
+                    contenido_json: lastGeneratedContent || {}
                 })
             });
             supaOk = true;
@@ -1094,6 +1025,7 @@ async function generateAIContent() {
             if (json.status !== 'success') throw new Error(json.message || 'Error en el servidor');
 
             captionField.value = json.data.caption;
+            lastGeneratedContent = json.data;
             await renderCarouselFromJson(json.data);
             showToast('✨ Campaña basada en tendencia generada', 'success');
         } catch (e) {
@@ -1107,7 +1039,7 @@ async function generateAIContent() {
     const industry = aiNicho ? aiNicho.value : aiIndustry.value;
     const conciencia = document.getElementById('aiConciencia').value;
     let template = aiTemplate.value;
-    
+
     if (!template) {
         template = TEMPLATE_MAP[conciencia];
     }
@@ -1204,6 +1136,7 @@ async function generateAIContent() {
         captionField.value = generatedJson.caption;
         
         // 2. Renderizar el carrusel usando la nueva función JSON
+        lastGeneratedContent = generatedJson;
         await renderCarouselFromJson(generatedJson);
         
         // Mostrar botón de video y auto-generar si el toggle está activo
@@ -1246,6 +1179,7 @@ function getFormData() {
         postDate: document.getElementById('postDate').value,
         status: `${company}, ${platform}, ${format}, ${document.getElementById('aiTemplate').value}, Mode:${currentMode}${espVal ? `, Esp:${espVal}` : ''}`, 
         token: document.getElementById('token').value,
+        contenidoJson: lastGeneratedContent || {},
         options: {            voice: enableVoice.checked,
             music: enableMusic.checked,
             video: enableVideo.checked
@@ -1318,6 +1252,7 @@ async function renderCarouselPreview(text) {
                     body: s.texto || s.body || '',
                     visual: s.visual || s.image_prompt || ''
                 }));
+                lastGeneratedContent = { slides };
                 await renderCarouselFromJson({ slides });
                 return;
             }
@@ -1335,6 +1270,10 @@ async function renderCarouselPreview(text) {
     const format = document.querySelector('.format-tab.active').dataset.format;
     const rawLogoUrl = normalizeDriveUrl(document.getElementById('companyLogo').value.trim());
     const finalLogoUrl = uploadedLogoDataUrl || await resolveLogoUrl(rawLogoUrl);
+
+    // Se llena en paralelo al forEach de abajo para que Submit guarde el JSON
+    // real de este preview (BDPR), no el de una generación anterior sin relación.
+    const parsedSlidesForSave = [];
 
     slides.forEach((slideText, index) => {
         const slideEl = document.createElement('div');
@@ -1365,6 +1304,8 @@ async function renderCarouselPreview(text) {
             // Remover explícitamente el prefijo "Cuerpo: " si existe
             body = filteredLines.join('<br>').replace(/^(?:Cuerpo|Texto|Body)[:\s]*/i, '').trim();
         }
+
+        parsedSlidesForSave.push({ title, body, visual });
 
         // Usamos la sugerencia en inglés (si la IA la dio) para un mejor resultado, o el título si no.
         let searchTerms = visual || title;
@@ -1458,6 +1399,7 @@ async function renderCarouselPreview(text) {
         }
     });
 
+    lastGeneratedContent = { slides: parsedSlidesForSave };
     previewSection.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -2064,6 +2006,298 @@ function setupCompanyAutoFill() {
     }
 }
 
+// Pipeline Brief → MediaPlanner → BriefMarker. Se activa con el botón propio
+// #videMediaPlanBtn en la sección VIDE. Usa la empresa del campo companyName
+// (que ya autocompleta desde Config_Empresas) y no toca el flujo VIDE/Ai normal.
+async function generateMediaPlanFromUI() {
+    const company = document.getElementById('companyName')?.value?.trim() || '';
+    const panel = document.getElementById('mediaPlanPanel');
+    const summaryEl = document.getElementById('mediaPlanSummary');
+    const piezasEl = document.getElementById('mediaPlanPiezas');
+    const errEl = document.getElementById('mediaPlanError');
+    const triggerBtn = document.getElementById('videMediaPlanBtn');
+    const triggerLoader = triggerBtn?.querySelector('.media-plan-loader');
+
+    if (!company) {
+        showToast('❌ Escribe/Selecciona la empresa (usa el autocompletado)', 'error');
+        return;
+    }
+    if (!panel || !summaryEl || !piezasEl || !errEl) {
+        showToast('❌ Panel de plan de medios no disponible', 'error');
+        return;
+    }
+
+    if (triggerBtn) triggerBtn.disabled = true;
+    if (triggerLoader) triggerLoader.style.display = 'inline-block';
+    panel.style.display = '';
+    piezasEl.innerHTML = '';
+    errEl.style.display = 'none';
+    summaryEl.textContent = 'Generando plan de medios con IA...';
+
+    try {
+        const res = await fetch('/api/media-plan/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_empresa: company })
+        });
+        const data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Error generando plan');
+        const plan = data.data;
+        attachMediaPlanPanel(plan.id || plan.plan_id, plan);
+        showToast('✅ Plan de medios generado — revísalo y aprueba', 'success');
+    } catch (e) {
+        errEl.textContent = '❌ ' + e.message;
+        errEl.style.display = '';
+        summaryEl.textContent = '';
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        if (triggerBtn) triggerBtn.disabled = false;
+        if (triggerLoader) triggerLoader.style.display = 'none';
+    }
+}
+
+// Comparte la lógica del panel entre "generar nuevo" (generateMediaPlanFromUI) y
+// "retomar viejo" (resumeMediaPlan): arma el resumen, autoselecciona industria,
+// engancha Aprobar/Rechazar, y si el plan ya estaba aprobado muestra sus piezas.
+function attachMediaPlanPanel(planId, plan) {
+    const panel = document.getElementById('mediaPlanPanel');
+    const summaryEl = document.getElementById('mediaPlanSummary');
+    const piezasEl = document.getElementById('mediaPlanPiezas');
+    const errEl = document.getElementById('mediaPlanError');
+    const acceptBtn = document.getElementById('mediaPlanAcceptBtn');
+    const rejectBtn = document.getElementById('mediaPlanRejectBtn');
+    if (!panel || !summaryEl || !piezasEl || !errEl || !acceptBtn || !rejectBtn) return;
+
+    panel.style.display = '';
+    piezasEl.innerHTML = '';
+    errEl.style.display = 'none';
+
+    const pm = (plan && plan.plan_de_medios) || {};
+    const camps = pm.campaigns || [];
+    const lines = [];
+    if (pm.summary) lines.push(`📝 ${pm.summary}`);
+    camps.forEach(c => {
+        lines.push(`\n📌 <b>${c.nombre || c.id || 'Campaña'}</b> — prioridad ${c.prioridad || 'n/d'}`);
+        if (c.objetivo) lines.push(`   🎯 ${c.objetivo}`);
+        if (c.canales) lines.push(`   📱 ${Array.isArray(c.canales) ? c.canales.join(', ') : c.canales}`);
+        lines.push(`   🎬 ${(c.content_slots || []).length} piezas`);
+    });
+    lines.push(`\nTotal: ${plan?.total_slots ?? 'n/d'} slots · estado: ${plan?.estado || 'n/d'}`);
+    summaryEl.innerHTML = lines.join('<br>');
+
+    // Autoselección de industria/nicho desde el brief si la empresa no la tenía
+    autoSelectIndustriaFromBrief(plan?.brief_normalizado);
+
+    // Aprobar: genera piezas con BriefMarker (N llamadas IA, puede tardar).
+    // Reintentable: si ya se aprobó antes y quedaron piezas con error (ej. por
+    // rate limit), volver a Aprobar solo reintenta las pendientes, no repite
+    // (ni re-paga) las que ya salieron bien — ver approveMediaPlan() en el server.
+    acceptBtn.disabled = false;
+    const onApprove = async () => {
+        if (!planId) return;
+        acceptBtn.disabled = true;
+        piezasEl.innerHTML = 'Generando piezas con BriefMarker (puede tardar)...';
+        try {
+            // El estilo visual viaja con la elección ya resuelta: si el usuario
+            // eligió categoría/sub-estilo a mano manda eso; si dejó "Automático",
+            // manda lo que el Director (autoPickStyleByTrend) decidió. Precedencia
+            // resuelta por estiloVisualSeleccionado (ver plan-pieza-a-video.md P2).
+            const res = await fetch(`/api/media-plan/${planId}/aprobar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estilo_visual: estiloVisualSeleccionado || null })
+            });
+            const data = await res.json();
+            if (data.status !== 'success') throw new Error(data.message || 'Error aprobando');
+            const r = data.data;
+            const nGen = r.piezas_generadas ?? 0;
+            const nErr = r.piezas_error ?? 0;
+            const nTotal = r.piezas_generadas_total ?? nGen;
+            piezasEl.innerHTML = `✅ <b>${nTotal}</b> piezas generadas en total${nErr ? ` · ⚠️ ${nErr} con error (click Aprobar de nuevo para reintentar)` : ''} · sin procesar: ${r.sin_procesar ?? 0}`;
+            showToast(`✅ Plan aprobado: ${nTotal} piezas creativas`, 'success');
+            if (!nErr) acceptBtn.disabled = true; else acceptBtn.disabled = false;
+
+            // Lista las piezas reales y ofrece "🎬 Generar Video" por cada una,
+            // reusando el MISMO motor de VIDE con el guion pre-armado de la pieza.
+            await renderPlanPiezas(planId, piezasEl);
+        } catch (e) {
+            piezasEl.innerHTML = '';
+            errEl.textContent = '❌ ' + e.message;
+            errEl.style.display = '';
+            showToast('❌ ' + e.message, 'error');
+            acceptBtn.disabled = false;
+        }
+    };
+    const onReject = async () => {
+        if (!planId) return;
+        rejectBtn.disabled = true;
+        try {
+            await fetch(`/api/media-plan/${planId}/rechazar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            piezasEl.innerHTML = '🗑️ Plan rechazado';
+            showToast('🗑️ Plan de medios rechazado', 'info');
+            acceptBtn.disabled = true;
+        } catch (e) {
+            showToast('❌ ' + e.message, 'error');
+            rejectBtn.disabled = false;
+        }
+    };
+    acceptBtn.onclick = onApprove;
+    rejectBtn.onclick = onReject;
+
+    // Al retomar un plan ya aprobado, mostrar sus piezas generadas de una vez
+    if (plan && plan.estado === 'aprobado') {
+        renderPlanPiezas(planId, piezasEl);
+    }
+}
+
+// Lista las piezas de un plan aprobado y las muestra con su formato/canal/goal
+// y un botón "🎬 Generar Video" por cada una. El botón reusa generateVideVideo()
+// con el guion pre-armado de la pieza (creative_json.scenes) — mismo motor
+// /api/video-produce de VIDE, sin pipeline nuevo.
+async function renderPlanPiezas(planId, container) {
+    if (!container) return;
+    try {
+        const res = await fetch(`/api/media-plan/${planId}/piezas`);
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.message || 'Error listando piezas');
+        const piezas = (json.data || []).filter(p => p.estado === 'generado' && p.creative_json?.scenes?.length);
+        if (piezas.length === 0) {
+            container.innerHTML += '<div style="margin-top:0.5rem;">Sin piezas generadas aún.</div>';
+            return;
+        }
+        const list = document.createElement('div');
+        list.style.marginTop = '0.5rem';
+        piezas.forEach(p => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.35rem 0;border-top:1px solid rgba(255,255,255,0.06);';
+            const info = document.createElement('span');
+            info.innerHTML = `${p.slot_id || p.id} · <b>${p.format || 'Reel'}</b>${p.channel ? ' · ' + p.channel : ''}${p.goal ? ' · 🎯 ' + p.goal : ''}`;
+            const btn = document.createElement('button');
+            btn.textContent = '🎬 Generar Video';
+            btn.type = 'button';
+            btn.style.cssText = 'padding:0.3rem 0.7rem;border-radius:8px;border:1px solid rgba(99,102,241,0.4);background:rgba(99,102,241,0.15);color:#a5b4fc;cursor:pointer;font-size:0.7rem;white-space:nowrap;';
+            btn.onclick = () => {
+                // La empresa del formulario debe seguir siendo la del plan — el
+                // motor de video usa el mismo campo companyName; si cambió, se
+                // genera un video con datos cruzados de otra empresa.
+                const currentCompany = document.getElementById('companyName')?.value?.trim() || '';
+                if (!currentCompany) {
+                    showToast('❌ Selecciona la empresa en DATOS / NEGOCIO antes de generar el video', 'error');
+                    return;
+                }
+                generateVideVideo({ escenas: p.creative_json.scenes });
+            };
+            row.appendChild(info);
+            row.appendChild(btn);
+            list.appendChild(row);
+        });
+        container.appendChild(list);
+    } catch (e) {
+        container.innerHTML += `<div style="margin-top:0.5rem;color:#f87171;">⚠️ No se pudieron cargar las piezas: ${e.message}</div>`;
+    }
+}
+
+// Lista los planes recientes (botón 📂 Retomar Plan de Medios) y ofrece "Cargar"
+// por cada uno. El plan completo se reabre con resumeMediaPlan(), que reusa el
+// mismo attachMediaPlanPanel() del flujo "generar nuevo".
+async function listRecentPlans() {
+    const btn = document.getElementById('videResumePlanBtn');
+    const listEl = document.getElementById('resumePlanList');
+    if (!btn || !listEl) return;
+    if (listEl.style.display !== 'none') { listEl.style.display = 'none'; return; }
+
+    listEl.style.display = '';
+    listEl.innerHTML = 'Cargando planes recientes...';
+    try {
+        const res = await fetch('/api/media-plan/recientes');
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.message || 'Error listando planes');
+        const planes = json.data || [];
+        if (planes.length === 0) {
+            listEl.innerHTML = '<div style="padding:0.4rem;color:var(--text-dim);">Sin planes aún — genera uno primero.</div>';
+            return;
+        }
+        listEl.innerHTML = '';
+        planes.forEach(p => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.35rem 0;border-top:1px solid rgba(255,255,255,0.06);';
+            const fecha = p.created_at ? new Date(p.created_at).toLocaleDateString() : '';
+            const info = document.createElement('span');
+            info.innerHTML = `<b>${p.empresa || p.id_empresa || 'Sin empresa'}</b> · ${p.estado || ''}${fecha ? ' · ' + fecha : ''} · ${p.total_slots ?? '?'} slots`;
+            const loadBtn = document.createElement('button');
+            loadBtn.textContent = 'Cargar';
+            loadBtn.type = 'button';
+            loadBtn.style.cssText = 'padding:0.3rem 0.7rem;border-radius:8px;border:1px solid rgba(99,102,241,0.4);background:rgba(99,102,241,0.15);color:#a5b4fc;cursor:pointer;font-size:0.7rem;white-space:nowrap;';
+            loadBtn.onclick = () => resumeMediaPlan(p.id);
+            row.appendChild(info);
+            row.appendChild(loadBtn);
+            listEl.appendChild(row);
+        });
+    } catch (e) {
+        listEl.innerHTML = `<div style="padding:0.4rem;color:#f87171;">⚠️ ${e.message}</div>`;
+    }
+}
+
+// Reabre un plan existente por id: trae el plan completo y lo pinta con el mismo
+// panel/flujo que un plan recién generado (resumen + Aprobar/Rechazar + piezas).
+async function resumeMediaPlan(planId) {
+    const listEl = document.getElementById('resumePlanList');
+    try {
+        const res = await fetch(`/api/media-plan/${planId}`);
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.message || 'Error obteniendo plan');
+        attachMediaPlanPanel(planId, json.data);
+        if (listEl) listEl.style.display = 'none';
+        showToast('📂 Plan retomado', 'success');
+    } catch (e) {
+        showToast('❌ ' + e.message, 'error');
+    }
+}
+
+// Normaliza texto para comparar con tolerancia a mayúsculas/acentos, "_" vs
+// espacio, plurales simples y emoji/íconos al inicio (los <option> de industria
+// llevan ícono + espacio, ej. "🔌 Electrodomésticos..." — una comparación exacta
+// nunca matchea contra el texto plano del Brief, ni siquiera sin el problema de
+// singular/plural). Reutilizable para cualquier matching de texto libre contra
+// catálogos reales, en vez de comparar exacto por cada campo.
+function matchText(input, candidates, textOf = c => c) {
+    if (!input) return null;
+    // Rango de marcas diacríticas combinantes (U+0300–U+036F) construido por
+    // código, no como literal en el string — evita depender de que el editor
+    // preserve bien caracteres combinantes invisibles dentro del archivo.
+    const combiningMarks = new RegExp('[' + String.fromCharCode(0x0300) + '-' + String.fromCharCode(0x036f) + ']', 'g');
+    const norm = s => String(s).trim().toLowerCase()
+        .normalize('NFD').replace(combiningMarks, '')
+        .replace(/[_-]/g, ' ')
+        .replace(/^[^\p{L}\p{N}]+/u, '')
+        .split(/\s+/).filter(Boolean).map(w => w.replace(/s$/, '')).join(' ');
+    const target = norm(input);
+    if (!target) return null;
+    return candidates.find(c => norm(textOf(c)) === target) || null;
+}
+
+// Lee el brief_normalizado (o tipo_negocio crudo) y precarga industria/nicho/
+// especialización en el formulario si aún están vacíos. No reescribe campos ya
+// llenados y nunca lanza error si el brief no trae esos datos.
+function autoSelectIndustriaFromBrief(brief) {
+    if (!brief || typeof brief !== 'object') return;
+    const setIfEmpty = (id, value) => {
+        if (!value) return;
+        const el = document.getElementById(id);
+        if (el && !el.value) {
+            const options = Array.from(el.options || []);
+            const match = matchText(value, options, o => o.text) || options.find(o => o.value === value);
+            if (match) { el.value = match.value; el.dispatchEvent(new Event('change')); }
+        }
+    };
+    setIfEmpty('aiIndustry', brief.industria);
+    setIfEmpty('aiNicho', brief.nicho);
+    setIfEmpty('aiEspecializacion', brief.especializacion);
+}
+
 function setWorkMode(mode) {
     currentMode = mode;
     const aiBtn = document.getElementById('btnModeAi');
@@ -2469,7 +2703,7 @@ function showStyleSelector(categorias, empresa) {
     if (!wrapper || !catSelect || !subSelect) return;
     wrapper.style.display = '';
 
-    catSelect.innerHTML = '<option value="">🤖 Automático (Director)</option>' +
+    catSelect.innerHTML = '<option value="">🎯 Automático (recomendado por tendencias)</option>' +
         categorias.map(c => `<option value="${c.slug}">${c.icono || '📁'} ${c.nombre}</option>`).join('');
 
     catSelect.onchange = () => {
@@ -2745,6 +2979,7 @@ REGLAS DE RETENCIÓN CINEMATOGRÁFICA (OBLIGATORIAS):
             };
         }
 
+        lastGeneratedContent = { tipo: 'VIDE', guion: parsed };
         const jsonStr = JSON.stringify(parsed, null, 2);
 
         const jsonTextarea = document.getElementById('videGuionJson');
@@ -2780,7 +3015,7 @@ REGLAS DE RETENCIÓN CINEMATOGRÁFICA (OBLIGATORIAS):
 }
 
 // === VIDE: Suite Completa de Video ===
-async function generateVideVideo() {
+async function generateVideVideo(overrideGuion = null) {
     const company = document.getElementById('companyName')?.value?.trim() || '';
     if (!company) {
         showToast('❌ Escribe o selecciona una empresa/marca en DATOS / NEGOCIO', 'error');
@@ -2788,10 +3023,19 @@ async function generateVideVideo() {
         return;
     }
 
-    // Resolve guion: text mode or JSON mode
+    // Resolve guion: guion pre-armado (ej. pieza del MediaPlanner/BriefMarker),
+    // text mode o JSON mode. Un guion pre-armado salta la lectura de los
+    // textareas de VIDE — mismo /api/video-produce, mismo panel de revisión.
     const isJsonMode = document.getElementById('videGuionJson')?.style.display !== 'none';
     let guion;
-    if (isJsonMode) {
+    // Refleja exactamente lo que se manda a /api/video-produce — no depende de
+    // lastGeneratedContent, que solo se llena si el usuario pasó por "Generar
+    // JSON" (en modo texto libre quedaría con el guion de una generación previa).
+    let guionParaGuardar;
+    if (overrideGuion) {
+        guion = JSON.stringify(overrideGuion, null, 2);
+        guionParaGuardar = { tipo: 'VIDE', guion: overrideGuion, origen: 'briefmarker' };
+    } else if (isJsonMode) {
         const jsonText = document.getElementById('videGuionJson')?.value?.trim();
         if (!jsonText) {
             showToast('❌ Pega el JSON del guion', 'error');
@@ -2801,6 +3045,7 @@ async function generateVideVideo() {
         try {
             const parsed = JSON.parse(jsonText);
             guion = JSON.stringify(parsed, null, 2);
+            guionParaGuardar = { tipo: 'VIDE', guion: parsed };
         } catch (e) {
             showToast('❌ JSON inválido: ' + e.message, 'error');
             return;
@@ -2812,6 +3057,7 @@ async function generateVideVideo() {
             document.getElementById('videGuion')?.focus();
             return;
         }
+        guionParaGuardar = { tipo: 'VIDE', guion_texto: guion };
     }
 
     const style = document.getElementById('videStyle')?.value || 'energetic';
@@ -2903,9 +3149,56 @@ async function generateVideVideo() {
             const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
             const blob = new Blob([bytes], { type: 'video/mp4' });
             const filename = company ? `vide_${company.replace(/\s+/g, '_')}_${Date.now()}.mp4` : `vide_${Date.now()}.mp4`;
-            downloadFile(URL.createObjectURL(blob), filename);
-            updateProgress(100, '¡Completado!', `Video: ${filename}`);
-            showToast('✅ Video completo generado y descargado', 'success');
+
+            // Panel de revisión: el video se reproduce, no se descarga solo.
+            // El usuario decide Aceptar (descarga + guarda en Supabase/Sheets)
+            // o Rechazar (no se guarda nada).
+            window.lastVideoBlob = blob;
+            window.lastVideoBlobUrl = URL.createObjectURL(blob);
+            const reviewPanel = document.getElementById('videReviewPanel');
+            const reviewPlayer = document.getElementById('videReviewPlayer');
+            if (reviewPanel && reviewPlayer) {
+                reviewPlayer.src = window.lastVideoBlobUrl;
+                reviewPanel.style.display = 'block';
+            }
+            updateProgress(100, '¡Listo!', 'Revisa el video y decide');
+
+            const acceptBtn = document.getElementById('videAcceptBtn');
+            const rejectBtn = document.getElementById('videRejectBtn');
+            acceptBtn.onclick = async () => {
+                downloadFile(window.lastVideoBlobUrl, filename);
+                try {
+                    await fetch(CONFIG.CAMPANAS_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: `camp_${Date.now()}`,
+                            empresa: company,
+                            nombre: `Video ${company}`.substring(0, 100),
+                            tema: document.getElementById('aiTheme')?.value?.trim() || '',
+                            formato: format,
+                            plataforma: platform,
+                            modo: 'VIDE',
+                            contenido: 'Video generado',
+                            estado: 'aceptado',
+                            configuracion: { style, duration, voice, modules },
+                            contenido_json: guionParaGuardar || {}
+                        })
+                    });
+                    showToast('✅ Campaña de video guardada', 'success');
+                } catch (e) {
+                    showToast('❌ Video descargado pero no se pudo guardar: ' + e.message, 'error');
+                }
+                if (reviewPanel) reviewPanel.style.display = 'none';
+            };
+            rejectBtn.onclick = () => {
+                if (window.lastVideoBlobUrl) URL.revokeObjectURL(window.lastVideoBlobUrl);
+                window.lastVideoBlobUrl = null;
+                window.lastVideoBlob = null;
+                if (reviewPanel) reviewPanel.style.display = 'none';
+                showToast('❌ Video rechazado, no se guardó', 'info');
+            };
+            showToast('✅ Video generado — revisa y acepta para guardar', 'success');
 
             // Alimenta al Director con uso real: un video generado de verdad con
             // este estilo cuenta como la señal de tendencia más honesta que hay.

@@ -143,6 +143,22 @@ workflows:
       - "render"
       - "composición"
 
+  video-generation-comfyui:
+    path: .suit/workflows/video-generation-comfyui.yaml
+    risk: low
+    domain: media
+    requires_review: false
+    requires_planning: true
+    estimated_tokens: 4000
+    trigger_keywords:
+      - "suitcomfy"
+      - "suit-comfy"
+      - "comfyui"
+      - "comfy"
+      - "ken burns"
+      - "crossfade"
+      - "imagen a video"
+
   reservacion:
     path: .suit/workflows/reservacion.yaml
     risk: medium

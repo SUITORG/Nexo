@@ -15,6 +15,10 @@
 | P3 — Actualizar Core | ████████░░ 80% |
 | P4 — Mantenibilidad | ░░░░░░░░░░ 0% |
 | P5 — Calidad de video VIDE | ██████████ 100% (pendiente de prueba manual del usuario) |
+| P6 — Industria/Nicho desde Supabase | ████████░░ 80% (Fase 2 pendiente) |
+| P7 — Aceptar/Rechazar campaña + JSON completo | ██████████ 100% |
+| P8 — Fix deployment GAS + crash en /api/save | █████████░ 90% (falta limpiar fila de prueba) |
+| P9 — Brief → MediaPlanner → BriefMarker | ██████████ 100% |
 
 ---
 
@@ -75,6 +79,57 @@ Detalle completo y verificación de cada punto en `.suit/memory/bugs/videos-mult
 ### Backlog evaluado y diferido (no bloqueante)
 - **FT-001** (`.suit/memory/pending/tech-debt.yaml`): integrar ComfyUI como motor visual/audio para VIDE — solo el registro MCP está hecho, resto diferido.
 - **FT-002** (`.suit/memory/pending/tech-debt.yaml`): automatizar edición vía DaVinci Resolve + MCP desde SuitCampanas — diferido hasta que la prueba manual (5.13) confirme si hace falta algo que FFmpeg no pueda resolver (color grading, mezcla compleja). Rompería la automatización 100%-servidor actual.
+
+## P6 — Industria/Nicho/Especialización desde Supabase (sesión 2026-07-31)
+
+Detalle completo en `.suit/memory/decisions/ADR-017-industria-nicho-supabase.md`.
+
+- [x] 6.1 `<select id="aiIndustry">` hardcodeado + mapa local `INDUSTRIAS_NICHOS` → eliminados; ahora 100% Supabase (`populateIndustrias()`/`populateNichos()` leen `/api/industrias`, 22 industrias / 85 nichos reales)
+- [x] 6.2 Verificado en vivo contra el servidor: 0 referencias a `INDUSTRIAS_NICHOS` en el repo, `node --check` limpio, `GET /api/industrias` responde con datos reales incluida "Hogar y Servicios del Hogar" (id 33)
+- [ ] 6.3 **Fase 2 (NO iniciada)**: exportar `industrias`/`nichos` a Google Sheets. Decisión tomada (2026-07-31): **Opción A** — 2 hojas (Industrias, Nichos), sin hoja separada para especializaciones; en Nichos, la columna `especializaciones` (y `sinonimos`) va en una sola celda con valores separados por coma.
+
+## P7 — Aceptar/Rechazar campaña generada + JSON completo (sesión 2026-08-01)
+
+Detalle completo en `.suit/memory/decisions/ADR-019-campanas-aceptar-rechazar.md`.
+
+- [x] 7.1 Reparados 2 bugs de raíz preexistentes que hacían fallar TODO guardado en `campanas` en silencio: columnas faltantes (`activo`/`plataforma`/`modo`/`contenido`/`metadata`) + RLS activo sin políticas. Migración `Documentacion/migrations/006_campanas_fix_schema.sql` aplicada y verificada en vivo.
+- [x] 7.2 Nueva columna `contenido_json` (jsonb) — el JSON completo del guion/slides ahora se persiste, no solo el caption.
+- [x] 7.3 Panel Aceptar/Rechazar en VIDE (`#videReviewPanel`): el video ya no se descarga automático, el usuario decide.
+- [x] 7.4 Revisión SuitOS (reviewer) tras la ejecución encontró 2 bugs de correctitud (JSON viejo/vacío persistido en VIDE modo-texto y en BDPR texto libre) — corregidos y verificados en vivo el mismo día.
+- [x] 7.5 Apps Script republicado por el usuario/otra CLI, columna JSON activa — confirmado en vivo.
+
+## P8 — Fix deployment GAS + bug crítico en `/api/save` (sesión 2026-08-01)
+
+Detalle completo en `.suit/memory/decisions/ADR-020-fix-gas-deploy-y-api-save-crash.md`.
+
+- [x] 8.1 `GAS_URL` restaurado al deployment correcto en 4 archivos (root cause: commit `949879e` lo había cambiado al deployment de otro proyecto)
+- [x] 8.2 **Bug crítico encontrado en revisión**: `POST /api/save` crasheaba el servidor completo (excepción sin capturar por mal uso de `fetchWithRedirects`, que es GET-only) — cualquier intento de guardado real a Sheets tumbaba todo SuitCampanas. Corregido usando `fetch()` nativo.
+- [x] 8.3 **Bug adicional encontrado**: el submit real del formulario apuntaba a `/api/history` (solo lectura, descarta el body) en vez de `/api/save` — el guardado a Sheets del flujo principal era un no-op silencioso desde siempre, enmascarado por `mode:'no-cors'`. Corregido: nuevo `CONFIG.SAVE_URL`, respuesta leída de verdad para fijar `gasOk`.
+- [x] 8.4 Verificado en vivo end-to-end: guardado real crea fila en SMMC sin tumbar el servidor.
+- [ ] 8.5 **Pendiente manual del usuario**: borrar la fila de prueba `REVIEW_PROBE_FIXED_SAVE_445566` de la hoja SMMC (no hay endpoint de borrado). También pendiente: decidir cómo pre-poblar `#token` en `index.html` (hoy vacío por defecto — sin llenarlo a mano, `doPost` sigue rechazando con 401).
+
+## P9 — Brief → MediaPlanner → BriefMarker (sesión 2026-08-01)
+
+Detalle completo en `.suit/memory/decisions/ADR-021-briefmarker-mediaplanner.md`.
+
+- [x] 9.1 Parser tolerante de los 18 campos de `tipo_negocio` (Brief), sin romper el matching por substring del generador de sitios web
+- [x] 9.2 `MediaPlanner` (1 llamada IA → `plan_de_medios`) con gate Aprobar/Rechazar antes de generar piezas
+- [x] 9.3 `BriefMarker` (hasta 12 llamadas IA → `piezas_creativas`, JSON creativo completo de 21 campos por pieza)
+- [x] 9.4 2 tablas nuevas en Supabase (`planes_medios`, `piezas_creativas`), migración idempotente
+- [x] 9.5 Fix adicional necesario: `/api/config` apuntaba a una acción GAS que no existe (`getAll`) — el picker de empresas llevaba tiempo sirviendo datos mock; corregido a `action=config` + expone `tipo_negocio`
+- [x] 9.6 **Bug encontrado en revisión**: autoselección de industria/nicho fallaba 100% de las veces (no solo "cosmético" como se reportó) — los `<option>` de industria llevan ícono+espacio, comparación exacta nunca podía matchear. Corregido con `matchText()` (normalización tolerante a acentos/mayúsculas/plural/símbolos), verificado con el caso real.
+- [x] 9.7 Verificado end-to-end con datos reales (Noe Thermomix): plan de 16 slots, cap de 12 respetado, 12 piezas con schema completo; rechazo confirmado sin persistencia. Datos de prueba limpiados.
+- [x] 9.8 **Bug encontrado en prueba manual del usuario**: opción quedó última (14/14) de `#aiTemplate` en vez de 2da. Corregido: reordenada justo debajo de "Automático".
+- [x] 9.9 **Bug más grave, mismo hallazgo**: `#mediaPlanPanel` vivía dentro de `#videSection` (solo visible en modo VIDE), pero el disparador (`#aiTemplate`/`#generateBtn`) vive en `#aiSection` (oculta por completo en modo VIDE) — no existía ningún modo donde disparador y panel de resultados fueran visibles a la vez. La IA y el guardado en Supabase sí funcionaban, pero nada se veía en pantalla. Corregido: panel movido a `#aiSection`, junto al botón "Generar con IA".
+- [ ] 9.10 **Pendiente aclaración del usuario**: si al escoger empresa también deben auto-seleccionarse Formato/Plataforma (Reel/Story/Post + Instagram/TikTok/etc.) según el campo `vivir` del Brief — no estaba en el plan original ni se implementó. El Brief no trae un campo equivalente a "formato" (solo a plataforma/canal).
+- [x] 9.11 Disparador movido de `#aiTemplate` (modo Ai) a botón propio `#videMediaPlanBtn` en modo VIDE, a pedido del usuario. `#mediaPlanPanel` movido junto con él.
+- [x] 9.12 `approveMediaPlan()` ahora es idempotente — reintentar solo procesa piezas pendientes/fallidas, sin duplicar ni re-pagar las ya generadas.
+- [x] 9.13 Fix de fallback de modelos IA: `[activeModel, "deepseek/deepseek-v4-flash"]` deduplicaba a un solo modelo real; corregido a `[activeModel, "openrouter/free"]` (los únicos 2 con mapeo verificado en OmniRoute) + backoff de 5s en 429 + espaciado de 3s entre piezas.
+- [x] 9.14 Bloqueo por cupo gratuito resuelto solo — reintentado más tarde, plan de prueba confirmado en 12/12 piezas generadas.
+- [x] 9.15 Botón "📂 Retomar Plan de Medios" en VIDE — lista los últimos 10 planes (`GET /api/media-plan/recientes`), carga uno completo (`GET /api/media-plan/:id`) y reabre el panel vía `attachMediaPlanPanel()` (refactor compartido con "generar nuevo"). Verificado en vivo, sin bugs. Detalle en `.suit/memory/pending/plan-retomar-plan.md`.
+- [x] 9.16 Botón "🎬 Generar Video" por pieza — reusa el mismo motor de VIDE (`generateVideVideo(overrideGuion)`), sin pipeline nuevo. Detalle en `.suit/memory/pending/plan-pieza-a-video.md`.
+- [x] 9.17 Estilo Visual (Director + override manual) conectado al prompt `CAMP-BRIEFMARKER` — solo afecta la piel visual, nunca el copy. Verificado con caso real meme/caricatura: copy estratégico intacto en 12/12 piezas.
+- [x] 9.18 **Bug encontrado en revisión**: el estilo visual no se fijaba por plan — un reintento (idempotente, 9.12) con el selector cambiado podía dejar piezas del mismo plan con estilos distintos. Corregido: `planes_medios.estilo_visual` (migración 008) se fija en la primera aprobación y se reusa en cualquier reintento posterior.
 
 ---
 

@@ -1,13 +1,216 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-07-28 | **Total archivos:** 449 JS/GS
+**Generado:** 2026-08-02 | **Total archivos:** 208 JS/GS
 
-## `app.js`
+## `.ponytail/benchmarks/behavior.js`
 
 | Línea | Función |
 |-------|---------|
-| 10 | `resetCompany` |
-| 16 | `viewLogs` |
-| 25 | `start` |
+| 13 | `proseOf` |
+
+## `.ponytail/benchmarks/claude-email.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `call` |
+
+## `.ponytail/benchmarks/correctness.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `correctnessTimeoutMs` |
+| 20 | `extractBlocks` |
+| 30 | `identifyTask` |
+| 41 | `exec` |
+| 52 | `python` |
+| 65 | `tmpFile` |
+
+## `.ponytail/benchmarks/loc.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 5 | `score` |
+
+## `.ponytail/benchmarks/model-email.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `call` |
+
+## `.ponytail/benchmarks/robustness-audit.js`
+
+| Línea | Función |
+|-------|---------|
+| 13 | `python` |
+| 120 | `pyBlock` |
+| 127 | `checkPy` |
+| 155 | `call` |
+
+## `.ponytail/hooks/ponytail-config.js`
+
+| Línea | Función |
+|-------|---------|
+| 20 | `normalizeMode` |
+| 26 | `normalizeConfigMode` |
+| 32 | `normalizePersistedMode` |
+| 40 | `isDeactivationCommand` |
+| 50 | `isShellSafe` |
+| 54 | `getConfigDir` |
+| 67 | `getConfigPath` |
+| 71 | `getClaudeDir` |
+| 76 | `getDefaultMode` |
+| 105 | `getQuietStartup` |
+| 122 | `getHideStatus` |
+| 136 | `writeDefaultMode` |
+
+## `.ponytail/hooks/ponytail-instructions.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `filterSkillBodyForMode` |
+| 43 | `getFallbackInstructions` |
+| 77 | `getPonytailInstructions` |
+
+## `.ponytail/hooks/ponytail-mode-tracker.js`
+
+| Línea | Función |
+|-------|---------|
+| 12 | `finish` |
+
+## `.ponytail/hooks/ponytail-runtime.js`
+
+| Línea | Función |
+|-------|---------|
+| 18 | `setMode` |
+| 23 | `clearMode` |
+| 28 | `readMode` |
+| 36 | `writeHookOutput` |
+
+## `.ponytail/hooks/ponytail-subagent.js`
+
+| Línea | Función |
+|-------|---------|
+| 23 | `inject` |
+| 56 | `finish` |
+
+## `.ponytail/pi-extension/index.js`
+
+| Línea | Función |
+|-------|---------|
+| 71 | `syncStatus` |
+| 91 | `setMode` |
+| 101 | `sendAlias` |
+| 116 | `handler` |
+| 151 | `handler` |
+| 156 | `handler` |
+| 161 | `handler` |
+| 166 | `handler` |
+| 171 | `handler` |
+
+## `.ponytail/pi-extension/test/extension.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 9 | `createPiHarness` |
+| 34 | `createCommandContext` |
+| 36 | `isIdle` |
+| 43 | `withTempConfig` |
+| 111 | `getEntries` |
+
+## `.ponytail/scripts/build-openclaw-skills.js`
+
+| Línea | Función |
+|-------|---------|
+| 30 | `sourceBody` |
+| 37 | `render` |
+| 47 | `outPath` |
+
+## `.ponytail/scripts/check-rule-copies.js`
+
+| Línea | Función |
+|-------|---------|
+| 7 | `read` |
+| 11 | `stripFrontmatter` |
+
+## `.ponytail/scripts/check-versions.js`
+
+| Línea | Función |
+|-------|---------|
+| 32 | `readVersion` |
+
+## `.ponytail/scripts/publish-openclaw-skills.js`
+
+| Línea | Función |
+|-------|---------|
+| 42 | `displayName` |
+| 47 | `quote` |
+
+## `.ponytail/scripts/uninstall.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `removeIfExists` |
+
+## `.ponytail/tests/behavior.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 12 | `check` |
+
+## `.ponytail/tests/copilot-plugin.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 20 | `readJSON` |
+
+## `.ponytail/tests/correctness.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `check` |
+
+## `.ponytail/tests/gemini-extension.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 40 | `read` |
+| 47 | `loadManifest` |
+
+## `.ponytail/tests/hermes-plugin.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 21 | `pythonExe` |
+| 31 | `python` |
+
+## `.ponytail/tests/hooks-windows.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 29 | `commandHooks` |
+
+## `.ponytail/tests/hooks.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 21 | `run` |
+
+## `.ponytail/tests/opencode-plugin.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 33 | `transform` |
+
+## `.ponytail/tests/qoder-plugin.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 20 | `readJSON` |
+
+## `.ponytail/tests/uninstall.test.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `runUninstall` |
 
 ## `Citas/handlers/actions.js`
 
@@ -70,33 +273,6 @@
 | 45 | `confirmPayment` |
 | 56 | `handleWebhook` |
 
-## `drive_manager.gs`
-
-| Línea | Función |
-|-------|---------|
-| 12 | `initDriveStructure` |
-| 59 | `crearCarpetaCliente` |
-| 99 | `_getOrCreateFolder` |
-| 107 | `obtenerDocumentosCliente` |
-
-## `gas-client.js`
-
-| Línea | Función |
-|-------|---------|
-| 11 | `getAuth` |
-| 24 | `runFunction` |
-| 39 | `getContent` |
-| 48 | `updateContent` |
-
-## `google-sheets.js`
-
-| Línea | Función |
-|-------|---------|
-| 8 | `getClient` |
-| 18 | `readSheet` |
-| 27 | `writeSheet` |
-| 38 | `appendSheet` |
-
 ## `PresentacionesVid/bdpv-generator.js`
 
 | Línea | Función |
@@ -129,14 +305,6 @@
 | 256 | `formatCell` |
 | 262 | `main` |
 | 382 | `tipoNegocio` |
-
-## `server.js`
-
-| Línea | Función |
-|-------|---------|
-| 411 | `proxyCotizador` |
-| 538 | `yahooFetch` |
-| 556 | `fetchQuoteV8` |
 
 ## `SuitAI/handlers/api.js`
 
@@ -183,6 +351,33 @@
 | 188 | `scan` |
 | 213 | `getCached` |
 | 217 | `clearCache` |
+
+## `SuitCVLO/frontend/app.js`
+
+| Línea | Función |
+|-------|---------|
+| 4 | `apiHeaders` |
+| 58 | `handleFiles` |
+| 85 | `handleFile` |
+| 96 | `showPreview` |
+| 111 | `uploadPhoto` |
+| 129 | `uploadMultiplePhotos` |
+| 162 | `uploadZip` |
+| 179 | `pollJob` |
+| 210 | `fetchResult` |
+| 226 | `normalizeResults` |
+| 262 | `renderResults` |
+| 350 | `downloadPDF` |
+| 362 | `downloadCSV` |
+| 376 | `downloadGeoJSON` |
+| 391 | `ocr_text` |
+| 400 | `downloadBlob` |
+| 411 | `setStatus` |
+| 417 | `showError` |
+| 424 | `hideAllSections` |
+| 431 | `imageName` |
+| 439 | `imageThumb` |
+| 444 | `escapeHtml` |
 
 ## `SuitChatTG/db/gas-client.js`
 
@@ -247,6 +442,30 @@
 | 72 | `handleMessage` |
 | 151 | `handleContact` |
 | 174 | `setup` |
+
+## `SuitComfy/index.js`
+
+| Línea | Función |
+|-------|---------|
+| 19 | `loadWorkflow` |
+| 32 | `generateImages` |
+
+## `SuitComfy/services/comfyClient.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `submitWorkflow` |
+| 22 | `waitForOutput` |
+| 48 | `resolveImagePath` |
+| 53 | `isAlive` |
+
+## `SuitComfy/services/renderer.js`
+
+| Línea | Función |
+|-------|---------|
+| 10 | `run` |
+| 19 | `zoompanExpr` |
+| 30 | `renderVideo` |
 
 ## `SuitCotizador/public/js/admin.js`
 
@@ -317,177 +536,6 @@
 | Línea | Función |
 |-------|---------|
 | 7 | `main` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/altair/jupyter/js/index.js`
-
-| Línea | Función |
-|-------|---------|
-| 9 | `render` |
-| 12 | `showError` |
-| 22 | `reembed` |
-| 60 | `selectionHandler` |
-| 79 | `paramHandler` |
-| 103 | `dataHandler` |
-| 115 | `signalHandler` |
-| 150 | `cleanJson` |
-| 154 | `getNestedRuntime` |
-| 162 | `lookupSignalOp` |
-| 167 | `dataRef` |
-| 205 | `findOperatorHandler` |
-| 211 | `addOperatorListener` |
-| 221 | `trap` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/matplotlib/backends/web_backend/js/mpl.js`
-
-| Línea | Función |
-|-------|---------|
-| 132 | `on_keyboard_event_closure` |
-| 260 | `on_mouse_event_closure` |
-| 342 | `set_focus` |
-| 357 | `on_click_closure` |
-| 363 | `on_mouseover_closure` |
-| 480 | `drawRubberband` |
-| 629 | `getModifiers` |
-| 651 | `simpleKeys` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/matplotlib/backends/web_backend/js/mpl_tornado.js`
-
-| Línea | Función |
-|-------|---------|
-| 6 | `mpl_ondownload` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/matplotlib/backends/web_backend/js/nbagg_mpl.js`
-
-| Línea | Función |
-|-------|---------|
-| 3 | `comm_websocket_adapter` |
-| 11 | `updateReadyState` |
-| 54 | `ondownload` |
-| 128 | `on_click_closure` |
-| 134 | `on_mouseover_closure` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/pydeck/nbextension/static/extensionRequires.js`
-
-| Línea | Función |
-|-------|---------|
-| 13 | `load_ipython_extension` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/chunk-FWX5IMBZ.BErP5FCA.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/DataFrame.Dkuppnh4.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/es6.DdnKCs-T.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/IFrame.CtHzGkN4.js`
-
-| Línea | Función |
-|-------|---------|
-| 4 | `sendSize` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/index.D7cltBCg.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/mermaid-parser.core.BuPiplVR.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/mermaid.core.CPusNTg-.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/MermaidChart.Cl8DwviK.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/StreamlitMarkdown.Dt4WoAEs.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/swimlanes-5IMT3BWC.DR74hdSd.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/util.BrnHTZD2.js`
-
-| Línea | Función |
-|-------|---------|
-| 1 | `__vite__mapDeps` |
-
-## `SuitCVLO/.venv/lib/python3.12/site-packages/torch/utils/model_dump/code.js`
-
-| Línea | Función |
-|-------|---------|
-| 9 | `humanFileSize` |
-| 15 | `caret` |
-| 69 | `ModelSizeSection` |
-| 92 | `StructuredDataSection` |
-| 307 | `ZipContentsSection` |
-| 333 | `CodeSection` |
-| 375 | `ExtraJsonSection` |
-| 412 | `ExtraPicklesSection` |
-| 448 | `assertStorageAreEqual` |
-| 455 | `computeTensorMemory` |
-| 483 | `getTensorStorages` |
-| 536 | `getTensorMemoryByDevice` |
-| 578 | `TensorMemorySection` |
-
-## `SuitCVLO/.venv/share/jupyter/nbextensions/pydeck/extensionRequires.js`
-
-| Línea | Función |
-|-------|---------|
-| 13 | `load_ipython_extension` |
-
-## `SuitCVLO/frontend/app.js`
-
-| Línea | Función |
-|-------|---------|
-| 4 | `apiHeaders` |
-| 58 | `handleFiles` |
-| 85 | `handleFile` |
-| 96 | `showPreview` |
-| 111 | `uploadPhoto` |
-| 129 | `uploadMultiplePhotos` |
-| 162 | `uploadZip` |
-| 179 | `pollJob` |
-| 210 | `fetchResult` |
-| 226 | `normalizeResults` |
-| 262 | `renderResults` |
-| 350 | `downloadPDF` |
-| 362 | `downloadCSV` |
-| 376 | `downloadGeoJSON` |
-| 391 | `ocr_text` |
-| 400 | `downloadBlob` |
-| 411 | `setStatus` |
-| 417 | `showError` |
-| 424 | `hideAllSections` |
-| 431 | `imageName` |
-| 439 | `imageThumb` |
-| 444 | `escapeHtml` |
 
 ## `SuitOSCore/ai-router/circuitBreaker.js`
 
@@ -815,9 +863,9 @@
 
 | Línea | Función |
 |-------|---------|
-| 8 | `downloadTTS` |
-| 38 | `generateVoice` |
-| 104 | `generateAllVoices` |
+| 9 | `downloadTTS` |
+| 39 | `generateVoice` |
+| 109 | `generateAllVoices` |
 
 ## `SuitVidGenRemotion/scripts/render.js`
 
@@ -826,6 +874,49 @@
 | 15 | `ensureDir` |
 | 19 | `parseArgs` |
 | 33 | `main` |
+
+## `app.js`
+
+| Línea | Función |
+|-------|---------|
+| 10 | `resetCompany` |
+| 16 | `viewLogs` |
+| 25 | `start` |
+
+## `drive_manager.gs`
+
+| Línea | Función |
+|-------|---------|
+| 12 | `initDriveStructure` |
+| 59 | `crearCarpetaCliente` |
+| 99 | `_getOrCreateFolder` |
+| 107 | `obtenerDocumentosCliente` |
+
+## `gas-client.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `getAuth` |
+| 24 | `runFunction` |
+| 39 | `getContent` |
+| 48 | `updateContent` |
+
+## `google-sheets.js`
+
+| Línea | Función |
+|-------|---------|
+| 8 | `getClient` |
+| 18 | `readSheet` |
+| 27 | `writeSheet` |
+| 38 | `appendSheet` |
+
+## `server.js`
+
+| Línea | Función |
+|-------|---------|
+| 411 | `proxyCotizador` |
+| 538 | `yahooFetch` |
+| 556 | `fetchQuoteV8` |
 
 ## `supabase.js`
 
@@ -836,7 +927,228 @@
 | 25 | `update` |
 | 33 | `remove` |
 
+## `Documentacion/`
+
+| Línea | Función | Archivo |
+|-------|---------|--------|
+| 77 | `escapeSql` | `migracion_datos.js` |
+| 105 | `toJsonIfNeeded` | `migracion_datos.js` |
+| 129 | `generateMigrationSQL` | `migracion_datos.js` |
+
+## `SuitCampanas/`
+
+### `SuitCampanas/backend.gs`
+
+| Línea | Función |
+|-------|---------|
+| 9 | `doGet` |
+| 51 | `doPost` |
+| 124 | `successResponse` |
+| 130 | `errorResponse` |
+
+### `SuitCampanas/local-server-node.js`
+
+| Línea | Función |
+|-------|---------|
+| 20 | `OMNIROUTE_BASE` |
+| 34 | `findFFmpeg` |
+| 62 | `getAudioDurationSec` |
+| 72 | `ffmpeg` |
+| 94 | `escapeFfmpegPath` |
+| 102 | `getDefaultFontFile` |
+| 115 | `wrapWords` |
+| 137 | `fitOverlayText` |
+| 168 | `computeRealDuration` |
+| 175 | `parseGuionScenes` |
+| 263 | `serverLog` |
+| 270 | `normalizeDriveUrl` |
+| 290 | `parseBrief` |
+| 329 | `fetchEmpresaRow` |
+| 343 | `loadPromptById` |
+| 357 | `callAIJson` |
+| 397 | `generateMediaPlan` |
+| 417 | `empresa` |
+| 431 | `approveMediaPlan` |
+| 1498 | `callAI` |
+| 1749 | `fetchFollowingRedirects` |
+| 1995 | `srtTime` |
+| 2305 | `background_music` |
+| 2375 | `subestilos` |
+| 2529 | `callOpenRouter` |
+| 2569 | `generateAITrendFallback` |
+| 2595 | `callLocalLMS` |
+| 2630 | `fetchWithRedirects` |
+
+### `SuitCampanas/models-config.js`
+
+| Línea | Función |
+|-------|---------|
+| 78 | `toOmniRouteId` |
+
+### `SuitCampanas/script.js`
+
+| Línea | Función |
+|-------|---------|
+| 4 | `escapeHtml` |
+| 11 | `parseLogoUrlField` |
+| 64 | `loadPrompt` |
+| 94 | `getCategoriaIndustria` |
+| 97 | `getEspecializaciones` |
+| 100 | `updateEspecializacionSelect` |
+| 200 | `initCategoriaLookup` |
+| 209 | `populateIndustrias` |
+| 226 | `suggestTheme` |
+| 238 | `showCategoriaHint` |
+| 241 | `populateNichos` |
+| 381 | `loadGooglePickerAPI` |
+| 402 | `openDrivePicker` |
+| 405 | `showDriveModalFallback` |
+| 410 | `hideDriveModal` |
+| 502 | `buscarTendencias` |
+| 614 | `subclasificaciones` |
+| 832 | `nombre` |
+| 869 | `generateAIContent` |
+| 1160 | `updateActiveTab` |
+| 1170 | `getFormData` |
+| 1190 | `autoToggleMultimedia` |
+| 1205 | `validateFormData` |
+| 1218 | `setLoading` |
+| 1224 | `setAiLoading` |
+| 1232 | `showToast` |
+| 1238 | `renderCarouselPreview` |
+| 1406 | `tryLoadImage` |
+| 1461 | `fetchHistory` |
+| 1503 | `renderHistory` |
+| 1553 | `resetFormErrors` |
+| 1555 | `downloadCampaignKit` |
+| 1714 | `generateVideoFromCarousel` |
+| 1805 | `downloadFile` |
+| 1814 | `downloadExternalImage` |
+| 1830 | `speakText` |
+| 1857 | `stopAll` |
+| 1923 | `loadCompanies` |
+| 1937 | `populateCompanySelect` |
+| 1951 | `setupCompanyAutoFill` |
+| 1962 | `handler` |
+| 1969 | `findVal` |
+| 2012 | `generateMediaPlanFromUI` |
+| 2062 | `attachMediaPlanPanel` |
+| 2096 | `onApprove` |
+| 2131 | `onReject` |
+| 2160 | `renderPlanPiezas` |
+| 2206 | `listRecentPlans` |
+| 2246 | `resumeMediaPlan` |
+| 2266 | `matchText` |
+| 2272 | `norm` |
+| 2285 | `autoSelectIndustriaFromBrief` |
+| 2287 | `setIfEmpty` |
+| 2301 | `setWorkMode` |
+| 2559 | `loadRecetas` |
+| 2579 | `generateImaginationVideo` |
+| 2660 | `syncVideFieldsFromJson` |
+| 2679 | `fetchEstilosVisuales` |
+| 2697 | `showStyleSelector` |
+| 2745 | `autoPickStyleByTrend` |
+| 2774 | `formatPhoneForSpeech` |
+| 2781 | `generateVideJson` |
+| 3018 | `generateVideVideo` |
+| 3102 | `updateProgress` |
+| 3230 | `generateViReVideo` |
+| 3316 | `ejecutarAgente` |
+| 3360 | `normalizeDriveUrl` |
+| 3379 | `resolveLogoUrl` |
+| 3391 | `renderCarouselFromJson` |
+| 3534 | `loadSlideImage` |
+| 3590 | `regenerateSlideImage` |
+| 3606 | `downloadAnimatedVideo` |
+| 3674 | `fetchLogs` |
+| 3686 | `toggleLogPanel` |
+
+### `SuitCampanas/test-system.js`
+
+| Línea | Función |
+|-------|---------|
+| 16 | `runTests` |
+
+
+## `SuitCampanas/scripts/`
+
+### `SuitCampanas/scripts/agent-tendencias.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `callIA` |
+| 34 | `buscarTendencias` |
+| 49 | `buscarTendenciasReales` |
+| 106 | `categorizarTendencia` |
+| 118 | `buscarRecetaPorCategoria` |
+| 140 | `crearRecetaConIA` |
+| 179 | `generarVideo` |
+| 227 | `guardarTendencia` |
+| 243 | `ejecutarAgente` |
+| 299 | `log` |
+
+### `SuitCampanas/scripts/download-drive-media.js`
+
+| Línea | Función |
+|-------|---------|
+| 10 | `main` |
+
+### `SuitCampanas/scripts/seed-industrias.js`
+
+| Línea | Función |
+|-------|---------|
+| 265 | `insertIndustries` |
+| 314 | `insertExtraNiches` |
+
+### `SuitCampanas/scripts/seed-media-plan-prompts.js`
+
+| Línea | Función |
+|-------|---------|
+| 124 | `seed` |
+
+### `SuitCampanas/scripts/seed-prompts.js`
+
+| Línea | Función |
+|-------|---------|
+| 138 | `seed` |
+
+### `SuitCampanas/scripts/seed-supabase.js`
+
+| Línea | Función |
+|-------|---------|
+| 13 | `seed` |
+| 67 | `seedRecetas` |
+
+### `SuitCampanas/scripts/sync-gas.js`
+
+| Línea | Función |
+|-------|---------|
+| 9 | `postToGAS` |
+| 27 | `syncIndustrias` |
+| 49 | `syncCampanas` |
+
+### `SuitCampanas/scripts/trend-research.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `getCacheKey` |
+| 18 | `readCache` |
+| 27 | `writeCache` |
+| 35 | `fetchPythonTrends` |
+| 47 | `extractTrends` |
+| 51 | `add` |
+| 81 | `fetchTrends` |
+
+
 ## `backend/`
+
+### `backend/DriveManager.js`
+
+| Línea | Función |
+|-------|---------|
+| 5 | `initDriveStructure` |
+| 25 | `_getOrCreateFolder` |
 
 ### `backend/ai_engine.js`
 
@@ -872,13 +1184,6 @@
 | 237 | `aplicarSUDOaTodas` |
 | 256 | `generarSUDOparaSeleccion` |
 
-### `backend/DriveManager.js`
-
-| Línea | Función |
-|-------|---------|
-| 5 | `initDriveStructure` |
-| 25 | `_getOrCreateFolder` |
-
 ### `backend/seeds_master.js`
 
 | Línea | Función |
@@ -899,14 +1204,6 @@
 | 269 | `processTransactionGSheets` |
 | 346 | `syncToSupabase` |
 
-
-## `Documentacion/`
-
-| Línea | Función | Archivo |
-|-------|---------|--------|
-| 77 | `escapeSql` | `migracion_datos.js` |
-| 105 | `toJsonIfNeeded` | `migracion_datos.js` |
-| 129 | `generateMigrationSQL` | `migracion_datos.js` |
 
 ## `js/modules/`
 
@@ -1359,6 +1656,28 @@
 
 ## `scripts/`
 
+### `scripts/configurador-estilos.js`
+
+| Línea | Función |
+|-------|---------|
+| 64 | `attachHoverListeners` |
+| 70 | `mostrarInfoCategoria` |
+| 81 | `mostrarInfoSub` |
+| 98 | `renderCategorias` |
+| 110 | `renderSubestilos` |
+| 161 | `ids` |
+
+### `scripts/configurador-formatos.js`
+
+| Línea | Función |
+|-------|---------|
+| 116 | `attachHoverListeners` |
+| 122 | `getRedesCompatibles` |
+| 127 | `getFormatosCompatibles` |
+| 132 | `aplicarFiltros` |
+| 189 | `actualizarInfoFormato` |
+| 205 | `actualizarInfoRed` |
+
 ### `scripts/generate-index.js`
 
 | Línea | Función |
@@ -1375,167 +1694,17 @@
 | 3 | `callByUrl` |
 | 41 | `run` |
 
+### `scripts/run-migration-007.js`
+
+| Línea | Función |
+|-------|---------|
+| 7 | `main` |
+
 ### `scripts/whatsapp-test.js`
 
 | Línea | Función |
 |-------|---------|
 | 31 | `send` |
-
-
-## `SuitCampanas/`
-
-### `SuitCampanas/backend.gs`
-
-| Línea | Función |
-|-------|---------|
-| 9 | `doGet` |
-| 51 | `doPost` |
-| 123 | `successResponse` |
-| 129 | `errorResponse` |
-
-### `SuitCampanas/local-server-node.js`
-
-| Línea | Función |
-|-------|---------|
-| 19 | `findFFmpeg` |
-| 43 | `ffmpeg` |
-| 68 | `serverLog` |
-| 75 | `normalizeDriveUrl` |
-| 899 | `callAI` |
-| 1150 | `fetchFollowingRedirects` |
-| 1410 | `callOpenRouter` |
-| 1445 | `callLocalLMS` |
-| 1480 | `fetchWithRedirects` |
-
-### `SuitCampanas/script.js`
-
-| Línea | Función |
-|-------|---------|
-| 4 | `escapeHtml` |
-| 38 | `loadPrompt` |
-| 67 | `getCategoriaIndustria` |
-| 70 | `getEspecializaciones` |
-| 73 | `updateEspecializacionSelect` |
-| 269 | `initCategoriaLookup` |
-| 285 | `suggestTheme` |
-| 295 | `showCategoriaHint` |
-| 298 | `populateNichos` |
-| 437 | `loadGooglePickerAPI` |
-| 458 | `openDrivePicker` |
-| 461 | `showDriveModalFallback` |
-| 466 | `hideDriveModal` |
-| 661 | `subclasificaciones` |
-| 848 | `nombre` |
-| 884 | `generateAIContent` |
-| 1182 | `updateActiveTab` |
-| 1192 | `getFormData` |
-| 1211 | `autoToggleMultimedia` |
-| 1226 | `validateFormData` |
-| 1239 | `setLoading` |
-| 1245 | `setAiLoading` |
-| 1253 | `showToast` |
-| 1259 | `renderCarouselPreview` |
-| 1395 | `tryLoadImage` |
-| 1450 | `fetchHistory` |
-| 1492 | `renderHistory` |
-| 1542 | `resetFormErrors` |
-| 1544 | `downloadCampaignKit` |
-| 1703 | `generateVideoFromCarousel` |
-| 1794 | `downloadFile` |
-| 1803 | `downloadExternalImage` |
-| 1819 | `speakText` |
-| 1846 | `stopAll` |
-| 1912 | `loadCompanies` |
-| 1926 | `populateCompanySelect` |
-| 1938 | `populateVideCompanySelect` |
-| 1952 | `setupCompanyAutoFill` |
-| 1955 | `handler` |
-| 1961 | `findVal` |
-| 1993 | `setWorkMode` |
-| 2292 | `loadRecetas` |
-| 2312 | `generateImaginationVideo` |
-| 2391 | `generateVideVideo` |
-| 2449 | `updateProgress` |
-| 2518 | `ejecutarAgente` |
-| 2562 | `normalizeDriveUrl` |
-| 2581 | `resolveLogoUrl` |
-| 2593 | `renderCarouselFromJson` |
-| 2726 | `loadSlideImage` |
-| 2782 | `regenerateSlideImage` |
-| 2798 | `downloadAnimatedVideo` |
-| 2866 | `fetchLogs` |
-| 2878 | `toggleLogPanel` |
-
-### `SuitCampanas/test-system.js`
-
-| Línea | Función |
-|-------|---------|
-| 16 | `runTests` |
-
-
-## `SuitCampanas/scripts/`
-
-### `SuitCampanas/scripts/agent-tendencias.js`
-
-| Línea | Función |
-|-------|---------|
-| 14 | `callIA` |
-| 34 | `buscarTendencias` |
-| 49 | `buscarTendenciasReales` |
-| 106 | `categorizarTendencia` |
-| 118 | `buscarRecetaPorCategoria` |
-| 140 | `crearRecetaConIA` |
-| 179 | `generarVideo` |
-| 227 | `guardarTendencia` |
-| 243 | `ejecutarAgente` |
-| 299 | `log` |
-
-### `SuitCampanas/scripts/download-drive-media.js`
-
-| Línea | Función |
-|-------|---------|
-| 10 | `main` |
-
-### `SuitCampanas/scripts/seed-industrias.js`
-
-| Línea | Función |
-|-------|---------|
-| 265 | `insertIndustries` |
-| 314 | `insertExtraNiches` |
-
-### `SuitCampanas/scripts/seed-prompts.js`
-
-| Línea | Función |
-|-------|---------|
-| 138 | `seed` |
-
-### `SuitCampanas/scripts/seed-supabase.js`
-
-| Línea | Función |
-|-------|---------|
-| 13 | `seed` |
-| 67 | `seedRecetas` |
-
-### `SuitCampanas/scripts/sync-gas.js`
-
-| Línea | Función |
-|-------|---------|
-| 9 | `postToGAS` |
-| 27 | `syncIndustrias` |
-| 49 | `syncCampanas` |
-
-### `SuitCampanas/scripts/trend-research.js`
-
-| Línea | Función |
-|-------|---------|
-| 14 | `getCacheKey` |
-| 18 | `readCache` |
-| 27 | `writeCache` |
-| 35 | `fetchPythonTrends` |
-| 47 | `extractTrends` |
-| 51 | `add` |
-| 81 | `extractTrendsFromIA` |
-| 95 | `fetchTrends` |
 
 
 ---

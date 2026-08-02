@@ -465,24 +465,6 @@
                             <label for="aiIndustry">Industria</label>
                             <select id="aiIndustry">
                                 <option value="">-- Seleccionar Industria --</option>
-                                <option value="servicios_profesionales">⚖️ Servicios Profesionales</option>
-                                <option value="salud_bienestar">🏥 Salud y Bienestar</option>
-                                <option value="tecnologia">💻 Tecnología</option>
-                                <option value="industria_manufactura">🏭 Industria y Manufactura</option>
-                                <option value="energia">☀️ Energía</option>
-                                <option value="comercio_ventas">🛒 Comercio y Ventas</option>
-                                <option value="alimentos_hospitalidad">🍽️ Alimentos y Hospitalidad</option>
-                                <option value="educacion">📚 Educación</option>
-                                <option value="logistica_transporte">🚚 Logística y Transporte</option>
-                                <option value="agropecuario">🌾 Agropecuario</option>
-                                <option value="mascotas">🐾 Mascotas</option>
-                                <option value="bienes_raices">🏠 Bienes Raíces</option>
-                                <option value="jardineria_paisajismo">🌿 Jardinería y Paisajismo</option>
-                                <option value="analisis_clinicos">🔬 Análisis Clínicos y Laboratorio</option>
-                                <option value="veterinaria">🐾 Veterinaria y Cuidado Animal</option>
-                                <option value="guarderia_infantil">👶 Guardería y Cuidado Infantil</option>
-                                <option value="electrodomesticos_premium">🔌 Electrodomésticos y Bienes de Consumo Premium</option>
-                                <option value="otro">📦 Otro</option>
                             </select>
                         </div>
                         <div class="input-wrapper">
@@ -510,7 +492,7 @@
                         <div class="input-wrapper" id="estiloVisualWrapper" style="display:none;">
                             <label for="videEstiloCategoria">Estilo Visual</label>
                             <select id="videEstiloCategoria">
-                                <option value="">🤖 Automático (Director)</option>
+                                <option value="">🎯 Automático (recomendado por tendencias)</option>
                             </select>
                         </div>
                         <div class="input-wrapper" id="estiloSubWrapper" style="display:none;">
@@ -645,6 +627,49 @@
                         <span>Generar Video Completo</span>
                         <div class="vide-loader loader" style="display:none;"></div>
                     </button>
+
+                    <!-- Video Review Panel: Aceptar/Rechazar antes de guardar -->
+                    <div id="videReviewPanel" style="display:none; margin-top:1rem; padding:1rem; background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); border-radius:12px;">
+                        <h4 style="margin:0 0 0.5rem; font-size:0.85rem;">🎬 Revisa tu video</h4>
+                        <video id="videReviewPlayer" controls style="max-width:100%; border-radius:8px; background:#000;"></video>
+                        <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+                            <button type="button" id="videAcceptBtn" class="secondary-btn" style="flex:1; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.4); color:#4ade80; padding:0.6rem;">
+                                ✅ Aceptar y Guardar
+                            </button>
+                            <button type="button" id="videRejectBtn" class="secondary-btn" style="flex:1; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#f87171; padding:0.6rem;">
+                                ❌ Rechazar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Brief → MediaPlanner → BriefMarker: pipeline separado, a partir
+                         del Brief (tipo_negocio) de la empresa seleccionada arriba. -->
+                    <button type="button" id="videMediaPlanBtn" class="secondary-btn" style="width:100%; margin-top:0.75rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#6ee7b7; padding:0.8rem; font-size:0.95rem;">
+                        <span>📋</span>
+                        <span>Generar Plan de Medios (Brief)</span>
+                        <div class="media-plan-loader loader" style="display:none;"></div>
+                    </button>
+
+                    <div id="mediaPlanPanel" style="display:none; margin-top:1rem; padding:1rem; background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); border-radius:12px;">
+                        <h4 style="margin:0 0 0.5rem; font-size:0.85rem;">📋 Plan de Medios (Brief → MediaPlanner)</h4>
+                        <div id="mediaPlanSummary" style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.75rem; max-height:200px; overflow-y:auto; line-height:1.5;"></div>
+                        <div id="mediaPlanPiezas" style="font-size:0.7rem; color:var(--text-dim); margin-bottom:0.75rem; max-height:200px; overflow-y:auto; line-height:1.5;"></div>
+                        <div id="mediaPlanError" style="display:none; font-size:0.75rem; color:#f87171; margin-bottom:0.75rem; line-height:1.5;"></div>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button type="button" id="mediaPlanAcceptBtn" class="secondary-btn" style="flex:1; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.4); color:#4ade80; padding:0.6rem;">
+                                ✅ Aprobar (generar piezas)
+                            </button>
+                            <button type="button" id="mediaPlanRejectBtn" class="secondary-btn" style="flex:1; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#f87171; padding:0.6rem;">
+                                ❌ Rechazar plan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Retomar un plan de medios existente por id (recarga/cierre de pestaña) -->
+                    <button type="button" id="videResumePlanBtn" class="secondary-btn" style="width:100%; margin-top:0.5rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:var(--text-dim); padding:0.6rem; font-size:0.85rem;">
+                        📂 Retomar Plan de Medios
+                    </button>
+                    <div id="resumePlanList" style="display:none; margin-top:0.5rem; padding:0.5rem; background:rgba(255,255,255,0.04); border-radius:8px; max-height:200px; overflow-y:auto;"></div>
                 </div>
 
                 <div class="input-group">
