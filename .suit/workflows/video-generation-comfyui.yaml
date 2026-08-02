@@ -1,0 +1,31 @@
+workflow:
+  id: video-generation-comfyui
+  name: "Generación de Video con ComfyUI + FFmpeg (SuitComfy)"
+  description: "Crea videos profesionales locales y gratis: genera N escenas con ComfyUI (SD1.5 + LoRA LCM) y las ensambla con FFmpeg (Ken Burns + crossfade) a MP4. Sin GPU NVIDIA."
+  risk: low
+  environment: Windows
+  required_services:
+    - "ComfyUI en http://127.0.0.1:8188 (--cpu)"
+    - "FFmpeg v8.1.1 en PATH (Gyan.FFmpeg via WinGet)"
+  steps:
+    - id: 1
+      name: "Escribir prompt y parámetros"
+      action: "Definir prompt, negative, width/height (max 1024), steps (4-8), cfg (1.0-2.0), seed, count (4-12), duration, transition"
+    - id: 2
+      name: "Generar imágenes"
+      action: "POST /api/image o dentro de /api/video → grafo workflows/txt2img-lcm.json parametrizado (placeholders __POSITIVE__/__NEGATIVE__)"
+      command: "curl -X POST http://127.0.0.1:3012/api/video -H 'Content-Type: application/json' -d '{\"prompt\":\"...\",\"count\":4}'"
+    - id: 3
+      name: "Ensamblar video"
+      action: "services/renderer.js → FFmpeg zoompan (Ken Burns in/out alternado) + xfade crossfade → MP4 H.264"
+      output: "SuitComfy/output/video_*.mp4"
+    - id: 4
+      name: "Distribuir"
+      action: "Copiar MP4 a destino (campañas, red social). Si se necesita animación programática adicional, usar ViRe (Remotion, puerto 3004)."
+  validation:
+    - "GET /api/health → { ok: true, comfy: true }"
+    - "El MP4 se abre sin errores y dura count*duration - (count-1)*transition segundos"
+    - "node --check en todo JS modificado"
+  constraints:
+    - "No modificar SuitCampanas/ ni ViRe/"
+    - "No escribir en el output dir de ComfyUI (solo lectura de imágenes)"
