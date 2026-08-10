@@ -119,6 +119,18 @@ Definidos en `opencode.json` y `~\.claude\settings.json` — disponibles en **am
 
 ---
 
+## Utilidades de workflow (feature.yaml)
+
+Agregadas para cubrir 3 huecos: detección de archivos sueltos, decisión frontend/backend, launcher por proyecto.
+
+| Utilidad | Dónde vive | Qué hace |
+|---|---|---|
+| **Detección de archivos sueltos** | `scripts/find-loose-files.js` (tool `SuitLooseFiles` en `tools.yaml`) | Escanea un directorio y reporta archivos cuyo nombre no aparece referenciado en ningún otro archivo del proyecto (logs, temporales, docs huérfanos). Read-only. Generaliza la limpieza de páginas huérfanas de `ssg-engine.mjs` (ADR-022) a cualquier proyecto. Se corre en el step `validate` de `.suit/workflows/feature.yaml`. |
+| **Decisión frontend/backend** | `.suit/workflows/feature.yaml` → step `analyze` | Regla agregada a `validation`: determinar si la tarea requiere frontend, backend o ambos, e implementar solo lo necesario — no se scaffoldea el lado que no aplica. |
+| **Launcher .bat por proyecto** | `.suit/templates/start.bat.template` + step `scaffold-launcher` en `feature.yaml` | Si el feature crea un proyecto standalone nuevo (con su propio `server.js`/`package.json` y sin `start.bat`), se genera un `start.bat` desde el template (abre el navegador en `localhost:{{PORT}}` y corre `node {{ENTRY}}`). No se regenera si el proyecto ya tiene launcher. |
+
+---
+
 ## Ubicaciones de instalación
 
 | Ruta | Propósito | Tool |

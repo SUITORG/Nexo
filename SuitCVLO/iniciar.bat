@@ -13,13 +13,23 @@ echo.
 set WSL_PATH=/mnt/c/Users/rojo-/Downloads/suitorg/SuitCVLO
 set RETRIES=0
 set MAX_RETRIES=15
+set KILLWAIT=0
+set MAX_KILLWAIT=15
 
-curl.exe -s http://localhost:3011/health >nul 2>&1
-if not errorlevel 1 (
-    echo  [i] Servidor ya corriendo en http://localhost:3011
-    goto :open
-)
+echo  [0/3] Deteniendo cualquier servidor SuitCVLO previo (puerto 3011)...
+wsl bash -c "pkill -f 'python -m api.main' 2>/dev/null; exit 0"
+if errorlevel 1 goto started
+:killwait
+set /a KILLWAIT+=1
+if %KILLWAIT% gtr %MAX_KILLWAIT% goto started
+netstat -ano | findstr /r /c:":3011" | findstr /i "LISTENING" >nul 2>&1
+if errorlevel 1 goto killdone
+timeout /t 1 /nobreak >nul
+goto killwait
+:killdone
+echo        Servidor anterior detenido y ventana cerrada.
 
+:started
 echo  [1/3] Iniciando servidor...
 echo        (cargando modelo YOLO, tarda ~20s la primera vez)
 start "SuitCVLO Server" wsl bash -c "cd %WSL_PATH% && source .venv/bin/activate && python -m api.main"

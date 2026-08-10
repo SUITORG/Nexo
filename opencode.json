@@ -2,19 +2,17 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "opencode/deepseek-v4-flash-free",
   "provider": {
-    "omniroute": {
+    "opencode": {},
+    "ollama": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "OmniRoute",
+      "name": "Ollama (local)",
       "options": {
-        "baseURL": "http://localhost:20128/v1",
-        "apiKey": "sk-9f2454b7e8838a01-1dfcbb-e1400022"
+        "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "auto": { "name": "auto" },
-        "claude-opus-4-5-thinking": { "name": "claude-opus-4-5-thinking" },
-        "claude-sonnet-4-5-thinking": { "name": "claude-sonnet-4-5-thinking" },
-        "gemini-3.1-pro-high": { "name": "gemini-3.1-pro-high" },
-        "gemini-3-flash": { "name": "gemini-3-flash" }
+        "hf.co/ornith-ai/Ornith-1.0-9B-GGUF:Q4_K_M": {
+          "name": "Ornith 1.0 9B"
+        }
       }
     }
   },

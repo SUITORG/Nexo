@@ -17,8 +17,14 @@ async function generateImage(prompt, options = {}) {
   const { width = 1080, height = 1920 } = options;
   if (!prompt) return null;
 
-  const encoded = encodeURIComponent(prompt);
-  const url = `${POLLINATIONS_BASE}/${encoded}?width=${width}&height=${height}&nofeed=true&nojson=true`;
+  // ViRe: orientar Pollinations hacia foto realista en vez de su default
+  // "AI genérico". Flux es el modelo fotográfico; el prefijo de estilo es el
+  // mismo que ya usa el flujo VIDE (local-server-node.js) y el sufijo evita
+  // texto inventado que los modelos de difusión no saben renderizar.
+  const fullPrompt = 'professional commercial photography, photorealistic, 8k, soft studio lighting, ' + prompt + ', no text, no readable signage, no logos, no writing';
+  const seed = Math.floor(Math.random() * 1000000);
+  const encoded = encodeURIComponent(fullPrompt);
+  const url = `${POLLINATIONS_BASE}/${encoded}?width=${width}&height=${height}&seed=${seed}&model=flux&nofeed=true&nojson=true`;
 
   if (process.env.VIRE_IMAGE_PROVIDER === 'kie') {
     return null;
@@ -34,16 +40,19 @@ async function generateImage(prompt, options = {}) {
 }
 
 async function generateAllImages(scenes, options = {}) {
+  const { onImage, ...genOptions } = options;
+  const total = scenes.length;
   const results = [];
-  for (const scene of scenes) {
+  for (let i = 0; i < scenes.length; i++) {
+    const scene = scenes[i];
+    let imgUrl = null;
     if (scene.image_url) {
-      results.push(scene.image_url);
+      imgUrl = scene.image_url;
     } else if (scene.image_prompt) {
-      const imgUrl = await generateImage(scene.image_prompt, options);
-      results.push(imgUrl);
-    } else {
-      results.push(null);
+      imgUrl = await generateImage(scene.image_prompt, genOptions);
     }
+    results.push(imgUrl);
+    if (onImage) onImage({ index: i, total, url: imgUrl, prompt: scene.image_prompt || null });
   }
   return results;
 }

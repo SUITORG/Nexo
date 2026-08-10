@@ -1,0 +1,47 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Noe Thermomix",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-JorgeNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "scenes": [
+    {
+      "type": "text",
+      "duration": 10,
+      "animation": "slide_up",
+      "body": "¿Cómo cocinar sin perder el tiempo?",
+      "image_prompt": "Un dron sobrevuela una ciudad vibrante con luces coloridas y música electrónica en el aire. La cámara se acerca a un grupo de personas bailando entusiastas bajo la iluminación festiva.",
+      "voice_text": "¿Cómo cocinar sin perder el tiempo?",
+      "sfx_file": "generated/sfx/sfx_1786295306705_0.wav",
+      "texto_overlay": "¡No más largos tiempos de preparación!"
+    },
+    {
+      "type": "text",
+      "duration": 10,
+      "animation": "slide_up",
+      "body": "Con Noe Thermomix, cocina con facilidad y eficiencia.",
+      "image_prompt": "Una persona usa un robot de cocina mientras la cámara se desplaza suavemente hacia arriba mostrando el proceso de preparación rápida. La iluminación es natural y cálida.",
+      "voice_text": "Con Noe Thermomix, cocina con facilidad y eficiencia.",
+      "texto_overlay": "¡Descubre tu nueva rutina culinaria!"
+    },
+    {
+      "type": "text",
+      "duration": 10,
+      "animation": "fade_in",
+      "body": "Conéctate con Noe Thermomix para una cocina inteligente.",
+      "image_prompt": "Una imagen de la página web de Noe Thermomix aparece en el fondo mientras la cámara se detiene en un logo brillante y moderno. La iluminación es dramática, destacando el logotipo.",
+      "voice_text": "Conéctate con Noe Thermomix para una cocina inteligente.",
+      "texto_overlay": "¡Asesoría de cocina inteligente! · 8110463721 · https://www.nw.com"
+    }
+  ]
+}

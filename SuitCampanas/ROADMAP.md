@@ -19,6 +19,9 @@
 | P7 — Aceptar/Rechazar campaña + JSON completo | ██████████ 100% |
 | P8 — Fix deployment GAS + crash en /api/save | █████████░ 90% (falta limpiar fila de prueba) |
 | P9 — Brief → MediaPlanner → BriefMarker | ██████████ 100% |
+| P10 — Ollama local como 3er respaldo de IA | ██████████ 100% |
+| P11 — Selector de alcance de producción (Completo/Semanal/Demo) | ██████████ 100% |
+| P12 — Reorganización visual de VIDE (3 bloques claros) | ██████████ 100% |
 
 ---
 
@@ -131,28 +134,48 @@ Detalle completo en `.suit/memory/decisions/ADR-021-briefmarker-mediaplanner.md`
 - [x] 9.17 Estilo Visual (Director + override manual) conectado al prompt `CAMP-BRIEFMARKER` — solo afecta la piel visual, nunca el copy. Verificado con caso real meme/caricatura: copy estratégico intacto en 12/12 piezas.
 - [x] 9.18 **Bug encontrado en revisión**: el estilo visual no se fijaba por plan — un reintento (idempotente, 9.12) con el selector cambiado podía dejar piezas del mismo plan con estilos distintos. Corregido: `planes_medios.estilo_visual` (migración 008) se fija en la primera aprobación y se reusa en cualquier reintento posterior.
 
----
+## P10 — Ollama local como 3er respaldo de IA (sesión 2026-08-02)
 
-## Historial de cambios
+Detalle completo en `.suit/memory/pending/plan-ollama-fallback.md`.
 
-| Fecha | Item | Estado |
-|-------|------|--------|
-| 2026-07-19 | Verificar `._backup/` en git | ✅ Encontrado en 2 commits |
-| 2026-07-19 | Eliminar `._backup/` del working tree | ✅ |
-| 2026-07-19 | Agregar `._backup/` a `.gitignore` | ✅ |
-| 2026-07-19 | Corregir `package.json` start | ✅ |
-| 2026-07-19 | Restringir CORS a localhost | ✅ |
-| 2026-07-19 | P3: projects.yaml — path + context + servers | ✅ |
-| 2026-07-19 | P3: AGENTS.md — architecture + gotchas + command | ✅ |
-| 2026-07-19 | P3: ARCHITECTURE.md — 15 referencias CampanasAi/ → SuitCampanas/ | ✅ |
-| 2026-07-19 | P3: .suit/INDEX.md — path CampanasAi/ → SuitCampanas/ | ✅ |
-| 2026-07-19 | P3: .suit/tests/system.yaml — path → SuitCampanas/ | ✅ |
-| 2026-07-19 | P3: .suit/workflows/video-generation.yaml — CampanasAi/media/ → SuitCampanas/media/ | ✅ |
-| 2026-07-19 | P3: scripts/generate-index.js — prefix CampanasAi/ → SuitCampanas/ | ✅ |
-| 2026-07-19 | P3: contexto.md — tree CampanasAi/ → SuitCampanas/ | ✅ |
-| 2026-07-19 | P1.1: lib/supabase.js — service_role → anon key, process.exit → throw | ✅ |
-| 2026-07-19 | P1.2: local-server-node.js — 12 execSync({shell:true}) → ffmpeg() helper con spawnSync | ✅ |
-| 2026-07-19 | P1.3: script.js — escapeHtml helper + DOM API en drivePreview, slides, history cards, trends, logs | ✅ |
-| 2026-07-19 | P1.4: proxy-image — whitelist de 14 dominios | ✅ |
-| 2026-07-19 | P2.4: campanas upsert — activo: TRUE agregado | ✅ |
-| 2026-07-19 | P3.4: reel-generator.js — generar() → generarTitulo() | ✅ |
+- [x] 10.1 `callOllama()` — llama a Ollama local (`qwen2.5-coder:latest`, elegido tras probar 3 modelos reales en la máquina) vía `http.request` nativo, no `fetch()` (el `fetch` de undici tiene `headersTimeout` de 300s que mataba la respuesta en generación CPU-only de varios minutos).
+- [x] 10.2 `callAIJson()` (MediaPlanner/BriefMarker) prueba Ollama como último recurso, solo si `[activeModel, "openrouter/free"]` ya fallaron ambos — no cambia el comportamiento normal.
+- [x] 10.3 Validado con el prompt REAL de `CAMP-BRIEFMARKER` completo (no un prompt de prueba): 118.6s, 21/21 keys del schema, JSON válido.
+- [x] 10.4 Validado en vivo: con la nube sana, Ollama nunca se invoca (plan real de 12 piezas, cero logs de fallback).
+- [x] 10.5 Manejo de error sin nube ni Ollama disponibles validado por revisión de código (mismo patrón `try/catch` ya probado limpio varias veces esta sesión) — no se forzó una prueba en vivo disruptiva porque el usuario estaba usando la app en tiempo real durante la validación.
+
+## P11 — Selector de alcance de producción (Completo/Semanal/Demo) (sesión 2026-08-02)
+
+Detalle completo en `.suit/memory/pending/plan-alcance-produccion-briefmarker.md`.
+
+- [x] 11.1 `approveMediaPlan(planId, estiloVisual, cap = 12)` — nuevo parámetro `cap` sanitizado (entero positivo, clamp 1–12, default 12 = comportamiento actual).
+- [x] 11.2 `POST /api/media-plan/:id/aprobar` lee `cap` del body (sanitización idéntica a la función).
+- [x] 11.3 Selector `#mediaPlanScope` (Completo 12 / Semanal 7 / Demo 4) en `#mediaPlanPanel`, antes de Aprobar/Rechazar; `onApprove()` lo lee y lo manda en el body.
+- [x] 11.4 Validado en vivo con `plan_1785691044578` (8 slots, Noe Thermomix): aprobar en Demo(4) → exactamente 4 piezas, 4 sin procesar; volver a aprobar en Completo(12) → solo los 4 faltantes (8 total, 0 sin procesar), sin duplicar ni re-generar; aprobar sin cap → mismo comportamiento de hoy (0 nuevas).
+
+## P12 — Reorganización visual de VIDE (sesión 2026-08-02)
+
+El usuario reportó dificultad recurrente para encontrar botones y seguir la secuencia correcta en modo VIDE (varios flujos apilados sin separación visual). Reorganizado en 3 bloques con etiqueta y descripción de una línea cada uno, sin cambiar ningún ID ni lógica:
+
+- [x] 12.1 **OPCIÓN A** — Video suelto desde guion (lo que ya existía: guion, Generar Video Completo, panel de revisión).
+- [x] 12.2 **OPCIÓN B** — Campaña completa desde el Brief (Generar Plan de Medios, con los 4 pasos numerados en la descripción: generar → revisar/elegir alcance → aprobar → generar video por pieza).
+- [x] 12.3 **RETOMAR** — Continuar un plan anterior.
+- [x] 12.4 Verificado: balance de `<div>` correcto (162 abiertos = 162 cerrados), servidor sirviendo el HTML actualizado en vivo, ningún ID tocado (cero riesgo para `script.js`).
+
+## P13 — Posicionamiento SEO multi-tenant (sesión 2026-08-02)
+
+Detalle completo en `.suit/memory/pending/plan-posicionamiento-seo-multitenant.md`. Contexto clave: `grupoevasol.com` es el sitio real de EvaSol; los demás inquilinos son demos de prueba que NO deben indexarse para no diluir el SEO real.
+
+- [x] 13.1 **F1.1** `noindex, nofollow` en toda página generada que no sea `EVASOL` (única `es_principal=true`). El link de demo sigue funcionando para abrir/mostrar a prospectos.
+- [x] 13.2 **F1.2** `sitemap.xml` ahora lista solo `https://grupoevasol.com/evasol.html` (antes: 13 inquilinos con prioridad 0.8).
+- [x] 13.3 **F1.3** `robots.txt` con `Disallow:` explícito por cada archivo de demo (14 rutas), `Allow: /` conservado para EvaSol + assets compartidos.
+- [x] 13.4 **F1.4** `baseUrl` corregido de `suitorg.com` (dominio inexistente) a `https://grupoevasol.com`.
+- [x] 13.5 **F2.1-2.2** OG/Twitter personalizados por inquilino (`og:title/description/image/url`, `twitter:*`), `og:url` apunta a la URL específica de cada página.
+- [x] 13.6 **F2.3-2.4** `rel=canonical` + JSON-LD `LocalBusiness` solo en la página real de EvaSol (con datos reales: Evasol — Energía Solar, +528112710091, sirisenergiasolar@grupoevasol.com).
+- [x] 13.7 **F2.5** Descripción/keywords reales para EvaSol derivadas de campos existentes (`giro_especifico`, `slogan`, `keywords_coma`) — sin migración de datos.
+- [x] 13.8 **F2.6** Chrome de panel interno retirado de páginas públicas: Chart.js, consola "SYSTEM READY", indicador de salud de IA. `status-bar` se conserva (auth.js:112 lo requiere sin guard).
+- [x] 13.9 **F3.1** Workflow `.github/workflows/ssg-regenerate.yml` (cron diario 03:00 UTC + dispatch) que corre `ssg-engine.mjs` y commitea `dist/` si cambió.
+- [x] 13.10 **F3.2** Documentado: tras cada regeneración publicada hay que **resubmitir `https://grupoevasol.com/sitemap.xml` en Google Search Console** (Sitemaps → Enviar) — un sitemap actualizado que Google no vuelve a leer no sirve. También conviene pedir indexación de `evasol.html`.
+- [ ] 13.11 **Fase 4 (radar, sin cambios)**: API keys hardcodeadas (`backend/core.js:13`, `SuitCampanas/script.js:8-11`, `scripts/agents/vision-audit.js:14`), CORS `*` en servidor local, sin rate limiting en endpoints públicos, `execSync` con `shell:true`. Deuda ya documentada.
+- [ ] 13.12 **Fase 5 (cuando un inquilino de prueba se vuelva cliente real)**: decidir dominio/subdominio propio (`{tenant}.suitorg.com` o dominio del cliente) — no indexarse desde grupoevasol.com a largo plazo. Decisión de negocio, no ahora.
+- [x] 13.13 **F1.5 (revisión SuitOS)** Bug encontrado en verificación independiente: `ssg-engine.mjs` nunca borraba páginas de inquilinos renombrados/eliminados de `Config_Empresas` — quedaban en `dist/` indexables (`index, follow`) con SEO genérico. Evidencia real: `roomateanl.html` (huérfano de un rename a `ROOMMATENL`), aún indexable pese al fix 13.1. Fix: `generatedFiles` Set + limpieza post-loop de cualquier `.html` en `dist/` que no esté en ese set. Re-ejecutado en vivo: eliminó `roomateanl.html` y un segundo huérfano (`.html`, de una fila vieja con `id_empresa` vacío, de antes de existir el guard `if (!coId) continue`). Ver ADR-022. `dist/` verificado post-fix: 16 archivos (1 indexable + 15 noindex), coincide exacto con los 17 inquilinos reales (SUITORG → `index.html`).

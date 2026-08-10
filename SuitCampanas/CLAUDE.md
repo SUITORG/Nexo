@@ -1,90 +1,37 @@
 # Campañas AI - Proyecto CMS
 
-## Estado Actual del Proyecto
-✅ **PROBLEMA RESUELTO**: El sistema ahora usa CORS en lugar de no-cors, permitiendo ver errores reales del servidor.
+## Contexto del proyecto
+CMS de generación de campañas publicitarias con IA: pipeline Brief → MediaPlanner → BriefMarker → VIDE que produce videos publicitarios (guion, voz, imágenes, overlays) a partir de datos de empresas en Google Sheets + Supabase. Stack: Node.js (server propio, puerto 8000), FFmpeg, OpenRouter/Gemini (+ Ollama local como fallback), Edge TTS, Supabase.
 
-## Funcionalidades Actuales
+## Alcance
+Proyecto local — no se despliega vía GitHub Pages. El SEO/deploy de `grupoevasol.com` es un proyecto aparte en la raíz de `SuitOrg` (ver `SuitOrg/CLAUDE.md`), no vive aquí.
 
-### Modos de Trabajo
-- **Ai**: Generación con IA vía OpenRouter/Gemini
-- **BD**: Carga empresas desde Google Sheets + IA
-- **BDPR**: Previsualización manual sin IA
-- **IMG**: Video de Imaginación desde carpeta local + receta
+## Comandos clave
+- `npm start` — arranca el servidor (`local-server-node.js`, puerto 8000)
+- `npm run mock` — servidor mock (`mock-server.js`)
+- `node scripts/seed-supabase.js` — siembra tablas `recetas`/`tendencias` en Supabase
+- `npm test` — placeholder; la prueba real es manual abriendo `test.html` en navegador
 
-### IMG de Imaginación (Nuevo)
-- 4to botón de modo exclusivo
-- Usa el campo Empresa/Marca como texto/comentario personal
-- Oculta Sitio Web, Teléfono, Asistente IA, Formatos, Plataformas
-- Mantiene carga opcional de logo
-- **Receta**: configurable desde Supabase (tabla `recetas`)
-  - Orden: aleatorio / secuencial
-  - Duración: 30s / 60s
-  - Ritmo: música / 0.5s / 2s por foto
-  - Filtro: ninguno / B&N / colores vivos / vintage
-  - Transición: corte brusco / fundido / barrido derecha / zoom
-  - Animación: on/off
-- Botón "Crear Video de Imaginación" llama a `POST /api/video-imaginacion`
-- El backend lee archivos de **MEDIA_FOLDER** (config en .env)
-- Genera video con FFmpeg aplicando receta y lo descarga
+## Reglas y convenciones
+- Voz: Edge TTS neuronal — no gTTS, no versión npm no-comercial.
+- IA: OpenRouter/Gemini como primario, Ollama local como 3er fallback.
+- El estilo visual de un video se fija en la 1ra aprobación del plan y no cambia en reintentos.
+- Overlays de logo/avatar/contacto van como miniaturas sobrepuestas sobre las imágenes generadas por IA, nunca como slides separados.
+- Campos autollenados desde Google Sheets: normalizar/tolerar variaciones de formato (mayúsculas, protocolo de URL, etc.), nunca blanquear silenciosamente por un chequeo estricto.
+- `SuitCampanas/` no pasa por el pipeline de deploy de GitHub Pages del repo raíz.
+- Búsqueda de tendencias: hay dos flujos distintos, no confundirlos. BDSMT/VIDE (`buscarTendencias()` en `script.js`) es manual — el usuario elige una de la lista antes de que se aplique a `#aiTheme`. El Agente de Tendencias de modo IMG (`scripts/agent-tendencias.js`) es automático — procesa las 5 sin selección.
 
-### Endpoints Nuevos
-- `GET /api/recetas` — lista recetas desde Supabase
-- `POST /api/video-imaginacion` — genera video con receta + texto + logo
+## Decisiones tomadas
+- Selector de alcance de producción: Completo (12) / Semanal (7) / Demo (4), idempotente.
+- `index.html` VIDE reorganizado en 3 bloques: suelto / campaña / retomar.
+- Pausado explícitamente por el usuario (no retomar sin que lo pida): conversión de guion de meditación de 20 min a video; flag `--rate` para voz más lenta en TTS.
 
-### Recetas Precargadas (Seed)
-1. Mix Rápido (aleatorio, 30s, 0.5s, sin filtro, corte brusco)
-2. Cine Vintage (secuencial, 60s, 2s, vintage, fundido, animación)
-3. Show Vibrante (aleatorio, 30s, música, colores vivos, barrido)
-4. Slow Elegance (secuencial, 60s, 2s, B&N, zoom, animación)
-5. Sorpresa Total (aleatorio, 30s, música, sin filtro, fundido, animación)
-
-## Archivos Modificados
-
-- `index.html` — 4to botón IMG, sección de receta, botón "Crear Video"
-- `script.js` — `setWorkMode('IMG')`, `loadRecetas()`, `generateImaginationVideo()`
-- `style.css` — Estilos para recipe-section, active IMG button
-- `local-server-node.js` — Endpoints `/api/recetas` y `/api/video-imaginacion` con FFmpeg
-- `scripts/seed-supabase.js` — Seed de tabla `recetas` con 5 recetas
-- `.env` / `.env.example` — Variable `MEDIA_FOLDER` agregada
-
-## Para Probar IMG de Imaginación
-
-1. Configura `MEDIA_FOLDER` en `.env` apuntando a carpeta con imágenes (jpg/png)
-2. Corre `node scripts/seed-supabase.js` para crear las recetas en Supabase
-3. Inicia servidor: `node local-server-node.js`
-4. Abre `index.html`, selecciona modo **IMG**
-5. Escribe texto opcional, sube logo (opcional), elige receta
-6. Click **"Crear Video de Imaginación"**
-
-### Agente de Tendencias (Nuevo)
-- Botón "Buscar Tendencias" en la sección de receta (modo IMG)
-- Llama a `POST /api/agent/tendencias`
-- El agente (`scripts/agent-tendencias.js`):
-  1. Pide a la IA (OpenRouter) generar 5 tendencias actuales
-  2. Por cada tendencia, busca receta existente que coincida con su categoría
-  3. Si no encuentra, la IA crea una **nueva receta** y la guarda en Supabase
-  4. Genera el video llamando al mismo `/api/video-imaginacion`
-  5. Guarda todo en la tabla `tendencias` de Supabase
-- Las recetas nuevas se persisten y reusan
-
-### Tablas Supabase Nuevas
-- `tendencias` — id, titulo, categoria, descripcion, fuente, receta_id, video_url, metadata (JSONB), publicado, created_at
-  - SQL de creación en `scripts/seed-supabase.js` (comentado)
-
-## Archivos Nuevos
-- `scripts/agent-tendencias.js` — agente autónomo con IA
-
-## Archivos Modificados
-- `local-server-node.js` — endpoint `POST /api/agent/tendencias`
-- `index.html` — botón "Buscar Tendencias" en sección de receta
-- `script.js` — `ejecutarAgente()` función frontend
-- `scripts/seed-supabase.js` — SQL comentado para tabla `tendencias`
-
-## Requisitos
-- FFmpeg instalado y accesible desde línea de comandos
-- Carpeta con al menos 1 imagen (jpg/png)
-- Supabase con tablas `recetas` y `tendencias` pobladas
-- OPENROUTER_API_KEY en .env (ya configurada)
+## Pendientes críticos
+- Rotar credenciales de Google Cloud (acción manual, seguridad).
+- Overlay de teléfono/sitio web en video + fix de normalización de URL en autofill de empresa (plan activo sin ejecutar aún).
+- Prueba manual del usuario en navegador real para cerrar validación end-to-end del pipeline.
+- Definir si se autoselecciona Formato/Plataforma desde el Brief (sin decidir aún).
+- Agregar paso de selección manual de tendencia al Agente de IMG (`agent-tendencias.js`) — hoy genera las 5 automáticamente sin que el usuario elija (a diferencia del flujo de BDSMT/VIDE).
 
 ---
 

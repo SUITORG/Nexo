@@ -1,0 +1,47 @@
+name: Regenerate SSG (dist) — SEO
+
+on:
+  schedule:
+    # Diario 03:00 UTC. Regenera dist/ desde Config_Empresas/Config_SEO (EvaSol).
+    # Los cambios en esas hojas solo afectan al tenant real (EVASOL); las demos
+    # ya no se indexan (noindex + robots Disallow), ver plan-posicionamiento-seo-multitenant.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ssg-regenerate
+  cancel-in-progress: false
+
+jobs:
+  ssg:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run SSG engine
+        run: node scripts/ssg-engine.mjs
+        env:
+          # El token/URL ya viven hardcodeados en ssg-engine.mjs (deuda conocida).
+          # Cuando se limpie (Fase 4 del plan), pasarlos por secrets aquí.
+          NODE_ENV: production
+
+      - name: Commit regenerated dist
+        run: |
+          if git diff --quiet -- dist/; then
+            echo "dist/ sin cambios — nada que commitear"
+          else
+            git config user.name "suitos-bot"
+            git config user.email "actions@github.com"
+            git add -f dist/
+            git commit -m "🤖 SEO: regenerar dist/ (ssg-engine) — sitemap/robots/SEO EvaSol"
+            git push origin HEAD:main
+          fi

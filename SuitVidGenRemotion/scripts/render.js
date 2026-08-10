@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { bundle } = require('@remotion/bundler');
+const { renderMedia, selectComposition } = require('@remotion/renderer');
+const { enableTailwind } = require('@remotion/tailwind-v4');
 const { loadFromFile, applyDefaults } = require('./helpers/scriptLoader');
 const { generateAllVoices } = require('./helpers/ttsProvider');
 const { generateAllImages } = require('./helpers/imageProvider');
@@ -10,7 +12,12 @@ const PROJECT_DIR = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.join(PROJECT_DIR, 'public');
 const AUDIO_DIR = path.join(PUBLIC_DIR, 'generated', 'audio');
 const IMAGES_DIR = path.join(PUBLIC_DIR, 'generated', 'images');
-const TEMP_PROPS = path.join(PROJECT_DIR, '.vire-props.json');
+
+// Línea reconocible en stdout para que local-server-node.js (que hace spawn de
+// este script como hijo) parsee el avance real sin pipes/archivos nuevos.
+function reportProgress(data) {
+  console.log(`##VIRE_PROGRESS##${JSON.stringify(data)}`);
+}
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -45,7 +52,9 @@ async function main() {
   ensureDir(AUDIO_DIR);
   ensureDir(IMAGES_DIR);
 
-  console.log(`[ViRe] Generando voces (${script.scenes.filter(s => s.voice_text).length} escenas)...`);
+  const totalVoices = script.scenes.filter(s => s.voice_text).length;
+  console.log(`[ViRe] Generando voces (${totalVoices} escenas)...`);
+  reportProgress({ stage: 'voices', total: totalVoices });
   const sceneAudioFiles = await generateAllVoices(script.scenes, {
     outputDir: AUDIO_DIR,
     voice: script.voice?.voice || 'es-MX-DaliaNeural',
@@ -54,11 +63,15 @@ async function main() {
   const audioCount = sceneAudioFiles.filter(Boolean).length;
   console.log(`[ViRe] Voces generadas: ${audioCount}`);
 
-  console.log(`[ViRe] Generando imágenes (${script.scenes.filter(s => s.image_prompt).length} escenas)...`);
+  const totalImages = script.scenes.filter(s => s.image_prompt).length;
+  console.log(`[ViRe] Generando imágenes (${totalImages} escenas)...`);
   const sceneImageFiles = await generateAllImages(script.scenes, {
     width: script.width,
     height: script.height,
     outputDir: IMAGES_DIR,
+    onImage: ({ index, total, url, prompt }) => {
+      reportProgress({ stage: 'images', current: index + 1, total, url, prompt });
+    },
   });
   const imgCount = sceneImageFiles.filter(Boolean).length;
   console.log(`[ViRe] Imágenes generadas: ${imgCount}`);
@@ -75,9 +88,6 @@ async function main() {
     sceneAudioFiles,
   };
 
-  fs.writeFileSync(TEMP_PROPS, JSON.stringify({ script: enrichedScript }), 'utf-8');
-  console.log(`[ViRe] Props escritas: .vire-props.json`);
-
   const output = opts.output || 'out/output.mp4';
   const fps = script.fps || 30;
 
@@ -88,21 +98,34 @@ async function main() {
   console.log(`  Resolución: ${script.width}x${script.height}`);
   console.log(`  Salida: ${output}`);
 
+  const inputProps = { script: enrichedScript };
+
   try {
-    execSync(
-      `npx remotion render ViReVideo "${output}" --props="${TEMP_PROPS}" --overwrite`,
-      {
-        cwd: PROJECT_DIR,
-        stdio: 'inherit',
-        timeout: 600000,
-      }
-    );
+    console.log(`[ViRe] Empaquetando composición...`);
+    const serveUrl = await bundle({
+      entryPoint: path.join(PROJECT_DIR, 'src/index.ts'),
+      webpackOverride: enableTailwind,
+    });
+
+    const composition = await selectComposition({ serveUrl, id: 'ViReVideo', inputProps });
+
+    reportProgress({ stage: 'render', percent: 0 });
+    await renderMedia({
+      composition,
+      serveUrl,
+      codec: 'h264',
+      outputLocation: output,
+      inputProps,
+      overwrite: true,
+      timeoutInMilliseconds: 600000,
+      onProgress: ({ progress }) => {
+        reportProgress({ stage: 'render', percent: Math.round(progress * 100) });
+      },
+    });
     console.log(`\n[ViRe] ✅ Video renderizado: ${output}`);
   } catch (err) {
     console.error(`\n[ViRe] ❌ Error en render: ${err.message}`);
     process.exit(1);
-  } finally {
-    if (fs.existsSync(TEMP_PROPS)) fs.unlinkSync(TEMP_PROPS);
   }
 }
 

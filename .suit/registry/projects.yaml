@@ -427,3 +427,50 @@ projects:
       - Logs_Chat_IA
       - Prompts_IA
       - Config_Empresas
+
+  suit-diccionario:
+    name: "SuitDiccionario — Diccionario EN-ES Interactivo"
+    path: SuitMiDBdic/
+    description: "Diccionario completo de inglés-español con IPA, tiempos verbales, frasales, vocabulario temático, quizzes y IA para buscar palabras. Incluye 150 preguntas de ciudadanía de EE.UU."
+    skills:
+      - javascript
+    context:
+      - SuitMiDBdic/index.js
+      - SuitMiDBdic/dictionary.html
+    frontend:
+      public: true
+      public_route: "#diccionario"
+      public_gate: "disponible para todas las empresas"
+      staff: false
+    environment:
+      PORT: 3013
+      TYPE: service
+    servers:
+      - name: diccionario
+        path: SuitMiDBdic/index.js
+        port: 3013
+        type: express
+
+  suit-landings:
+    name: "SuitLandings — Plantilla de Landing Pages multi-tenant"
+    path: SuitLandings/
+    description: "Plantilla estática de landing de conversión (hero, propuesta de valor, oferta/CTA, contacto). Consumida en build-time por scripts/ssg-engine.mjs. Sin servidor propio ni puerto — no es un servicio, es un template. Activación por flag landing en la posición 8 de Config_Empresas.modo (0/ausente = solo sitio, 1 = landing-only, 2 = sitio + landing). Toda landing es noindex."
+    type: template
+    skills:
+      - javascript
+      - multi-tenant
+      - landing-pages
+    context:
+      - SuitLandings/landing-template.html
+      - scripts/ssg-engine.mjs
+      - js/modules/core.js
+    frontend:
+      public: true
+      public_route: "{slug}.html (modo pos8=1) / {slug}-landing.html (modo pos8=2)"
+      public_gate: "modo pos 8 (índice 7) = 1 o 2"
+      staff: false
+    environment:
+      TYPE: template
+      BUILD_TIME: "scripts/ssg-engine.mjs"
+    columns: []
+    notes: "Sin columnas nuevas en Config_Empresas (diseño final, ronda 3). Todo el contenido de landing vive en logo_url: \"{logo}|{hero}|{oferta}|{cta}\" (4 segmentos, ninguno requerido). Requiere fixDriveUrl() en js/modules/core.js con split('|')[0] al inicio para que el resto del SPA (10+ call sites) ignore los segmentos extra — ver ADR-023."

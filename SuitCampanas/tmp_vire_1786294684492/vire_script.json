@@ -1,0 +1,49 @@
+{
+  "format": "post",
+  "width": 1080,
+  "height": 1080,
+  "fps": 24,
+  "empresa": "Noe Thermomix",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-JorgeNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "duration": 10,
+      "animation": "fade_in",
+      "title": "Hook",
+      "subtitle": "¿Sabías que tu Thermomix puede hacer todo?",
+      "voice_text": "¿Sabías que tu Thermomix puede hacer todo?",
+      "sfx_file": "generated/sfx/sfx_1786294684759_0.wav",
+      "texto_overlay": "¡Última oportunidad!"
+    },
+    {
+      "type": "text",
+      "duration": 10,
+      "animation": "slide_up",
+      "title": "Desarrollo",
+      "body": "Consejos de cocina inteligente para tu Thermomix.",
+      "image_prompt": "Cocinero en acción con el Thermomix, tonos neutros, iluminación suave, ángulo medio, composición dinámica.",
+      "voice_text": "Consejos de cocina inteligente para tu Thermomix.",
+      "texto_overlay": "¡Asesoría de cocina!"
+    },
+    {
+      "type": "outro",
+      "duration": 10,
+      "animation": "fade_in",
+      "cta": "Última oportunidad para Asesoría de cocina inteligente en Electrodomésticos y Bienes de Consumo Premium.",
+      "contact_info": "8110463721",
+      "website": "https://www.nw.com",
+      "voice_text": "Última oportunidad para Asesoría de cocina inteligente en Electrodomésticos y Bienes de Consumo Premium.",
+      "texto_overlay": "81 10 46 37 21"
+    }
+  ]
+}

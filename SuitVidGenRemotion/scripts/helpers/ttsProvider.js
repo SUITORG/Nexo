@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const crypto = require('crypto');
+const { spawnSync } = require('child_process');
 
 const TTS_BASE = 'https://translate.google.com/translate_tts';
 const MAX_CHARS = 180;
@@ -44,12 +45,13 @@ async function generateVoice(text, options = {}) {
     speed = 1.0,
     outputDir,
     index = 0,
+    voice,
   } = options;
 
   // Cache key must depend on content (text+lang+speed), not just scene index:
   // with an index-only key, a stale audio file from a previous unrelated
   // guion is silently reused for the "same" scene position on every render.
-  const contentHash = crypto.createHash('md5').update(`${text}|${lang}|${speed}`).digest('hex').slice(0, 10);
+  const contentHash = crypto.createHash('md5').update(`${text}|${lang}|${speed}|${voice || ''}`).digest('hex').slice(0, 10);
   const fileName = `voice_${index}_${contentHash}.mp3`;
   const destPath = outputDir ? path.join(outputDir, fileName) : null;
 
@@ -59,6 +61,25 @@ async function generateVoice(text, options = {}) {
       destPath
     ).replace(/\\/g, '/');
     return { file: relPath, durationMs: 0 };
+  }
+
+  const charsPerSecond = 15;
+  const estimatedDurationMs = Math.round((text.length / charsPerSecond) * 1000);
+
+  // Edge TTS (voces neuronales de Microsoft, gratis, sin API key) — mismo
+  // patrón que ya usa VIDE (local-server-node.js, spawnSync python -m edge_tts).
+  // gTTS de abajo queda como respaldo si esto falla, igual que en VIDE.
+  if (destPath) {
+    try {
+      const edgeResult = spawnSync('python', ['-m', 'edge_tts', '--voice', voice || 'es-MX-DaliaNeural', '--text', text, '--write-media', destPath], { timeout: 30000 });
+      if (edgeResult.status === 0 && fs.existsSync(destPath)) {
+        const relPath = path.relative(path.resolve(__dirname, '../../public'), destPath).replace(/\\/g, '/');
+        return { file: relPath, durationMs: estimatedDurationMs };
+      }
+      console.warn(`Edge TTS falló para "${text.slice(0, 40)}...", usando gTTS de respaldo`);
+    } catch (e) {
+      console.warn(`Edge TTS error para "${text.slice(0, 40)}...": ${e.message}, usando gTTS de respaldo`);
+    }
   }
 
   try {
@@ -95,9 +116,6 @@ async function generateVoice(text, options = {}) {
     const relPath = destPath
       ? path.relative(path.resolve(__dirname, '../../public'), destPath).replace(/\\/g, '/')
       : null;
-
-    const charsPerSecond = 15;
-    const estimatedDurationMs = Math.round((text.length / charsPerSecond) * 1000);
 
     return { file: relPath, durationMs: estimatedDurationMs };
   } catch (err) {

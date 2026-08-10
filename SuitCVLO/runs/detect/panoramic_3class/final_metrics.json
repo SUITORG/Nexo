@@ -1,0 +1,11 @@
+{
+  "mAP50": 0.7617,
+  "mAP50-95": 0.7037,
+  "precision": 0.8245,
+  "recall": 0.7243,
+  "per_class_AP50": {
+    "panoramic": 0.5572,
+    "wall": 0.733,
+    "other": 0.995
+  }
+}

@@ -57,7 +57,8 @@ console.log(`[FFmpeg] Ruta: ${FFMPEG_PATH}`);
 // second auto-detect routine.
 const FFPROBE_PATH = FFMPEG_PATH === 'ffmpeg' ? 'ffprobe' : FFMPEG_PATH.replace(/ffmpeg(\.exe)?$/i, 'ffprobe$1');
 
-const { spawnSync } = require('child_process');
+const { spawnSync, spawn } = require('child_process');
+const crypto = require('crypto');
 
 function getAudioDurationSec(filePath) {
     try {
@@ -257,6 +258,20 @@ const PROMPTS_CACHE_TTL = 60 * 1000; // 1 minuto
 // Modelo activo (cambiable desde el frontend)
 let activeModel = DEFAULT_MODEL;
 
+// --- ViRe: jobs de render en curso (en memoria, servidor local de un solo
+// usuario, mismo criterio simple que logBuffer/activeModel) ---
+const VIRE_JOB_TTL_MS = 60 * 60 * 1000; // 1 hora
+const vireJobs = new Map();
+function limpiarVireJobsViejos() {
+    const now = Date.now();
+    for (const [id, job] of vireJobs) {
+        if ((job.stage === 'done' || job.stage === 'error' || job.stage === 'cancelled') && (now - job.createdAt) > VIRE_JOB_TTL_MS) {
+            if (job.tmpDir && fs.existsSync(job.tmpDir)) fs.rmSync(job.tmpDir, { recursive: true, force: true });
+            vireJobs.delete(id);
+        }
+    }
+}
+
 // --- LOG BUFFER COMPARTIDO ---
 const logBuffer = [];
 const MAX_LOGS = 200;
@@ -389,6 +404,16 @@ async function callAIJson(systemContent, userContent, temperature = 0.7) {
             }
         }
     }
+    // Última opción: modelo local de Ollama, sin depender de cupo/red externa.
+    // Lento (~60-90s por llamada, medido en vivo) pero funciona sin internet.
+    try {
+        serverLog('WARN', '[AI_JSON] Modelos en la nube agotados, probando Ollama local (puede tardar ~1 min)...');
+        const result = await callOllama(OLLAMA_FALLBACK_MODEL, systemContent, userContent, temperature);
+        const cleaned = result.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+        return JSON.parse(cleaned);
+    } catch (err) {
+        lastError = err.message;
+    }
     throw new Error('Todos los modelos fallaron al generar JSON. Último error: ' + lastError);
 }
 
@@ -428,7 +453,7 @@ async function generateMediaPlan(idEmpresa, fallbacks = {}) {
 }
 
 // Procesa cada content_slot del plan con BriefMarker (N llamadas, caras — cap 12).
-async function approveMediaPlan(planId, estiloVisual = null) {
+async function approveMediaPlan(planId, estiloVisual = null, cap = 12) {
     const { data: plan, error } = await supabase
         .from('planes_medios')
         .select('*')
@@ -446,7 +471,8 @@ async function approveMediaPlan(planId, estiloVisual = null) {
     // Cap de seguridad: máx 12, prioridad alta primero
     const prioRank = { alta: 0, media: 1, baja: 2 };
     slots.sort((a, b) => (prioRank[a.priority] ?? 1) - (prioRank[b.priority] ?? 1));
-    const capped = slots.slice(0, 12);
+    const capN = (Number.isInteger(cap) && cap > 0) ? Math.min(cap, 12) : 12;
+    const capped = slots.slice(0, capN);
 
     // Idempotente: reintentar (aprobar de nuevo el mismo plan) no vuelve a pagar
     // ni regenerar las piezas que ya salieron bien — solo reintenta las que
@@ -853,7 +879,9 @@ const server = http.createServer((req, res) => {
                 try {
                     const parsedBody = body ? JSON.parse(body) : {};
                     serverLog('INFO', `[BRIEFMARKER] Aprobando plan ${aprobarMatch[1]}...`);
-                    const result = await approveMediaPlan(aprobarMatch[1], parsedBody.estilo_visual || null);
+                    const capRaw = parseInt(parsedBody.cap);
+                    const cap = (Number.isInteger(capRaw) && capRaw > 0) ? Math.min(capRaw, 12) : 12;
+                    const result = await approveMediaPlan(aprobarMatch[1], parsedBody.estilo_visual || null, cap);
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ status: 'success', data: result }));
                 } catch (e) {
@@ -1878,7 +1906,21 @@ const server = http.createServer((req, res) => {
                             const imgRes = await fetch(imgUrl);
                             const imgBuf = Buffer.from(await imgRes.arrayBuffer());
                             let imgPath = path.join(imagesDir, `scene_${i}.png`);
-                            fs.writeFileSync(imgPath, imgBuf);
+                            // Pollinations a veces responde 200 con un JSON de error (ej. rate
+                            // limit) en vez de una imagen real — sin validar, ese JSON se
+                            // escribía tal cual como si fuera el PNG. Río abajo eso tronaba
+                            // FFmpeg dos veces: en el overlay de esa escena ("Invalid PNG
+                            // signature") y, peor, en el ensamblado final del video completo
+                            // (el error verboso de decodificar basura repetido por escena
+                            // parece ser lo que desbordaba el pipe de spawnSync -> ENOBUFS).
+                            const isValidImage = imgRes.ok && imgBuf.length > 100 &&
+                                ((imgBuf[0] === 0x89 && imgBuf[1] === 0x50) || (imgBuf[0] === 0xFF && imgBuf[1] === 0xD8));
+                            if (!isValidImage) {
+                                serverLog('WARN', `[VIDE] Imagen de escena ${i} inválida (Pollinations HTTP ${imgRes.status}), usando fondo sólido de respaldo`);
+                                ffmpeg(['-y', '-f', 'lavfi', '-i', `color=c=0x1e293b:s=${imgDim.w}x${imgDim.h}`, '-frames:v', '1', imgPath]);
+                            } else {
+                                fs.writeFileSync(imgPath, imgBuf);
+                            }
                             // Overlay logo on the image (top-left) and avatar (bottom-left circle)
                             let hasOverlays = false;
                             let overlayInputs = [];
@@ -2222,7 +2264,8 @@ const server = http.createServer((req, res) => {
         req.on('end', async () => {
             let tmpDir = null;
             try {
-                const { empresa, sitio_web, telefono, guion, style, duration, format, enableMusic } = JSON.parse(body);
+                const { empresa, sitio_web, telefono, guion, style, voice, duration, format, enableMusic, enableVoice } = JSON.parse(body);
+                const vozActiva = enableVoice !== false;
                 serverLog('INFO', `[ViRe] Iniciando para: ${empresa}`);
 
                 const vireDir = path.join(__dirname, '../SuitVidGenRemotion');
@@ -2236,58 +2279,83 @@ const server = http.createServer((req, res) => {
                 tmpDir = path.join(__dirname, `tmp_vire_${Date.now()}`);
                 fs.mkdirSync(tmpDir, { recursive: true });
 
+                // Los assets de audio (voz/música/sfx) deben quedar DENTRO de
+                // SuitVidGenRemotion/public para poder referenciarse con
+                // staticFile(), que rechaza rutas absolutas (ver ttsProvider.js,
+                // que ya guarda las voces ahí) — tmpDir no sirve para esto.
+                const virePublicDir = path.join(vireDir, 'public', 'generated');
+                const toPublicRelative = (absPath) => path.relative(path.join(vireDir, 'public'), absPath).replace(/\\/g, '/');
+
                 const { scenes, videoConfig } = parseGuionScenes(guion, duration, style);
 
                 // Música de fondo opcional (mismo generador que usa VIDE)
-                let musicFilePath = null;
+                let musicRelPath = null;
                 if (enableMusic) {
                     try {
-                        musicFilePath = path.join(tmpDir, 'music.wav');
+                        const musicDir = path.join(virePublicDir, 'music');
+                        fs.mkdirSync(musicDir, { recursive: true });
+                        const musicFilePath = path.join(musicDir, `music_${Date.now()}.wav`);
                         const musicStyle = videoConfig.musica.estilo || style || 'energetic';
                         const bpm = videoConfig.musica.bpm || (musicStyle === 'energetic' ? 140 : musicStyle === 'relaxing' ? 80 : 100);
                         const musicDuration = videoConfig.duracion_total || parseInt(duration) || 30;
                         const musicScript = path.join(__dirname, '../SuitMusic/scripts/music.py');
                         spawnSync('python', [musicScript, '-o', musicFilePath, '-d', String(musicDuration), '-b', String(bpm), '-s', musicStyle], { timeout: 30000 });
+                        if (fs.existsSync(musicFilePath)) musicRelPath = toPublicRelative(musicFilePath);
                     } catch (e) {
                         serverLog('WARN', `[ViRe] Música no generada: ${e.message}`);
                     }
                 }
 
-                // Map guion scenes -> ViRe scene types
-                const vireScenes = scenes.map((s, i) => {
-                    const isFirst = i === 0;
-                    const isLast = i === scenes.length - 1;
-
-                    if (isFirst && scenes.length > 2) {
-                        return {
-                            type: 'intro',
-                            duration: s.duracion || 5,
-                            animation: 'fade_in',
-                            title: s.title || 'Video',
-                            subtitle: s.body ? s.body.substring(0, 100) : undefined,
-                            voice_text: s.body || s.title || '',
-                        };
-                    } else if (isLast && scenes.length > 2) {
-                        return {
-                            type: 'outro',
-                            duration: s.duracion || 5,
-                            animation: 'fade_in',
-                            cta: s.body || '¡Contáctanos!',
-                            contact_info: telefono || undefined,
-                            website: sitio_web || undefined,
-                            voice_text: s.body || s.title || '',
-                        };
-                    } else {
-                        return {
-                            type: 'text',
-                            duration: s.duracion || 5,
-                            animation: s.animacion === 'fade' ? 'fade_in' : 'slide_up',
-                            title: s.title || undefined,
-                            body: s.body || '',
-                            image_prompt: s.visual || `${s.title || ''} ${s.body || ''}`.substring(0, 200),
-                            voice_text: s.body || s.title || '',
-                        };
+                // Genera (si aplica) el wav de sfx de una escena y devuelve su
+                // ruta relativa a public/, o undefined si no hay sfx o falla.
+                const sfxScript = path.join(__dirname, '../SuitMusic/scripts/sfx.py');
+                const sfxDir = path.join(virePublicDir, 'sfx');
+                function generarSfx(tipo, index) {
+                    if (!tipo) return undefined;
+                    try {
+                        fs.mkdirSync(sfxDir, { recursive: true });
+                        const sfxFilePath = path.join(sfxDir, `sfx_${Date.now()}_${index}.wav`);
+                        const result = spawnSync('python', [sfxScript, '-o', sfxFilePath, '-t', tipo], { timeout: 10000 });
+                        if (result.status === 0 && fs.existsSync(sfxFilePath)) return toPublicRelative(sfxFilePath);
+                    } catch (e) {
+                        serverLog('WARN', `[ViRe] sfx '${tipo}' no generado: ${e.message}`);
                     }
+                    return undefined;
+                }
+
+                // Map guion scenes -> ViRe scene types.
+                // Todas las escenas se renderizan como 'text' (imagen IA de
+                // fondo + overlay acotado a 85% de ancho). Antes la primera y
+                // última escena se forzaban a 'intro'/'outro': slides sin
+                // imagen (IntroScene/OutroScene nunca leen image_prompt) que
+                // además mostraban el `titulo` interno del guion ("Hook",
+                // "Cierre"...) como texto gigante en pantalla, y el CTA del
+                // outro no tenía maxWidth -> se salía del frame en escenas
+                // largas. Viola además la regla de CLAUDE.md: los overlays de
+                // contacto van sobre la imagen generada, nunca en un slide
+                // aparte — por eso el teléfono/sitio va ahora pegado al
+                // texto_overlay de la última escena en vez de en un outro.
+                const vireScenes = scenes.map((s, i) => {
+                    const isLast = i === scenes.length - 1;
+                    const voice_text = vozActiva ? (s.body || s.title || '') : undefined;
+                    const sfx_file = generarSfx(s.sfx, i);
+                    let texto_overlay = s.texto_overlay || s.title || undefined;
+
+                    if (isLast && (telefono || sitio_web)) {
+                        const contacto = [telefono, sitio_web].filter(Boolean).join(' · ');
+                        texto_overlay = texto_overlay ? `${texto_overlay} · ${contacto}` : contacto;
+                    }
+
+                    return {
+                        type: 'text',
+                        duration: s.duracion || 5,
+                        animation: s.animacion === 'fade' ? 'fade_in' : 'slide_up',
+                        body: s.body || '',
+                        image_prompt: s.visual || `${s.title || ''} ${s.body || ''}`.substring(0, 200),
+                        voice_text,
+                        sfx_file,
+                        texto_overlay,
+                    };
                 });
 
                 const fmtMap = { Post: 'post', Reel: 'story', Story: 'story', Banner: 'custom' };
@@ -2301,8 +2369,8 @@ const server = http.createServer((req, res) => {
                     fps: vireFps,
                     empresa: empresa || '',
                     tema: 'vide',
-                    voice: { provider: 'edge_tts', voice: 'es-MX-DaliaNeural', speed: 1.0 },
-                    background_music: (musicFilePath && fs.existsSync(musicFilePath)) ? musicFilePath : undefined,
+                    voice: { provider: 'edge_tts', voice: voice || 'es-MX-DaliaNeural', speed: 1.0 },
+                    background_music: musicRelPath || undefined,
                     subtitles: { enabled: true, style: 'classic' },
                     scenes: vireScenes,
                 };
@@ -2312,39 +2380,175 @@ const server = http.createServer((req, res) => {
                 fs.writeFileSync(vireScriptPath, JSON.stringify(vireScript, null, 2));
 
                 serverLog('INFO', `[ViRe] 🎬 Renderizando (${vireScenes.length} escenas, formato ${vireFmt})...`);
-                const vireResult = spawnSync('node', [
+
+                // spawn (no spawnSync): la generación de imágenes + el render de
+                // Remotion pueden tardar varios minutos, y spawnSync congelaría
+                // TODO el event loop del servidor (no solo esta request) — con
+                // spawn el servidor sigue atendiendo /api/vire-status mientras
+                // corre. render.js reporta avance real por stdout (líneas
+                // ##VIRE_PROGRESS##, ver reportProgress en render.js).
+                limpiarVireJobsViejos();
+                const jobId = crypto.randomUUID();
+                const job = {
+                    id: jobId,
+                    stage: 'starting',
+                    percent: 0,
+                    voiceTotal: 0,
+                    imageTotal: 0,
+                    images: [],
+                    error: null,
+                    videoPath: null,
+                    tmpDir,
+                    child: null,
+                    createdAt: Date.now(),
+                };
+                vireJobs.set(jobId, job);
+
+                const child = spawn('node', [
                     vireRenderScript,
                     '--guion', vireScriptPath,
                     '--output', vireOutputPath,
                     '--empresa', empresa || 'ViRe',
                     '--auto'
-                ], {
-                    cwd: vireDir,
-                    timeout: 600000,
-                    stdio: 'pipe',
-                    maxBuffer: 50 * 1024 * 1024,
+                ], { cwd: vireDir });
+                job.child = child;
+
+                let stdoutBuf = '';
+                let stderrTail = '';
+                const PROGRESS_MARKER = '##VIRE_PROGRESS##';
+                child.stdout.on('data', (chunk) => {
+                    stdoutBuf += chunk.toString();
+                    const lines = stdoutBuf.split('\n');
+                    stdoutBuf = lines.pop();
+                    for (const line of lines) {
+                        const idx = line.indexOf(PROGRESS_MARKER);
+                        if (idx === -1) continue;
+                        try {
+                            const data = JSON.parse(line.slice(idx + PROGRESS_MARKER.length));
+                            job.stage = data.stage;
+                            if (data.stage === 'voices') job.voiceTotal = data.total;
+                            if (data.stage === 'images') {
+                                job.imageTotal = data.total;
+                                job.images.push({ index: data.current - 1, url: data.url, prompt: data.prompt });
+                            }
+                            if (data.stage === 'render') job.percent = data.percent;
+                        } catch (_) { /* línea de progreso corrupta, se ignora */ }
+                    }
+                });
+                child.stderr.on('data', (chunk) => {
+                    stderrTail = (stderrTail + chunk.toString()).slice(-4000);
+                });
+                child.on('error', (err) => {
+                    job.stage = 'error';
+                    job.error = `No se pudo iniciar el render: ${err.message}`;
+                    serverLog('ERROR', `[ViRe] spawn falló (job ${jobId}): ${err.message}`);
+                });
+                child.on('close', (code) => {
+                    if (job.stage === 'cancelled') return;
+                    if (code === 0 && fs.existsSync(vireOutputPath)) {
+                        job.stage = 'done';
+                        job.percent = 100;
+                        job.videoPath = vireOutputPath;
+                        serverLog('INFO', `[ViRe] ✅ Video renderizado (job ${jobId})`);
+                    } else {
+                        const tail = stderrTail.split('\n').slice(-15).join('\n').trim();
+                        job.stage = 'error';
+                        job.error = `ViRe falló: ${tail.substring(0, 500)}`;
+                        serverLog('ERROR', `[ViRe] ❌ Render falló (exit ${code}, job ${jobId}): ${tail.substring(0, 800)}`);
+                        if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
+                    }
                 });
 
-                if (vireResult.status === 0 && fs.existsSync(vireOutputPath)) {
-                    serverLog('INFO', `[ViRe] ✅ Video renderizado`);
-                    const videoBase64 = fs.readFileSync(vireOutputPath).toString('base64');
-                    fs.rmSync(tmpDir, { recursive: true, force: true });
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ status: 'success', video: `data:video/mp4;base64,${videoBase64}`, renderer: 'vire' }));
-                } else {
-                    const stderr = vireResult.stderr?.toString() || '';
-                    const tail = stderr.split('\n').slice(-15).join('\n').trim();
-                    serverLog('ERROR', `[ViRe] ❌ Render falló (exit ${vireResult.status}): ${tail.substring(0, 800)}`);
-                    fs.rmSync(tmpDir, { recursive: true, force: true });
-                    res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ status: 'error', error: `ViRe falló: ${tail.substring(0, 500)}` }));
-                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'accepted', jobId }));
             } catch (e) {
                 serverLog('ERROR', `[ViRe] ${e.message}`);
                 if (tmpDir && fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ status: 'error', error: e.message }));
             }
+        });
+        return;
+    }
+
+    // ViRe: estado de un job en curso (polling desde el front-end)
+    if (pathname === '/api/vire-status' && req.method === 'GET') {
+        const jobId = parsedUrl.searchParams.get('jobId');
+        const job = vireJobs.get(jobId);
+        if (!job) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'error', error: 'Job no encontrado (¿expiró?)' }));
+            return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            status: 'ok',
+            stage: job.stage,
+            percent: job.percent,
+            voiceTotal: job.voiceTotal,
+            imageTotal: job.imageTotal,
+            images: job.images,
+            done: job.stage === 'done',
+            error: job.error,
+        }));
+        return;
+    }
+
+    // ViRe: sirve el mp4 ya renderizado de un job (stream, no base64 — evita
+    // duplicar ~33% de tamaño en el JSON y permite <video> nativo)
+    if (pathname === '/api/vire-result' && req.method === 'GET') {
+        const jobId = parsedUrl.searchParams.get('jobId');
+        const job = vireJobs.get(jobId);
+        if (!job || job.stage !== 'done' || !job.videoPath || !fs.existsSync(job.videoPath)) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'error', error: 'Video no disponible' }));
+            return;
+        }
+        // El <video> de Chrome siempre pide un Range al cargar el src; si se
+        // ignora y se responde 200 con el archivo completo, el reproductor se
+        // queda cargando indefinidamente en vez de reproducir (confirmado en
+        // pruebas de navegador) — hay que servir 206 Partial Content real.
+        // Cross-Origin-Resource-Policy explícito: el servidor manda COEP
+        // credentialless global (línea ~568) para otra feature — sin CORP en
+        // esta respuesta, el <video> se queda "stalled" para siempre sin
+        // ningún error visible (confirmado en pruebas de navegador reales).
+        const fileSize = fs.statSync(job.videoPath).size;
+        const range = req.headers.range;
+        if (range) {
+            const match = /bytes=(\d*)-(\d*)/.exec(range);
+            const start = match[1] ? parseInt(match[1], 10) : 0;
+            const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+            res.writeHead(206, {
+                'Content-Type': 'video/mp4',
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': end - start + 1,
+                'Cross-Origin-Resource-Policy': 'cross-origin',
+            });
+            fs.createReadStream(job.videoPath, { start, end }).pipe(res);
+        } else {
+            res.writeHead(200, { 'Content-Type': 'video/mp4', 'Accept-Ranges': 'bytes', 'Content-Length': fileSize, 'Cross-Origin-Resource-Policy': 'cross-origin' });
+            fs.createReadStream(job.videoPath).pipe(res);
+        }
+        return;
+    }
+
+    // ViRe: cancela un job en curso (mata el proceso hijo)
+    if (pathname === '/api/vire-cancel' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', () => {
+            let jobId;
+            try { ({ jobId } = JSON.parse(body)); } catch (_) { /* body vacío/mal formado */ }
+            const job = vireJobs.get(jobId);
+            if (job && job.child && job.stage !== 'done' && job.stage !== 'error') {
+                job.child.kill();
+                job.stage = 'cancelled';
+                if (job.tmpDir && fs.existsSync(job.tmpDir)) fs.rmSync(job.tmpDir, { recursive: true, force: true });
+                serverLog('INFO', `[ViRe] Job ${jobId} cancelado por el usuario`);
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'ok' }));
         });
         return;
     }
@@ -2560,6 +2764,53 @@ async function callOpenRouter(model, messages, temperature = 0.7) {
     } catch (error) {
         throw error;
     }
+}
+
+// Fallback local (Ollama) para cuando se agota el cupo gratuito de OmniRoute.
+// Modelo default elegido tras probar 3 opciones reales en esta máquina (ver
+// tabla arriba): qwen2.5-coder es el único que respetó la semántica del schema
+// de BriefMarker sin ser inviablemente lento (los modelos "thinking" no
+// terminaron ni en 4 minutos). num_predict como techo de seguridad, no como
+// límite esperado — la respuesta real (~300-600 tokens) queda muy por debajo.
+const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
+const OLLAMA_FALLBACK_MODEL = process.env.OLLAMA_FALLBACK_MODEL || 'qwen2.5-coder:latest';
+
+// callOllama usa http.request en vez de fetch: el fetch global de undici tiene
+// headersTimeout de 300s, y con stream:false Ollama no envía headers hasta
+// terminar de generar — un prompt de MediaPlanner en CPU-only supera los 5 min
+// y muere con "fetch failed" aunque la generación vaya bien. http.request no
+// tiene ese límite; solo el timeout propio (120s de techo para lo inesperado).
+function callOllama(model, systemContent, userContent, temperature = 0.7) {
+    return new Promise((resolve, reject) => {
+        const url = new URL(`${OLLAMA_URL}/api/generate`);
+        const payload = JSON.stringify({
+            model, system: systemContent, prompt: userContent, stream: false,
+            options: { temperature, num_predict: 2000 }
+        });
+        const req = (url.protocol === 'https:' ? https : http).request(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload)
+            },
+            timeout: 900000
+        }, res => {
+            let body = '';
+            res.on('data', d => body += d);
+            res.on('end', () => {
+                let data;
+                try { data = JSON.parse(body); }
+                catch (e) { return reject(new Error('Respuesta de Ollama malformada (no es JSON)')); }
+                if (res.statusCode !== 200) return reject(new Error(data.error || `Error HTTP ${res.statusCode}`));
+                if (!data.response) return reject(new Error('Respuesta de Ollama vacía o malformada'));
+                resolve(data.response);
+            });
+        });
+        req.on('error', e => reject(e));
+        req.on('timeout', () => req.destroy(new Error(`Timeout de Ollama (${OLLAMA_FALLBACK_MODEL}) tras 15 min`)));
+        req.write(payload);
+        req.end();
+    });
 }
 
 // Respaldo real cuando pytrends/Reddit devuelven pocos resultados — antes era

@@ -343,3 +343,29 @@ skills:
     discoverable: true
     context_hint:
       - "backend/DriveManager.js"
+
+  landing-pages:
+    description: "Generación estática de landing pages de conversión multi-tenant vía scripts/ssg-engine.mjs. Consume SuitLandings/landing-template.html (hero, propuesta de valor, oferta/CTA, contacto) y la activación por flag landing en la posición 8 de Config_Empresas.modo (0/ausente = solo sitio, 1 = landing-only, 2 = sitio + landing). Sin columnas nuevas: todo el contenido vive empacado en logo_url = \"{logo}|{hero}|{oferta}|{cta}\", aislado del resto del SPA por un fix en js/modules/core.js:fixDriveUrl(). Toda landing es noindex/noarchive para no canibalizar el sitio principal."
+    version: 1.0.0
+    type: domain
+    domain: marketing
+    dependencies:
+      - javascript
+      - multi-tenant
+    triggers:
+      - "landing page"
+      - "landing"
+      - "modo landing"
+      - "logo_url pipe"
+      - "fixDriveUrl"
+      - file_pattern: "SuitLandings/**/*.html"
+      - file_pattern: "scripts/ssg-engine.mjs"
+    inputs:
+      - "empresa config (Config_Empresas)"
+      - "flag landing en modo (pos 8)"
+    outputs:
+      - "{slug}.html (landing-only) / {slug}-landing.html (sitio + landing)"
+    discoverable: true
+    context_hint:
+      - "scripts/ssg-engine.mjs"
+      - "SuitLandings/landing-template.html"

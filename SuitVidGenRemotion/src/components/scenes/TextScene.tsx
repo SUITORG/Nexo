@@ -19,7 +19,14 @@ export const TextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              opacity: 0.25,
+            }}
+          />
+          {/* Gradiente solo detrás del texto: la foto se ve completa sin
+              lavarse, el texto sigue legible sobre la zona oscurecida. */}
+          <AbsoluteFill
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 45%, rgba(0,0,0,0.65) 100%)",
             }}
           />
         </AbsoluteFill>
@@ -62,7 +69,7 @@ export const TextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
             textShadow: "0 2px 8px rgba(0,0,0,0.2)",
           }}
         >
-          {scene.body}
+          {scene.texto_overlay || scene.body}
         </p>
       </AbsoluteFill>
     </AbsoluteFill>

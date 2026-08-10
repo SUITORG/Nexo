@@ -80,6 +80,16 @@ Tras la prueba manual, el usuario pidió mover el disparador de "Ai" (dropdown `
 
 Extensión del pipeline: cada pieza generada ahora tiene un botón "🎬 Generar Video" que reusa el mismo motor de VIDE (`generateVideVideo(overrideGuion)` → `/api/video-produce`), y `CAMP-BRIEFMARKER` ahora recibe la dirección de Estilo Visual resuelta (Director o override manual del usuario) sin afectar el copy. Detalle completo, incluyendo un bug de consistencia encontrado y corregido en revisión (estilo podía quedar mezclado entre piezas de un mismo plan si se reintentaba con el selector cambiado — fix: `planes_medios.estilo_visual` se fija en la primera aprobación y se reusa siempre), en `.suit/memory/pending/plan-pieza-a-video.md`.
 
+## Bug encontrado en uso real: video-produce 500 por imágenes de Pollinations corruptas
+
+Al generar el video de la pieza C1-1 desde la UI, `/api/video-produce` devolvió 500 ("El video no pudo generarse"). Logs del servidor mostraron la causa: Pollinations respondía HTTP 200 con un JSON de error (`{"error"...`) en vez de una imagen real, y el código lo escribía tal cual a disco como si fuera un `.png` válido — sin verificar `imgRes.ok` ni el contenido. Eso rompía FFmpeg dos veces: al aplicar el overlay de logo/avatar de esa escena ("Invalid PNG signature") y, más grave, en el ensamblado final del video completo (el volumen de errores de decodificación de PNGs corruptos por escena parece ser lo que desbordaba el pipe de `spawnSync` → `ENOBUFS`).
+
+### Fix
+En el fetch de cada imagen de escena (`local-server-node.js`, generación de imágenes VIDE): valida `imgRes.ok` + magic bytes (PNG `0x89 0x50` / JPEG `0xFF 0xD8`) antes de escribir a disco. Si la respuesta no es una imagen válida, genera un fondo sólido con FFmpeg (`color=c=0x1e293b`) del tamaño correcto en su lugar — la escena sigue teniendo overlay de logo/avatar y sigue en el video, solo sin la imagen de IA.
+
+### Validación
+Reproducido con la misma llamada real que falló (3 escenas de la pieza C1-1) contra el servidor reiniciado con el fix: Pollinations devolvió 500 en las 3 escenas (saturado por el uso de hoy) — el pipeline ahora absorbe eso, cae a fondo sólido en cada una, y **el video se generó completo (HTTP 200, payload de video real ~320KB)** en vez de tronar.
+
 ## Consequences
 - `matchText()` queda disponible en `script.js` para cualquier otro matching de texto libre contra catálogos (ej. si más adelante se quiere el mismo criterio para `producto`/`competidores` u otros campos) — no se aplicó retroactivamente a otros matchings existentes en el archivo (ej. `setupCompanyAutoFill()`'s `findVal()`) por no estar dentro del alcance pedido.
 - Sin commits — pendiente que el usuario decida cuándo confirmar el trabajo en git.

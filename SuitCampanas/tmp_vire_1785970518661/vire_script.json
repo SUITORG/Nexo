@@ -1,0 +1,48 @@
+{
+  "format": "post",
+  "width": 1080,
+  "height": 1080,
+  "fps": 24,
+  "empresa": "Campaña",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "background_music": "generated/music/music_1785970518662.wav",
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "duration": 3,
+      "animation": "fade_in",
+      "title": "Intro",
+      "subtitle": "Bienvenida de prueba en navegador",
+      "voice_text": "Bienvenida de prueba en navegador",
+      "sfx_file": "generated/sfx/sfx_1785970518871_0.wav",
+      "texto_overlay": "Bienvenida"
+    },
+    {
+      "type": "text",
+      "duration": 3,
+      "animation": "fade_in",
+      "title": "Medio",
+      "body": "Cuerpo largo de narracion de prueba para validar el overlay corto en pantalla",
+      "image_prompt": "a golden retriever puppy playing in a park, cinematic",
+      "voice_text": "Cuerpo largo de narracion de prueba para validar el overlay corto en pantalla",
+      "texto_overlay": "Cachorro feliz"
+    },
+    {
+      "type": "outro",
+      "duration": 3,
+      "animation": "fade_in",
+      "cta": "Gracias por ver esta prueba",
+      "voice_text": "Gracias por ver esta prueba",
+      "texto_overlay": "Gracias"
+    }
+  ]
+}

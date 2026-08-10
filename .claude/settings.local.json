@@ -96,7 +96,9 @@
       "Bash(python -m pip show gtts)",
       "Bash(python -m pip list)",
       "Bash(where.exe ffmpeg *)",
-      "Bash(ffmpeg -version)"
+      "Bash(ffmpeg -version)",
+      "WebFetch(domain:huggingface.co)",
+      "PowerShell(Get-CimInstance *)"
     ]
   },
   "enabledMcpjsonServers": [
@@ -111,6 +113,7 @@
   "disabledMcpjsonServers": [
     "suitcvlo-filesystem",
     "telegram-bot",
-    "manychat"
+    "manychat",
+    "comfyui"
   ]
 }

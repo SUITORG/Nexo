@@ -212,6 +212,14 @@
 |-------|---------|
 | 11 | `runUninstall` |
 
+## `app.js`
+
+| Línea | Función |
+|-------|---------|
+| 10 | `resetCompany` |
+| 16 | `viewLogs` |
+| 25 | `start` |
+
 ## `Citas/handlers/actions.js`
 
 | Línea | Función |
@@ -273,6 +281,33 @@
 | 45 | `confirmPayment` |
 | 56 | `handleWebhook` |
 
+## `drive_manager.gs`
+
+| Línea | Función |
+|-------|---------|
+| 12 | `initDriveStructure` |
+| 59 | `crearCarpetaCliente` |
+| 99 | `_getOrCreateFolder` |
+| 107 | `obtenerDocumentosCliente` |
+
+## `gas-client.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `getAuth` |
+| 24 | `runFunction` |
+| 39 | `getContent` |
+| 48 | `updateContent` |
+
+## `google-sheets.js`
+
+| Línea | Función |
+|-------|---------|
+| 8 | `getClient` |
+| 18 | `readSheet` |
+| 27 | `writeSheet` |
+| 38 | `appendSheet` |
+
 ## `PresentacionesVid/bdpv-generator.js`
 
 | Línea | Función |
@@ -305,6 +340,14 @@
 | 256 | `formatCell` |
 | 262 | `main` |
 | 382 | `tipoNegocio` |
+
+## `server.js`
+
+| Línea | Función |
+|-------|---------|
+| 411 | `proxyCotizador` |
+| 538 | `yahooFetch` |
+| 556 | `fetchQuoteV8` |
 
 ## `SuitAI/handlers/api.js`
 
@@ -351,33 +394,6 @@
 | 188 | `scan` |
 | 213 | `getCached` |
 | 217 | `clearCache` |
-
-## `SuitCVLO/frontend/app.js`
-
-| Línea | Función |
-|-------|---------|
-| 4 | `apiHeaders` |
-| 58 | `handleFiles` |
-| 85 | `handleFile` |
-| 96 | `showPreview` |
-| 111 | `uploadPhoto` |
-| 129 | `uploadMultiplePhotos` |
-| 162 | `uploadZip` |
-| 179 | `pollJob` |
-| 210 | `fetchResult` |
-| 226 | `normalizeResults` |
-| 262 | `renderResults` |
-| 350 | `downloadPDF` |
-| 362 | `downloadCSV` |
-| 376 | `downloadGeoJSON` |
-| 391 | `ocr_text` |
-| 400 | `downloadBlob` |
-| 411 | `setStatus` |
-| 417 | `showError` |
-| 424 | `hideAllSections` |
-| 431 | `imageName` |
-| 439 | `imageThumb` |
-| 444 | `escapeHtml` |
 
 ## `SuitChatTG/db/gas-client.js`
 
@@ -536,6 +552,33 @@
 | Línea | Función |
 |-------|---------|
 | 7 | `main` |
+
+## `SuitCVLO/frontend/app.js`
+
+| Línea | Función |
+|-------|---------|
+| 4 | `apiHeaders` |
+| 58 | `handleFiles` |
+| 85 | `handleFile` |
+| 96 | `showPreview` |
+| 111 | `uploadPhoto` |
+| 129 | `uploadMultiplePhotos` |
+| 162 | `uploadZip` |
+| 179 | `pollJob` |
+| 210 | `fetchResult` |
+| 226 | `normalizeResults` |
+| 262 | `renderResults` |
+| 350 | `downloadPDF` |
+| 362 | `downloadCSV` |
+| 376 | `downloadGeoJSON` |
+| 391 | `ocr_text` |
+| 400 | `downloadBlob` |
+| 411 | `setStatus` |
+| 417 | `showError` |
+| 424 | `hideAllSections` |
+| 431 | `imageName` |
+| 439 | `imageThumb` |
+| 444 | `escapeHtml` |
 
 ## `SuitOSCore/ai-router/circuitBreaker.js`
 
@@ -875,49 +918,6 @@
 | 19 | `parseArgs` |
 | 33 | `main` |
 
-## `app.js`
-
-| Línea | Función |
-|-------|---------|
-| 10 | `resetCompany` |
-| 16 | `viewLogs` |
-| 25 | `start` |
-
-## `drive_manager.gs`
-
-| Línea | Función |
-|-------|---------|
-| 12 | `initDriveStructure` |
-| 59 | `crearCarpetaCliente` |
-| 99 | `_getOrCreateFolder` |
-| 107 | `obtenerDocumentosCliente` |
-
-## `gas-client.js`
-
-| Línea | Función |
-|-------|---------|
-| 11 | `getAuth` |
-| 24 | `runFunction` |
-| 39 | `getContent` |
-| 48 | `updateContent` |
-
-## `google-sheets.js`
-
-| Línea | Función |
-|-------|---------|
-| 8 | `getClient` |
-| 18 | `readSheet` |
-| 27 | `writeSheet` |
-| 38 | `appendSheet` |
-
-## `server.js`
-
-| Línea | Función |
-|-------|---------|
-| 411 | `proxyCotizador` |
-| 538 | `yahooFetch` |
-| 556 | `fetchQuoteV8` |
-
 ## `supabase.js`
 
 | Línea | Función |
@@ -927,228 +927,7 @@
 | 25 | `update` |
 | 33 | `remove` |
 
-## `Documentacion/`
-
-| Línea | Función | Archivo |
-|-------|---------|--------|
-| 77 | `escapeSql` | `migracion_datos.js` |
-| 105 | `toJsonIfNeeded` | `migracion_datos.js` |
-| 129 | `generateMigrationSQL` | `migracion_datos.js` |
-
-## `SuitCampanas/`
-
-### `SuitCampanas/backend.gs`
-
-| Línea | Función |
-|-------|---------|
-| 9 | `doGet` |
-| 51 | `doPost` |
-| 124 | `successResponse` |
-| 130 | `errorResponse` |
-
-### `SuitCampanas/local-server-node.js`
-
-| Línea | Función |
-|-------|---------|
-| 20 | `OMNIROUTE_BASE` |
-| 34 | `findFFmpeg` |
-| 62 | `getAudioDurationSec` |
-| 72 | `ffmpeg` |
-| 94 | `escapeFfmpegPath` |
-| 102 | `getDefaultFontFile` |
-| 115 | `wrapWords` |
-| 137 | `fitOverlayText` |
-| 168 | `computeRealDuration` |
-| 175 | `parseGuionScenes` |
-| 263 | `serverLog` |
-| 270 | `normalizeDriveUrl` |
-| 290 | `parseBrief` |
-| 329 | `fetchEmpresaRow` |
-| 343 | `loadPromptById` |
-| 357 | `callAIJson` |
-| 397 | `generateMediaPlan` |
-| 417 | `empresa` |
-| 431 | `approveMediaPlan` |
-| 1498 | `callAI` |
-| 1749 | `fetchFollowingRedirects` |
-| 1995 | `srtTime` |
-| 2305 | `background_music` |
-| 2375 | `subestilos` |
-| 2529 | `callOpenRouter` |
-| 2569 | `generateAITrendFallback` |
-| 2595 | `callLocalLMS` |
-| 2630 | `fetchWithRedirects` |
-
-### `SuitCampanas/models-config.js`
-
-| Línea | Función |
-|-------|---------|
-| 78 | `toOmniRouteId` |
-
-### `SuitCampanas/script.js`
-
-| Línea | Función |
-|-------|---------|
-| 4 | `escapeHtml` |
-| 11 | `parseLogoUrlField` |
-| 64 | `loadPrompt` |
-| 94 | `getCategoriaIndustria` |
-| 97 | `getEspecializaciones` |
-| 100 | `updateEspecializacionSelect` |
-| 200 | `initCategoriaLookup` |
-| 209 | `populateIndustrias` |
-| 226 | `suggestTheme` |
-| 238 | `showCategoriaHint` |
-| 241 | `populateNichos` |
-| 381 | `loadGooglePickerAPI` |
-| 402 | `openDrivePicker` |
-| 405 | `showDriveModalFallback` |
-| 410 | `hideDriveModal` |
-| 502 | `buscarTendencias` |
-| 614 | `subclasificaciones` |
-| 832 | `nombre` |
-| 869 | `generateAIContent` |
-| 1160 | `updateActiveTab` |
-| 1170 | `getFormData` |
-| 1190 | `autoToggleMultimedia` |
-| 1205 | `validateFormData` |
-| 1218 | `setLoading` |
-| 1224 | `setAiLoading` |
-| 1232 | `showToast` |
-| 1238 | `renderCarouselPreview` |
-| 1406 | `tryLoadImage` |
-| 1461 | `fetchHistory` |
-| 1503 | `renderHistory` |
-| 1553 | `resetFormErrors` |
-| 1555 | `downloadCampaignKit` |
-| 1714 | `generateVideoFromCarousel` |
-| 1805 | `downloadFile` |
-| 1814 | `downloadExternalImage` |
-| 1830 | `speakText` |
-| 1857 | `stopAll` |
-| 1923 | `loadCompanies` |
-| 1937 | `populateCompanySelect` |
-| 1951 | `setupCompanyAutoFill` |
-| 1962 | `handler` |
-| 1969 | `findVal` |
-| 2012 | `generateMediaPlanFromUI` |
-| 2062 | `attachMediaPlanPanel` |
-| 2096 | `onApprove` |
-| 2131 | `onReject` |
-| 2160 | `renderPlanPiezas` |
-| 2206 | `listRecentPlans` |
-| 2246 | `resumeMediaPlan` |
-| 2266 | `matchText` |
-| 2272 | `norm` |
-| 2285 | `autoSelectIndustriaFromBrief` |
-| 2287 | `setIfEmpty` |
-| 2301 | `setWorkMode` |
-| 2559 | `loadRecetas` |
-| 2579 | `generateImaginationVideo` |
-| 2660 | `syncVideFieldsFromJson` |
-| 2679 | `fetchEstilosVisuales` |
-| 2697 | `showStyleSelector` |
-| 2745 | `autoPickStyleByTrend` |
-| 2774 | `formatPhoneForSpeech` |
-| 2781 | `generateVideJson` |
-| 3018 | `generateVideVideo` |
-| 3102 | `updateProgress` |
-| 3230 | `generateViReVideo` |
-| 3316 | `ejecutarAgente` |
-| 3360 | `normalizeDriveUrl` |
-| 3379 | `resolveLogoUrl` |
-| 3391 | `renderCarouselFromJson` |
-| 3534 | `loadSlideImage` |
-| 3590 | `regenerateSlideImage` |
-| 3606 | `downloadAnimatedVideo` |
-| 3674 | `fetchLogs` |
-| 3686 | `toggleLogPanel` |
-
-### `SuitCampanas/test-system.js`
-
-| Línea | Función |
-|-------|---------|
-| 16 | `runTests` |
-
-
-## `SuitCampanas/scripts/`
-
-### `SuitCampanas/scripts/agent-tendencias.js`
-
-| Línea | Función |
-|-------|---------|
-| 14 | `callIA` |
-| 34 | `buscarTendencias` |
-| 49 | `buscarTendenciasReales` |
-| 106 | `categorizarTendencia` |
-| 118 | `buscarRecetaPorCategoria` |
-| 140 | `crearRecetaConIA` |
-| 179 | `generarVideo` |
-| 227 | `guardarTendencia` |
-| 243 | `ejecutarAgente` |
-| 299 | `log` |
-
-### `SuitCampanas/scripts/download-drive-media.js`
-
-| Línea | Función |
-|-------|---------|
-| 10 | `main` |
-
-### `SuitCampanas/scripts/seed-industrias.js`
-
-| Línea | Función |
-|-------|---------|
-| 265 | `insertIndustries` |
-| 314 | `insertExtraNiches` |
-
-### `SuitCampanas/scripts/seed-media-plan-prompts.js`
-
-| Línea | Función |
-|-------|---------|
-| 124 | `seed` |
-
-### `SuitCampanas/scripts/seed-prompts.js`
-
-| Línea | Función |
-|-------|---------|
-| 138 | `seed` |
-
-### `SuitCampanas/scripts/seed-supabase.js`
-
-| Línea | Función |
-|-------|---------|
-| 13 | `seed` |
-| 67 | `seedRecetas` |
-
-### `SuitCampanas/scripts/sync-gas.js`
-
-| Línea | Función |
-|-------|---------|
-| 9 | `postToGAS` |
-| 27 | `syncIndustrias` |
-| 49 | `syncCampanas` |
-
-### `SuitCampanas/scripts/trend-research.js`
-
-| Línea | Función |
-|-------|---------|
-| 14 | `getCacheKey` |
-| 18 | `readCache` |
-| 27 | `writeCache` |
-| 35 | `fetchPythonTrends` |
-| 47 | `extractTrends` |
-| 51 | `add` |
-| 81 | `fetchTrends` |
-
-
 ## `backend/`
-
-### `backend/DriveManager.js`
-
-| Línea | Función |
-|-------|---------|
-| 5 | `initDriveStructure` |
-| 25 | `_getOrCreateFolder` |
 
 ### `backend/ai_engine.js`
 
@@ -1184,6 +963,13 @@
 | 237 | `aplicarSUDOaTodas` |
 | 256 | `generarSUDOparaSeleccion` |
 
+### `backend/DriveManager.js`
+
+| Línea | Función |
+|-------|---------|
+| 5 | `initDriveStructure` |
+| 25 | `_getOrCreateFolder` |
+
 ### `backend/seeds_master.js`
 
 | Línea | Función |
@@ -1204,6 +990,14 @@
 | 269 | `processTransactionGSheets` |
 | 346 | `syncToSupabase` |
 
+
+## `Documentacion/`
+
+| Línea | Función | Archivo |
+|-------|---------|--------|
+| 77 | `escapeSql` | `migracion_datos.js` |
+| 105 | `toJsonIfNeeded` | `migracion_datos.js` |
+| 129 | `generateMigrationSQL` | `migracion_datos.js` |
 
 ## `js/modules/`
 
@@ -1705,6 +1499,213 @@
 | Línea | Función |
 |-------|---------|
 | 31 | `send` |
+
+
+## `SuitCampanas/`
+
+### `SuitCampanas/backend.gs`
+
+| Línea | Función |
+|-------|---------|
+| 9 | `doGet` |
+| 51 | `doPost` |
+| 124 | `successResponse` |
+| 130 | `errorResponse` |
+
+### `SuitCampanas/local-server-node.js`
+
+| Línea | Función |
+|-------|---------|
+| 20 | `OMNIROUTE_BASE` |
+| 34 | `findFFmpeg` |
+| 62 | `getAudioDurationSec` |
+| 72 | `ffmpeg` |
+| 94 | `escapeFfmpegPath` |
+| 102 | `getDefaultFontFile` |
+| 115 | `wrapWords` |
+| 137 | `fitOverlayText` |
+| 168 | `computeRealDuration` |
+| 175 | `parseGuionScenes` |
+| 263 | `serverLog` |
+| 270 | `normalizeDriveUrl` |
+| 290 | `parseBrief` |
+| 329 | `fetchEmpresaRow` |
+| 343 | `loadPromptById` |
+| 357 | `callAIJson` |
+| 407 | `generateMediaPlan` |
+| 427 | `empresa` |
+| 441 | `approveMediaPlan` |
+| 1511 | `callAI` |
+| 1762 | `fetchFollowingRedirects` |
+| 2022 | `srtTime` |
+| 2332 | `background_music` |
+| 2402 | `subestilos` |
+| 2556 | `callOpenRouter` |
+| 2606 | `callOllama` |
+| 2643 | `generateAITrendFallback` |
+| 2669 | `callLocalLMS` |
+| 2704 | `fetchWithRedirects` |
+
+### `SuitCampanas/models-config.js`
+
+| Línea | Función |
+|-------|---------|
+| 78 | `toOmniRouteId` |
+
+### `SuitCampanas/script.js`
+
+| Línea | Función |
+|-------|---------|
+| 4 | `escapeHtml` |
+| 11 | `parseLogoUrlField` |
+| 64 | `loadPrompt` |
+| 94 | `getCategoriaIndustria` |
+| 97 | `getEspecializaciones` |
+| 100 | `updateEspecializacionSelect` |
+| 200 | `initCategoriaLookup` |
+| 209 | `populateIndustrias` |
+| 226 | `suggestTheme` |
+| 238 | `showCategoriaHint` |
+| 241 | `populateNichos` |
+| 381 | `loadGooglePickerAPI` |
+| 402 | `openDrivePicker` |
+| 405 | `showDriveModalFallback` |
+| 410 | `hideDriveModal` |
+| 502 | `buscarTendencias` |
+| 614 | `subclasificaciones` |
+| 832 | `nombre` |
+| 869 | `generateAIContent` |
+| 1160 | `updateActiveTab` |
+| 1170 | `getFormData` |
+| 1190 | `autoToggleMultimedia` |
+| 1205 | `validateFormData` |
+| 1218 | `setLoading` |
+| 1224 | `setAiLoading` |
+| 1232 | `showToast` |
+| 1238 | `renderCarouselPreview` |
+| 1406 | `tryLoadImage` |
+| 1461 | `fetchHistory` |
+| 1503 | `renderHistory` |
+| 1553 | `resetFormErrors` |
+| 1555 | `downloadCampaignKit` |
+| 1714 | `generateVideoFromCarousel` |
+| 1805 | `downloadFile` |
+| 1814 | `downloadExternalImage` |
+| 1830 | `speakText` |
+| 1857 | `stopAll` |
+| 1923 | `loadCompanies` |
+| 1937 | `populateCompanySelect` |
+| 1951 | `setupCompanyAutoFill` |
+| 1962 | `handler` |
+| 1969 | `findVal` |
+| 2012 | `generateMediaPlanFromUI` |
+| 2062 | `attachMediaPlanPanel` |
+| 2097 | `onApprove` |
+| 2132 | `onReject` |
+| 2161 | `renderPlanPiezas` |
+| 2207 | `listRecentPlans` |
+| 2247 | `resumeMediaPlan` |
+| 2267 | `matchText` |
+| 2273 | `norm` |
+| 2286 | `autoSelectIndustriaFromBrief` |
+| 2288 | `setIfEmpty` |
+| 2302 | `setWorkMode` |
+| 2560 | `loadRecetas` |
+| 2580 | `generateImaginationVideo` |
+| 2661 | `syncVideFieldsFromJson` |
+| 2680 | `fetchEstilosVisuales` |
+| 2698 | `showStyleSelector` |
+| 2746 | `autoPickStyleByTrend` |
+| 2775 | `formatPhoneForSpeech` |
+| 2782 | `generateVideJson` |
+| 3019 | `generateVideVideo` |
+| 3103 | `updateProgress` |
+| 3231 | `generateViReVideo` |
+| 3317 | `ejecutarAgente` |
+| 3361 | `normalizeDriveUrl` |
+| 3380 | `resolveLogoUrl` |
+| 3392 | `renderCarouselFromJson` |
+| 3535 | `loadSlideImage` |
+| 3591 | `regenerateSlideImage` |
+| 3607 | `downloadAnimatedVideo` |
+| 3675 | `fetchLogs` |
+| 3687 | `toggleLogPanel` |
+
+### `SuitCampanas/test-system.js`
+
+| Línea | Función |
+|-------|---------|
+| 16 | `runTests` |
+
+
+## `SuitCampanas/scripts/`
+
+### `SuitCampanas/scripts/agent-tendencias.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `callIA` |
+| 34 | `buscarTendencias` |
+| 49 | `buscarTendenciasReales` |
+| 106 | `categorizarTendencia` |
+| 118 | `buscarRecetaPorCategoria` |
+| 140 | `crearRecetaConIA` |
+| 179 | `generarVideo` |
+| 227 | `guardarTendencia` |
+| 243 | `ejecutarAgente` |
+| 299 | `log` |
+
+### `SuitCampanas/scripts/download-drive-media.js`
+
+| Línea | Función |
+|-------|---------|
+| 10 | `main` |
+
+### `SuitCampanas/scripts/seed-industrias.js`
+
+| Línea | Función |
+|-------|---------|
+| 265 | `insertIndustries` |
+| 314 | `insertExtraNiches` |
+
+### `SuitCampanas/scripts/seed-media-plan-prompts.js`
+
+| Línea | Función |
+|-------|---------|
+| 124 | `seed` |
+
+### `SuitCampanas/scripts/seed-prompts.js`
+
+| Línea | Función |
+|-------|---------|
+| 138 | `seed` |
+
+### `SuitCampanas/scripts/seed-supabase.js`
+
+| Línea | Función |
+|-------|---------|
+| 13 | `seed` |
+| 67 | `seedRecetas` |
+
+### `SuitCampanas/scripts/sync-gas.js`
+
+| Línea | Función |
+|-------|---------|
+| 9 | `postToGAS` |
+| 27 | `syncIndustrias` |
+| 49 | `syncCampanas` |
+
+### `SuitCampanas/scripts/trend-research.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `getCacheKey` |
+| 18 | `readCache` |
+| 27 | `writeCache` |
+| 35 | `fetchPythonTrends` |
+| 47 | `extractTrends` |
+| 51 | `add` |
+| 81 | `fetchTrends` |
 
 
 ---

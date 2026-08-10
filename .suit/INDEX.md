@@ -78,6 +78,7 @@
 | `vire` | `SuitVidGenRemotion/` | - | 3004 |
 | `suit-chat-tg` | `SuitChatTG/` | GSHEETS | 3011 |
 | `suit-comfy` | `SuitComfy/` | - (ComfyUI + FFmpeg, local) | 3012 |
+| `suit-diccionario` | `SuitMiDBdic/` | - | 3013 |
 
 ## Memory
 | Directory | Purpose |

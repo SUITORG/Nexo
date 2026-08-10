@@ -33,6 +33,7 @@ function applyDefaults(script) {
     fps: script.fps || 30,
     subtitles: script.subtitles || { enabled: true, style: 'classic' },
     voice: script.voice || { provider: 'edge_tts', voice: 'es-MX-DaliaNeural' },
+    background_music: script.background_music,
     scenes: script.scenes || [],
   };
 }

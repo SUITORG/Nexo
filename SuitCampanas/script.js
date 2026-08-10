@@ -31,6 +31,59 @@ const CONFIG = {
     DRIVE_APP_ID: ''
 };
 
+// jobId del render de ViRe en curso (o null) — lo lee el botón Cancelar,
+// que se registra una sola vez al cargar la página, lejos de generateViReVideo().
+let vireCurrentJobId = null;
+// true desde que se hace click en Generar hasta que termina (incluye la
+// conversión IA del prompt libre, que puede tardar varios minutos) — sin esto,
+// un segundo click o un cambio de modo mientras la IA sigue respondiendo deja
+// esa llamada vieja corriendo en segundo plano, y cuando por fin resuelve
+// pisa los campos del formulario y dispara un render que el usuario ya no pidió.
+let vireGenerationInProgress = false;
+// true mientras el click en "📄 Guion JSON" está generando el guion vía IA —
+// separado de vireGenerationInProgress (que cubre el render final) porque son
+// dos pasos distintos de la secuencia (generar guion -> revisar -> renderizar).
+let vireJsonGenerating = false;
+
+// ViRe reutiliza Estilo Musical/Voz/Duración/Música/Narración del Asistente IA
+// y Producción Multimedia (mismos <select>/checkboxes que ya usa VIDE) en vez
+// de duplicarlos — esto los REUBICA físicamente arriba de la caja ViRe mientras
+// ese modo está activo (dejando un comentario-marcador en su lugar original) y
+// los devuelve a su sitio al salir, para no romper el layout de los demás modos
+// que también los leen por id (VIDE, BDSMT, el flujo "Generar con IA", etc.).
+const VIRE_SHARED_FIELD_IDS = ['videStyle', 'videVoice', 'videDuration', 'enableMusic', 'enableVoice'];
+const vireSharedPlaceholders = new Map();
+function vireSharedWrapper(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    return el.closest('.toggle-group') || el.closest('.input-wrapper') || el;
+}
+function moveSharedFieldsIntoVire() {
+    const target = document.getElementById('vireSharedConfig');
+    if (!target) return;
+    VIRE_SHARED_FIELD_IDS.forEach(id => {
+        if (vireSharedPlaceholders.has(id)) return;
+        const wrapper = vireSharedWrapper(id);
+        if (!wrapper || !wrapper.parentNode) return;
+        const placeholder = document.createComment(`vire-shared-${id}`);
+        wrapper.parentNode.insertBefore(placeholder, wrapper);
+        vireSharedPlaceholders.set(id, placeholder);
+        wrapper.style.flex = '1 1 160px';
+        target.appendChild(wrapper);
+    });
+}
+function restoreSharedFieldsFromVire() {
+    vireSharedPlaceholders.forEach((placeholder, id) => {
+        const wrapper = vireSharedWrapper(id);
+        if (wrapper && placeholder.parentNode) {
+            wrapper.style.flex = '';
+            placeholder.parentNode.insertBefore(wrapper, placeholder);
+            placeholder.remove();
+        }
+    });
+    vireSharedPlaceholders.clear();
+}
+
 // Plantilla narrativa derivada del nivel de conciencia cuando el usuario no elige
 // una explícitamente — compartido por generateAIContent() (carrusel) y
 // generateVideJson() (VIDE), para que ambos generadores de IA sigan la misma regla.
@@ -495,6 +548,107 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ViRe: 3 cápsulas — Auto (Datos+IA) / Guion JSON / Prompt libre. Las tres
+    // comparten vireJsonGenerating como lock (las 3 pueden escribir en el mismo
+    // textarea vireGuionJson, así que solo una puede correr a la vez).
+    const vireAutoModeBtn = document.getElementById('vireAutoMode');
+    const vireJsonModeBtn = document.getElementById('vireJsonMode');
+    const virePromptModeBtn = document.getElementById('virePromptMode');
+    const vireModeButtons = [vireAutoModeBtn, vireJsonModeBtn, virePromptModeBtn];
+    const setVireActiveButton = (activeBtn) => {
+        vireModeButtons.forEach(b => {
+            if (!b) return;
+            if (b === activeBtn) {
+                b.style.background = 'rgba(99,102,241,0.15)';
+                b.style.borderColor = 'rgba(99,102,241,0.4)';
+                b.style.color = '#a5b4fc';
+            } else {
+                b.style.background = 'rgba(255,255,255,0.05)';
+                b.style.borderColor = 'var(--glass-border)';
+                b.style.color = 'var(--text-dim)';
+            }
+        });
+    };
+    const setVireMode = (json) => {
+        setVireActiveButton(json ? vireJsonModeBtn : virePromptModeBtn);
+        const jsonEl = document.getElementById('vireGuionJson');
+        const promptEl = document.getElementById('virePrompt');
+        if (jsonEl) jsonEl.style.display = json ? '' : 'none';
+        if (promptEl) promptEl.style.display = json ? 'none' : '';
+    };
+
+    // Pulsar "Guion JSON" no es solo un toggle de vista: si hay texto en el
+    // prompt libre, genera (o regenera) el guion con IA y lo vuelca en el
+    // textarea JSON — así el usuario ve/edita el guion como paso intermedio
+    // antes de renderizar, en vez de tener que adivinar el formato a mano.
+    // Sin prompt escrito, se comporta como antes (solo cambia de vista, para
+    // quien prefiera pegar el JSON manualmente).
+    const vireJsonModeLabel = vireJsonModeBtn?.textContent || '';
+    if (vireJsonModeBtn) vireJsonModeBtn.addEventListener('click', async () => {
+        if (vireJsonGenerating) {
+            showToast('⏳ Ya se está generando un guion, espera a que termine', 'info');
+            return;
+        }
+        setVireMode(true);
+        const prompt = document.getElementById('virePrompt')?.value?.trim();
+        if (!prompt) return;
+
+        vireJsonGenerating = true;
+        vireJsonModeBtn.textContent = '⏳ Generando...';
+        vireJsonModeBtn.style.cursor = 'wait';
+        showToast('🤖 Generando guion JSON desde tu prompt...', 'info');
+        try {
+            const duration = parseInt(document.getElementById('videDuration')?.value) || 30;
+            const musicStyle = document.getElementById('videStyle')?.value || 'cinematic';
+            const guionObj = await generarGuionDesdePrompt(prompt, duration, musicStyle);
+            aplicarAjustesDetectados(guionObj.ajustes_detectados);
+            const jsonEl = document.getElementById('vireGuionJson');
+            if (jsonEl) jsonEl.value = JSON.stringify(guionObj, null, 2);
+            showToast('✅ Guion JSON generado — revísalo/edítalo y pulsa "Generar con ViRe"', 'success');
+        } catch (e) {
+            showToast(`❌ Error generando guion: ${e.message}`, 'error');
+            console.error(e);
+        } finally {
+            vireJsonGenerating = false;
+            vireJsonModeBtn.textContent = vireJsonModeLabel;
+            vireJsonModeBtn.style.cursor = '';
+        }
+    });
+    if (virePromptModeBtn) virePromptModeBtn.addEventListener('click', () => setVireMode(false));
+
+    // "✨ Auto (Datos+IA)" — el CreatorEngine de ViRe: nada de prompt libre,
+    // arma el guion completo desde DATOS/NEGOCIO + Asistente IA (mismo
+    // generador que usa VIDE). Mismo lock/indicador que "Guion JSON".
+    const vireAutoModeLabel = vireAutoModeBtn?.textContent || '';
+    if (vireAutoModeBtn) vireAutoModeBtn.addEventListener('click', async () => {
+        if (vireJsonGenerating) {
+            showToast('⏳ Ya se está generando un guion, espera a que termine', 'info');
+            return;
+        }
+        setVireActiveButton(vireAutoModeBtn);
+        const jsonEl = document.getElementById('vireGuionJson');
+        const promptEl = document.getElementById('virePrompt');
+        if (jsonEl) jsonEl.style.display = '';
+        if (promptEl) promptEl.style.display = 'none';
+
+        vireJsonGenerating = true;
+        vireAutoModeBtn.textContent = '⏳ Generando...';
+        vireAutoModeBtn.style.cursor = 'wait';
+        showToast('✨ Generando guion desde Datos/Negocio + Asistente IA...', 'info');
+        try {
+            const guionObj = await generarGuionDesdeAsistente();
+            if (jsonEl) jsonEl.value = JSON.stringify(guionObj, null, 2);
+            showToast('✅ Guion generado — revísalo/edítalo y pulsa "Generar con ViRe"', 'success');
+        } catch (e) {
+            showToast(`❌ ${e.message}`, 'error');
+            console.error(e);
+        } finally {
+            vireJsonGenerating = false;
+            vireAutoModeBtn.textContent = vireAutoModeLabel;
+            vireAutoModeBtn.style.cursor = '';
+        }
+    });
+
     // Búsqueda de tendencias (nicho/industria + sub-nicho/región, siempre desde
     // los mismos campos compartidos) que aplica al tema compartido #aiTheme —
     // extraído para que tanto BDSMT como VIDE puedan usar el mismo botón/lógica
@@ -716,6 +870,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listener para ViRe (Remotion, motor independiente de VIDE)
     const vireGenerateBtn = document.getElementById('vireGenerateBtn');
     if (vireGenerateBtn) vireGenerateBtn.addEventListener('click', generateViReVideo);
+    const vireCancelBtn = document.getElementById('vireCancelBtn');
+    if (vireCancelBtn) vireCancelBtn.addEventListener('click', () => {
+        if (!vireCurrentJobId) return;
+        fetch('/api/vire-cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jobId: vireCurrentJobId })
+        }).catch(() => {});
+    });
     const videGenerateJsonBtn = document.getElementById('videGenerateJsonBtn');
     if (videGenerateJsonBtn) videGenerateJsonBtn.addEventListener('click', generateVideJson);
 
@@ -2093,6 +2256,7 @@ function attachMediaPlanPanel(planId, plan) {
     // rate limit), volver a Aprobar solo reintenta las pendientes, no repite
     // (ni re-paga) las que ya salieron bien — ver approveMediaPlan() en el server.
     acceptBtn.disabled = false;
+    const scopeSel = document.getElementById('mediaPlanScope');
     const onApprove = async () => {
         if (!planId) return;
         acceptBtn.disabled = true;
@@ -2105,7 +2269,7 @@ function attachMediaPlanPanel(planId, plan) {
             const res = await fetch(`/api/media-plan/${planId}/aprobar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estilo_visual: estiloVisualSeleccionado || null })
+                body: JSON.stringify({ estilo_visual: estiloVisualSeleccionado || null, cap: scopeSel ? parseInt(scopeSel.value) || 12 : 12 })
             });
             const data = await res.json();
             if (data.status !== 'success') throw new Error(data.message || 'Error aprobando');
@@ -2343,7 +2507,7 @@ function setWorkMode(mode) {
     document.querySelectorAll('.input-group-row:has(.mode-switch) .input-group').forEach(el => {
         el.style.display = '';
     });
-    [webField, phoneField, captionGroup, mediaGroup, dateGroup, aiSection, bdPhotosContainer].forEach(el => {
+    [webField, phoneField, captionGroup, mediaGroup, dateGroup, aiSection, bdPhotosContainer, document.querySelector('.production-options')].forEach(el => {
         if (el) el.style.display = '';
     });
     if (generateBtn) generateBtn.style.display = '';
@@ -2355,6 +2519,7 @@ function setWorkMode(mode) {
     if (bdpvSection) bdpvSection.style.display = 'none';
     if (vireSection) vireSection.style.display = 'none';
     if (videSection) videSection.style.display = 'none';
+    restoreSharedFieldsFromVire();
 
     if (mode === 'Ai') {
         aiBtn.classList.add('active');
@@ -2522,9 +2687,13 @@ function setWorkMode(mode) {
         if (dateGroup) dateGroup.style.display = 'none';
         if (aiSection) aiSection.style.display = 'none';
         if (bdPhotosContainer) bdPhotosContainer.style.display = 'none';
+        // Formato SÍ lo usa ViRe (define ancho/alto del render, ver
+        // /api/vire-produce) — se muestra. Red social no se envía nunca al
+        // backend de ViRe, así que se oculta para no sugerir que hace algo.
         document.querySelectorAll('.input-group-row:has(.mode-switch) .input-group').forEach(g => {
-            g.style.display = 'none';
+            g.style.display = '';
         });
+        if (platformMenu) platformMenu.style.display = 'none';
         const prodSection = document.querySelector('.production-options');
         if (prodSection) prodSection.style.display = 'none';
         if (generateBtn) generateBtn.style.display = 'none';
@@ -2534,6 +2703,7 @@ function setWorkMode(mode) {
         if (bdsmtSection) bdsmtSection.style.display = 'none';
         if (bdpvSection) bdpvSection.style.display = 'none';
         if (vireSection) vireSection.style.display = 'block';
+        moveSharedFieldsIntoVire();
     } else if (mode === 'VIDE') {
         if (videBtn) videBtn.classList.add('active');
         console.log("🎬 Modo actual: VIDE — Suite Completa de Video");
@@ -2778,6 +2948,98 @@ function formatPhoneForSpeech(phone) {
 }
 
 // === VIDE: Generar JSON desde Contenido + Datos ===
+// Prompt de guion compartido entre VIDE y ViRe (construido a partir de
+// Empresa/Sitio/Teléfono + Asistente IA) — extraído de generateVideJson()
+// para que ambos motores generen con la misma coherencia/calidad sin
+// mantener dos prompts que puedan desalinearse con el tiempo.
+function construirPromptGuion({
+    company, website, phone, logoUrl, avatarUrl,
+    format, platform, style, duration, res, suggestedBpm,
+    conciencia, industria, nicho, especializacion, template, slides, theme,
+    modules, estiloStr, catalogoInterrupts
+}) {
+    return `Eres un generador de guiones publicitarios de alto impacto visual y conversión. Respondes EXCLUSIVAMENTE con un objeto JSON válido según el schema indicado.
+
+Genera el guion publicitario completo en JSON en formato ${format} para ${platform}.
+
+ESTRUCTURA DEL JSON REQUERIDO:
+{
+  "config": {
+    "duracion_total": (número, en segundos. Debe ser ${duration} o menos),
+    "musica": { "estilo": "${style}", "bpm": ${suggestedBpm}, "volumen": 0.8 },
+    "fps": 24,
+    "resolucion": { "ancho": ${res.ancho}, "alto": ${res.alto} }
+  },
+  "escenas": [
+    {
+      "id": 1,
+      "titulo": "Nombre/rol de la escena (ej. Hook, Desarrollo, Cierre)",
+      "texto": "Texto que se leerá en voz alta para esta escena (speech, conversacional)",
+      "visual": "Descripción cinematográfica detallada para generar imagen con IA: entorno, colores, ángulo, iluminación, composición — evita descripciones genéricas",
+      "texto_overlay": "Frase corta y llamativa que aparecerá en pantalla (máx 60 caracteres)",
+      "duracion": (segundos que dura esta escena, entre 4 y 15),
+      "pausa_inicial": (segundos de pausa antes de la escena, 0.3 a 1.0),
+      "pausa_final": (segundos de pausa después de la escena, 0.3 a 1.0),
+      "animacion": "zoom_in" | "ken_burns" | "fade" | "none",
+      "musica_local": null | "energetic" | "relaxing" | "professional" | "cinematic",
+      "pattern_interrupt": "(solo escena 1) acción o sonido disruptivo en los primeros 1.5s",
+      "camara": { "plano": "Close-up | Medium Shot | Extreme Close-up | POV", "movimiento": "Whip Zoom | Static | Tracking Shot | Tilt Up/Down" },
+      "sfx": "Efecto de sonido puntual de la escena (Whoosh, Glitch, Pop, Bass drop) o null"
+    }
+  ]
+}
+
+DATOS DE LA EMPRESA:
+- Nombre: ${company || '(no especificado)'}
+- Sitio web: ${website || '(no especificado)'}
+- Teléfono (escribir el número exactamente así en el texto hablado, en pares, para que se lea natural): ${formatPhoneForSpeech(phone) || '(no especificado)'}
+- Logo URL: ${logoUrl || '(no especificado)'}
+- Avatar URL: ${avatarUrl || '(no especificado)'}
+
+CONFIGURACIÓN DEL VIDEO:
+- Estilo musical global: ${style}
+- Duración total objetivo: ${duration}s
+- Formato/dimensiones finales: ${format} (${res.ancho}x${res.alto}) — no cambia aunque el contenido sugiera otra cosa.
+- Nivel de conciencia del mercado: ${conciencia || 'No especificado'}
+- Industria: ${industria || '(no especificada)'}
+- Nicho: ${nicho || '(no especificado)'}
+- Especialización: ${especializacion || '(no especificada)'}
+- Tipo de plantilla narrativa: ${template || 'Automático'}
+- Cantidad de escenas de referencia: ${slides} (aproximado, no un límite — decide tú la cantidad real)
+- Tema de la publicación: ${theme || '(no especificado)'}
+- Módulos activos: ${modules.join(', ') || 'ninguno'}
+
+ESTILO VISUAL (OBLIGATORIO):
+Aplica el estilo visual "${estiloStr}" en cada escena: el "visual" de cada escena y el "texto_overlay" deben usar la estética, paleta y tratamiento visual de este estilo. No generes imágenes genéricas.
+
+ANCLA DE IDENTIDAD VISUAL (OBLIGATORIO — método Pareto 20/80):
+Antes de escribir las escenas, define UNA sola dirección y aplícala en TODAS, no una distinta por escena:
+- Ritmo de montaje: cortes rápidos (<1.5s, "camara.movimiento" tipo Whip Zoom/Tracking) para conciencia alta/CTA, o plano secuencia más pausado (Static/Tilt) para conciencia baja/narrativa.
+- Dirección de luz/color: elige una y sostenla en "visual" de cada escena (ej. Teal & Orange cinematográfico, alto contraste dramático, o iluminación nativa/orgánica tipo redes sociales) — coherente con "${estiloStr || template || 'el tono general'}".
+
+ARQUETIPO DE COMUNICACIÓN (OBLIGATORIO):
+Elige UNO para todo el guion y sostenlo en el tono de "texto": **El Mentor** (autoridad, datos, enseña) si la marca/tema pide credibilidad técnica; **El Antagonista** (desafía una creencia popular del nicho) si "${conciencia || 'No especificado'}" es baja (Inconsciente/Consciente_Problema) y conviene un choque de opinión; **El Par** (experiencia compartida, cercanía) si el objetivo es conexión/confianza. No mezcles arquetipos entre escenas.
+
+ALINEACIÓN PSICOLÓGICA (OBLIGATORIO):
+Adapta el gancho de la escena 1, el ángulo narrativo de "texto"/"texto_overlay" y el tono de todo el guion al estado mental exacto del cliente (${conciencia || 'No especificado'}) según esta técnica concreta:
+- Inconsciente → requiere CHOQUE VISUAL: abre con algo inesperado/perturbador, el cliente ni sabe que tiene el problema.
+- Consciente_Problema → requiere EMPATÍA/HISTORIA: valida el dolor con una narrativa relatable antes de ofrecer nada.
+- Consciente_Solucion / Consciente_Producto / Mas_Consciente → requiere PRUEBA/DEMOSTRACIÓN: muestra el producto/resultado funcionando, datos concretos, sin rodeos.
+Combínalo con la estrategia "${template || 'Automático'}". Define primero ángulo+arquetipo mentalmente y luego escribe cada escena siguiéndolos — no generes un guion genérico que ignore estas condiciones.
+${catalogoInterrupts ? `\nCATÁLOGO DE PATTERN INTERRUPTS DISPONIBLES (usa uno de estos en la escena 1 si aplica, en vez de improvisar uno genérico):\n${catalogoInterrupts}\n` : ''}
+REGLAS DE RETENCIÓN CINEMATOGRÁFICA (OBLIGATORIAS):
+1. Tú decides cuántas escenas necesita la historia — ${slides} es solo una referencia aproximada, no un límite fijo: usa más o menos según lo que el contenido y los ${duration}s realmente pidan. No rellenes con escenas de relleno ni cortes ideas a la mitad para ajustar a un número. Cada escena con TODOS los campos del schema.
+2. La SUMA de duracion de todas las escenas + pausa_inicial + pausa_final debe ser aprox ${duration} segundos. No puede exceder ${duration}.
+3. ESCENA 1 (HOOK): obligatorio un "pattern_interrupt" (del catálogo si hay uno disponible arriba, si no, uno propio) y un "texto_overlay" contraintuitivo alineado con "${conciencia || 'No especificado'}".
+4. Cada escena define explícitamente "camara.plano", "camara.movimiento" y "sfx" — no dejes "visual" en descripciones genéricas, y respeta la Ancla de Identidad Visual definida arriba en las 4.
+5. "animacion" elige según el ritmo: zoom_in para impacto (conciencia más alta / CTA), ken_burns para narrativa (conciencia baja / storytelling), fade para transición suave.
+6. "musica_local" solo si una escena necesita un estilo distinto al global; si no, null.
+7. La última escena debe incluir un Call to Value (CTV) explícito con los datos de contacto (teléfono, web). Si dice el teléfono en voz alta, escríbelo en pares exactamente como viene arriba (ej. "52 81 10 46 37 21"), nunca como un número corrido.
+8. Serás penalizado si el guion no es 100% relevante al tema "${theme || industria || 'la empresa'}" y a la industria/nicho especificados.
+9. PROHIBIDO describir texto legible, letreros, carteles, etiquetas, nombres de producto/marca escritos, o cualquier escritura dentro de "visual" — los modelos de imagen no pueden renderizar texto correctamente y siempre sale ilegible/inventado. Describe el entorno, objetos y composición sin pedir texto visible en ningún lado de la escena.
+10. Responde SOLO con el JSON, sin markdown, sin explicaciones.`;
+}
+
 async function generateVideJson() {
     const company = document.getElementById('companyName')?.value?.trim() || '';
     const website = document.getElementById('webSite')?.value?.trim() || '';
@@ -2844,86 +3106,12 @@ async function generateVideJson() {
         }
     } catch (_) { /* sin catálogo disponible, la IA improvisa como antes */ }
 
-    const prompt = `Eres un generador de guiones publicitarios de alto impacto visual y conversión. Respondes EXCLUSIVAMENTE con un objeto JSON válido según el schema indicado.
-
-Genera el guion publicitario completo en JSON en formato ${format} para ${platform}.
-
-ESTRUCTURA DEL JSON REQUERIDO:
-{
-  "config": {
-    "duracion_total": (número, en segundos. Debe ser ${duration} o menos),
-    "musica": { "estilo": "${style}", "bpm": ${suggestedBpm}, "volumen": 0.8 },
-    "fps": 24,
-    "resolucion": { "ancho": ${res.ancho}, "alto": ${res.alto} }
-  },
-  "escenas": [
-    {
-      "id": 1,
-      "titulo": "Nombre/rol de la escena (ej. Hook, Desarrollo, Cierre)",
-      "texto": "Texto que se leerá en voz alta para esta escena (speech, conversacional)",
-      "visual": "Descripción cinematográfica detallada para generar imagen con IA: entorno, colores, ángulo, iluminación, composición — evita descripciones genéricas",
-      "texto_overlay": "Frase corta y llamativa que aparecerá en pantalla (máx 60 caracteres)",
-      "duracion": (segundos que dura esta escena, entre 4 y 15),
-      "pausa_inicial": (segundos de pausa antes de la escena, 0.3 a 1.0),
-      "pausa_final": (segundos de pausa después de la escena, 0.3 a 1.0),
-      "animacion": "zoom_in" | "ken_burns" | "fade" | "none",
-      "musica_local": null | "energetic" | "relaxing" | "professional" | "cinematic",
-      "pattern_interrupt": "(solo escena 1) acción o sonido disruptivo en los primeros 1.5s",
-      "camara": { "plano": "Close-up | Medium Shot | Extreme Close-up | POV", "movimiento": "Whip Zoom | Static | Tracking Shot | Tilt Up/Down" },
-      "sfx": "Efecto de sonido puntual de la escena (Whoosh, Glitch, Pop, Bass drop) o null"
-    }
-  ]
-}
-
-DATOS DE LA EMPRESA:
-- Nombre: ${company || '(no especificado)'}
-- Sitio web: ${website || '(no especificado)'}
-- Teléfono (escribir el número exactamente así en el texto hablado, en pares, para que se lea natural): ${formatPhoneForSpeech(phone) || '(no especificado)'}
-- Logo URL: ${parsedLogoUrl.logoUrl || '(no especificado)'}
-- Avatar URL: ${parsedLogoUrl.avatarUrl || '(no especificado)'}
-
-CONFIGURACIÓN DEL VIDEO:
-- Estilo musical global: ${style}
-- Duración total objetivo: ${duration}s
-- Formato/dimensiones finales: ${format} (${res.ancho}x${res.alto}) — no cambia aunque el contenido sugiera otra cosa.
-- Nivel de conciencia del mercado: ${conciencia || 'No especificado'}
-- Industria: ${industria || '(no especificada)'}
-- Nicho: ${nicho || '(no especificado)'}
-- Especialización: ${especializacion || '(no especificada)'}
-- Tipo de plantilla narrativa: ${template || 'Automático'}
-- Cantidad de escenas de referencia: ${slides} (aproximado, no un límite — decide tú la cantidad real)
-- Tema de la publicación: ${theme || '(no especificado)'}
-- Módulos activos: ${modules.join(', ') || 'ninguno'}
-
-ESTILO VISUAL (OBLIGATORIO):
-Aplica el estilo visual "${estiloStr}" en cada escena: el "visual" de cada escena y el "texto_overlay" deben usar la estética, paleta y tratamiento visual de este estilo. No generes imágenes genéricas.
-
-ANCLA DE IDENTIDAD VISUAL (OBLIGATORIO — método Pareto 20/80):
-Antes de escribir las escenas, define UNA sola dirección y aplícala en TODAS, no una distinta por escena:
-- Ritmo de montaje: cortes rápidos (<1.5s, "camara.movimiento" tipo Whip Zoom/Tracking) para conciencia alta/CTA, o plano secuencia más pausado (Static/Tilt) para conciencia baja/narrativa.
-- Dirección de luz/color: elige una y sostenla en "visual" de cada escena (ej. Teal & Orange cinematográfico, alto contraste dramático, o iluminación nativa/orgánica tipo redes sociales) — coherente con "${estiloStr || template || 'el tono general'}".
-
-ARQUETIPO DE COMUNICACIÓN (OBLIGATORIO):
-Elige UNO para todo el guion y sostenlo en el tono de "texto": **El Mentor** (autoridad, datos, enseña) si la marca/tema pide credibilidad técnica; **El Antagonista** (desafía una creencia popular del nicho) si "${conciencia || 'No especificado'}" es baja (Inconsciente/Consciente_Problema) y conviene un choque de opinión; **El Par** (experiencia compartida, cercanía) si el objetivo es conexión/confianza. No mezcles arquetipos entre escenas.
-
-ALINEACIÓN PSICOLÓGICA (OBLIGATORIO):
-Adapta el gancho de la escena 1, el ángulo narrativo de "texto"/"texto_overlay" y el tono de todo el guion al estado mental exacto del cliente (${conciencia || 'No especificado'}) según esta técnica concreta:
-- Inconsciente → requiere CHOQUE VISUAL: abre con algo inesperado/perturbador, el cliente ni sabe que tiene el problema.
-- Consciente_Problema → requiere EMPATÍA/HISTORIA: valida el dolor con una narrativa relatable antes de ofrecer nada.
-- Consciente_Solucion / Consciente_Producto / Mas_Consciente → requiere PRUEBA/DEMOSTRACIÓN: muestra el producto/resultado funcionando, datos concretos, sin rodeos.
-Combínalo con la estrategia "${template || 'Automático'}". Define primero ángulo+arquetipo mentalmente y luego escribe cada escena siguiéndolos — no generes un guion genérico que ignore estas condiciones.
-${catalogoInterrupts ? `\nCATÁLOGO DE PATTERN INTERRUPTS DISPONIBLES (usa uno de estos en la escena 1 si aplica, en vez de improvisar uno genérico):\n${catalogoInterrupts}\n` : ''}
-REGLAS DE RETENCIÓN CINEMATOGRÁFICA (OBLIGATORIAS):
-1. Tú decides cuántas escenas necesita la historia — ${slides} es solo una referencia aproximada, no un límite fijo: usa más o menos según lo que el contenido y los ${duration}s realmente pidan. No rellenes con escenas de relleno ni cortes ideas a la mitad para ajustar a un número. Cada escena con TODOS los campos del schema.
-2. La SUMA de duracion de todas las escenas + pausa_inicial + pausa_final debe ser aprox ${duration} segundos. No puede exceder ${duration}.
-3. ESCENA 1 (HOOK): obligatorio un "pattern_interrupt" (del catálogo si hay uno disponible arriba, si no, uno propio) y un "texto_overlay" contraintuitivo alineado con "${conciencia || 'No especificado'}".
-4. Cada escena define explícitamente "camara.plano", "camara.movimiento" y "sfx" — no dejes "visual" en descripciones genéricas, y respeta la Ancla de Identidad Visual definida arriba en las 4.
-5. "animacion" elige según el ritmo: zoom_in para impacto (conciencia más alta / CTA), ken_burns para narrativa (conciencia baja / storytelling), fade para transición suave.
-6. "musica_local" solo si una escena necesita un estilo distinto al global; si no, null.
-7. La última escena debe incluir un Call to Value (CTV) explícito con los datos de contacto (teléfono, web). Si dice el teléfono en voz alta, escríbelo en pares exactamente como viene arriba (ej. "52 81 10 46 37 21"), nunca como un número corrido.
-8. Serás penalizado si el guion no es 100% relevante al tema "${theme || industria || 'la empresa'}" y a la industria/nicho especificados.
-9. PROHIBIDO describir texto legible, letreros, carteles, etiquetas, nombres de producto/marca escritos, o cualquier escritura dentro de "visual" — los modelos de imagen no pueden renderizar texto correctamente y siempre sale ilegible/inventado. Describe el entorno, objetos y composición sin pedir texto visible en ningún lado de la escena.
-10. Responde SOLO con el JSON, sin markdown, sin explicaciones.`;
+    const prompt = construirPromptGuion({
+        company, website, phone, logoUrl: parsedLogoUrl.logoUrl, avatarUrl: parsedLogoUrl.avatarUrl,
+        format, platform, style, duration, res, suggestedBpm,
+        conciencia, industria, nicho, especializacion, template, slides, theme,
+        modules, estiloStr, catalogoInterrupts
+    });
 
     try {
         const response = await fetch(CONFIG.AI_URL, {
@@ -3227,44 +3415,331 @@ async function generateVideVideo(overrideGuion = null) {
     }
 }
 
-async function generateViReVideo() {
+// Convierte un prompt libre en un guion {config, escenas[]} via IA (openrouter/free),
+// sin depender de empresa/BD — mismo schema que consume /api/vire-produce.
+// "CreatorEngine" de ViRe: arma el guion completo (config + escenas) desde
+// DATOS/NEGOCIO + Asistente IA, sin que el usuario tenga que escribir un
+// prompt libre — mismo generador que usa VIDE (construirPromptGuion), mismo
+// entorno (CONFIG.AI_URL), sin dependencias nuevas. Devuelve el objeto guion
+// ya parseado, o lanza si falta información mínima o la IA falla.
+async function generarGuionDesdeAsistente() {
     const company = document.getElementById('companyName')?.value?.trim() || '';
-    if (!company) {
-        showToast('❌ Escribe o selecciona una empresa/marca en DATOS / NEGOCIO', 'error');
-        document.getElementById('companyName')?.focus();
-        return;
-    }
-
-    const guion = document.getElementById('vireGuionJson')?.value?.trim();
-    if (!guion) {
-        showToast('❌ Pega el JSON del guion (escenas)', 'error');
-        document.getElementById('vireGuionJson')?.focus();
-        return;
-    }
-    try {
-        JSON.parse(guion);
-    } catch (e) {
-        showToast('❌ JSON inválido: ' + e.message, 'error');
-        return;
-    }
-
-    const duration = parseInt(document.getElementById('vireDuration')?.value) || 30;
-    const enableMusic = document.getElementById('vireEnableMusic')?.checked || false;
+    const website = document.getElementById('webSite')?.value?.trim() || '';
+    const logoField = document.getElementById('companyLogo')?.value?.trim() || '';
+    const parsedLogoUrl = parseLogoUrlField(logoField);
+    const phone = document.getElementById('contactPhone')?.value?.trim() || '';
     const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
+    const style = document.getElementById('videStyle')?.value || 'energetic';
+    const duration = document.getElementById('videDuration')?.value || '30';
+    const conciencia = document.getElementById('aiConciencia')?.value || '';
+    const industria = document.getElementById('aiIndustry')?.value || '';
+    const nicho = document.getElementById('aiNicho')?.value || '';
+    const especializacion = document.getElementById('aiEspecializacion')?.value || '';
+    const template = document.getElementById('aiTemplate')?.value || TEMPLATE_MAP[conciencia] || '';
+    const slides = document.getElementById('aiSlides')?.value || '3';
+    const theme = document.getElementById('aiTheme')?.value?.trim() || '';
+
+    if (!company && !theme) {
+        throw new Error('Completa el nombre de la empresa (DATOS/NEGOCIO) o el tema de la publicación (Asistente IA) antes de generar');
+    }
+
+    const modules = [];
+    if (document.getElementById('enableVoice')?.checked) modules.push('Voz TTS');
+    if (document.getElementById('enableMusic')?.checked) modules.push('Música');
+
+    const bpmMap = { energetic: 140, relaxing: 80, professional: 100, cinematic: 110 };
+    const suggestedBpm = bpmMap[style] || 100;
+    const FMT_RES = { Post: { ancho: 1080, alto: 1080 }, Reel: { ancho: 1080, alto: 1920 }, Story: { ancho: 1080, alto: 1920 }, Banner: { ancho: 1200, alto: 628 } };
+    const res = FMT_RES[format] || FMT_RES.Reel;
+
+    const estiloStr = estiloVisualSeleccionado && estiloVisualSeleccionado.keywords
+        ? `${estiloVisualSeleccionado.cat}/${estiloVisualSeleccionado.sub}: ${estiloVisualSeleccionado.keywords}`
+        : (estiloVisualSeleccionado ? `${estiloVisualSeleccionado.cat}/${estiloVisualSeleccionado.sub}` : '');
+
+    let catalogoInterrupts = '';
+    try {
+        const resPI = await fetch(`/api/pattern-interrupts?nicho=${encodeURIComponent(nicho || 'GENERAL')}`);
+        const jsonPI = await resPI.json();
+        if (jsonPI.status === 'success' && jsonPI.data.length > 0) {
+            catalogoInterrupts = jsonPI.data.map(p => `- (${p.tipo}) ${p.descripcion}`).join('\n');
+        }
+    } catch (_) { /* sin catálogo disponible, la IA improvisa */ }
+
+    const prompt = construirPromptGuion({
+        company, website, phone, logoUrl: parsedLogoUrl.logoUrl, avatarUrl: parsedLogoUrl.avatarUrl,
+        format, platform: 'Instagram', style, duration, res, suggestedBpm,
+        conciencia, industria, nicho, especializacion, template, slides, theme,
+        modules, estiloStr, catalogoInterrupts
+    });
+
+    const response = await fetch(CONFIG.AI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            messages: [
+                { role: 'system', content: 'Eres un generador de guiones publicitarios. Siempre respondes exclusivamente con JSON válido siguiendo el schema exacto proporcionado.' },
+                { role: 'user', content: prompt }
+            ],
+            temperature: 0.7,
+            model: 'openrouter/free'
+        })
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error ${response.status}`);
+    }
+    const data = await response.json();
+    const rawContent = data.choices[0].message.content.trim().replace(/```json|```/g, '').trim();
+    let parsed;
+    try {
+        parsed = JSON.parse(rawContent);
+    } catch (e) {
+        throw new Error('La IA no devolvió JSON válido. Intenta de nuevo.');
+    }
+    if (Array.isArray(parsed)) {
+        parsed = {
+            config: { duracion_total: parseInt(duration), musica: { estilo: style, bpm: suggestedBpm, volumen: 0.8 }, fps: 24, resolucion: { ancho: res.ancho, alto: res.alto } },
+            escenas: parsed.map((s, i) => ({
+                id: i + 1,
+                titulo: s.titulo || s.title || `Escena ${i + 1}`,
+                texto: s.texto || s.text || s.body || '',
+                visual: s.visual || '',
+                texto_overlay: s.texto_overlay || s.titulo || s.title || '',
+                duracion: s.duracion || Math.floor(parseInt(duration) / parsed.length),
+                pausa_inicial: s.pausa_inicial || 0.5,
+                pausa_final: s.pausa_final || 0.5,
+                animacion: s.animacion || 'fade',
+                musica_local: s.musica_local || null
+            }))
+        };
+    }
+    return parsed;
+}
+
+async function generarGuionDesdePrompt(prompt, duration = 30, musicStyle = 'cinematic') {
+    const FMT_RES = { Post: { ancho: 1080, alto: 1080 }, Reel: { ancho: 1080, alto: 1920 }, Story: { ancho: 1080, alto: 1920 }, Banner: { ancho: 1200, alto: 628 } };
+    const res = FMT_RES.Reel;
+
+    const promptIA = `Eres un director de video. Convierte el siguiente prompt libre del usuario en un guion publicitario en EXACTAMENTE este JSON, sin markdown ni explicaciones:
+
+{
+  "config": {
+    "duracion_total": ${duration},
+    "musica": { "estilo": "${musicStyle}", "bpm": 110, "volumen": 0.8 },
+    "fps": 24,
+    "resolucion": { "ancho": ${res.ancho}, "alto": ${res.alto} }
+  },
+  "escenas": [
+    {
+      "id": 1,
+      "titulo": "Nombre de la escena",
+      "texto": "Texto que se narra en voz alta (speech, conversacional)",
+      "visual": "Descripción cinematográfica para generar imagen IA: entorno, colores, ángulo, iluminación, composición",
+      "texto_overlay": "Frase corta en pantalla (máx 60 caracteres)",
+      "duracion": 5,
+      "pausa_inicial": 0.5,
+      "pausa_final": 0.5,
+      "animacion": "zoom_in" o "ken_burns" o "fade",
+      "musica_local": null,
+      "pattern_interrupt": "",
+      "camara": { "plano": "Close-up", "movimiento": "Whip Zoom" },
+      "sfx": null
+    }
+  ],
+  "ajustes_detectados": {
+    "formato": "Post o Reel o Story o Banner, o null si el usuario no lo especifica",
+    "duracion_segundos": "number, o null si el usuario no especifica duracion",
+    "voz": "true si el usuario pide narracion/voz, false si pide explicitamente SIN voz/narracion, null si no lo menciona",
+    "musica_instrumental": "true si el usuario pide musica instrumental/de fondo, null si no lo menciona"
+  }
+}
+
+REGLAS:
+1. Divide la historia del prompt en varias escenas que expliquen cada paso/proceso.
+2. Cada escena con TODOS los campos del schema.
+3. La SUMA de duracion de las escenas + pausas no excede ${duration}s.
+4. "visual" describe la imagen generada IA del paso (una imagen por escena) coherente al estilo pedido; NO describas texto legible, letreros ni logos (los modelos de imagen no los renderizan bien).
+5. Escena 1 abre con un hook visual fuerte; la última incluye una llamada a la acción.
+6. "ajustes_detectados": completa cada campo SOLO si el usuario lo especifica explícitamente en su prompt (ej. "vertical 9:16" -> Reel, "40 segundos" -> 40, "sin narración ni voces" -> voz:false, "música instrumental" -> musica_instrumental:true). Si no lo menciona, deja ese campo en null. No inventes valores.
+7. Responde SOLO con el JSON.
+
+PROMPT DEL USUARIO:
+${prompt}`;
+
+    const response = await fetch(CONFIG.AI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            messages: [
+                { role: 'system', content: 'Eres un director de video. Siempre respondes exclusivamente con JSON válido siguiendo el schema exacto.' },
+                { role: 'user', content: promptIA }
+            ],
+            temperature: 0.7,
+            model: 'openrouter/free'
+        })
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error ${response.status}`);
+    }
+    const data = await response.json();
+    let rawContent = data.choices[0].message.content.trim().replace(/```json|```/g, '').trim();
+    let parsed = JSON.parse(rawContent);
+    if (Array.isArray(parsed)) {
+        parsed = {
+            config: { duracion_total: duration, musica: { estilo: musicStyle, bpm: 110, volumen: 0.8 }, fps: 24, resolucion: { ancho: res.ancho, alto: res.alto } },
+            escenas: parsed.map((s, i) => ({
+                id: i + 1,
+                titulo: s.titulo || s.title || `Escena ${i + 1}`,
+                texto: s.texto || s.text || s.body || '',
+                visual: s.visual || '',
+                texto_overlay: s.texto_overlay || s.titulo || s.title || '',
+                duracion: s.duracion || Math.floor(duration / parsed.length),
+                pausa_inicial: s.pausa_inicial || 0.5,
+                pausa_final: s.pausa_final || 0.5,
+                animacion: s.animacion || 'fade',
+                musica_local: s.musica_local || null
+            }))
+        };
+    }
+    // El estilo musical elegido en el Asistente IA siempre gana, aunque la IA
+    // haya devuelto otro valor de ejemplo en config.musica.estilo.
+    parsed.config = parsed.config || {};
+    parsed.config.musica = { ...parsed.config.musica, estilo: musicStyle };
+    parsed.ajustes_detectados = {
+        formato: null, duracion_segundos: null, voz: null, musica_instrumental: null,
+        ...(parsed.ajustes_detectados || {})
+    };
+    return parsed;
+}
+
+// Aplica al UI de ViRe lo que la IA detectó explícitamente en el prompt libre
+// (formato/segundos/voz/música) y avisa con un toast qué se ajustó — así el
+// usuario no tiene que tocar las pestañas/campos compartidos a mano.
+function aplicarAjustesDetectados(ajustes) {
+    if (!ajustes) return;
+    const cambios = [];
+
+    const formatosValidos = { Post: '1:1', Reel: '9:16', Story: '9:16', Banner: '1200×628' };
+    if (ajustes.formato && formatosValidos[ajustes.formato]) {
+        const tabActivo = document.querySelector('.format-tab.active')?.dataset?.format;
+        if (tabActivo !== ajustes.formato) {
+            document.querySelector(`.format-tab[data-format="${ajustes.formato}"]`)?.click();
+            cambios.push(`${ajustes.formato} (${formatosValidos[ajustes.formato]})`);
+        }
+    }
+
+    const segundos = parseInt(ajustes.duracion_segundos);
+    if (segundos > 0) {
+        const durationInput = document.getElementById('videDuration');
+        if (durationInput && parseInt(durationInput.value) !== segundos) {
+            durationInput.value = segundos;
+            cambios.push(`${segundos}s`);
+        }
+    }
+
+    const vozDesactivada = ajustes.voz === false || ajustes.voz === 'false';
+    if (vozDesactivada) {
+        const voiceCheckbox = document.getElementById('enableVoice');
+        if (voiceCheckbox?.checked) {
+            voiceCheckbox.checked = false;
+            cambios.push('sin voz');
+        }
+    }
+
+    const musicaPedida = ajustes.musica_instrumental === true || ajustes.musica_instrumental === 'true';
+    if (musicaPedida) {
+        const musicCheckbox = document.getElementById('enableMusic');
+        if (musicCheckbox && !musicCheckbox.checked) {
+            musicCheckbox.checked = true;
+            cambios.push('música activada');
+        }
+    }
+
+    if (cambios.length) {
+        showToast(`🔎 Ajustado desde tu prompt: ${cambios.join(', ')}`, 'info');
+    }
+}
+
+async function generateViReVideo() {
+    if (vireGenerationInProgress) {
+        showToast('⏳ Ya hay una generación de ViRe en curso, espera a que termine (o cancélala)', 'info');
+        return;
+    }
+    if (vireJsonGenerating) {
+        showToast('⏳ Espera a que termine de generarse el guion JSON antes de renderizar', 'info');
+        return;
+    }
+    vireGenerationInProgress = true;
+
+    const company = document.getElementById('companyName')?.value?.trim() || 'Campaña';
+
+    const isPromptMode = document.getElementById('virePrompt')?.style.display !== 'none';
+    let guion;
+    if (isPromptMode) {
+        const prompt = document.getElementById('virePrompt')?.value?.trim();
+        if (!prompt) {
+            showToast('❌ Escribe tu prompt completo', 'error');
+            document.getElementById('virePrompt')?.focus();
+            vireGenerationInProgress = false;
+            return;
+        }
+        const duration = parseInt(document.getElementById('videDuration')?.value) || 30;
+        const musicStyle = document.getElementById('videStyle')?.value || 'cinematic';
+        showToast('🤖 Convirtiendo prompt a escenas con IA...', 'info');
+        try {
+            const guionObj = await generarGuionDesdePrompt(prompt, duration, musicStyle);
+            aplicarAjustesDetectados(guionObj.ajustes_detectados);
+            guion = JSON.stringify(guionObj, null, 2);
+        } catch (e) {
+            showToast(`❌ Error generando guion: ${e.message}`, 'error');
+            console.error(e);
+            vireGenerationInProgress = false;
+            return;
+        }
+    } else {
+        guion = document.getElementById('vireGuionJson')?.value?.trim();
+        if (!guion) {
+            showToast('❌ Pega el JSON del guion (escenas)', 'error');
+            document.getElementById('vireGuionJson')?.focus();
+            vireGenerationInProgress = false;
+            return;
+        }
+        try {
+            JSON.parse(guion);
+        } catch (e) {
+            showToast('❌ JSON inválido: ' + e.message, 'error');
+            vireGenerationInProgress = false;
+            return;
+        }
+    }
+
+    const duration = parseInt(document.getElementById('videDuration')?.value) || 30;
+    const enableMusic = document.getElementById('enableMusic')?.checked || false;
+    const enableVoice = document.getElementById('enableVoice')?.checked ?? true;
+    const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
+    const style = document.getElementById('videStyle')?.value || 'energetic';
+    const voice = document.getElementById('videVoice')?.value || 'es-MX-DaliaNeural';
 
     const btn = document.getElementById('vireGenerateBtn');
     const loader = btn?.querySelector('.vire-loader');
     const btnText = btn?.querySelector('span:last-child');
     const progressDiv = document.getElementById('vireProgress');
+    const progressLabel = document.getElementById('vireProgressLabel');
+    const progressBar = document.getElementById('vireProgressBar');
+    const imagePreview = document.getElementById('vireImagePreview');
     const resultDiv = document.getElementById('vireResult');
 
     if (btn) btn.disabled = true;
     if (loader) loader.style.display = 'inline-block';
     if (btnText) btnText.textContent = 'Renderizando...';
     if (progressDiv) progressDiv.style.display = 'block';
+    if (progressLabel) progressLabel.textContent = 'Iniciando...';
+    if (progressBar) progressBar.style.width = '2%';
+    if (imagePreview) imagePreview.innerHTML = '';
     if (resultDiv) { resultDiv.style.display = 'none'; resultDiv.innerHTML = ''; }
 
-    showToast('🎬 Renderizando con ViRe (Remotion)... puede tardar varios minutos', 'info');
+    showToast('🎬 Enviando a ViRe (Remotion)...', 'info');
 
     try {
         const res = await fetch('/api/vire-produce', {
@@ -3277,27 +3752,20 @@ async function generateViReVideo() {
                 guion,
                 duration,
                 format,
-                enableMusic
+                style,
+                voice,
+                enableMusic,
+                enableVoice
             })
         });
 
         const data = await res.json();
-        if (data.status !== 'success') {
+        if (data.status !== 'accepted' || !data.jobId) {
             throw new Error(data.error || 'Error del servidor');
         }
 
-        if (data.video) {
-            const b64 = data.video.split(',')[1];
-            const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-            const blob = new Blob([bytes], { type: 'video/mp4' });
-            const filename = `vire_${company.replace(/\s+/g, '_')}_${Date.now()}.mp4`;
-            downloadFile(URL.createObjectURL(blob), filename);
-            if (resultDiv) {
-                resultDiv.style.display = 'block';
-                resultDiv.innerHTML = `<div style="font-size:0.8rem;color:#4ade80;">✅ Video generado: ${filename}</div>`;
-            }
-            showToast('✅ Video ViRe generado y descargado', 'success');
-        }
+        vireCurrentJobId = data.jobId;
+        await pollVireJob(data.jobId, { progressLabel, progressBar, imagePreview, resultDiv, company });
     } catch (e) {
         showToast(`❌ Error ViRe: ${e.message}`, 'error');
         console.error(e);
@@ -3306,11 +3774,82 @@ async function generateViReVideo() {
             resultDiv.innerHTML = `<div style="font-size:0.8rem;color:#f87171;">❌ ${e.message}</div>`;
         }
     } finally {
+        vireCurrentJobId = null;
+        vireGenerationInProgress = false;
         if (btn) btn.disabled = false;
         if (loader) loader.style.display = 'none';
         if (btnText) btnText.textContent = 'Generar con ViRe';
         if (progressDiv) progressDiv.style.display = 'none';
     }
+}
+
+// Pollea /api/vire-status hasta que el job termine (done/error/cancelled),
+// actualizando el label + barra + grid de thumbnails en tiempo real — así se
+// puede ver un preview de las imágenes antes de que el render termine.
+const VIRE_STAGE_LABELS = { starting: 'Iniciando...', voices: 'Generando voces...' };
+function pollVireJob(jobId, { progressLabel, progressBar, imagePreview, resultDiv, company }) {
+    return new Promise((resolve, reject) => {
+        let intervalId;
+        const tick = async () => {
+            let data;
+            try {
+                const res = await fetch(`/api/vire-status?jobId=${jobId}`);
+                data = await res.json();
+            } catch (e) {
+                clearInterval(intervalId);
+                reject(new Error('No se pudo consultar el progreso del render'));
+                return;
+            }
+            if (data.status !== 'ok') {
+                clearInterval(intervalId);
+                reject(new Error(data.error || 'Job no encontrado'));
+                return;
+            }
+
+            if (imagePreview && data.images?.length) {
+                imagePreview.innerHTML = data.images.map(img => img.url
+                    ? `<img src="${img.url}" title="${(img.prompt || '').replace(/"/g, '&quot;')}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--glass-border);">`
+                    : '<div style="width:64px;height:64px;border-radius:6px;background:rgba(255,255,255,0.05);"></div>'
+                ).join('');
+            }
+
+            if (progressLabel) {
+                if (data.stage === 'images') progressLabel.textContent = `Generando imágenes (${data.images.length}/${data.imageTotal})...`;
+                else if (data.stage === 'render') progressLabel.textContent = `Renderizando video (${data.percent}%)...`;
+                else progressLabel.textContent = VIRE_STAGE_LABELS[data.stage] || data.stage;
+            }
+            if (progressBar) {
+                let pct = 2;
+                if (data.stage === 'voices') pct = 5;
+                else if (data.stage === 'images') pct = 10 + (data.imageTotal ? (data.images.length / data.imageTotal) * 20 : 0);
+                else if (data.stage === 'render') pct = 30 + (data.percent / 100) * 70;
+                else if (data.stage === 'done') pct = 100;
+                progressBar.style.width = `${Math.round(pct)}%`;
+            }
+
+            if (data.stage === 'done') {
+                clearInterval(intervalId);
+                const videoUrl = `/api/vire-result?jobId=${jobId}`;
+                if (resultDiv) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `
+                        <video controls src="${videoUrl}" style="width:100%;border-radius:8px;margin-bottom:0.5rem;"></video>
+                        <a href="${videoUrl}" download="vire_${company.replace(/\s+/g, '_')}_${Date.now()}.mp4" class="secondary-btn" style="display:block;text-align:center;font-size:0.8rem;padding:0.5rem;text-decoration:none;">⬇️ Descargar</a>`;
+                }
+                showToast('✅ Video ViRe listo', 'success');
+                resolve();
+            } else if (data.stage === 'error') {
+                clearInterval(intervalId);
+                reject(new Error(data.error || 'Render falló'));
+            } else if (data.stage === 'cancelled') {
+                clearInterval(intervalId);
+                showToast('⏹️ Render cancelado', 'info');
+                resolve();
+            }
+        };
+        intervalId = setInterval(tick, 2000);
+        tick();
+    });
 }
 
 async function ejecutarAgente() {

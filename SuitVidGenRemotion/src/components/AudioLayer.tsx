@@ -21,11 +21,10 @@ export const AudioLayer: React.FC<{
         const startFrame = currentStartFrame;
         currentStartFrame += durationFrames;
 
-        if (!audioFile) return null;
-
         return (
           <Sequence key={i} from={startFrame} durationInFrames={durationFrames}>
-            <Audio src={staticFile(audioFile)} volume={0.8} />
+            {audioFile && <Audio src={staticFile(audioFile)} volume={0.8} />}
+            {scene.sfx_file && <Audio src={staticFile(scene.sfx_file)} volume={0.9} />}
           </Sequence>
         );
       })}

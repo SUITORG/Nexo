@@ -80,6 +80,15 @@ tools:
     status: ❌ no usado
     note: local-server-node.js busca FFmpeg por PATH o env.FFMPEG_PATH.
 
+  SuitLooseFiles:
+    path: ../scripts/find-loose-files.js
+    entry: scripts/find-loose-files.js
+    purpose: Escanea un proyecto y reporta archivos sin referencias (logs, temp, docs huérfanos) — generaliza la limpieza de huérfanos de ssg-engine.mjs (ADR-022) a cualquier carpeta
+    cli: node scripts/find-loose-files.js [dir]
+    output: reporte por consola (read-only, no borra nada)
+    status: ✅ usado
+    used_in: .suit/workflows/feature.yaml (step validate)
+
   # ── Módulos de producto (no herramientas de pipeline) ──
 
   SuitCampanas:

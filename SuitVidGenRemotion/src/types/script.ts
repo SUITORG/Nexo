@@ -7,6 +7,8 @@ export interface SceneBase {
   duration: number;
   animation?: AnimationType;
   voice_text?: string;
+  sfx_file?: string;
+  texto_overlay?: string;
 }
 
 export interface IntroScene extends SceneBase {

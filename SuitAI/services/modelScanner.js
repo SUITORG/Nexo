@@ -68,7 +68,10 @@ function parseOpenRouterModels(data) {
       const p = m.pricing || {};
       const promptPrice = p.prompt !== undefined && p.prompt !== null ? parseFloat(p.prompt) : Infinity;
       const completionPrice = p.completion !== undefined && p.completion !== null ? parseFloat(p.completion) : Infinity;
-      return (promptPrice === 0 && completionPrice === 0) || (promptPrice <= 0.00001 && completionPrice <= 0.00001);
+      const isFree = (promptPrice === 0 && completionPrice === 0) || (promptPrice <= 0.00001 && completionPrice <= 0.00001);
+      // descarta clasificadores/moderación/embeddings — no sirven para chat general
+      const isNonChat = /safety|guard|moderation|embed|rerank/i.test(m.id || '');
+      return isFree && !isNonChat;
     })
     .map(m => ({
       id: m.id,

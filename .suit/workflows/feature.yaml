@@ -25,6 +25,7 @@ workflow:
         - system-analysis
       validation:
         - "Understand the feature in context of existing architecture"
+        - "Determine scope: frontend-only, backend-only, or both — implement only what the request requires, don't scaffold the unused side"
 
     - id: plan
       description: "Create implementation plan"
@@ -59,13 +60,23 @@ workflow:
       validation:
         - "INDEX_FUNCIONES.md regenerated"
 
+    - id: scaffold-launcher
+      description: "Create start.bat from template if this is a new standalone project (has its own server.js/package.json and no launcher yet)"
+      action: run
+      template: .suit/templates/start.bat.template
+      condition: "new project directory created with its own entry point (server.js) and no start.bat present"
+      validation:
+        - "start.bat created at project root with correct PORT and ENTRY substituted"
+
     - id: validate
       description: "Run all validations"
       action: review
+      command: "node scripts/find-loose-files.js {{project_path}}"
       validation:
         - "No regressions detected"
         - "Permissions respected"
         - "Multi-tenant isolation maintained"
+        - "No loose/orphan files left behind (temp scripts, logs, unreferenced docs)"
 
     - id: commit
       description: "Commit changes"

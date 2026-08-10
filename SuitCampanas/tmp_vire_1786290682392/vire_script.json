@@ -1,0 +1,49 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Noe Thermomix",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "duration": 4,
+      "animation": "fade_in",
+      "title": "Hook",
+      "subtitle": "¿Sabías que tu Thermomix puede ser un verdadero problema?",
+      "voice_text": "¿Sabías que tu Thermomix puede ser un verdadero problema?",
+      "sfx_file": "generated/sfx/sfx_1786290682804_0.wav",
+      "texto_overlay": "¡No todo lo que brilla es oro!"
+    },
+    {
+      "type": "text",
+      "duration": 6,
+      "animation": "slide_up",
+      "title": "Desarrollo",
+      "body": "¿Has notado que tu Thermomix no siempre cocina como esperas?",
+      "image_prompt": "Un robot de cocina en una cocina moderna con luces brillantes y colores vibrantes. El robot está en el centro del cuadro, con su brazo extendido hacia la cámara. La iluminación es dramática, creando sombras profundas que resaltan los detalles del robot.",
+      "voice_text": "¿Has notado que tu Thermomix no siempre cocina como esperas?",
+      "texto_overlay": "¡Es hora de cambiar!"
+    },
+    {
+      "type": "outro",
+      "duration": 10,
+      "animation": "fade_in",
+      "cta": "Descubre cómo Noe Thermomix puede ser tu aliado culinario.",
+      "contact_info": "8110463721",
+      "website": "https://www.nw.com",
+      "voice_text": "Descubre cómo Noe Thermomix puede ser tu aliado culinario.",
+      "texto_overlay": "¡Noe Thermomix, tu asesor de cocina inteligente!"
+    }
+  ]
+}

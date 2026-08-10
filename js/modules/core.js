@@ -5,6 +5,26 @@
  * ---------------------------------------------------------
  * Responsabilidad: Estado global, carga de datos y utilidades base.
  */
+
+// logo_url puede traer segmentos etiquetados (logo:/hero:/oferta:/cta:) en
+// cualquier posición del string, mezclados con el vector de Brief (industria:,
+// nicho:, LAPVTFU:, ...) — así el orden del campo queda libre. Si no hay
+// ninguna etiqueta, cae al formato clásico posicional "{logo}|{hero}|{oferta}|{cta}"
+// (retrocompatible con los tenants que nunca agregaron etiquetas). Gemela de
+// la copia en scripts/ssg-engine.mjs (Node, sin módulo compartido con el SPA).
+function resolveLogoUrlParts(raw) {
+    const segments = (raw || '').toString().trim().split('|').map(s => s.trim());
+    const labeled = {};
+    segments.forEach(seg => {
+        const m = seg.match(/^(logo|hero|oferta|cta)\s*:\s*([\s\S]*)$/i);
+        if (m) labeled[m[1].toLowerCase()] = m[2].trim();
+    });
+    if (Object.keys(labeled).length > 0) {
+        return { logo: labeled.logo || '', hero: labeled.hero || '', oferta: labeled.oferta || '', cta: labeled.cta || '' };
+    }
+    return { logo: segments[0] || '', hero: segments[1] || '', oferta: segments[2] || '', cta: segments[3] || '' };
+}
+
 var app = {
     // --- APP CONFIG ---
     version: "260424-0953", // Sistema Inteligente (v260424-0953) - Secure Proxy 🛡️
@@ -68,7 +88,10 @@ var app = {
     utils: {
         fixDriveUrl: (url) => {
             if (!url) return "";
-            const sUrl = url.toString().trim();
+            // ronda 3 (landing-pages) + resolveLogoUrlParts (orden libre): logo_url
+            // puede traer el logo etiquetado (logo:) en cualquier posición, mezclado
+            // con el resto del vector de Brief/landing. El SPA solo consume ese logo.
+            const sUrl = resolveLogoUrlParts(url).logo;
             // 1. Detectar si es una URL de Drive estándar o el formato obsoleto 'uc?id='
             const idMatch = sUrl.match(/\/d\/([^\/?#]+)/) ||
                 sUrl.match(/[?&]id=([^&?#]+)/) ||
