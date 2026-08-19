@@ -9,6 +9,7 @@ const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
     : supabase;
 const bdpvGenerator = require('../PresentacionesVid/bdpv-generator');
+const lpGenerator = require('./lp-generator');
 const { MODELS, DEFAULT_MODEL, toOmniRouteId } = require('./models-config');
 
 const PORT = 8000;
@@ -296,25 +297,43 @@ const BRIEF_LIST_FIELDS = {
     dolor: 'dolor',
     pcp: 'promesa_beneficio_prueba',
     pbm: 'promesa_beneficio_prueba',
-    lavtfu: 'activos',
-    lapvtfu: 'activos',
     objecion: 'objeciones',
     competidores: 'competidores'
 };
 // Campos cuyo key ya es su destino en brief_normalizado (no mapeado arriba).
-function parseBrief(tipoNegocioRaw) {
+// ADR-026: fuente real es logo_url (ADR-025), cuyo segmento 0 ya es "industria:
+// valor" (etiquetado) — a diferencia del tipo_negocio legado donde el segmento 0
+// era una etiqueta suelta sin ":". Por eso el segmento 0 ahora se intenta
+// parsear como key:value igual que el resto; solo cae a etiqueta_legado si no
+// tiene ":" (caso legado real).
+function parseBrief(briefVectorRaw) {
     const brief = { etiqueta_legado: '' };
-    if (!tipoNegocioRaw || typeof tipoNegocioRaw !== 'string') return brief;
-    const segments = tipoNegocioRaw.split('|');
-    brief.etiqueta_legado = (segments[0] || '').trim();
-    for (let i = 1; i < segments.length; i++) {
+    if (!briefVectorRaw || typeof briefVectorRaw !== 'string') return brief;
+    const segments = briefVectorRaw.split('|');
+    for (let i = 0; i < segments.length; i++) {
         const seg = segments[i].trim();
         if (!seg) continue;
         const colon = seg.indexOf(':');
-        if (colon < 0) continue;
+        if (colon < 0) {
+            if (i === 0) brief.etiqueta_legado = seg;
+            continue;
+        }
         const key = seg.slice(0, colon).trim().toLowerCase();
         let value = seg.slice(colon + 1).trim();
         if (!value) continue;
+        // LAPVTFU: 7 slots POSICIONALES (Logo,Avatar,FotoPersonal,Videos,
+        // Testimonios,Fotos,UGC) — a diferencia de objecion/competidores (listas
+        // sin orden), filtrar vacíos aquí desalinearía las posiciones (ADR-025:
+        // Avatar vacío debe caer a Logo, imposible de saber cuál era cuál tras
+        // un filter). El slot 6 (Fotos) queda sin sub-parsear a propósito
+        // (separador interno aún sin decidir, ver ADR-025).
+        if (key === 'lapvtfu' || key === 'lavtfu') {
+            const parts = value.split(',').map(s => s.trim());
+            while (parts.length < 7) parts.push('');
+            const [logo, avatarRaw, fotoPersonal, videos, testimonios, fotos, ugc] = parts;
+            brief.activos = { logo, avatar: avatarRaw || logo, fotoPersonal, videos, testimonios, fotos, ugc };
+            continue;
+        }
         // Campos de lista (split por coma, filtra vacíos)
         if (BRIEF_LIST_FIELDS[key]) {
             const arr = value.split(',').map(s => s.trim()).filter(Boolean);
@@ -421,7 +440,10 @@ async function callAIJson(systemContent, userContent, temperature = 0.7) {
 // Genera el plan_de_medios desde brief_normalizado (1 llamada de IA, barata).
 async function generateMediaPlan(idEmpresa, fallbacks = {}) {
     const empresaRow = await fetchEmpresaRow(idEmpresa);
-    const briefRaw = (empresaRow && (empresaRow.tipo_negocio || empresaRow.tiponegocio)) || '';
+    // ADR-026: el vector de Brief vive en logo_url desde ADR-025 (2026-08-09) —
+    // tipo_negocio se revirtió a su formato corto original. Fallback a
+    // tipo_negocio solo por si algún tenant viejo nunca migró.
+    const briefRaw = (empresaRow && (empresaRow.logo_url || empresaRow.tipo_negocio || empresaRow.tiponegocio)) || '';
     const brief = parseBrief(briefRaw);
     if (!brief.industria && fallbacks.industria) brief.industria = fallbacks.industria;
     if (!brief.nicho && fallbacks.nicho) brief.nicho = fallbacks.nicho;
@@ -1590,6 +1612,109 @@ const server = http.createServer((req, res) => {
                     return;
                 }
                 await bdpvGenerator.openPresentation(filePath);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'ok' }));
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // POST /api/lp/generate — Genera landing page HTML (lp: si en origen_politicas, ADR-019)
+    if (pathname === '/api/lp/generate' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const data = JSON.parse(body);
+                serverLog('INFO', `🌐 [LP] Generando landing para: ${data.company}`);
+
+                // Lee la fila de Config_Empresas para enriquecer con el Brief
+                // (mismo mecanismo que MediaPlanner). Tolerante: si falla o no
+                // encuentra la empresa, continúa con los datos del formulario.
+                let brief = {};
+                try {
+                    const row = await fetchEmpresaRow(data.company);
+                    if (row) {
+                        brief = parseBrief(row.logo_url || row.tipo_negocio || row.tiponegocio || '');
+                        if (!data.industry && brief.industria) data.industry = brief.industria;
+                        if (!data.subNicho && brief.nicho) data.subNicho = brief.nicho;
+                        if (!data.phone && (row.telefonowhastapp || row.telefono)) data.phone = row.telefonowhastapp || row.telefono;
+                        if (!data.website && (row.enlace_oficial || row.website)) data.website = row.enlace_oficial || row.website;
+                        if (!data.color) data.color = row.color_tema || '';
+                    }
+                } catch (e) {
+                    serverLog('WARN', `⚠️ [LP] No se pudo leer Config_Empresas (continúa con formulario): ${e.message}`);
+                }
+                data.brief = brief;
+
+                // Wrapper OpenRouter con fallbacks (mismo patrón que BDPV)
+                const callAI = async (messages, temperature) => {
+                    const orModels = [
+                        "openrouter/free",
+                        "qwen/qwen3.6-35b-a3b:free",
+                        "minimax/minimax-m2.5:free",
+                        "google/gemini-flash-1.5",
+                        "deepseek/deepseek-v4-flash"
+                    ];
+                    let lastError = '';
+                    for (const m of orModels) {
+                        try {
+                            const result = await callOpenRouter(m, messages, temperature || 0.7);
+                            return result;
+                        } catch (err) {
+                            lastError = err.message;
+                            serverLog('WARN', `⚠️ [LP_AI] ${m}: ${err.message}`);
+                        }
+                    }
+                    try {
+                        const msg = messages[messages.length - 1].content;
+                        return await callLocalLMS(msg);
+                    } catch (localErr) {
+                        throw new Error(`Todos los modelos fallaron. Último error: ${lastError}`);
+                    }
+                };
+
+                const result = await lpGenerator.generateLanding(data, callAI);
+
+                if (result.success) {
+                    await lpGenerator.openLanding(result.filePath);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        status: 'success',
+                        filename: result.filename,
+                        filePath: result.filePath
+                    }));
+                } else {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: result.error }));
+                }
+            } catch (e) {
+                serverLog('ERROR', `❌ [LP] Error: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // POST /api/lp/open — Abre landing generada (with path traversal guard)
+    if (pathname === '/api/lp/open' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { filePath } = JSON.parse(body);
+                const allowedDir = path.join(__dirname, 'landings');
+                const resolved = path.resolve(filePath);
+                if (!resolved.startsWith(allowedDir)) {
+                    res.writeHead(403, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: 'Path not allowed' }));
+                    return;
+                }
+                await lpGenerator.openLanding(filePath);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ status: 'ok' }));
             } catch (e) {

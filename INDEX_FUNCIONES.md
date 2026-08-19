@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-08-02 | **Total archivos:** 208 JS/GS
+**Generado:** 2026-08-11 | **Total archivos:** 583 JS/GS
 
 ## `.ponytail/benchmarks/behavior.js`
 
@@ -385,15 +385,15 @@
 | 11 | `fetchJson` |
 | 27 | `pingModel` |
 | 64 | `parseOpenRouterModels` |
-| 85 | `parseOpenCodeZenModels` |
-| 104 | `parseOmniRouteModels` |
-| 125 | `scanOpenRouter` |
-| 136 | `scanOpenCodeZen` |
-| 151 | `scanOmniRoute` |
-| 162 | `verifyModels` |
-| 188 | `scan` |
-| 213 | `getCached` |
-| 217 | `clearCache` |
+| 88 | `parseOpenCodeZenModels` |
+| 107 | `parseOmniRouteModels` |
+| 128 | `scanOpenRouter` |
+| 139 | `scanOpenCodeZen` |
+| 154 | `scanOmniRoute` |
+| 165 | `verifyModels` |
+| 191 | `scan` |
+| 216 | `getCached` |
+| 220 | `clearCache` |
 
 ## `SuitChatTG/db/gas-client.js`
 
@@ -552,6 +552,115 @@
 | Línea | Función |
 |-------|---------|
 | 7 | `main` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/altair/jupyter/js/index.js`
+
+| Línea | Función |
+|-------|---------|
+| 9 | `render` |
+| 12 | `showError` |
+| 22 | `reembed` |
+| 60 | `selectionHandler` |
+| 79 | `paramHandler` |
+| 103 | `dataHandler` |
+| 115 | `signalHandler` |
+| 150 | `cleanJson` |
+| 154 | `getNestedRuntime` |
+| 162 | `lookupSignalOp` |
+| 167 | `dataRef` |
+| 205 | `findOperatorHandler` |
+| 211 | `addOperatorListener` |
+| 221 | `trap` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/pydeck/nbextension/static/extensionRequires.js`
+
+| Línea | Función |
+|-------|---------|
+| 13 | `load_ipython_extension` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/chunk-FWX5IMBZ.BYCJDOX7.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/DataFrame.v-5GXvjU.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/DeckGlJsonChart.BVVXhfes.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/es6.CiwTgjbX.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/FileSystemDirectoryHandle.p7DJujU-.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/IFrame.DuX-R7vt.js`
+
+| Línea | Función |
+|-------|---------|
+| 4 | `sendSize` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/index.bE3scgDe.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/mermaid-parser.core.CrKH_ZR4.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/mermaid.core.DA_hCDOH.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/MermaidChart.Bk0sk5TL.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/StreamlitMarkdown.8wKeixZI.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/swimlanes-5IMT3BWC.YFqhAsZJ.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/lib/python3.12/site-packages/streamlit/static/static/js/util.D5poj9OK.js`
+
+| Línea | Función |
+|-------|---------|
+| 1 | `__vite__mapDeps` |
+
+## `SuitCVLO/.venv/share/jupyter/nbextensions/pydeck/extensionRequires.js`
+
+| Línea | Función |
+|-------|---------|
+| 13 | `load_ipython_extension` |
 
 ## `SuitCVLO/frontend/app.js`
 
@@ -824,6 +933,19 @@
 | 6 | `SD_CODE_TEMPLATE` |
 | 30 | `main` |
 
+## `SuitSXO/sxo.mx/js/app.js`
+
+| Línea | Función |
+|-------|---------|
+| 6 | `enter` |
+| 69 | `fmt` |
+| 71 | `mostrar` |
+| 86 | `renderCat` |
+| 115 | `guardar` |
+| 121 | `cambiarCant` |
+| 142 | `renderCart` |
+| 196 | `renderPago` |
+
 ## `SuitTaskflow/backend/server.js`
 
 | Línea | Función |
@@ -892,7 +1014,7 @@
 |-------|---------|
 | 7 | `checkUrl` |
 | 16 | `generateImage` |
-| 36 | `generateAllImages` |
+| 42 | `generateAllImages` |
 
 ## `SuitVidGenRemotion/scripts/helpers/scriptLoader.js`
 
@@ -906,17 +1028,20 @@
 
 | Línea | Función |
 |-------|---------|
-| 9 | `downloadTTS` |
-| 39 | `generateVoice` |
-| 109 | `generateAllVoices` |
+| 10 | `downloadTTS` |
+| 40 | `generateVoice` |
+| 127 | `generateAllVoices` |
 
 ## `SuitVidGenRemotion/scripts/render.js`
 
 | Línea | Función |
 |-------|---------|
-| 15 | `ensureDir` |
-| 19 | `parseArgs` |
-| 33 | `main` |
+| 18 | `reportProgress` |
+| 22 | `ensureDir` |
+| 26 | `parseArgs` |
+| 40 | `main` |
+| 72 | `onImage` |
+| 121 | `onProgress` |
 
 ## `supabase.js`
 
@@ -1148,31 +1273,35 @@
 
 | Línea | Función |
 |-------|---------|
-| 69 | `fixDriveUrl` |
-| 87 | `getEffectivePrice` |
-| 93 | `playNotification` |
-| 109 | `playBuzz` |
-| 127 | `playClick` |
-| 143 | `getCoId` |
-| 146 | `sanitizeString` |
-| 158 | `getTimestamp` |
-| 162 | `getDate` |
-| 169 | `parseModo` |
-| 174 | `hub` |
-| 187 | `parseAiConfig` |
-| 212 | `parseSocialLinks` |
-| 243 | `getSocialLinks` |
-| 264 | `loadEnvConfig` |
-| 289 | `init` |
-| 374 | `mainBiz` |
-| 470 | `checkBackendVersion` |
-| 488 | `loadData` |
-| 505 | `currentBiz` |
-| 563 | `loadFromSupabase` |
-| 604 | `loadGalleryFromStorage` |
-| 666 | `switchCompany` |
-| 724 | `createAgentTask` |
-| 754 | `saveRecord` |
+| 15 | `resolveLogoUrlParts` |
+| 16 | `segments` |
+| 28 | `parseOrigenPoliticas` |
+| 29 | `segments` |
+| 102 | `fixDriveUrl` |
+| 123 | `getEffectivePrice` |
+| 129 | `playNotification` |
+| 145 | `playBuzz` |
+| 163 | `playClick` |
+| 179 | `getCoId` |
+| 182 | `sanitizeString` |
+| 194 | `getTimestamp` |
+| 198 | `getDate` |
+| 205 | `parseModo` |
+| 210 | `hub` |
+| 223 | `parseAiConfig` |
+| 248 | `parseSocialLinks` |
+| 279 | `getSocialLinks` |
+| 300 | `loadEnvConfig` |
+| 325 | `init` |
+| 410 | `mainBiz` |
+| 506 | `checkBackendVersion` |
+| 524 | `loadData` |
+| 541 | `currentBiz` |
+| 599 | `loadFromSupabase` |
+| 640 | `loadGalleryFromStorage` |
+| 702 | `switchCompany` |
+| 760 | `createAgentTask` |
+| 790 | `saveRecord` |
 
 ### `js/modules/events.js`
 
@@ -1472,6 +1601,13 @@
 | 189 | `actualizarInfoFormato` |
 | 205 | `actualizarInfoRed` |
 
+### `scripts/find-loose-files.js`
+
+| Línea | Función |
+|-------|---------|
+| 28 | `walk` |
+| 42 | `main` |
+
 ### `scripts/generate-index.js`
 
 | Línea | Función |
@@ -1518,33 +1654,35 @@
 |-------|---------|
 | 20 | `OMNIROUTE_BASE` |
 | 34 | `findFFmpeg` |
-| 62 | `getAudioDurationSec` |
-| 72 | `ffmpeg` |
-| 94 | `escapeFfmpegPath` |
-| 102 | `getDefaultFontFile` |
-| 115 | `wrapWords` |
-| 137 | `fitOverlayText` |
-| 168 | `computeRealDuration` |
-| 175 | `parseGuionScenes` |
-| 263 | `serverLog` |
-| 270 | `normalizeDriveUrl` |
-| 290 | `parseBrief` |
-| 329 | `fetchEmpresaRow` |
-| 343 | `loadPromptById` |
-| 357 | `callAIJson` |
-| 407 | `generateMediaPlan` |
-| 427 | `empresa` |
-| 441 | `approveMediaPlan` |
-| 1511 | `callAI` |
-| 1762 | `fetchFollowingRedirects` |
-| 2022 | `srtTime` |
-| 2332 | `background_music` |
-| 2402 | `subestilos` |
-| 2556 | `callOpenRouter` |
-| 2606 | `callOllama` |
-| 2643 | `generateAITrendFallback` |
-| 2669 | `callLocalLMS` |
-| 2704 | `fetchWithRedirects` |
+| 63 | `getAudioDurationSec` |
+| 73 | `ffmpeg` |
+| 95 | `escapeFfmpegPath` |
+| 103 | `getDefaultFontFile` |
+| 116 | `wrapWords` |
+| 138 | `fitOverlayText` |
+| 169 | `computeRealDuration` |
+| 176 | `parseGuionScenes` |
+| 265 | `limpiarVireJobsViejos` |
+| 278 | `serverLog` |
+| 285 | `normalizeDriveUrl` |
+| 305 | `parseBrief` |
+| 344 | `fetchEmpresaRow` |
+| 358 | `loadPromptById` |
+| 372 | `callAIJson` |
+| 422 | `generateMediaPlan` |
+| 442 | `empresa` |
+| 456 | `approveMediaPlan` |
+| 1526 | `callAI` |
+| 1777 | `fetchFollowingRedirects` |
+| 2037 | `srtTime` |
+| 2287 | `toPublicRelative` |
+| 2313 | `generarSfx` |
+| 2579 | `subestilos` |
+| 2733 | `callOpenRouter` |
+| 2783 | `callOllama` |
+| 2820 | `generateAITrendFallback` |
+| 2846 | `callLocalLMS` |
+| 2881 | `fetchWithRedirects` |
 
 ### `SuitCampanas/models-config.js`
 
@@ -1558,78 +1696,89 @@
 |-------|---------|
 | 4 | `escapeHtml` |
 | 11 | `parseLogoUrlField` |
-| 64 | `loadPrompt` |
-| 94 | `getCategoriaIndustria` |
-| 97 | `getEspecializaciones` |
-| 100 | `updateEspecializacionSelect` |
-| 200 | `initCategoriaLookup` |
-| 209 | `populateIndustrias` |
-| 226 | `suggestTheme` |
-| 238 | `showCategoriaHint` |
-| 241 | `populateNichos` |
-| 381 | `loadGooglePickerAPI` |
-| 402 | `openDrivePicker` |
-| 405 | `showDriveModalFallback` |
-| 410 | `hideDriveModal` |
-| 502 | `buscarTendencias` |
-| 614 | `subclasificaciones` |
-| 832 | `nombre` |
-| 869 | `generateAIContent` |
-| 1160 | `updateActiveTab` |
-| 1170 | `getFormData` |
-| 1190 | `autoToggleMultimedia` |
-| 1205 | `validateFormData` |
-| 1218 | `setLoading` |
-| 1224 | `setAiLoading` |
-| 1232 | `showToast` |
-| 1238 | `renderCarouselPreview` |
-| 1406 | `tryLoadImage` |
-| 1461 | `fetchHistory` |
-| 1503 | `renderHistory` |
-| 1553 | `resetFormErrors` |
-| 1555 | `downloadCampaignKit` |
-| 1714 | `generateVideoFromCarousel` |
-| 1805 | `downloadFile` |
-| 1814 | `downloadExternalImage` |
-| 1830 | `speakText` |
-| 1857 | `stopAll` |
-| 1923 | `loadCompanies` |
-| 1937 | `populateCompanySelect` |
-| 1951 | `setupCompanyAutoFill` |
-| 1962 | `handler` |
-| 1969 | `findVal` |
-| 2012 | `generateMediaPlanFromUI` |
-| 2062 | `attachMediaPlanPanel` |
-| 2097 | `onApprove` |
-| 2132 | `onReject` |
-| 2161 | `renderPlanPiezas` |
-| 2207 | `listRecentPlans` |
-| 2247 | `resumeMediaPlan` |
-| 2267 | `matchText` |
-| 2273 | `norm` |
-| 2286 | `autoSelectIndustriaFromBrief` |
-| 2288 | `setIfEmpty` |
-| 2302 | `setWorkMode` |
-| 2560 | `loadRecetas` |
-| 2580 | `generateImaginationVideo` |
-| 2661 | `syncVideFieldsFromJson` |
-| 2680 | `fetchEstilosVisuales` |
-| 2698 | `showStyleSelector` |
-| 2746 | `autoPickStyleByTrend` |
-| 2775 | `formatPhoneForSpeech` |
-| 2782 | `generateVideJson` |
-| 3019 | `generateVideVideo` |
-| 3103 | `updateProgress` |
-| 3231 | `generateViReVideo` |
-| 3317 | `ejecutarAgente` |
-| 3361 | `normalizeDriveUrl` |
-| 3380 | `resolveLogoUrl` |
-| 3392 | `renderCarouselFromJson` |
-| 3535 | `loadSlideImage` |
-| 3591 | `regenerateSlideImage` |
-| 3607 | `downloadAnimatedVideo` |
-| 3675 | `fetchLogs` |
-| 3687 | `toggleLogPanel` |
+| 56 | `vireSharedWrapper` |
+| 61 | `moveSharedFieldsIntoVire` |
+| 75 | `restoreSharedFieldsFromVire` |
+| 117 | `loadPrompt` |
+| 147 | `getCategoriaIndustria` |
+| 150 | `getEspecializaciones` |
+| 153 | `updateEspecializacionSelect` |
+| 253 | `initCategoriaLookup` |
+| 262 | `populateIndustrias` |
+| 279 | `suggestTheme` |
+| 291 | `showCategoriaHint` |
+| 294 | `populateNichos` |
+| 434 | `loadGooglePickerAPI` |
+| 455 | `openDrivePicker` |
+| 458 | `showDriveModalFallback` |
+| 463 | `hideDriveModal` |
+| 558 | `setVireActiveButton` |
+| 572 | `setVireMode` |
+| 656 | `buscarTendencias` |
+| 768 | `subclasificaciones` |
+| 995 | `nombre` |
+| 1032 | `generateAIContent` |
+| 1323 | `updateActiveTab` |
+| 1333 | `getFormData` |
+| 1353 | `autoToggleMultimedia` |
+| 1368 | `validateFormData` |
+| 1381 | `setLoading` |
+| 1387 | `setAiLoading` |
+| 1395 | `showToast` |
+| 1401 | `renderCarouselPreview` |
+| 1569 | `tryLoadImage` |
+| 1624 | `fetchHistory` |
+| 1666 | `renderHistory` |
+| 1716 | `resetFormErrors` |
+| 1718 | `downloadCampaignKit` |
+| 1877 | `generateVideoFromCarousel` |
+| 1968 | `downloadFile` |
+| 1977 | `downloadExternalImage` |
+| 1993 | `speakText` |
+| 2020 | `stopAll` |
+| 2086 | `loadCompanies` |
+| 2100 | `populateCompanySelect` |
+| 2114 | `setupCompanyAutoFill` |
+| 2125 | `handler` |
+| 2132 | `findVal` |
+| 2175 | `generateMediaPlanFromUI` |
+| 2225 | `attachMediaPlanPanel` |
+| 2260 | `onApprove` |
+| 2295 | `onReject` |
+| 2324 | `renderPlanPiezas` |
+| 2370 | `listRecentPlans` |
+| 2410 | `resumeMediaPlan` |
+| 2430 | `matchText` |
+| 2436 | `norm` |
+| 2449 | `autoSelectIndustriaFromBrief` |
+| 2451 | `setIfEmpty` |
+| 2465 | `setWorkMode` |
+| 2729 | `loadRecetas` |
+| 2749 | `generateImaginationVideo` |
+| 2830 | `syncVideFieldsFromJson` |
+| 2849 | `fetchEstilosVisuales` |
+| 2867 | `showStyleSelector` |
+| 2915 | `autoPickStyleByTrend` |
+| 2944 | `formatPhoneForSpeech` |
+| 2955 | `construirPromptGuion` |
+| 3043 | `generateVideJson` |
+| 3206 | `generateVideVideo` |
+| 3290 | `updateProgress` |
+| 3425 | `generarGuionDesdeAsistente` |
+| 3519 | `generarGuionDesdePrompt` |
+| 3619 | `aplicarAjustesDetectados` |
+| 3664 | `generateViReVideo` |
+| 3790 | `pollVireJob` |
+| 3793 | `tick` |
+| 3855 | `ejecutarAgente` |
+| 3899 | `normalizeDriveUrl` |
+| 3918 | `resolveLogoUrl` |
+| 3930 | `renderCarouselFromJson` |
+| 4073 | `loadSlideImage` |
+| 4129 | `regenerateSlideImage` |
+| 4145 | `downloadAnimatedVideo` |
+| 4213 | `fetchLogs` |
+| 4225 | `toggleLogPanel` |
 
 ### `SuitCampanas/test-system.js`
 

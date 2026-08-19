@@ -55,7 +55,7 @@ app.auth = {
         }
         // Resolución de permisos
         const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
-        const origenPoliticas = (company && company.origen_politicas) || "ROL";
+        const origenPoliticas = parseOrigenPoliticas(company && company.origen_politicas).op || "ROL";
         const modoCreditos = (company && company.modo_creditos) || "USUARIO";
         let effectiveLevel = parseInt(getVal(user, ['nivel_acceso', 'nivel', 'access_level'])) || 0;
         let effectiveModules = "";

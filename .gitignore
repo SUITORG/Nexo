@@ -102,3 +102,9 @@ SuitCampanas/tmp_vide_*/
 # Misc generated
 comfyui_test.png
 
+# Reporte local de preparar-produccion (nunca publicar)
+revision-produccion/
+
+# Secretos accidentales (visto: SuitCampanas/.env.test con token real)
+*.env.test
+

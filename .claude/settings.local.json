@@ -98,7 +98,10 @@
       "Bash(where.exe ffmpeg *)",
       "Bash(ffmpeg -version)",
       "WebFetch(domain:huggingface.co)",
-      "PowerShell(Get-CimInstance *)"
+      "PowerShell(Get-CimInstance *)",
+      "Bash(opencode --help)",
+      "Bash(powershell.exe *)",
+      "Bash(opencode session *)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -1,7 +1,7 @@
 # ADR-025: Vector de Brief en `logo_url` — contrato de datos para el CreatorEngine de SuitCampanas
 
 **Date:** 2026-08-09
-**Status:** Documentado, no implementado (sin consumidor todavía — es contrato para trabajo futuro del CreatorEngine/BriefMarker en SuitCampanas)
+**Status:** Implementado (2026-08-10, ver ADR-026). NOET es el primer tenant real con el vector completo cargado en `logo_url`. Consumidores en producción: `renderLanding()` (root, qué hace/para quién/precio) y `generateMediaPlan()`/`parseBrief()` (SuitCampanas, MediaPlanner→BriefMarker). El CreatorEngine de ViRe en sí (más allá de MediaPlanner) sigue sin consumir el vector directamente.
 **Risk:** Low (aditivo; nada de esto se parsea todavía en código)
 **Workflow:** feature (documentación de contrato, sin código)
 

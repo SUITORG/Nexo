@@ -49,6 +49,8 @@
 | POST | `/api/ai/image` | 796 | `{prompt}` | Genera imagen (Google Imagen 3) |
 | POST | `/api/bdpv/generate` | 851 | `{company, ...}` | Genera presentación HTML |
 | POST | `/api/bdpv/open` | 912 | `{filePath}` | Abre presentación HTML |
+| POST | `/api/lp/generate` | 1626 | `{company, ...}` | Genera landing page HTML desde Config_Empresas + Brief |
+| POST | `/api/lp/open` | 1704 | `{filePath}` | Abre landing page generada |
 | POST | `/api/animate` | 938 | `{image, effect, duration, vertical}` | Video animado desde imagen |
 | POST | `/api/slideshow` | 1006 | `{images, effect, duration}` | Slideshow con transiciones |
 | GET | `/api/proxy-image` | 1089 | `?url=` | Proxy imagen externa a base64 |

@@ -376,7 +376,8 @@ app.events = {
 
         const hasBilling = elRfc && elRfc.value.trim() !== "" && elBiz && elBiz.value.trim() !== "" && elBillDir && elBillDir.value.trim() !== "";
 
-        const isPaper = (app.state.dbEngine || "").toUpperCase() === 'SUPABASE';
+        const leadCompany = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
+        const isPaper = String(leadCompany?.id_empresa || '').toUpperCase() === 'PAPER';
         const elLastName = document.getElementById('lead-lastname');
         const elAge = document.getElementById('lead-age');
         const elWeeks = document.getElementById('lead-weeks');

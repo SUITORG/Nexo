@@ -1,32 +1,30 @@
 Datos y Brief:
-1\* tipo\_negocio: tomar del campo tipo\_negocio
-2\* galeria: si\_galeria o no\_galeria 
-3 Industria: ,
-4 Nicho: 
-5 Especializacion:,
-6 Que vendes: Producto(s) o Servicio o Marca Personal,
-7 Para quien es: Audiencia Exacta
-8 Dolor Principal,
-9 + Que te hace Distinto PBP Promesa y Beneficio y Prueba,
-10 Que quieres lograr: Ventas o Leads o awarareness(que tanto te recuerdan) o Contenido,
-11 Donde va a vivir: RSSS,
-12+ Activos(LAPVTFU): Logo 1, Avatar 2, Foto Personal 3, Videos 4, Testimonios 5, Fotos 6 , UGC 7 |(contenido que crean los usuarios hablando de la marca (reviews, videos, fotos, testimonios) en lugar de la propia empresa; se usa porque se percibe más auténtico.),
-13+ Precio y margen (PM):,
-14 Objeciones mas comunes,
-15 3 Competidores,
-16 Tono de la marca,
-17 Caso de Exito o prueba social (PS),
-18 Restricciones legales o de plataforma (RLP)
+\* tipo\_negocio: tomar del campo tipo\_negocio
+\* tipo\_negocio: galeria: si\_galeria o no\_galeria
+1 Industria: ,
+2 Nicho:
+3 Especializacion:,
+4 Que vendes: Producto(s) o Servicio o Marca Personal,
+5 Para quien es: Audiencia Exacta
+6 Dolor Principal,
+7 + Que te hace Distinto PBP Promesa y Beneficio y Prueba,
+8 Que quieres lograr: Ventas o Leads o awarareness(que tanto te recuerdan) o Contenido,
+9 Donde va a vivir: RSSS,
+10+ Activos(LAPVTFU): 1 Logo , 2 Avatar , 3 Foto Personal , 4 Videos , 5 Testimonios , 6 Fotos  , 7 UGC |(contenido que crean los usuarios hablando de la marca (reviews, videos, fotos, testimonios) en lugar de la propia empresa; se usa porque se percibe más auténtico.),
+11+ Precio y margen (PM):,
+12 Objeciones mas comunes,
+13 3 Competidores,
+14 Tono de la marca,
+15 Caso de Exito o prueba social (PS),
+16 Restricciones legales o de plataforma (RLP)
 
+\* slogan: tiene su propio campo Bienestar herbal, sin cita ni salir de casa
 
+17 Oferta: Oferta principal ej. Sin cita, sin salir de casa, hoy, primer entrega gratis
 
-19\* slogan: tiene su propio campo Bienestar herbal, sin cita ni salir de casa
+18 Descripcion: Descripcion de la oferta ej. Medicina alternativa herbal, discreta y a tu alcance — resuelve tu bienestar sin filas, sin citas y sin complicaciones, con entrega directa a tu puerta.
 
-20 Oferta: Oferta principal ej. Sin cita, sin salir de casa, hoy, primer entrega gratis
-
-21 Descripcion: Descripcion de la oferta ej. Medicina alternativa herbal, discreta y a tu alcance — resuelve tu bienestar sin filas, sin citas y sin complicaciones, con entrega directa a tu puerta.
-
-22 Cta\_texto: llamado a la accion 
+19 Cta\_texto: llamado a la accion ,
 
 
 
@@ -70,6 +68,8 @@ PS: Cientos de mujeres como tu! pasando mas tiempo con su familia! |
 
 RLP: decir que el anuncio fue creado con AI
 
+
+
 slogan: tomalo de campo slogan |
 
 oferta: 12 Meses sin intereses en tarjetas participantes|
@@ -82,11 +82,21 @@ cta\_texto: Quiero mi demo! |
 
 
 
+TIPOS DE TONO
 
+Profesional, cercano, premium, divertido, directo.
 
 
 
 tipo\_negocio: Servicio de Software asistido por AI: |galeria: no\_galeria |industria: Tecnología |nicho: Software |especializacion: IA |vendes: Soluciones asistidas por AI |audiencia: Hombre y mujeres emprendedores del noreste de México, amantes de la tecnología deseosos de implementar soluciones con AI, dinámicos, curiosos de 27 a 55 años con poder adquisitivo medio alto |dolor: poco tiempo para investigar tendencias tecnológicas, que desconozcan lo que la AI pueden hacer por ellos o su negocio, falta de organización, falta de creatividad en sus negocios, falta de creatividad en sus campañas publicitarias,  |PCP: Tu desarrollo por demanda, ahorro de tiempo, testimonios en redes sociales por usar Software asistido por la AI |lograr: alcance |vivir: TikTok |LAVTFU:https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,,,, |PM: 32000.00,8% |objecion: es caro, no tengo tiempo para citas, no soy capaz de usar aplicaciones, incredulidad, Desconfianza |competidores:|tono: dinamico |PS: |RLP: decir que el anuncio fue creado con AI
+
+
+
+
+
+|industria: Tecnología |nicho: Software |especializacion: IA |vendes: Soluciones asistidas por AI |audiencia: Hombre y mujeres emprendedores del noreste de México, amantes de la tecnología deseosos de implementar soluciones con AI, dinámicos, curiosos de 27 a 55 años con poder adquisitivo medio alto |dolor: poco tiempo para investigar tendencias tecnológicas, que desconozcan lo que la AI pueden hacer por ellos o su negocio, falta de organización, falta de creatividad en sus negocios, falta de creatividad en sus campañas publicitarias,  |PCP: Tu desarrollo por demanda, ahorro de tiempo, testimonios en redes sociales por usar Software asistido por la AI |lograr: alcance |vivir: TikTok |LAVTFU:https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,https://drive.google.com/file/d/17ga2dN9ebPVL49Rcd4eFvWa5r1q3tqW3/view?usp=drive\_link,https://drive.google.com/file/d/1soSCtPdGbQys1Mxc9FpKwJlz3GmvBOCZ/view?usp=drive\_link,https://drive.google.com/file/d/1soSCtPdGbQys1Mxc9FpKwJlz3GmvBOCZ/view?usp=drive\_link,, |PM: 32000.00,8% |objecion: es caro, no tengo tiempo para citas, no soy capaz de usar aplicaciones, incredulidad, Desconfianza |competidores:|tono: dinamico |PS: |RLP: decir que el anuncio fue creado con AI
+
+
 
 
 

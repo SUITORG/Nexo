@@ -1818,7 +1818,7 @@ app.public = {
             return;
         }
 
-        const isPaper = (app.state.dbEngine || "").toUpperCase() === 'SUPABASE';
+        const isPaper = String(company.id_empresa).toUpperCase() === 'PAPER';
         const isInsurance = (company.tipo_negocio || "").toString().toUpperCase().includes('SEGUROS') || (company.tipo_negocio || "").toString().toUpperCase().includes('FINANZAS');
 
         container.innerHTML = `

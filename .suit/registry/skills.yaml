@@ -156,6 +156,27 @@ skills:
     context_hint:
       - ".github/workflows/deploy.yml"
 
+  preparar-produccion:
+    description: "Clasifica archivos modificados/nuevos (git status) en Producción-Público, Producción-Módulos (js/modules/), Fuera del sitio y Riesgo (secretos), antes de un push a main. Escribe revision-produccion/REPORTE.md (local, gitignored). No hace git add/commit/push por sí sola — es un paso previo al workflow deploy, pensado para un usuario no-técnico."
+    version: 1.0.0
+    type: process
+    domain: operations
+    dependencies:
+      - deployment
+    triggers:
+      - "subir a producción"
+      - "preparar deploy"
+      - "qué subo a producción"
+      - "revisar antes de subir"
+    inputs:
+      - "git status --porcelain"
+    outputs:
+      - "revision-produccion/REPORTE.md"
+    discoverable: true
+    context_hint:
+      - ".claude/skills/preparar-produccion/SKILL.md"
+      - ".github/workflows/deploy.yml"
+
   cotizaciones-engine:
     description: "Motor de cálculo para cotizaciones configurables por proceso, producto o servicio. Evalúa reglas de precio, variables dinámicas, y produce una cotización con folio que puede convertirse en Lead, Proyecto u Orden."
     version: 1.0.0
@@ -345,7 +366,7 @@ skills:
       - "backend/DriveManager.js"
 
   landing-pages:
-    description: "Generación estática de landing pages de conversión multi-tenant vía scripts/ssg-engine.mjs. Consume SuitLandings/landing-template.html (hero, propuesta de valor, oferta/CTA, contacto) y la activación por flag landing en la posición 8 de Config_Empresas.modo (0/ausente = solo sitio, 1 = landing-only, 2 = sitio + landing). Sin columnas nuevas: todo el contenido vive empacado en logo_url = \"{logo}|{hero}|{oferta}|{cta}\", aislado del resto del SPA por un fix en js/modules/core.js:fixDriveUrl(). Toda landing es noindex/noarchive para no canibalizar el sitio principal."
+    description: "Generación estática de landing pages de conversión multi-tenant vía scripts/ssg-engine.mjs. Consume SuitLandings/landing-template.html (hero, propuesta de valor, oferta/CTA, contacto) y la activación por flag landing en la posición 8 de Config_Empresas.modo (0/ausente = solo sitio, 1 = landing-only, 2 = sitio + landing). Sin columnas nuevas: todo el contenido vive empacado en logo_url, etiquetas logo:/hero:/oferta:/cta: (ADR-023) + vector de Brief opcional (ADR-025/026: industria:/vendes:/audiencia:/PBP:/PM:/...), aislado del resto del SPA por un fix en js/modules/core.js:fixDriveUrl(). Regla de negocio (ADR-026): la landing debe contestar qué hace (vendes/PBP) y para quién sirve (audiencia) antes de que el visitante pregunte; el precio (PM) solo se muestra si el Brief lo trae explícito, nunca inventado — y el margen de PM jamás se expone en la landing. Toda landing es noindex/noarchive para no canibalizar el sitio principal."
     version: 1.0.0
     type: domain
     domain: marketing
@@ -369,3 +390,29 @@ skills:
     context_hint:
       - "scripts/ssg-engine.mjs"
       - "SuitLandings/landing-template.html"
+
+  marketing-psicologia-progreso:
+    description: "Efecto del progreso otorgado (endowed progress effect, Nunes & Drèze 2006): dar al usuario un adelanto de avance hacia una meta real (barra pre-llenada, \"ya llevas X de Y\", framing \"solo falta Z\") aumenta la motivación de completar mucho más que pedir el mismo esfuerzo restante desde cero. Aplicable siempre que haya una secuencia genuina hacia una meta (compra, cotización, plan de medios aprobado, suscripción): copy de CTA/oferta en piezas de BriefMarker, guiones de video (VIDE/ViRe/CreatorEngine), resúmenes de MediaPlanner, landing pages. Regla dura: nunca inventar pasos o progreso ficticio sin base real — es un principio de motivación, no un dark pattern; el progreso mostrado debe corresponder a avance real del usuario/lead."
+    version: 1.0.0
+    type: domain
+    domain: marketing
+    dependencies: []
+    triggers:
+      - "efecto del progreso"
+      - "endowed progress"
+      - "progreso otorgado"
+      - "psicologia de marketing"
+      - "copy de cta"
+      - "mediaplanner"
+      - "creatorengine"
+      - file_pattern: "SuitCampanas/local-server-node.js"
+    inputs:
+      - "meta real del funnel (compra, cotización, suscripción, plan aprobado)"
+      - "pasos ya completados por el usuario/lead, si existen"
+    outputs:
+      - "copy de CTA/oferta/guion con framing de progreso otorgado"
+    discoverable: true
+    context_hint:
+      - "SuitCampanas/local-server-node.js (generateMediaPlan, approveMediaPlan, parseBrief)"
+      - "Prompts_IA: CAMP-MEDIAPLANNER, CAMP-BRIEFMARKER"
+      - ".suit/registry/skills.yaml: landing-pages"

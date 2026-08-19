@@ -25,6 +25,19 @@ function resolveLogoUrlParts(raw) {
     return { logo: segments[0] || '', hero: segments[1] || '', oferta: segments[2] || '', cta: segments[3] || '' };
 }
 
+function parseOrigenPoliticas(raw) {
+    const segments = (raw || '').toString().trim().split('|').map(s => s.trim());
+    const labeled = {};
+    segments.forEach(seg => {
+        const m = seg.match(/^(op|presentacion|lp)\s*:\s*([\s\S]*)$/i);
+        if (m) labeled[m[1].toLowerCase()] = m[2].trim();
+    });
+    if (Object.keys(labeled).length > 0) {
+        return { op: labeled.op || '', presentacion: labeled.presentacion || '', lp: labeled.lp || '' };
+    }
+    return { op: segments[0] || '', presentacion: segments[1] || '', lp: segments[2] || '' };
+}
+
 var app = {
     // --- APP CONFIG ---
     version: "260424-0953", // Sistema Inteligente (v260424-0953) - Secure Proxy 🛡️
@@ -584,7 +597,7 @@ var app = {
     },
     // EVASOL - CORE MODULE (v16.7.0 - MIGRACIÓN COMPLETA SUPABASE)
     loadFromSupabase: async (coId) => {
-        console.log(`⚡ [SECURE_DB] Cargando tablas vía Proxy para ${coId}...`);
+        console.log(`⚡ [SECURE_DB] Cargando tablas desde Supabase para ${coId}...`);
 
         const tables = [
             'Catalogo', 'Leads', 'Proyectos', 'Pagos', 'Proyectos_Pagos',
@@ -595,12 +608,18 @@ var app = {
             'Config_Empresas', 'Config_SEO', 'Config_Paginas', 'Cuotas_Pagos', 'Config_IA_Notebooks'
         ];
 
+        if (!app.sbUrl || !app.sbKey) {
+            console.warn('⚠️ [SECURE_DB] Falta sbUrl/sbKey (revisa js/modules/config.js) — no se puede leer Supabase.');
+            return {};
+        }
+
         const results = {};
         try {
             await Promise.all(tables.map(async (table) => {
-                // Pasamos coId como filtro de consulta al proxy
-                const url = `/api/db/${table}?id_empresa=${coId}`;
-                const res = await fetch(url);
+                // Lectura directa a la REST API de Supabase (funciona igual en local y en GitHub Pages;
+                // /api/db/:table solo responde cuando server.js está corriendo, que no es el caso en producción)
+                const url = `${app.sbUrl}/rest/v1/${table}?id_empresa=eq.${encodeURIComponent(coId)}&select=*`;
+                const res = await fetch(url, { headers: { apikey: app.sbKey, Authorization: `Bearer ${app.sbKey}` } });
                 if (res.ok) {
                     const raw = await res.json();
                     results[table] = JSON.parse(JSON.stringify(raw), (key, value) =>

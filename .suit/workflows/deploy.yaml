@@ -14,6 +14,7 @@ workflow:
     required_skills:
       - javascript
       - deployment
+      - preparar-produccion
     forbidden_if:
       - "Uncommitted changes in working directory"
 
@@ -22,6 +23,7 @@ workflow:
       description: "Check deployment readiness"
       action: validate
       validation:
+        - "preparar-produccion corrió y revision-produccion/REPORTE.md no tiene hallazgos 🚫 RIESGO sin resolver"
         - "All tests pass (or manual smoke test)"
         - "INDEX_FUNCIONES.md is up to date"
         - "No uncommitted changes"

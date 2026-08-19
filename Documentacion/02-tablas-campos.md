@@ -17,7 +17,7 @@ Esta tabla decide TODO. Vive en GSheets y también en Supabase.
 | `modo` | PROD, HIDDEN, PROD,1,1,1 | Formato: `VISIBILIDAD,STRIPE,EXPRESS,POS`. VISIBILIDAD: PROD=visible en Hub, HIDDEN=oculto. STRIPE: 1=Tarjeta activa. EXPRESS: 1=Pedido Express visible. POS: 1=POS en staff visible. Defaults de partes faltantes: STRIPE=0, EXPRESS=1, POS=1 |
 | `modo_sitio` | HYBRID, NOHYBRIDO, vacío | Si es tenant independiente (en pruebas) |
 | `es_principal` | TRUE, FALSE | Si es el tenant principal |
-| `origen_politicas` | ROL, USUARIO | De dónde saca los permisos |
+| `origen_politicas` | `op: ROL\|op: USUARIO` + extras | Vector `etiqueta:valor` separado por `\|`. `op` (obligatorio, único en producción): de dónde saca los permisos (ROL=desde Config_Roles, USUARIO=del propio registro). Extras opcionales: `presentacion: SI` (activa presentación), `lp: si` (landing page). Si `op` falta → default ROL. Valores legacy sin etiqueta (`ROL`, `USUARIO`) se leen igual. Se parsea con `parseOrigenPoliticas()` en `js/modules/core.js` |
 | `modo_creditos` | DIARIO, GLOBAL, USUARIO | Cómo se calculan los créditos |
 | `color_tema` | #hex | Color principal del negocio |
 

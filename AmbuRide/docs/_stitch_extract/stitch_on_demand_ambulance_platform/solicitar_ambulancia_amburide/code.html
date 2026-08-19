@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Emergency Home/Request - RapidRescue</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#002204",
+                      "primary-fixed-dim": "#ffb3ac",
+                      "surface-container-low": "#f3f3f3",
+                      "secondary-fixed-dim": "#a5c8ff",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#5b403d",
+                      "error-container": "#ffdad6",
+                      "on-background": "#1a1c1c",
+                      "surface-dim": "#dadada",
+                      "surface-tint": "#ba1a20",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed": "#001c3a",
+                      "surface-container-highest": "#e2e2e2",
+                      "on-primary-fixed-variant": "#930010",
+                      "tertiary-container": "#298030",
+                      "primary-fixed": "#ffdad6",
+                      "on-tertiary-container": "#daffd1",
+                      "on-surface": "#1a1c1c",
+                      "secondary-fixed": "#d4e3ff",
+                      "inverse-primary": "#ffb3ac",
+                      "on-secondary-fixed-variant": "#004786",
+                      "tertiary": "#016619",
+                      "on-primary-container": "#fff2f0",
+                      "secondary": "#005faf",
+                      "on-tertiary-fixed-variant": "#005312",
+                      "outline": "#8f6f6c",
+                      "surface-container-high": "#e8e8e8",
+                      "on-error": "#ffffff",
+                      "surface": "#f9f9f9",
+                      "primary-container": "#d32f2f",
+                      "surface-variant": "#e2e2e2",
+                      "on-primary-fixed": "#410003",
+                      "inverse-surface": "#2f3131",
+                      "background": "#f9f9f9",
+                      "outline-variant": "#e4beba",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#003567",
+                      "surface-container-lowest": "#ffffff",
+                      "primary": "#af101a",
+                      "surface-bright": "#f9f9f9",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#eeeeee",
+                      "inverse-on-surface": "#f1f1f1",
+                      "secondary-container": "#54a0fe",
+                      "tertiary-fixed": "#9df898",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#82db7e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "lg": "24px",
+                      "base": "4px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "xl": "32px",
+                      "gutter": "16px",
+                      "margin-desktop": "64px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-bold": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "mono-data": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "label-bold": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "mono-data": ["16px", {"lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background h-full font-sans antialiased overflow-hidden flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 border-b border-outline-variant flex justify-between items-center px-margin-mobile py-sm bg-surface">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="emergency">emergency</span>
+<span class="font-headline-md text-headline-md font-bold text-primary">RapidRescue</span>
+</div>
+<button class="bg-primary text-on-primary font-label-bold text-label-bold px-md py-sm rounded-lg hover:bg-primary/90 active:scale-95 transition-transform duration-150 flex items-center gap-xs">
+            SOS
+        </button>
+</header>
+<!-- Map Background Area -->
+<main class="relative flex-1 w-full h-full">
+<!-- Interactive Map Placeholder -->
+<div class="absolute inset-0 w-full h-full bg-surface-container-low" data-alt="A modern, high-contrast digital map interface showing a city grid. The map uses a light mode aesthetic with clean white and light gray streets, subtle topographical details, and distinct primary red route markers highlighting emergency pathways. The lighting is flat and analytical, suitable for a professional corporate dashboard. No text or labels are visible, focusing entirely on the geometric layout of the urban environment." data-location="Santiago, Chile" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD4mYMNBp-NH_9KtE7z5pZCt1Ev1mjSDCAQGOyhuUyGVTgaKMb-MMoR88xAx8xZmQ0hTLU336Kr6_5jc_7QGFkjDadgGMlM8gO4EsFjiPG9hkRYV0x5rR2wJrABCOSZeSBaGK2KmePJlIXkIIBLxfw2heBDGcKUZ04FLAgzeWXHzp5AKgc6prWW9lbZbB0JI0iayiP9l1ur86y0dSmdyEBOPslF-WrsRH6f558HxOiRqMiRrxumCcVW'); background-size: cover; background-position: center;">
+<!-- Map Overlay Gradient to ensure text readability -->
+<div class="absolute inset-0 bg-gradient-to-b from-surface/40 via-transparent to-surface/90 pointer-events-none"></div>
+<!-- User Location Marker -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+<div class="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center animate-pulse">
+<div class="w-4 h-4 bg-secondary rounded-full shadow-lg border-2 border-surface"></div>
+</div>
+</div>
+</div>
+<!-- Selection Drawer (Bottom Sheet) -->
+<div class="absolute bottom-16 md:bottom-0 left-0 w-full bg-surface rounded-t-xl shadow-[0_-4px_24px_rgba(0,0,0,0.08)] z-40 transition-transform duration-300 ease-in-out transform translate-y-0">
+<!-- Drag Handle -->
+<div class="w-full flex justify-center py-sm cursor-grab">
+<div class="w-12 h-1 bg-outline-variant rounded-full"></div>
+</div>
+<div class="px-margin-mobile pb-xl pt-sm flex flex-col gap-lg max-w-3xl mx-auto w-full">
+<h2 class="font-headline-md text-headline-md text-on-surface">Seleccionar Tipo de Unidad</h2>
+<!-- Options Grid -->
+<div class="grid grid-cols-1 gap-md">
+<!-- Option 1: Basic -->
+<label class="relative flex items-center justify-between p-md border rounded-lg cursor-pointer bg-surface border-outline-variant hover:border-secondary transition-colors group">
+<input checked="" class="peer sr-only" name="ambulance_type" type="radio" value="basic"/>
+<div class="absolute inset-0 border-2 border-transparent peer-checked:border-secondary rounded-lg pointer-events-none transition-colors"></div>
+<div class="absolute top-md right-md opacity-0 peer-checked:opacity-100 text-secondary transition-opacity">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex items-center gap-md z-10">
+<div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="local_hospital">local_hospital</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-bold text-label-bold text-on-surface">Urgencia Básica</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-sm">Soporte vital básico</span>
+</div>
+</div>
+<div class="font-mono-data text-mono-data text-on-surface z-10">
+                            $45.000
+                        </div>
+</label>
+<!-- Option 2: Advanced (UCI) -->
+<label class="relative flex items-center justify-between p-md border rounded-lg cursor-pointer bg-surface border-outline-variant hover:border-primary transition-colors group">
+<input class="peer sr-only" name="ambulance_type" type="radio" value="advanced"/>
+<div class="absolute inset-0 border-2 border-transparent peer-checked:border-primary rounded-lg pointer-events-none transition-colors bg-primary/5 peer-checked:bg-primary/10"></div>
+<div class="absolute top-md right-md opacity-0 peer-checked:opacity-100 text-primary transition-opacity">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex items-center gap-md z-10">
+<div class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined" data-icon="monitor_heart" data-weight="fill" style="font-variation-settings: 'FILL' 1;">monitor_heart</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-bold text-label-bold text-on-surface flex items-center gap-xs">
+                                    Avanzada (UCI)
+                                    <span class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold uppercase tracking-wider rounded-sm">Crítico</span>
+</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-sm">Médico a bordo, equipo avanzado</span>
+</div>
+</div>
+<div class="font-mono-data text-mono-data text-on-surface font-semibold z-10">
+                            $120.000
+                        </div>
+</label>
+<!-- Option 3: Transfer -->
+<label class="relative flex items-center justify-between p-md border rounded-lg cursor-pointer bg-surface border-outline-variant hover:border-tertiary transition-colors group">
+<input class="peer sr-only" name="ambulance_type" type="radio" value="transfer"/>
+<div class="absolute inset-0 border-2 border-transparent peer-checked:border-tertiary rounded-lg pointer-events-none transition-colors"></div>
+<div class="absolute top-md right-md opacity-0 peer-checked:opacity-100 text-tertiary transition-opacity">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex items-center gap-md z-10">
+<div class="w-12 h-12 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="accessible_forward">accessible_forward</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-bold text-label-bold text-on-surface">Traslado Simple</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-sm">Sin riesgo vital programado</span>
+</div>
+</div>
+<div class="font-mono-data text-mono-data text-on-surface z-10">
+                            $35.000
+                        </div>
+</label>
+</div>
+<!-- Primary Action Button -->
+<button class="w-full bg-primary text-on-primary font-label-bold text-label-bold py-lg rounded-lg uppercase tracking-wider shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-lg" data-icon="airport_shuttle">airport_shuttle</span>
+                    Solicitar Ambulancia
+                </button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Hidden on desktop, visible on mobile if considered a main destination. Since this is an active request flow, it's a bit borderline, but it acts as 'Home') -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 bg-surface border-t border-outline-variant z-50 md:hidden">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-xl mb-0.5" data-icon="home_health" data-weight="fill" style="font-variation-settings: 'FILL' 1;">home_health</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<!-- History -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:bg-surface-container-high rounded-full px-4 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-xl mb-0.5" data-icon="history">history</span>
+<span class="font-label-sm text-label-sm">History</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:bg-surface-container-high rounded-full px-4 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-xl mb-0.5" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<!-- Desktop SideNav (Placeholder for responsive layout, mostly hidden here to focus on map) -->
+<aside class="hidden md:flex flex-col w-64 h-full bg-surface border-r border-outline-variant fixed left-0 top-[65px] pt-md z-40 transform -translate-x-full lg:translate-x-0 transition-transform">
+<nav class="flex flex-col gap-xs px-md">
+<a class="flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="home_health" data-weight="fill" style="font-variation-settings: 'FILL' 1;">home_health</span>
+<span class="font-label-bold text-label-bold">Home</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-bold text-label-bold">History</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-bold text-label-bold">Profile</span>
+</a>
+</nav>
+</aside>
+<!-- Desktop spacer adjustment for map -->
+<style>
+        @media (min-width: 1024px) {
+            main {
+                padding-left: 256px; /* Width of side nav */
+            }
+            .bottom-16 {
+                bottom: 0 !important;
+            }
+        }
+    </style>
+</body></html>

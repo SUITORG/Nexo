@@ -639,146 +639,610 @@ D.offNote="'Off' no siempre forma un verbo frasal — muchas veces es solo un ad
 D.particles=[
  {k:"off",label:"OFF",note:"OFF combina dos ideas base que se repiten en casi todos sus usos: separación física (algo se despega o se aleja) y desconexión/interrupción (algo deja de estar activo o de continuar). Por eso 'take off' es despegar (separarse del suelo) y 'turn off' es apagar (desconectar la electricidad) — parecen distintos pero comparten la misma raíz de sentido: 'cortar el contacto o la continuidad'.",cats:[
   {t:"Separación / desprendimiento",c:"algo se separa físicamente de otra cosa",vs:[
-   {v:"take off",ipa:"/teɪk ɔf/",es:"despegar; quitarse (ropa)",ex:"The plane took off late."},
-   {v:"cut off",ipa:"/kʌt ɔf/",es:"cortar, separar; interrumpir (suministro)",ex:"They cut off the water supply."}]},
+   {v:"take off",ipa:"/teɪk ɔf/",es:"despegar; quitarse (ropa)",ex:"The plane took off on time."},
+   {v:"peel off",ipa:"/pil ɔf/",es:"despegar, pelar",ex:"The old paint is starting to peel off."},
+   {v:"tear off",ipa:"/tɛr ɔf/",es:"arrancar, rasgar",ex:"He tore off a piece of paper."},
+   {v:"come off",ipa:"/kʌm ɔf/",es:"despegarse, soltarse",ex:"A button came off my shirt."},
+   {v:"slice off",ipa:"/slaɪs ɔf/",es:"cortar en rebanada",ex:"She sliced off a piece of bread."},
+   {v:"snap off",ipa:"/snæp ɔf/",es:"romper de un tirón",ex:"The branch snapped off in the wind."},
+   {v:"saw off",ipa:"/sɔ ɔf/",es:"cortar con sierra",ex:"He sawed off the broken branch."},
+   {v:"chop off",ipa:"/tʃɑp ɔf/",es:"cortar de un tajo",ex:"The chef chopped off the fish head."},
+   {v:"flake off",ipa:"/fleɪk ɔf/",es:"descascararse, desprenderse en escamas",ex:"The rust is flaking off the fence."},
+   {v:"hack off",ipa:"/hæk ɔf/",es:"cortar bruscamente",ex:"He hacked off the tangled vines."}]},
   {t:"Alejamiento / movimiento fuera de un lugar",c:"alejarse de un lugar",vs:[
    {v:"drive off",ipa:"/draɪv ɔf/",es:"alejarse manejando",ex:"He drove off without saying goodbye."},
-   {v:"run off",ipa:"/rʌn ɔf/",es:"irse corriendo, huir",ex:"The dog ran off after the cat."}]},
-  {t:"Desconexión",c:"cortar el flujo de electricidad, gas o señal",vs:[
+   {v:"run off",ipa:"/rʌn ɔf/",es:"irse corriendo, huir",ex:"The dog ran off after the cat."},
+   {v:"walk off",ipa:"/wɔk ɔf/",es:"irse caminando (a veces enojado)",ex:"She walked off in anger."},
+   {v:"storm off",ipa:"/stɔrm ɔf/",es:"irse furioso, salir hecho una tormenta",ex:"He stormed off after the argument."},
+   {v:"march off",ipa:"/mɑrtʃ ɔf/",es:"irse con paso decidido",ex:"The soldiers marched off at dawn."},
+   {v:"dash off",ipa:"/dæʃ ɔf/",es:"salir corriendo rápido",ex:"She dashed off to catch the bus."},
+   {v:"head off",ipa:"/hɛd ɔf/",es:"partir, dirigirse a otro lugar",ex:"We're heading off to the beach this weekend."},
+   {v:"move off",ipa:"/muv ɔf/",es:"ponerse en marcha, alejarse",ex:"The train slowly moved off the platform."},
+   {v:"sail off",ipa:"/seɪl ɔf/",es:"zarpar, alejarse navegando",ex:"The ship sailed off into the sunset."},
+   {v:"jet off",ipa:"/dʒɛt ɔf/",es:"irse de viaje (informal)",ex:"They jetted off to Paris for the weekend."}]},
+  {t:"Desconexión",c:"cortar el flujo de electricidad, gas, señal o el paso hacia un lugar",vs:[
    {v:"turn off",ipa:"/tɜrn ɔf/",es:"apagar",ex:"Please turn off the lights before you leave."},
-   {v:"switch off",ipa:"/swɪtʃ ɔf/",es:"apagar, desconectar",ex:"I switched off my phone during the meeting."}]},
-  {t:"Terminación / interrupción",c:"detener algo antes de que termine naturalmente",vs:[
+   {v:"switch off",ipa:"/swɪtʃ ɔf/",es:"apagar, desconectar",ex:"I switched off my phone during the meeting."},
+   {v:"shut off",ipa:"/ʃʌt ɔf/",es:"cortar (un suministro)",ex:"They shut off the water while fixing the pipe."},
+   {v:"power off",ipa:"/ˈpaʊər ɔf/",es:"apagar (un dispositivo)",ex:"Power off the laptop before the flight."},
+   {v:"log off",ipa:"/lɔɡ ɔf/",es:"cerrar sesión",ex:"Remember to log off when you're done."},
+   {v:"sign off",ipa:"/saɪn ɔf/",es:"despedirse (radio, correo); cerrar sesión",ex:"The news anchor signed off for the night."},
+   {v:"cut off",ipa:"/kʌt ɔf/",es:"cortar, interrumpir (suministro)",ex:"They cut off the water supply."},
+   {v:"block off",ipa:"/blɑk ɔf/",es:"bloquear (una calle, un acceso)",ex:"Police blocked off the street after the accident."},
+   {v:"seal off",ipa:"/sil ɔf/",es:"cerrar, aislar por completo (un área)",ex:"Officials sealed off the area."},
+   {v:"cordon off",ipa:"/ˈkɔrdən ɔf/",es:"acordonar, bloquear el acceso",ex:"The police cordoned off the crime scene."}]},
+  {t:"Terminación / interrupción",c:"detener, posponer o interrumpir algo antes de que siga su curso natural",vs:[
    {v:"break off",ipa:"/breɪk ɔf/",es:"interrumpir, romper (una relación, una conversación)",ex:"They broke off their engagement."},
-   {v:"call off",ipa:"/kɔl ɔf/",es:"cancelar",ex:"They called off the meeting."}]},
-  {t:"Inicio o partida",c:"el punto de arranque de un viaje o evento",vs:[
+   {v:"call off",ipa:"/kɔl ɔf/",es:"cancelar",ex:"They called off the meeting."},
+   {v:"knock off",ipa:"/nɑk ɔf/",es:"dejar de trabajar (informal)",ex:"Let's knock off early today."},
+   {v:"lay off",ipa:"/leɪ ɔf/",es:"despedir (trabajadores)",ex:"The company laid off dozens of workers."},
+   {v:"hold off",ipa:"/hoʊld ɔf/",es:"aplazar, contener(se)",ex:"Let's hold off on the decision until tomorrow."},
+   {v:"put off",ipa:"/pʊt ɔf/",es:"posponer",ex:"Don't put it off again."},
+   {v:"doze off",ipa:"/doʊz ɔf/",es:"quedarse dormido de repente",ex:"He dozed off during the movie."},
+   {v:"nod off",ipa:"/nɑd ɔf/",es:"quedarse dormido cabeceando",ex:"She nodded off in the middle of class."},
+   {v:"drop off",ipa:"/drɑp ɔf/",es:"quedarse dormido (informal)",ex:"I dropped off during the long flight."},
+   {v:"cool off",ipa:"/kul ɔf/",es:"calmarse",ex:"He needs some time to cool off."}]},
+  {t:"Inicio o partida",c:"el punto de arranque de un viaje, evento o actividad",vs:[
    {v:"set off",ipa:"/sɛt ɔf/",es:"partir, ponerse en marcha",ex:"We set off early in the morning."},
-   {v:"kick off",ipa:"/kɪk ɔf/",es:"comenzar (un evento, un partido)",ex:"The festival kicks off this Friday."}]},
+   {v:"kick off",ipa:"/kɪk ɔf/",es:"comenzar (un evento, un partido)",ex:"The festival kicks off this Friday."},
+   {v:"start off",ipa:"/stɑrt ɔf/",es:"comenzar, empezar (de cierta forma)",ex:"We started off well but got tired later."},
+   {v:"lead off",ipa:"/lid ɔf/",es:"abrir, comenzar (una lista, un evento)",ex:"She led off the meeting with good news."},
+   {v:"push off",ipa:"/pʊʃ ɔf/",es:"irse, partir",ex:"We should push off now, it's getting late."},
+   {v:"shove off",ipa:"/ʃʌv ɔf/",es:"irse (informal, un poco brusco)",ex:"Just shove off, will you?"},
+   {v:"zoom off",ipa:"/zum ɔf/",es:"irse rápidamente",ex:"He zoomed off on his motorcycle."},
+   {v:"tee off",ipa:"/ti ɔf/",es:"arrancar, dar el puntapié inicial (informal)",ex:"The project teed off with a big kickoff meeting."},
+   {v:"get off (to a start)",ipa:"/ɡɛt ɔf/",es:"comenzar (bien o mal)",ex:"We got off to a great start this morning."},
+   {v:"buzz off",ipa:"/bʌz ɔf/",es:"largarse (informal, brusco)",ex:"He told the salesman to buzz off."}]},
   {t:"Eliminación / liberación",c:"quitarse de encima una carga, deuda o problema",vs:[
    {v:"pay off",ipa:"/peɪ ɔf/",es:"terminar de pagar (una deuda)",ex:"We finally paid off the loan."},
-   {v:"shake off",ipa:"/ʃeɪk ɔf/",es:"librarse de, deshacerse de",ex:"I can't shake off this cold."}]},
+   {v:"shake off",ipa:"/ʃeɪk ɔf/",es:"librarse de, deshacerse de",ex:"I can't shake off this cold."},
+   {v:"write off",ipa:"/raɪt ɔf/",es:"dar por perdido, cancelar (una deuda)",ex:"The bank wrote off the bad debt."},
+   {v:"brush off",ipa:"/brʌʃ ɔf/",es:"ignorar, quitarle importancia",ex:"She brushed off his rude comment."},
+   {v:"laugh off",ipa:"/læf ɔf/",es:"restarle importancia riéndose de algo",ex:"He laughed off the embarrassing mistake."},
+   {v:"shrug off",ipa:"/ʃrʌɡ ɔf/",es:"no darle importancia, quitarse de encima",ex:"She shrugged off the criticism."},
+   {v:"let off",ipa:"/lɛt ɔf/",es:"dejar ir sin castigo",ex:"The teacher let him off with a warning."},
+   {v:"ward off",ipa:"/wɔrd ɔf/",es:"alejar, prevenir (una amenaza)",ex:"Vitamin C helps ward off colds."},
+   {v:"stave off",ipa:"/steɪv ɔf/",es:"evitar, mantener a raya",ex:"They staved off bankruptcy for another year."},
+   {v:"sleep off",ipa:"/slip ɔf/",es:"dormir hasta que se pase (una resaca)",ex:"He slept off his hangover all morning."}]},
   {t:"Reducción o desaparición gradual",c:"algo pierde intensidad poco a poco, no de golpe",vs:[
    {v:"wear off",ipa:"/wɛr ɔf/",es:"desaparecer (un efecto) poco a poco",ex:"The pain medicine wore off."},
-   {v:"ease off",ipa:"/iz ɔf/",es:"disminuir, aflojar",ex:"The rain finally eased off."}]},
-  {t:"Consumo o finalización completa",c:"terminar o consumir algo por completo, sin dejar nada",vs:[
+   {v:"ease off",ipa:"/iz ɔf/",es:"disminuir, aflojar",ex:"The rain finally eased off."},
+   {v:"die off",ipa:"/daɪ ɔf/",es:"extinguirse gradualmente",ex:"The old tradition slowly died off."},
+   {v:"taper off",ipa:"/ˈteɪpər ɔf/",es:"disminuir gradualmente hasta casi desaparecer",ex:"Her interest in the hobby tapered off."},
+   {v:"level off",ipa:"/ˈlɛvəl ɔf/",es:"estabilizarse (tras subir o bajar)",ex:"Prices leveled off after the holidays."},
+   {v:"fall off",ipa:"/fɔl ɔf/",es:"disminuir (ventas, interés)",ex:"Sales fell off during the winter."},
+   {v:"tail off",ipa:"/teɪl ɔf/",es:"disminuir gradualmente",ex:"Attendance tailed off toward the end of the season."},
+   {v:"back off",ipa:"/bæk ɔf/",es:"retroceder, dejar de presionar",ex:"He backed off when she raised her voice."},
+   {v:"trail off",ipa:"/treɪl ɔf/",es:"irse apagando (una voz, un sonido)",ex:"Her voice trailed off as she got emotional."},
+   {v:"burn off",ipa:"/bɜrn ɔf/",es:"disiparse por el calor",ex:"The morning fog burned off by noon."}]},
+  {t:"Consumo o finalización completa",c:"terminar, consumir o rematar algo por completo, sin dejar nada",vs:[
    {v:"finish off",ipa:"/ˈfɪnɪʃ ɔf/",es:"terminar por completo, rematar",ex:"Let's finish off the last slice of pizza."},
-   {v:"polish off",ipa:"/ˈpɑlɪʃ ɔf/",es:"acabarse algo rápido (comida, tarea)",ex:"They polished off the whole cake in ten minutes."}]}
+   {v:"polish off",ipa:"/ˈpɑlɪʃ ɔf/",es:"acabarse algo rápido (comida, tarea)",ex:"They polished off the whole cake in ten minutes."},
+   {v:"round off",ipa:"/raʊnd ɔf/",es:"rematar, redondear",ex:"Let's round off the evening with dessert."},
+   {v:"top off",ipa:"/tɑp ɔf/",es:"rellenar hasta el tope",ex:"Can you top off my coffee?"},
+   {v:"cap off",ipa:"/kæp ɔf/",es:"rematar, coronar",ex:"They capped off the night with fireworks."},
+   {v:"sell off",ipa:"/sɛl ɔf/",es:"liquidar, vender todo",ex:"The company sold off its remaining stock."},
+   {v:"auction off",ipa:"/ˈɔkʃən ɔf/",es:"subastar, rematar",ex:"They auctioned off the old furniture."},
+   {v:"marry off",ipa:"/ˈmæri ɔf/",es:"casar, colocar en matrimonio",ex:"Her parents were eager to marry off their daughter."},
+   {v:"kill off",ipa:"/kɪl ɔf/",es:"eliminar por completo, exterminar",ex:"The disease killed off most of the population."},
+   {v:"clean off",ipa:"/klin ɔf/",es:"dejar limpio por completo",ex:"He cleaned off his plate."}]}
  ]},
  {k:"out",label:"OUT",note:"OUT es la partícula de 'salir hacia afuera' en el sentido más amplio: de un espacio físico (go out), de la oscuridad al conocimiento (find out), de un conjunto completo hasta agotarlo (run out), o de un grupo por exclusión (leave out). Casi todo uso de OUT se puede rastrear a esa imagen central: algo sale, se agota, se revela o se excluye.",cats:[
   {t:"Movimiento hacia afuera",c:"moverse de adentro hacia afuera",vs:[
    {v:"go out",ipa:"/ɡoʊ aʊt/",es:"salir",ex:"We went out for dinner last night."},
-   {v:"get out",ipa:"/ɡɛt aʊt/",es:"salir, largarse",ex:"Get out of the car, we're here."}]},
-  {t:"Extinción / apagado",c:"detener algo que ardía o brillaba",vs:[
+   {v:"get out",ipa:"/ɡɛt aʊt/",es:"salir, largarse",ex:"Get out of the car, we're here."},
+   {v:"step out",ipa:"/stɛp aʊt/",es:"salir un momento",ex:"I'm just stepping out for a minute."},
+   {v:"walk out",ipa:"/wɔk aʊt/",es:"irse abruptamente (de una reunión)",ex:"He walked out in the middle of the meeting."},
+   {v:"move out",ipa:"/muv aʊt/",es:"mudarse, irse de un lugar",ex:"They moved out of the apartment last month."},
+   {v:"come out",ipa:"/kʌm aʊt/",es:"salir a la luz, revelarse",ex:"The truth finally came out."},
+   {v:"head out",ipa:"/hɛd aʊt/",es:"salir, partir hacia algún lugar",ex:"We should head out before traffic gets bad."},
+   {v:"climb out",ipa:"/klaɪm aʊt/",es:"salir trepando",ex:"She climbed out through the window."},
+   {v:"crawl out",ipa:"/krɔl aʊt/",es:"salir gateando",ex:"The baby crawled out from under the table."},
+   {v:"break out",ipa:"/breɪk aʊt/",es:"escapar (de prisión); estallar (una guerra, un sarpullido)",ex:"The prisoners broke out of jail."}]},
+  {t:"Extinción / apagado",c:"detener algo que ardía, brillaba o estaba consciente",vs:[
    {v:"put out",ipa:"/pʊt aʊt/",es:"apagar (un fuego)",ex:"Firefighters put out the fire quickly."},
-   {v:"blow out",ipa:"/bloʊ aʊt/",es:"apagar soplando",ex:"She blew out the candles on her cake."}]},
+   {v:"blow out",ipa:"/bloʊ aʊt/",es:"apagar soplando",ex:"She blew out the candles on her cake."},
+   {v:"die out",ipa:"/daɪ aʊt/",es:"extinguirse (una especie, una tradición)",ex:"The old tradition eventually died out."},
+   {v:"burn out",ipa:"/bɜrn aʊt/",es:"consumirse por completo; agotarse (una persona)",ex:"The candle burned out overnight."},
+   {v:"snuff out",ipa:"/snʌf aʊt/",es:"apagar de un soplido o apretón",ex:"She snuffed out the candle."},
+   {v:"peter out",ipa:"/ˈpitər aʊt/",es:"irse apagando gradualmente, perder fuerza",ex:"The party petered out around midnight."},
+   {v:"fizzle out",ipa:"/ˈfɪzəl aʊt/",es:"desvanecerse, fracasar gradualmente",ex:"The protest fizzled out after a few days."},
+   {v:"knock out",ipa:"/nɑk aʊt/",es:"noquear, dejar inconsciente",ex:"The champion knocked out his opponent in round two."},
+   {v:"black out",ipa:"/blæk aʊt/",es:"desmayarse; sufrir un apagón",ex:"The whole city blacked out during the storm."},
+   {v:"pass out",ipa:"/pæs aʊt/",es:"desmayarse, perder el conocimiento",ex:"He passed out from the heat."}]},
   {t:"Eliminación / borrado",c:"quitar algo de un conjunto o de un texto",vs:[
    {v:"cross out",ipa:"/krɔs aʊt/",es:"tachar",ex:"He crossed out the wrong answer."},
-   {v:"cut out",ipa:"/kʌt aʊt/",es:"recortar; dejar de hacer algo",ex:"You should cut out sugar from your diet."}]},
+   {v:"cut out",ipa:"/kʌt aʊt/",es:"recortar; dejar de hacer algo",ex:"You should cut out sugar from your diet."},
+   {v:"white out",ipa:"/waɪt aʊt/",es:"corregir con corrector líquido",ex:"She whited out the mistake."},
+   {v:"blot out",ipa:"/blɑt aʊt/",es:"borrar, tapar por completo",ex:"Clouds blotted out the sun."},
+   {v:"wipe out",ipa:"/waɪp aʊt/",es:"eliminar por completo, arrasar",ex:"The flood wiped out the village."},
+   {v:"rub out",ipa:"/rʌb aʊt/",es:"borrar frotando",ex:"He rubbed out the pencil marks."},
+   {v:"edit out",ipa:"/ˈɛdɪt aʊt/",es:"eliminar en la edición",ex:"They edited out the boring parts."},
+   {v:"weed out",ipa:"/wid aʊt/",es:"eliminar lo no deseado, depurar",ex:"The coach weeded out the weakest players."},
+   {v:"strike out",ipa:"/straɪk aʊt/",es:"tachar",ex:"Strike out that sentence."},
+   {v:"phase out",ipa:"/feɪz aʊt/",es:"eliminar gradualmente, retirar poco a poco",ex:"They're phasing out plastic bags."}]},
   {t:"Distribución / reparto",c:"algo sale de una fuente hacia varias personas",vs:[
    {v:"hand out",ipa:"/hænd aʊt/",es:"repartir",ex:"The teacher handed out the tests."},
-   {v:"give out",ipa:"/ɡɪv aʊt/",es:"repartir, distribuir",ex:"Volunteers gave out free water at the race."}]},
+   {v:"give out",ipa:"/ɡɪv aʊt/",es:"repartir, distribuir",ex:"Volunteers gave out free water at the race."},
+   {v:"dish out",ipa:"/dɪʃ aʊt/",es:"repartir, servir",ex:"She dished out generous portions."},
+   {v:"dole out",ipa:"/doʊl aʊt/",es:"repartir con cautela, en pequeñas cantidades",ex:"The manager doled out the bonuses."},
+   {v:"send out",ipa:"/sɛnd aʊt/",es:"enviar, distribuir",ex:"They sent out invitations."},
+   {v:"mail out",ipa:"/meɪl aʊt/",es:"enviar por correo",ex:"We mailed out the newsletters."},
+   {v:"parcel out",ipa:"/ˈpɑrsəl aʊt/",es:"repartir en partes",ex:"The land was parceled out among the heirs."},
+   {v:"read out",ipa:"/rid aʊt/",es:"leer en voz alta, anunciar",ex:"The teacher read out the names."},
+   {v:"call out",ipa:"/kɔl aʊt/",es:"llamar en voz alta (nombres, instrucciones)",ex:"The coach called out instructions from the sideline."},
+   {v:"share out",ipa:"/ʃɛr aʊt/",es:"repartir, dividir entre varios",ex:"They shared out the profits equally."}]},
   {t:"Agotamiento / consumo total",c:"algo se acaba o se gasta hasta no quedar nada",vs:[
    {v:"run out (of)",ipa:"/rʌn aʊt/",es:"acabarse, quedarse sin algo",ex:"We ran out of milk this morning."},
-   {v:"wear out",ipa:"/wɛr aʊt/",es:"desgastar(se), agotar(se)",ex:"These shoes wore out after one summer."}]},
+   {v:"wear out",ipa:"/wɛr aʊt/",es:"desgastar(se), agotar(se)",ex:"These shoes wore out after one summer."},
+   {v:"sell out",ipa:"/sɛl aʊt/",es:"agotarse (las entradas, las existencias)",ex:"The concert tickets sold out in minutes."},
+   {v:"tire out",ipa:"/taɪr aʊt/",es:"agotar, cansar por completo",ex:"The hike tired us out."},
+   {v:"max out",ipa:"/mæks aʊt/",es:"llegar al límite (una tarjeta, un esfuerzo)",ex:"He maxed out his credit card."},
+   {v:"cash out",ipa:"/kæʃ aʊt/",es:"retirar todo el dinero, cobrar",ex:"He cashed out his chips at the casino."},
+   {v:"drain out",ipa:"/dreɪn aʊt/",es:"agotarse, vaciarse por completo",ex:"All the energy drained out of her."},
+   {v:"dry out",ipa:"/draɪ aʊt/",es:"secarse por completo",ex:"The riverbed dried out during the drought."},
+   {v:"stress out",ipa:"/strɛs aʊt/",es:"estresar(se) por completo",ex:"The exam stressed her out."},
+   {v:"flame out",ipa:"/fleɪm aʊt/",es:"fracasar de golpe tras agotar el impulso",ex:"The startup flamed out after a year."}]},
   {t:"Revelar / descubrir",c:"hacer visible o comprensible algo que estaba oculto",vs:[
    {v:"find out",ipa:"/faɪnd aʊt/",es:"descubrir, averiguar",ex:"I just found out she's moving to Canada."},
-   {v:"figure out",ipa:"/ˈfɪɡjər aʊt/",es:"entender, resolver",ex:"Can you figure out this math problem?"}]},
+   {v:"figure out",ipa:"/ˈfɪɡjər aʊt/",es:"entender, resolver",ex:"Can you figure out this math problem?"},
+   {v:"point out",ipa:"/pɔɪnt aʊt/",es:"señalar, hacer notar",ex:"He pointed out an error."},
+   {v:"check out",ipa:"/tʃɛk aʊt/",es:"revisar, echar un vistazo",ex:"We checked out at noon."},
+   {v:"sniff out",ipa:"/snɪf aʊt/",es:"descubrir olfateando, detectar",ex:"The dog sniffed out the drugs."},
+   {v:"suss out",ipa:"/sʌs aʊt/",es:"descubrir, entender (informal)",ex:"I finally sussed out how it works."},
+   {v:"spell out",ipa:"/spɛl aʊt/",es:"explicar en detalle, dejar en claro",ex:"Let me spell out the rules."},
+   {v:"bring out",ipa:"/brɪŋ aʊt/",es:"revelar, sacar a la luz una cualidad",ex:"The photo really brings out her eyes."},
+   {v:"draw out",ipa:"/drɔ aʊt/",es:"sacar, hacer salir información",ex:"The interviewer drew out some surprising answers."},
+   {v:"root out",ipa:"/rut aʊt/",es:"encontrar y eliminar algo oculto",ex:"They rooted out the corruption."}]},
   {t:"Expansión / resolución completa",c:"llevar algo desordenado a un resultado completo y claro",vs:[
    {v:"sort out",ipa:"/sɔrt aʊt/",es:"resolver, organizar",ex:"We need to sort out this schedule conflict."},
-   {v:"work out",ipa:"/wɜrk aʊt/",es:"resultar bien; resolver; hacer ejercicio",ex:"Everything worked out in the end."}]},
+   {v:"work out",ipa:"/wɜrk aʊt/",es:"resultar bien; resolver; hacer ejercicio",ex:"Everything worked out in the end."},
+   {v:"iron out",ipa:"/ˈaɪərn aʊt/",es:"resolver dificultades, allanar",ex:"We ironed out the details."},
+   {v:"hammer out",ipa:"/ˈhæmər aʊt/",es:"llegar a un acuerdo tras mucho esfuerzo",ex:"They hammered out a deal."},
+   {v:"thrash out",ipa:"/θræʃ aʊt/",es:"discutir a fondo hasta resolver",ex:"They thrashed out their differences."},
+   {v:"smooth out",ipa:"/smuð aʊt/",es:"allanar, resolver dificultades",ex:"They smoothed out the wrinkles in the plan."},
+   {v:"straighten out",ipa:"/ˈstreɪtən aʊt/",es:"poner en orden, resolver una confusión",ex:"Let's straighten out this misunderstanding."},
+   {v:"map out",ipa:"/mæp aʊt/",es:"planear en detalle",ex:"She mapped out her career path."},
+   {v:"plan out",ipa:"/plæn aʊt/",es:"planear con detalle",ex:"They planned out the whole trip."},
+   {v:"lay out",ipa:"/leɪ aʊt/",es:"exponer, presentar en detalle",ex:"They laid out their strategy."}]},
   {t:"Exclusión",c:"no incluir algo dentro de un grupo o de las posibilidades",vs:[
    {v:"leave out",ipa:"/liv aʊt/",es:"omitir, dejar fuera",ex:"Don't leave out any important details."},
-   {v:"rule out",ipa:"/rul aʊt/",es:"descartar",ex:"The doctor ruled out any serious illness."}]}
+   {v:"rule out",ipa:"/rul aʊt/",es:"descartar",ex:"The doctor ruled out any serious illness."},
+   {v:"count out",ipa:"/kaʊnt aʊt/",es:"no incluir a alguien en un plan",ex:"Count me out of this plan."},
+   {v:"opt out",ipa:"/ɑpt aʊt/",es:"optar por no participar",ex:"She opted out of the program."},
+   {v:"screen out",ipa:"/skrin aʊt/",es:"filtrar, excluir mediante un criterio",ex:"The filter screens out spam."},
+   {v:"block out",ipa:"/blɑk aʊt/",es:"bloquear, no dejar entrar (ruido, pensamientos)",ex:"He tried to block out the noise."},
+   {v:"shut out",ipa:"/ʃʌt aʊt/",es:"excluir, dejar fuera",ex:"He felt shut out of the decision."},
+   {v:"edge out",ipa:"/ɛdʒ aʊt/",es:"superar por poco, dejar fuera por un margen mínimo",ex:"She edged out her rival for the position."},
+   {v:"freeze out",ipa:"/friz aʊt/",es:"excluir deliberadamente, dejar de lado",ex:"They froze him out of the group."},
+   {v:"kick out",ipa:"/kɪk aʊt/",es:"expulsar, echar",ex:"He was kicked out of the club."}]}
  ]},
  {k:"up",label:"UP",note:"UP tiene dos familias de significado que a veces se cruzan: movimiento/dirección literal hacia arriba (stand up, pick up) y, mucho más frecuente en phrasal verbs, la idea de 'completar algo hasta el final' o 'intensificar' (finish up, speed up, use up). Cuando dudes qué significa un verbo + up, prueba primero con 'por completo' o 'más' — funciona en la mayoría de los casos.",cats:[
   {t:"Totalidad / terminar por completo",c:"llevar algo hasta el final, sin dejar nada pendiente",vs:[
    {v:"finish up",ipa:"/ˈfɪnɪʃ ʌp/",es:"terminar del todo",ex:"Let's finish up this report before lunch."},
-   {v:"use up",ipa:"/juz ʌp/",es:"usar por completo, agotar",ex:"We used up all the paper in the printer."}]},
+   {v:"use up",ipa:"/juz ʌp/",es:"usar por completo, agotar",ex:"We used up all the paper in the printer."},
+   {v:"wrap up",ipa:"/ræp ʌp/",es:"envolver; terminar (algo)",ex:"Let's wrap up the meeting."},
+   {v:"eat up",ipa:"/it ʌp/",es:"comerse todo",ex:"The kids ate up all the cookies."},
+   {v:"drink up",ipa:"/drɪŋk ʌp/",es:"beberse todo",ex:"Drink up, we need to leave soon."},
+   {v:"sum up",ipa:"/sʌm ʌp/",es:"resumir",ex:"To sum up, the project was a success."},
+   {v:"tidy up",ipa:"/ˈtaɪdi ʌp/",es:"ordenar por completo",ex:"Let's tidy up before guests arrive."},
+   {v:"mop up",ipa:"/mɑp ʌp/",es:"limpiar por completo, rematar",ex:"They mopped up the spilled juice."},
+   {v:"button up",ipa:"/ˈbʌtən ʌp/",es:"abrochar por completo; finalizar detalles",ex:"He buttoned up his coat."},
+   {v:"top up",ipa:"/tɑp ʌp/",es:"rellenar hasta el tope",ex:"Can you top up my coffee?"}]},
   {t:"Aumento / intensificación",c:"aumentar la cantidad, velocidad o intensidad de algo",vs:[
    {v:"speed up",ipa:"/spid ʌp/",es:"acelerar",ex:"Can you speed up a little? We're late."},
-   {v:"turn up",ipa:"/tɜrn ʌp/",es:"subir (volumen, intensidad)",ex:"Turn up the music, I love this song."}]},
+   {v:"turn up",ipa:"/tɜrn ʌp/",es:"subir (volumen, intensidad)",ex:"Turn up the music, I love this song."},
+   {v:"step up",ipa:"/stɛp ʌp/",es:"intensificar un esfuerzo",ex:"The team stepped up their efforts in the final match."},
+   {v:"ramp up",ipa:"/ræmp ʌp/",es:"aumentar gradualmente, intensificar",ex:"The company ramped up production for the holidays."},
+   {v:"beef up",ipa:"/bif ʌp/",es:"reforzar, aumentar",ex:"They beefed up security after the incident."},
+   {v:"heat up",ipa:"/hit ʌp/",es:"calentarse, intensificarse",ex:"The competition heated up in the final round."},
+   {v:"warm up",ipa:"/wɔrm ʌp/",es:"calentar; entrar en calor",ex:"The runners warmed up before the race."},
+   {v:"pump up",ipa:"/pʌmp ʌp/",es:"inflar; motivar, aumentar energía",ex:"The coach pumped up the team before the game."},
+   {v:"crank up",ipa:"/kræŋk ʌp/",es:"subir, aumentar",ex:"Crank up the music!"},
+   {v:"build up",ipa:"/bɪld ʌp/",es:"acumular, intensificar gradualmente",ex:"Tension built up before the announcement."}]},
   {t:"Movimiento hacia arriba",c:"un movimiento físico hacia arriba",vs:[
    {v:"stand up",ipa:"/stænd ʌp/",es:"ponerse de pie",ex:"Everyone stood up when she entered."},
-   {v:"pick up",ipa:"/pɪk ʌp/",es:"recoger (a alguien); aprender (informal)",ex:"I'll pick you up at 7."}]},
+   {v:"pick up",ipa:"/pɪk ʌp/",es:"recoger (a alguien); aprender (informal)",ex:"I'll pick you up at 7."},
+   {v:"get up",ipa:"/ɡɛt ʌp/",es:"levantarse",ex:"Get up, it's time for school."},
+   {v:"jump up",ipa:"/dʒʌmp ʌp/",es:"saltar, levantarse de un salto",ex:"He jumped up when he heard the news."},
+   {v:"sit up",ipa:"/sɪt ʌp/",es:"sentarse derecho, incorporarse",ex:"She sat up in bed."},
+   {v:"look up",ipa:"/lʊk ʌp/",es:"mirar hacia arriba",ex:"He looked up at the sky."},
+   {v:"hold up",ipa:"/hoʊld ʌp/",es:"sostener en alto",ex:"Hold up your hand if you agree."},
+   {v:"lift up",ipa:"/lɪft ʌp/",es:"levantar, alzar",ex:"She lifted up the heavy box."},
+   {v:"rise up",ipa:"/raɪz ʌp/",es:"levantarse, alzarse (a veces en rebelión)",ex:"The people rose up against the regime."},
+   {v:"perk up",ipa:"/pɜrk ʌp/",es:"animarse; erguirse",ex:"Her ears perked up at the sound."}]},
   {t:"Mejora / arreglo",c:"dejar algo en mejor estado del que tenía",vs:[
    {v:"clean up",ipa:"/klin ʌp/",es:"limpiar, ordenar",ex:"We need to clean up the kitchen."},
-   {v:"fix up",ipa:"/fɪks ʌp/",es:"arreglar, remodelar",ex:"They fixed up the old house before selling it."}]},
+   {v:"fix up",ipa:"/fɪks ʌp/",es:"arreglar, remodelar",ex:"They fixed up the old house before selling it."},
+   {v:"spruce up",ipa:"/sprus ʌp/",es:"arreglar, embellecer",ex:"They spruced up the garden for the party."},
+   {v:"patch up",ipa:"/pætʃ ʌp/",es:"remendar; reconciliar",ex:"They patched up their differences."},
+   {v:"touch up",ipa:"/tʌtʃ ʌp/",es:"retocar",ex:"She touched up her makeup."},
+   {v:"dress up",ipa:"/drɛs ʌp/",es:"arreglarse, vestirse elegante",ex:"They dressed up for the party."},
+   {v:"smarten up",ipa:"/ˈsmɑrtən ʌp/",es:"arreglarse, mejorar la apariencia",ex:"He smartened up his appearance for the interview."},
+   {v:"brighten up",ipa:"/ˈbraɪtən ʌp/",es:"alegrar, iluminar",ex:"Flowers brighten up the room."},
+   {v:"freshen up",ipa:"/ˈfrɛʃən ʌp/",es:"refrescarse, arreglarse",ex:"Let me freshen up before dinner."},
+   {v:"do up",ipa:"/du ʌp/",es:"arreglar, renovar",ex:"They did up the old cottage."}]},
   {t:"Aparición / creación",c:"algo empieza a existir o se hace visible",vs:[
    {v:"show up",ipa:"/ʃoʊ ʌp/",es:"aparecer, presentarse",ex:"He never showed up."},
-   {v:"set up",ipa:"/sɛt ʌp/",es:"establecer, montar",ex:"He set up a company."}]},
+   {v:"set up",ipa:"/sɛt ʌp/",es:"establecer, montar",ex:"He set up a company."},
+   {v:"pop up",ipa:"/pɑp ʌp/",es:"aparecer de repente",ex:"A new problem popped up."},
+   {v:"crop up",ipa:"/krɑp ʌp/",es:"surgir, aparecer inesperadamente",ex:"New issues keep cropping up."},
+   {v:"spring up",ipa:"/sprɪŋ ʌp/",es:"surgir rápidamente",ex:"New buildings sprang up all over the city."},
+   {v:"come up",ipa:"/kʌm ʌp/",es:"surgir, presentarse (un tema)",ex:"Something came up at work."},
+   {v:"open up",ipa:"/ˈoʊpən ʌp/",es:"abrir (un negocio); abrirse emocionalmente",ex:"A new bakery opened up downtown."},
+   {v:"start up",ipa:"/stɑrt ʌp/",es:"arrancar, poner en marcha",ex:"They started up a new business."},
+   {v:"line up",ipa:"/laɪn ʌp/",es:"formarse, alinearse",ex:"People lined up outside the store."},
+   {v:"team up",ipa:"/tim ʌp/",es:"unirse, asociarse",ex:"They teamed up to start a business."}]},
   {t:"Acumulación / ahorro",c:"reunir algo poco a poco hasta tener una cantidad",vs:[
    {v:"save up",ipa:"/seɪv ʌp/",es:"ahorrar poco a poco",ex:"I'm saving up for a new laptop."},
-   {v:"gather up",ipa:"/ˈɡæðər ʌp/",es:"juntar, recoger",ex:"She gathered up her books and left."}]},
+   {v:"gather up",ipa:"/ˈɡæðər ʌp/",es:"juntar, recoger",ex:"She gathered up her books and left."},
+   {v:"stock up",ipa:"/stɑk ʌp/",es:"abastecerse, acumular provisiones",ex:"They stocked up on supplies before the storm."},
+   {v:"pile up",ipa:"/paɪl ʌp/",es:"acumularse, amontonarse",ex:"Bills piled up on the desk."},
+   {v:"stack up",ipa:"/stæk ʌp/",es:"apilar, acumular",ex:"Boxes stacked up in the corner."},
+   {v:"add up",ipa:"/æd ʌp/",es:"sumar; tener sentido",ex:"The numbers don't add up."},
+   {v:"rack up",ipa:"/ræk ʌp/",es:"acumular, ir sumando",ex:"He racked up huge debts."},
+   {v:"store up",ipa:"/stɔr ʌp/",es:"almacenar, guardar para después",ex:"Squirrels store up food for winter."},
+   {v:"round up",ipa:"/raʊnd ʌp/",es:"reunir, juntar",ex:"They rounded up the cattle."},
+   {v:"scrape up",ipa:"/skreɪp ʌp/",es:"reunir con esfuerzo",ex:"She scraped up enough money for rent."}]},
   {t:"División / partición",c:"algo que era una sola unidad se divide en partes",vs:[
    {v:"split up",ipa:"/splɪt ʌp/",es:"separarse (pareja); dividir",ex:"They split up after five years together."},
-   {v:"break up",ipa:"/breɪk ʌp/",es:"terminar una relación; romperse en pedazos",ex:"My parents broke up when I was ten."}]},
+   {v:"break up",ipa:"/breɪk ʌp/",es:"terminar una relación; romperse en pedazos",ex:"My parents broke up when I was ten."},
+   {v:"divide up",ipa:"/dɪˈvaɪd ʌp/",es:"dividir, repartir en partes",ex:"They divided up the work."},
+   {v:"cut up",ipa:"/kʌt ʌp/",es:"cortar en pedazos",ex:"She cut up the vegetables."},
+   {v:"chop up",ipa:"/tʃɑp ʌp/",es:"picar, cortar en trozos",ex:"He chopped up the onions."},
+   {v:"tear up",ipa:"/tɛr ʌp/",es:"romper en pedazos",ex:"He tore up the letter."},
+   {v:"carve up",ipa:"/kɑrv ʌp/",es:"repartir, dividir (territorio, recursos)",ex:"The empire was carved up after the war."},
+   {v:"dice up",ipa:"/daɪs ʌp/",es:"cortar en cubitos",ex:"Dice up the potatoes."},
+   {v:"parcel up",ipa:"/ˈpɑrsəl ʌp/",es:"empaquetar, dividir en partes",ex:"They parceled up the gifts."},
+   {v:"pair up",ipa:"/pɛr ʌp/",es:"emparejar, dividir en parejas",ex:"The teacher paired up the students."}]},
   {t:"Despertar / activación",c:"pasar a un estado activo o a un resultado final, a veces inesperado",vs:[
    {v:"wake up",ipa:"/weɪk ʌp/",es:"despertar(se)",ex:"I woke up at 6 a.m. today."},
-   {v:"wind up",ipa:"/waɪnd ʌp/",es:"terminar/acabar en cierta situación inesperada",ex:"We wound up staying at the party until midnight."}]}
+   {v:"wind up",ipa:"/waɪnd ʌp/",es:"terminar/acabar en cierta situación inesperada",ex:"We wound up staying at the party until midnight."},
+   {v:"end up",ipa:"/ɛnd ʌp/",es:"terminar, acabar en cierta situación",ex:"We ended up staying home."},
+   {v:"grow up",ipa:"/ɡroʊ ʌp/",es:"crecer, madurar",ex:"She grew up in Texas."},
+   {v:"level up",ipa:"/ˈlɛvəl ʌp/",es:"subir de nivel, mejorar",ex:"He leveled up his skills."},
+   {v:"gear up",ipa:"/ɡɪr ʌp/",es:"prepararse, alistarse",ex:"They geared up for the competition."},
+   {v:"psych up",ipa:"/saɪk ʌp/",es:"motivarse mentalmente",ex:"The team psyched themselves up before the game."},
+   {v:"fire up",ipa:"/faɪr ʌp/",es:"encender, entusiasmar",ex:"The coach fired up the team."},
+   {v:"suit up",ipa:"/sut ʌp/",es:"equiparse, vestirse para una actividad",ex:"The astronauts suited up for the mission."},
+   {v:"buckle up",ipa:"/ˈbʌkəl ʌp/",es:"abrocharse el cinturón; prepararse",ex:"Buckle up, it's going to be a bumpy ride."}]}
  ]},
  {k:"down",label:"DOWN",note:"DOWN es en gran parte el opuesto de UP: reduce, detiene o hace descender. Cubre desde el movimiento literal (sit down) hasta la reducción de intensidad (turn down, slow down) y el fallo o colapso de algo que antes funcionaba (break down). También aparece en el sentido de 'fijar algo por escrito' (write down) — la idea de 'asentar' algo firmemente.",cats:[
   {t:"Disminución / reducción de intensidad",c:"reducir la intensidad, velocidad o cantidad de algo",vs:[
    {v:"turn down",ipa:"/tɜrn daʊn/",es:"bajar (volumen); rechazar",ex:"Please turn down the TV, it's too loud."},
-   {v:"slow down",ipa:"/sloʊ daʊn/",es:"reducir la velocidad",ex:"Slow down, this road is icy."}]},
+   {v:"slow down",ipa:"/sloʊ daʊn/",es:"reducir la velocidad",ex:"Slow down, this road is icy."},
+   {v:"tone down",ipa:"/toʊn daʊn/",es:"moderar, suavizar",ex:"Tone down your language, please."},
+   {v:"cut down (on)",ipa:"/kʌt daʊn/",es:"reducir, recortar",ex:"I'm cutting down on sugar."},
+   {v:"scale down",ipa:"/skeɪl daʊn/",es:"reducir en escala",ex:"They scaled down the project."},
+   {v:"wind down",ipa:"/waɪnd daʊn/",es:"relajarse, ir terminando gradualmente",ex:"Let's wind down after work."},
+   {v:"water down",ipa:"/ˈwɔtər daʊn/",es:"diluir, suavizar",ex:"They watered down the proposal."},
+   {v:"dial down",ipa:"/ˈdaɪəl daʊn/",es:"reducir, bajar el nivel de",ex:"Dial down the drama, please."},
+   {v:"simmer down",ipa:"/ˈsɪmər daʊn/",es:"calmarse, bajar la intensidad",ex:"Simmer down, everyone."},
+   {v:"play down",ipa:"/pleɪ daʊn/",es:"minimizar, quitarle importancia",ex:"He played down his role in the project."}]},
   {t:"Movimiento hacia abajo",c:"un movimiento físico hacia abajo",vs:[
    {v:"sit down",ipa:"/sɪt daʊn/",es:"sentarse",ex:"Please sit down and make yourself comfortable."},
-   {v:"lie down",ipa:"/laɪ daʊn/",es:"acostarse, recostarse",ex:"I need to lie down, I have a headache."}]},
+   {v:"lie down",ipa:"/laɪ daʊn/",es:"acostarse, recostarse",ex:"I need to lie down, I have a headache."},
+   {v:"kneel down",ipa:"/nil daʊn/",es:"arrodillarse",ex:"He knelt down to pray."},
+   {v:"bend down",ipa:"/bɛnd daʊn/",es:"agacharse",ex:"She bent down to pick up the coin."},
+   {v:"crouch down",ipa:"/kraʊtʃ daʊn/",es:"agacharse, ponerse en cuclillas",ex:"He crouched down behind the wall."},
+   {v:"lay down",ipa:"/leɪ daʊn/",es:"recostar; establecer (reglas)",ex:"Lay down your weapons."},
+   {v:"climb down",ipa:"/klaɪm daʊn/",es:"bajar trepando; ceder en una postura",ex:"He climbed down the ladder carefully."},
+   {v:"fall down",ipa:"/fɔl daʊn/",es:"caerse",ex:"The child fell down and cried."},
+   {v:"get down",ipa:"/ɡɛt daʊn/",es:"bajar",ex:"Get down from there, it's dangerous!"},
+   {v:"duck down",ipa:"/dʌk daʊn/",es:"agacharse rápido, esquivar",ex:"He ducked down to avoid the ball."}]},
   {t:"Falla / detención abrupta",c:"algo deja de funcionar, a veces de forma abrupta",vs:[
    {v:"break down",ipa:"/breɪk daʊn/",es:"averiarse; venirse abajo emocionalmente",ex:"My car broke down on the highway."},
-   {v:"shut down",ipa:"/ʃʌt daʊn/",es:"apagar, cerrar (una máquina, un negocio)",ex:"The factory shut down last year."}]},
+   {v:"shut down",ipa:"/ʃʌt daʊn/",es:"apagar, cerrar (una máquina, un negocio)",ex:"The factory shut down last year."},
+   {v:"close down",ipa:"/kloʊz daʊn/",es:"cerrar definitivamente",ex:"The old shop closed down for good."},
+   {v:"power down",ipa:"/ˈpaʊər daʊn/",es:"apagar (un dispositivo)",ex:"Power down the system before leaving."},
+   {v:"go down",ipa:"/ɡoʊ daʊn/",es:"dejar de funcionar (un sistema, un sitio web)",ex:"The website went down for maintenance."},
+   {v:"burn down",ipa:"/bɜrn daʊn/",es:"incendiarse por completo",ex:"The house burned down in the fire."},
+   {v:"melt down",ipa:"/mɛlt daʊn/",es:"derretirse; colapsar emocionalmente",ex:"The reactor nearly melted down."},
+   {v:"knock down",ipa:"/nɑk daʊn/",es:"derribar",ex:"They knocked down the old building."},
+   {v:"tear down",ipa:"/tɛr daʊn/",es:"derribar, demoler",ex:"They tore down the old stadium."},
+   {v:"come down",ipa:"/kʌm daʊn/",es:"derrumbarse, venirse abajo",ex:"The old bridge came down in the storm."}]},
   {t:"Registro por escrito",c:"pasar algo de la mente o la voz al papel, para que quede fijo",vs:[
    {v:"write down",ipa:"/raɪt daʊn/",es:"anotar",ex:"Let me write down your number."},
-   {v:"note down",ipa:"/noʊt daʊn/",es:"apuntar",ex:"She noted down the main ideas."}]},
+   {v:"note down",ipa:"/noʊt daʊn/",es:"apuntar",ex:"She noted down the main ideas."},
+   {v:"jot down",ipa:"/dʒɑt daʊn/",es:"apuntar rápidamente",ex:"Let me jot down your address."},
+   {v:"set down",ipa:"/sɛt daʊn/",es:"dejar constancia por escrito",ex:"She set down her memories in a journal."},
+   {v:"take down",ipa:"/teɪk daʊn/",es:"anotar, apuntar",ex:"The officer took down his statement."},
+   {v:"copy down",ipa:"/ˈkɑpi daʊn/",es:"copiar, transcribir",ex:"Copy down the homework from the board."},
+   {v:"mark down",ipa:"/mɑrk daʊn/",es:"anotar, registrar",ex:"Mark down the date on your calendar."},
+   {v:"pin down",ipa:"/pɪn daʊn/",es:"precisar, determinar con exactitud",ex:"It's hard to pin down the exact cause."},
+   {v:"nail down",ipa:"/neɪl daʊn/",es:"concretar, precisar con exactitud",ex:"We need to nail down the details."},
+   {v:"lock down",ipa:"/lɑk daʊn/",es:"asegurar, fijar por completo",ex:"They locked down the entire building."}]},
   {t:"Calma / control emocional",c:"pasar de un estado agitado a uno tranquilo o estable",vs:[
    {v:"calm down",ipa:"/kɑm daʊn/",es:"calmarse",ex:"Calm down, everything will be fine."},
-   {v:"settle down",ipa:"/ˈsɛtl daʊn/",es:"tranquilizarse; establecerse (vida)",ex:"After years of traveling, they settled down in Spain."}]},
+   {v:"settle down",ipa:"/ˈsɛtl daʊn/",es:"tranquilizarse; establecerse (vida)",ex:"After years of traveling, they settled down in Spain."},
+   {v:"cool down",ipa:"/kul daʊn/",es:"enfriarse, calmarse",ex:"Let the engine cool down before you check it."},
+   {v:"quiet down",ipa:"/ˈkwaɪət daʊn/",es:"callarse, tranquilizarse",ex:"The class quieted down when the teacher walked in."},
+   {v:"pipe down",ipa:"/paɪp daʊn/",es:"bajar la voz, callarse (informal)",ex:"Pipe down, I'm trying to concentrate!"},
+   {v:"talk down",ipa:"/tɔk daʊn/",es:"calmar a alguien hablándole",ex:"The negotiator talked him down."},
+   {v:"stand down",ipa:"/stænd daʊn/",es:"retirarse, dejar la alerta",ex:"The soldiers were told to stand down."},
+   {v:"back down",ipa:"/bæk daʊn/",es:"ceder, retractarse",ex:"He backed down from his demands."},
+   {v:"hunker down",ipa:"/ˈhʌŋkər daʊn/",es:"resguardarse, prepararse para resistir",ex:"They hunkered down during the storm."},
+   {v:"die down",ipa:"/daɪ daʊn/",es:"calmarse, disminuir (ruido, emociones)",ex:"The applause died down."}]},
   {t:"Rebajar (literal o emocional)",c:"rebajar algo o a alguien, literal o emocionalmente",vs:[
    {v:"let down",ipa:"/lɛt daʊn/",es:"decepcionar, fallarle a alguien",ex:"I don't want to let my team down."},
-   {v:"put down",ipa:"/pʊt daʊn/",es:"menospreciar a alguien; depositar algo",ex:"He always puts down his coworkers in meetings."}]}
+   {v:"put down",ipa:"/pʊt daʊn/",es:"menospreciar a alguien; depositar algo",ex:"He always puts down his coworkers in meetings."},
+   {v:"run down",ipa:"/rʌn daʊn/",es:"criticar, menospreciar",ex:"She's always running down her coworkers."},
+   {v:"look down (on)",ipa:"/lʊk daʊn/",es:"menospreciar, ver con desdén",ex:"He looks down on people who didn't go to college."},
+   {v:"bring down",ipa:"/brɪŋ daʊn/",es:"derribar (a alguien de un puesto de poder); deprimir",ex:"The scandal brought down the president."},
+   {v:"weigh down",ipa:"/weɪ daʊn/",es:"agobiar, cargar",ex:"Responsibilities weighed him down."},
+   {v:"drag down",ipa:"/dræɡ daʊn/",es:"arrastrar hacia abajo, deprimir",ex:"Negativity can drag down the whole team."},
+   {v:"shout down",ipa:"/ʃaʊt daʊn/",es:"silenciar a alguien gritando más fuerte",ex:"The crowd shouted down the speaker."},
+   {v:"talk down to",ipa:"/tɔk daʊn tu/",es:"hablarle a alguien con condescendencia",ex:"Don't talk down to me, I understand perfectly."},
+   {v:"grind down",ipa:"/ɡraɪnd daʊn/",es:"desgastar, agotar moralmente con el tiempo",ex:"Years of criticism ground her down."}]}
  ]},
  {k:"on",label:"ON",note:"ON representa continuidad y conexión: algo sigue activo (carry on), se enciende o se engancha a otra cosa (turn on, put on), o avanza hacia lo siguiente sin detenerse (move on). Es la partícula que menos se aleja de su sentido original de preposición ('sobre, en contacto con') incluso en sus usos como verbo frasal.",cats:[
   {t:"Continuación",c:"una acción sigue sin detenerse",vs:[
    {v:"carry on",ipa:"/ˈkæri ɑn/",es:"continuar, seguir adelante",ex:"Carry on with your work, I'll be back soon."},
-   {v:"keep on",ipa:"/kip ɑn/",es:"seguir haciendo algo",ex:"She kept on singing even after the music stopped."}]},
+   {v:"keep on",ipa:"/kip ɑn/",es:"seguir haciendo algo",ex:"She kept on singing even after the music stopped."},
+   {v:"go on",ipa:"/ɡoʊ ɑn/",es:"continuar, seguir",ex:"Go on, tell me more."},
+   {v:"press on",ipa:"/prɛs ɑn/",es:"seguir adelante a pesar de dificultades",ex:"Despite the rain, they pressed on."},
+   {v:"hang on",ipa:"/hæŋ ɑn/",es:"esperar; aguantar",ex:"Hang on a second."},
+   {v:"live on",ipa:"/lɪv ɑn/",es:"seguir viviendo, perdurar",ex:"His legacy lives on."},
+   {v:"drag on",ipa:"/dræɡ ɑn/",es:"prolongarse tediosamente",ex:"The meeting dragged on for hours."},
+   {v:"push on",ipa:"/pʊʃ ɑn/",es:"seguir adelante con esfuerzo",ex:"They pushed on despite the storm."},
+   {v:"stay on",ipa:"/steɪ ɑn/",es:"quedarse, permanecer",ex:"She decided to stay on for another year."},
+   {v:"soldier on",ipa:"/ˈsoʊldʒər ɑn/",es:"perseverar a pesar de dificultades",ex:"Despite the setbacks, she soldiered on."}]},
   {t:"Conexión / activación",c:"activar o conectar algo: electricidad, ropa, un sistema",vs:[
    {v:"turn on",ipa:"/tɜrn ɑn/",es:"encender",ex:"Turn on the lights, it's dark in here."},
-   {v:"put on",ipa:"/pʊt ɑn/",es:"ponerse (ropa); encender",ex:"Put on your jacket, it's cold outside."}]},
+   {v:"put on",ipa:"/pʊt ɑn/",es:"ponerse (ropa); encender",ex:"Put on your jacket, it's cold outside."},
+   {v:"switch on",ipa:"/swɪtʃ ɑn/",es:"encender",ex:"Switch on the TV."},
+   {v:"click on",ipa:"/klɪk ɑn/",es:"hacer clic en",ex:"Click on the link to continue."},
+   {v:"log on",ipa:"/lɔɡ ɑn/",es:"iniciar sesión",ex:"Log on to your account."},
+   {v:"try on",ipa:"/traɪ ɑn/",es:"probarse (ropa)",ex:"She tried on the dress."},
+   {v:"hop on",ipa:"/hɑp ɑn/",es:"subirse a",ex:"Hop on the bus, it's about to leave."},
+   {v:"get on",ipa:"/ɡɛt ɑn/",es:"subir (a un transporte)",ex:"We got on the train at 8."},
+   {v:"latch on (to)",ipa:"/lætʃ ɑn/",es:"engancharse, aferrarse a (una idea)",ex:"She latched on to the idea immediately."},
+   {v:"catch on",ipa:"/kætʃ ɑn/",es:"ponerse de moda, hacerse popular",ex:"The trend caught on quickly."}]},
   {t:"Avance / progreso",c:"avanzar hacia lo siguiente, dejando algo atrás",vs:[
    {v:"move on",ipa:"/muv ɑn/",es:"seguir adelante, pasar página",ex:"It's time to move on from this mistake."},
-   {v:"come on",ipa:"/kʌm ɑn/",es:"vamos, apúrate (ánimo o urgencia)",ex:"Come on, we're going to be late!"}]},
+   {v:"come on",ipa:"/kʌm ɑn/",es:"vamos, apúrate (ánimo o urgencia)",ex:"Come on, we're going to be late!"},
+   {v:"march on",ipa:"/mɑrtʃ ɑn/",es:"seguir adelante, avanzar con determinación",ex:"Time marches on."},
+   {v:"forge on",ipa:"/fɔrdʒ ɑn/",es:"seguir adelante con determinación",ex:"They forged on despite criticism."},
+   {v:"read on",ipa:"/rid ɑn/",es:"seguir leyendo",ex:"Read on to find out what happens."},
+   {v:"play on",ipa:"/pleɪ ɑn/",es:"seguir jugando o tocando",ex:"The band played on despite the rain."},
+   {v:"egg on",ipa:"/ɛɡ ɑn/",es:"incitar, animar a seguir",ex:"His friends egged him on."},
+   {v:"urge on",ipa:"/ɜrdʒ ɑn/",es:"animar, instar a continuar",ex:"The coach urged the team on."},
+   {v:"spur on",ipa:"/spɜr ɑn/",es:"motivar, impulsar a seguir",ex:"Success spurred them on to work harder."},
+   {v:"cheer on",ipa:"/tʃɪr ɑn/",es:"animar, alentar (en una competencia)",ex:"The fans cheered on their team."}]},
   {t:"Adición / superposición",c:"agregar algo encima de lo que ya había",vs:[
    {v:"add on",ipa:"/æd ɑn/",es:"añadir, agregar",ex:"They added on an extra room to the house."},
-   {v:"pile on",ipa:"/paɪl ɑn/",es:"acumular, agregar en exceso",ex:"The teacher piled on more homework this week."}]},
+   {v:"pile on",ipa:"/paɪl ɑn/",es:"acumular, agregar en exceso",ex:"The teacher piled on more homework this week."},
+   {v:"layer on",ipa:"/ˈleɪər ɑn/",es:"aplicar en capas",ex:"She layered on the sunscreen."},
+   {v:"heap on",ipa:"/hip ɑn/",es:"amontonar, añadir en exceso",ex:"They heaped on the compliments."},
+   {v:"tack on",ipa:"/tæk ɑn/",es:"añadir al final, agregar adicionalmente",ex:"They tacked on an extra fee."},
+   {v:"slap on",ipa:"/slæp ɑn/",es:"aplicar rápido y sin cuidado",ex:"He slapped on some paint."},
+   {v:"throw on",ipa:"/θroʊ ɑn/",es:"añadir rápidamente (ropa, ingrediente)",ex:"She threw on a jacket and left."},
+   {v:"pack on",ipa:"/pæk ɑn/",es:"aumentar rápidamente (peso, músculo)",ex:"He packed on muscle at the gym."},
+   {v:"pass on",ipa:"/pæs ɑn/",es:"transmitir, pasar a otra persona",ex:"He passed on the tradition to his kids."},
+   {v:"build on",ipa:"/bɪld ɑn/",es:"construir sobre, aprovechar como base",ex:"We should build on our early success."}]},
   {t:"Dependencia / apoyo",c:"apoyarse en algo o alguien para conseguir un resultado",vs:[
    {v:"count on",ipa:"/kaʊnt ɑn/",es:"contar con, confiar en",ex:"You can always count on your family."},
-   {v:"rely on",ipa:"/rɪˈlaɪ ɑn/",es:"depender de, confiar en",ex:"We rely on solar energy for electricity."}]}
+   {v:"rely on",ipa:"/rɪˈlaɪ ɑn/",es:"depender de, confiar en",ex:"We rely on solar energy for electricity."},
+   {v:"depend on",ipa:"/dɪˈpɛnd ɑn/",es:"depender de",ex:"It depends on the weather."},
+   {v:"lean on",ipa:"/lin ɑn/",es:"apoyarse en, depender de",ex:"You can always lean on your friends."},
+   {v:"bank on",ipa:"/bæŋk ɑn/",es:"contar con, confiar plenamente en",ex:"Don't bank on getting a refund."},
+   {v:"bet on",ipa:"/bɛt ɑn/",es:"apostar por, confiar en que algo pasará",ex:"I wouldn't bet on it happening soon."},
+   {v:"draw on",ipa:"/drɔ ɑn/",es:"recurrir a, aprovechar (experiencia)",ex:"She drew on her experience to solve the problem."},
+   {v:"feed on",ipa:"/fid ɑn/",es:"alimentarse de, nutrirse de",ex:"Rumors feed on fear."},
+   {v:"call on",ipa:"/kɔl ɑn/",es:"recurrir a, pedir ayuda a",ex:"They called on the experts for advice."},
+   {v:"hinge on",ipa:"/hɪndʒ ɑn/",es:"depender por completo de",ex:"Success hinges on good planning."}]}
  ]},
  {k:"away",label:"AWAY",note:"AWAY siempre implica distancia creciente respecto a un punto de referencia: algo se aleja físicamente (run away, throw away), desaparece poco a poco (fade away) o continúa sin parar, 'alejándose' del punto donde empezó (work away). Si la traducción te suena a 'lejos' o 'sin parar', probablemente sea este el sentido.",cats:[
   {t:"Distancia / alejamiento físico",c:"alejar algo del lugar donde estaba, quitarlo de en medio",vs:[
    {v:"throw away",ipa:"/θroʊ əˈweɪ/",es:"tirar, desechar",ex:"Don't throw away that box, I still need it."},
-   {v:"put away",ipa:"/pʊt əˈweɪ/",es:"guardar (en su lugar)",ex:"Please put away your toys before dinner."}]},
+   {v:"put away",ipa:"/pʊt əˈweɪ/",es:"guardar (en su lugar)",ex:"Please put away your toys before dinner."},
+   {v:"give away",ipa:"/ɡɪv əˈweɪ/",es:"regalar, dar gratis",ex:"They gave away free samples."},
+   {v:"take away",ipa:"/teɪk əˈweɪ/",es:"llevarse, quitar",ex:"The waiter took away our plates."},
+   {v:"send away",ipa:"/sɛnd əˈweɪ/",es:"enviar lejos, despedir",ex:"They sent the kids away to summer camp."},
+   {v:"push away",ipa:"/pʊʃ əˈweɪ/",es:"empujar, alejar",ex:"She pushed him away."},
+   {v:"pull away",ipa:"/pʊl əˈweɪ/",es:"alejarse (un vehículo)",ex:"The car pulled away from the curb."},
+   {v:"brush away",ipa:"/brʌʃ əˈweɪ/",es:"apartar con la mano",ex:"He brushed away a tear."},
+   {v:"sweep away",ipa:"/swip əˈweɪ/",es:"arrastrar, llevarse por completo",ex:"The flood swept away the cars."},
+   {v:"file away",ipa:"/faɪl əˈweɪ/",es:"archivar, guardar",ex:"She filed away the documents."}]},
   {t:"Desaparición gradual",c:"algo desaparece de forma lenta y natural",vs:[
    {v:"fade away",ipa:"/feɪd əˈweɪ/",es:"desvanecerse poco a poco",ex:"The music faded away as the car drove off."},
-   {v:"wash away",ipa:"/wɑʃ əˈweɪ/",es:"arrastrar o borrar algo por acción del agua",ex:"The heavy rain washed away the sandcastle."}]},
+   {v:"wash away",ipa:"/wɑʃ əˈweɪ/",es:"arrastrar o borrar algo por acción del agua",ex:"The heavy rain washed away the sandcastle."},
+   {v:"melt away",ipa:"/mɛlt əˈweɪ/",es:"derretirse por completo, desvanecerse",ex:"The snow melted away by afternoon."},
+   {v:"die away",ipa:"/daɪ əˈweɪ/",es:"irse apagando (un sonido)",ex:"The sound of footsteps died away."},
+   {v:"drift away",ipa:"/drɪft əˈweɪ/",es:"alejarse a la deriva, perder el contacto",ex:"Old friends sometimes drift away."},
+   {v:"slip away",ipa:"/slɪp əˈweɪ/",es:"escurrirse, irse sin ser notado",ex:"He slipped away quietly."},
+   {v:"ebb away",ipa:"/ɛb əˈweɪ/",es:"disminuir gradualmente (energía, esperanza)",ex:"His strength slowly ebbed away."},
+   {v:"waste away",ipa:"/weɪst əˈweɪ/",es:"consumirse, adelgazar por enfermedad",ex:"He wasted away after the illness."},
+   {v:"blow away",ipa:"/bloʊ əˈweɪ/",es:"llevarse el viento",ex:"The wind blew away the papers."},
+   {v:"wither away",ipa:"/ˈwɪðər əˈweɪ/",es:"marchitarse, decaer gradualmente",ex:"The plant withered away without water."}]},
   {t:"Acción continua / prolongada",c:"hacer algo de forma continua e ininterrumpida",vs:[
    {v:"work away",ipa:"/wɜrk əˈweɪ/",es:"seguir trabajando sin parar",ex:"She worked away at her essay all night."},
-   {v:"chat away",ipa:"/tʃæt əˈweɪ/",es:"seguir charlando animadamente",ex:"The kids chatted away during the whole trip."}]},
+   {v:"chat away",ipa:"/tʃæt əˈweɪ/",es:"seguir charlando animadamente",ex:"The kids chatted away during the whole trip."},
+   {v:"slave away",ipa:"/sleɪv əˈweɪ/",es:"trabajar duro y sin parar",ex:"She's been slaving away at her thesis."},
+   {v:"peck away (at)",ipa:"/pɛk əˈweɪ/",es:"avanzar poco a poco en algo",ex:"He's been pecking away at his to-do list."},
+   {v:"hack away (at)",ipa:"/hæk əˈweɪ/",es:"trabajar en algo con esfuerzo repetido",ex:"He hacked away at the code for hours."},
+   {v:"plug away (at)",ipa:"/plʌɡ əˈweɪ/",es:"perseverar, seguir trabajando con esfuerzo",ex:"She kept plugging away at her studies."},
+   {v:"type away",ipa:"/taɪp əˈweɪ/",es:"teclear sin parar",ex:"He was typing away on his laptop."},
+   {v:"sing away",ipa:"/sɪŋ əˈweɪ/",es:"cantar sin parar",ex:"The birds were singing away in the trees."},
+   {v:"puff away",ipa:"/pʌf əˈweɪ/",es:"fumar sin parar",ex:"He puffed away on his cigarette."},
+   {v:"laugh away",ipa:"/læf əˈweɪ/",es:"reírse sin parar",ex:"They laughed away the whole evening."}]},
   {t:"Huida / escape",c:"escapar o irse de un lugar, a veces evitando algo",vs:[
    {v:"run away",ipa:"/rʌn əˈweɪ/",es:"huir, escaparse",ex:"The cat ran away when it heard the noise."},
-   {v:"get away",ipa:"/ɡɛt əˈweɪ/",es:"escapar; salir de vacaciones",ex:"We need to get away for the weekend."}]}
+   {v:"get away",ipa:"/ɡɛt əˈweɪ/",es:"escapar; salir de vacaciones",ex:"We need to get away for the weekend."},
+   {v:"walk away",ipa:"/wɔk əˈweɪ/",es:"irse; salir ileso de algo",ex:"He walked away from the crash unharmed."},
+   {v:"break away",ipa:"/breɪk əˈweɪ/",es:"escaparse, independizarse",ex:"The colony broke away from the empire."},
+   {v:"sneak away",ipa:"/snik əˈweɪ/",es:"escabullirse sin ser visto",ex:"The kids snuck away during the party."},
+   {v:"steal away",ipa:"/stil əˈweɪ/",es:"escabullirse sigilosamente",ex:"She stole away in the middle of the night."},
+   {v:"drive away",ipa:"/draɪv əˈweɪ/",es:"irse manejando",ex:"He drove away without looking back."},
+   {v:"chase away",ipa:"/tʃeɪs əˈweɪ/",es:"ahuyentar",ex:"They chased away the stray dog."},
+   {v:"scare away",ipa:"/skɛr əˈweɪ/",es:"espantar, ahuyentar por miedo",ex:"Loud noises scare away the birds."},
+   {v:"turn away",ipa:"/tɜrn əˈweɪ/",es:"rechazar, no dejar entrar",ex:"The bouncer turned away latecomers."}]}
  ]},
  {k:"back",label:"BACK",note:"BACK apunta siempre a un punto de origen: volver a él (come back, give back), revertir algo a como estaba antes (take back), o responder a algo que llegó primero (call back, fight back). Es la partícula de 'regresar' en sentido amplio, físico o figurado.",cats:[
   {t:"Retorno / regreso",c:"algo o alguien vuelve a su lugar o dueño original",vs:[
    {v:"come back",ipa:"/kʌm bæk/",es:"regresar, volver",ex:"She'll come back next week."},
-   {v:"give back",ipa:"/ɡɪv bæk/",es:"devolver",ex:"Can you give back my book when you're done?"}]},
+   {v:"give back",ipa:"/ɡɪv bæk/",es:"devolver",ex:"Can you give back my book when you're done?"},
+   {v:"go back",ipa:"/ɡoʊ bæk/",es:"regresar",ex:"I need to go back home."},
+   {v:"bring back",ipa:"/brɪŋ bæk/",es:"traer de vuelta; revivir un recuerdo",ex:"This song brings back memories."},
+   {v:"get back",ipa:"/ɡɛt bæk/",es:"regresar",ex:"We got back late last night."},
+   {v:"send back",ipa:"/sɛnd bæk/",es:"devolver, mandar de vuelta",ex:"They sent back the defective product."},
+   {v:"put back",ipa:"/pʊt bæk/",es:"regresar algo a su lugar",ex:"Put the book back on the shelf."},
+   {v:"pay back",ipa:"/peɪ bæk/",es:"devolver (dinero prestado)",ex:"I'll pay you back next week."},
+   {v:"head back",ipa:"/hɛd bæk/",es:"regresar, volver",ex:"It's getting late, let's head back."},
+   {v:"drive back",ipa:"/draɪv bæk/",es:"regresar manejando",ex:"We drove back home after midnight."}]},
   {t:"Reversión",c:"revertir una acción o contener un impulso",vs:[
    {v:"take back",ipa:"/teɪk bæk/",es:"retractarse; devolver algo",ex:"I take back what I said, I was wrong."},
-   {v:"hold back",ipa:"/hoʊld bæk/",es:"contener(se), reprimir",ex:"He held back his tears during the movie."}]},
+   {v:"hold back",ipa:"/hoʊld bæk/",es:"contener(se), reprimir",ex:"He held back his tears during the movie."},
+   {v:"pull back",ipa:"/pʊl bæk/",es:"retirarse, retroceder",ex:"The army pulled back from the border."},
+   {v:"draw back",ipa:"/drɔ bæk/",es:"retroceder, echarse atrás",ex:"She drew back in surprise."},
+   {v:"step back",ipa:"/stɛp bæk/",es:"dar un paso atrás; tomar distancia",ex:"Let's step back and think about this."},
+   {v:"scale back",ipa:"/skeɪl bæk/",es:"reducir, recortar",ex:"They scaled back their plans."},
+   {v:"cut back (on)",ipa:"/kʌt bæk/",es:"recortar, reducir gastos",ex:"We need to cut back on expenses."},
+   {v:"roll back",ipa:"/roʊl bæk/",es:"revertir (precios, políticas)",ex:"They rolled back the price increase."},
+   {v:"turn back",ipa:"/tɜrn bæk/",es:"dar la vuelta, regresar",ex:"It was too dangerous, so they turned back."},
+   {v:"win back",ipa:"/wɪn bæk/",es:"recuperar, reconquistar",ex:"The team worked hard to win back the fans' trust."}]},
   {t:"Respuesta / reacción",c:"responder a algo que se recibió primero",vs:[
    {v:"call back",ipa:"/kɔl bæk/",es:"devolver la llamada",ex:"I'll call you back in five minutes."},
-   {v:"fight back",ipa:"/faɪt bæk/",es:"defenderse, contraatacar",ex:"The team fought back in the second half."}]},
+   {v:"fight back",ipa:"/faɪt bæk/",es:"defenderse, contraatacar",ex:"The team fought back in the second half."},
+   {v:"talk back",ipa:"/tɔk bæk/",es:"responder de mala manera",ex:"Don't talk back to your mother."},
+   {v:"text back",ipa:"/tɛkst bæk/",es:"responder por mensaje de texto",ex:"She never texted back."},
+   {v:"write back",ipa:"/raɪt bæk/",es:"responder por escrito",ex:"He promised to write back soon."},
+   {v:"strike back",ipa:"/straɪk bæk/",es:"contraatacar",ex:"The army struck back at dawn."},
+   {v:"snap back",ipa:"/snæp bæk/",es:"responder bruscamente",ex:"She snapped back at the accusation."},
+   {v:"bounce back",ipa:"/baʊns bæk/",es:"recuperarse rápidamente",ex:"He bounced back quickly after the setback."},
+   {v:"answer back",ipa:"/ˈænsər bæk/",es:"replicar, contestar (a veces irrespetuosamente)",ex:"He always answers back when criticized."},
+   {v:"shoot back",ipa:"/ʃut bæk/",es:"responder rápido y cortante",ex:"He shot back a sharp reply."}]},
   {t:"Retraso / plan alternativo",c:"perder terreno o tiempo respecto a un plan",vs:[
    {v:"set back",ipa:"/sɛt bæk/",es:"retrasar, atrasar (un plan)",ex:"The storm set back our construction schedule."},
-   {v:"fall back (on)",ipa:"/fɔl bæk/",es:"retroceder; recurrir a un plan alternativo",ex:"If this doesn't work, we can fall back on plan B."}]}
+   {v:"fall back (on)",ipa:"/fɔl bæk/",es:"retroceder; recurrir a un plan alternativo",ex:"If this doesn't work, we can fall back on plan B."},
+   {v:"push back",ipa:"/pʊʃ bæk/",es:"posponer, retrasar (una fecha)",ex:"They pushed back the deadline."},
+   {v:"hang back",ipa:"/hæŋ bæk/",es:"quedarse atrás, dudar en avanzar",ex:"She hung back, unsure whether to join."},
+   {v:"keep back",ipa:"/kip bæk/",es:"retener, mantener a distancia",ex:"They kept back some important information."},
+   {v:"ease back",ipa:"/iz bæk/",es:"aflojar, reducir el ritmo",ex:"He eased back on the accelerator."},
+   {v:"dial back",ipa:"/ˈdaɪəl bæk/",es:"reducir, moderar (expectativas)",ex:"They dialed back their expectations."},
+   {v:"wind back",ipa:"/waɪnd bæk/",es:"retroceder, revertir (una política)",ex:"They wound back the regulations."},
+   {v:"count back",ipa:"/kaʊnt bæk/",es:"contar hacia atrás",ex:"Count back from ten to zero."},
+   {v:"trace back",ipa:"/treɪs bæk/",es:"rastrear hacia atrás, buscar el origen",ex:"They traced back the error to a single line of code."}]}
+ ]},
+ {k:"with",label:"WITH",note:"WITH conecta la acción con OTRA PERSONA O COSA con la que interactúas, cooperas, o a la que te enfrentas/soportas — a diferencia de las partículas anteriores (off, out, up...), WITH casi no cambia de sentido: siempre apunta a 'con quién o con qué'.",cats:[
+  {t:"Lidiar / soportar",c:"afrontar o tolerar algo difícil",vs:[
+   {v:"deal with",ipa:"/dil wɪð/",es:"lidiar con, ocuparse de",ex:"She deals with customer complaints every day."},
+   {v:"put up with",ipa:"/pʊt ʌp wɪð/",es:"soportar, aguantar",ex:"I can't put up with this noise anymore."},
+   {v:"bear with",ipa:"/bɛr wɪð/",es:"tener paciencia con",ex:"Please bear with me while I fix this."}]},
+  {t:"Idear algo",c:"producir o que se te ocurra una idea, plan o solución",vs:[
+   {v:"come up with",ipa:"/kʌm ʌp wɪð/",es:"idear, ocurrírsele algo",ex:"We came up with a new plan."}]},
+  {t:"Mantener el ritmo",c:"seguirle el paso a algo, o alcanzarlo tras quedarse atrás",vs:[
+   {v:"keep up with",ipa:"/kip ʌp wɪð/",es:"mantenerse al día con, seguirle el ritmo a",ex:"It's hard to keep up with all the news."},
+   {v:"catch up with",ipa:"/kætʃ ʌp wɪð/",es:"ponerse al día con",ex:"Let's catch up with each other soon."}]},
+  {t:"Acuerdo o relación",c:"llevarse bien, ceder ante algo o mantenerse fiel a ello",vs:[
+   {v:"get along with",ipa:"/ɡɛt əˈlɔŋ wɪð/",es:"llevarse bien con",ex:"He gets along with everyone at work."},
+   {v:"go along with",ipa:"/ɡoʊ əˈlɔŋ wɪð/",es:"estar de acuerdo con, seguirle la corriente a",ex:"I decided to go along with her plan."},
+   {v:"stick with",ipa:"/stɪk wɪð/",es:"quedarse con, no cambiar de",ex:"Let's stick with the original plan."}]},
+  {t:"Eliminar",c:"deshacerse de algo, hacer que deje de existir",vs:[
+   {v:"do away with",ipa:"/du əˈweɪ wɪð/",es:"eliminar, deshacerse de",ex:"The new policy did away with the old rules."}]}
+ ]},
+ {k:"to",label:"TO",note:"TO marca hacia dónde apunta, llega o conduce una acción: un destino, un límite, o una consecuencia. Comparte forma con el 'to' de infinitivo, pero aquí es una preposición fija pegada al verbo, no parte de un infinitivo.",cats:[
+  {t:"Anticipación o demora",c:"esperar algo con ganas, o finalmente hacer algo que se había pospuesto",vs:[
+   {v:"look forward to",ipa:"/lʊk ˈfɔrwərd tu/",es:"esperar con ilusión (+ -ing)",ex:"I look forward to seeing you."},
+   {v:"get around to",ipa:"/ɡɛt əˈraʊnd tu/",es:"finalmente hacer algo que se había pospuesto",ex:"I finally got around to cleaning the garage."}]},
+  {t:"Resultado o consecuencia",c:"a lo que suma, equivale o conduce algo",vs:[
+   {v:"add up to",ipa:"/æd ʌp tu/",es:"sumar, equivaler a",ex:"All these small expenses add up to a lot."},
+   {v:"amount to",ipa:"/əˈmaʊnt tu/",es:"equivaler a, resultar en",ex:"His excuse didn't amount to much."},
+   {v:"lead to",ipa:"/lid tu/",es:"conducir a, causar",ex:"Stress can lead to health problems."}]},
+  {t:"Reacción o respuesta",c:"cómo reaccionas ante algo: te opones, respondes o te identificas con ello",vs:[
+   {v:"object to",ipa:"/əbˈdʒɛkt tu/",es:"oponerse a",ex:"Many residents object to the new plan."},
+   {v:"respond to",ipa:"/rɪˈspɑnd tu/",es:"responder a",ex:"She quickly responded to the email."},
+   {v:"relate to",ipa:"/rɪˈleɪt tu/",es:"identificarse con, relacionarse con",ex:"I really relate to that story."}]},
+  {t:"Compromiso o enfoque",c:"mantenerte fiel a algo, o concentrarte en ello",vs:[
+   {v:"stick to",ipa:"/stɪk tu/",es:"apegarse a, no desviarse de",ex:"Try to stick to the schedule."},
+   {v:"get down to",ipa:"/ɡɛt daʊn tu/",es:"ponerse manos a la obra con",ex:"Let's get down to business."}]}
+ ]},
+ {k:"at",label:"AT",note:"AT dirige la acción hacia un punto específico y puntual: donde miras, apuntas o reaccionas — a diferencia de TO (destino/límite) o FOR (propósito), AT es siempre un punto exacto, físico o de atención.",cats:[
+  {t:"Mirar",c:"dirigir la vista hacia algo",vs:[
+   {v:"look at",ipa:"/lʊk æt/",es:"mirar",ex:"Look at this photo."},
+   {v:"stare at",ipa:"/stɛr æt/",es:"mirar fijamente",ex:"She stared at the painting for a while."},
+   {v:"glance at",ipa:"/ɡlæns æt/",es:"echar un vistazo a",ex:"He glanced at his watch."}]},
+  {t:"Reacción o gesto hacia alguien",c:"expresar una reacción o señalar hacia una persona",vs:[
+   {v:"laugh at",ipa:"/læf æt/",es:"reírse de",ex:"Don't laugh at his mistake."},
+   {v:"smile at",ipa:"/smaɪl æt/",es:"sonreírle a",ex:"She smiled at the baby."},
+   {v:"shout at",ipa:"/ʃaʊt æt/",es:"gritarle a",ex:"Don't shout at me."},
+   {v:"point at",ipa:"/pɔɪnt æt/",es:"señalar (con el dedo)",ex:"It's rude to point at people."}]},
+  {t:"Apuntar, llegar o insinuar",c:"dirigirse a un objetivo, llegar a un lugar/conclusión, o dar a entender algo",vs:[
+   {v:"aim at",ipa:"/eɪm æt/",es:"apuntar a, dirigirse a",ex:"The ad is aimed at young adults."},
+   {v:"arrive at",ipa:"/əˈraɪv æt/",es:"llegar a (un lugar o una conclusión)",ex:"We arrived at the airport early."},
+   {v:"get at",ipa:"/ɡɛt æt/",es:"querer decir, insinuar",ex:"What are you getting at?"}]}
+ ]},
+ {k:"for",label:"FOR",note:"FOR conecta la acción con su motivo, su objetivo, o lo que se busca o recibe a cambio — es la partícula del 'para qué' o 'a cambio de qué'.",cats:[
+  {t:"Buscar o esperar",c:"aguardar algo, o intentar encontrarlo",vs:[
+   {v:"wait for",ipa:"/weɪt fɔr/",es:"esperar (a algo/alguien)",ex:"We waited for the bus."},
+   {v:"look for",ipa:"/lʊk fɔr/",es:"buscar",ex:"I'm looking for my keys."}]},
+  {t:"Solicitar",c:"pedir formalmente algo",vs:[
+   {v:"ask for",ipa:"/æsk fɔr/",es:"pedir",ex:"He asked for help."},
+   {v:"apply for",ipa:"/əˈplaɪ fɔr/",es:"postularse a, solicitar",ex:"She applied for the job."}]},
+  {t:"Justificar o representar",c:"explicar una causa, o simbolizar/tolerar algo",vs:[
+   {v:"account for",ipa:"/əˈkaʊnt fɔr/",es:"explicar, dar cuenta de",ex:"How do you account for the missing money?"},
+   {v:"stand for",ipa:"/stænd fɔr/",es:"representar, significar; tolerar",ex:"What does 'UN' stand for?"}]},
+  {t:"Pagar o compensar",c:"entregar dinero a cambio de algo, o reparar un daño",vs:[
+   {v:"pay for",ipa:"/peɪ fɔr/",es:"pagar por",ex:"I'll pay for dinner tonight."},
+   {v:"make up for",ipa:"/meɪk ʌp fɔr/",es:"compensar",ex:"She worked overtime to make up for the delay."}]},
+  {t:"Sentimiento hacia alguien",c:"que alguien te importe, te guste o te atrape emocionalmente",vs:[
+   {v:"care for",ipa:"/kɛr fɔr/",es:"cuidar de; gustarle algo a alguien",ex:"She cares for her elderly mother."},
+   {v:"fall for",ipa:"/fɔl fɔr/",es:"enamorarse de; caer en un engaño",ex:"He fell for her right away."}]}
+ ]},
+ {k:"about",label:"ABOUT",note:"ABOUT introduce de QUÉ se trata la acción: el tema sobre el que piensas, hablas o sientes algo — es la partícula del 'sobre qué', casi siempre ligada a verbos de comunicación o pensamiento. También indica cantidad o tiempo aproximado ('about 10 minutes') y, en 'be about to', una acción inminente. Sinónimos: about (sobre)≈concerning/regarding/on; about (aprox.)≈approximately/around/roughly; about to≈going to/on the verge of.",cats:[
+  {t:"Tema o asunto",c:"el tema del que trata la acción de pensar, hablar o sentir",vs:[
+   {v:"worry about",ipa:"/ˈwɜri əˈbaʊt/",es:"preocuparse por",ex:"Don't worry about it."},
+   {v:"talk about",ipa:"/tɔk əˈbaʊt/",es:"hablar de, sobre",ex:"Let's talk about your plans."},
+   {v:"think about",ipa:"/θɪŋk əˈbaʊt/",es:"pensar en, sobre",ex:"I need to think about this."},
+   {v:"care about",ipa:"/kɛr əˈbaʊt/",es:"importarle a alguien algo",ex:"She really cares about the environment."},
+   {v:"complain about",ipa:"/kəmˈpleɪn əˈbaʊt/",es:"quejarse de",ex:"He complained about the service."},
+   {v:"bring about",ipa:"/brɪŋ əˈbaʊt/",es:"causar, provocar",ex:"The reform brought about major changes."},
+   {v:"go about",ipa:"/ɡoʊ əˈbaʊt/",es:"abordar, encarar (una tarea)",ex:"How should I go about this problem?"},
+   {v:"hear about",ipa:"/hɪr əˈbaʊt/",es:"enterarse de",ex:"Did you hear about the new policy?"},
+   {v:"dream about",ipa:"/drim əˈbaʊt/",es:"soñar con",ex:"She dreams about traveling the world."},
+   {v:"argue about",ipa:"/ˈɑrɡju əˈbaʊt/",es:"discutir sobre",ex:"They argued about money."}]},
+  {t:"Cantidad o tiempo aproximado",c:"about = casi, alrededor de — para cifras o duraciones inexactas",vs:[
+   {v:"about",ipa:"/əˈbaʊt/",es:"aproximadamente, alrededor de (cantidad)",ex:"There were about 50 people at the party."},
+   {v:"about",ipa:"/əˈbaʊt/",es:"aproximadamente (tiempo)",ex:"I'll be there in about ten minutes."},
+   {v:"about",ipa:"/əˈbaʊt/",es:"aproximadamente (precio)",ex:"It costs about $20."}]},
+  {t:"Estar a punto de",c:"be about to = a punto de, inminente",vs:[
+   {v:"be about to",ipa:"/bi əˈbaʊt tu/",es:"estar a punto de",ex:"I am about to leave."},
+   {v:"be about to",ipa:"/bi əˈbaʊt tu/",es:"estar a punto de",ex:"The movie is about to start."},
+   {v:"be about to",ipa:"/bi əˈbaʊt tu/",es:"estar a punto de",ex:"She was about to call you when the phone rang."}]}
+ ]},
+ {k:"in",label:"IN",note:"IN describe entrar en un estado, una actividad, o involucrarse en algo — la partícula de la inmersión o participación, distinta de INTO (que enfatiza el movimiento de entrada, no el estado ya dentro).",cats:[
+  {t:"Participar o unirse",c:"tomar parte activa en algo",vs:[
+   {v:"participate in",ipa:"/pɑrˈtɪsəpeɪt ɪn/",es:"participar en",ex:"Everyone can participate in the contest."},
+   {v:"engage in",ipa:"/ɪnˈɡeɪdʒ ɪn/",es:"involucrarse en, participar en",ex:"He doesn't engage in office gossip."},
+   {v:"join in",ipa:"/dʒɔɪn ɪn/",es:"unirse, participar",ex:"Everyone joined in the celebration."}]},
+  {t:"Creer o confiar",c:"tener fe o convicción en algo",vs:[
+   {v:"believe in",ipa:"/bɪˈliv ɪn/",es:"creer en",ex:"I believe in you."}]},
+  {t:"Resultar o producir",c:"tener como consecuencia",vs:[
+   {v:"result in",ipa:"/rɪˈzʌlt ɪn/",es:"resultar en, tener como consecuencia",ex:"The accident resulted in serious injuries."}]},
+  {t:"Invertir o especializarse",c:"dedicar dinero o enfoque a un área concreta",vs:[
+   {v:"invest in",ipa:"/ɪnˈvɛst ɪn/",es:"invertir en",ex:"They invested in new technology."},
+   {v:"specialize in",ipa:"/ˈspɛʃəlaɪz ɪn/",es:"especializarse en",ex:"She specializes in family law."}]},
+  {t:"Entrar en un estado",c:"pasar a un estado: ceder, darse un gusto, o registrarse en un lugar/sistema",vs:[
+   {v:"give in",ipa:"/ɡɪv ɪn/",es:"rendirse, ceder",ex:"He finally gave in to their demands."},
+   {v:"indulge in",ipa:"/ɪnˈdʌldʒ ɪn/",es:"darse el gusto de",ex:"We indulged in a big dessert."},
+   {v:"check in",ipa:"/tʃɛk ɪn/",es:"registrarse (hotel, vuelo)",ex:"We checked in at the front desk."}]}
+ ]},
+ {k:"of",label:"OF",note:"OF conecta la acción con aquello de lo que algo proviene, de lo que está hecho o compuesto, o de lo que se libera — la partícula del origen o contenido.",cats:[
+  {t:"Composición",c:"de qué partes está hecho algo",vs:[
+   {v:"consist of",ipa:"/kənˈsɪst ʌv/",es:"consistir en, estar compuesto de",ex:"The team consists of five people."}]},
+  {t:"Deshacerse o quedarse sin algo",c:"eliminar algo, o que se te agote",vs:[
+   {v:"dispose of",ipa:"/dɪˈspoʊz ʌv/",es:"deshacerse de",ex:"Please dispose of the trash properly."},
+   {v:"get rid of",ipa:"/ɡɛt rɪd ʌv/",es:"deshacerse de",ex:"It's time to get rid of old clothes."},
+   {v:"run out of",ipa:"/rʌn aʊt ʌv/",es:"quedarse sin",ex:"We ran out of milk."}]},
+  {t:"Cuidar",c:"encargarte de algo o alguien",vs:[
+   {v:"take care of",ipa:"/teɪk kɛr ʌv/",es:"cuidar de, encargarse de",ex:"I'll take care of it."}]},
+  {t:"Burlarse",c:"reírse de algo/alguien de forma despectiva",vs:[
+   {v:"make fun of",ipa:"/meɪk fʌn ʌv/",es:"burlarse de",ex:"They made fun of his accent."}]},
+  {t:"Opinión, conocimiento o advertencia",c:"formarse una opinión, enterarse de algo, o prevenir sobre un riesgo",vs:[
+   {v:"think of",ipa:"/θɪŋk ʌv/",es:"pensar en, ocurrírsele",ex:"She thought of a great idea."},
+   {v:"hear of",ipa:"/hɪr ʌv/",es:"tener noticia de, haber oído hablar de",ex:"I've never heard of that band."},
+   {v:"approve of",ipa:"/əˈpruv ʌv/",es:"aprobar, estar de acuerdo con",ex:"Her parents don't approve of the trip."},
+   {v:"warn of",ipa:"/wɔrn ʌv/",es:"advertir sobre",ex:"Scientists warn of rising sea levels."}]}
  ]}
 ];
 
@@ -1427,6 +1891,36 @@ D.vocab={
   ["budget","/ˈbʌdʒɪt/","n · v","presupuesto; presupuestar","Ya visto en Precios (sección de Vocabulario por temas)","We need to budget more carefully."],
   ["bankrupt","/ˈbæŋkrʌpt/","adj · v","en quiebra; llevar a la quiebra","'go bankrupt' = quebrar","The company went bankrupt last year."],
   ["net worth","/nɛt wɜrθ/","n","patrimonio neto","Frase fija (finanzas personales)","His net worth grew significantly."]
+ ],
+ "Sustantivos usados como verbo":[
+  ["last","/læst/","adj · adv · n · v","último, pasado; (v) durar","'This meeting won't last long'","This battery lasts about ten hours."],
+  ["table","/ˈteɪbəl/","n · v","mesa; (v) aplazar, proponer una moción (BrE)","'table a motion' = presentarla para discusión","They tabled the proposal until next month."],
+  ["water","/ˈwɔtər/","n · v","agua; (v) regar","'water the plants'","Can you water the plants while I'm away?"],
+  ["hand","/hænd/","n · v","mano; (v) entregar, pasar","'hand me that pen'","Could you hand me the salt?"],
+  ["face","/feɪs/","n · v","cara; (v) enfrentar","'face a problem'","We have to face the consequences of our actions."],
+  ["head","/hɛd/","n · v","cabeza; (v) dirigirse a, encabezar","'head to the store'","Let's head to the beach before it gets crowded."],
+  ["shoulder","/ˈʃoʊldər/","n · v","hombro; (v) cargar con, asumir","'shoulder the blame'","She had to shoulder all the responsibility alone."],
+  ["eye","/aɪ/","n · v","ojo; (v) mirar con atención o recelo","'eye the exit'","The dog eyed the stranger suspiciously."],
+  ["elbow","/ˈɛlboʊ/","n · v","codo; (v) abrirse paso a codazos","'elbow through the crowd'","He elbowed his way to the front of the line."],
+  ["fire","/faɪr/","n · v","fuego; (v) despedir; disparar","'fire an employee'","The company fired him after the incident."],
+  ["ship","/ʃɪp/","n · v","barco; (v) enviar","'ship the package'","We'll ship your order within two days."],
+  ["fish","/fɪʃ/","n · v","pez, pescado; (v) pescar","'go fishing'","They fish in this lake every summer."],
+  ["cash","/kæʃ/","n · v","efectivo; (v) cobrar (un cheque)","'cash a check'","I need to cash this check at the bank."],
+  ["corner","/ˈkɔrnər/","n · v","esquina; (v) acorralar; acaparar","'corner the market'","The company managed to corner the market on electric cars."],
+  ["bridge","/brɪdʒ/","n · v","puente; (v) salvar (una brecha)","'bridge the gap'","This program aims to bridge the gap between rich and poor."],
+  ["weather","/ˈwɛðər/","n · v","clima; (v) sobrellevar, capear","'weather the storm'","The company weathered the economic crisis."],
+  ["star","/stɑr/","n · v","estrella; (v) protagonizar","'star in a movie'","She starred in her first movie last year."],
+  ["picture","/ˈpɪktʃər/","n · v","imagen, foto; (v) imaginar","'picture this'","Picture yourself living on a tropical island."],
+  ["host","/hoʊst/","n · v","anfitrión; (v) organizar, presentar","'host a party'","They hosted the event at their house."],
+  ["coach","/koʊtʃ/","n · v","entrenador; (v) entrenar","'coach a team'","He coaches the local soccer team."],
+  ["judge","/dʒʌdʒ/","n · v","juez; (v) juzgar","'don't judge me'","Don't judge a book by its cover."],
+  ["mirror","/ˈmɪrər/","n · v","espejo; (v) reflejar, imitar","'mirror someone's behavior'","Her actions mirrored her father's."],
+  ["trigger","/ˈtrɪɡər/","n · v","gatillo; (v) desencadenar","'trigger a reaction'","The news triggered a wave of protests."],
+  ["brand","/brænd/","n · v","marca; (v) tildar de, marcar","'branded a liar'","The media branded him a traitor."],
+  ["label","/ˈleɪbəl/","n · v","etiqueta; (v) etiquetar","'label the boxes'","Please label each box with its contents."],
+  ["text","/tɛkst/","n · v","texto, mensaje; (v) enviar un mensaje","'text me later'","I'll text you when I get home."],
+  ["google","/ˈɡuɡəl/","n · v","(marca); (v) buscar en internet","minúscula cuando es verbo","Just google it if you're not sure."],
+  ["microwave","/ˈmaɪkroʊweɪv/","n · v","microondas; (v) calentar en el microondas","'microwave the leftovers'","Just microwave the leftovers for two minutes."]
  ]
 };
 D.chunks=[
@@ -1526,6 +2020,28 @@ D.pronouns={
  ["we /wi/","us /ʌs/","our /ˈaʊər/","ours","ourselves"],
  ["they /ðeɪ/","them /ðɛm/","their /ðɛr/","theirs","themselves"]]
 };
+D.indefPron=[
+ {t:"SOME-",c:"afirmativo: alguien/algo/algún lugar existe, sin especificar quién/qué/dónde",vs:[
+  {v:"someone",ipa:"/ˈsʌmwʌn/",es:"alguien",ex:"Someone is knocking at the door."},
+  {v:"somebody",ipa:"/ˈsʌmbɑdi/",es:"alguien",ex:"Somebody left their bag here."},
+  {v:"something",ipa:"/ˈsʌmθɪŋ/",es:"algo",ex:"I need something to drink."},
+  {v:"somewhere",ipa:"/ˈsʌmwɛr/",es:"en algún lugar",ex:"Let's go somewhere quiet."}]},
+ {t:"ANY-",c:"preguntas y negaciones: si existe alguien/algo/algún lugar, sin importar cuál",vs:[
+  {v:"anyone",ipa:"/ˈɛniwʌn/",es:"alguien (en preguntas/negaciones)",ex:"Is anyone home?"},
+  {v:"anybody",ipa:"/ˈɛnibɑdi/",es:"alguien (en preguntas/negaciones)",ex:"I didn't see anybody."},
+  {v:"anything",ipa:"/ˈɛniθɪŋ/",es:"algo / nada (en preguntas/negaciones)",ex:"Do you need anything?"},
+  {v:"anywhere",ipa:"/ˈɛniwɛr/",es:"en cualquier lugar",ex:"You can sit anywhere."}]},
+ {t:"NO-",c:"negación absoluta: nadie/nada/ningún lugar",vs:[
+  {v:"no one",ipa:"/ˈnoʊ wʌn/",es:"nadie",ex:"No one answered the phone."},
+  {v:"nobody",ipa:"/ˈnoʊbɑdi/",es:"nadie",ex:"Nobody knows the answer."},
+  {v:"nothing",ipa:"/ˈnʌθɪŋ/",es:"nada",ex:"There's nothing in the fridge."},
+  {v:"nowhere",ipa:"/ˈnoʊwɛr/",es:"en ningún lugar",ex:"My keys are nowhere to be found."}]},
+ {t:"EVERY-",c:"totalidad: todos/todo/todas partes, sin excepción",vs:[
+  {v:"everyone",ipa:"/ˈɛvriwʌn/",es:"todos",ex:"Everyone loves this song."},
+  {v:"everybody",ipa:"/ˈɛvribɑdi/",es:"todos",ex:"Everybody makes mistakes."},
+  {v:"everything",ipa:"/ˈɛvriθɪŋ/",es:"todo",ex:"She knows everything about art."},
+  {v:"everywhere",ipa:"/ˈɛvriwɛr/",es:"en todas partes",ex:"We looked everywhere for the dog."}]}
+];
 D.saxonGen=[
  ["Nombre propio + 's","Peter's house","/ˈpitərz haʊs/","la casa de Peter"],
  ["Sustantivo singular + 's","the dog's bone","/ðə dɔɡz boʊn/","el hueso del perro"],
@@ -1634,10 +2150,14 @@ D.contrExamples=[
  ["I'd","would","I'd love to come.","Me encantaría ir."],
  ["I'd","had","I'd never seen snow before.","Nunca había visto nieve antes."],
  ["would've","would have","I would've called, but my phone died.","Habría llamado, pero se me murió el teléfono."],
- ["ain't","am not / is not / are not","She ain't coming tonight.","Ella no viene esta noche."],
+ ["ain't","am not","I ain't ready.","No estoy listo."],
+ ["ain't","is not","She ain't here.","Ella no está aquí."],
+ ["ain't","are not","They ain't coming.","Ellos no vienen."],
+ ["ain't","has not / have not","I ain't seen him.","No lo he visto."],
  ["won't","will not","I won't be late again.","No llegaré tarde otra vez."]
 ];
 D.contrExNote="Estas contracciones tienen más de un significado posible — el contexto es lo único que las distingue al oído. Aquí cada una en una oración real, para ver cómo se resuelve la ambigüedad en la práctica.";
+D.aintNote="<b>ain't</b> es la contracción comodín no estándar: sustituye am not/is not/are not/has not/have not según el contexto. Se oye constantemente en habla cotidiana, canciones, cine y dialectos — pero se evita en exámenes, correos profesionales, textos académicos y entrevistas de trabajo. En los dialectos donde se usa (ej. sur de EE.UU., AAVE) también es común la <b>doble negación</b>: <i>I ain't got no money</i> (literalmente 'no tengo ningún dinero' — dos negativos que refuerzan uno solo, no se cancelan). En inglés estándar esa misma idea es <i>I don't have any money</i>, con un solo negativo.";
 D.doubleContrEx=[
  ["sin contraer","I should not have gone to that party.","No debí haber ido a esa fiesta."],
  ["contracción simple","I shouldn't have gone to that party.","(should not → shouldn't)"],
@@ -1762,7 +2282,7 @@ D.silentNote="El nombre oficial en lingüística es <b>silent letters</b> (letra
 /* 19 · Habla conectada (Connected Speech) */
 D.connected=[
  {n:"Content words vs. Function words (por qué unas palabras se reducen y otras no)",ipa:"—",r:"Esta es la regla MADRE de toda la sección: las <b>content words</b> (sustantivos, verbos principales, adjetivos, adverbios — las que cargan el significado) casi nunca se reducen ni pierden sonidos. Las <b>function words</b> (artículos, preposiciones, pronombres, auxiliares: a, the, to, of, him, have, does, is...) sí se reducen, casi siempre a schwa o desaparecen — son 'pegamento' gramatical, no información nueva. Todas las reglas de abajo (flapping, h-dropping, elisión...) le pasan casi siempre a function words, casi nunca a content words.",ex:[["I WANT the BOOK","/aɪ wɑnt ðə bʊk/","quiero el libro — 'want' y 'book' (content) suenan completas y claras; 'the' (function) se reduce a schwa apenas audible"]]},
- {n:"Flapping / Alveolar Tap (la \"flat T\" — y también la D)",ipa:"/ɾ/",r:"En inglés americano, tanto la <b>T</b> como la <b>D</b> entre dos vocales (o entre vocal y R) suenan igual: como una D rápida, casi como la 'r' suave del español (pero, cara). Por eso 'did I' y 'city' usan el MISMO sonido aunque una tenga D y la otra T en la ortografía.",ex:[["water","/ˈwɔɾər/","agua (T suena como 'd/r' rápida)"],["better","/ˈbɛɾər/","mejor"],["city","/ˈsɪɾi/","ciudad"],["a lot of","/ə ˈlɑɾ əv/","mucho de"],["did I","/ˈdɪɾaɪ/","(la D de 'did' flapea igual que una T) — suena 'ríai'"],["already did it","/ɔlˈrɛɾi ˈɾɪɾ ɪt/","ya lo hice — dos flaps seguidos, suena 'ardy ríri' o 'ardy did it' según velocidad"]]},
+ {n:"Flapping / Alveolar Tap (la \"flat T\" — y también la D)",ipa:"/ɾ/",r:"En inglés americano, tanto la <b>T</b> como la <b>D</b> entre una vocal y una vocal SIGUIENTE ÁTONA (sin acento) suenan igual: como una D rápida, casi como la 'r' suave del español (pero, cara). Patrón: <b>vocal + T/D + vocal átona</b>. Por eso 'did I' y 'city' usan el MISMO sonido aunque una tenga D y la otra T en la ortografía. <b>Cuándo NO se aplica</b> (la T se queda fuerte y clara): al inicio de palabra (time, take), justo antes de una sílaba ACENTUADA (attack, retain — no átona) y después de <b>S</b> (stop, student). <b>Con N delante (patrón NT)</b> la T se debilita todavía más y casi desaparece, fundiéndose con la N: twenty→'tweny', internet→'innernet', winter→casi 'winner' — técnicamente es una mezcla de flap y reducción, no un flap puro.",ex:[["water","/ˈwɔɾər/","agua (T suena como 'd/r' rápida)"],["better","/ˈbɛɾər/","mejor"],["city","/ˈsɪɾi/","ciudad"],["a lot of","/ə ˈlɑɾ əv/","mucho de"],["did I","/ˈdɪɾaɪ/","(la D de 'did' flapea igual que una T) — suena 'ríai'"],["already did it","/ɔlˈrɛɾi ˈɾɪɾ ɪt/","ya lo hice — dos flaps seguidos, suena 'ardy ríri' o 'ardy did it' según velocidad"],["writer / rider","/ˈraɪɾər/","escritor / jinete — con flap T y D suenan IGUAL: sin contexto no se distinguen al oído"],["time","/taɪm/","tiempo — T al inicio de palabra, SIN flap, se mantiene fuerte"],["attack","/əˈtæk/","atacar — T antes de sílaba acentuada, SIN flap"],["stop","/stɑp/","detener — T después de S, SIN flap, nunca"],["twenty","/ˈtweni/","veinte — patrón NT, la T casi desaparece"],["winter","/ˈwɪnər/","invierno — patrón NT, suena casi igual que 'winner' (ganador)"]]},
  {n:"Yod-coalescence (D + Y → /dʒ/)",ipa:"/dʒ/",r:"Cuando una palabra termina en <b>d</b> y la siguiente empieza con <b>you/your</b>, se fusionan en el sonido 'y' de 'llegar' fuerte, igual que el de 'jump'.",ex:[["Would you","/wʊdʒə/","¿Podrías...?"],["Did you","/dɪdʒə/","¿Hiciste...?"],["Could you","/kʊdʒə/","¿Podrías...?"]]},
  {n:"Yod-coalescence (T + Y → /tʃ/)",ipa:"/tʃ/",r:"Mismo fenómeno que arriba pero con <b>t</b>: t + you = sonido 'ch' de 'chair'.",ex:[["Don't you","/doʊntʃə/","¿No... verdad?"],["Won't you","/woʊntʃə/","¿No querrás...?"],["Can't you","/kæntʃə/","¿No puedes...?"]]},
  {n:"Affrication de TR/DR (TR≈CH, DR≈J)",ipa:"/tʃr/ /dʒr/",r:"El grupo <b>tr</b> al inicio de palabra suena parecido a 'ch' + r, y <b>dr</b> suena parecido a 'j' (inglesa) + r. Es automático, no un error.",ex:[["train","/tʃreɪn/","tren (suena 'chrein')"],["truck","/tʃrʌk/","camión"],["dragon","/dʒræɡən/","dragón (suena 'jragon')"],["drive","/dʒraɪv/","conducir"]]},
@@ -2039,9 +2559,15 @@ D.confusTrios=[
    ["used to + V(base)","/just tu/","hábito pasado que ya NO ocurre","I used to play soccer as a kid.","Solía jugar fútbol de niño."],
    ["be used to + gerundio","/bi just tu/","estar acostumbrado a algo","I'm used to waking up early.","Estoy acostumbrado a despertarme temprano."],
    ["get used to + gerundio","/ɡɛt just tu/","acostumbrarse a algo (proceso)","It took a while to get used to the new schedule.","Me tomó tiempo acostumbrarme al nuevo horario."]
+ ]},
+ {t:"such a / such / so",items:[
+   ["such a + adj + sustantivo (contable singular)","/sʌtʃ ə/","tan + adjetivo — lleva 'a/an' porque el sustantivo es contable singular","It was such a beautiful day.","Fue un día tan hermoso."],
+   ["such + adj + sustantivo (incontable o plural)","/sʌtʃ/","tan + adjetivo — sin 'a/an', porque el sustantivo es incontable o plural","They have such good ideas.","Tienen ideas tan buenas."],
+   ["so + adj (sin sustantivo)","/soʊ/","tan + adjetivo, SIN sustantivo después — si aparece un sustantivo, 'so' ya no funciona, hay que cambiar a 'such'","The exam is so difficult.","El examen es tan difícil."]
  ]}
 ];
 D.usedToRule="¿Por qué 2 de los 3 llevan gerundio y el primero no? Porque el 'to' cambia de función: en 'used to + V(base)' es parte de un verbo modal-like (no es preposición). En 'be/get used to', <b>'to' SÍ es preposición</b> — y como ya viste en la sección de Gerundios, después de preposición SIEMPRE va gerundio, nunca infinitivo. Es la misma regla de oro, aplicada aquí.";
+D.suchRule="Estos 3 son intercambiables en significado ('tan') — lo único que cambia es si hay sustantivo después y si es contable singular. Regla rápida: ¿hay sustantivo? → such (a). ¿No hay sustantivo? → so. Otros 2 usos de 'such' que NO son este mismo patrón: <b>such as</b> = como, por ejemplo (<i>fruits such as apples</i> — frutas como las manzanas) y <b>no such</b> = no existe tal (<i>There is no such thing as perfect</i> — no existe tal cosa como la perfección).";
 D.confusNote="Estas parejas/tríos no son homófonas (sección de Homófonas) porque casi nunca suenan exactamente igual, ni son falsos amigos (sección de Falsos amigos) porque no chocan con el español — se confunden entre sí en inglés por su parecido visual o porque comparten la misma raíz con función gramatical distinta. La categoría en inglés se llama <b>confusable words</b>.";
 
 /* Verbos divididos — un verbo en español se separa en 2 o 3 en inglés, cada uno con su propia regla */
@@ -2388,13 +2914,44 @@ D.multiModals=[
   ["May have + V3 = posibilidad pasada (formal)","She may have missed the bus.","Puede que haya perdido el autobús."]
  ]}
 ];
-D.certaintyScaleNote="Estos modales no son sinónimos cuando hablas de qué tan seguro estás de algo (no de habilidad ni permiso) — forman una escala de certeza. <b>Must</b> es casi certeza con evidencia; <b>should</b> es expectativa razonable, no garantía; <b>may/might/could</b> son posibilidad abierta, sin diferencia de probabilidad entre ellos; <b>can't</b> es la certeza negativa — tan seguro como 'must', pero de que algo NO es cierto.";
+D.certaintyScaleNote="Estos modales y adverbios no son sinónimos cuando hablas de qué tan seguro estás de algo (no de habilidad ni permiso) — forman una escala de certeza, de menor a mayor. <b>Might</b> y <b>could</b> son las más débiles y casi intercambiables; <b>may</b> suena un poco más segura pero sigue siendo abierta; <b>should</b> es expectativa razonable, no garantía; <b>probably</b> y <b>likely to</b> expresan alta probabilidad sin usar modal; <b>must</b> es casi certeza con evidencia; <b>can't</b> es la certeza negativa — tan seguro como 'must', pero de que algo NO es cierto.";
 D.certaintyScale=[
- ["must","~95% — casi seguro, con evidencia","He must be at home; his car is outside.","Debe estar en casa; su carro está afuera."],
+ ["might","~30% — posibilidad débil, poco convencido","She might be at the gym.","Puede que esté en el gimnasio (no muy seguro)."],
+ ["could","~35% — posibilidad débil-media, abierta","There could be traffic on the highway.","Podría haber tráfico en la autopista."],
+ ["may","~50% — posibilidad media, registro algo más formal","He may know the answer.","Puede que sepa la respuesta."],
  ["should","~70% — esperado, no garantizado","The package should arrive today.","El paquete debería llegar hoy."],
- ["may / might / could","~50% — posible, no lo sabes","She may/might/could be running late.","Puede que esté llegando tarde."],
+ ["probably","~80% — alta probabilidad, sin modal","She's probably still at work.","Probablemente todavía esté en el trabajo."],
+ ["likely to","~80% — alta probabilidad, con adjetivo + infinitivo","The meeting is likely to be postponed.","Es probable que la reunión se posponga."],
+ ["must","~95% — casi seguro, con evidencia","He must be at home; his car is outside.","Debe estar en casa; su carro está afuera."],
  ["can't","~95% negativo — casi seguro que NO","He can't be at home; his car is gone.","No puede estar en casa; su carro no está."]
 ];
+D.thereModalPossibilityNote="La estructura 'there is/are' (sección de BE) también acepta modales de posibilidad delante de 'be' — sirve para especular sobre la existencia de algo, no sobre una acción. Fórmula: <b>There + modal + be + sustantivo</b>.";
+D.thereModalPossibility=[
+ ["may","There may be a problem with the connection.","Puede que haya un problema con la conexión."],
+ ["may","There may be another explanation.","Puede que haya otra explicación."],
+ ["might","There might be a solution we haven't tried.","Podría haber una solución que no hemos probado."],
+ ["might","There might be a delay because of the weather.","Podría haber un retraso por el clima."],
+ ["could","There could be another reason for the delay.","Podría haber otra razón para el retraso."],
+ ["could","There could be a catch we're not seeing.","Podría haber una trampa que no estamos viendo."],
+ ["must","There must be an explanation for this.","Debe haber una explicación para esto."],
+ ["must","There must be a misunderstanding.","Debe haber un malentendido."],
+ ["can't","There can't be any mistake; I checked twice.","No puede haber ningún error; revisé dos veces."],
+ ["can't","There can't be an alternative at this point.","No puede haber una alternativa a estas alturas."]
+];
+D.possibilityExtrasNote="Fuera de los modales, el inglés tiene adverbios y frases fijas para el mismo rango de certeza — muy usados en conversación porque no exigen conjugar un modal.";
+D.possibilityExtras=[
+ ["maybe","Maybe she forgot about the meeting.","Tal vez se le olvidó la reunión."],
+ ["perhaps","Perhaps he's just running late.","Quizás simplemente está llegando tarde."],
+ ["probably","I'll probably stay home tonight.","Probablemente me quede en casa esta noche."],
+ ["probably not","She probably won't come to the party.","Probablemente no venga a la fiesta."],
+ ["possibly","This could possibly be the wrong address.","Esto podría posiblemente ser la dirección equivocada."],
+ ["it's possible that...","It's possible that the flight will be delayed.","Es posible que el vuelo se retrase."],
+ ["there's a chance that...","There's a chance that it will rain tomorrow.","Hay una posibilidad de que llueva mañana."],
+ ["it's likely that...","It's likely that prices will rise.","Es probable que los precios suban."],
+ ["it's unlikely that...","It's unlikely that they will agree.","Es poco probable que estén de acuerdo."],
+ ["likely to + V","Traffic is likely to be heavy this evening.","Es probable que haya mucho tráfico esta noche."]
+];
+D.opinionAppearanceNote="También suavizan una afirmación sin usar modal: <b>think</b>, <b>believe</b>, <b>suppose</b>, <b>guess</b> (sección Modelos mentales, rol Opinion) y <b>seem</b>, <b>appear</b> (sección Tipos de verbos, Copulativos).";
 D.beNote="BE es el verbo más irregular del inglés (8 formas: be, am, is, are, was, were, being, been) y también el más multifuncional — funciona como verbo copulativo (conecta sujeto con descripción) Y como auxiliar (continuo, pasiva) a la vez, algo que ningún otro verbo hace. Dos de sus usos son trampas clásicas para hispanohablantes: la edad y el clima, donde el español usa 'tener'/'hacer' pero el inglés siempre usa BE.";
 D.beUses=[
  ["Copulativo: identidad","She is a doctor.","Ella es doctora."],
@@ -2488,10 +3045,11 @@ D.mentalModels=[
   {en:"I enjoy reading.",ipa:"/aɪ ɪnˈdʒɔɪ ˈridɪŋ/",es:"Disfruto leer."},
   {en:"Avoid making the same mistake twice.",ipa:"/əˈvɔɪd ˈmeɪkɪŋ ðə seɪm mɪˈsteɪk twaɪs/",es:"Evita cometer el mismo error dos veces."},
   {en:"Keep working, we're almost done.",ipa:"/kip ˈwɜrkɪŋ wir ˈɔlmoʊst dʌn/",es:"Sigue trabajando, ya casi terminamos."}]},
- {k:"G",label:"Opinion",t:"Introduce una opinión",rule:"Va al inicio de la oración para marcar que lo que sigue es tu punto de vista, no un hecho objetivo.",words:"think, believe, suppose",exs:[
+ {k:"G",label:"Opinion",t:"Introduce una opinión",rule:"Va al inicio de la oración para marcar que lo que sigue es tu punto de vista, no un hecho objetivo. 'Guess' es la versión más informal e insegura del grupo — a diferencia de 'suppose', casi siempre implica que estás adivinando, no razonando.",words:"think, believe, suppose, guess",exs:[
   {en:"I think it's a good idea.",ipa:"/aɪ θɪŋk ɪts ə ɡʊd aɪˈdiə/",es:"Creo que es una buena idea."},
   {en:"I believe she's right.",ipa:"/aɪ bɪˈliv ʃiz raɪt/",es:"Creo que ella tiene razón."},
-  {en:"I suppose we could try again.",ipa:"/aɪ səˈpoʊz wi kʊd traɪ əˈɡɛn/",es:"Supongo que podríamos intentar de nuevo."}]},
+  {en:"I suppose we could try again.",ipa:"/aɪ səˈpoʊz wi kʊd traɪ əˈɡɛn/",es:"Supongo que podríamos intentar de nuevo."},
+  {en:"I guess we'll find out soon.",ipa:"/aɪ ɡɛs wil faɪnd aʊt sun/",es:"Supongo que pronto lo sabremos (adivinando, no muy seguro)."}]},
  {k:"H",label:"Emotion",t:"Expresa emoción",rule:"Va seguido de sustantivo o gerundio, y describe cómo te hace sentir algo.",words:"love, hate, like",exs:[
   {en:"I love music.",ipa:"/aɪ lʌv ˈmjuzɪk/",es:"Amo la música."},
   {en:"She hates spiders.",ipa:"/ʃi heɪts ˈspaɪdərz/",es:"Ella odia las arañas."},
@@ -2726,6 +3284,44 @@ D.suffixes=[
 ];
 D.affixNote="Reconocer prefijos y sufijos multiplica tu vocabulario sin memorizar palabra por palabra: si sabes 'happy' y sabes que 'un-' niega, ya entiendes 'unhappy' sin buscarlo. Muchos sufijos también CAMBIAN la categoría gramatical de la palabra (verbo→sustantivo, adjetivo→adverbio), lo cual conecta directo con la sección de Acento: sustantivo vs verbo (cambio de acento sustantivo/verbo).";
 
+D.spellingNote="Estas 4 reglas se aplican al agregar CUALQUIER sufijo que empiece en vocal (-ing, -ed, -er, -est, -y, -able...) — no son de un solo tema gramatical: la misma regla de duplicar consonante aplica a un verbo (stop→stopping) y a un adjetivo (big→bigger). Dominarlas evita los errores de escritura más comunes en inglés — más que aprender cientos de palabras sueltas.";
+D.spellingRules=[
+ {n:"1. Duplicar la consonante final (regla CVC)",r:"Se duplica la consonante final SOLO si la palabra termina en <b>1 vocal + 1 consonante</b> (patrón CVC) Y esa sílaba lleva el acento. En palabras de una sola sílaba (stop, run, big) siempre se cumple. En palabras de 2+ sílabas, solo si el acento cae en la ÚLTIMA sílaba (preFER→preferred) — si el acento cae antes, NO se duplica (OPen→opening). Tampoco se duplica si terminan en 2 consonantes seguidas (jump→jumping) o 2 vocales seguidas (need→needing). <b>Nota BrE/AmE:</b> 'travel' es la excepción más citada — el británico duplica igual (travelled) aunque el acento no esté en la última sílaba; el americano no (traveled) (ver sección de Británico vs Americano).",ex:[
+  ["stop","stopping / stopped","1 sílaba, CVC → duplica"],
+  ["run","running","1 sílaba, CVC → duplica"],
+  ["big","bigger / biggest","adjetivo, mismo patrón"],
+  ["prefer","preferred / preferring","2 sílabas, acento en la última → duplica"],
+  ["begin","beginning","2 sílabas, acento en la última → duplica"],
+  ["jump","jumping","2 consonantes al final (mp) → NO duplica"],
+  ["need","needing","2 vocales (ee) → NO duplica"],
+  ["open","opening","acento en la 1ª sílaba → NO duplica"],
+  ["travel","traveled (AmE) / travelled (BrE)","excepción conocida, difiere por dialecto"]
+ ]},
+ {n:"2. Quitar la -e muda antes de sufijo con vocal",r:"Si la palabra termina en <b>-e muda</b>, esa e se ELIMINA antes de un sufijo que empieza en VOCAL (-ing, -ed, -able, -ous...). Se MANTIENE si el sufijo empieza en CONSONANTE (-ful, -ment, -less). Excepciones: 'dye' mantiene la e en 'dyeing' (para no confundirse con 'dying', de morir); 'notice'/'courage' mantienen la e antes de -able/-ous para conservar el sonido suave de la c/g.",ex:[
+  ["make","making","-ing empieza en vocal → se quita la e"],
+  ["hope","hoping / hoped","-ing/-ed empiezan en vocal → se quita la e"],
+  ["hope","hopeful","-ful empieza en consonante → se mantiene la e"],
+  ["care","careful","-ful empieza en consonante → se mantiene la e"],
+  ["dye","dyeing","excepción: mantiene la e para no confundirse con 'dying'"],
+  ["notice","noticeable","excepción: mantiene la e para conservar el sonido /s/ de la c"],
+  ["courage","courageous","excepción: mantiene la e para conservar el sonido /dʒ/ de la g"]
+ ]},
+ {n:"3. Y → I antes de sufijo (excepto -ing)",r:"Si la palabra termina en <b>consonante + y</b>, la y cambia a i antes de un sufijo — EXCEPTO antes de -ing, que siempre mantiene la y (para no formar 'ii'). Si termina en <b>vocal + y</b>, nunca cambia. Mismo patrón que ya viste para el plural en consonante+y→ies (sección de Singular vs plural), aquí generalizado a cualquier sufijo, no solo el plural.",ex:[
+  ["study","studied / studies","consonante+y → cambia a i"],
+  ["study","studying","excepción -ing: mantiene la y"],
+  ["happy","happier / happiest / happily","consonante+y → cambia a i"],
+  ["carry","carried / carrier","consonante+y → cambia a i"],
+  ["play","played / player","vocal+y → NO cambia"],
+  ["enjoy","enjoyed / enjoying","vocal+y → NO cambia"]
+ ]},
+ {n:"4. IE vs EI",r:"Regla clásica: 'i antes de e, excepto después de c' — el detalle que casi nadie enseña bien es que SOLO aplica cuando el sonido es /iː/ (como en 'see'). Si el sonido no es ese, la regla no aplica y la palabra sigue el patrón general (ie) aunque tenga una c cerca.",ex:[
+  ["believe, friend, piece","ie","sonido /iː/, sin 'c' antes → ie (regla general)"],
+  ["receive, ceiling, deceive, conceit","ei","sonido /iː/, CON 'c' antes → ei (la excepción de la regla)"],
+  ["science, society","ie","tiene 'c' pero el sonido NO es /iː/ → la regla no aplica, sigue ie"],
+  ["weird, seize, either, neither, height, foreign, leisure","—","excepciones que no siguen ninguna regla — se memorizan sueltas"]
+ ]}
+];
+
 /* 36 · Reported speech */
 D.reportedBackshift=[
  ["Present Simple","→ Past Simple","\"I work here.\"","She said (that) she worked there."],
@@ -2950,7 +3546,7 @@ const SECTIONS=[
  ["vsplit","Verbos divididos"],
  ["variations","Variaciones para decir lo mismo"],
  ["structures","Estructuras de oración"],
- ["adjorder","Orden de los adjetivos"],["affixes","Prefijos y sufijos"],["reported","Reported speech"],
+ ["adjorder","Orden de los adjetivos"],["affixes","Prefijos y sufijos"],["spelling","Ortografía al agregar sufijos"],["reported","Reported speech"],
  ["esidioms","Modismos en español sin traducción literal"],["adverbs","Adverbios"],
  ["negation","Negación (no, not, neither, nor)"],
  ["french","Préstamos del francés"],
@@ -2967,7 +3563,7 @@ const PARTS=[
  {k:"sonidos",label:"I · Sonidos",sections:["ipa","homoph","homon","silent","connected","stress","dialects"]},
  {k:"piezas",label:"II · Piezas del idioma",sections:["nouns","plural","adj","articles","pron","mentalmodels","prep","conj","adverbs","negation"]},
  {k:"oracion",label:"III · La oración",sections:["tenses","vtypes","multiuse","comp","adjorder","quest","cond","passive","gerund","structures","reported"]},
- {k:"vocab",label:"IV · Vocabulario",sections:["vocab","chunks","colloc","phrasal","vsplit","syn","anton","posneg","falsef","confuse","affixes"]},
+ {k:"vocab",label:"IV · Vocabulario",sections:["vocab","chunks","colloc","phrasal","vsplit","syn","anton","posneg","falsef","confuse","affixes","spelling"]},
  {k:"registro",label:"V · Registro y estilo",sections:["variations","brame","contr","contrpractice","popculture","esidioms","french","frameworks"]},
  {k:"aplicado",label:"VI · Aplicado",sections:["citizenship","news","ailab"]}
 ];
@@ -3109,6 +3705,13 @@ function build(){
  <h3 style="margin-top:24px;border-top:2px solid var(--ink);padding-top:16px">Escala de certeza (possibility, probability, certainty)</h3>
  <div class="lesson"><b>Mini-clase.</b> ${D.certaintyScaleNote}</div>
  <div class="tblwrap"><table><tr><th>Modal</th><th>Certeza</th><th>Ejemplo</th><th>Español</th></tr>${D.certaintyScale.map(c=>`<tr><td><b>${c[0]}</b></td><td class="es">${c[1]}</td><td>${c[2]} ${spkBtn(c[2])}</td><td class="es">${c[3]}</td></tr>`).join("")}</table></div>
+ <h3 style="margin-top:24px;border-top:2px solid var(--ink);padding-top:16px">There + modal + be — especular sobre existencia</h3>
+ <div class="rule">${D.thereModalPossibilityNote}</div>
+ <div class="tblwrap"><table><tr><th>Modal</th><th>Ejemplo</th><th>Español</th></tr>${D.thereModalPossibility.map(t=>`<tr><td><b>${t[0]}</b></td><td>${t[1]} ${spkBtn(t[1])}</td><td class="es">${t[2]}</td></tr>`).join("")}</table></div>
+ <h3 style="margin-top:24px;border-top:2px solid var(--ink);padding-top:16px">Otras formas de expresar posibilidad</h3>
+ <div class="rule">${D.possibilityExtrasNote}</div>
+ <div class="tblwrap"><table><tr><th>Adverbio / frase</th><th>Ejemplo</th><th>Español</th></tr>${D.possibilityExtras.map(p=>`<tr><td><b>${p[0]}</b></td><td>${p[1]} ${spkBtn(p[1])}</td><td class="es">${p[2]}</td></tr>`).join("")}</table></div>
+ <div class="lesson"><b>Mini-clase.</b> ${D.opinionAppearanceNote}</div>
  <h3 style="margin-top:24px;border-top:2px solid var(--ink);padding-top:16px">BE — copulativo y auxiliar a la vez</h3>
  <div class="rule">${D.beNote}</div>
  <div class="tblwrap"><table><tr><th>Uso</th><th>Ejemplo</th><th>Español</th></tr>${D.beUses.map(u=>`<tr><td><b>${u[0]}</b></td><td>${u[1]} ${spkBtn(u[1])}</td><td class="es">${u[2]}</td></tr>`).join("")}</table></div>
@@ -3211,7 +3814,11 @@ h+=`<section class="topic" id="vocab"><h2><span class="n"></span>Vocabulario por
  <div class="lesson"><b>Mini-clase.</b> 5 columnas, 5 funciones: sujeto (antes del verbo), objeto (después), adjetivo posesivo (+ sustantivo: <i>my car</i>), pronombre posesivo (solo: <i>it's mine</i>), reflexivo (mismo sujeto y objeto: <i>I hurt myself</i>). Error clásico: ✗ "its'" no existe; <b>it's</b> = it is, <b>its</b> = su.</div>
  <div class="tblwrap"><table><tr><th></th>${D.pronouns.head.map(x=>`<th>${x}</th>`).join("")}</tr>
  ${D.pronouns.rows.map((r,i)=>`<tr><td><b>${["1ª sing","2ª","3ª m","3ª f","3ª n","1ª pl","3ª pl"][i]}</b></td>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table></div>
- <div class="rule">También existen: <b>demostrativos</b> (this/that/these/those), <b>indefinidos</b> (someone, anything, nobody), <b>relativos</b> (who, which, that, whose) e <b>interrogativos</b> (ver sección de Interrogativo).</div>
+ <div class="rule">También existen: <b>demostrativos</b> (this/that/these/those), <b>relativos</b> (who, which, that, whose) e <b>interrogativos</b> (ver sección de Interrogativo).</div>
+ <h3>Pronombres indefinidos</h3>
+ <div class="lesson"><b>Mini-clase.</b> Se forman combinando un prefijo (SOME-/ANY-/NO-/EVERY-) con una terminación (-one, -body, -thing, -where) — mismo patrón en las 4 filas. SOME = afirmativo ("hay alguien/algo"). ANY = preguntas y negaciones ("¿hay alguien?", "no hay nadie" se dice con NOT...ANY). NO = negación absoluta en una sola palabra (no lleva "not" adicional). EVERY = todos sin excepción. <b>-one</b> y <b>-body</b> son intercambiables (someone = somebody), solo cambia el registro (-body es un poco más informal).</div>
+ ${D.indefPron.map(cat=>`<h4>${esc(cat.t)}</h4><div class="rule"><i>${esc(cat.c)}</i></div><div class="tblwrap"><table><tr><th>Palabra · IPA</th><th>Español</th><th>Ejemplo</th></tr>${cat.vs.map(v=>`<tr><td><b>${esc(v.v)}</b> ${spkBtn(v.v)}<br><span class="ipa wrap">${esc(v.ipa)}</span></td><td class="es">${esc(v.es)}</td><td>${esc(v.ex)} ${spkBtn(v.ex)}</td></tr>`).join("")}</table></div>`).join("")}
+ <div class="rule"><b>Ojo con "somewhat":</b> aunque empieza igual que someone/something, NO es un pronombre indefinido — es un <b>adverbio de grado</b> ("algo, un poco, bastante"), modifica adjetivos/verbos, no reemplaza un sustantivo. <i>This is somewhat difficult.</i> (Esto es algo difícil.) · <i>She somewhat agrees.</i> (Ella está algo de acuerdo.) Otros compuestos con some-/any-/every- que existen pero no son parte de esta familia de pronombres: someday (algún día), somehow (de algún modo), anyway/anyhow (de todos modos).</div>
  <h3>Posesivo 's (genitivo sajón) — Peter's house</h3>
  <div class="rule">${D.saxonNote}</div>
  <div class="tblwrap"><table><tr><th>Regla</th><th>Ejemplo · IPA</th><th>Español</th></tr>
@@ -3276,6 +3883,7 @@ h+=`<section class="topic" id="vocab"><h2><span class="n"></span>Vocabulario por
  <div class="rule">${D.contrExNote}</div>
  <div class="tblwrap"><table><tr><th>Contracción</th><th>Significado aquí</th><th>Ejemplo</th><th>Español</th></tr>
  ${D.contrExamples.map(c=>`<tr><td><b>${c[0]}</b></td><td class="es">${c[1]}</td><td>${c[2]} ${spkBtn(c[2])}</td><td class="es">${c[3]}</td></tr>`).join("")}</table></div>
+ <div class="rule">${D.aintNote}</div>
  <h3>Una misma oración, 3 niveles de contracción</h3>
  <div class="rule">${D.doubleContrNote}</div>
  <div class="tblwrap"><table><tr><th>Nivel</th><th>Oración · IPA</th><th>Nota</th></tr>
@@ -3424,10 +4032,10 @@ h+=`<section class="topic" id="vocab"><h2><span class="n"></span>Vocabulario por
  <h3>Pares de ortografía parecida</h3>
  <div class="tblwrap"><table><tr><th>Palabra · IPA</th><th>Significado</th><th>Ejemplo · Español</th></tr>
  ${D.confusSpelling.map(c=>`<tr><td><b>${c[0]}</b><br><span class="ipa">${c[1]}</span></td><td class="es">${c[2]}</td><td>${c[3]}<br><span class="es">${c[4]}</span></td></tr>`).join("")}</table></div>
- <h3>Tríos que atrapan incluso a nivel intermedio</h3>
+ <h3>Grupos y pares que atrapan incluso a nivel intermedio</h3>
  ${D.confusTrios.map(g=>`<div class="card" style="margin-bottom:10px"><h4>${g.t}</h4>
   <div class="tblwrap"><table><tr><th>Forma · IPA</th><th>Significado</th><th>Ejemplo · Español</th></tr>
-  ${g.items.map(i=>`<tr><td><b>${i[0]}</b><br><span class="ipa wrap">${i[1]}</span></td><td class="es">${i[2]}</td><td>${i[3]}<br><span class="es">${i[4]}</span></td></tr>`).join("")}</table></div>${g.t.startsWith("used to")?`<div class="rule">${D.usedToRule}</div>`:""}</div>`).join("")}
+  ${g.items.map(i=>`<tr><td><b>${i[0]}</b><br><span class="ipa wrap">${i[1]}</span></td><td class="es">${i[2]}</td><td>${i[3]}<br><span class="es">${i[4]}</span></td></tr>`).join("")}</table></div>${g.t.startsWith("used to")?`<div class="rule">${D.usedToRule}</div>`:g.t.startsWith("such")?`<div class="rule">${D.suchRule}</div>`:""}</div>`).join("")}
  ${exWidget("confuse",[...D.confusSpelling.map(c=>c[0]),...D.confusTrios.flatMap(g=>g.items.map(i=>i[0]))],"palabra, distinguiéndola de su par que se confunde")}</section>`;
 
  /* VERBOS DIVIDIDOS - un verbo en español se separa en 2 o 3 en inglés */
@@ -3471,6 +4079,14 @@ h+=`<section class="topic" id="vocab"><h2><span class="n"></span>Vocabulario por
  <div class="tblwrap"><table><tr><th>Sufijo</th><th>Función</th><th>Ejemplos</th><th>Español</th></tr>
  ${D.suffixes.map(s=>`<tr><td><b>${s[0]}</b></td><td class="es">${s[1]}</td><td>${s[2]}</td><td class="es">${s[3]}</td></tr>`).join("")}</table></div>
  ${exWidget("affix",[...D.prefixes.map(p=>p[0]),...D.suffixes.map(s=>s[0])],"palabra formada con el afijo")}</section>`;
+
+ /* 35b · ORTOGRAFÍA AL AGREGAR SUFIJOS */
+ h+=`<section class="topic" id="spelling"><h2><span class="n"></span>Ortografía al agregar sufijos</h2>
+ <div class="lesson"><b>Mini-clase.</b> ${D.spellingNote}</div>
+ ${D.spellingRules.map(c=>`<div class="card" style="margin-bottom:10px"><h4>${c.n}</h4><div style="font-size:13px;margin:4px 0">${c.r}</div>
+  <div class="tblwrap"><table><tr><th>Palabra base</th><th>+ sufijo</th><th>Nota</th></tr>
+  ${c.ex.map(e=>`<tr><td><b>${e[0]}</b></td><td>${e[1]}</td><td class="es">${e[2]}</td></tr>`).join("")}</table></div></div>`).join("")}
+ </section>`;
 
  /* 36 · REPORTED SPEECH */
  h+=`<section class="topic" id="reported"><h2><span class="n"></span>Reported speech (estilo indirecto)</h2>
@@ -3848,7 +4464,7 @@ function showParticle(idx,btn){
  if(btn){btn.parentElement.querySelectorAll(".chip").forEach(c=>c.classList.toggle("active",c===btn));}
  const p=D.particles[idx];
  let html=`<div class="rule"><b>${esc(p.label)}.</b> ${p.note}</div>`;
- html+=p.cats.map(cat=>`<h3>${esc(cat.t)}</h3><div class="rule"><i>Idea central: ${esc(cat.c)}</i></div><div class="grid g2">${cat.vs.map(v=>`<div class="card"><h4>${esc(v.v)} ${spkBtn(v.v)}</h4><span class="ipa wrap">${esc(v.ipa)}</span><br><span class="es">${esc(v.es)}</span><br>${esc(v.ex)} ${spkBtn(v.ex)}</div>`).join("")}</div>`).join("");
+ html+=p.cats.map(cat=>`<h3>${esc(cat.t)}</h3><div class="rule"><i>Idea central: ${esc(cat.c)}</i></div><div class="tblwrap"><table><tr><th>Frase · IPA</th><th>Español</th><th>Ejemplo</th></tr>${cat.vs.map(v=>`<tr><td><b>${esc(v.v)}</b> ${spkBtn(v.v)}<br><span class="ipa wrap">${esc(v.ipa)}</span></td><td class="es">${esc(v.es)}</td><td>${esc(v.ex)} ${spkBtn(v.ex)}</td></tr>`).join("")}</table></div>`).join("");
  $("particlebody").innerHTML=html;
 }
 function showArticleCat(cat,btn){

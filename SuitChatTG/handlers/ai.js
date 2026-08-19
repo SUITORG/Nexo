@@ -7,7 +7,8 @@ const OPENAI_COMPAT_PROVIDERS = {
   groq: { baseUrl: 'https://api.groq.com/openai/v1', key: () => process.env.GROQ_API_KEY },
   cerebras: { baseUrl: 'https://api.cerebras.ai/v1', key: () => process.env.CEREBRAS_API_KEY },
   nvidia: { baseUrl: 'https://integrate.api.nvidia.com/v1', key: () => process.env.NVIDIA_NIM_API_KEY },
-  mistral: { baseUrl: 'https://api.mistral.ai/v1', key: () => process.env.MISTRAL_API_KEY }
+  mistral: { baseUrl: 'https://api.mistral.ai/v1', key: () => process.env.MISTRAL_API_KEY },
+  ollama: { baseUrl: 'http://localhost:11434/v1', key: () => 'ollama' }
 };
 
 const SYSTEM_PROMPT_DEFAULT = `Eres un asistente amable y profesional de renta de cuartos. Tu objetivo es:
@@ -19,7 +20,7 @@ const SYSTEM_PROMPT_DEFAULT = `Eres un asistente amable y profesional de renta d
 IMPORTANTE: NO inventes precios ni disponibilidad que no estén en el contexto.
 Sé natural y conversacional.`;
 
-const DEFAULT_FALLBACK = ['groq:llama-3.3-70b-versatile', 'cerebras:llama-3.3-70b', 'nvidia:meta/llama-3.3-70b-instruct', 'mistral:mistral-small-latest', 'gemini:gemini-flash-latest', 'openrouter:meta-llama/llama-3.3-70b-instruct:free'];
+const DEFAULT_FALLBACK = ['ollama:richardyoung/qwen3-14b-abliterated:Q4_K_M', 'groq:llama-3.3-70b-versatile', 'cerebras:llama-3.3-70b', 'nvidia:meta/llama-3.3-70b-instruct', 'mistral:mistral-small-latest', 'gemini:gemini-flash-latest', 'openrouter:meta-llama/llama-3.3-70b-instruct:free'];
 
 function buildMessages(prompt, history, systemPrompt) {
   const messages = [{ role: 'system', content: systemPrompt }];
@@ -98,10 +99,12 @@ async function tryOpenAICompatible(providerKey, model, prompt, history, systemPr
   if (!apiKey) return { error: `${providerKey.toUpperCase()}_API_KEY no configurada` };
   try {
     const messages = buildMessages(prompt, history, systemPrompt);
+    const timeoutMs = providerKey === 'ollama' ? 120000 : 30000;
     const res = await fetch(`${provider.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 })
+      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 }),
+      signal: AbortSignal.timeout(timeoutMs)
     });
     const data = await res.json();
     if (data.error) return { error: typeof data.error === 'string' ? data.error : data.error.message };

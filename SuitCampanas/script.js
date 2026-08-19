@@ -8,9 +8,35 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// ADR-026: logo_url puede venir en formato vector de Brief (ADR-023/025 —
+// "logo: url|avatar: url|industria: ...|LAPVTFU: url,url,,,,,|...") en vez del
+// formato legado de ADR-008 ("logoUrl,avatarUrl"). Probar etiquetas primero;
+// si no hay ninguna, caer al comma-split legado (retrocompatible).
 function parseLogoUrlField(value) {
     if (!value) return { logoUrl: '', avatarUrl: '' };
     const trimmed = value.trim();
+
+    if (trimmed.includes('|') || /^(logo|avatar|lapvtfu)\s*:/i.test(trimmed)) {
+        let logo = '', avatar = '';
+        trimmed.split('|').forEach(seg => {
+            const m = seg.trim().match(/^(logo|avatar|lapvtfu)\s*:\s*([\s\S]*)$/i);
+            if (!m) return;
+            const key = m[1].toLowerCase();
+            const val = m[2].trim();
+            if (key === 'logo') logo = val;
+            else if (key === 'avatar') avatar = val;
+            else if (key === 'lapvtfu') {
+                const parts = val.split(',').map(s => s.trim());
+                if (!logo) logo = parts[0] || '';
+                if (!avatar) avatar = parts[1] || '';
+            }
+        });
+        // Vector de Brief sin logo/avatar/LAPVTFU todavía (ej. NOET hoy): sin
+        // logo utilizable. No caer al comma-split — reventaría en las comas
+        // internas de industria/dolor/objecion/etc.
+        return { logoUrl: logo, avatarUrl: avatar };
+    }
+
     if (!trimmed.includes(',')) return { logoUrl: trimmed, avatarUrl: '' };
     if (trimmed.startsWith('data:')) {
         const match = trimmed.match(/^(data:[^,]+;base64,[^,]+),?(.*)/);
@@ -18,6 +44,36 @@ function parseLogoUrlField(value) {
     }
     const lastComma = trimmed.lastIndexOf(',');
     return { logoUrl: trimmed.substring(0, lastComma).trim(), avatarUrl: trimmed.substring(lastComma + 1).trim() };
+}
+
+// Gemela de parseOrigenPoliticas() en js/modules/core.js (ADR-019) — sin módulo
+// compartido entre root SuitOrg y SuitCampanas, misma lógica duplicada a propósito.
+// origen_politicas = "op: ROL|presentacion: SI|lp: si"; legado sin etiquetas
+// ("ROL"/"USUARIO" a secas) cae posicional a `op`.
+function parseOrigenPoliticas(raw) {
+    const segments = (raw || '').toString().trim().split('|').map(s => s.trim());
+    const labeled = {};
+    segments.forEach(seg => {
+        const m = seg.match(/^(op|presentacion|lp)\s*:\s*([\s\S]*)$/i);
+        if (m) labeled[m[1].toLowerCase()] = m[2].trim();
+    });
+    if (Object.keys(labeled).length > 0) {
+        return { op: labeled.op || '', presentacion: labeled.presentacion || '', lp: labeled.lp || '' };
+    }
+    return { op: segments[0] || '', presentacion: '', lp: '' };
+}
+
+// Subconjunto del vector de Brief de logo_url (ADR-025/026) que BDPV puede
+// aprovechar hoy: industria/nicho/especializacion van directo a
+// autoSelectIndustriaFromBrief() (ya usada por MediaPlanner), sin duplicar esa
+// lógica de matching contra los <select>.
+function parseBriefTags(raw) {
+    const brief = {};
+    (raw || '').toString().trim().split('|').forEach(seg => {
+        const m = seg.trim().match(/^(industria|nicho|especializacion)\s*:\s*([\s\S]*)$/i);
+        if (m && m[2].trim()) brief[m[1].toLowerCase()] = m[2].trim();
+    });
+    return brief;
 }
 
 const CONFIG = {
@@ -537,6 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnModeBdsmt) btnModeBdsmt.addEventListener('click', () => setWorkMode('BDSMT'));
     const btnModeBdpv = document.getElementById('btnModeBdpv');
     if (btnModeBdpv) btnModeBdpv.addEventListener('click', () => setWorkMode('BDPV'));
+    const btnModeLp = document.getElementById('btnModeLp');
+    if (btnModeLp) btnModeLp.addEventListener('click', () => setWorkMode('LP'));
     const btnModeViRe = document.getElementById('btnModeViRe');
     if (btnModeViRe) btnModeViRe.addEventListener('click', () => setWorkMode('ViRe'));
     const btnModeVide = document.getElementById('btnModeVide');
@@ -1098,6 +1156,80 @@ async function generateAIContent() {
                     });
                     captionField.value = `✅ Presentación generada: ${data.filename}`;
                     // Append link after caption
+                    const parent = captionField.parentElement;
+                    const existing = parent.querySelector('.bdpv-open-link');
+                    if (existing) existing.remove();
+                    link.className = 'bdpv-open-link';
+                    parent.appendChild(link);
+                }
+            } else {
+                showToast(`❌ Error: ${data.error || 'Desconocido'}`, 'error');
+            }
+        } catch (e) {
+            showToast(`❌ Error de conexión: ${e.message}`, 'error');
+        }
+        setAiLoading(false);
+        return;
+    }
+
+    // --- MODO LP: generar landing page HTML ---
+    if (currentMode === 'LP') {
+        const company = document.getElementById('companyName').value.trim();
+        if (!company) {
+            showToast('❌ Selecciona una empresa/marca', 'error');
+            return;
+        }
+        setAiLoading(true);
+        try {
+            const website = document.getElementById('webSite')?.value.trim() || '';
+            const phone = document.getElementById('contactPhone')?.value.trim() || '';
+            const logoFile = document.getElementById('companyLogoFile')?.files?.[0];
+            const logoUrl = document.getElementById('companyLogo')?.value.trim() || '';
+            const noLogo = document.getElementById('bdpvNoLogo')?.checked || false;
+            const region = document.getElementById('bdpvRegion')?.value.trim() || 'Monterrey, N.L., México';
+            const subNicho = document.getElementById('bdpvSubNicho')?.value || document.getElementById('bdpvSubNichoText')?.value.trim() || '';
+            const industry = aiNicho ? aiNicho.value : document.getElementById('aiIndustry')?.value || '';
+            const industryLabel = industry ? document.querySelector(`#aiNicho option[value="${industry}"]`)?.textContent || industry : '';
+
+            const skills = Array.from(document.querySelectorAll('.bdpv-skill:checked')).map(cb => cb.value);
+
+            const payload = {
+                company,
+                website,
+                phone,
+                logoUrl,
+                noLogo,
+                region,
+                subNicho,
+                industry: industryLabel,
+                skills,
+                photoCount: (window.bdUploadedPhotos || []).length
+            };
+
+            const LP_BASE = `http://${location.hostname}:8000`;
+            const res = await fetch(`${LP_BASE}/api/lp/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast(`✅ Landing generada: ${data.filename}`, 'success');
+                if (data.filePath) {
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.textContent = `📂 Abrir: ${data.filename}`;
+                    link.style.cssText = 'display:block;margin-top:0.5rem;color:#60a5fa;text-align:center;font-size:0.9rem';
+                    link.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        await fetch(`${LP_BASE}/api/lp/open`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filePath: data.filePath })
+                        });
+                    });
+                    captionField.value = `✅ Landing generada: ${data.filename}`;
                     const parent = captionField.parentElement;
                     const existing = parent.querySelector('.bdpv-open-link');
                     if (existing) existing.remove();
@@ -2158,6 +2290,34 @@ function setupCompanyAutoFill() {
                 document.documentElement.style.setProperty('--primary-hover', color + 'dd');
                 showToast(`Configuración de ${val} cargada`, 'success');
             }
+
+            // presentacion: SI / lp: SI (origen_politicas, ADR-019) + datos del Brief para
+            // BDPV/LP (ADR-026). No cambia de modo solo: solo avisa, precarga lo que BDPV
+            // va a necesitar si lo usa, y habilita el botón correspondiente.
+            const origenPol = parseOrigenPoliticas(findVal(['origen_politicas']));
+            const lpModeBtn = document.getElementById('btnModeLp');
+            const bdpvModeBtn = document.getElementById('btnModeBdpv');
+            if (origenPol.presentacion.toUpperCase() === 'SI') {
+                showToast(`💡 ${val} tiene marcada generación de presentación (BDPV)`, 'success');
+                if (bdpvModeBtn) bdpvModeBtn.classList.add('flag-active');
+            } else if (bdpvModeBtn) {
+                bdpvModeBtn.classList.remove('flag-active');
+            }
+            if (origenPol.lp.toUpperCase() === 'SI') {
+                showToast(`🌐 ${val} tiene marcada generación de landing page (LP)`, 'success');
+                if (lpModeBtn) {
+                    lpModeBtn.disabled = false;
+                    lpModeBtn.classList.add('flag-active');
+                }
+            } else if (lpModeBtn) {
+                lpModeBtn.disabled = true;
+                lpModeBtn.classList.remove('flag-active');
+            }
+            const brief = parseBriefTags(rawLogo);
+            autoSelectIndustriaFromBrief(brief);
+            const subNichoText = document.getElementById('bdpvSubNichoText');
+            if (subNichoText && !subNichoText.value && brief.nicho) subNichoText.value = brief.nicho;
+
             fetchEstilosVisuales();
         }
         // Don't clear fields on custom input — user may be typing their own business
@@ -2500,6 +2660,8 @@ function setWorkMode(mode) {
     if (bdsmtBtn) bdsmtBtn.classList.remove('active');
     const bdpvBtn = document.getElementById('btnModeBdpv');
     if (bdpvBtn) bdpvBtn.classList.remove('active');
+    const lpBtn = document.getElementById('btnModeLp');
+    if (lpBtn) lpBtn.classList.remove('active');
     if (vireBtn) vireBtn.classList.remove('active');
     if (videBtn) videBtn.classList.remove('active');
 
@@ -2674,6 +2836,59 @@ function setWorkMode(mode) {
         captionField.placeholder = 'La IA generará la presentación...';
 
         // Load sub-nicho options from industrias
+        if (typeof window.loadBdpvSubNicho === 'function') window.loadBdpvSubNicho();
+
+        loadCompanies().then(() => setupCompanyAutoFill());
+    } else if (mode === 'LP') {
+        if (lpBtn) lpBtn.classList.add('active');
+        console.log("🌐 Modo actual: LP — Landing Page HTML");
+
+        // Same company photos as BD
+        if (bdPhotosContainer) {
+            bdPhotosContainer.style.display = 'block';
+            if (typeof window.updateBdPhotosLabel === 'function') window.updateBdPhotosLabel();
+        }
+
+        // Hide format & platform (not used in LP)
+        document.querySelectorAll('.input-group-row:has(.mode-switch) .input-group').forEach(g => {
+            g.style.display = 'none';
+        });
+
+        // Hide multimedia production (voice, music, video, animation)
+        const prodSection = document.querySelector('.production-options');
+        if (prodSection) prodSection.style.display = 'none';
+
+        // Hide caption, media, date (landing generates its own content)
+        if (captionGroup) captionGroup.style.display = 'none';
+        if (mediaGroup) mediaGroup.style.display = 'none';
+        if (dateGroup) dateGroup.style.display = 'none';
+
+        // Reuse BDPV section (skills, sub-nicho, región, logo), hide recipe & BDSMT
+        if (bdpvSection) bdpvSection.style.display = 'block';
+        if (recipeSection) recipeSection.style.display = 'none';
+        if (previewSection) previewSection.style.display = 'none';
+        if (bdsmtSection) bdsmtSection.style.display = 'none';
+
+        // AI assistant: only show industry/niche field
+        if (aiSection) aiSection.style.display = 'block';
+        const aiFields = aiSection ? aiSection.querySelectorAll('.input-wrapper') : [];
+        aiFields.forEach((el, i) => {
+            el.style.display = '';
+            const lbl = el.querySelector('label');
+            if (lbl) {
+                const txt = lbl.textContent.trim();
+                if (txt.includes('Conciencia') || txt.includes('Plantilla') || txt.includes('Slides') || txt.includes('Tema')) {
+                    el.style.display = 'none';
+                }
+            }
+        });
+
+        // Show generate button
+        if (generateBtn) generateBtn.style.display = '';
+        if (genText) genText.textContent = '🌐 Generar Landing Page';
+        if (magicIcon) magicIcon.textContent = '🌐';
+        captionField.placeholder = 'La IA generará la landing page...';
+
         if (typeof window.loadBdpvSubNicho === 'function') window.loadBdpvSubNicho();
 
         loadCompanies().then(() => setupCompanyAutoFill());

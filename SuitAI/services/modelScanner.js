@@ -7,6 +7,7 @@ let modelCache = { models: [], lastScan: 0, scanning: false };
 const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models?max_price=0&sort=latency-low-to-high';
 const OPENCODE_ZEN_MODELS_URL = 'https://opencode.ai/zen/v1/models';
 const OMNIROUTE_BASE_URL = process.env.OMNIROUTE_BASE_URL || 'http://localhost:20128/v1';
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 
 function fetchJson(url, apiKey) {
   return new Promise((resolve, reject) => {
@@ -20,7 +21,9 @@ function fetchJson(url, apiKey) {
         try { resolve(JSON.parse(body)); }
         catch (e) { reject(new Error(`Failed to parse JSON from ${url}: ${e.message}`)); }
       });
-    }).on('error', reject);
+    }).on('error', reject).setTimeout(10000, () => {
+      reject(new Error(`Timeout reading ${url}`));
+    });
   });
 }
 
@@ -125,6 +128,35 @@ function parseOmniRouteModels(data) {
     }));
 }
 
+function parseOllamaModels(data) {
+  if (!data || !Array.isArray(data.data)) return [];
+  return data.data
+    .filter(m => {
+      const id = (m.id || '').toLowerCase();
+      return !/embed|rerank/i.test(id);
+    })
+    .map(m => ({
+      id: m.id,
+      name: m.id,
+      provider: 'ollama',
+      source: 'ollama',
+      endpoint: `${OLLAMA_BASE_URL}/v1/chat/completions`,
+      context_length: m.context_length || 32768,
+      latency_ms: null,
+      last_verified: null
+    }));
+}
+
+async function scanOllama() {
+  try {
+    const data = await fetchJson(`${OLLAMA_BASE_URL}/v1/models`);
+    return parseOllamaModels(data);
+  } catch (e) {
+    console.warn('[SCANNER] Ollama scan failed (local IA no disponible):', e.message);
+    return [];
+  }
+}
+
 async function scanOpenRouter() {
   try {
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -165,10 +197,16 @@ async function scanOmniRoute() {
 async function verifyModels(models) {
   const results = [];
   for (const m of models) {
+    if (m.source === 'ollama') {
+      results.push({ ...m, latency_ms: 0, last_verified: new Date().toISOString() });
+      continue;
+    }
     const apiKey = m.source === 'openrouter'
       ? process.env.OPENROUTER_API_KEY
       : m.source === 'omniroute'
       ? process.env.OMNIROUTE_API_KEY
+      : m.source === 'ollama'
+      ? 'ollama'
       : process.env.OPENCODE_API_KEY;
     if (!apiKey) { results.push({ ...m, latency_ms: null, last_verified: null }); continue; }
     const ping = await pingModel(m.endpoint, apiKey, m.id);
@@ -196,8 +234,8 @@ async function scan(force) {
   }
   modelCache.scanning = true;
   try {
-    const [orModels, ocModels, omniModels] = await Promise.all([scanOpenRouter(), scanOpenCodeZen(), scanOmniRoute()]);
-    let all = [...orModels, ...ocModels, ...omniModels];
+    const [orModels, ocModels, omniModels, ollamaModels] = await Promise.all([scanOpenRouter(), scanOpenCodeZen(), scanOmniRoute(), scanOllama()]);
+    let all = [...orModels, ...ocModels, ...omniModels, ...ollamaModels];
     if (all.length === 0) {
       console.warn('[SCANNER] No free models found from any provider, using fallback');
       all = FALLBACK_MODELS;
@@ -206,7 +244,7 @@ async function scan(force) {
     }
     modelCache.models = all;
     modelCache.lastScan = now;
-    console.log(`[SCANNER] Scanned ${all.length} free models (${orModels.length} OR, ${ocModels.length} OCZ, ${omniModels.length} OmniRoute)`);
+    console.log(`[SCANNER] Scanned ${all.length} models (${orModels.length} OR, ${ocModels.length} OCZ, ${omniModels.length} OmniRoute, ${ollamaModels.length} Ollama)`);
     return all;
   } finally {
     modelCache.scanning = false;

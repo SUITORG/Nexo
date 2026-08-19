@@ -1,0 +1,642 @@
+Plan de Desarrollo - App de Ambulancias Tipo Uber/Didi
+Fase 1: Planificación y Requerimientos (Documento Actual)
+1.1 Visión General del Proyecto
+Objetivo: Crear una plataforma que conecte pacientes que necesitan servicios de ambulancia con proveedores de servicios médicos de emergencia y traslados programados.
+
+1.2 Diferenciadores Clave vs. Apps de Transporte Regular
+Urgencia real: Tiempo de respuesta crítico
+
+Personal médico calificado: Paramédicos, enfermeros
+
+Equipamiento médico: Desfibrilador, oxígeno, monitor cardíaco
+
+Coordinación con hospitales: Pre-alerta de llegada
+
+Tipos de servicio: Emergencia, traslado programado, UCI móvil
+
+Triaje inicial: Evaluación de gravedad antes de asignar unidad
+
+1.3 Tipos de Usuarios
+Paciente/Solicitante:
+
+Solicitud inmediata o programada
+
+Información médica básica (alergias, condiciones)
+
+Contacto de emergencia
+
+Seguimiento en tiempo real
+
+Personal Médico:
+
+Paramédicos
+
+Enfermeros especializados
+
+Conductores de ambulancia
+
+Coordinador/Despachador:
+
+Monitoreo de flota
+
+Asignación de unidades
+
+Comunicación con hospitales
+
+Administrador:
+
+Gestión de usuarios
+
+Métricas y reportes
+
+Configuración del sistema
+
+1.4 Stack Tecnológico Recomendado
+Para Principiantes (recomendado):
+
+Backend:
+Firebase (Google): Base de datos en tiempo real, autenticación, storage
+
+Lenguaje: JavaScript/TypeScript con Node.js
+
+Frontend:
+React Native: Desarrollo multiplataforma (iOS y Android)
+
+Expo: Framework que simplifica el desarrollo React Native
+
+Base de Datos:
+Firebase Firestore: NoSQL, en tiempo real, fácil de usar
+
+PostgreSQL (alternativa): Para datos estructurados complejos
+
+Servicios Adicionales:
+Google Maps API: Geolocalización y rutas
+
+Twilio: SMS y notificaciones
+
+Stripe: Procesamiento de pagos
+
+1.5 Modelo de Datos Básico
+javascript
+// Usuario (Paciente)
+{
+  id_usuario: "string",
+  nombre: "string",
+  telefono: "string",
+  correo: "string",
+  direccion: "string",
+  info_medica: {
+    tipo_sangre: "string",
+    alergias: "array",
+    condiciones: "array",
+    medicamentos: "array"
+  },
+  contacto_emergencia: {
+    nombre: "string",
+    telefono: "string",
+    relacion: "string"
+  },
+  historial_servicios: "array"
+}
+
+// Unidad de Ambulancia
+{
+  id_unidad: "string",
+  tipo: "basica|avanzada|uci",
+  placa: "string",
+  estado: "disponible|ocupada|mantenimiento",
+  ubicacion_actual: {
+    latitud: "float",
+    longitud: "float"
+  },
+  personal: {
+    conductor: "string",
+    paramedico: "string",
+    enfermero: "string"
+  },
+  equipamiento: "array"
+}
+
+// Servicio/Solicitud
+{
+  id_servicio: "string",
+  id_paciente: "string",
+  id_unidad: "string",
+  tipo_servicio: "emergencia|programado",
+  estado: "pendiente|en_camino|en_sitio|traslado|completado|cancelado",
+  origen: {
+    direccion: "string",
+    latitud: "float",
+    longitud: "float"
+  },
+  destino: {
+    hospital: "string",
+    direccion: "string",
+    latitud: "float",
+    longitud: "float"
+  },
+  tiempo_solicitud: "timestamp",
+  tiempo_llegada: "timestamp",
+  costo: "float",
+  metodo_pago: "string"
+}
+Fase 2: Seguridad de la Aplicación
+2.1 Seguridad Esencial para Principiantes
+Implementar desde el inicio:
+
+Autenticación Segura:
+
+Firebase Authentication (gratis y fácil)
+
+Verificación por SMS (Twilio)
+
+Tokens JWT para sesiones
+
+MFA (Autenticación de dos factores) para personal médico
+
+Protección de Datos:
+
+Encriptación de datos médicos (AES-256)
+
+Cumplimiento HIPAA (para datos de salud)
+
+Auditoría de accesos
+
+Consentimiento del paciente para compartir datos
+
+Seguridad en Tiempo Real:
+
+Cifrado SSL/TLS en todas las comunicaciones
+
+Rate limiting para prevenir ataques
+
+Validación de entradas en formularios
+
+Protección contra inyección SQL
+
+Privacidad:
+
+Ocultar datos sensibles de conductores
+
+Historial accesible solo para usuario y administradores
+
+Modo "incógnito" para solicitudes anónimas
+
+Configuración de Firebase Security Rules:
+
+javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usuarios/{userId} {
+      allow read, write: if request.auth.uid == userId;
+      allow read: if isAdmin();
+    }
+    match /unidades/{unidadId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isDispatcher();
+    }
+  }
+}
+Fase 3: Frontend - Diseño y Registro
+3.1 Proceso de Registro para Pacientes
+Paso 1: Selección de Tipo de Usuario
+
+Paciente/Familiar
+
+Personal Médico
+
+Coordinador
+
+Paso 2: Registro Básico (Paciente)
+
+Número de teléfono (verificación OTP)
+
+Nombre completo
+
+Correo electrónico (opcional)
+
+Foto de perfil (opcional)
+
+Paso 3: Información Médica (Crítica)
+
+Tipo de sangre
+
+Alergias conocidas
+
+Condiciones crónicas
+
+Medicamentos actuales
+
+Contacto de emergencia
+
+Paso 4: Método de Pago
+
+Tarjeta de crédito/débito
+
+Seguro médico
+
+Efectivo (opcional)
+
+3.2 Interfaz Principal del Paciente
+Pantalla de Inicio:
+
+text
+[Logo]
+[Botón de Emergencia - ROJO GRANDE]
+[Programar Traslado]
+[Historial de Servicios]
+[Mi Perfil Médico]
+[Configuración]
+Flujo de Emergencia:
+
+Presionar botón de emergencia
+
+Confirmar ubicación (GPS)
+
+Seleccionar tipo de emergencia:
+
+Dolor de pecho
+
+Dificultad respiratoria
+
+Accidente
+
+Otro
+
+Ver unidades cercanas
+
+Asignación automática
+
+Seguimiento en tiempo real
+
+Fase 4: Diseño Responsive y Multidispositivo
+4.1 Estrategia de Diseño Responsive
+Enfoque: Mobile-First
+
+Diseñar primero para pantallas pequeñas
+
+Adaptar a tablets y desktop después
+
+Breakpoints Principales:
+
+css
+/* Mobile */
+@media (max-width: 480px) { }
+
+/* Tablet */
+@media (min-width: 481px) and (max-width: 768px) { }
+
+/* Desktop */
+@media (min-width: 769px) { }
+
+/* Large Desktop */
+@media (min-width: 1200px) { }
+Componentes Adaptables:
+
+Botón de emergencia: 200% más grande en mobile
+
+Mapas: Fullscreen en mobile, embedido en desktop
+
+Menú: Hamburguesa en mobile, sidebar en desktop
+
+Formularios: Stack vertical en mobile, grid en desktop
+
+Tecnologías Responsive:
+
+Flexbox y Grid para layouts
+
+Unidades relativas (em, rem, %, vh, vw)
+
+Imágenes SVG escalables
+
+React Native Dimensions API
+
+4.2 Accesibilidad
+Texto mínimo 16px en inputs
+
+Contraste de colores AA
+
+Botones táctiles mínimo 44x44px
+
+Compatibilidad con lectores de pantalla
+
+Fase 5: Sistema de Pagos
+5.1 Integración de Pagos
+Proveedor Principal: Stripe
+
+Acepta tarjetas internacionales
+
+Comisiones transparentes
+
+Documentación excelente para principiantes
+
+Modo sandbox para pruebas
+
+Alternativas:
+
+PayPal (fácil integración)
+
+MercadoPago (Latinoamérica)
+
+Conekta (México)
+
+5.2 Flujo de Pago
+javascript
+// Estructura de pago
+{
+  id_pago: "string",
+  id_servicio: "string",
+  monto: 450.00,
+  moneda: "MXN",
+  estado: "pendiente|aprobado|rechazado|reembolsado",
+  metodo: {
+    tipo: "tarjeta|seguro|efectivo",
+    detalles: {
+      ultimos_digitos: "4242",
+      marca: "Visa",
+      titular: "Juan Pérez"
+    }
+  },
+  fecha: "timestamp"
+}
+Proceso:
+
+Crear "Payment Intent" en Stripe
+
+Mostrar formulario de pago
+
+Confirmar pago
+
+Generar recibo digital
+
+Enviar por correo/SMS
+
+5.3 Tarifas y Comisiones
+Modelo de Negocio:
+
+Comisión por servicio: 15-20%
+
+Tarifa base: $200 MXN
+
+Tarifa por kilómetro: $25 MXN
+
+Tarifa por minuto de espera: $5 MXN
+
+Cargos nocturnos: +30% (10pm-6am)
+
+Seguro incluido: $50 MXN
+
+Fase 6: Branding Configurable
+6.1 Sistema de Temas
+javascript
+// Configuración de tema
+const theme = {
+  colors: {
+    primary: '#E63946',    // Rojo emergencia
+    secondary: '#457B9D',  // Azul confianza
+    accent: '#F4A261',     // Naranja alerta
+    background: '#FFFFFF',
+    surface: '#F1FAEE',
+    error: '#D90429',
+    success: '#2A9D8F',
+    text: '#1D3557',
+    textLight: '#6C757D'
+  },
+  typography: {
+    heading: 'Poppins-Bold',
+    body: 'Inter-Regular',
+    emergency: 'Roboto-Black'
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32
+  },
+  borderRadius: {
+    sm: 4,
+    md: 8,
+    lg: 16,
+    pill: 50
+  }
+}
+6.2 Logo y Elementos Visuales
+Logo Sugerido:
+
+Ícono: Cruz médica + rayo (velocidad)
+
+Colores: Rojo (#E63946) y Blanco
+
+Tipografía: Sans-serif bold
+
+Variaciones:
+
+Logo principal
+
+Logo simplificado (ícono solo)
+
+Logo horizontal
+
+Logo vertical
+
+Instalación y Configuración para Principiantes
+Requisitos del Sistema
+Para Desarrollo:
+
+bash
+# 1. Instalar Node.js
+# Descargar de: https://nodejs.org/
+# Versión recomendada: LTS (18.x o superior)
+
+# 2. Instalar Git
+# Descargar de: https://git-scm.com/
+
+# 3. Instalar Visual Studio Code
+# Descargar de: https://code.visualstudio.com/
+
+# 4. Crear cuenta en Firebase
+# https://firebase.google.com/
+
+# 5. Crear cuenta en Stripe (modo test)
+# https://stripe.com/
+Instalación del Proyecto
+bash
+# 1. Clonar repositorio
+git clone https://github.com/tu-usuario/ambulancia-app.git
+cd ambulancia-app
+
+# 2. Instalar Expo CLI
+npm install -g expo-cli
+
+# 3. Instalar dependencias
+npm install
+
+# 4. Configurar Firebase
+# Crear archivo .env con tus credenciales
+FIREBASE_API_KEY=tu_api_key
+FIREBASE_AUTH_DOMAIN=tu_dominio
+FIREBASE_PROJECT_ID=tu_proyecto
+FIREBASE_STORAGE_BUCKET=tu_bucket
+FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
+FIREBASE_APP_ID=tu_app_id
+
+# 5. Iniciar aplicación
+npm start
+# o
+expo start
+Plataformas de Publicación
+iOS - App Store
+Requisitos:
+
+Mac con macOS
+
+Xcode (gratis desde App Store)
+
+Apple Developer Account ($99 USD/año)
+
+Certificados de desarrollo
+
+Provisioning profiles
+
+Proceso:
+
+Crear Apple ID
+
+Registrar como desarrollador
+
+Crear App ID en Apple Developer Portal
+
+Generar certificados
+
+Configurar en Xcode
+
+Crear build de producción
+
+Subir a App Store Connect
+
+Revisión de Apple (24-48 horas)
+
+Android - Google Play
+Requisitos:
+
+PC o Mac
+
+Android Studio (gratis)
+
+Google Play Developer Account ($25 USD pago único)
+
+Keystore de firma
+
+Proceso:
+
+Crear cuenta de desarrollador
+
+Generar keystore
+
+Configurar en Android Studio
+
+Crear bundle/app
+
+Subir a Google Play Console
+
+Revisión de Google (24-72 horas)
+
+Bases de Datos en iOS/Mac
+Firebase en iOS:
+
+Integración nativa con Swift/Objective-C
+
+Sincronización automática
+
+Almacenamiento local en Core Data (opcional)
+
+Trabaja offline
+
+Base de datos en la nube
+
+Core Data (local):
+
+Base de datos local de Apple
+
+Para datos persistentes
+
+Sincronización con iCloud
+
+Backup automático
+
+Costos Estimados
+Costos Iniciales (Primer Año)
+Concepto	Costo Anual
+Apple Developer	$99 USD
+Google Play	$25 USD (pago único)
+Firebase (Spark - gratis)	$0
+Firebase (Blaze - producción)	$300-600 USD
+Stripe (por transacción)	2.9% + $0.30
+Twilio SMS	$0.0075/mensaje
+Google Maps API	$200/mes (gratis hasta $200)
+Dominio	$10-15 USD
+Hosting	$100-300 USD
+Total inicial aproximado: $500-1,000 USD
+
+Próximas Fases
+Fase 7: MVP (Producto Mínimo Viable)
+Autenticación básica
+
+Geolocalización simple
+
+Solicitud de emergencia
+
+Asignación manual
+
+Pago básico
+
+Fase 8: Pruebas Piloto
+Beta cerrada con 10-20 usuarios
+
+Pruebas con conductores reales
+
+Ajustes de UX/UI
+
+Optimización de rutas
+
+Fase 9: Lanzamiento
+Marketing inicial
+
+Soporte al cliente
+
+Monitoreo de métricas
+
+Ajustes post-lanzamiento
+
+Fase 10: Expansión
+Integración con hospitales
+
+Alianzas con aseguradoras
+
+Nuevas funcionalidades
+
+Expansión geográfica
+
+Fase 11: Optimización
+Inteligencia artificial para despacho
+
+Predicción de demanda
+
+Mantenimiento predictivo
+
+Análisis de datos avanzado
+
+Conclusión
+Este plan proporciona una base sólida para comenzar tu aplicación de ambulancias. Recuerda:
+
+Empieza simple: No intentes implementar todo de una vez
+
+Prueba constantemente: Con usuarios reales
+
+Prioriza la seguridad: Especialmente con datos médicos
+
+Busca feedback: De profesionales de la salud
+
+Mantén la flexibilidad: El mercado puede cambiar

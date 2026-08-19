@@ -53,7 +53,7 @@ function callDirectGoogle(messages) {
   });
 }
 
-function callModel(endpoint, modelId, apiKey, messages) {
+function callModel(endpoint, modelId, apiKey, messages, timeoutMs = 30000) {
   return new Promise((resolve, reject) => {
     const body = buildRequest(modelId, messages, apiKey);
     const urlObj = new URL(endpoint);
@@ -68,7 +68,7 @@ function callModel(endpoint, modelId, apiKey, messages) {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Length': Buffer.byteLength(body)
       },
-      timeout: 30000
+      timeout: timeoutMs
     };
     const start = Date.now();
     const req = proto.request(opts, (res) => {
@@ -93,7 +93,7 @@ function callModel(endpoint, modelId, apiKey, messages) {
     });
     req.on('error', (e) => { circuitBreaker.recordFailure(modelId); reject(e); });
     req.on('timeout', () => { req.destroy(); circuitBreaker.recordFailure(modelId); reject(new Error(`Timeout from ${modelId}`)); });
-    req.setTimeout(30000);
+    req.setTimeout(timeoutMs);
     req.write(body);
     req.end();
   });
@@ -126,10 +126,13 @@ async function route(messages) {
       ? process.env.OPENROUTER_API_KEY
       : m.source === 'omniroute'
       ? process.env.OMNIROUTE_API_KEY
+      : m.source === 'ollama'
+      ? 'ollama'
       : process.env.OPENCODE_API_KEY;
     if (!apiKey) { errors.push(`${m.id} (no API key)`); continue; }
     try {
-      return await callModel(m.endpoint, m.id, apiKey, messages);
+      // Local Ollama corre en CPU: primer request puede tardar al cargar el modelo
+      return await callModel(m.endpoint, m.id, apiKey, messages, m.source === 'ollama' ? 120000 : 30000);
     } catch (e) {
       errors.push(`${m.id}: ${e.message}`);
       continue;

@@ -248,6 +248,17 @@ body {
     color: white;
 }
 
+.mode-btn.flag-active {
+    background: var(--accent-color);
+    color: white;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.mode-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
 .slide-visual {
     margin-top: 0.5rem;
     font-size: 0.75rem;

@@ -1,0 +1,42 @@
+Plan de Desarrollo Fases (Enfoque Pareto 80/20)
+Fase 1: Arquitectura Base y Pruebas (Actual)
+
+Frontend (App): React Native con Expo. Permite programar una vez y exportar a iOS, Android, Web (Mac/PC) adaptándose a cualquier pantalla (Responsive Design).
+
+Backend y Base de Datos: Supabase (alternativa open-source a Firebase).
+
+Seguridad: Row Level Security (RLS). Los datos médicos deben estar encriptados.
+
+Autenticación: Login vía OTP (One-Time Password) por SMS al teléfono.
+
+Pagos: Integración de Stripe (Modo Test). Soporta tarjetas y Apple/Google Pay.
+
+Branding Configurable: Archivo central theme.js para modificar colores y logos instantáneamente sin tocar la lógica.
+
+Fases Siguientes
+
+Fase 2: Lógica de Triaje (Clasificación de emergencia) y Geolocalización en tiempo real.
+
+Fase 3: Panel de Despacho (Web) para hospitales/paramédicos y algoritmos de ruteo.
+
+Fase 4: Despliegue a Producción (App Store/Play Store) y escalabilidad de servidores.
+
+Explicación Técnica para Principiantes
+Base de Datos y Ecosistema Apple (iOS/Mac)
+La base de datos no reside en el teléfono ni en la Mac; vive en la nube (Supabase). Funciona con tablas relacionales (PostgreSQL).
+
+Tabla Usuarios: Teléfono, nombre, historial médico básico.
+
+Tabla Ambulancias: Ubicación GPS, tipo de equipo, estado (disponible/ocupada).
+La app en iOS/Mac solo actúa como un "visor" que solicita y envía datos a la nube mediante APIs (puentes de comunicación).
+
+Costos (Capa Gratuita)
+Usar Supabase y Expo no tiene costo inicial para desarrollo y demos. Solo pagarás cuando superes los límites gratuitos (ej. más de 50,000 usuarios activos) o al desplegar en tiendas (Apple cobra $99 USD/año). Stripe solo cobra comisión por transacción real, no en pruebas.
+
+Instalaciones Necesarias
+
+Node.js: Entorno de ejecución para Javascript.
+
+Visual Studio Code (VS Code): Tu editor de texto.
+
+Expo CLI: Herramienta para probar la app en tu teléfono físico escaneando un código QR, sin configurar simuladores pesados.

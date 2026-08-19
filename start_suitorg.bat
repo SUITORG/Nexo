@@ -69,9 +69,22 @@ if errorlevel 1 goto waitloop
 echo  [3/3] Servidor listo. Abriendo el sitio en el navegador...
 start "" http://localhost:%PORT%
 echo.
-echo  ─────────────────────────────────────────
-echo   Sitio:    http://localhost:%PORT%
-echo   Servidor: ventana "SuitOrg Server" (chica)
-echo   Cierra esa ventana (o Ctrl+C ahi) para detenerlo.
-echo  ─────────────────────────────────────────
+echo  ═══════════════════════════════════════════
+echo   CÓMO USARLO
+echo  ═══════════════════════════════════════════
+echo   1. Sitio:    http://localhost:%PORT%
+echo      El servidor abre en la ventana "SuitOrg Server" (chica).
+echo   2. Para DETENERLO: cierra esa ventana o presiona Ctrl+C en ella.
+echo   3. Accesos rápidos:
+echo      - #orbit          Hub de empresas
+echo      - #home           Inicio del inquilino activo
+echo      - #pos / #staff-pos   Punto de venta (requiere modo flag POS)
+echo      - #leads          Bandeja de leads
+echo      - #reservations   Reservaciones (requiere usa_reservaciones)
+echo   4. Submodulos que arrancan junto con server.js (mismo proceso):
+echo      citas(3002) PedidoExpress(3005) Pos(3006) Productos(3007)
+echo      Inventarios(3008) Bodega(3009) SuitAI(3010).
+echo   5. Si algo no responde, revisa la ventana "SuitOrg Server" por errores.
+echo  ═══════════════════════════════════════════
 echo.
+pause

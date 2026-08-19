@@ -85,6 +85,27 @@ function resolveLogoUrlParts(raw) {
     return { logo: segments[0] || '', hero: segments[1] || '', oferta: segments[2] || '', cta: segments[3] || '' };
 }
 
+// ADR-026: extrae del vector de Brief (mismo campo logo_url, ver ADR-025) las
+// 3 preguntas de pre-compra que la landing debe contestar sin que el visitante
+// tenga que preguntar: vendes/PBP ("¿qué hace?"), audiencia ("¿para quién?").
+// PM trae {precio},{margen} — margen es dato interno de negocio, NUNCA se
+// expone en la landing; precio solo se muestra si el Brief lo trae explícito
+// (nunca se inventa ni se estima).
+function resolveBriefParts(raw) {
+    const segments = (raw || '').toString().trim().split('|').map(s => s.trim());
+    const brief = {};
+    segments.forEach(seg => {
+        const m = seg.match(/^(vendes|pbp|audiencia|pm)\s*:\s*([\s\S]*)$/i);
+        if (!m) return;
+        const key = m[1].toLowerCase();
+        const val = m[2].trim();
+        if (!val) return;
+        if (key === 'pm') brief.precio = (val.split(',')[0] || '').trim();
+        else brief[key] = val;
+    });
+    return brief;
+}
+
 // Convierte link de vista de Google Drive a URL de imagen directa (para og:image).
 function directDriveImage(url) {
     if (!url) return url;
@@ -106,6 +127,13 @@ function renderLanding(tpl, company, coSeo, file, suitorgCompany = {}) {
     const { logo: logoRaw, hero: heroRaw, oferta: ofertaRaw, cta: ctaRaw } = resolveLogoUrlParts(company.logo_url);
     const oferta = ofertaRaw || slogan;
     const ctaTexto = ctaRaw || 'Contactar por WhatsApp';
+    // Responde qué hace / para quién / cuánto cuesta antes de que lo pregunten.
+    // vendes/PBP y audiencia son opcionales (tenants sin Brief cargado quedan
+    // igual que antes); precio nunca se inventa, solo sale si PM lo trae.
+    const briefParts = resolveBriefParts(company.logo_url);
+    const queHace = briefParts.vendes || briefParts.pbp || '';
+    const paraQuien = briefParts.audiencia || '';
+    const precio = briefParts.precio || '';
     const telefono = company.telefonowhatsapp || '';
     const correo = company.correoempresarial || '';
     const ctaHref = telefono ? `https://wa.me/${telefono}` : (correo ? `mailto:${correo}` : '');
@@ -130,7 +158,16 @@ function renderLanding(tpl, company, coSeo, file, suitorgCompany = {}) {
         .replace(/{{COLOR_TEMA}}/g, colorTema)
         .replace(/{{URL}}/g, `${CONFIG.baseUrl}/${file}`)
         .replace(/{{TELEFONO}}/g, telefono)
-        .replace(/{{CORREO}}/g, correo);
+        .replace(/{{CORREO}}/g, correo)
+        .replace(/{{QUE_HACE}}/g, queHace)
+        .replace(/{{PARA_QUIEN}}/g, paraQuien)
+        .replace(/{{PRECIO}}/g, precio);
+
+    // Preguntas de pre-compra: ocultar cada línea si el Brief no trae el dato
+    // (nunca mostrar "¿Qué hace? " vacío, y nunca inventar un precio).
+    if (!queHace) h = h.replace(/\s*<p class="que-hace"[\s\S]*?<\/p>/, '');
+    if (!paraQuien) h = h.replace(/\s*<p class="para-quien"[\s\S]*?<\/p>/, '');
+    if (!precio) h = h.replace(/\s*<p class="precio"[\s\S]*?<\/p>/, '');
 
     // CTA condicional: sin teléfono ni correo, no renderizar botón muerto (mismo
     // patrón del motor con logo/avatar en overlays de otros módulos).
