@@ -15,8 +15,7 @@ if "%DESC%"=="" set DESC=backup
 git add -A
 git commit -m "%TIPO%: %DESC% (%date% %time%)"
 if errorlevel 1 (
-  echo [X] Nada que commitear o error en commit
-  goto :end
+  echo [i] Nada nuevo que commitear ^(puede que ya estuviera commiteado^) - se intenta subir igual lo pendiente...
 )
 
 set BRANCH=
