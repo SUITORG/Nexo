@@ -1,0 +1,496 @@
+🚑 Plan de Desarrollo: App de Ambulancias "MediRápido"
+FASE 1: PLAN ESTRATÉGICO Y ARQUITECTURA BÁSICA
+1. VISIÓN GENERAL DEL PROYECTO
+Nombre sugerido: MediRápido (branding configurable)
+Concepto: Plataforma que conecta pacientes/usuarios con ambulancias privadas de forma inmediata, similar a Uber pero optimizado para emergencias médicas y traslados programados.
+Diferencias clave vs. Uber:
+El usuario NO es un "pasajero normal": puede estar inconsciente, acompañado por familiares, o necesitar atención médica durante el traslado
+Se requiere información médica básica (alergias, tipo de sangre, contacto de emergencia)
+Las ambulancias tienen equipamiento médico variable (básica, avanzada, UCI móvil)
+El "conductor" es un paramédico o técnico en urgencias
+Se necesita integración con hospitales/centros médicos
+2. STACK TECNÓLÓGICO RECOMENDADO (Principiante-friendly)
+Hojas
+Capa	Tecnología	¿Por qué?
+Frontend (App móvil)	Flutter o React Native	Un solo código para iOS y Android. Flutter es más amigable para principiantes
+Frontend (Web admin)	React.js o Vue.js	Muy documentado, muchos tutoriales
+Backend	Firebase (Google) o Supabase	No necesitas servidor propio inicialmente, base de datos + autenticación + hosting incluidos
+Base de Datos	Cloud Firestore (Firebase) o PostgreSQL (Supabase)	Escalable, gratis para empezar
+Mapas/Geolocalización	Google Maps API	Estándar de la industria
+Notificaciones Push	Firebase Cloud Messaging (FCM)	Gratis y confiable
+Pagos	Stripe o MercadoPago	Fácil integración, documentación en español
+Almacenamiento	Firebase Storage	Para fotos de perfil, documentos médicos
+💡 Recomendación para principiantes: Empieza con Flutter + Firebase. Es el combo más documentado, tiene muchos tutoriales en YouTube, y la curva de aprendizaje es suave.
+3. ARQUITECTURA DE LA APP
+plain
+┌─────────────────────────────────────────────────────────────┐
+│                    USUARIO (Paciente)                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ App Móvil   │  │ Registro    │  │ Solicitar Ambulancia│ │
+│  │ (Flutter)   │  │ Teléfono    │  │ + Ubicación GPS     │ │
+│  └──────┬──────┘  └─────────────┘  └─────────────────────┘ │
+│         │                                                    │
+│         ▼                                                    │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              FIREBASE (Backend Serverless)              │ │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │ │
+│  │  │Auth      │ │Firestore  │ │Cloud     │ │Cloud     │  │ │
+│  │  │(Teléfono)│ │(Datos)    │ │Functions │ │Messaging  │  │ │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘  │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│         │                                                    │
+│         ▼                                                    │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              CONDUCTOR (Paramédico)                      │ │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐ │ │
+│  │  │ App Móvil   │  │ Aceptar     │  │ Navegación GPS  │ │ │
+│  │  │ (Flutter)   │  │ Servicio    │  │ + Estado en vivo│ │ │
+│  │  └─────────────┘  └─────────────┘  └─────────────────┘ │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│         │                                                    │
+│         ▼                                                    │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              PANEL WEB (Administrador)                   │ │
+│  │  - Monitoreo de flota en tiempo real                    │ │
+│  │  - Gestión de conductores y ambulancias                 │ │
+│  │  - Reportes y estadísticas                              │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+4. FLUJO DE REGISTRO (Usuario Paciente)
+plain
+Pantalla 1: Bienvenida + Logo configurable
+    │
+    ▼
+Pantalla 2: Ingresar número de teléfono
+    │
+    ▼
+Pantalla 3: Recibir SMS con código OTP (verificación)
+    │
+    ▼
+Pantalla 4: Datos básicos de perfil
+    ├── Nombre completo
+    ├── Fecha de nacimiento
+    ├── Tipo de sangre (A+, B-, O+, etc.)
+    ├── Alergias conocidas
+    ├── Contacto de emergencia (nombre + teléfono)
+    └── Foto de perfil (opcional)
+    │
+    ▼
+Pantalla 5: Permisos (ubicación GPS, notificaciones)
+    │
+    ▼
+✅ LISTO - Pantalla principal (Mapa + Botón de emergencia)
+📱 Método de registro recomendado: Teléfono móvil con verificación OTP (One Time Password) vía SMS. Es el más rápido para emergencias y no requiere recordar contraseñas.
+5. FLUJO PRINCIPAL (Solicitar Ambulancia)
+plain
+Usuario abre app
+    │
+    ▼
+Mapa con ubicación actual
+    │
+    ▼
+Seleccionar tipo de servicio:
+    ├── 🚨 EMERGENCIA (rojo) - Respuesta inmediata
+    ├── 🏥 TRASLADO PROGRAMADO (azul) - Cita médica, dialisis, etc.
+    └── ♿ MOVILIDAD REDUCIDA (verde) - Silla de ruedas, camilla
+    │
+    ▼
+Confirmar ubicación de origen y destino
+    │
+    ▼
+Mostrar estimación de costo y tiempo de llegada
+    │
+    ▼
+Confirmar solicitud
+    │
+    ▼
+Sistema busca ambulancia más cercana disponible
+    │
+    ▼
+Notificación al conductor más cercano
+    │
+    ▼
+Conductor acepta → Usuario ve:
+    ├── Foto del paramédico
+    ├── Nombre y credencial
+    ├── Tipo de ambulancia
+    ├── Placa del vehículo
+    ├── Tiempo estimado de llegada
+    └── Botón para llamar al conductor
+    │
+    ▼
+Conductor llega → Inicia servicio
+    │
+    ▼
+Traslado en curso → Usuario ve ruta en vivo
+    │
+    ▼
+Llegada al destino → Confirmar finalización
+    │
+    ▼
+Pago automático (tarjeta guardada) o efectivo
+    │
+    ▼
+Calificación del servicio + comentarios
+6. SEGURIDAD (Fase crítica - NO negociable)
+🔒 Seguridad de Datos (HIPAA / Ley de Protección de Datos)
+Hojas
+Aspecto	Implementación
+Cifrado en tránsito	HTTPS/TLS 1.3 para todas las comunicaciones
+Cifrado en reposo	Datos médicos cifrados en la base de datos
+Autenticación	Firebase Auth con verificación de teléfono + reCAPTCHA
+Reglas de seguridad	Firestore Rules: cada usuario solo ve sus propios datos
+Datos médicos sensibles	No almacenar historial clínico completo. Solo: tipo de sangre, alergias, contacto de emergencia
+Consentimiento	Pantalla de términos y condiciones + política de privacidad obligatoria
+Borrado de datos	Función para que el usuario pueda eliminar su cuenta y datos (GDPR/LGPD)
+🛡️ Seguridad Operativa
+Hojas
+Aspecto	Implementación
+Verificación de conductores	Documento de identidad, licencia de conducción, certificación de paramédico, antecedentes penales
+Rastreo en tiempo real	Ubicación GPS compartida con contacto de emergencia durante el traslado
+Botón de pánico	Usuario y conductor pueden activar alerta a central de monitoreo
+Registro de viajes	Cada servicio queda registrado con: hora, ruta, conductor, paciente, costo
+Límites de acceso	Solo usuarios verificados pueden solicitar servicios
+7. DISEÑO RESPONSIVO (Cualquier tamaño de pantalla)
+Flutter resuelve esto automáticamente, pero debes considerar:
+plain
+📱 Teléfono móvil (principal):
+   - Modo portrait (vertical)
+   - Botón de emergencia grande y accesible
+   - Mapa a pantalla completa
+
+📱 Tablet:
+   - Pantalla dividida: mapa a la izquierda, detalles a la derecha
+   - Botones más grandes para uso con guantes (paramédicos)
+
+💻 Web / Escritorio:
+   - Panel de administración
+   - Vista de flota completa en mapa grande
+   - Reportes y estadísticas
+
+🖥️ Mac / Windows:
+   - Aplicación de escritorio para central de monitoreo
+   - Múltiples ventanas de seguimiento
+💡 Tip: Diseña primero para móvil (Mobile First), luego adapta a tablet y escritorio.
+8. FORMAS DE PAGO
+Hojas
+Método	Fase 1	Fase 2+
+Tarjeta de crédito/débito	✅ Sí (Stripe/MercadoPago)	✅
+Efectivo	✅ Sí (pago al conductor)	✅
+Transferencia bancaria	❌ No	✅
+Wallet digital	❌ No	✅ (PayPal, Apple Pay, Google Pay)
+Seguro médico	❌ No	✅ (Integración con aseguradoras)
+Suscripción mensual	❌ No	✅ (Plan familiar, empresas)
+Flujo de pago:
+Usuario guarda tarjeta de forma segura (tokenizada - no guardas el número real)
+Al finalizar el servicio, se cobra automáticamente
+Se genera factura digital (PDF) enviada por email/WhatsApp
+El conductor recibe su comisión en su cuenta bancaria (semanal)
+9. BRANDING CONFIGURABLE (Colores, Logo, Nombre)
+Para que puedas personalizar la app sin cambiar código:
+dart
+// Archivo de configuración: lib/config/branding.dart
+class Branding {
+  // Cambia estos valores y se actualiza toda la app
+  static const String appName = "MediRápido";
+  static const String primaryColor = "#E63946";    // Rojo emergencia
+  static const String secondaryColor = "#1D3557";  // Azul oscuro
+  static const String accentColor = "#F1FAEE";     // Blanco hueso
+  static const String logoPath = "assets/logo.png";
+  static const String emergencyButtonColor = "#D62828"; // Rojo intenso
+  
+  // Textos configurables
+  static const String welcomeMessage = "Tu ambulancia en minutos";
+  static const String emergencyButtonText = "SOLICITAR AMBULANCIA";
+}
+Elementos configurables:
+✅ Logo (imagen PNG/SVG)
+✅ Paleta de colores (3 colores principales)
+✅ Nombre de la app
+✅ Textos y mensajes
+✅ Número de teléfono de soporte
+✅ Términos y condiciones
+✅ Precios base por kilómetro
+10. GUÍA PARA PRINCIPIANTES: INSTALACIÓN Y CONFIGURACIÓN
+Paso 1: Instalar herramientas básicas
+bash
+# 1. Instalar Flutter (framework de la app)
+# Ve a: https://docs.flutter.dev/get-started/install
+# Descarga e instala según tu sistema operativo (Windows/Mac/Linux)
+
+# 2. Instalar Visual Studio Code (editor de código)
+# Ve a: https://code.visualstudio.com/
+# Instala las extensiones: Flutter, Dart
+
+# 3. Instalar Android Studio (para emulador Android)
+# Ve a: https://developer.android.com/studio
+
+# 4. Instalar Git (control de versiones)
+# Ve a: https://git-scm.com/downloads
+Paso 2: Crear cuenta Firebase (Backend gratuito)
+plain
+1. Ve a https://console.firebase.google.com
+2. Crea una cuenta de Google (si no tienes)
+3. Click en "Crear proyecto"
+4. Nombre: "medirapido-app"
+5. Desactiva Google Analytics (por ahora)
+6. Click en "Crear"
+7. Registra tu app: Click en el icono de Android (</>)
+8. Ingresa el nombre del paquete: com.tuempresa.medirapido
+9. Descarga el archivo google-services.json
+10. Colócalo en la carpeta android/app/ de tu proyecto
+Paso 3: Estructura de carpetas del proyecto
+plain
+medirapido/
+├── android/              # Configuración Android
+├── ios/                  # Configuración iOS
+├── lib/                  # CÓDIGO PRINCIPAL (aquí trabajarás)
+│   ├── main.dart         # Punto de entrada
+│   ├── config/           # Colores, logos, textos
+│   ├── screens/          # Pantallas de la app
+│   ├── widgets/          # Componentes reutilizables
+│   ├── models/           # Estructuras de datos
+│   ├── services/         # Conexión con Firebase
+│   └── utils/            # Funciones de ayuda
+├── assets/               # Imágenes, logos, fuentes
+├── pubspec.yaml          # Dependencias (librerías)
+└── test/                 # Pruebas automáticas
+Paso 4: Dependencias necesarias (pubspec.yaml)
+yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Firebase (backend)
+  firebase_core: ^2.24.0
+  firebase_auth: ^4.16.0
+  cloud_firestore: ^4.14.0
+  firebase_messaging: ^14.7.0
+  firebase_storage: ^11.6.0
+  
+  # Mapas y ubicación
+  google_maps_flutter: ^2.5.0
+  geolocator: ^10.1.0
+  geocoding: ^2.1.0
+  
+  # UI y utilidades
+  flutter_screenutil: ^5.9.0      # Responsive
+  google_fonts: ^6.1.0            # Fuentes
+  flutter_svg: ^2.0.9             # Logos SVG
+  permission_handler: ^11.0.0     # Permisos
+  
+  # Pagos
+  flutter_stripe: ^9.5.0          # O mercadopago_sdk
+11. PLATAFORMAS: iOS, ANDROID Y MAC
+Hojas
+Plataforma	¿Cómo funciona?	Costo para publicar
+Android	Subes el archivo .apk o .aab a Google Play Console	$25 USD (pago único por cuenta de desarrollador)
+iOS (iPhone/iPad)	Subes a App Store Connect desde Mac	$99 USD/año (cuenta de desarrollador Apple)
+Mac (escritorio)	Flutter permite compilar para Mac nativo	Incluido en la cuenta de desarrollador iOS ($99/año)
+Web	Firebase Hosting (gratis)	$0
+💡 Recomendación para empezar:
+Desarrolla y prueba en Android primero (más barato, más flexible)
+Cuando tengas la versión estable, compra la cuenta de Apple ($99/año) y publica en iOS
+La versión Web es gratis con Firebase y sirve para el panel de administración
+12. BASES DE DATOS: ¿CÓMO FUNCIONAN LOS DATOS DE CLIENTES?
+Estructura de datos en Firestore (Firebase)
+plain
+📁 users/                          ← COLECCIÓN: todos los usuarios
+   ├── 📄 user_12345/              ← DOCUMENTO: un usuario específico
+   │   ├── nombre: "Juan Pérez"
+   │   ├── telefono: "+5215512345678"
+   │   ├── email: "juan@email.com"
+   │   ├── fechaNacimiento: "1990-05-15"
+   │   ├── tipoSangre: "O+"
+   │   ├── alergias: ["Penicilina", "Yodo"]
+   │   ├── contactoEmergencia: {
+   │   │   ├── nombre: "María Pérez"
+   │   │   └── telefono: "+5215587654321"
+   │   │   }
+   │   ├── createdAt: timestamp
+   │   └── historialViajes: [referencias...]
+   │
+   └── 📄 user_67890/
+       └── [misma estructura]
+
+📁 drivers/                        ← COLECCIÓN: conductores/paramédicos
+   ├── 📄 driver_001/
+   │   ├── nombre: "Carlos López"
+   │   ├── telefono: "+5215511122233"
+   │   ├── licencia: "ABC123456"
+   │   ├── certificadoParamedico: true
+   │   ├── foto: "url_de_foto"
+   │   ├── ambulancia: {
+   │   │   ├── placa: "ABC-123"
+   │   │   ├── tipo: "avanzada"    // básica, avanzada, uci
+   │   │   ├── modelo: "Ford Transit 2022"
+   │   │   └── equipamiento: ["desfibrilador", "oxígeno"]
+   │   │   }
+   │   ├── ubicacionActual: {
+   │   │   ├── lat: 19.4326
+   │   │   └── lng: -99.1332
+   │   │   }
+   │   ├── disponible: true
+   │   └── rating: 4.8
+   │
+   └── 📄 driver_002/
+       └── [misma estructura]
+
+📁 rides/                          ← COLECCIÓN: servicios/viajes
+   ├── 📄 ride_abc123/
+   │   ├── userId: "user_12345"
+   │   ├── driverId: "driver_001"
+   │   ├── tipo: "emergencia"
+   │   ├── estado: "completado"    // solicitado, en_camino, en_servicio, completado, cancelado
+   │   ├── origen: {
+   │   │   ├── direccion: "Calle Principal 123"
+   │   │   ├── lat: 19.4326
+   │   │   └── lng: -99.1332
+   │   │   }
+   │   ├── destino: {
+   │   │   ├── direccion: "Hospital General"
+   │   │   ├── lat: 19.4500
+   │   │   └── lng: -99.1500
+   │   │   }
+   │   ├── costo: 450.00
+   │   ├── metodoPago: "tarjeta"
+   │   ├── ruta: [array de puntos GPS]
+   │   ├── timestamps: {
+   │   │   ├── solicitado: timestamp
+   │   │   ├── conductorAsignado: timestamp
+   │   │   ├── inicio: timestamp
+   │   │   └── fin: timestamp
+   │   │   }
+   │   └── calificacion: 5
+   │
+   └── 📄 ride_def456/
+       └── [misma estructura]
+
+📁 payments/                       ← COLECCIÓN: pagos
+   ├── 📄 payment_xyz789/
+   │   ├── rideId: "ride_abc123"
+   │   ├── userId: "user_12345"
+   │   ├── monto: 450.00
+   │   ├── estado: "completado"
+   │   ├── metodo: "tarjeta_terminacion_4242"
+   │   └── stripePaymentId: "pi_123456789"
+   │
+   └── [más pagos]
+¿Cómo se consultan los datos?
+dart
+// Ejemplo: Obtener perfil del usuario actual
+FirebaseFirestore.instance
+    .collection('users')
+    .doc(userId)
+    .get()
+    .then((doc) {
+      print(doc.data()['nombre']);
+      print(doc.data()['tipoSangre']);
+    });
+
+// Ejemplo: Buscar conductores disponibles cerca
+FirebaseFirestore.instance
+    .collection('drivers')
+    .where('disponible', isEqualTo: true)
+    .where('certificadoParamedico', isEqualTo: true)
+    .get();
+13. COSTOS Y CARGOS ESTIMADOS
+💰 Costos de Desarrollo (Fase 1 - Básico)
+Hojas
+Concepto	Costo	Frecuencia
+Cuenta Google Play	$25 USD	Único
+Cuenta Apple Developer	$99 USD/año	Anual
+Dominio web	$10-15 USD/año	Anual
+Computadora para desarrollo	$0 (usas la que tienes)	-
+☁️ Costos de Servidores (Firebase - Plan Spark/Gratuito)
+Hojas
+Servicio	Límite gratis	Costo si excedes
+Autenticación	10,000 usuarios/mes	$0.01 por verificación SMS
+Firestore (BD)	1 GB almacenamiento, 50,000 lecturas/día	~$0.06 por 100,000 lecturas
+Cloud Functions	2 millones de ejecuciones/mes	~$0.40 por millón
+Hosting web	1 GB almacenamiento, 10 GB transferencia/mes	~$0.15/GB extra
+Storage (fotos)	5 GB almacenamiento	~$0.026/GB/mes
+Google Maps API	$200 USD de crédito mensual	Variable por uso
+📊 Escenario realista: Con 100 usuarios activos y 50 servicios al mes, pagas $0. Firebase es gratuito para empezar.
+💵 Costos cuando escales (Plan Blaze/Pago por uso)
+Hojas
+Usuarios activos/mes	Costo estimado Firebase
+1,000	$0 - $10 USD
+10,000	$20 - $50 USD
+50,000	$100 - $300 USD
+100,000	$300 - $800 USD
+💳 Costos de transacciones (Pagos)
+Hojas
+Plataforma	Comisión por transacción
+Stripe	2.9% + $0.30 USD por transacción
+MercadoPago	~3.5% + IVA por transacción
+PayPal	2.9% + $0.30 USD
+14. DEMO Y PRUEBAS SIN PAGAR SERVIDORES
+✅ Todo lo anterior es GRATIS para desarrollo y pruebas:
+plain
+┌─────────────────────────────────────────────┐
+│           ENTORNO DE DESARROLLO              │
+│              (100% GRATIS)                   │
+├─────────────────────────────────────────────┤
+│ ✅ Firebase Spark Plan (gratuito)           │
+│ ✅ Emulador Android (incluido en Android    │
+│    Studio, no necesitas teléfono físico)    │
+│ ✅ Simulador iOS (incluido en Xcode, Mac)   │
+│ ✅ Google Maps API con crédito de $200/mes  │
+│ ✅ Pruebas de pago con tarjetas de prueba   │
+│    (Stripe: 4242 4242 4242 4242)            │
+│ ✅ TestLab de Firebase (pruebas automáticas)│
+└─────────────────────────────────────────────┘
+Flujo de pruebas:
+Desarrollas en tu computadora
+Pruebas en emulador Android (gratis)
+Invitas a 5-10 personas con "App Distribution" (gratis)
+Recopilas feedback
+Corriges errores
+Repites hasta estar listo para producción
+Cuándo pagar:
+Solo cuando publiques en tiendas (Google Play $25, Apple $99/año)
+Solo si excedes los límites de Firebase (con 100 usuarios reales, no pasará)
+📋 FASES SIGUIENTES DEL PROYECTO
+Hojas
+Fase	Nombre	Duración estimada	Lo que incluye
+Fase 1	Planificación y MVP	2-3 meses	✅ Este plan, app básica con registro, solicitud de ambulancia, mapa, y pago en efectivo
+Fase 2	Pagos y Seguridad	1-2 meses	Integración Stripe, cifrado de datos médicos, verificación de conductores, botón de pánico
+Fase 3	Panel de Administración	1-2 meses	Web app para monitorear flota, gestionar conductores, ver reportes, estadísticas de uso
+Fase 4	Ambulancia Avanzada	2 meses	Tipos de ambulancia (básica/avanzada/UCI), equipamiento, paramédicos especializados
+Fase 5	Seguros y Suscripciones	2 meses	Integración con aseguradoras, planes familiares, empresas, cobertura por seguro médico
+Fase 6	Inteligencia y Optimización	2-3 meses	Predicción de demanda, rutas optimizadas, asignación inteligente de ambulancias
+Fase 7	Expansión	Continuo	Nuevas ciudades, integración con hospitales, telemedicina en ambulancia, drones
+🎯 RESUMEN: CHECKLIST PARA EMPEZAR (Fase 1)
+plain
+□ Instalar Flutter, VS Code, Android Studio
+□ Crear cuenta Firebase (gratuita)
+□ Crear proyecto Flutter: flutter create medirapido
+□ Configurar Firebase en el proyecto
+□ Diseñar pantalla de bienvenida (logo + colores configurables)
+□ Implementar registro con teléfono (Firebase Auth)
+□ Implementar perfil de usuario (datos médicos básicos)
+□ Integrar Google Maps (mostrar ubicación actual)
+□ Crear botón de "Solicitar Ambulancia"
+□ Simular asignación de conductor (aleatorio por ahora)
+□ Pantalla de seguimiento en vivo (mapa con ruta)
+□ Pantalla de finalización y calificación
+□ Pruebas en emulador Android
+□ Invitar a 5 amigos a probar (Firebase App Distribution)
+□ Corregir errores
+□ Publicar en Google Play (pagar $25 USD)
+□ Publicar en App Store (pagar $99 USD/año)
+📚 RECURSOS DE APRENDIZAJE PARA PRINCIPIANTES
+Hojas
+Recurso	Descripción	Enlace
+Curso Flutter	Curso completo en español	YouTube: "Flutter Course - FreeCodeCamp"
+Firebase Docs	Documentación oficial	firebase.google.com/docs
+Flutter Widgets	Catálogo de componentes visuales	docs.flutter.dev/ui/widgets
+Stack Overflow	Resolver dudas específicas	stackoverflow.com
+Flutter Community	Foro en español	flutter-es.io
+🚀 Consejo final: No intentes hacer todo a la vez. En la Fase 1, enfócate en:
+Registro con teléfono
+Mostrar un mapa
+Un botón grande que diga "SOLICITAR AMBULANCIA"
+Que aparezca una pantalla de "Conductor asignado" (simulado)
+Cuando eso funcione perfecto, avanza a la Fase 2. ¡El mejor código es el que funciona y se puede probar!

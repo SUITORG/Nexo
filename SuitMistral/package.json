@@ -1,0 +1,9 @@
+{
+  "name": "suit-mistral",
+  "version": "1.0.0",
+  "description": "Mistral AI chat completion module for SuitOrg",
+  "main": "index.js",
+  "dependencies": {
+    "@mistralai/mistralai": "^1.15.1"
+  }
+}

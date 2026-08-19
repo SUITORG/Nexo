@@ -1,0 +1,48 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "TestAsyncFlow",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "background_music": "generated/music/music_1785970900763.wav",
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "duration": 4,
+      "animation": "fade_in",
+      "title": "Intro",
+      "subtitle": "Bienvenida de prueba",
+      "voice_text": "Bienvenida de prueba",
+      "sfx_file": "generated/sfx/sfx_1785970900972_0.wav",
+      "texto_overlay": "Bienvenida"
+    },
+    {
+      "type": "text",
+      "duration": 4,
+      "animation": "fade_in",
+      "title": "Medio",
+      "body": "Cuerpo largo de narracion para probar el overlay corto en pantalla",
+      "image_prompt": "a red rocket launching, digital art",
+      "voice_text": "Cuerpo largo de narracion para probar el overlay corto en pantalla",
+      "texto_overlay": "Despegue"
+    },
+    {
+      "type": "outro",
+      "duration": 4,
+      "animation": "fade_in",
+      "cta": "Gracias por ver",
+      "voice_text": "Gracias por ver",
+      "texto_overlay": "Gracias"
+    }
+  ]
+}

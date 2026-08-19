@@ -1,0 +1,38 @@
+skill:
+  name: sql
+  display_name: "SQL / Supabase"
+  version: 1.0.0
+  type: language
+  domain: database
+
+  dependencies: []
+
+  triggers:
+    - keyword: "sql"
+    - keyword: "migration"
+    - keyword: "schema"
+    - keyword: "supabase"
+    - keyword: "rls"
+    - file_pattern: "*.sql"
+    - file_pattern: "Documentacion/migrations/*.sql"
+
+  context_hint:
+    - "Documentacion/migracion_datos.js"
+    - "Documentacion/03-solucion-migracion.md"
+
+  rules:
+    - id: sql-001
+      description: "RLS policies on all new tables"
+      severity: error
+
+    - id: sql-002
+      description: "id_empresa column on all multi-tenant tables"
+      severity: error
+
+    - id: sql-003
+      description: "Soft delete (activo BOOLEAN) on all tables"
+      severity: error
+
+    - id: sql-004
+      description: "Timestamptz for dates"
+      severity: warning

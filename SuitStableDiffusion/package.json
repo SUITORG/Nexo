@@ -1,0 +1,13 @@
+{
+  "name": "suit-stable-diffusion",
+  "version": "1.0.0",
+  "description": "Generación de imágenes con Stable Diffusion vía Google Colab",
+  "main": "scripts/generate.js",
+  "scripts": {
+    "start": "node scripts/generate.js",
+    "generate": "node scripts/generate.js"
+  },
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}

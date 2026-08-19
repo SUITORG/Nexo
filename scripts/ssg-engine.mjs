@@ -29,9 +29,17 @@ const CONFIG = {
     apiToken: 'PROTON-77-X',
     outputDir: './dist', // Directorio para los archivos generados
     template: 'index.html',
-    baseUrl: 'https://grupoevasol.com', // F1.4: dominio real (antes suitorg.com)
+    landingTemplate: 'SuitLandings/landing-template.html', // plan-landing-pages-multitenant
+    baseUrl: 'https://grupoevasol.com', // F1.4: real (antes suitorg.com)
     realTenant: 'EVASOL' // F1.1: única empresa con es_principal=true — la real
 };
+
+// plan-landing-pages-multitenant: flag landing en la posición 8 (índice 7) de `modo`.
+// 0/ausente = solo sitio; 1 = landing-only; 2 = sitio + landing.
+function getLandingMode(company) {
+    const parts = (company.modo || '').split(',');
+    return parts.length > 7 ? parts[7].trim() : '';
+}
 
 // Utilidad para fetch en Node.js (con soporte para redirecciones)
 function fetchJson(url) {
@@ -58,11 +66,122 @@ function fetchJson(url) {
     });
 }
 
+// logo_url puede traer segmentos etiquetados (logo:/hero:/oferta:/cta:) en
+// cualquier posición del string, mezclados con el vector de Brief (industria:,
+// nicho:, LAPVTFU:, ...) — así el orden del campo queda libre. Si no hay
+// ninguna etiqueta, cae al formato clásico posicional "{logo}|{hero}|{oferta}|{cta}"
+// (retrocompatible con los tenants que nunca agregaron etiquetas). Gemela de
+// la copia en js/modules/core.js (SPA, sin módulo compartido con este script).
+function resolveLogoUrlParts(raw) {
+    const segments = (raw || '').toString().trim().split('|').map(s => s.trim());
+    const labeled = {};
+    segments.forEach(seg => {
+        const m = seg.match(/^(logo|hero|oferta|cta)\s*:\s*([\s\S]*)$/i);
+        if (m) labeled[m[1].toLowerCase()] = m[2].trim();
+    });
+    if (Object.keys(labeled).length > 0) {
+        return { logo: labeled.logo || '', hero: labeled.hero || '', oferta: labeled.oferta || '', cta: labeled.cta || '' };
+    }
+    return { logo: segments[0] || '', hero: segments[1] || '', oferta: segments[2] || '', cta: segments[3] || '' };
+}
+
+// ADR-026: extrae del vector de Brief (mismo campo logo_url, ver ADR-025) las
+// 3 preguntas de pre-compra que la landing debe contestar sin que el visitante
+// tenga que preguntar: vendes/PBP ("¿qué hace?"), audiencia ("¿para quién?").
+// PM trae {precio},{margen} — margen es dato interno de negocio, NUNCA se
+// expone en la landing; precio solo se muestra si el Brief lo trae explícito
+// (nunca se inventa ni se estima).
+function resolveBriefParts(raw) {
+    const segments = (raw || '').toString().trim().split('|').map(s => s.trim());
+    const brief = {};
+    segments.forEach(seg => {
+        const m = seg.match(/^(vendes|pbp|audiencia|pm)\s*:\s*([\s\S]*)$/i);
+        if (!m) return;
+        const key = m[1].toLowerCase();
+        const val = m[2].trim();
+        if (!val) return;
+        if (key === 'pm') brief.precio = (val.split(',')[0] || '').trim();
+        else brief[key] = val;
+    });
+    return brief;
+}
+
 // Convierte link de vista de Google Drive a URL de imagen directa (para og:image).
 function directDriveImage(url) {
     if (!url) return url;
     const m = url.match(/\/file\/d\/([^/]+)\//);
     return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : url;
+}
+
+// plan-landing-pages-multitenant: renderiza la plantilla de landing reemplazando
+// sus placeholders {{...}} con datos del inquilino + SEO (noindex siempre).
+// ronda 5: logo_url se resuelve vía resolveLogoUrlParts() — etiquetas logo:/hero:/
+// oferta:/cta: en cualquier posición del campo (permite anteponer un vector de
+// Brief tipo "industria:...|nicho:...|...|logo:...|hero:...|oferta:...|cta:..."),
+// con fallback al formato clásico posicional "{logo}|{hero}|{oferta}|{cta}" para
+// tenants sin etiquetas. + fallback a SUITORG si el tenant no tiene logo/hero propio.
+function renderLanding(tpl, company, coSeo, file, suitorgCompany = {}) {
+    const nombre = company.nomempresa || 'SuitOrg';
+    const giro = (company.giro_especifico || company.giro || '').trim();
+    const slogan = company.slogan || '';
+    const { logo: logoRaw, hero: heroRaw, oferta: ofertaRaw, cta: ctaRaw } = resolveLogoUrlParts(company.logo_url);
+    const oferta = ofertaRaw || slogan;
+    const ctaTexto = ctaRaw || 'Contactar por WhatsApp';
+    // Responde qué hace / para quién / cuánto cuesta antes de que lo pregunten.
+    // vendes/PBP y audiencia son opcionales (tenants sin Brief cargado quedan
+    // igual que antes); precio nunca se inventa, solo sale si PM lo trae.
+    const briefParts = resolveBriefParts(company.logo_url);
+    const queHace = briefParts.vendes || briefParts.pbp || '';
+    const paraQuien = briefParts.audiencia || '';
+    const precio = briefParts.precio || '';
+    const telefono = company.telefonowhatsapp || '';
+    const correo = company.correoempresarial || '';
+    const ctaHref = telefono ? `https://wa.me/${telefono}` : (correo ? `mailto:${correo}` : '');
+    const colorTema = company.color_tema || '#2563eb';
+    const suitorgLogoRaw = resolveLogoUrlParts(suitorgCompany.logo_url).logo;
+    const logo = logoRaw || suitorgLogoRaw || '';
+    // orden final heroSrc: hero propio → foto_agente → logo propio → coSeo.imagen_url → logo SUITORG
+    const heroSrc = directDriveImage(heroRaw) || directDriveImage(company.foto_agente) || directDriveImage(logoRaw) || directDriveImage(coSeo.imagen_url) || directDriveImage(suitorgLogoRaw);
+    const url = `${CONFIG.baseUrl}/${file}`;
+    const seoDesc = ofertaRaw || company.descripcion || slogan || nombre;
+
+    let h = tpl
+        .replace(/{{NOMBRE}}/g, nombre)
+        .replace(/{{GIRO}}/g, giro)
+        .replace(/{{SLOGAN}}/g, slogan)
+        .replace(/{{DESCRIPCION}}/g, seoDesc)
+        .replace(/{{OFERTA}}/g, (ofertaRaw || slogan || company.descripcion || '').trim())
+        .replace(/{{CTA_HREF}}/g, ctaHref)
+        .replace(/{{CTA_TEXTO}}/g, ctaTexto)
+        .replace(/{{LOGO}}/g, directDriveImage(logo))
+        .replace(/{{IMAGEN_HERO}}/g, heroSrc || '')
+        .replace(/{{COLOR_TEMA}}/g, colorTema)
+        .replace(/{{URL}}/g, `${CONFIG.baseUrl}/${file}`)
+        .replace(/{{TELEFONO}}/g, telefono)
+        .replace(/{{CORREO}}/g, correo)
+        .replace(/{{QUE_HACE}}/g, queHace)
+        .replace(/{{PARA_QUIEN}}/g, paraQuien)
+        .replace(/{{PRECIO}}/g, precio);
+
+    // Preguntas de pre-compra: ocultar cada línea si el Brief no trae el dato
+    // (nunca mostrar "¿Qué hace? " vacío, y nunca inventar un precio).
+    if (!queHace) h = h.replace(/\s*<p class="que-hace"[\s\S]*?<\/p>/, '');
+    if (!paraQuien) h = h.replace(/\s*<p class="para-quien"[\s\S]*?<\/p>/, '');
+    if (!precio) h = h.replace(/\s*<p class="precio"[\s\S]*?<\/p>/, '');
+
+    // CTA condicional: sin teléfono ni correo, no renderizar botón muerto (mismo
+    // patrón del motor con logo/avatar en overlays de otros módulos).
+    if (!ctaHref) {
+        h = h.replace(/\s*<a class="cta"[\s\S]*?<\/a>/, '');
+    }
+    // Información de contacto: ocultar bloques vacíos. El separador `·` se limpia
+    // junto con cualquiera de los dos que falte (no solo con telefono) para no
+    // dejarlo huérfano colgando tras el otro (ADR-023 #1).
+    if (!telefono) h = h.replace(/\s*<span data-tel>[\s\S]*?<\/span>\s*<span class="sep" data-tel-sep>\s*·\s*<\/span>/, '');
+    if (!correo) h = h.replace(/\s*<span class="sep" data-tel-sep>\s*·\s*<\/span>\s*<a href="mailto:"[\s\S]*?<\/a>/, '');
+    if (!telefono && !correo) h = h.replace(/\s*<div class="info">[\s\S]*?<\/div>/, '');
+
+    return h;
 }
 
 async function build() {
@@ -87,8 +206,12 @@ async function build() {
         };
 
         const companies = data.Config_Empresas.map(normalizeKeys);
+        // ronda 4: resolver SUITORG una vez fuera del loop para el fallback de logo/hero de landing
+        const suitorgCompany = companies.find(c => (c.id_empresa || '').toString().trim().toUpperCase() === 'SUITORG') || {};
         const seoData = (data.Config_SEO || []).map(normalizeKeys);
         const templateContent = fs.readFileSync(CONFIG.template, 'utf8');
+        // plan-landing-pages-multitenant: plantilla de landing (una sola carga, fuera del loop)
+        const landingTemplateContent = fs.readFileSync(CONFIG.landingTemplate, 'utf8');
 
         // 3. Crear directorio de salida si no existe
         if (!fs.existsSync(CONFIG.outputDir)) {
@@ -117,6 +240,22 @@ async function build() {
                     ? `${company.nomempresa || 'EvaSol'} — ${company.giro_especifico || 'Energía Solar'}.${company.slogan ? ' ' + company.slogan + '.' : ''}`
                     : `Ordena online en ${company.nomempresa || 'nosotros'}.`);
             const keywords = coSeo.keywords || coSeo.keywords_coma || `${company.nomempresa || 'SuitOrg'}, pedidos online`;
+
+            // plan-landing-pages-multitenant: branch por bandera de landing (pos 8 de modo).
+            const landingMode = getLandingMode(company);
+            const file = fileName(coId);
+
+            if (landingMode === '1') {
+                // Landing-only: el archivo principal se genera desde la plantilla de
+                // landing, no desde el SPA. Nunca va al sitemap (siempre noindex) pero
+                // sí a generatedFiles + Disallow.
+                const landingHtml = renderLanding(landingTemplateContent, company, coSeo, file, suitorgCompany);
+                fs.writeFileSync(path.join(CONFIG.outputDir, file), landingHtml);
+                generatedFiles.add(file);
+                demoFiles.push(file);
+                console.log(`   → modo landing (pos 8='1'): ${file} desde plantilla de landing`);
+                continue;
+            }
 
             // Inyectar en el HTML físicamente
             let html = templateContent
@@ -166,9 +305,20 @@ async function build() {
             }
 
             // Guardar archivo (ej: POLLITO.html o index.html si es el principal)
-            const file = fileName(coId);
             fs.writeFileSync(path.join(CONFIG.outputDir, file), html);
             generatedFiles.add(file);
+
+            // plan-landing-pages-multitenant: mode 2 = sitio + landing. Genera además
+            // {slug}-landing.html desde la plantilla, siempre noindex (va a Disallow,
+            // nunca al sitemap) y registrado en generatedFiles para el barrido de huérfanos.
+            if (landingMode === '2') {
+                const landingFile = coId.toLowerCase() + '-landing.html';
+                const landingHtml = renderLanding(landingTemplateContent, company, coSeo, landingFile, suitorgCompany);
+                fs.writeFileSync(path.join(CONFIG.outputDir, landingFile), landingHtml);
+                generatedFiles.add(landingFile);
+                demoFiles.push(landingFile);
+                console.log(`   → + landing: ${landingFile} (modo pos 8='2')`);
+            }
 
             // F1.2/F1.3: solo la real al sitemap; las demás a la lista de Disallow.
             if (isReal) {

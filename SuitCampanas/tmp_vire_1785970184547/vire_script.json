@@ -1,0 +1,42 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Campaña",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "duration": 12,
+      "animation": "fade_in",
+      "title": "Nombre de la escena",
+      "texto_overlay": "Nombre de la escena"
+    },
+    {
+      "type": "text",
+      "duration": 12,
+      "animation": "slide_up",
+      "title": "Nombre de la escena",
+      "body": "",
+      "image_prompt": "Taza de café caliente humeando en mesa de madera con luz cálida y sombras suaves, ángulo ligeramente elevado, composición centrada con el café como punto focal.",
+      "texto_overlay": "Nombre de la escena"
+    },
+    {
+      "type": "outro",
+      "duration": 6,
+      "animation": "fade_in",
+      "cta": "¡Contáctanos!",
+      "texto_overlay": "Nombre de la escena"
+    }
+  ]
+}

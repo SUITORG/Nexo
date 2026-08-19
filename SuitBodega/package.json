@@ -1,0 +1,16 @@
+{
+  "name": "suitbodega",
+  "version": "1.0.0",
+  "description": "SuitOS - Módulo de Bodega (Ubicaciones + Transferencias)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
+    "dotenv": "^17.4.1",
+    "express": "^4.22.1"
+  },
+  "private": true
+}

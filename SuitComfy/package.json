@@ -1,0 +1,12 @@
+{
+  "name": "suit-comfy",
+  "version": "0.1.0",
+  "description": "Módulo ComfyUI — generación de imágenes (SD1.5+LCM) y ensamblaje de video profesional con FFmpeg. Local y gratuito. Puerto 3012.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "verify": "node SuitFFmpeg/scripts/verify.js"
+  },
+  "private": true
+}

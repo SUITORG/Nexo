@@ -1,0 +1,64 @@
+# SuitOS Skill — Custom YOLO Training (SuitCVLO v0.6)
+skill:
+  name: yolo-training
+  display_name: "Custom YOLO Billboard Training"
+  version: 1.0.0
+  type: domain
+  domain: ml
+
+  description: >
+    Train a custom YOLO model to detect outdoor advertising structures.
+    Uses pseudo-labels from the existing pipeline + public datasets.
+    5 classes: panoramic, wall, busstop, furniture, other.
+
+  dependencies:
+    - python
+
+  triggers:
+    - keyword: "yolo"
+    - keyword: "entrenar"
+    - keyword: "train"
+    - keyword: "billboard"
+    - keyword: "v0.6"
+    - file_pattern: "tools/*.py"
+    - file_pattern: "SuitCVLO/tools/*.py"
+
+  context_hint:
+    - "SuitCVLO/AGENTS.md"
+    - "SuitCVLO/tools/export_yolo.py"
+    - "SuitCVLO/tools/train.py"
+    - "SuitCVLO/tools/dataset.yaml"
+
+  tools:
+    - path: "SuitCVLO/tools/export_yolo.py"
+      purpose: "Export existing detections as YOLO pseudo-labels"
+      usage: "python tools/export_yolo.py --source uploads --output dataset_yolo"
+    - path: "SuitCVLO/tools/download_datasets.py"
+      purpose: "Download public billboard datasets"
+      usage: "python tools/download_datasets.py --roboflow-api-key KEY"
+    - path: "SuitCVLO/tools/prepare_dataset.py"
+      purpose: "Merge, split, and augment dataset"
+      usage: "python tools/prepare_dataset.py --input dataset_yolo --output dataset_yolo_final"
+    - path: "SuitCVLO/tools/train.py"
+      purpose: "Train custom YOLO model"
+      usage: "python tools/train.py --data dataset_yolo_final/dataset.yaml --epochs 200"
+    - path: "SuitCVLO/tools/evaluate.py"
+      purpose: "Evaluate trained model"
+      usage: "python tools/evaluate.py --model runs/train/exp/weights/best.pt --data dataset_yolo_final/dataset.yaml"
+    - path: "SuitCVLO/tools/colab_notebook.ipynb"
+      purpose: "GPU training on Google Colab"
+      usage: "Open in Colab → T4 GPU runtime"
+
+  rules:
+    - id: yt-001
+      description: "Use yolov8n.pt as base for transfer learning (nano, fastest)"
+      severity: info
+    - id: yt-002
+      description: "5 classes only: panoramic, wall, busstop, furniture, other"
+      severity: error
+    - id: yt-003
+      description: "Pseudo-labels from pipeline need min confidence 0.3"
+      severity: warning
+    - id: yt-004
+      description: "Model replaces YOLO_MODEL in .env after validation"
+      severity: info

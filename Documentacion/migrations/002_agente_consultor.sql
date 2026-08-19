@@ -1,0 +1,4 @@
+ALTER TABLE public."Leads" ADD COLUMN IF NOT EXISTS current_phase TEXT;
+ALTER TABLE public."Leads" ADD COLUMN IF NOT EXISTS suit_index INTEGER;
+ALTER TABLE public."Logs_Chat_IA" ADD COLUMN IF NOT EXISTS phase TEXT;
+ALTER TABLE public."Catalogo" ADD COLUMN IF NOT EXISTS billing_type TEXT;

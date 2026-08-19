@@ -1,0 +1,6 @@
+name: hybrid-db
+description: SuitCVLO — sync local SQLite to Supabase
+commands:
+  - python -c "from db.sync import SyncEngine; SyncEngine().sync_to_cloud()"
+inputs: []
+output: Sync status (synced count)

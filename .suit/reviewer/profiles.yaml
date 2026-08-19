@@ -1,0 +1,147 @@
+profiles:
+  quick:
+    description: "Quick validation - runs on every change"
+    checks:
+      - id: syntax
+        description: "Basic syntax validation"
+        severity: error
+        auto_fix: false
+
+      - id: secrets
+        description: "No hardcoded API keys or secrets"
+        severity: error
+        patterns:
+          - "api_key"
+          - "API_KEY"
+          - "sk-"
+          - "service_role"
+          - "AIza"
+        exclude:
+          - ".env.example"
+          - "*.json"
+
+      - id: debug
+        description: "No debug code left in"
+        severity: warning
+        patterns:
+          - "console.log"
+          - "debugger"
+          - "TODO"
+          - "FIXME"
+
+      - id: giro_validation
+        description: "giro_especifico validation present for cotizador routes"
+        severity: error
+        check: "file includes cotizador route AND has giro_especifico check"
+        file_pattern: "server.js"
+
+  standard:
+    description: "Standard validation - medium risk workflows"
+    extends: quick
+    checks:
+      - id: multi-tenant
+        description: "Multi-tenant isolation preserved"
+        severity: error
+        checks:
+          - "All new queries filter by id_empresa"
+          - "No removal of existing id_empresa filters"
+          - "Soft delete only (activo=FALSE)"
+
+      - id: soft-delete
+        description: "No physical DELETE statements"
+        severity: error
+        patterns:
+          - "DELETE FROM"
+          - "DELETE "
+        exclude:
+          - "*.sql"
+          - "scripts/"
+
+      - id: ids
+        description: "Sequential IDs maintained (no UUIDs)"
+        severity: warning
+        checks:
+          - "New IDs follow PREFIX-NNN pattern"
+
+      - id: overengineering
+        description: "Detect over-engineered code (abstractions, dead code, unnecessary dependencies)"
+        severity: warning
+        checks:
+          - "No unused imports or variables"
+          - "No speculative abstractions (classes/interfaces not yet needed)"
+          - "No unnecessary dependencies added"
+          - "No wrapper/proxy layers that add no value"
+
+      - id: cotizador-rules
+        description: "Cotizador pricing rules validated"
+        severity: error
+        checks:
+          - "Reglas_Precios evaluated before total"
+          - "Variables_Cotizacion validated against definition"
+          - "Folio COT-XXX generated server-side"
+
+  architecture:
+    description: "Architecture validation - high risk workflows"
+    extends: standard
+    checks:
+      - id: architecture
+        description: "Architecture consistency"
+        severity: error
+        checks:
+          - "No new frontend frameworks"
+          - "No new backend patterns without review"
+          - "No CORS mode added to GAS fetches"
+          - "GAS URL not hardcoded in multiple files"
+
+      - id: csp
+        description: "CSP/Helmet compatibility"
+        severity: warning
+        checks:
+          - "New external domains added to CSP"
+          - "Helmet not accidentally disabled"
+
+      - id: server-routing
+        description: "Server routing impact"
+        severity: error
+        checks:
+          - "No conflicts with existing routes"
+          - "Webhook order preserved (before express.json)"
+          - "New /api/cotizador/* routes authenticated"
+
+  security:
+    description: "Dedicated security review"
+    extends: quick
+    checks:
+      - id: hardcoded-keys
+        description: "No hardcoded API keys or tokens"
+        severity: error
+        patterns:
+          - "AIza"
+          - "sk_live"
+          - "sk_test"
+          - "service_role"
+          - "supabase_key"
+          - "eyJ"
+        exclude:
+          - ".env.example"
+          - "*.json"
+
+      - id: rbac
+        description: "RBAC enforced on new routes"
+        severity: error
+        checks:
+          - "New routes protected by role check"
+
+      - id: input-validation
+        description: "User input validated and sanitized"
+        severity: warning
+        checks:
+          - "Input sanitization before database operations"
+          - "SQL injection prevention (parameterized queries)"
+
+      - id: giro-validation-security
+        description: "Giro validation cannot be bypassed"
+        severity: error
+        checks:
+          - "giro_especifico check is server-side"
+          - "Cannot be bypassed by client manipulation"

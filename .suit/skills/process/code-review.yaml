@@ -1,0 +1,20 @@
+skill:
+  name: code-review
+  display_name: "Code Review"
+  version: 1.0.0
+  type: process
+  domain: quality
+
+  dependencies:
+    - javascript
+
+  triggers:
+    - keyword: "review"
+    - keyword: "code review"
+    - keyword: "revisar"
+    - file_pattern: "*.js"
+    - file_pattern: "*.gs"
+
+  context_hint:
+    - "AGENTS.md"
+    - "contexto.md"

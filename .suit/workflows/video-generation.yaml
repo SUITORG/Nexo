@@ -1,0 +1,32 @@
+workflow:
+  id: video-generation
+  name: "Generación de Video con Remotion"
+  description: "Crea videos programáticos usando Remotion (ViRe). Compone escenas React, renderiza a MP4."
+  risk: low
+  environment: WSL
+  steps:
+    - id: 1
+      name: "Planificar composición"
+      action: "Definir duración, fps, resolución, y secuencia de escenas"
+      artifacts:
+        - storyboard
+    - id: 2
+      name: "Crear/editar componentes React"
+      action: "Modificar SuitVidGenRemotion/src/Composition.tsx y crear escenas"
+      files:
+        - SuitVidGenRemotion/src/Composition.tsx
+        - SuitVidGenRemotion/src/Root.tsx
+    - id: 3
+      name: "Previsualizar en estudio"
+      action: "Ejecutar `npm run dev` en SuitVidGenRemotion/ y abrir http://localhost:3004"
+      command: "cd SuitVidGenRemotion && npm run dev"
+    - id: 4
+      name: "Renderizar video"
+      action: "Ejecutar `npx remotion render` para exportar MP4"
+      command: "cd SuitVidGenRemotion && npx remotion render MyComp out/video.mp4"
+    - id: 5
+      name: "Integrar con CampanasAi"
+      action: "Copiar video renderizado a SuitCampanas/media/ para uso en campañas"
+  validation:
+    - "Ejecutar `npm run build` en SuitVidGenRemotion/"
+    - "Verificar que el video se renderiza sin errores"

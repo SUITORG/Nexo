@@ -1,0 +1,4 @@
+image,captured_at,gps_lat,gps_lng,address,billboard_idx,format,brand,campaign_type,campaign_detail,ocr_text,confidence,detection_method,area_ratio
+slide_1_hamburguesas_metroplex.jpg,,,,,1,valla,pollo,general,El Pollo Más Codiciado! Nuestro pollo ala parrilla es el más sabroso y jugoso de,El Pollo Más Codiciado! Nuestro pollo ala parrilla es el más sabroso y jugoso de toda la ciudad. iSólo quedan unas porciones disponibles!,0.9,contour,0.488
+slide_1_hamburguesas_metroplex.jpg,,,,,2,valla,unknown,general,,,0.9,contour,0.514
+slide_3_ape.jpg,,,,,1,valla,unknown,general,Invierte en energía limpia. Llama al 528112710091.,Invierte en energía limpia. Llama al 528112710091.,0.29,contour,0.144

@@ -30,6 +30,13 @@ app.agents = {
         }
         return vid;
     },
+    getAgentIdForCompany: (company) => {
+        if (!company || !company.id_empresa || !app.data.Prompts_IA) return null;
+        const agent = app.data.Prompts_IA.find(a =>
+            a.id_empresa && a.id_empresa.toString().toUpperCase() === company.id_empresa.toString().toUpperCase() && a.id_agente
+        );
+        return agent ? agent.id_agente : null;
+    },
     run: (agentKey) => {
         const agent = (app.data.Agentes || app.data.Prompts_IA || []).find(a =>
             a.id_agente === agentKey || a.id === agentKey
@@ -132,7 +139,7 @@ app.agents = {
                 return;
             }
             const idleSeconds = (Date.now() - app.state._lastChatActivity) / 1000;
-            if (idleSeconds > 180) { // 3 minutos
+            if (idleSeconds > 360) { // 6 minutos
                 if (app.state.currentAgent) {
                     app.agents.addMessageToUI('ai', `Sesión pausada por inactividad. Estaré aquí si necesitas algo más.`);
                     app.agents.closeChat();
@@ -427,7 +434,7 @@ app.agents = {
                     setTimeout(() => app.agents.saveMemory(vid, "Resumen parcial: " + summary.substring(0, 400)), 1000); // fire-and-forget
                 }
 
-                if (app.state.chatHistory.length >= 8) {
+                if (app.state.chatHistory.length >= 16) {
                     const currentId = (app.state.companyId || "").trim().toUpperCase();
                     const company = app.data.Config_Empresas.find(c => (c.id_empresa || "").toUpperCase() === currentId);
 
@@ -1029,38 +1036,28 @@ app.agents = {
     checkAiHealth: async () => {
         const circle = document.getElementById('sb-ai-health');
         if (!circle) return;
-
-        // Evitar verificaciones redundantes si ya está ONLINE hace poco
         if (circle.classList.contains('online') && (Date.now() - (app.state._lastAiHealthCheck || 0) < 60000)) return;
-        
         app.state._lastAiHealthCheck = Date.now();
         circle.className = 'ai-status-circle warning';
         circle.title = "Verificando conexión con IA...";
-
         const company = (app.data.Config_Empresas || []).find(c => c.id_empresa === app.state.companyId);
         const rawList = (company?.usa_soporte_ia || 'openai/gpt-3.5-turbo').toString().split(',').map(m => m.trim()).filter(m => m && m.toUpperCase() !== 'NO' && m.toUpperCase() !== 'TRUE' && m.toUpperCase() !== 'FALSE');
         const modelList = rawList.map(m => app.agents.normalizeModelName(m));
         const currentModel = app.state._aiModel || localStorage.getItem('evasol_ai_model') || modelList[0];
-
         try {
-            // v17.0.0: Usar Proxy Seguro en lugar de llamada directa
             const res = await fetch("/api/ai/chat", {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: currentModel,
-                    messages: [{ role: "user", content: "ping" }]
-                })
+                body: JSON.stringify({ model: currentModel, messages: [{ role: "user", content: "ping" }] })
             });
             const data = await res.json();
-            const isOk = res.ok && (data.choices && data.choices[0] || data.id); // Algunos modelos devuelven ID directo
+            const isOk = res.ok && (data.choices && data.choices[0] || data.id);
             if (isOk) {
                 app.state._aiModel = currentModel;
                 localStorage.setItem('evasol_ai_model', currentModel);
                 circle.className = 'ai-status-circle online';
                 circle.title = `IA Conectada (${currentModel})`;
             } else {
-                console.warn(`[AI_HEALTH] Model ${currentModel} failed. Rotating...`);
                 let found = false;
                 for (let m of modelList) {
                     if (m === currentModel) continue;
@@ -1068,10 +1065,7 @@ app.agents = {
                         const testRes = await fetch("/api/ai/chat", {
                             method: 'POST',
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                model: m,
-                                messages: [{ role: "user", content: "ping" }]
-                            })
+                            body: JSON.stringify({ model: m, messages: [{ role: "user", content: "ping" }] })
                         });
                         const testData = await testRes.json();
                         if (testRes.ok && (testData.choices && testData.choices[0] || testData.id)) {
@@ -1095,6 +1089,75 @@ app.agents = {
             circle.className = 'ai-status-circle offline';
             circle.title = 'Error de Red: No hay respuesta del backend.';
             app.ui.updateConsole('AI_NET_ERR', true);
+        }
+    },
+
+    _checkAiModel: async () => {
+        try {
+            const company = (app.data.Config_Empresas || []).find(c => c.id_empresa === app.state.companyId);
+            const rawList = (company?.usa_soporte_ia || 'gemini-2.0-flash').toString().split(',').map(m => m.trim()).filter(m => m && m.toUpperCase() !== 'NO' && m.toUpperCase() !== 'TRUE' && m.toUpperCase() !== 'FALSE');
+            const modelList = rawList.map(m => app.agents.normalizeModelName(m));
+            const model = app.state._aiModel || modelList[0] || 'gemini-2.0-flash';
+            const res = await fetch("/api/ai/chat", {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ model, messages: [{ role: "user", content: "ping" }] })
+            });
+            const data = await res.json();
+            const ok = res.ok && (data.choices && data.choices[0] || data.id);
+            if (ok && model !== (app.state._aiModel || '')) {
+                app.state._aiModel = model;
+                localStorage.setItem('evasol_ai_model', model);
+            }
+            return ok;
+        } catch { return false; }
+    },
+
+    _checkSupabase: async () => {
+        try {
+            const res = await fetch(app.sbUrl + '/rest/v1/', {
+                method: 'GET',
+                headers: { 'apikey': app.sbKey || '' }
+            });
+            return res.ok || res.status === 401 || res.status === 406;
+        } catch { return false; }
+    },
+
+    _checkNodeProcess: async () => {
+        try {
+            const res = await fetch('/api/service-health/telegram');
+            const data = await res.json();
+            return data.status === 'ok';
+        } catch { return false; }
+    },
+
+    checkAllServices: async () => {
+        const circle = document.getElementById('sb-ai-health');
+        if (!circle) return;
+        if (circle.classList.contains('online') && (Date.now() - (app.state._lastServiceCheck || 0) < 60000)) return;
+        app.state._lastServiceCheck = Date.now();
+        circle.className = 'ai-status-circle warning';
+        circle.title = 'Verificando servicios...';
+        const results = await Promise.allSettled([
+            app.agents._checkAiModel(),
+            app.agents._checkSupabase(),
+            app.agents._checkNodeProcess()
+        ]);
+        const ok = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+        app.state._lastServiceResults = results.map((r, i) => ({
+            name: ['IA', 'Supabase', 'Telegram'][i],
+            ok: r.status === 'fulfilled' && r.value === true
+        }));
+        if (ok === 3) {
+            circle.className = 'ai-status-circle online';
+            circle.title = '✓ IA ✓ SB ✓ TG — Todos OK';
+        } else if (ok === 0) {
+            circle.className = 'ai-status-circle offline';
+            circle.title = '✗ IA ✗ SB ✗ TG — Todos caídos';
+        } else {
+            circle.className = 'ai-status-circle warning';
+            const labels = app.state._lastServiceResults.map(s => s.ok ? '✓' : '✗').join(' ');
+            circle.title = `${labels} — ${ok}/3 servicios`;
         }
     },
     updateAiProgress: (percent, status) => {

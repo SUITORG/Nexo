@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuitCVLO — OOH Billboard Pipeline</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>SuitCVLO</h1>
+    <p class="subtitle">Computer Vision Look Once — Pipeline de publicidad exterior</p>
+  </header>
+
+  <section id="upload-section">
+    <div id="dropzone" class="dropzone">
+      <div id="dropzone-content">
+        <div class="dropzone-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <p class="dropzone-text">Arrastra fotos, carpeta o .zip aquí</p>
+        <p class="dropzone-hint">o haz clic para seleccionar archivos</p>
+        <p class="dropzone-formats">JPG · PNG · WebP · CR3 · ARW · DNG · TIFF · BMP · HEIC · ZIP · Múltiples · Carpetas</p>
+      </div>
+      <div id="dropzone-preview" class="dropzone-preview hidden">
+        <img id="preview-img" src="" alt="Preview">
+        <p id="preview-filename"></p>
+      </div>
+      <div class="upload-options">
+        <button type="button" class="btn btn-outline" id="btn-select-files">Seleccionar fotos</button>
+        <button type="button" class="btn btn-outline" id="btn-select-folder">Seleccionar carpeta</button>
+      </div>
+      <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.webp,.cr3,.arw,.dng,.tiff,.tif,.bmp,.heic,.heif,.zip" multiple hidden>
+      <input type="file" id="folder-input" webkitdirectory multiple hidden>
+    </div>
+    <p id="upload-status" class="status hidden"></p>
+    <div id="progress-container" class="progress-container hidden">
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <p id="progress-text" class="progress-text">Procesando...</p>
+    </div>
+  </section>
+
+  <section id="results-section" class="hidden">
+    <div class="results-header">
+      <h2>Resultados</h2>
+      <div id="downloads" class="downloads"></div>
+    </div>
+    <div id="results-summary" class="results-summary"></div>
+    <div id="results-table-container">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Archivo</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Dirección</th>
+            <th>Categoría</th>
+            <th>Marca</th>
+            <th>Formato</th>
+            <th>Campaña</th>
+            <th>Confianza</th>
+            <th>Texto OCR</th>
+            <th>Coordenadas</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="error-section" class="hidden">
+    <div class="error-box">
+      <h3>Error</h3>
+      <p id="error-message"></p>
+    </div>
+  </section>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

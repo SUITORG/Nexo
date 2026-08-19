@@ -24,9 +24,9 @@
 ## Mapa de Carpetas
 
 ```
-SUITORGSTORE01/
+suitorg/
 ├── backend/              → GAS: core (orquestador), database, utils, ai_engine, DriveManager, seeds_master
-├── CampanasAi/           → CMS marketing: frontend SPA, server Node 8000, generadores, scripts, config
+├── SuitCampanas/         → CMS marketing: frontend SPA, server Node 8000, generadores, scripts, config
 ├── citas/                → Módulo citas: Express 3002, webhook WhatsApp, handlers, servicios (AI/Calendar/Notifier)
 ├── conecionpagos/        → Módulo Stripe: multi-tenant PaymentIntents, webhooks
 ├── js/modules/           → Frontend SPA: core, router, auth, ui, public, pos, admin, agents, config, events
@@ -272,9 +272,9 @@ SUITORGSTORE01/
 
 | Entorno | Propósito | Ubicación |
 |---|---|---|
-| Desarrollo local | WSL 2 | `C:\Users\rojo-\Downloads\SUITORGSTORE01` |
+| Desarrollo local | WSL 2 | `C:\Users\rojo-\Downloads\suitorg` |
 | Producción GAS | Script runtime | `script.google.com` (ID: `1pSFYiYl_blIOzZ_kBSYDB...`) |
-| Producción Frontend | GitHub Pages | `suitorgstore01.github.io` (asumido) |
+| Producción Frontend | GitHub Pages | `suitorg.github.io` (asumido) |
 
 [PENDIENTE: No hay staging/pre-producción. No hay proceso de rollback documentado.]
 

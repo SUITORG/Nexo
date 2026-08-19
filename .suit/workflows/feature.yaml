@@ -1,0 +1,104 @@
+workflow:
+  name: feature
+  display_name: "Feature Implementation"
+  description: "Implement a new feature or module"
+  risk: medium
+  domain: code
+
+  entry:
+    requires_planning: true
+    requires_confirmation: true
+    required_context:
+      - AGENTS.md
+      - contexto.md
+      - INDEX_FUNCIONES.md
+    required_skills:
+      - domain-specific
+    forbidden_if:
+      - "No AGENTS.md loaded"
+
+  steps:
+    - id: analyze
+      description: "Analyze requirements and existing code"
+      action: read
+      skills:
+        - system-analysis
+      validation:
+        - "Understand the feature in context of existing architecture"
+        - "Determine scope: frontend-only, backend-only, or both — implement only what the request requires, don't scaffold the unused side"
+
+    - id: plan
+      description: "Create implementation plan"
+      action: plan
+      skills:
+        - system-analysis
+      produces: plan.yaml
+      validation:
+        - "Plan approved by Planner"
+
+    - id: implement
+      description: "Implement the feature"
+      action: write
+      skills:
+        - javascript
+        - gas
+        - domain-specific
+        - ponytail-ladder
+      validation:
+        - "Syntax is valid"
+        - "No hardcoded secrets"
+        - "id_empresa filtered where applicable"
+        - "Soft delete only"
+        - "giro_especifico validated for cotizador"
+        - "Code is minimal — no speculative abstractions, unused imports, or over-engineering"
+
+    - id: index
+      description: "Update function index"
+      action: run
+      command: "node scripts/generate-index.js"
+      condition: "if new functions added or renamed"
+      validation:
+        - "INDEX_FUNCIONES.md regenerated"
+
+    - id: scaffold-launcher
+      description: "Create start.bat from template if this is a new standalone project (has its own server.js/package.json and no launcher yet)"
+      action: run
+      template: .suit/templates/start.bat.template
+      condition: "new project directory created with its own entry point (server.js) and no start.bat present"
+      validation:
+        - "start.bat created at project root with correct PORT and ENTRY substituted"
+
+    - id: validate
+      description: "Run all validations"
+      action: review
+      command: "node scripts/find-loose-files.js {{project_path}}"
+      validation:
+        - "No regressions detected"
+        - "Permissions respected"
+        - "Multi-tenant isolation maintained"
+        - "No loose/orphan files left behind (temp scripts, logs, unreferenced docs)"
+
+    - id: commit
+      description: "Commit changes"
+      action: git
+      command: "git add . && git commit -m '{emoji} {type}: {desc} (v{version})'"
+      condition: "user confirms"
+      validation:
+        - "Commit message follows convention"
+
+  exit:
+    validation:
+      - "INDEX_FUNCIONES.md is updated"
+      - "No debug code left"
+      - "Smoke test passed"
+    requires_commit: true
+    notifies:
+      - memory/decisions
+      - telemetry
+
+  config:
+    allowed_models:
+      - claude-sonnet
+      - deepseek-flash
+    max_steps_without_confirmation: 3
+    auto_rollback_on_failure: true

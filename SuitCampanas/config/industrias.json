@@ -1,0 +1,331 @@
+{
+  "clasificacion": [
+    {
+      "categoria": "Servicios Profesionales",
+      "icono": "⚖️",
+      "descripcion": "Bufetes, consultorías y asesorías especializadas",
+      "subclasificaciones": [
+        {
+          "valor": "abogados", "etiqueta": "Abogados", "sinonimos": ["jurídico", "legal", "litigio", "derecho", "bufete"],
+          "especializaciones": ["Derecho Corporativo", "Derecho Civil", "Derecho Laboral", "Derecho Fiscal", "Derecho Penal", "Propiedad Intelectual"]
+        },
+        {
+          "valor": "despachos_contables", "etiqueta": "Despachos Contables", "sinonimos": ["contabilidad", "impuestos", "contador", "finanzas", "auditoría"],
+          "especializaciones": ["Contabilidad General", "Auditoría", "Impuestos", "Finanzas Personales", "Consultoría Financiera"]
+        },
+        {
+          "valor": "consultoria_coaching", "etiqueta": "Consultoría y Coaching", "sinonimos": ["coaching", "mentoría", "consultor", "marca personal", "desarrollo profesional"],
+          "especializaciones": ["Marca Personal", "Coaching Ejecutivo", "Mentoría", "Consultoría Empresarial", "Desarrollo Organizacional", "Speaker / Conferencista"]
+        },
+        {
+          "valor": "agencias_marketing", "etiqueta": "Agencias de Marketing", "sinonimos": ["marketing", "publicidad", "branding", "redes sociales", "mercadeo", "agencia digital"],
+          "especializaciones": ["Marketing digital", "Branding", "Redes sociales", "Publicidad pagada"]
+        },
+        {
+          "valor": "seguros", "etiqueta": "Seguros", "sinonimos": ["seguro", "aseguradora", "agente de seguros", "póliza", "insurance"],
+          "especializaciones": ["Seguros de vida", "Seguros de auto", "Seguros de gastos médicos", "Seguros empresariales"]
+        },
+        {
+          "valor": "recursos_humanos", "etiqueta": "Recursos Humanos", "sinonimos": ["reclutamiento", "RRHH", "capital humano", "nómina", "headhunter", "rh"],
+          "especializaciones": ["Reclutamiento", "Nómina", "Capacitación", "Evaluación de desempeño"]
+        }
+      ]
+    },
+    {
+      "categoria": "Salud y Bienestar",
+      "icono": "🏥",
+      "descripcion": "Atención médica, dental y bienestar integral",
+      "subclasificaciones": [
+        {
+          "valor": "clinicas_medicas", "etiqueta": "Clínicas Médicas", "sinonimos": ["médico", "hospital", "medicina general", "consulta", "diagnóstico"],
+          "especializaciones": ["Medicina General", "Pediatría", "Ginecología", "Cardiología", "Medicina Estética", "Dermatología"]
+        },
+        {
+          "valor": "dentistas", "etiqueta": "Dentistas", "sinonimos": ["odontología", "dental", "dientes", "ortodoncia", "implantes"],
+          "especializaciones": ["Odontología General", "Ortodoncia", "Implantología", "Estética Dental", "Blanqueamiento"]
+        },
+        {
+          "valor": "salud_bienestar", "etiqueta": "Salud y Bienestar", "sinonimos": ["wellness", "nutrición", "fitness", "terapia", "holístico"],
+          "especializaciones": ["Psicología", "Nutrición", "Fisioterapia", "Terapias Alternativas", "Medicina Funcional", "Mindfulness"]
+        },
+        {
+          "valor": "gimnasios", "etiqueta": "Gimnasios y Fitness", "sinonimos": ["gimnasio", "fitness", "crossfit", "yoga", "pilates", "entrenamiento", "gym"],
+          "especializaciones": ["Entrenamiento personal", "CrossFit", "Yoga y Pilates", "Nutrición deportiva"]
+        },
+        {
+          "valor": "opticas", "etiqueta": "Ópticas", "sinonimos": ["óptica", "lentes", "anteojos", "examen de la vista", "optometría", "lentes de contacto"],
+          "especializaciones": ["Exámenes de la vista", "Lentes de contacto", "Lentes de sol", "Armazones"]
+        }
+      ]
+    },
+    {
+      "categoria": "Tecnología",
+      "icono": "💻",
+      "descripcion": "Desarrollo de software, hardware y servicios tech",
+      "subclasificaciones": [
+        {
+          "valor": "software", "etiqueta": "Software", "sinonimos": ["desarrollo", "app", "sistema", "web", "plataforma"],
+          "especializaciones": ["Desarrollo Web", "Apps Móviles", "SaaS", "IA / Machine Learning", "CRM / ERP"]
+        },
+        {
+          "valor": "tecnologia", "etiqueta": "Tecnología", "sinonimos": ["tech", "innovación", "IT", "digital", "transformación digital"],
+          "especializaciones": ["Ciberseguridad", "Cloud Computing", "Infraestructura IT", "Marketing Digital", "Transformación Digital"]
+        }
+      ]
+    },
+    {
+      "categoria": "Industria y Manufactura",
+      "icono": "🏭",
+      "descripcion": "Construcción, manufactura y maquinado industrial",
+      "subclasificaciones": [
+        {
+          "valor": "construccion", "etiqueta": "Construcción", "sinonimos": ["obra", "edificación", "infraestructura", "arquitectura", "inmuebles"],
+          "especializaciones": ["Obra Civil", "Construcción Residencial", "Construcción Comercial", "Arquitectura", "Remodelaciones"]
+        },
+        {
+          "valor": "manufacturera", "etiqueta": "Manufacturera", "sinonimos": ["fábrica", "producción", "industrial", "maquiladora", "ensamble"],
+          "especializaciones": ["Producción en Serie", "Control de Calidad", "Automatización", "Logística Industrial", "Maquila"]
+        },
+        {
+          "valor": "tornos_maquinado", "etiqueta": "Tornos y Maquinado", "sinonimos": ["mecanizado", "CNC", "metal", "herramientas", "precisión"],
+          "especializaciones": ["CNC", "Mecanizado de Precisión", "Soldadura", "Herramientas Industriales", "Inyección de Plásticos"]
+        }
+      ]
+    },
+    {
+      "categoria": "Energía",
+      "icono": "☀️",
+      "descripcion": "Energías renovables y almacenamiento",
+      "subclasificaciones": [
+        {
+          "valor": "energia_solar", "etiqueta": "Energía Solar", "sinonimos": ["paneles solares", "fotovoltaico", "renovable", "energía limpia", "solar"],
+          "especializaciones": ["Paneles Solares", "Sistemas Fotovoltaicos", "Calentadores Solares", "Mantenimiento Solar", "Consultoría Energética"]
+        },
+        {
+          "valor": "almacenamiento_energia", "etiqueta": "Almacenamiento de Energía", "sinonimos": ["baterías", "respaldo energético", "almacenamiento", "UPS", "reserva"],
+          "especializaciones": ["Baterías Industriales", "UPS", "Respaldo Energético", "Sistemas Híbridos", "Eficiencia Energética"]
+        }
+      ]
+    },
+    {
+      "categoria": "Comercio y Ventas",
+      "icono": "🛒",
+      "descripcion": "Comercio electrónico, inmobiliarias y ventas",
+      "subclasificaciones": [
+        {
+          "valor": "ecommerce", "etiqueta": "E-commerce", "sinonimos": ["tienda online", "ventas digitales", "comercio electrónico", "marketplace", "dropshipping"],
+          "especializaciones": ["Tiendas Online", "Dropshipping", "Marketplaces", "Logística E-commerce", "Conversion Rate Optimization"]
+        },
+        {
+          "valor": "inmobiliarias", "etiqueta": "Inmobiliarias", "sinonimos": ["bienes raíces", "propiedades", "renta", "venta de casas", "desarrollo inmobiliario"],
+          "especializaciones": ["Venta de Propiedades", "Rentas", "Desarrollo Inmobiliario", "Avalúos", "Hipotecas"]
+        },
+        {
+          "valor": "tiendas_conveniencia", "etiqueta": "Tiendas de Conveniencia y Abarrotes", "sinonimos": ["abarrotes", "mini súper", "tienda de la esquina", "conveniencia", "miscelánea", "farmacia de conveniencia"],
+          "especializaciones": ["Abarrotes", "Mini súper", "Farmacias de conveniencia", "Productos regionales"]
+        },
+        {
+          "valor": "boutiques_moda", "etiqueta": "Boutiques de Moda", "sinonimos": ["ropa", "moda", "boutique", "calzado", "accesorios", "clothing", "fashion"],
+          "especializaciones": ["Ropa de dama", "Ropa de caballero", "Calzado", "Accesorios"]
+        },
+        {
+          "valor": "florerias", "etiqueta": "Florerías", "sinonimos": ["flores", "florería", "arreglos florales", "ramo", "floristería"],
+          "especializaciones": ["Arreglos florales", "Eventos", "Decoración", "Envíos"]
+        }
+      ]
+    },
+    {
+      "categoria": "Alimentos y Hospitalidad",
+      "icono": "🍽️",
+      "descripcion": "Gastronomía, hotelería y turismo",
+      "subclasificaciones": [
+        {
+          "valor": "restaurantes", "etiqueta": "Restaurantes y Comida Rápida", "sinonimos": ["comida", "gastronomía", "cocina", "bar", "alimentos"],
+          "especializaciones": ["Comida Rápida", "Alta Cocina", "Bares", "Cafeterías", "Comida Saludable", "Catering"]
+        },
+        {
+          "valor": "pastelerias", "etiqueta": "Pastelerías", "sinonimos": ["repostería", "panadería", "dulces", "pasteles", "postres"],
+          "especializaciones": ["Repostería", "Panadería Artesanal", "Pasteles Personalizados", "Postres Premium", "Chocolatería"]
+        },
+        {
+          "valor": "hoteles_turismo", "etiqueta": "Hoteles y Turismo", "sinonimos": ["hotelería", "viajes", "hospedaje", "vacaciones", "alojamiento"],
+          "especializaciones": ["Hotelería", "Agencias de Viajes", "Turismo de Aventura", "Alojamiento Boutique", "Turismo Corporativo"]
+        },
+        {
+          "valor": "taquerias", "etiqueta": "Taquerías y Antojitos", "sinonimos": ["tacos", "taquería", "tortas", "garnachas", "comida callejera", "antojitos", "sopes"],
+          "especializaciones": ["Tacos", "Tortas", "Garnachas", "Comida callejera"]
+        },
+        {
+          "valor": "cafeterias", "etiqueta": "Cafeterías de Especialidad", "sinonimos": ["café", "cafetería", "barismo", "espresso", "coffee", "café de origen"],
+          "especializaciones": ["Café de origen", "Barismo", "Té", "Repostería para café"]
+        },
+        {
+          "valor": "juguerias", "etiqueta": "Juguerías y Smoothies", "sinonimos": ["jugos", "juguería", "smoothies", "licuados", "bebidas naturales", "desayunos saludables"],
+          "especializaciones": ["Jugos naturales", "Smoothies", "Desayunos saludables"]
+        }
+      ]
+    },
+    {
+      "categoria": "Educación",
+      "icono": "📚",
+      "descripcion": "Instituciones educativas y capacitación",
+      "subclasificaciones": [
+        {
+          "valor": "educacion", "etiqueta": "Educación", "sinonimos": ["enseñanza", "cursos", "capacitación", "escuela", "aprendizaje"],
+          "especializaciones": ["Capacitación Corporativa", "Idiomas", "Educación Online", "Coaching Educativo", "Educación Básica", "Universidades"]
+        }
+      ]
+    },
+    {
+      "categoria": "Logística y Transporte",
+      "icono": "🚚",
+      "descripcion": "Transporte, distribución y cadena de suministro",
+      "subclasificaciones": [
+        {
+          "valor": "logistica_transporte", "etiqueta": "Logística y Transporte", "sinonimos": ["distribución", "flotilla", "mensajería", "carga", "envíos"],
+          "especializaciones": ["Distribución", "Mensajería", "Flotillas", "Cadena de Suministro", "Transporte de Carga", "Última Milla"]
+        }
+      ]
+    },
+    {
+      "categoria": "Agropecuario",
+      "icono": "🌾",
+      "descripcion": "Agricultura, ganadería y campo",
+      "subclasificaciones": [
+        {
+          "valor": "agricultura", "etiqueta": "Agricultura", "sinonimos": ["campo", "cultivo", "agro", "siembra", "cosecha"],
+          "especializaciones": ["Cultivos", "Ganadería", "Agroindustria", "Agricultura Orgánica", "Tecnología Agrícola"]
+        }
+      ]
+    },
+    {
+      "categoria": "Mascotas",
+      "icono": "🐾",
+      "descripcion": "Cuidado, alimentos y accesorios para mascotas",
+      "subclasificaciones": [
+        {
+          "valor": "mascotas", "etiqueta": "Mascotas", "sinonimos": ["animales", "perros", "gatos", "veterinaria", "pet"],
+          "especializaciones": ["Veterinaria", "Alimentos", "Accesorios", "Pet Grooming", "Guardería Canina"]
+        },
+        {
+          "valor": "tiendas_mascotas", "etiqueta": "Tiendas de Mascotas", "sinonimos": ["tienda de mascotas", "pet shop", "alimento premium", "accesorios para mascotas"],
+          "especializaciones": ["Alimentos premium", "Accesorios", "Juguetes", "Medicamentos"]
+        },
+        {
+          "valor": "entrenamiento_canino", "etiqueta": "Entrenamiento Canino", "sinonimos": ["adiestramiento", "entrenador de perros", "obediencia canina", "dog trainer", "adiestrador"],
+          "especializaciones": ["Obediencia básica", "Modificación de conducta", "Adiestramiento profesional"]
+        }
+      ]
+    },
+    {
+      "categoria": "Electrodomésticos y Bienes de Consumo Premium",
+      "icono": "🔌",
+      "descripcion": "Robots de cocina, línea blanca, automatización culinaria para el hogar",
+      "subclasificaciones": [
+        {
+          "valor": "robots_cocina_multifuncion", "etiqueta": "Robots de Cocina Multifunción", "sinonimos": ["thermomix", "robot de cocina", "cocina inteligente", "tm7", "tm6", "electrodoméstico premium"],
+          "especializaciones": ["Asesoría de cocina inteligente", "Automatización culinaria", "Recetas guiadas", "Comparativa de modelos", "Batch cooking", "Estilo de vida saludable"]
+        },
+        {
+          "valor": "estilo_vida_saludable", "etiqueta": "Estilo de Vida Saludable", "sinonimos": ["bienestar", "comida saludable", "nutrición", "cocina sana", "vida fitness"],
+          "especializaciones": ["Alimentación saludable", "Meal prep semanal", "Nutrición con robot de cocina", "Dietas personalizadas", "Cocina sin procesados"]
+        }
+      ]
+    },
+    {
+      "categoria": "Hogar y Servicios del Hogar",
+      "icono": "🏠",
+      "descripcion": "Servicios para el hogar: lavandería, limpieza, reparaciones y jardinería",
+      "subclasificaciones": [
+        {
+          "valor": "lavanderia_tintoreria", "etiqueta": "Lavandería y Tintorería", "sinonimos": ["lavandería", "tintorería", "lavado de ropa", "laundry", "dry cleaning", "lavado y planchado", "lavandería industrial"],
+          "especializaciones": ["Lavandería autoservicio", "Lavandería a domicilio", "Tintorería premium", "Lavandería industrial", "Planchado y vapor"]
+        },
+        {
+          "valor": "limpieza_hogar", "etiqueta": "Limpieza del Hogar y Oficinas", "sinonimos": ["limpieza", "aseo", "servicio de limpieza", "house cleaning", "sanitización", "desinfección"],
+          "especializaciones": ["Limpieza residencial", "Limpieza de oficinas", "Desinfección y sanitización", "Limpieza post-obra"]
+        },
+        {
+          "valor": "reparaciones_hogar", "etiqueta": "Reparaciones del Hogar", "sinonimos": ["plomería", "electricista", "pintura", "carpintería", "mantenimiento del hogar", "reparaciones"],
+          "especializaciones": ["Plomería", "Instalaciones eléctricas", "Pintura", "Carpintería", "Aire acondicionado"]
+        },
+        {
+          "valor": "jardineria", "etiqueta": "Jardinería y Paisajismo", "sinonimos": ["jardinería", "paisajismo", "jardines", "poda", "riego", "landscaping"],
+          "especializaciones": ["Mantenimiento de jardines", "Diseño de paisaje", "Poda y fertilización", "Riego automatizado"]
+        }
+      ]
+    },
+    {
+      "categoria": "Belleza y Estética",
+      "icono": "💇",
+      "descripcion": "Salones, barberías, estética y spa",
+      "subclasificaciones": [
+        {
+          "valor": "salones_belleza", "etiqueta": "Salones de Belleza", "sinonimos": ["salón de belleza", "estética capilar", "corte de cabello", "tinte", "peinados", "beauty salon"],
+          "especializaciones": ["Cortes y peinados", "Colorimetría", "Tintes y mechas", "Alisados"]
+        },
+        {
+          "valor": "barberias", "etiqueta": "Barberías", "sinonimos": ["barbería", "corte de pelo", "barba", "afeitado", "barber shop"],
+          "especializaciones": ["Cortes de cabello", "Arreglo de barba", "Afeitado clásico", "Diseño de cejas"]
+        },
+        {
+          "valor": "estetica_unas", "etiqueta": "Estética y Uñas", "sinonimos": ["uñas", "manicure", "pedicure", "pestañas", "cejas", "acrílicas", "nail art"],
+          "especializaciones": ["Manicure y pedicure", "Uñas acrílicas", "Extensión de pestañas", "Micropigmentación de cejas"]
+        },
+        {
+          "valor": "spa_masajes", "etiqueta": "Spa y Masajes", "sinonimos": ["spa", "masajes", "masoterapia", "relajación", "facial", "hidroterapia"],
+          "especializaciones": ["Masajes relajantes", "Masajes reductivos", "Tratamientos faciales", "Hidroterapia"]
+        }
+      ]
+    },
+    {
+      "categoria": "Autos y Movilidad",
+      "icono": "🚗",
+      "descripcion": "Talleres, lavado de autos y refaccionarias",
+      "subclasificaciones": [
+        {
+          "valor": "talleres_mecanicos", "etiqueta": "Talleres Mecánicos", "sinonimos": ["taller mecánico", "mecánica", "automotriz", "mantenimiento de autos", "hójalatería", "pintura automotriz", "auto shop"],
+          "especializaciones": ["Mantenimiento preventivo", "Diagnóstico computarizado", "Frenos", "Transmisión", "Hojalatería y pintura"]
+        },
+        {
+          "valor": "lavado_detallado_autos", "etiqueta": "Lavado y Detallado de Autos", "sinonimos": ["lavado de autos", "car wash", "detallado", "pulido", "encerado", "polarizado"],
+          "especializaciones": ["Lavado a domicilio", "Detallado interior", "Pulido y encerado", "Polarizado"]
+        },
+        {
+          "valor": "refaccionarias", "etiqueta": "Refaccionarias", "sinonimos": ["refacciones", "autopartes", "llantas", "aceites", "lubricantes", "repuestos"],
+          "especializaciones": ["Refacciones nacionales", "Refacciones importadas", "Llantas", "Aceites y lubricantes"]
+        }
+      ]
+    },
+    {
+      "categoria": "Eventos y Entretenimiento",
+      "icono": "🎉",
+      "descripcion": "Salones de eventos, banquetes, fotografía y video",
+      "subclasificaciones": [
+        {
+          "valor": "salones_eventos", "etiqueta": "Salones de Eventos", "sinonimos": ["salón de eventos", "fiestas", "bodas", "XV años", "eventos corporativos", "quinceañeras", "banquetes"],
+          "especializaciones": ["Bodas", "XV años", "Eventos corporativos", "Fiestas infantiles"]
+        },
+        {
+          "valor": "banquetes_catering", "etiqueta": "Banquetes y Catering", "sinonimos": ["banquetes", "catering", "buffet", "meseros", "coctelería", "servicio de alimentos para eventos"],
+          "especializaciones": ["Buffets", "Catering corporativo", "Meseros y logística", "Coctelería"]
+        },
+        {
+          "valor": "fotografia_video", "etiqueta": "Fotografía y Video", "sinonimos": ["fotógrafo", "fotografía", "video", "videografía", "drones", "sesión de fotos"],
+          "especializaciones": ["Fotografía de eventos", "Video profesional", "Drones", "Sesiones de marca"]
+        }
+      ]
+    },
+    {
+      "categoria": "Otros",
+      "icono": "📦",
+      "descripcion": "Industrias no clasificadas en las categorías anteriores",
+      "subclasificaciones": [
+        {
+          "valor": "otro", "etiqueta": "Otro", "sinonimos": ["general", "varios", "otra industria", "especial", "personalizado"],
+          "especializaciones": []
+        }
+      ]
+    }
+  ]
+}

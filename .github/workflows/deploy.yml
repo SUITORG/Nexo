@@ -25,12 +25,19 @@ jobs:
         env:
           MY_URL: ${{ secrets.API_URL }}
           MY_TOKEN: ${{ secrets.API_TOKEN }}
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          SB_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           mkdir -p js/modules
           U=$(echo "$MY_URL" | tr -d '[:space:]')
           T=$(echo "$MY_TOKEN" | tr -d '[:space:]')
-          echo "const SUIT_CONFIG = { apiUrl: '$U', apiToken: '$T' };" > js/modules/config.js
+          SU=$(echo "$SB_URL" | tr -d '[:space:]')
+          SK=$(echo "$SB_KEY" | tr -d '[:space:]')
+          echo "const SUIT_CONFIG = { apiUrl: '$U', apiToken: '$T', sbUrl: '$SU', sbKey: '$SK' };" > js/modules/config.js
         shell: bash
+
+      - name: Exclude non-public projects from Pages
+        run: rm -rf AmbuRide
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

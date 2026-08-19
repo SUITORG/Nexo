@@ -19,7 +19,7 @@
 ## Mapa de Carpetas
 
 ```
-SUITORGSTORE01/
+suitorg/
 ├── backend/              → GAS: core (orquestador), database, utils, ai_engine, DriveManager, seeds_master
 ├── CampanasAi/           → CMS marketing: frontend SPA, server Node 8000, generadores, scripts, config
 ├── citas/                → Módulo citas: Express 3002, webhook WhatsApp, handlers, servicios (AI/Calendar/Notifier)

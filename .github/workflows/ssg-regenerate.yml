@@ -2,6 +2,9 @@ name: Regenerate SSG (dist) — SEO
 
 on:
   schedule:
+    # Diario 03:00 UTC. Regenera dist/ desde Config_Empresas/Config_SEO (EvaSol).
+    # Los cambios en esas hojas solo afectan al tenant real (EVASOL); las demos
+    # ya no se indexan (noindex + robots Disallow), ver plan-posicionamiento-seo-multitenant.
     - cron: '0 3 * * *'
   workflow_dispatch:
 
@@ -27,6 +30,8 @@ jobs:
       - name: Run SSG engine
         run: node scripts/ssg-engine.mjs
         env:
+          # El token/URL ya viven hardcodeados en ssg-engine.mjs (deuda conocida).
+          # Cuando se limpie (Fase 4 del plan), pasarlos por secrets aquí.
           NODE_ENV: production
 
       - name: Commit regenerated dist

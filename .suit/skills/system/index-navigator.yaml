@@ -1,0 +1,21 @@
+skill:
+  name: index-navigator
+  display_name: "INDEX_FUNCIONES.md Navigator"
+  version: 1.0.0
+  type: system
+  domain: system
+
+  description: >
+    Uses INDEX_FUNCIONES.md to locate exact function locations
+    before reading source files. Saves tokens by reading only
+    the needed lines.
+
+  triggers:
+    - keyword: "buscar funcion"
+    - keyword: "find function"
+    - keyword: "INDEX_FUNCIONES"
+    - keyword: "localizar"
+    - file_pattern: "INDEX_FUNCIONES.md"
+
+  context_hint:
+    - "INDEX_FUNCIONES.md"

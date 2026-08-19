@@ -137,14 +137,20 @@ app.ui = {
                     repairBtn.id = 'sb-ai-repair';
                     repairBtn.className = 'fa-solid fa-screwdriver-wrench';
                     repairBtn.style.cssText = 'font-size: 0.6rem; color: rgba(255,255,255,0.4); cursor: pointer; margin-left: 5px; transition: 0.3s;';
-                    repairBtn.title = 'Reparación de Emergencia IA';
+                    repairBtn.title = 'Estado de Servicios';
                     repairBtn.onmouseover = () => repairBtn.style.color = '#fff';
                     repairBtn.onmouseout = () => repairBtn.style.color = 'rgba(255,255,255,0.4)';
-                    repairBtn.onclick = () => app.agents.triggerMicroAuthRepair();
+                    repairBtn.onclick = () => {
+                        const services = app.state._lastServiceResults || [];
+                        if (services.length === 0) { app.agents.checkAllServices(); return; }
+                        const lines = services.map(s => `${s.ok ? '✅' : '❌'} ${s.name}`).join('\n');
+                        const ok = services.filter(s => s.ok).length;
+                        alert(`Estado de Servicios\n${lines}\n\n${ok}/3 operativos`);
+                    };
                     aiContainer.appendChild(repairBtn);
                 }
 
-                if (app.agents?.checkAiHealth) app.agents.checkAiHealth();
+                if (app.agents?.checkAllServices) app.agents.checkAllServices();
             } else {
                 aiContainer.classList.add('hidden');
             }
@@ -388,46 +394,7 @@ app.ui = {
     exportReport: (fmt) => app.admin.exportReport(fmt),
     renderBusinessDashboard: () => app.admin.renderBusinessDashboard(),
 
-    renderReservations: () => {
-        const container = document.getElementById('view-reservations');
-        if (!container) return;
-        const data = app.data.Reservaciones || [];
-        const coId = app.state.companyId;
-
-        container.innerHTML = `
-            <div class="admin-header">
-                <h2><i class="fas fa-calendar-alt"></i> Control de Citas</h2>
-                <p>Gestiona las reservaciones del sitio web.</p>
-            </div>
-            <div class="table-container shadow-premium">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha/Hora</th>
-                            <th>Cliente</th>
-                            <th>WhatsApp</th>
-                            <th>Servicio</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.filter(r => r.id_empresa === coId).map(r => {
-            const fecha = r.fecha_cita ? r.fecha_cita.toString().replace('T', ' ') : 'Pendiente';
-            return `
-                                <tr>
-                                    <td><b>${fecha}</b></td>
-                                    <td>${r.nombre_cliente || 'N/A'}</td>
-                                    <td><a href="https://wa.me/${r.whatsapp || ''}" target="_blank">${r.whatsapp || 'Sin Tel'}</a></td>
-                                    <td><span class="badge-accent">${r.servicio || 'General'}</span></td>
-                                    <td><span class="status-pill ${(r.status || 'PENDIENTE').toLowerCase()}">${r.status || 'PENDIENTE'}</span></td>
-                                </tr>
-                            `;
-        }).join('') || '<tr><td colspan="5">No hay citas registradas.</td></tr>'}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    },
+    renderReservations: () => app.admin.renderReservations(),
 
     // --- PUBLIC BRIDGE ---
     renderOrbit: () => app.public.renderOrbit(),
@@ -484,7 +451,7 @@ app.ui = {
             const res = await fetch(app.apiUrl, {
                 method: 'POST',
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: 'syncSupabase', id_empresa: app.state.companyId, token: app.apiToken })
+                body: JSON.stringify({ action: 'syncToSupabase', id_empresa: app.state.companyId, token: app.apiToken })
             });
             const data = await res.json();
             if (data.success) {

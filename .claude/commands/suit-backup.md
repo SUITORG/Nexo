@@ -1,0 +1,1 @@
+SuitOS Backup. Ejecuta desde WSL: bash scripts/backup.sh. Confirma al usuario el nombre del archivo ZIP creado con formato SuitOrgYYMMDD.zip.

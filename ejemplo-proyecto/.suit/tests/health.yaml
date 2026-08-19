@@ -1,0 +1,24 @@
+suite:
+  name: Health Checks
+  description: "Verifica que los servidores del proyecto responden"
+  config:
+    timeout: 10000
+  servers:
+    - name: main
+      url: http://localhost:3000
+  tests:
+    - id: health-main
+      description: "Servidor principal responde ok"
+      request:
+        path: /api/health
+      expect:
+        status: 200
+        body_contains: "ok"
+
+    - id: health-db
+      description: "Conexión a base de datos responde"
+      request:
+        path: /api/health/db
+      expect:
+        status: 200
+        body_has_key: "status"

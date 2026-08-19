@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
-// Try loading .env from this folder first, then fall back to parent (SUITORGSTORE01 root)
+// Try loading .env from this folder first, then fall back to parent (suitorg root)
 const localEnv = path.join(__dirname, '.env');
 const parentEnv = path.join(__dirname, '..', '.env');
 if (fs.existsSync(localEnv)) {

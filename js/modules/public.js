@@ -8,12 +8,10 @@ app.public = {
         const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
         const content = document.getElementById('about-content');
         if (content && company) {
-            // Social Links HTML
-            let socialHtml = '';
-            if (company.rsface) socialHtml += `<a href="${company.rsface}" target="_blank" style="color:#1877F2; font-size:1.5rem;"><i class="fab fa-facebook"></i></a>`;
-            if (company.rsinsta) socialHtml += `<a href="${company.rsinsta}" target="_blank" style="color:#E4405F; font-size:1.5rem;"><i class="fab fa-instagram"></i></a>`;
-            if (company.rstik) socialHtml += `<a href="${company.rstik}" target="_blank" style="color:#000000; font-size:1.5rem;"><i class="fab fa-tiktok"></i></a>`;
-            if (company.rsyt) socialHtml += `<a href="${company.rsyt}" target="_blank" style="color:#FF0000; font-size:1.5rem;"><i class="fab fa-youtube"></i></a>`;
+            const socialLinks = app.utils.getSocialLinks(company);
+            let socialHtml = socialLinks.map(function(s) {
+                return '<a href="' + s.url + '" target="_blank" style="color:' + s.color + '; font-size:1.5rem;"><i class="fab ' + s.icon + '"></i></a>';
+            }).join('');
 
             content.innerHTML = `
                 <div style="text-align: center; margin-bottom: 20px;">
@@ -197,6 +195,7 @@ app.public = {
         const bizType = (company.tipo_negocio || "").toString().toUpperCase();
         const isFood = ['ALIMENTOS', 'COMIDA', 'RESTAURANTE', 'FOOD'].some(k => bizType.includes(k));
         const isPersonal = bizType.includes("MARCA PERSONAL");
+        const modoFlags = app.utils.parseModo(company);
 
         // --- COREOGRAFÍA DINÁMICA DE CAPAS (v14.7.0) ---
         const viewHome = document.getElementById('view-home');
@@ -420,12 +419,17 @@ app.public = {
                                                     CONTACTAR
                                                 </button>
                                                 ${(() => {
-                        const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
-                        const usesAi = !rawAi.endsWith(',NO') && (rawAi === 'TRUE' || rawAi.includes(','));
-                        return usesAi ? `
-                                                    <button class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
-                                                        IA
-                                                    </button>` : '';
+                        const aiCfg = app.utils.parseAiConfig(company);
+                        const tgParts = (company.agent_enabled || '').toString().split(',');
+                        const tgLink = tgParts.length > 1 && tgParts[1].trim().startsWith('https://t.me/') ? tgParts[1].trim() : '';
+                        let btnsHtml = '';
+                        if (tgLink) {
+                            btnsHtml += `<a href="${tgLink}" target="_blank" class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,136,204,0.3); border:none; cursor:pointer; background:#0088cc; color:#fff; text-align:center; text-decoration:none; display:inline-block;"><i class="fab fa-telegram-plane"></i> CHAT</a>`;
+                        }
+                        if (aiCfg.enabled) {
+                            btnsHtml += `<button class="btn-primary" style="width:100%; padding:8px 15px; border-radius:50px; font-weight:900; font-size:0.75rem; box-shadow:0 10px 20px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('${app.agents.getAgentIdForCompany(company) || 'AGT-PAPER-IMSS'}')">IA</button>`;
+                        }
+                        return btnsHtml;
                     })()}
                                             </div>
 
@@ -759,12 +763,21 @@ app.public = {
                                     CONTACTAR
                                 </button>
                                 ${(() => {
+                        const tgParts = (company.agent_enabled || '').toString().split(',');
+                        const tgLink = tgParts.length > 1 && tgParts[1].trim().startsWith('https://t.me/') ? tgParts[1].trim() : '';
                         const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
                         const usesAi = !rawAi.endsWith(',NO') && (rawAi.includes('TRUE') || rawAi.includes('/') || rawAi.includes(',') || rawAi.includes('GPT') || rawAi.includes('GEMINI'));
-                        return usesAi ? `
-                                     <button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('AGT-PAPER-IMSS')">
-                                         <i class="fas fa-robot"></i> CONSULTAR
-                                     </button>` : '';
+                        const hasReservations = company.usa_reservaciones >= 1;
+                        if (!usesAi && !hasReservations && !tgLink) return '';
+                        let btns = '';
+                        if (tgLink) {
+                            btns += `<a href="${tgLink}" target="_blank" class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,136,204,0.3); border:none; cursor:pointer; background:#0088cc; color:#fff; text-decoration:none; display:inline-block;"><i class="fab fa-telegram-plane"></i> CHAT</a>`;
+                        }
+                        if (usesAi) {
+                            btns += `<button class="btn-primary" style="padding:10px 30px; border-radius:50px; font-weight:900; font-size:0.8rem; box-shadow:0 10px 25px rgba(0,230,118,0.3); border:none; cursor:pointer; background:#00e676; color:#000;" onclick="app.agents.select('${app.agents.getAgentIdForCompany(company) || 'AGT-PAPER-IMSS'}')"><i class="fas fa-robot"></i> CONSULTAR</button>`;
+                        }
+
+                        return btns;
                     })()}
                             </div>
                         </div>
@@ -784,14 +797,19 @@ app.public = {
         if (subEl && !heroBanner.innerHTML.includes('hero-actions-dynamic')) subEl.innerText = company.mensaje1 || company.descripcion || "Bienvenido.";
 
         if (actions && !isPersonal && !heroBanner.innerHTML.includes('hero-actions-dynamic')) {
-            let btns = isFood ?
+            let btns = (isFood && modoFlags.express) ?
                 `<button class="btn-primary" onclick="window.location.hash='#food-app-area'"><i class="fas fa-utensils"></i> Menú Digital</button>` :
                 `<button class="btn-primary" onclick="window.location.hash='#contact'">Contactar Ahora</button>`;
 
+            const tgParts = (company.agent_enabled || '').toString().split(',');
+            const tgLink = tgParts.length > 1 && tgParts[1].trim().startsWith('https://t.me/') ? tgParts[1].trim() : '';
             const rawAi = (company.usa_soporte_ia || company.agent_enabled || "").toString().toUpperCase();
             const usesAi = !rawAi.endsWith(',NO') && (rawAi.includes('TRUE') || rawAi.includes('/') || rawAi.includes(',') || rawAi.includes('GPT') || rawAi.includes('GEMINI'));
+            if (tgLink) {
+                btns += `<a href="${tgLink}" target="_blank" class="btn-primary" style="background:#0088cc; color:#fff; margin-left:10px; text-decoration:none;"><i class="fab fa-telegram-plane"></i> CHAT</a>`;
+            }
             if (usesAi) {
-                btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('AGT-PAPER-IMSS')"><i class="fas fa-robot"></i> Consultar AI</button>`;
+                btns += `<button class="btn-primary" style="background:#00e676; color:#000; margin-left:10px;" onclick="app.agents.select('${app.agents.getAgentIdForCompany(company) || 'AGT-PAPER-IMSS'}')"><i class="fas fa-robot"></i> Consultar AI</button>`;
             }
             actions.innerHTML = btns;
         }
@@ -800,6 +818,7 @@ app.public = {
             const isIsolated = (company.is_isolated === 'TRUE' || company.is_isolated === true || company.is_isolated === "1");
             const siteMode = (company.modo_sitio || "HUB").toString().toUpperCase();
             const showHub = siteMode === "HUB" || (siteMode !== "WHITE" && !isIsolated);
+            const hasReservations = company.usa_reservaciones >= 1;
 
             // --- MOTOR DE MENÚ DINÁMICO (v8.2.0) ---
             const dynamicPages = (app.data.Config_Paginas || []).filter(p => {
@@ -839,8 +858,9 @@ app.public = {
                 ${(showHub) ? '<li><a href="#orbit" title="Portal/Explorar"><i class="fas fa-compass"></i></a></li>' : ''}
                 <li><a href="#home">Inicio</a></li>
                 ${dynamicLinksHtml}
-                ${isFood ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
+                ${(isFood && modoFlags.express) ? '<li><a href="#food-app-area" class="btn-express-nav"><i class="fas fa-utensils"></i> Pedido Express</a></li>' : ''}
                 ${company.formulario ? `<li><a href="#contact">Contacto</a></li>` : ''}
+                ${hasReservations && !isFood ? '<li><a href="javascript:void(0)" onclick="app.public.showReservationModal()">Agendar Cita</a></li>' : ''}
                 <li><a href="#login" class="nav-login-btn"><i class="fas fa-user-lock"></i> Staff</a></li>
             `;
         }
@@ -866,7 +886,9 @@ app.public = {
             const h1Val = pageData.h1 || content.h1 || content.titulo || "Información";
             const h2Val = pageData.h2 || pageData.subtitulo || content.h2 || content.subtitulo || "";
             const h3Val = pageData.h3 || content.h3 || content.h2_1 || "";
-            const pVal = pageData.p || pageData.descripcion || content.p_intro || content.texto || content.descripcion || "";
+            const pIntro = content.p_intro || "";
+            const pTexto = content.texto || "";
+            const pVal = pIntro + (pIntro && pTexto ? "<br><br>" : "") + pTexto || pageData.descripcion || "";
 
             const h2 = document.getElementById('story-h2');
             const h3 = document.getElementById('story-h3');
@@ -889,6 +911,25 @@ app.public = {
             finalBodyHtml = finalBodyHtml.replace(/\{(\s)*\"@(context|type)\"[\s\S]*?\}/gim, "");
             
             if (body) body.innerHTML = finalBodyHtml;
+
+            // FAQ dinámico desde contenido_json (preguntas_frecuentes)
+            if (content.preguntas_frecuentes && Array.isArray(content.preguntas_frecuentes)) {
+                let existingFaq = document.getElementById('dynamic-faq-section');
+                if (existingFaq) existingFaq.remove();
+                const faqDiv = document.createElement('div');
+                faqDiv.id = 'dynamic-faq-section';
+                faqDiv.style.marginTop = '2rem';
+                let faqHtml = '<h3 style="margin-bottom:1rem">Preguntas Frecuentes</h3>';
+                content.preguntas_frecuentes.forEach((q) => {
+                    if (!q.pregunta || !q.respuesta) return;
+                    faqHtml += `<details style="margin-bottom:0.75rem;padding:1rem;border:1px solid #e0e0e0;border-radius:8px">
+                        <summary style="font-weight:600;cursor:pointer;color:var(--color-tema,#001f3f)">${q.pregunta}</summary>
+                        <p style="margin-top:0.5rem">${q.respuesta}</p>
+                    </details>`;
+                });
+                faqDiv.innerHTML = faqHtml;
+                body.parentNode.insertBefore(faqDiv, body.nextSibling);
+            }
 
             if (img) {
                 const targetId = String(app.state.companyId || "").trim().toUpperCase();
@@ -984,25 +1025,52 @@ app.public = {
             }
         };
 
-        try {
-            const response = await fetch(app.apiUrl, {
-                method: 'POST',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify(data)
-            });
-            const res = await response.json();
-            if (res.success) {
-                alert("¡Cita agendada con éxito! Te contactaremos por WhatsApp.");
-                document.getElementById('reservation-modal').classList.add('hidden');
-            } else {
-                throw new Error(res.error || "Error desconocido");
+        const engine = app.state.dbEngine || 'GSHEETS';
+        let saved = false;
+
+        // SUPABASE mode: try local Supabase endpoint first
+        if (engine === 'SUPABASE') {
+            try {
+                const localRes = await fetch('/api/reservaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data.reservation)
+                });
+                const localResult = await localRes.json();
+                if (localResult.ok) saved = true;
+                else console.warn('[RESERVE] Local endpoint:', localResult.error);
+            } catch (e) {
+                console.warn('[RESERVE] Local endpoint error:', e.message);
             }
-        } catch (err) {
-            alert("Error al reservar: " + err.message);
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
         }
+
+        // GSHEETS mode or Supabase fallback: always go through GAS
+        if (!saved) {
+            try {
+                const response = await fetch(app.apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(data)
+                });
+                const res = await response.json();
+                if (res.success) saved = true;
+                else throw new Error(res.error || "Error desconocido");
+            } catch (gasErr) {
+                alert("Error al reservar: " + gasErr.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return;
+            }
+        }
+
+        alert("¡Cita agendada con éxito! Te contactaremos por WhatsApp.");
+        document.getElementById('reservation-modal').classList.add('hidden');
+
+        await app.loadData();
+        if (app.admin && app.admin.renderReservations) app.admin.renderReservations();
+
+        btn.innerText = originalText;
+        btn.disabled = false;
     },
 
     renderSEO: () => {
@@ -1326,7 +1394,8 @@ app.public = {
         container.innerHTML = '';
         const companies = (app.data.Config_Empresas || []).filter(co => {
             const isHabil = (co.habilitado === 'TRUE' || co.habilitado === true || co.habilitado === "1");
-            const isProd = (co.modo === 'PROD');
+            const modoBase = (co.modo || '').split(',')[0].trim();
+            const isProd = (modoBase === 'PROD');
             // Nota: En la Órbita se ven todos los activos/producción. El aislamiento (is_isolated)
             // solo afecta la salida del sitio hacia el Hub una vez dentro.
             return isHabil && isProd;
@@ -1542,11 +1611,11 @@ app.public = {
         const container = document.getElementById('footer-links-container');
         if (!container) return;
 
-        let socialHtml = '';
-        if (company.rsface) socialHtml += `<a href="${company.rsface}" target="_blank" class="social-icon facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>`;
-        if (company.rsinsta) socialHtml += `<a href="${company.rsinsta}" target="_blank" class="social-icon instagram" title="Instagram"><i class="fab fa-instagram"></i></a>`;
-        if (company.rstik) socialHtml += `<a href="${company.rstik}" target="_blank" class="social-icon tiktok" title="TikTok"><i class="fab fa-tiktok"></i></a>`;
-        if (company.rsyt) socialHtml += `<a href="${company.rsyt}" target="_blank" class="social-icon youtube" title="YouTube"><i class="fab fa-youtube"></i></a>`;
+        const socialLinks = app.utils.getSocialLinks(company);
+        let socialHtml = socialLinks.map(function(s) {
+            var title = s.platform.charAt(0).toUpperCase() + s.platform.slice(1);
+            return '<a href="' + s.url + '" target="_blank" class="social-icon ' + s.className + '" title="' + title + '"><i class="fab ' + s.icon + '"></i></a>';
+        }).join('');
 
         const showForm = company.formulario === 'TRUE' || company.formulario === true;
 
@@ -1749,7 +1818,7 @@ app.public = {
             return;
         }
 
-        const isPaper = (app.state.dbEngine || "").toUpperCase() === 'SUPABASE';
+        const isPaper = String(company.id_empresa).toUpperCase() === 'PAPER';
         const isInsurance = (company.tipo_negocio || "").toString().toUpperCase().includes('SEGUROS') || (company.tipo_negocio || "").toString().toUpperCase().includes('FINANZAS');
 
         container.innerHTML = `
@@ -2180,7 +2249,7 @@ app.public = {
             formulario: 'TRUE',
             usa_soporte_ia: 'FALSE',
             usa_qr_sitio: 'FALSE',
-            usa_reservaciones: 'FALSE'
+            usa_reservaciones: '0'
         };
 
         try {

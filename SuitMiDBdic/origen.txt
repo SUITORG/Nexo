@@ -1,0 +1,36 @@
+### Rol y Contexto:
+Act£a como un Desarrollador Senior Full-Stack Cuantitativo especializado en DeFi y Arquitecto de Dashboards Financieros en Tiempo Real. Debes dise¤ar la arquitectura y el c¢digo completo, modular y listo para producci¢n de un dashboard anal¡tico e interactivo dise¤ado para proveedores de liquidez (LPs) y traders multiactivo.
+
+### Tarea Concreta:
+Construye una aplicaci¢n Dashboard completa que se conecte a APIs p£blicas sin costo para realizar an lisis de correlaci¢n cripto, simulaci¢n de P‚rdida Impermanente (IL), clasificaci¢n de pools de liquidez concentrada por rendimiento/riesgo, y monitoreo en tiempo real de mercados tradicionales (Forex, ETFs, Acciones y Commodities), integrando un ticker de noticias estilo Bloomberg.
+
+### Especificaciones T‚cnicas y Funcionales:
+1. **M¢dulo Crypto & Pools:**
+   - **Heatmap de Correlaci¢n Real:** Ventana m¢vil de 30 d¡as calculando coeficientes de Pearson de 5 a 10 criptomonedas seleccionables vs. BTC y USDT utilizando endpoints de CoinGecko API o GeckoTerminal API.
+   - **Top 10 Pools Multired:** Extracci¢n de m‚tricas clave (TVL, Volumen 24h, APY, Fee/TVL) v¡a DefiLlama / DexScreener API para Solana, Ethereum, Base, Arbitrum y BSC.
+   - **Ranking LP Score:** Algoritmo din mico ordenado por: $$LP\_Score = \left(\frac{\text{Volumen 24h}}{\text{TVL}}\right) \times \text{APY} \times (1 - \text{Riesgo IL})$$
+   - **Simulador de IL & Rango Concentrado:** Interfaz visual con selectores m¢viles (range sliders) para definir precios l¡mites superior e inferior, calculando las ganancias estimadas frente a HODL y el c lculo matem tico exacto de P‚rdida Impermanente.
+   - **Backtesting Hist¢rico:** Selector de fechas para validar el desempe¤o del rango en ventanas temporales pasadas.
+
+2. **M¢dulo Mercados Tradicionales (Top 10 por categor¡a):**
+   - **Pesta¤a Stocks:** Las 10 empresas de mayor capitalizaci¢n con Tickers oficiales.
+   - **Pesta¤a ETFs:** Top 10 ETFs globales por volumen transaccionado.
+   - **Pesta¤a Forex:** Top 10 pares de divisas globales.
+   - **Pesta¤a Commodities:** Top 10 materias primas (Gas Natural, Petr¢leo Brent/WTI, Oro, Plata, Agua, Cobre, etc.).
+   - **Lista de Favoritos:** Funcionalidad para marcar, guardar y filtrar activos preferidos.
+
+3. **Infraestructura, Noticias y Actualizaci¢n:**
+   - **Ticker Noticioso:** Barra inferior fija con desplazamiento horizontal continuo (marquee estilo Bloomberg) consumiendo titulares en tiempo real v¡a NewsAPI / CoinGecko News.
+   - **Auto-Refresh:** Tarea as¡ncrona que actualiza todos los datos cada 5 minutos (300 segundos) mostrando la estampa temporal ("Ultima actualizaci¢n: HH:MM:SS").
+   - **Explicaci¢n T‚cnica:** Incluye un bloque explicativo sobre por qu‚ la ventana de 5 minutos es el balance ¢ptimo entre precisi¢n y control de l¡mites de consumo (rate-limiting) en APIs p£blicas.
+
+### Criterios de Calidad:
+- **Datos 100% Reales:** Prohibido el uso de *mock data* o listas est ticas; todas las m‚tricas deben consumirse din micamente.
+- **Rigor Matem tico:** Precisi¢n estricta en las ecuaciones de P‚rdida Impermanente (IL) y la matriz de correlaci¢n.
+- **Resiliencia de APIs:** Implementaci¢n de control de excepciones y cach‚ temporal (*fallback*) para gestionar los l¡mites de peticiones por minuto.
+
+### Formato de Entrega:
+Un £nico script ejecutable (ej. Python con Streamlit y Plotly, o aplicaci¢n Web Next.js/React con Chart.js) documentado con instrucciones claras de instalaci¢n, dependencias y ejecuci¢n.
+
+### Verificaci¢n Final:
+Confirma que el script cumpla con todas las secciones exigidas (Heatmap, Simulador IL, Top 10 pools multired, Commodities, ETFs, Forex, Acciones, Favoritos, Barra de noticias y temporizador de 5 minutos) garantizando una ejecuci¢n sin errores de sintaxis o conexi¢n. 

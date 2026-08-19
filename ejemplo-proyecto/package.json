@@ -1,0 +1,16 @@
+{
+  "name": "mi-proyecto",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "registry:build": "cd SuitOSCore && node tooling/build-registry.js --mcp",
+    "registry:verify": "cd SuitOSCore && node tooling/build-registry.js --verify",
+    "registry:server": "cd SuitOSCore && node tooling/build-registry.js --server --watch --mcp",
+    "check": "node --check index.js && cd SuitOSCore && node tooling/build-registry.js --validate",
+    "test": "node SuitOSCore/scripts/agents/probador.js --suite health"
+  },
+  "dependencies": {
+    "suitos-core": "file:./SuitOSCore"
+  }
+}

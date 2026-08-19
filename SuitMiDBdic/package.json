@@ -1,0 +1,13 @@
+{
+  "name": "suitmidbdic",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "check": "node check.js"
+  },
+  "dependencies": {
+    "express": "^4.22.1"
+  }
+}

@@ -1,0 +1,183 @@
+[
+  {
+    "id": "countable-uncountable",
+    "title": "Sustantivos contables e incontables",
+    "explanation": "En inglés, los sustantivos pueden ser contables (se pueden contar: one apple, two apples) o incontables (no se pueden contar con números: water, rice, information).",
+    "rule": "Los contables usan 'a/an' en singular y tienen plural. Los incontables NO usan 'a/an' y NO tienen plural. Usamos 'some' con incontables y 'a/an' con contables.",
+    "examples": [
+      {"en": "I need an apple.", "es": "Necesito una manzana."},
+      {"en": "I need some water.", "es": "Necesito agua."},
+      {"en": "There are many books on the table.", "es": "Hay muchos libros en la mesa."},
+      {"en": "There is a lot of information online.", "es": "Hay mucha información en línea."}
+    ],
+    "level": "A2",
+    "relatedWordIds": ["luggage", "menu"],
+    "tags": ["grammar", "nouns", "basics"]
+  },
+  {
+    "id": "some-any",
+    "title": "Some vs Any",
+    "explanation": "'Some' y 'any' se usan para cantidades indefinidas. 'Some' va en oraciones afirmativas. 'Any' va en oraciones negativas y preguntas.",
+    "rule": "Afirmativo: some. Negativo: any. Preguntas: any (pero 'some' en preguntas de ofrecimiento o petición).",
+    "examples": [
+      {"en": "I have some friends in London.", "es": "Tengo algunos amigos en Londres."},
+      {"en": "I don't have any money.", "es": "No tengo dinero."},
+      {"en": "Do you have any questions?", "es": "¿Tienes alguna pregunta?"},
+      {"en": "Would you like some coffee?", "es": "¿Te gustaría algo de café?"}
+    ],
+    "level": "A1",
+    "relatedWordIds": ["luggage", "menu"],
+    "tags": ["grammar", "quantifiers", "basics"]
+  },
+  {
+    "id": "present-simple",
+    "title": "Presente Simple",
+    "explanation": "El presente simple se usa para hechos, rutinas y cosas permanentes.",
+    "rule": "Sujeto + verbo (tercera persona singular añade -s/-es/-ies). Negativo: don't/doesn't + verbo. Preguntas: Do/Does + sujeto + verbo.",
+    "examples": [
+      {"en": "I work in an office.", "es": "Trabajo en una oficina."},
+      {"en": "She works in a hospital.", "es": "Ella trabaja en un hospital."},
+      {"en": "They don't eat meat.", "es": "Ellos no comen carne."},
+      {"en": "Does he speak English?", "es": "¿Él habla inglés?"}
+    ],
+    "level": "A1",
+    "relatedWordIds": ["be", "have", "do"],
+    "tags": ["grammar", "tenses", "basics"]
+  },
+  {
+    "id": "past-simple",
+    "title": "Pasado Simple",
+    "explanation": "El pasado simple se usa para acciones completadas en el pasado.",
+    "rule": "Verbos regulares: verbo + -ed. Verbos irregulares: forma propia (2da columna). Negativo: didn't + verbo base.",
+    "examples": [
+      {"en": "I walked to school yesterday.", "es": "Caminé a la escuela ayer."},
+      {"en": "She went to the cinema last night.", "es": "Ella fue al cine anoche."},
+      {"en": "We didn't watch TV last night.", "es": "No vimos televisión anoche."},
+      {"en": "Did you call me?", "es": "¿Me llamaste?"}
+    ],
+    "level": "A1",
+    "relatedWordIds": ["be", "have", "do", "make"],
+    "tags": ["grammar", "tenses", "basics"]
+  },
+  {
+    "id": "present-perfect",
+    "title": "Presente Perfecto",
+    "explanation": "El presente perfecto conecta el pasado con el presente. Se usa para experiencias, cambios, y acciones que continúan.",
+    "rule": "Sujeto + have/has + participio pasado (3ra columna). 'Ever' y 'never' van entre have y participio.",
+    "examples": [
+      {"en": "I have visited London twice.", "es": "He visitado Londres dos veces."},
+      {"en": "She has never tried sushi.", "es": "Ella nunca ha probado sushi."},
+      {"en": "Have you ever been to Paris?", "es": "¿Has estado alguna vez en París?"},
+      {"en": "They have already finished their homework.", "es": "Ellos ya terminaron su tarea."}
+    ],
+    "level": "B1",
+    "relatedWordIds": ["be", "experience", "apply"],
+    "tags": ["grammar", "tenses", "intermediate"]
+  },
+  {
+    "id": "modal-verbs",
+    "title": "Verbos modales: can, should, must, might",
+    "explanation": "Los verbos modales expresan habilidad, obligación, permiso o posibilidad. Siempre van seguidos de verbo en forma base (sin 'to').",
+    "rule": "Modal + verbo base. No cambian para tercera persona. 'Can' = poder/habilidad. 'Should' = deber/consejo. 'Must' = obligación. 'Might' = posibilidad.",
+    "examples": [
+      {"en": "You should see a doctor.", "es": "Deberías ver a un doctor."},
+      {"en": "I can speak three languages.", "es": "Puedo hablar tres idiomas."},
+      {"en": "You must wear a seatbelt.", "es": "Debes usar cinturón de seguridad."},
+      {"en": "It might rain tomorrow.", "es": "Podría llover mañana."}
+    ],
+    "level": "A2",
+    "relatedWordIds": ["call", "prescription"],
+    "tags": ["grammar", "modals", "intermediate"]
+  },
+  {
+    "id": "imperatives",
+    "title": "Imperativos (dar órdenes/instrucciones)",
+    "explanation": "El imperativo se usa para dar órdenes, instrucciones o direcciones. Se forma con el verbo en forma base.",
+    "rule": "Afirmativo: verbo base + complemento. Negativo: Don't + verbo base. Para ser cortés: 'Please' al inicio o final.",
+    "examples": [
+      {"en": "Turn left at the corner.", "es": "Gire a la izquierda en la esquina."},
+      {"en": "Don't run in the hallway.", "es": "No corras en el pasillo."},
+      {"en": "Please take a seat.", "es": "Por favor siéntese."},
+      {"en": "Go straight for two blocks.", "es": "Vaya recto dos cuadras."}
+    ],
+    "level": "A1",
+    "relatedWordIds": ["left", "right", "straight"],
+    "tags": ["grammar", "commands", "basics"]
+  },
+  {
+    "id": "comparatives",
+    "title": "Comparativos: adjetivos",
+    "explanation": "Los comparativos se usan para comparar dos cosas. Adjetivos cortos (1 sílaba) añaden -er. Adjetivos largos (3+ sílabas) usan 'more'.",
+    "rule": "Corto: adj + -er + than. Largo: more + adj + than. Irregulares: good→better, bad→worse, far→farther/further.",
+    "examples": [
+      {"en": "This shirt is cheaper than that one.", "es": "Esta camisa es más barata que esa."},
+      {"en": "She is more intelligent than him.", "es": "Ella es más inteligente que él."},
+      {"en": "My house is bigger than yours.", "es": "Mi casa es más grande que la tuya."},
+      {"en": "This coffee is better than the other one.", "es": "Este café es mejor que el otro."}
+    ],
+    "level": "A2",
+    "relatedWordIds": ["price", "size", "expensive", "cheap"],
+    "tags": ["grammar", "adjectives", "comparisons"]
+  },
+  {
+    "id": "present-continuous-future",
+    "title": "Presente Continuo para futuro",
+    "explanation": "El presente continuo (am/is/are + -ing) se usa para planes futuros ya confirmados, especialmente con tiempo específico.",
+    "rule": "Sujeto + am/is/are + verbo-ing + tiempo futuro. Equivale al 'ir a' en español para planes.",
+    "examples": [
+      {"en": "I am flying to New York tomorrow.", "es": "Vuelo a Nueva York mañana."},
+      {"en": "She is meeting her friends at 8 PM.", "es": "Ella se reúne con sus amigos a las 8 PM."},
+      {"en": "They are staying at the Grand Hotel tonight.", "es": "Ellos se quedan en el Grand Hotel esta noche."},
+      {"en": "We are having dinner with them on Friday.", "es": "Cenamos con ellos el viernes."}
+    ],
+    "level": "A2",
+    "relatedWordIds": ["departure", "arrival", "reservation"],
+    "tags": ["grammar", "tenses", "future"]
+  },
+  {
+    "id": "irregular-verbs",
+    "title": "Verbos irregulares más comunes",
+    "explanation": "Hay aproximadamente 200 verbos irregulares en inglés. No siguen la regla de añadir -ed para el pasado.",
+    "rule": "No hay regla fija. Hay que memorizarlos en grupos: A-A-A (cut-cut-cut), A-B-B (buy-bought-bought), A-B-C (write-wrote-written).",
+    "examples": [
+      {"en": "be - was/were - been", "es": "ser/estar"},
+      {"en": "go - went - gone", "es": "ir"},
+      {"en": "have - had - had", "es": "tener"},
+      {"en": "see - saw - seen", "es": "ver"},
+      {"en": "take - took - taken", "es": "tomar/llevar"}
+    ],
+    "level": "A1",
+    "relatedWordIds": ["be", "have", "do", "make", "go", "take"],
+    "tags": ["grammar", "verbs", "irregular"]
+  },
+  {
+    "id": "prepositions-place",
+    "title": "Preposiciones de lugar: in, on, at",
+    "explanation": "Las preposiciones de lugar indican dónde está algo. 'At' para puntos específicos. 'In' para áreas cerradas. 'On' para superficies.",
+    "rule": "AT: dirección exacta (at 123 Main St). IN: ciudad, país, habitación (in Paris). ON: calle, superficie (on the table).",
+    "examples": [
+      {"en": "I'm at the bus stop.", "es": "Estoy en la parada de autobús."},
+      {"en": "She lives in Mexico City.", "es": "Ella vive en la Ciudad de México."},
+      {"en": "The book is on the desk.", "es": "El libro está en el escritorio."},
+      {"en": "He is waiting at the corner.", "es": "Él está esperando en la esquina."}
+    ],
+    "level": "A1",
+    "relatedWordIds": ["left", "right", "corner", "street"],
+    "tags": ["grammar", "prepositions", "basics"]
+  },
+  {
+    "id": "idiom-usage",
+    "title": "Cómo usar modismos correctamente",
+    "explanation": "Los modismos son expresiones fijas cuyo significado no es literal. No se pueden traducir palabra por palabra.",
+    "rule": "Usar modismos en contexto informal o semiforma. Evitar en escritura académica o muy formal. No cambiar las palabras del modismo.",
+    "examples": [
+      {"en": "'It's a piece of cake' = it's very easy.", "es": "'Es un pedazo de pastel' = es muy fácil."},
+      {"en": "'Break a leg' = good luck.", "es": "'Rómpete una pierna' = buena suerte."},
+      {"en": "'Under the weather' = feeling sick.", "es": "'Bajo el clima' = sentirse enfermo."},
+      {"en": "'Spill the beans' = reveal a secret.", "es": "'Derramar los frijoles' = revelar un secreto."}
+    ],
+    "level": "B1",
+    "relatedWordIds": ["break-a-leg", "piece-of-cake", "spill-the-beans", "under-weather"],
+    "tags": ["grammar", "idioms", "advanced"]
+  }
+]

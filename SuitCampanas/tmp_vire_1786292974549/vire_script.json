@@ -1,0 +1,49 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Noe Thermomix",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-JorgeNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "duration": 10,
+      "animation": "fade_in",
+      "title": "Hook",
+      "subtitle": "¿Sabías que tu Thermomix puede hacer más de lo que piensas?",
+      "voice_text": "¿Sabías que tu Thermomix puede hacer más de lo que piensas?",
+      "sfx_file": "generated/sfx/sfx_1786292974945_0.wav",
+      "texto_overlay": "¡Tu Thermomix es más que solo un robot!"
+    },
+    {
+      "type": "text",
+      "duration": 10,
+      "animation": "slide_up",
+      "title": "Desarrollo",
+      "body": "¿Sabías que puedes cocinar con un solo toque?",
+      "image_prompt": "Visual cinematográfico de una persona usando el Thermomix, iluminación suave y natural, texturas realistas, tonos neutros y cálidos. La cámara se mueve ligeramente para seguir la acción.",
+      "voice_text": "¿Sabías que puedes cocinar con un solo toque?",
+      "texto_overlay": "¡Controla tu cocina con facilidad!"
+    },
+    {
+      "type": "outro",
+      "duration": 10,
+      "animation": "fade_in",
+      "cta": "¿Sabías que puedes ahorrar hasta un 50% en tiempo de preparación?",
+      "contact_info": "8110463721",
+      "website": "https://www.nw.com",
+      "voice_text": "¿Sabías que puedes ahorrar hasta un 50% en tiempo de preparación?",
+      "texto_overlay": "¡Tu Thermomix te hace ganar tiempo!"
+    }
+  ]
+}

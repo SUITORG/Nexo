@@ -5,47 +5,68 @@ app.pos = {
     stripe: {
         stripeInstance: null,
         elements: null,
-        cardElement: null,
         mounted: false,
 
-        init: async (companyId) => {
-            if (app.pos.stripe.stripeInstance) return;
-            try {
-                const res = await fetch(`/api/stripe/config?company_id=${companyId}`);
-                const config = await res.json();
-                if (!config.publishableKey) return;
-                app.pos.stripe.stripeInstance = Stripe(config.publishableKey);
-            } catch (e) {
-                console.error('Stripe init error:', e);
-            }
+        init: async (companyId, force) => {
+            if (app.pos.stripe.stripeInstance && !force) return;
+            if (app.pos.stripe._initPromise && !force) return app.pos.stripe._initPromise;
+            app.pos.stripe._initPromise = (async () => {
+                try {
+                    const res = await fetch(`/api/stripe/config?company_id=${companyId}`);
+                    const config = await res.json();
+                    if (!config.publishableKey) return;
+                    app.pos.stripe.stripeInstance = Stripe(config.publishableKey);
+                } catch (e) {
+                    console.error('Stripe init error:', e);
+                }
+            })();
+            return app.pos.stripe._initPromise;
         },
 
-        mountElement: (containerId) => {
-            if (!app.pos.stripe.stripeInstance) return;
+        mountStripeFields: async (prefix) => {
             if (app.pos.stripe.mounted) return;
-            const container = document.getElementById(containerId);
-            if (!container || container.hasChildNodes()) return;
+            if (!app.pos.stripe.stripeInstance) {
+                const companyId = app.state?.companyId;
+                if (!companyId) return;
+                await app.pos.stripe.init(companyId);
+                if (!app.pos.stripe.stripeInstance) return;
+            }
             app.pos.stripe.elements = app.pos.stripe.stripeInstance.elements();
-            app.pos.stripe.cardElement = app.pos.stripe.elements.create('card', {
-                style: {
-                    base: { fontSize: '16px', color: '#32325d', fontFamily: 'Arial, sans-serif' }
-                }
-            });
-            app.pos.stripe.cardElement.mount(`#${containerId}`);
+            const style = {
+                base: { fontSize: '16px', color: '#32325d', fontFamily: 'Arial, sans-serif' }
+            };
+            app.pos.stripe.numberElement = app.pos.stripe.elements.create('cardNumber', { style });
+            app.pos.stripe.expiryElement = app.pos.stripe.elements.create('cardExpiry', { style });
+            app.pos.stripe.cvcElement = app.pos.stripe.elements.create('cardCvc', { style });
+            app.pos.stripe.postalElement = app.pos.stripe.elements.create('postalCode', { style });
+            app.pos.stripe.numberElement.mount(`#${prefix}-number`);
+            app.pos.stripe.expiryElement.mount(`#${prefix}-expiry`);
+            app.pos.stripe.cvcElement.mount(`#${prefix}-cvc`);
+            app.pos.stripe.postalElement.mount(`#${prefix}-zip`);
+            const errorDiv = document.getElementById(`${prefix}-errors`);
+            const handleChange = (event) => {
+                if (errorDiv) errorDiv.textContent = event.error ? event.error.message : '';
+            };
+            app.pos.stripe.numberElement.on('change', handleChange);
+            app.pos.stripe.expiryElement.on('change', handleChange);
+            app.pos.stripe.cvcElement.on('change', handleChange);
+            app.pos.stripe.postalElement.on('change', handleChange);
             app.pos.stripe.mounted = true;
         },
 
         unmount: () => {
-            if (app.pos.stripe.cardElement) {
-                app.pos.stripe.cardElement.unmount();
-                app.pos.stripe.cardElement = null;
-                app.pos.stripe.elements = null;
-                app.pos.stripe.mounted = false;
-            }
+            ['numberElement', 'expiryElement', 'cvcElement', 'postalElement'].forEach(key => {
+                if (app.pos.stripe[key]) {
+                    app.pos.stripe[key].unmount();
+                    app.pos.stripe[key] = null;
+                }
+            });
+            app.pos.stripe.elements = null;
+            app.pos.stripe.mounted = false;
         },
 
         processPayment: async (amount, companyId) => {
-            if (!app.pos.stripe.stripeInstance || !app.pos.stripe.cardElement) {
+            if (!app.pos.stripe.stripeInstance || !app.pos.stripe.numberElement) {
                 throw new Error('Stripe no inicializado');
             }
             const res = await fetch('/api/stripe/create-payment-intent', {
@@ -58,7 +79,7 @@ app.pos = {
 
             const { error, paymentIntent } = await app.pos.stripe.stripeInstance.confirmCardPayment(
                 intent.clientSecret,
-                { payment_method: { card: app.pos.stripe.cardElement } }
+                { payment_method: { card: app.pos.stripe.numberElement } }
             );
             if (error) throw new Error(error.message);
 
@@ -66,6 +87,34 @@ app.pos = {
                 return { id: paymentIntent.id, status: 'succeeded' };
             }
             throw new Error('Pago no completado: ' + paymentIntent.status);
+        },
+
+        isActivo: () => {
+            const company = (app.data?.Config_Empresas || []).find(c => c.id_empresa === app.state?.companyId);
+            const flags = app.utils.parseModo(company);
+            return flags.stripe;
+        },
+
+        syncVisibility: () => {
+            const activo = app.pos.stripe.isActivo();
+            const posBtn = document.getElementById('pos-btn-tarjeta');
+            const publicBtn = document.getElementById('public-btn-tarjeta');
+            if (posBtn) posBtn.classList.toggle('hidden', !activo);
+            if (publicBtn) publicBtn.classList.toggle('hidden', !activo);
+            if (!activo) {
+                ['pos-pay-method', 'pay-method'].forEach(id => {
+                    const sel = document.getElementById(id);
+                    if (sel && sel.value === 'Tarjeta') {
+                        sel.value = 'Efectivo';
+                        (id === 'pos-pay-method'
+                            ? document.getElementById('pos-ticket-sidebar')
+                            : document
+                        )?.querySelectorAll('.pay-btn').forEach(btn => {
+                            btn.classList.toggle('active', btn.dataset.value === 'Efectivo');
+                        });
+                    }
+                });
+            }
         }
     },
 
@@ -374,7 +423,8 @@ app.pos = {
             // === ESCRITURA DIRECTA A SUPABASE ===
             await app.pos._checkoutSupabase({
                 leadData, cartTotal, method, confirmNum, isStaffSale,
-                name, phone, address, notes, generatedOtp, company, stockUpdates
+                name, phone, address, notes, generatedOtp, company, stockUpdates,
+                stripePaymentId
             });
         } else {
             // === FALLBACK A GSHEETS (comportamiento original) ===
@@ -457,7 +507,8 @@ app.pos = {
     _checkoutSupabase: async (params) => {
         const {
             leadData, cartTotal, method, confirmNum, isStaffSale,
-            name, phone, address, notes, generatedOtp, company, stockUpdates
+            name, phone, address, notes, generatedOtp, company, stockUpdates,
+            stripePaymentId
         } = params;
 
         console.log('🔵 [SUPABASE_CHECKOUT] 1/6 - Iniciando transacción...');
@@ -673,7 +724,8 @@ app.pos = {
                 </div>
             `;
     },
-    handlePayMethodChange: () => {
+    handlePayMethodChange: async () => {
+        if (app.pos.stripe.syncVisibility) app.pos.stripe.syncVisibility();
         const method = document.getElementById('pay-method').value;
         const confirmBlock = document.getElementById('confirm-block');
         const bankDisplay = document.getElementById('bank-info-display');
@@ -704,7 +756,7 @@ app.pos = {
             }
         }
         if (method === 'Tarjeta') {
-            app.pos.stripe.mountElement('stripe-card-element');
+            await app.pos.stripe.mountStripeFields('stripe-card');
         }
     },
     openCheckout: () => {
@@ -988,7 +1040,8 @@ app.pos = {
     },
 
     // --- POS UI & RENDERING (Migrated from ui.js) ---
-    togglePosFolio: () => {
+    togglePosFolio: async () => {
+        if (app.pos.stripe.syncVisibility) app.pos.stripe.syncVisibility();
         const method = document.getElementById('pos-pay-method').value;
         const folioBlock = document.getElementById('pos-folio-container');
         const bankBlock = document.getElementById('pos-bank-info-display');
@@ -1015,7 +1068,7 @@ app.pos = {
             bankBlock.classList.add('hidden');
             if (stripeBlock) stripeBlock.classList.remove('hidden');
             if (cashControl) cashControl.classList.add('hidden');
-            app.pos.stripe.mountElement('pos-stripe-element');
+            await app.pos.stripe.mountStripeFields('pos-stripe');
         } else {
             folioBlock.classList.add('hidden');
             bankBlock.classList.add('hidden');

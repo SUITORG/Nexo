@@ -20,6 +20,7 @@ out/
 *.rar
 *.7z
 BACKUP_*/
+_LEGACY_BACKUPS/
 temp/
 tmp/
 .temp/
@@ -56,9 +57,54 @@ gas-client.js
 google-sheets.js
 supabase.js
 iniciar-servidor.*
-iniciar-suitorgstore.*
+iniciar-suitorg.*
 
-# CampanasAi generated videos and temp files
-CampanasAi/slideshow_*.mp4
-CampanasAi/tmp_slideshow_*/
+# SuitCampanas — generated videos, temp files, and rollback backups
+SuitCampanas/slideshow_*.mp4
+SuitCampanas/tmp_slideshow_*/
+SuitCampanas/._backup/
+
+# ViRe (Remotion) render output
+SuitVidGenRemotion/out/
+SuitVidGenRemotion/.vire-props.json
+SuitVidGenRemotion/public/generated/
+
+# Mystery artifact files (zi*)
+zi*
+
+# Secrets & local session data
+.wwebjs_auth/
+.wwebjs_cache/
+**/.wwebjs_auth/
+**/.wwebjs_cache/
+.claude.json
+.claude/settings.json
+.opencode/.suitos-guard.json
+body.json
+
+# Python virtual envs, caches, datasets (SuitCVLO)
+.venv/
+.venv2/
+__pycache__/
+*.pyc
+dataset_yolo*/
+SuitCVLO/data/*.db
+SuitCVLO/output/
+SuitCVLO/uploads/
+SuitCVLO/tools/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# ViRe temp renders
+SuitCampanas/tmp_vide_*/
+
+# Misc generated
+comfyui_test.png
+
+# Reporte local de preparar-produccion (nunca publicar)
+revision-produccion/
+
+# Secretos accidentales (visto: SuitCampanas/.env.test con token real)
+*.env.test
 

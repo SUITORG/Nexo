@@ -1,0 +1,41 @@
+name: prospeccion
+description: "Workflow para prospección comercial de oportunidades de IA/automatización"
+
+steps:
+  - id: search
+    action: "Usar google-places-business-finder para encontrar negocios en la zona"
+    params:
+      location: "Monterrey, Nuevo León, Mexico"
+      radius: 10000
+      categories: ["manufactura", "logistica", "restaurantes", "clinicas", "agencias"]
+
+  - id: analyze
+    action: "Analizar cada empresa encontrada"
+    params:
+      visit_website: true
+      check_reviews: true
+      identify_pain_points: true
+
+  - id: qualify
+    action: "Calificar oportunidad"
+    params:
+      score_factors: ["procesos_manuales", "tamano", "presencia_digital", "quejas_comunes"]
+      priority_threshold: 60
+
+  - id: output
+    action: "Generar reporte con formato estándar"
+    format:
+      - nombre
+      - giro
+      - web
+      - tamano_estimado
+      - problema_detectado
+      - solucion_propuesta
+      - beneficio_economico
+      - prioridad
+      - primer_mensaje
+
+validation:
+  - max_companies: 5
+  - no_invent_data: true
+  - zone: "Monterrey, Apodaca, San Nicolás"

@@ -1,0 +1,10 @@
+name: vision-yolo
+description: SuitCVLO — detect objects using YOLOv8n via Ultralytics
+commands:
+  - python SuitCVLO/detect.py --source photo --input "{path}"
+  - python SuitCVLO/detect.py --source webcam
+inputs:
+  - name: path
+    type: string
+    description: Path to image or video file
+output: JSON detection results saved to SQLite

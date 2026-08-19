@@ -1,0 +1,57 @@
+permissions:
+  roles:
+    architect:
+      allowed_workflows:
+        - audit
+        - review
+        - docs
+      allowed_projects:
+        - root
+      max_risk: high
+
+    developer:
+      allowed_workflows:
+        - feature
+        - bugfix
+        - docs
+        - research
+      allowed_projects:
+        - root
+      max_risk: medium
+
+    operator:
+      allowed_workflows:
+        - deploy
+        - migration
+        - bugfix
+      allowed_projects:
+        - root
+      max_risk: high
+
+    researcher:
+      allowed_workflows:
+        - research
+        - audit
+      allowed_projects:
+        - root
+      max_risk: low
+
+  rules:
+    - operation: "modify_core_registry"
+      requires_role: architect
+      requires_review:
+        - architecture
+      notify: true
+
+    - operation: "modify_server_routing"
+      requires_role: operator
+      requires_review:
+        - security
+        - architecture
+      notify: true
+
+    - operation: "modify_multi_tenant"
+      requires_role: architect
+      requires_review:
+        - security
+      notify: true

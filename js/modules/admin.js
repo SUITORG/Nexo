@@ -1037,6 +1037,146 @@ app.admin = {
         } catch (err) { console.error(err); }
     },
 
+    // --- RESERVACIONES STAFF ---
+    renderReservations: () => {
+        const container = document.getElementById('view-reservations');
+        if (!container) return;
+        const data = app.data.Reservaciones || [];
+        const coId = app.state.companyId;
+        const user = app.state.currentUser;
+        const isAdmin = user && (user.nivel_acceso >= 10 || user.rol === 'DIOS');
+        const isStaff = user && (user.nivel_acceso >= 5 || user.rol === 'DIOS');
+
+        const filterStatus = document.getElementById('res-filter-status')?.value || 'todas';
+        const filterDate = document.getElementById('res-filter-date')?.value || 'todas';
+
+        let list = data.filter(r => r.id_empresa === coId);
+
+        if (filterStatus !== 'todas') list = list.filter(r => r.status === filterStatus);
+
+        if (filterDate === 'hoy') {
+            const today = new Date().toISOString().split('T')[0];
+            list = list.filter(r => r.fecha_cita && r.fecha_cita.startsWith(today));
+        } else if (filterDate === 'semana') {
+            const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+            list = list.filter(r => r.fecha_cita && r.fecha_cita >= weekAgo);
+        } else if (filterDate === 'mes') {
+            const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+            list = list.filter(r => r.fecha_cita && r.fecha_cita >= monthAgo);
+        }
+
+        list.sort((a, b) => (a.fecha_cita || '').localeCompare(b.fecha_cita || ''));
+
+        const statusColors = { PENDIENTE: '#ff9800', CONFIRMADA: '#4caf50', CANCELADA: '#f44336', COMPLETADA: '#2196f3' };
+
+        container.innerHTML = `
+            <div class="admin-header">
+                <h2><i class="fas fa-calendar-alt"></i> Control de Citas</h2>
+                <p>Gestiona las reservaciones del sitio web.</p>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
+                <select id="res-filter-status" style="padding:8px 12px; border:2px solid #e0e0e0; border-radius:10px;">
+                    <option value="todas">Todos los estados</option>
+                    <option value="PENDIENTE" ${filterStatus === 'PENDIENTE' ? 'selected' : ''}>Pendiente</option>
+                    <option value="CONFIRMADA" ${filterStatus === 'CONFIRMADA' ? 'selected' : ''}>Confirmada</option>
+                    <option value="CANCELADA" ${filterStatus === 'CANCELADA' ? 'selected' : ''}>Cancelada</option>
+                    <option value="COMPLETADA" ${filterStatus === 'COMPLETADA' ? 'selected' : ''}>Completada</option>
+                </select>
+                <select id="res-filter-date" style="padding:8px 12px; border:2px solid #e0e0e0; border-radius:10px;">
+                    <option value="todas">Todas las fechas</option>
+                    <option value="hoy" ${filterDate === 'hoy' ? 'selected' : ''}>Hoy</option>
+                    <option value="semana" ${filterDate === 'semana' ? 'selected' : ''}>Últimos 7 días</option>
+                    <option value="mes" ${filterDate === 'mes' ? 'selected' : ''}>Últimos 30 días</option>
+                </select>
+                <button class="btn-primary" onclick="document.getElementById('res-filter-status').value='todas'; document.getElementById('res-filter-date').value='todas'; app.admin.renderReservations()" style="padding:8px 16px;">
+                    <i class="fas fa-sync"></i> Limpiar filtros
+                </button>
+                ${isStaff ? `<button class="btn-primary" onclick="app.public.showReservationModal()" style="margin-left:auto; padding:8px 16px;"><i class="fas fa-plus"></i> Nueva Cita</button>` : ''}
+            </div>
+            <div class="table-container shadow-premium">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Cliente</th>
+                            <th>WhatsApp</th>
+                            <th>Servicio</th>
+                            <th>Estado</th>
+                            ${isStaff ? '<th>Acciones</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${list.map(r => {
+            const fecha = r.fecha_cita ? r.fecha_cita.toString().replace('T', ' ') : 'Pendiente';
+            const color = statusColors[r.status] || '#999';
+            return `
+                            <tr>
+                                <td><b>${fecha}</b></td>
+                                <td>${r.nombre_cliente || 'N/A'}</td>
+                                <td><a href="https://wa.me/${r.whatsapp || ''}" target="_blank">${r.whatsapp || 'Sin Tel'}</a></td>
+                                <td><span class="badge-accent">${r.servicio || 'General'}</span></td>
+                                <td><span style="padding:4px 10px; border-radius:20px; background:${color}22; color:${color}; font-weight:bold; font-size:0.8rem;">${r.status || 'PENDIENTE'}</span></td>
+                                ${isStaff ? `
+                                <td>
+                                    <div style="display:flex; gap:5px;">
+                                        ${r.status === 'PENDIENTE' ? `<button class="btn-small" style="background:#4caf50; color:#fff;" onclick="app.admin.confirmReservation('${r.id}')"><i class="fas fa-check"></i></button>` : ''}
+                                        ${r.status === 'CONFIRMADA' ? `<button class="btn-small" style="background:#2196f3; color:#fff;" onclick="app.admin.completeReservation('${r.id}')"><i class="fas fa-check-double"></i></button>` : ''}
+                                        ${r.status !== 'CANCELADA' && r.status !== 'COMPLETADA' ? `<button class="btn-small" style="background:#f44336; color:#fff;" onclick="app.admin.cancelReservation('${r.id}')"><i class="fas fa-times"></i></button>` : ''}
+                                    </div>
+                                </td>
+                                ` : ''}
+                            </tr>
+                        `;
+        }).join('') || '<tr><td colspan="6">No hay citas registradas.</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        document.getElementById('res-filter-status')?.addEventListener('change', () => app.admin.renderReservations());
+        document.getElementById('res-filter-date')?.addEventListener('change', () => app.admin.renderReservations());
+    },
+
+    confirmReservation: async (id) => {
+        try {
+            const r = await fetch('/api/reservaciones/' + id, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'CONFIRMADA' })
+            });
+            const result = await r.json();
+            if (result.ok) { await app.loadData(); app.admin.renderReservations(); }
+            else alert('Error: ' + (result.error || 'desconocido'));
+        } catch (e) { alert('Error al confirmar: ' + e.message); }
+    },
+
+    completeReservation: async (id) => {
+        try {
+            const r = await fetch('/api/reservaciones/' + id, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'COMPLETADA' })
+            });
+            const result = await r.json();
+            if (result.ok) { await app.loadData(); app.admin.renderReservations(); }
+            else alert('Error: ' + (result.error || 'desconocido'));
+        } catch (e) { alert('Error al completar: ' + e.message); }
+    },
+
+    cancelReservation: async (id) => {
+        if (!confirm('¿Cancelar esta cita?')) return;
+        try {
+            const r = await fetch('/api/reservaciones/' + id, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'CANCELADA' })
+            });
+            const result = await r.json();
+            if (result.ok) { await app.loadData(); app.admin.renderReservations(); }
+            else alert('Error: ' + (result.error || 'desconocido'));
+        } catch (e) { alert('Error al cancelar: ' + e.message); }
+    },
+
     // --- KNOWLEDGE ---
     renderKnowledge: () => {
         const grid = document.getElementById('knowledge-list');

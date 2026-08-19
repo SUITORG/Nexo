@@ -1,0 +1,182 @@
+routing:
+  intents:
+    - patterns:
+        - "implement"
+        - "add feature"
+        - "create module"
+        - "new functionality"
+      workflow: feature
+      priority: 10
+
+    - patterns:
+        - "fix"
+        - "bug"
+        - "error"
+        - "crash"
+        - "not working"
+      workflow: bugfix
+      priority: 20
+
+    - patterns:
+        - "audit"
+        - "analyze"
+        - "review architecture"
+        - "diagnose"
+      workflow: audit
+      priority: 5
+
+    - patterns:
+        - "generate video"
+        - "render video"
+        - "remotion"
+        - "vire"
+        - "crear video"
+        - "composición animada"
+      workflow: video-generation
+      priority: 50
+
+    - patterns:
+        - "deploy"
+        - "release"
+        - "publish"
+      workflow: deploy
+      priority: 30
+
+    - patterns:
+        - "document"
+        - "docs"
+        - "readme"
+      workflow: docs
+      priority: 5
+
+    - patterns:
+        - "migrate"
+        - "migration"
+        - "schema change"
+      workflow: migration
+      priority: 30
+
+    - patterns:
+        - "research"
+        - "search"
+        - "investigate"
+        - "find"
+      workflow: research
+      priority: 5
+
+    - patterns:
+        - "review"
+        - "validate"
+        - "check"
+        - "verify"
+      workflow: review
+      priority: 5
+
+    - patterns:
+        - "revisa"
+        - "analiza seguridad"
+        - "audita codigo"
+        - "que opinas de"
+        - "encuentra problemas en"
+        - "reportero"
+      workflow: review
+      priority: 15
+      agent: reportero
+      skills_override:
+        - code-review
+        - security-audit
+
+    - patterns:
+        - "prueba"
+        - "test"
+        - "smoke test"
+        - "verifica servidor"
+        - "probador"
+        - "ejecuta pruebas"
+        - "corre tests"
+      workflow: test
+      priority: 15
+      agent: probador
+      skills_override:
+        - system-analysis
+
+    - patterns:
+        - "cotizador"
+        - "cotización"
+        - "calculadora"
+        - "proceso"
+      workflow: cotizador
+      priority: 15
+
+    - patterns:
+        - "reservacion"
+        - "cita"
+        - "agendar"
+        - "appointment"
+        - "schedule"
+        - "whatsapp booking"
+        - "lista de espera"
+      workflow: reservacion
+      priority: 15
+
+    - patterns:
+        - "prospeccion"
+        - "prospectos"
+        - "oportunidades comerciales"
+        - "empresas potenciales"
+        - "buscar clientes"
+        - "leads comerciales"
+        - "monterrey empresas"
+        - "negocios monterrey"
+      workflow: prospeccion
+      priority: 10
+      agent: developer
+      skills_override:
+        - prospeccion-ia-monterrey
+        - google-places-business-finder
+
+  overrides:
+    - if:
+        project: campanas-ai
+        keyword: "trend"
+      workflow: research
+      priority: 100
+
+    - if:
+        workflow: feature
+        project: campanas-ai
+      agent: developer
+      skills_override:
+        - content-generation
+
+    - if:
+        project: suit-cotizador
+      agent: cotizador
+      skills_override:
+        - cotizaciones-engine
+        - pdf-generation
+
+    - if:
+        project: vire
+      agent: developer
+      skills_override:
+        - remotion-video
+
+    - if:
+        project: suitreservaciones
+      agent: developer
+      skills_override:
+        - reservations-engine
+        - javascript
+
+    - if:
+        keyword: "vire"
+        workflow: feature
+      skills_override:
+        - remotion-video
+
+    - if:
+        keyword: "video"
+        project: campanas-ai
+      workflow: video-generation
+      priority: 80

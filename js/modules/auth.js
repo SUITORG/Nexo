@@ -55,7 +55,7 @@ app.auth = {
         }
         // Resolución de permisos
         const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
-        const origenPoliticas = (company && company.origen_politicas) || "ROL";
+        const origenPoliticas = parseOrigenPoliticas(company && company.origen_politicas).op || "ROL";
         const modoCreditos = (company && company.modo_creditos) || "USUARIO";
         let effectiveLevel = parseInt(getVal(user, ['nivel_acceso', 'nivel', 'access_level'])) || 0;
         let effectiveModules = "";
@@ -160,14 +160,51 @@ app.auth = {
             else li.classList.add('hidden');
         });
 
-        const sbIndicator = document.getElementById('sb-indicator');
-        if (sbIndicator && isStaff) {
-            sbIndicator.innerHTML = `<a href="#pos" style="color:inherit; text-decoration:none;"><i class="fas fa-desktop"></i> MONITOR</a>`;
+        // Hide Cotizador links in staff menu if company doesn't have it enabled
+        const coId = app.state.companyId;
+        const emp = (app.data.Config_Empresas || []).find(e => e.id_empresa === coId);
+        const giro = (emp?.giro_especifico || '').trim();
+        const cotizadorHabilitado = giro.split(',').length >= 2 && giro.split(',').pop().trim() === '1';
+        document.querySelectorAll('#menu-staff a[href="#cotizador"], #menu-staff a[href="#cotizador/admin"]').forEach(a => {
+            const li = a.closest('li');
+            if (li && !cotizadorHabilitado) li.classList.add('hidden');
+        });
+
+        // Hide Reservaciones links if usa_reservaciones < 1
+        const reservacionesLevel = emp?.usa_reservaciones ?? 0;
+        document.querySelectorAll('#menu-staff [data-mod="reservations"]').forEach(el => {
+            const li = el.closest('li');
+            if (li) {
+                if (reservacionesLevel >= 1) li.classList.remove('hidden');
+                else li.classList.add('hidden');
+            }
+        });
+
+        // Gate POS/Express menu items by modo flags
+        if (emp) {
+            const modoFlags = app.utils.parseModo(emp);
+            document.querySelectorAll('#menu-staff a[href="#pos"], #menu-staff a[href="#staff-pos"]').forEach(a => {
+                const li = a.closest('li');
+                if (li) {
+                    if (modoFlags.pos) li.classList.remove('hidden');
+                    else li.classList.add('hidden');
+                }
+            });
         }
 
+        const sbIndicator = document.getElementById('sb-indicator');
         // Dashboard Values
         const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
         const isGlobal = (company && company.modo_creditos) === "GLOBAL";
+        const modoFlags = company ? app.utils.parseModo(company) : null;
+
+        if (sbIndicator && isStaff) {
+            if (modoFlags && modoFlags.pos) {
+                sbIndicator.innerHTML = `<a href="#pos" style="color:inherit; text-decoration:none;"><i class="fas fa-desktop"></i> MONITOR</a>`;
+            } else {
+                sbIndicator.innerHTML = `<i class="fas fa-desktop"></i> MONITOR`;
+            }
+        }
 
         const dashView = document.getElementById('view-dashboard');
         if (dashView) {
@@ -178,6 +215,16 @@ app.auth = {
                 const match = onclickStr.match(/#([a-z-]+)/);
                 const targetHash = match ? `#${match[1]}` : "";
                 const targetBase = targetHash.replace('#', '').toLowerCase();
+                // Hide Citas card if usa_reservaciones < 1
+                if (targetBase === 'reservations' && reservacionesLevel < 1) {
+                    card.classList.add('hidden');
+                    return;
+                }
+                // Hide POS/Staff-POS cards if modo flag disables it
+                if (modoFlags && (targetBase === 'pos' || targetBase === 'staff-pos') && !modoFlags.pos) {
+                    card.classList.add('hidden');
+                    return;
+                }
                 if (isAdmin || modulesArray.includes(targetBase) || targetBase === "dashboard" || targetBase === "home") {
                     card.classList.remove('hidden');
                 } else {

@@ -1,0 +1,158 @@
+{
+  "schemaVersion": "1.0",
+  "tools": [
+    {
+      "name": "skill_system_analysis",
+      "description": "Analyze system architecture, identify patterns, detect issues",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "skill_javascript",
+      "description": "JavaScript/Node.js development",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "skill_code_review",
+      "description": "Code review according to project standards",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "skill_security_audit",
+      "description": "Security audit for hardcoded keys, CSP, RBAC",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "skill_sql",
+      "description": "SQL migrations and schema management",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "skill_deployment",
+      "description": "Deployment procedures",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "skill_manychat",
+      "description": "Integración con ManyChat API. Gestionar subscribers, tags, custom fields, flows y mensajes. Requiere ManyChat PRO.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "skill_multi_tenant",
+      "description": "Enforces multi-tenant data isolation. All queries must filter by tenant_id. No cross-tenant data access. Soft delete only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    },
+    {
+      "name": "skill_telegram_bot",
+      "description": "Integración con Telegram Bot API. Enviar mensajes, fotos, documentos, encuestas, gestionar comandos y miembros del chat.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Input context for the skill"
+          },
+          "project_root": {
+            "type": "string",
+            "description": "Project root path (optional)"
+          }
+        }
+      }
+    }
+  ]
+}

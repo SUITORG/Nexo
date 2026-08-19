@@ -1,0 +1,20 @@
+skill:
+  name: context-loader
+  display_name: "Context Loader"
+  version: 1.0.0
+  type: system
+  domain: system
+
+  description: >
+    Loads minimal context based on workflow requirements and load strategy.
+    Uses INDEX_FUNCIONES.md for function-level loading.
+    Reads only lines needed, not entire files.
+
+  triggers:
+    - keyword: "cargar contexto"
+    - keyword: "load context"
+    - file_pattern: ".suit/loader/*"
+
+  context_hint:
+    - ".suit/loader/strategy.yaml"
+    - "INDEX_FUNCIONES.md"

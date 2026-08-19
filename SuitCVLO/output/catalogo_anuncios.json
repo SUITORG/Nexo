@@ -1,0 +1,28 @@
+[
+  {
+    "brand": "pollo",
+    "format": "valla",
+    "campaign_type": "general",
+    "campaign_detail": "El Pollo Más Codiciado! Nuestro pollo ala parrilla es el más sabroso y jugoso de",
+    "ocr_text": "El Pollo Más Codiciado! Nuestro pollo ala parrilla es el más sabroso y jugoso de toda la ciudad. iSólo quedan unas porciones disponibles!",
+    "occurrences": 1,
+    "images": [
+      "slide_1_hamburguesas_metroplex.jpg"
+    ],
+    "gps_points": [],
+    "centroid": null
+  },
+  {
+    "brand": "unknown",
+    "format": "valla",
+    "campaign_type": "general",
+    "campaign_detail": "Invierte en energía limpia. Llama al 528112710091.",
+    "ocr_text": "Invierte en energía limpia. Llama al 528112710091.",
+    "occurrences": 1,
+    "images": [
+      "slide_3_ape.jpg"
+    ],
+    "gps_points": [],
+    "centroid": null
+  }
+]

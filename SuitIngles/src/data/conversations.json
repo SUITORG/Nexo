@@ -1,0 +1,558 @@
+[
+  {
+    "id": "airport-checkin",
+    "topic": "airport",
+    "title": "Facturación en el aeropuerto",
+    "level": "A2",
+    "situation": "Estás en el mostrador de facturación de un aeropuerto",
+    "lines": [
+      {"speaker": "A", "text": "Good morning. Where are you flying today?", "textEs": "Buenos días. ¿A dónde vuela hoy?"},
+      {"speaker": "B", "text": "Hello. I'm flying to New York.", "textEs": "Hola. Vuelo a Nueva York."},
+      {"speaker": "A", "text": "Can I see your passport and reservation, please?", "textEs": "¿Puedo ver su pasaporte y reservación, por favor?"},
+      {"speaker": "B", "text": "Here you are.", "textEs": "Aquí tiene."},
+      {"speaker": "A", "text": "Thank you. Do you have any luggage to check in?", "textEs": "Gracias. ¿Tiene equipaje para facturar?"},
+      {"speaker": "B", "text": "Yes, I have one suitcase.", "textEs": "Sí, tengo una maleta."},
+      {"speaker": "A", "text": "Your gate is B12. Boarding starts at 2:30.", "textEs": "Su puerta es B12. El abordaje comienza a las 2:30."},
+      {"speaker": "B", "text": "Thank you very much!", "textEs": "¡Muchas gracias!"}
+    ],
+    "vocabularyIds": ["gate", "boarding-pass", "check-in", "luggage", "passport"],
+    "tags": ["airport", "travel", "formal"]
+  },
+  {
+    "id": "airport-boarding",
+    "topic": "airport",
+    "title": "Abordaje y preguntas sobre la puerta",
+    "level": "A2",
+    "situation": "Estás en el aeropuerto buscando tu puerta de embarque",
+    "lines": [
+      {"speaker": "A", "text": "Excuse me, where is gate B12?", "textEs": "Disculpe, ¿dónde está la puerta B12?"},
+      {"speaker": "B", "text": "Go straight ahead. It's down the hall on your left.", "textEs": "Siga recto. Está al final del pasillo a su izquierda."},
+      {"speaker": "A", "text": "Is it far?", "textEs": "¿Está lejos?"},
+      {"speaker": "B", "text": "No, about five minutes walking.", "textEs": "No, como a cinco minutos caminando."},
+      {"speaker": "A", "text": "Has the boarding started?", "textEs": "¿Ya empezó el abordaje?"},
+      {"speaker": "B", "text": "Yes, they're boarding now. Hurry up!", "textEs": "Sí, están abordando ahora. ¡Apúrese!"}
+    ],
+    "vocabularyIds": ["gate", "departure", "boarding-pass"],
+    "tags": ["airport", "travel", "casual"]
+  },
+  {
+    "id": "restaurant-order",
+    "topic": "restaurant",
+    "title": "Ordenar comida en un restaurante",
+    "level": "A1",
+    "situation": "Estás en un restaurante y el mesero te atiende",
+    "lines": [
+      {"speaker": "B", "text": "Welcome! A table for two?", "textEs": "¡Bienvenidos! ¿Una mesa para dos?"},
+      {"speaker": "A", "text": "Yes, please.", "textEs": "Sí, por favor."},
+      {"speaker": "B", "text": "Here's the menu. I'll be back in a moment.", "textEs": "Aquí tiene el menú. Vuelvo en un momento."},
+      {"speaker": "B", "text": "Are you ready to order?", "textEs": "¿Están listos para ordenar?"},
+      {"speaker": "A", "text": "Yes. I'd like the grilled chicken salad, please.", "textEs": "Sí. Quisiera la ensalada de pollo a la parrilla, por favor."},
+      {"speaker": "B", "text": "Would you like anything to drink?", "textEs": "¿Quiere algo de tomar?"},
+      {"speaker": "A", "text": "Just water, please.", "textEs": "Solo agua, por favor."},
+      {"speaker": "B", "text": "Great. I'll bring your order shortly.", "textEs": "Perfecto. Traeré su orden en un momento."}
+    ],
+    "vocabularyIds": ["menu", "order", "waiter", "bill", "tip"],
+    "tags": ["restaurant", "food", "casual"]
+  },
+  {
+    "id": "restaurant-reservation",
+    "topic": "restaurant",
+    "title": "Hacer una reservación",
+    "level": "A2",
+    "situation": "Llamas a un restaurante para reservar una mesa",
+    "lines": [
+      {"speaker": "B", "text": "La Piazza Restaurant. How can I help you?", "textEs": "Restaurante La Piazza. ¿En qué puedo ayudarle?"},
+      {"speaker": "A", "text": "I'd like to make a reservation for tonight.", "textEs": "Me gustaría hacer una reservación para esta noche."},
+      {"speaker": "B", "text": "Of course. For how many people?", "textEs": "Claro. ¿Para cuántas personas?"},
+      {"speaker": "A", "text": "For four people, at 8 PM.", "textEs": "Para cuatro personas, a las 8 PM."},
+      {"speaker": "B", "text": "Let me check... Yes, we have a table available at 8.", "textEs": "Déjeme verificar... Sí, tenemos una mesa disponible a las 8."},
+      {"speaker": "A", "text": "Perfect. Can we have a table by the window?", "textEs": "Perfecto. ¿Podemos tener una mesa junto a la ventana?"},
+      {"speaker": "B", "text": "I'll note that. See you tonight!", "textEs": "Lo anoto. ¡Hasta esta noche!"}
+    ],
+    "vocabularyIds": ["reservation", "menu", "waiter"],
+    "tags": ["restaurant", "food", "formal"]
+  },
+  {
+    "id": "doctor-appointment",
+    "topic": "doctor",
+    "title": "Hablando con el doctor",
+    "level": "B1",
+    "situation": "Estás en el consultorio del médico explicando tus síntomas",
+    "lines": [
+      {"speaker": "A", "text": "Good morning. What brings you here today?", "textEs": "Buenos días. ¿Qué lo trae por aquí hoy?"},
+      {"speaker": "B", "text": "I've been feeling under the weather for three days.", "textEs": "Me he sentido mal por tres días."},
+      {"speaker": "A", "text": "What are your symptoms?", "textEs": "¿Cuáles son sus síntomas?"},
+      {"speaker": "B", "text": "I have a headache, a sore throat, and a cough.", "textEs": "Tengo dolor de cabeza, garganta irritada y tos."},
+      {"speaker": "A", "text": "Do you have a fever?", "textEs": "¿Tiene fiebre?"},
+      {"speaker": "B", "text": "Yes, I think so. I feel very warm.", "textEs": "Sí, creo que sí. Me siento muy caliente."},
+      {"speaker": "A", "text": "I'll prescribe some medicine. Rest for a few days.", "textEs": "Le recetaré medicina. Descanse unos días."}
+    ],
+    "vocabularyIds": ["appointment", "symptom", "prescription", "fever", "cough", "headache", "medicine"],
+    "tags": ["doctor", "health", "formal"]
+  },
+  {
+    "id": "doctor-pharmacy",
+    "topic": "doctor",
+    "title": "En la farmacia",
+    "level": "A2",
+    "situation": "Vas a la farmacia a comprar medicina con tu receta",
+    "lines": [
+      {"speaker": "A", "text": "Hello, I need to fill this prescription.", "textEs": "Hola, necesito surtir esta receta."},
+      {"speaker": "B", "text": "Sure. Please wait a few minutes.", "textEs": "Claro. Espere unos minutos por favor."},
+      {"speaker": "B", "text": "Here's your medicine. Take one pill twice a day after meals.", "textEs": "Aquí está su medicina. Tome una pastilla dos veces al día después de las comidas."},
+      {"speaker": "A", "text": "Thank you. Are there any side effects?", "textEs": "Gracias. ¿Hay algún efecto secundario?"},
+      {"speaker": "B", "text": "You might feel sleepy. Avoid driving.", "textEs": "Podría sentirse somnoliento. Evite conducir."}
+    ],
+    "vocabularyIds": ["prescription", "pharmacy", "medicine"],
+    "tags": ["doctor", "pharmacy", "health"]
+  },
+  {
+    "id": "worried-friend",
+    "topic": "worried",
+    "title": "Hablando con un amigo preocupado",
+    "level": "A2",
+    "situation": "Tu amigo está preocupado por una situación difícil",
+    "lines": [
+      {"speaker": "A", "text": "You look worried. What's wrong?", "textEs": "Te ves preocupado. ¿Qué pasa?"},
+      {"speaker": "B", "text": "I'm really anxious about my job interview tomorrow.", "textEs": "Estoy muy ansioso por mi entrevista de trabajo mañana."},
+      {"speaker": "A", "text": "Don't worry. You'll do great!", "textEs": "No te preocupes. ¡Te irá muy bien!"},
+      {"speaker": "B", "text": "I'm not so sure. I feel nervous.", "textEs": "No estoy tan seguro. Me siento nervioso."},
+      {"speaker": "A", "text": "Take a deep breath. You have all the qualifications.", "textEs": "Respira profundo. Tienes todas las cualificaciones."},
+      {"speaker": "B", "text": "Thanks for the support. That helps.", "textEs": "Gracias por el apoyo. Eso ayuda."}
+    ],
+    "vocabularyIds": ["worried", "anxious", "nervous", "stress", "support", "breathe"],
+    "tags": ["emotions", "friends", "informal"]
+  },
+  {
+    "id": "worried-exam",
+    "topic": "worried",
+    "title": "Preocupación por un examen",
+    "level": "B1",
+    "situation": "Estás preocupado por un examen importante",
+    "lines": [
+      {"speaker": "A", "text": "I can't stop thinking about the exam.", "textEs": "No puedo dejar de pensar en el examen."},
+      {"speaker": "B", "text": "You've studied a lot. You know the material.", "textEs": "Has estudiado mucho. Sabes el material."},
+      {"speaker": "A", "text": "What if I fail? I'm so stressed.", "textEs": "¿Qué pasa si repruebo? Estoy muy estresado."},
+      {"speaker": "B", "text": "Stay calm. Focus on what you know.", "textEs": "Mantén la calma. Concéntrate en lo que sabes."},
+      {"speaker": "A", "text": "I hope you're right. I just want it to be over.", "textEs": "Espero que tengas razón. Solo quiero que termine."},
+      {"speaker": "B", "text": "Whatever happens, I'm here for you.", "textEs": "Pase lo que pase, estoy aquí para ti."}
+    ],
+    "vocabularyIds": ["worried", "stress", "hope", "calm", "support", "problem"],
+    "tags": ["emotions", "school", "informal"]
+  },
+  {
+    "id": "hotel-checkin",
+    "topic": "hotel",
+    "title": "Registrarse en el hotel",
+    "level": "A2",
+    "situation": "Llegas al hotel para hacer check-in",
+    "lines": [
+      {"speaker": "A", "text": "Good evening. Welcome to Grand Hotel.", "textEs": "Buenas tardes. Bienvenido al Grand Hotel."},
+      {"speaker": "B", "text": "Hello. I have a reservation under the name García.", "textEs": "Hola. Tengo una reservación a nombre de García."},
+      {"speaker": "A", "text": "Let me check... Yes, a single room for three nights.", "textEs": "Déjeme verificar... Sí, una habitación individual por tres noches."},
+      {"speaker": "B", "text": "Perfect. Is breakfast included?", "textEs": "Perfecto. ¿El desayuno está incluido?"},
+      {"speaker": "A", "text": "Yes, from 7 to 10 AM in the restaurant. Here's your key.", "textEs": "Sí, de 7 a 10 AM en el restaurante. Aquí está su llave."}
+    ],
+    "vocabularyIds": ["reservation", "check-in", "room", "key", "breakfast"],
+    "tags": ["hotel", "travel", "formal"]
+  },
+  {
+    "id": "hotel-complaint",
+    "topic": "hotel",
+    "title": "Queja en el hotel",
+    "level": "B1",
+    "situation": "Tienes un problema con tu habitación de hotel",
+    "lines": [
+      {"speaker": "A", "text": "Hello, this is room 204. There's a problem with the air conditioning.", "textEs": "Hola, soy de la habitación 204. Hay un problema con el aire acondicionado."},
+      {"speaker": "B", "text": "I'm sorry to hear that. I'll send someone immediately.", "textEs": "Lamento escuchar eso. Enviaré a alguien inmediatamente."},
+      {"speaker": "A", "text": "Also, the Wi-Fi isn't working in my room.", "textEs": "Además, el WiFi no funciona en mi habitación."},
+      {"speaker": "B", "text": "Let me reset it. It should work in five minutes.", "textEs": "Déjeme reiniciarlo. Debería funcionar en cinco minutos."},
+      {"speaker": "A", "text": "Thank you. I appreciate your help.", "textEs": "Gracias. Aprecio su ayuda."}
+    ],
+    "vocabularyIds": ["room", "reception", "check-in", "view"],
+    "tags": ["hotel", "complaint", "formal"]
+  },
+  {
+    "id": "shopping-clothes",
+    "topic": "shopping",
+    "title": "Comprando ropa",
+    "level": "A1",
+    "situation": "Estás en una tienda de ropa buscando una camisa",
+    "lines": [
+      {"speaker": "A", "text": "Excuse me, how much is this shirt?", "textEs": "Disculpe, ¿cuánto cuesta esta camisa?"},
+      {"speaker": "B", "text": "It's $35. There's a 20% discount this week.", "textEs": "Está $35. Hay un 20% de descuento esta semana."},
+      {"speaker": "A", "text": "Great! Can I try it on?", "textEs": "¡Genial! ¿Puedo probármela?"},
+      {"speaker": "B", "text": "Of course. The fitting rooms are over there.", "textEs": "Claro. Los probadores están allá."},
+      {"speaker": "A", "text": "I like it. I'll take it.", "textEs": "Me gusta. La llevo."}
+    ],
+    "vocabularyIds": ["price", "size", "discount", "fitting-room", "cashier"],
+    "tags": ["shopping", "clothes", "casual"]
+  },
+  {
+    "id": "shopping-return",
+    "topic": "shopping",
+    "title": "Devolver un producto",
+    "level": "B1",
+    "situation": "Necesitas devolver un artículo que compraste",
+    "lines": [
+      {"speaker": "A", "text": "Hi, I'd like to return this jacket.", "textEs": "Hola, me gustaría devolver esta chaqueta."},
+      {"speaker": "B", "text": "Do you have the receipt?", "textEs": "¿Tiene el recibo?"},
+      {"speaker": "A", "text": "Yes, here it is. I bought it yesterday.", "textEs": "Sí, aquí está. La compré ayer."},
+      {"speaker": "B", "text": "Is there a problem with it?", "textEs": "¿Hay algún problema con ella?"},
+      {"speaker": "A", "text": "It's too small. I need a larger size.", "textEs": "Es muy pequeña. Necesito una talla más grande."},
+      {"speaker": "B", "text": "We can exchange it. What size do you need?", "textEs": "Podemos cambiarla. ¿Qué talla necesita?"}
+    ],
+    "vocabularyIds": ["price", "size", "receipt", "return", "cashier"],
+    "tags": ["shopping", "clothes", "casual"]
+  },
+  {
+    "id": "directions-street",
+    "topic": "directions",
+    "title": "Preguntando direcciones en la calle",
+    "level": "A1",
+    "situation": "Estás perdido en la ciudad y pides ayuda",
+    "lines": [
+      {"speaker": "A", "text": "Excuse me, how do I get to the train station?", "textEs": "Disculpe, ¿cómo llego a la estación de tren?"},
+      {"speaker": "B", "text": "Go straight for two blocks. Then turn left.", "textEs": "Vaya recto dos cuadras. Luego gire a la izquierda."},
+      {"speaker": "A", "text": "Left at the traffic light?", "textEs": "¿A la izquierda en el semáforo?"},
+      {"speaker": "B", "text": "Yes. You'll see the station on your right.", "textEs": "Sí. Verá la estación a su derecha."},
+      {"speaker": "A", "text": "Thank you so much!", "textEs": "¡Muchas gracias!"}
+    ],
+    "vocabularyIds": ["left", "right", "straight", "corner", "traffic-light", "lost"],
+    "tags": ["directions", "city", "casual"]
+  },
+  {
+    "id": "directions-transport",
+    "topic": "directions",
+    "title": "Preguntando por transporte público",
+    "level": "A2",
+    "situation": "Necesitas tomar el autobús para llegar a un lugar",
+    "lines": [
+      {"speaker": "A", "text": "Does this bus go to the museum?", "textEs": "¿Este autobús va al museo?"},
+      {"speaker": "B", "text": "No, you need bus number 42. It stops across the street.", "textEs": "No, necesita el autobús número 42. Para al otro lado de la calle."},
+      {"speaker": "A", "text": "How often does it come?", "textEs": "¿Cada cuánto pasa?"},
+      {"speaker": "B", "text": "Every 15 minutes. Get off at the fifth stop.", "textEs": "Cada 15 minutos. Bájese en la quinta parada."},
+      {"speaker": "A", "text": "Thanks for your help!", "textEs": "¡Gracias por su ayuda!"}
+    ],
+    "vocabularyIds": ["left", "right", "straight", "map", "near"],
+    "tags": ["directions", "transport", "casual"]
+  },
+  {
+    "id": "phone-formal",
+    "topic": "phone-call",
+    "title": "Llamada formal de negocios",
+    "level": "B1",
+    "situation": "Llamas a una oficina para hablar con un gerente",
+    "lines": [
+      {"speaker": "B", "text": "Good morning, Smith Corporation. How may I help you?", "textEs": "Buenos días, Smith Corporation. ¿En qué puedo ayudarle?"},
+      {"speaker": "A", "text": "Could I speak with Mr. Johnson, please?", "textEs": "¿Podría hablar con el Sr. Johnson, por favor?"},
+      {"speaker": "B", "text": "I'm sorry, he's in a meeting right now. Would you like to leave a message?", "textEs": "Lo siento, está en una reunión ahora. ¿Quiere dejar un mensaje?"},
+      {"speaker": "A", "text": "Yes, please ask him to call me back at 555-1234.", "textEs": "Sí, por favor pídale que me devuelva la llamada al 555-1234."},
+      {"speaker": "B", "text": "I'll give him the message. Goodbye.", "textEs": "Le daré el mensaje. Adiós."}
+    ],
+    "vocabularyIds": ["call", "message", "callback", "available"],
+    "tags": ["phone", "business", "formal"]
+  },
+  {
+    "id": "phone-informal",
+    "topic": "phone-call",
+    "title": "Llamada informal con un amigo",
+    "level": "A2",
+    "situation": "Llamas a un amigo para hacer planes",
+    "lines": [
+      {"speaker": "A", "text": "Hey! What's up?", "textEs": "¡Oye! ¿Qué tal?"},
+      {"speaker": "B", "text": "Not much. I was about to call you!", "textEs": "No mucho. ¡Estaba a punto de llamarte!"},
+      {"speaker": "A", "text": "Do you want to go to the movies tonight?", "textEs": "¿Quieres ir al cine esta noche?"},
+      {"speaker": "B", "text": "Sure! What time?", "textEs": "¡Claro! ¿A qué hora?"},
+      {"speaker": "A", "text": "The movie starts at 7:30. I'll pick you up at 7.", "textEs": "La película empieza a las 7:30. Te recojo a las 7."},
+      {"speaker": "B", "text": "Sounds good! See you later.", "textEs": "¡Suena bien! Nos vemos luego."}
+    ],
+    "vocabularyIds": ["call", "message", "mobile"],
+    "tags": ["phone", "friends", "informal"]
+  },
+  {
+    "id": "weather-smalltalk",
+    "topic": "weather",
+    "title": "Charlas sobre el clima",
+    "level": "A1",
+    "situation": "Hablando del clima con un compañero de trabajo",
+    "lines": [
+      {"speaker": "A", "text": "Beautiful day, isn't it?", "textEs": "Hermoso día, ¿verdad?"},
+      {"speaker": "B", "text": "Yes! Finally sunny after all the rain.", "textEs": "¡Sí! Finalmente soleado después de tanta lluvia."},
+      {"speaker": "A", "text": "The forecast says it will be warm all week.", "textEs": "El pronóstico dice que estará cálido toda la semana."},
+      {"speaker": "B", "text": "Perfect for a walk in the park.", "textEs": "Perfecto para caminar en el parque."}
+    ],
+    "vocabularyIds": ["sunny", "rainy", "forecast", "temperature"],
+    "tags": ["weather", "smalltalk", "casual"]
+  },
+  {
+    "id": "weather-planning",
+    "topic": "weather",
+    "title": "Planificando según el clima",
+    "level": "A2",
+    "situation": "Planificando un viaje según el pronóstico",
+    "lines": [
+      {"speaker": "A", "text": "What's the weather going to be like tomorrow?", "textEs": "¿Cómo va a estar el clima mañana?"},
+      {"speaker": "B", "text": "It's going to be cloudy with some rain in the afternoon.", "textEs": "Va a estar nublado con algo de lluvia por la tarde."},
+      {"speaker": "A", "text": "Should I bring an umbrella?", "textEs": "¿Debería llevar un paraguas?"},
+      {"speaker": "B", "text": "Yes, I think so. And a jacket too, it'll be windy.", "textEs": "Sí, creo que sí. Y una chaqueta también, estará ventoso."}
+    ],
+    "vocabularyIds": ["cloudy", "windy", "forecast", "rainy", "temperature"],
+    "tags": ["weather", "planning", "casual"]
+  },
+  {
+    "id": "bank-account",
+    "topic": "bank",
+    "title": "Abriendo una cuenta bancaria",
+    "level": "B1",
+    "situation": "Vas al banco a abrir una cuenta de ahorros",
+    "lines": [
+      {"speaker": "A", "text": "Good morning. I'd like to open a savings account.", "textEs": "Buenos días. Me gustaría abrir una cuenta de ahorros."},
+      {"speaker": "B", "text": "Certainly. Do you have your ID and proof of address?", "textEs": "Claro. ¿Tiene su identificación y comprobante de domicilio?"},
+      {"speaker": "A", "text": "Yes, here they are.", "textEs": "Sí, aquí están."},
+      {"speaker": "B", "text": "Thank you. Please fill out this form.", "textEs": "Gracias. Por favor llene este formulario."},
+      {"speaker": "A", "text": "What is the minimum deposit?", "textEs": "¿Cuál es el depósito mínimo?"},
+      {"speaker": "B", "text": "$100. You can deposit or withdraw at any branch.", "textEs": "$100. Puede depositar o retirar en cualquier sucursal."}
+    ],
+    "vocabularyIds": ["account", "deposit", "withdraw", "balance", "branch", "teller"],
+    "tags": ["bank", "money", "formal"]
+  },
+  {
+    "id": "bank-exchange",
+    "topic": "bank",
+    "title": "Cambio de divisas",
+    "level": "B1",
+    "situation": "Necesitas cambiar dólares a euros",
+    "lines": [
+      {"speaker": "A", "text": "I'd like to exchange dollars to euros, please.", "textEs": "Me gustaría cambiar dólares a euros, por favor."},
+      {"speaker": "B", "text": "What's the exchange rate today?", "textEs": "¿Cuál es el tipo de cambio hoy?"},
+      {"speaker": "A", "text": "It's 0.85 euros per dollar. We charge a 2% commission.", "textEs": "Está a 0.85 euros por dólar. Cobramos una comisión del 2%."},
+      {"speaker": "B", "text": "That's fine. I'd like to exchange 500 dollars.", "textEs": "Está bien. Quisiera cambiar 500 dólares."},
+      {"speaker": "A", "text": "Here's your euros and the receipt.", "textEs": "Aquí tiene sus euros y el recibo."}
+    ],
+    "vocabularyIds": ["currency", "exchange-rate", "deposit", "withdraw", "statement"],
+    "tags": ["bank", "money", "travel"]
+  },
+  {
+    "id": "interview-intro",
+    "topic": "job-interview",
+    "title": "Entrevista - Introducción",
+    "level": "B1",
+    "situation": "Primera parte de una entrevista de trabajo",
+    "lines": [
+      {"speaker": "A", "text": "Tell me a little about yourself.", "textEs": "Hábleme un poco de usted."},
+      {"speaker": "B", "text": "I'm a marketing professional with five years of experience.", "textEs": "Soy un profesional de marketing con cinco años de experiencia."},
+      {"speaker": "A", "text": "What attracted you to this position?", "textEs": "¿Qué le atrajo de esta posición?"},
+      {"speaker": "B", "text": "I'm passionate about digital marketing and your company is a leader in this field.", "textEs": "Me apasiona el marketing digital y su empresa es líder en este campo."}
+    ],
+    "vocabularyIds": ["apply", "experience", "qualification", "position", "resume"],
+    "tags": ["work", "interview", "formal"]
+  },
+  {
+    "id": "interview-questions",
+    "topic": "job-interview",
+    "title": "Entrevista - Preguntas clave",
+    "level": "B2",
+    "situation": "Preguntas típicas de una entrevista de trabajo",
+    "lines": [
+      {"speaker": "A", "text": "What are your greatest strengths?", "textEs": "¿Cuáles son tus mayores fortalezas?"},
+      {"speaker": "B", "text": "I'm very organized and I work well under pressure.", "textEs": "Soy muy organizado y trabajo bien bajo presión."},
+      {"speaker": "A", "text": "What is your expected salary?", "textEs": "¿Cuál es tu salario esperado?"},
+      {"speaker": "B", "text": "Based on my experience and qualifications, I'm looking for $60,000 per year.", "textEs": "Basado en mi experiencia y cualificaciones, busco $60,000 al año."},
+      {"speaker": "A", "text": "When can you start?", "textEs": "¿Cuándo puedes empezar?"},
+      {"speaker": "B", "text": "I can start in two weeks after giving my notice.", "textEs": "Puedo empezar en dos semanas después de dar mi aviso."}
+    ],
+    "vocabularyIds": ["experience", "qualification", "salary", "skill", "deadline", "reference"],
+    "tags": ["work", "interview", "formal"]
+  },
+  {
+    "id": "idioms-conversation",
+    "topic": "idioms",
+    "title": "Conversación con modismos",
+    "level": "B2",
+    "situation": "Dos amigos conversando usando modismos comunes",
+    "lines": [
+      {"speaker": "A", "text": "How was the exam?", "textEs": "¿Cómo te fue en el examen?"},
+      {"speaker": "B", "text": "It was a piece of cake! I studied a lot.", "textEs": "¡Fue pan comido! Estudié mucho."},
+      {"speaker": "A", "text": "Great! Break a leg on your presentation tomorrow.", "textEs": "¡Genial! Mucha suerte en tu presentación mañana."},
+      {"speaker": "B", "text": "Thanks! Oh, don't spill the beans about the surprise party.", "textEs": "¡Gracias! Oye, no reveles lo de la fiesta sorpresa."},
+      {"speaker": "A", "text": "Don't worry. My lips are sealed!", "textEs": "No te preocupes. ¡Labios sellados!"}
+    ],
+    "vocabularyIds": ["piece-of-cake", "break-a-leg", "spill-the-beans"],
+    "tags": ["idioms", "conversation", "informal"]
+  },
+  {
+    "id": "politics-news-1",
+    "topic": "politics-news",
+    "title": "Entendiendo las noticias políticas",
+    "level": "B2",
+    "situation": "Dos amigos discutiendo las últimas noticias políticas en EE.UU.",
+    "lines": [
+      {"speaker": "A", "text": "Did you watch the presidential debate last night?", "textEs": "¿Viste el debate presidencial anoche?"},
+      {"speaker": "B", "text": "Yes, it was intense. The candidates argued about healthcare and the economy.", "textEs": "Sí, fue intenso. Los candidatos discutieron sobre salud y economía."},
+      {"speaker": "A", "text": "I think the Democrat made some good points about climate change policy.", "textEs": "Creo que el demócrata hizo buenos puntos sobre la política de cambio climático."},
+      {"speaker": "B", "text": "The Republican talked about tax cuts and border security.", "textEs": "El republicano habló de recortes de impuestos y seguridad fronteriza."},
+      {"speaker": "A", "text": "Congress has to pass new legislation on immigration reform.", "textEs": "El Congreso tiene que aprobar nueva legislación sobre reforma migratoria."},
+      {"speaker": "B", "text": "I hope they can reach a compromise. The election is in November.", "textEs": "Espero que puedan llegar a un compromiso. Las elecciones son en noviembre."}
+    ],
+    "vocabularyIds": ["election", "president", "congress", "debate", "policy", "democrat", "republican", "legislation"],
+    "tags": ["politics", "news", "formal"]
+  },
+  {
+    "id": "politics-news-2",
+    "topic": "politics-news",
+    "title": "Hablando de gobierno y senado",
+    "level": "C1",
+    "situation": "Analistas políticos discutiendo el proceso legislativo",
+    "lines": [
+      {"speaker": "A", "text": "The Senate is divided on the new bill.", "textEs": "El Senado está dividido sobre el nuevo proyecto de ley."},
+      {"speaker": "B", "text": "The government needs to address this issue before the campaign season.", "textEs": "El gobierno necesita abordar este tema antes de la temporada de campañas."},
+      {"speaker": "A", "text": "Voter turnout could be the deciding factor in the election.", "textEs": "La participación electoral podría ser el factor decisivo en las elecciones."},
+      {"speaker": "B", "text": "Both parties are investing heavily in their campaigns.", "textEs": "Ambos partidos están invirtiendo fuertemente en sus campañas."}
+    ],
+    "vocabularyIds": ["senate", "government", "vote", "campaign"],
+    "tags": ["politics", "news", "formal"]
+  },
+  {
+    "id": "weather-news-1",
+    "topic": "weather-news",
+    "title": "Pronóstico del tiempo en las noticias",
+    "level": "A2",
+    "situation": "Mirando el pronóstico del tiempo en las noticias",
+    "lines": [
+      {"speaker": "A", "text": "What's the temperature going to be today?", "textEs": "¿Cuál será la temperatura hoy?"},
+      {"speaker": "B", "text": "It's going to be 95 degrees Fahrenheit. A heat wave is coming.", "textEs": "Van a ser 95 grados Fahrenheit. Viene una ola de calor."},
+      {"speaker": "A", "text": "That's terrible. I hope it rains soon.", "textEs": "Eso es terrible. Espero que llueva pronto."},
+      {"speaker": "B", "text": "The forecast says no rain for at least a week. Humidity is very high.", "textEs": "El pronóstico dice que no habrá lluvia por al menos una semana. La humedad está muy alta."}
+    ],
+    "vocabularyIds": ["temperature", "fahrenheit", "heat-wave", "forecast", "humidity"],
+    "tags": ["weather", "news", "casual"]
+  },
+  {
+    "id": "weather-news-2",
+    "topic": "weather-news",
+    "title": "Eventos meteorológicos extremos",
+    "level": "B1",
+    "situation": "Cubierto de un reporte de noticias sobre clima extremo",
+    "lines": [
+      {"speaker": "A", "text": "Breaking news: A tornado warning has been issued for the Midwest.", "textEs": "Noticias de última hora: Se emitió una alerta de tornado para el Medio Oeste."},
+      {"speaker": "B", "text": "How bad is it? Are there any hurricanes forming?", "textEs": "¿Qué tan mal está? ¿Hay huracanes formándose?"},
+      {"speaker": "A", "text": "There's a Category 3 hurricane heading toward Florida.", "textEs": "Hay un huracán de Categoría 3 dirigiéndose hacia Florida."},
+      {"speaker": "B", "text": "What about the flooding on the East Coast?", "textEs": "¿Qué pasa con las inundaciones en la Costa Este?"},
+      {"speaker": "A", "text": "Drought conditions in the West have been severe. No freezing temperatures though.", "textEs": "Las condiciones de sequía en el Oeste han sido severas. No hay temperaturas de congelamiento sin embargo."}
+    ],
+    "vocabularyIds": ["tornado", "hurricane", "flooding", "drought", "freeze"],
+    "tags": ["weather", "news", "formal"]
+  },
+  {
+    "id": "science-news-1",
+    "topic": "science-news",
+    "title": "Descubrimientos científicos recientes",
+    "level": "B1",
+    "situation": "Leyendo un artículo de ciencia en las noticias",
+    "lines": [
+      {"speaker": "A", "text": "Did you hear about the new discovery on Mars?", "textEs": "¿Escuchaste sobre el nuevo descubrimiento en Marte?"},
+      {"speaker": "B", "text": "Yes! Scientists found evidence of water. The research was published yesterday.", "textEs": "¡Sí! Los científicos encontraron evidencia de agua. La investigación fue publicada ayer."},
+      {"speaker": "A", "text": "Technology is helping us explore space like never before.", "textEs": "La tecnología nos está ayudando a explorar el espacio como nunca antes."},
+      {"speaker": "B", "text": "The experiment confirmed the hypothesis about the planet's atmosphere.", "textEs": "El experimento confirmó la hipótesis sobre la atmósfera del planeta."}
+    ],
+    "vocabularyIds": ["discovery", "research", "technology", "experiment", "hypothesis"],
+    "tags": ["science", "news", "casual"]
+  },
+  {
+    "id": "science-news-2",
+    "topic": "science-news",
+    "title": "Innovación y energía renovable",
+    "level": "B2",
+    "situation": "Reporte sobre tecnología y cambio climático",
+    "lines": [
+      {"speaker": "A", "text": "The government announced a major investment in renewable energy.", "textEs": "El gobierno anunció una inversión importante en energía renovable."},
+      {"speaker": "B", "text": "That's great. Climate change requires innovation and action.", "textEs": "Excelente. El cambio climático requiere innovación y acción."},
+      {"speaker": "A", "text": "Artificial intelligence is being used to optimize solar panels.", "textEs": "La inteligencia artificial se está usando para optimizar paneles solares."},
+      {"speaker": "B", "text": "Quantum computing could revolutionize energy storage.", "textEs": "La computación cuántica podría revolucionar el almacenamiento de energía."},
+      {"speaker": "A", "text": "Space exploration has also advanced genome research.", "textEs": "La exploración espacial también ha avanzado la investigación genómica."}
+    ],
+    "vocabularyIds": ["renewable-energy", "climate-change", "innovation", "artificial-intelligence", "quantum", "space-exploration", "genome"],
+    "tags": ["science", "news", "technology", "formal"]
+  },
+  {
+    "id": "medicine-news-1",
+    "topic": "medicine-news",
+    "title": "Noticias de salud pública",
+    "level": "B1",
+    "situation": "Reporte de noticias sobre vacunas y salud",
+    "lines": [
+      {"speaker": "A", "text": "The WHO announced new guidelines for the pandemic.", "textEs": "La OMS anunció nuevas guías para la pandemia."},
+      {"speaker": "B", "text": "I heard the vaccine is effective against the new variant.", "textEs": "Escuché que la vacuna es efectiva contra la nueva variante."},
+      {"speaker": "A", "text": "Clinical trials are ongoing for the treatment.", "textEs": "Los ensayos clínicos están en curso para el tratamiento."},
+      {"speaker": "B", "text": "The FDA should approve it by next month.", "textEs": "La FDA debería aprobarlo para el próximo mes."}
+    ],
+    "vocabularyIds": ["who", "vaccine", "variant", "clinical-trial", "fda", "treatment"],
+    "tags": ["medicine", "health", "news", "formal"]
+  },
+  {
+    "id": "medicine-news-2",
+    "topic": "medicine-news",
+    "title": "Salud pública y diagnósticos",
+    "level": "C1",
+    "situation": "Reporte sobre avances médicos",
+    "lines": [
+      {"speaker": "A", "text": "Early diagnosis is crucial for treating the disease.", "textEs": "El diagnóstico temprano es crucial para tratar la enfermedad."},
+      {"speaker": "B", "text": "Immunization programs have reduced childhood deaths significantly.", "textEs": "Los programas de inmunización han reducido significativamente las muertes infantiles."},
+      {"speaker": "A", "text": "The outbreak was contained thanks to quarantine measures.", "textEs": "El brote fue contenido gracias a las medidas de cuarentena."},
+      {"speaker": "B", "text": "Hospitals needed more ventilators during the peak.", "textEs": "Los hospitales necesitaron más ventiladores durante el pico."}
+    ],
+    "vocabularyIds": ["diagnosis", "immunization", "outbreak", "quarantine", "ventilator"],
+    "tags": ["medicine", "health", "news", "formal"]
+  },
+  {
+    "id": "migrant-interview-1",
+    "topic": "migrant-prep",
+    "title": "Preguntas de entrevista de inmigración (Parte 1)",
+    "level": "B1",
+    "situation": "Preparación para una entrevista en la embajada",
+    "lines": [
+      {"speaker": "A", "text": "What type of visa are you applying for?", "textEs": "¿Qué tipo de visa está solicitando?"},
+      {"speaker": "B", "text": "I'm applying for a work visa. I have a job offer from a US company.", "textEs": "Estoy solicitando una visa de trabajo. Tengo una oferta de trabajo de una empresa de EE.UU."},
+      {"speaker": "A", "text": "Do you have your work permit and Social Security number?", "textEs": "¿Tiene su permiso de trabajo y número de Seguro Social?"},
+      {"speaker": "B", "text": "Yes, I have all my documents ready.", "textEs": "Sí, tengo todos mis documentos listos."},
+      {"speaker": "A", "text": "Have you ever been denied a visa before?", "textEs": "¿Alguna vez le han denegado una visa antes?"},
+      {"speaker": "B", "text": "No, this is my first application.", "textEs": "No, esta es mi primera solicitud."}
+    ],
+    "vocabularyIds": ["visa", "work-permit", "social-security", "embassy"],
+    "tags": ["migration", "immigration", "formal"]
+  },
+  {
+    "id": "migrant-interview-2",
+    "topic": "migrant-prep",
+    "title": "Preguntas de entrevista de inmigración (Parte 2)",
+    "level": "B2",
+    "situation": "Preguntas sobre integración y permanent residency",
+    "lines": [
+      {"speaker": "A", "text": "Why do you want to live in the United States?", "textEs": "¿Por qué quiere vivir en los Estados Unidos?"},
+      {"speaker": "B", "text": "I want to contribute to the economy and give my family a better life.", "textEs": "Quiero contribuir a la economía y dar a mi familia una vida mejor."},
+      {"speaker": "A", "text": "Do you plan to apply for a green card?", "textEs": "¿Planea solicitar una green card?"},
+      {"speaker": "B", "text": "Yes, I hope to become a permanent resident and eventually a citizen.", "textEs": "Sí, espero ser residente permanente y eventualmente ciudadano."},
+      {"speaker": "A", "text": "How will you integrate into the community?", "textEs": "¿Cómo se integrará a la comunidad?"},
+      {"speaker": "B", "text": "I plan to learn English, volunteer, and participate in community events.", "textEs": "Planeo aprender inglés, hacer voluntariado y participar en eventos comunitarios."}
+    ],
+    "vocabularyIds": ["green-card", "citizenship", "integration", "rights"],
+    "tags": ["migration", "immigration", "formal"]
+  },
+  {
+    "id": "migrant-rights",
+    "topic": "migrant-prep",
+    "title": "Conociendo tus derechos como migrante",
+    "level": "A2",
+    "situation": "Orientación sobre derechos de inmigrantes en EE.UU.",
+    "lines": [
+      {"speaker": "A", "text": "Do you know your rights as an immigrant?", "textEs": "¿Conoce sus derechos como inmigrante?"},
+      {"speaker": "B", "text": "I know I have the right to remain silent if stopped by police.", "textEs": "Sé que tengo derecho a guardar silencio si la policía me detiene."},
+      {"speaker": "A", "text": "That's correct. You also have the right to a lawyer.", "textEs": "Correcto. También tiene derecho a un abogado."},
+      {"speaker": "B", "text": "Where can I get my driver's license?", "textEs": "¿Dónde puedo obtener mi licencia de conducir?"},
+      {"speaker": "A", "text": "You can get it at the DMV. You'll need your immigration documents.", "textEs": "Puede obtenerla en el DMV. Necesitará sus documentos de inmigración."}
+    ],
+    "vocabularyIds": ["rights", "driver-license", "immigration", "deportation"],
+    "tags": ["migration", "immigration", "rights", "formal"]
+  }
+]

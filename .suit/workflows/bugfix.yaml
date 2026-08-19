@@ -1,0 +1,74 @@
+workflow:
+  name: bugfix
+  display_name: "Bug Fix"
+  description: "Fix a bug or error in existing code"
+  risk: medium
+  domain: code
+
+  entry:
+    requires_planning: true
+    requires_confirmation: true
+    required_context:
+      - AGENTS.md
+      - INDEX_FUNCIONES.md
+      - contexto.md
+    required_skills:
+      - javascript
+      - system-analysis
+
+  steps:
+    - id: reproduce
+      description: "Understand the bug (read error, trace, affected code)"
+      action: read
+      skills:
+        - system-analysis
+      validation:
+        - "Root cause identified"
+
+    - id: plan_fix
+      description: "Plan the minimal fix"
+      action: plan
+      skills:
+        - system-analysis
+      produces: fix_plan.yaml
+      validation:
+        - "Fix is minimal (doesn't touch unrelated code)"
+
+    - id: implement_fix
+      description: "Apply the fix"
+      action: write
+      skills:
+        - javascript
+        - gas
+        - ponytail-ladder
+      validation:
+        - "Fix is syntactically correct"
+        - "No collateral damage"
+        - "Fix is minimal — touches only what's needed to resolve the bug"
+
+    - id: verify_fix
+      description: "Verify the bug is fixed and no regressions"
+      action: test
+      validation:
+        - "Bug scenario now works"
+        - "Existing functionality preserved"
+
+    - id: document
+      description: "Document the bug and fix"
+      action: write
+      target: .suit/memory/bugs/
+      validation:
+        - "Bug recorded with reproduction steps and fix"
+
+    - id: commit
+      action: git
+      condition: "user confirms"
+
+  exit:
+    validation:
+      - "Bug is fixed"
+      - "Bug is documented in memory"
+    requires_commit: true
+    notifies:
+      - memory/bugs
+      - telemetry

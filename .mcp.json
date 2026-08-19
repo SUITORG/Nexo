@@ -1,10 +1,66 @@
 {
   "mcpServers": {
     "supabase": {
+      "command": "node",
+      "args": ["scripts/mcp-supabase.js"]
+    },
+    "whatsapp": {
       "command": "npx",
-      "args": ["-y", "@supabase/mcp-server"],
+      "args": ["-y", "wweb-mcp"],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_d685801616a2ebc70e51aeb099a9aa7c2731c556"
+        "WHATSAPP_TARGET_NUMBER": "528110463721@s.whatsapp.net"
+      }
+    },
+    "higgsfield": {
+      "url": "https://mcp.higgsfield.ai/mcp"
+    },
+    "google-sheets": {
+      "command": "npx",
+      "args": ["-y", "mcp-gsheets@latest"],
+      "env": {
+        "GOOGLE_PROJECT_ID": "suitorg00",
+        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\rojo-\\Downloads\\suitorg\\google-credentials.json"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "suitcvlo-filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\rojo-\\Downloads\\suitorg\\SuitCVLO"]
+    },
+    "telegram-bot": {
+      "command": "npx",
+      "args": ["-y", "telegram-bot-mcp-server"],
+      "env": {
+        "TELEGRAM_BOT_API_TOKEN": "${TELEGRAM_BOT_API_TOKEN}"
+      }
+    },
+    "manychat": {
+      "command": "npx",
+      "args": ["-y", "github:fabienbutz/manychat-mcp"],
+      "env": {
+        "MANYCHAT_API_KEY": "${MANYCHAT_API_KEY}"
+      }
+    },
+    "comfyui": {
+      "command": "npx",
+      "args": ["-y", "comfyui-mcp"],
+      "env": {
+        "COMFYUI_HOST": "127.0.0.1",
+        "COMFYUI_PORT": "8188"
+      }
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     }
   }

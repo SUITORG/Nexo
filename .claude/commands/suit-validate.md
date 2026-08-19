@@ -1,0 +1,1 @@
+SuitOS Reviewer. Pregúntale al usuario qué perfil quiere usar: quick, standard, architecture, security. Lee `.suit/reviewer/profiles.yaml`, selecciona el perfil indicado (incluyendo sus herencias), y corre TODAS las checks sobre los cambios actuales. Reporta claramente qué pasó, qué falló y qué son warnings.

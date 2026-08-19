@@ -1,0 +1,5 @@
+@echo off
+REM Launcher generado por SuitOS ({{workflow}}) — {{project_name}}
+cd /d "%~dp0"
+start "" http://localhost:{{PORT}}
+node {{ENTRY}}

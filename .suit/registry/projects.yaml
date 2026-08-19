@@ -1,0 +1,476 @@
+projects:
+  root:
+    path: ./
+    agents: .suit/registry/agents.yaml
+    skills: .suit/registry/skills.yaml
+    context:
+      - AGENTS.md
+      - contexto.md
+      - INDEX_FUNCIONES.md
+      - opencode.json
+    servers:
+      - name: main
+        path: server.js
+        port: 3001
+        type: express
+
+  campanas-ai:
+    path: SuitCampanas/
+    agents: SuitCampanas/CLAUDE.md
+    skills:
+      - trend-analysis
+      - content-generation
+      - javascript
+      - comfy-ui
+    context:
+      - SuitCampanas/CLAUDE.md
+      - SuitCampanas/script.js
+      - SuitCampanas/config/prompts.json
+      - SuitCampanas/config/formatos.json
+      - SuitCampanas/local-server-node.js
+      - SuitCampanas/backend.gs
+      - SuitCampanas/CODE_INDEX.md
+    environment:
+      PORT: 8000
+      TYPE: cms
+    servers:
+      - name: cms
+        path: SuitCampanas/local-server-node.js
+        port: 8000
+        type: http
+
+  citas:
+    path: citas/
+    agents: citas/AGENTS.md
+    skills:
+      - reservations-engine
+    context:
+      - citas/index.js
+      - citas/services/ai.js
+      - citas/handlers/actions.js
+      - citas/db/schema.sql
+    environment:
+      PORT: 3002
+      TYPE: service
+    status: deprecated
+    migration: SuitReservaciones/
+    servers:
+      - name: appointments
+        path: citas/index.js
+        port: 3002
+        type: express
+
+  suitreservaciones:
+    path: SuitReservaciones/
+    description: "Módulo de Reservaciones con WhatsApp + Google Calendar. Reemplaza citas/. Niveles: 1 (WhatsApp), 2 (+ Calendar)."
+    skills:
+      - reservations-engine
+      - javascript
+      - multi-tenant
+    context:
+      - SuitReservaciones/index.js
+      - SuitReservaciones/services/ai.js
+      - SuitReservaciones/handlers/actions.js
+      - SuitReservaciones/handlers/webhook.js
+      - SuitReservaciones/db/schema.sql
+      - SuitReservaciones/package.json
+    frontend:
+      public: true
+      public_route: "#home (botón en hero)"
+      public_gate: "usa_reservaciones >= 1"
+      staff: true
+      staff_route: "#reservations"
+      staff_gate: "usa_reservaciones >= 1 AND modulos_visibles CONTAINS 'reservations'"
+      staff_rbac: "STAFF >= 5, ADMIN >= 10"
+      api_endpoints:
+        - "POST /api/reservaciones (público)"
+        - "PATCH /api/reservaciones/:id (staff)"
+        - "GET /api/reservaciones (staff)"
+        - "GET /api/clientes (staff)"
+    environment:
+      PORT: 3002
+      TYPE: service
+    servers:
+      - name: appointments
+        path: SuitReservaciones/index.js
+        port: 3002
+        type: express
+    tables:
+      - Reservaciones
+      - clientes
+      - lista_espera
+      - Logs_Chat_IA
+      - Config_Empresas
+    validation:
+      field: "usa_reservaciones"
+      values:
+        0: "desactivado"
+        1: "WhatsApp básico"
+        2: "WhatsApp + Calendar"
+
+  vire:
+    name: "ViRe — Video con Remotion"
+    path: SuitVidGenRemotion/
+    description: "Módulo de generación de video profesional con Remotion. Crea composiciones animadas, presentaciones dinámicas y contenido multimedia programático desde React. Servido en puerto 3004."
+    skills:
+      - remotion-video
+      - javascript
+    context:
+      - SuitVidGenRemotion/src/Root.tsx
+      - SuitVidGenRemotion/src/Composition.tsx
+      - SuitVidGenRemotion/package.json
+    environment:
+      PORT: 3004
+      TYPE: remotion
+    servers:
+      - name: studio
+        path: SuitVidGenRemotion/
+        port: 3004
+        type: remotion
+
+  suit-pedido-express:
+    name: "Pedido Express — Menú Digital + Órdenes"
+    path: SuitPedidoExpress/
+    description: "Módulo de Pedido Express: menú digital, carrito, checkout. Scaffold inicial — puerto 3005."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitPedidoExpress/index.js
+      - SuitPedidoExpress/package.json
+    frontend:
+      public: true
+      public_route: "#food-app-area"
+      public_gate: "modo EXPRESS=1 AND tipo_negocio IN (ALIMENTOS,COMIDA,RESTAURANTE,FOOD)"
+      staff: false
+    environment:
+      PORT: 3005
+      TYPE: service
+    servers:
+      - name: pedido-express
+        path: SuitPedidoExpress/index.js
+        port: 3005
+        type: express
+
+  suit-pos:
+    name: "POS — Punto de Venta + Monitoreo"
+    path: SuitPos/
+    description: "Módulo de POS: venta en mostrador, monitoreo de órdenes, Stripe. Scaffold inicial — puerto 3006."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitPos/index.js
+      - SuitPos/package.json
+    frontend:
+      public: false
+      staff: true
+      staff_route: "#staff-pos, #pos"
+      staff_gate: "modo POS=1 AND modulos_visibles CONTAINS 'pos' OR 'staff-pos'"
+      staff_rbac: "STAFF >= 2"
+    environment:
+      PORT: 3006
+      TYPE: service
+    servers:
+      - name: pos
+        path: SuitPos/index.js
+        port: 3006
+        type: express
+
+  suit-productos:
+    name: "Productos — Catálogo + Precios"
+    path: SuitProductos/
+    description: "Módulo de Productos: catálogo multi-categoría, precios, gestión de variantes. Supabase exclusivo — puerto 3007."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitProductos/index.js
+      - SuitProductos/package.json
+    frontend:
+      public: false
+      staff: true
+      staff_route: "#productos"
+      staff_gate: "modo PRODUCTOS=1"
+      staff_rbac: "ADMIN >= 10"
+    environment:
+      PORT: 3007
+      TYPE: service
+    servers:
+      - name: productos
+        path: SuitProductos/index.js
+        port: 3007
+        type: express
+    tables:
+      - Catalogo
+
+  suit-inventarios:
+    name: "Inventarios — Stock + Movimientos"
+    path: SuitInventarios/
+    description: "Módulo de Inventarios: control de stock, movimientos (entrada/salida/ajuste), historial. Supabase exclusivo — puerto 3008."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitInventarios/index.js
+      - SuitInventarios/package.json
+    frontend:
+      public: false
+      staff: true
+      staff_route: "#inventarios"
+      staff_gate: "modo INVENTARIOS=1"
+      staff_rbac: "ADMIN >= 10"
+    environment:
+      PORT: 3008
+      TYPE: service
+    servers:
+      - name: inventarios
+        path: SuitInventarios/index.js
+        port: 3008
+        type: express
+    tables:
+      - Inventario
+      - Movimientos_Inventario
+
+  suit-bodega:
+    name: "Bodega — Ubicaciones + Transferencias"
+    path: SuitBodega/
+    description: "Módulo de Bodega: gestión de ubicaciones físicas, transferencias entre bodegas. Supabase exclusivo — puerto 3009."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitBodega/index.js
+      - SuitBodega/package.json
+    frontend:
+      public: false
+      staff: true
+      staff_route: "#bodega"
+      staff_gate: "modo BODEGA=1"
+      staff_rbac: "ADMIN >= 10"
+    environment:
+      PORT: 3009
+      TYPE: service
+    servers:
+      - name: bodega
+        path: SuitBodega/index.js
+        port: 3009
+        type: express
+    tables:
+      - Bodegas
+      - Transferencias
+
+  suit-ai:
+    name: "SuitAI — Model Discovery + Auto-Routing + Circuit Breaker"
+    path: SuitAI/
+    description: "Módulo de IA: auto-descubre modelos gratis de OpenRouter y OpenCode Zen, prueba conectividad, rutea mensajes al mejor disponible con circuit breaker. Puerto 3010."
+    skills:
+      - javascript
+      - multi-tenant
+      - system-analysis
+    context:
+      - SuitAI/index.js
+      - SuitAI/handlers/api.js
+      - SuitAI/services/modelScanner.js
+      - SuitAI/services/modelRouter.js
+      - SuitAI/services/circuitBreaker.js
+    frontend:
+      public: true
+      public_route: "POST /api/ai/chat (público)"
+      public_gate: "ninguno — disponible para todas las empresas"
+      staff: true
+      staff_route: "#ai-models (futuro)"
+      staff_rbac: "ADMIN >= 10"
+    environment:
+      PORT: 3010
+      TYPE: service
+    servers:
+      - name: ai
+        path: SuitAI/index.js
+        port: 3010
+        type: express
+    tables: []
+
+  suit-cotizador:
+    name: "Portal de Cotización en Línea"
+    path: SuitCotizador/
+    description: "Calculadoras configurables por proceso/producto/servicio. Cotización autónoma → Lead/Proyecto/Orden. Habilitado solo si Config_Empresas.giro_especifico contiene ',1' al final (ej: 'Energía Solar,1'). Validación robusta contra nulos/vacíos."
+    db_engine: SUPABASE
+    dependencies:
+      - js/modules/public.js
+      - js/modules/admin.js
+      - backend/core.js
+      - backend/utils.js
+      - backend/ai_engine.js
+      - backend/DriveManager.js
+    skills:
+      - multi-tenant
+      - javascript
+      - cotizaciones-engine
+      - pdf-generation
+    context:
+      - AGENTS.md
+      - contexto.md
+      - INDEX_FUNCIONES.md
+      - js/modules/public.js
+      - js/modules/admin.js
+      - backend/core.js
+      - backend/utils.js
+      - backend/ai_engine.js
+      - backend/DriveManager.js
+      - server.js
+    tables:
+      - Cotizaciones
+      - Cotizacion_Detalle
+      - Procesos_Cotizacion
+      - Variables_Cotizacion
+      - Reglas_Precios
+      - Leads
+      - Proyectos
+      - Catalogo
+      - Clientes
+      - Config_Empresas
+    environment:
+      PORT: 3001
+      DB_ENGINE: SUPABASE
+      TYPE: feature
+    validation:
+      giro_field: "giro_especifico"
+      enable_pattern: ",1$"
+      fallback: false
+      error_message: "El giro de la empresa no tiene habilitado el módulo de cotizaciones"
+
+  suit-ffmpeg:
+    name: "SuitFFmpeg — Wrapper FFmpeg"
+    path: SuitFFmpeg/
+    description: "Wrapper local para FFmpeg. Auto-detecta ruta del sistema. Usado por SuitCampanas (animate, slideshow, video-imaginacion, video-produce)."
+    skills:
+      - javascript
+    context:
+      - SuitFFmpeg/README.md
+      - SuitFFmpeg/scripts/verify.js
+    environment:
+      TYPE: tool
+    notes: "FFmpeg v8.1.1 via WinGet. Ruta auto-detectada o configurable via FFMPEG_PATH en .env"
+
+  suit-comfy:
+    name: "SuitComfy — Imagen + Video con ComfyUI (local, gratis)"
+    path: SuitComfy/
+    description: "Módulo de generación de imagen con ComfyUI (SD1.5 + LoRA LCM, corre en CPU) y ensamblaje de video profesional con FFmpeg (Ken Burns + crossfade). 100% local, sin GPU NVIDIA. Aislado de SuitCampanas y ViRe. ComfyUI en puerto 8188."
+    skills:
+      - comfy-ui
+      - javascript
+    context:
+      - SuitComfy/README.md
+      - SuitComfy/AGENTS.md
+      - SuitComfy/index.js
+      - SuitComfy/workflows/txt2img-lcm.json
+    environment:
+      PORT: 3012
+      TYPE: service
+      COMFYUI_URL: http://127.0.0.1:8188
+    servers:
+      - name: suitcomfy
+        path: SuitComfy/index.js
+        port: 3012
+        type: express
+    api_endpoints:
+      - "GET /api/health"
+      - "POST /api/image (genera 1 imagen con parámetros)"
+      - "POST /api/video (genera N escenas + ensambla MP4 con FFmpeg)"
+    hardware:
+      gpu: none
+      notes: "CPU-only. Imagen LCM 512² ≈ 1-2 min; video 4 escenas ≈ 5-15 min."
+    dependencies:
+      - ComfyUI Desktop (http://127.0.0.1:8188, --cpu)
+      - FFmpeg v8.1.1 (WinGet)
+
+  suit-chat-tg:
+    name: "SuitChatTG — Chatbot Telegram multi-inquilino"
+    path: SuitChatTG/
+    description: "Chatbot con IA para Telegram. Recoge Leads, mantiene memoria persistente (Memoria_IA_Snapshots), y usa prompts desde Prompts_IA vía GAS backend. id_empresa=ROOMATENL por defecto."
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitChatTG/index.js
+      - SuitChatTG/handlers/telegram.js
+      - SuitChatTG/handlers/ai.js
+      - SuitChatTG/handlers/leads.js
+      - SuitChatTG/handlers/memory.js
+      - SuitChatTG/db/gas-client.js
+      - backend/core.js
+      - backend/utils.js
+    frontend:
+      public: true
+      public_route: "#chat-tg (enlace tipo t.me/tu_bot?start=ROOMATENL)"
+      public_gate: "usa_agente_ai = TRUE AND agent_enabled = TRUE"
+      staff: true
+      staff_route: "#admin-chat-tg"
+      staff_gate: "usa_soporte_ia activo"
+      staff_rbac: "ADMIN >= 10"
+      api_endpoints:
+        - "GET /api/health"
+        - "GET /api/sessions"
+        - "GET /api/link"
+    environment:
+      PORT: 3011
+      TYPE: service
+    servers:
+      - name: telegram-bot
+        path: SuitChatTG/index.js
+        port: 3011
+        type: express
+    tables:
+      - Leads
+      - Memoria_IA_Snapshots
+      - Logs_Chat_IA
+      - Prompts_IA
+      - Config_Empresas
+
+  suit-diccionario:
+    name: "SuitDiccionario — Diccionario EN-ES Interactivo"
+    path: SuitMiDBdic/
+    description: "Diccionario completo de inglés-español con IPA, tiempos verbales, frasales, vocabulario temático, quizzes y IA para buscar palabras. Incluye 150 preguntas de ciudadanía de EE.UU."
+    skills:
+      - javascript
+    context:
+      - SuitMiDBdic/index.js
+      - SuitMiDBdic/dictionary.html
+    frontend:
+      public: true
+      public_route: "#diccionario"
+      public_gate: "disponible para todas las empresas"
+      staff: false
+    environment:
+      PORT: 3013
+      TYPE: service
+    servers:
+      - name: diccionario
+        path: SuitMiDBdic/index.js
+        port: 3013
+        type: express
+
+  suit-landings:
+    name: "SuitLandings — Plantilla de Landing Pages multi-tenant"
+    path: SuitLandings/
+    description: "Plantilla estática de landing de conversión (hero, propuesta de valor, oferta/CTA, contacto). Consumida en build-time por scripts/ssg-engine.mjs. Sin servidor propio ni puerto — no es un servicio, es un template. Activación por flag landing en la posición 8 de Config_Empresas.modo (0/ausente = solo sitio, 1 = landing-only, 2 = sitio + landing). Toda landing es noindex."
+    type: template
+    skills:
+      - javascript
+      - multi-tenant
+      - landing-pages
+    context:
+      - SuitLandings/landing-template.html
+      - scripts/ssg-engine.mjs
+      - js/modules/core.js
+    frontend:
+      public: true
+      public_route: "{slug}.html (modo pos8=1) / {slug}-landing.html (modo pos8=2)"
+      public_gate: "modo pos 8 (índice 7) = 1 o 2"
+      staff: false
+    environment:
+      TYPE: template
+      BUILD_TIME: "scripts/ssg-engine.mjs"
+    columns: []
+    notes: "Sin columnas nuevas en Config_Empresas (diseño final, ronda 3). Todo el contenido de landing vive en logo_url: \"{logo}|{hero}|{oferta}|{cta}\" (4 segmentos, ninguno requerido). Requiere fixDriveUrl() en js/modules/core.js con split('|')[0] al inicio para que el resto del SPA (10+ call sites) ignore los segmentos extra — ver ADR-023."

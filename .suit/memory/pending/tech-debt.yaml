@@ -1,0 +1,176 @@
+tech_debt:
+  - id: TD-001
+    description: "API keys hardcodeadas en backend/core.js:13"
+    severity: high
+    related_files:
+      - "backend/core.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-002
+    description: "API keys hardcodeadas en CampanasAi/script.js:8-11"
+    severity: high
+    related_files:
+      - "CampanasAi/script.js"
+    created: "2026-07-05"
+    status: fixed
+    fixed_date: "2026-07-10"
+    fix: "Moved to /api/config/client endpoint. Secrets loaded async from server."
+
+  - id: TD-003
+    description: "service_role key en cliente (CampanasAi/lib/supabase.js, citas/db/client.js)"
+    severity: high
+    related_files:
+      - "CampanasAi/lib/supabase.js"
+      - "citas/db/client.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-004
+    description: "syncToSupabase catch vacío en backend/utils.js"
+    severity: medium
+    related_files:
+      - "backend/utils.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-005
+    description: "GAS URL hardcodeada en local-server-node.js, ssg-engine.mjs, orchestrator_client.js"
+    severity: medium
+    related_files:
+      - "CampanasAi/local-server-node.js"
+      - "scripts/ssg-engine.mjs"
+      - "scripts/orchestrator_client.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-006
+    description: "Modelo gemini-1.5-flash deprecated - migrar a OpenRouter free"
+    severity: high
+    related_files:
+      - "backend/ai_engine.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-007
+    description: "No hay tests automatizados"
+    severity: medium
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-008
+    description: "No hay lint/typecheck"
+    severity: low
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-009
+    description: "No hay sistema de logging centralizado"
+    severity: medium
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-010
+    description: "No hay rate limiting en endpoints públicos (server.js, local-server-node.js)"
+    severity: medium
+    related_files:
+      - "server.js"
+      - "CampanasAi/local-server-node.js"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-011
+    description: "No hay staging/pre-producción ni rollback documentado"
+    severity: low
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-012
+    description: "SuitCotizador: migración Supabase pendiente de aplicar"
+    severity: medium
+    related_files:
+      - "Documentacion/migrations/001_suit_cotizador.sql"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-013
+    description: "SuitCotizador: procesos y reglas de precio base para estándares México pendientes de crear"
+    severity: medium
+    related_files:
+      - "Documentacion/migrations/001_suit_cotizador.sql"
+    created: "2026-07-05"
+    status: open
+
+  - id: TD-014
+    description: "APIs de subsistemas sin autenticación (SuitReservaciones, SuitPedidoExpress, SuitPos, SuitProductos, SuitInventarios, SuitBodega, SuitCotizador) — cualquier endpoint es accesible sin token vía /api/*. Propuesta: middleware JWT gateway centralizado en server.js o aislamiento por puerto con reverse proxy."
+    severity: critical
+    related_files:
+      - "server.js"
+      - "SuitReservaciones/index.js"
+      - "SuitPedidoExpress/index.js"
+      - "SuitPos/index.js"
+      - "SuitProductos/index.js"
+      - "SuitInventarios/index.js"
+      - "SuitBodega/index.js"
+      - "SuitCotizador/index.js"
+      - "citas/index.js"
+    created: "2026-07-09"
+    status: open
+
+  - id: TD-015
+    description: "service_role key expuesta en db/client.js de todos los módulos nuevos — bypass total de RLS. Extensión de TD-003 para SuitPedidoExpress/db/client.js, SuitPos/db/client.js, SuitProductos/db/client.js, SuitInventarios/db/client.js, SuitBodega/db/client.js"
+    severity: high
+    related_files:
+      - "SuitPedidoExpress/db/client.js"
+      - "SuitPos/db/client.js"
+      - "SuitProductos/db/client.js"
+      - "SuitInventarios/db/client.js"
+      - "SuitBodega/db/client.js"
+    created: "2026-07-09"
+    status: open
+
+  - id: FT-001
+    description: "Integrar ComfyUI como motor de generación visual/audio para VIDE. Incluye: diseñar workflows ComfyUI (text2img+ControlNet, AnimateDiff para b-roll, SFX, ensamblaje multicapa), conectar generateVideJson()→MCP comfyui, actualizar schema JSON con pattern_interrupt/camara/sfx/b-roll, y registrar en .suit/registry/ como tool oficial."
+    severity: medium
+    type: feature
+    related_files:
+      - ".suit/registry/tools.yaml"    # ✅ ya registrado
+      - ".suit/registry/skills.yaml"   # ✅ ya registrado
+      - ".mcp.json"                    # ✅ ya registrado
+      - "opencode.json"                # ✅ ya registrado
+      - ".suit/registry/projects.yaml" # ✅ ya registrado
+      - "SuitCampanas/local-server-node.js"
+      - "SuitCampanas/script.js"
+      - ".suit/workflows/video-avanzado.yaml"
+    dependencies:
+      - "ComfyUI corriendo (puerto 8188, modo CPU)"
+      - "comfyui-mcp vía npx (configurado global y proyecto)"
+      - "Workflows ComfyUI .json para cada operación (diseñar)"
+    created: "2026-07-30"
+    status: deferred
+    defer_reason: "Solo el paso 1 (registro en .mcp.json) está hecho. Pausado por la misma razón que FT-002: priorizar la prueba manual del pipeline VIDE ya mejorado antes de invertir en el resto (workflows ComfyUI, conectar generateVideJson())."
+
+  - id: FT-002
+    description: "Automatizar edición de video profesional vía DaVinci Resolve controlado por MCP desde SuitCampanas (color grading real, mezcla de audio avanzada, transiciones complejas) — evaluado como alternativa/complemento a las mejoras incrementales de FFmpeg (ver B1-B17 y mejoras de calidad #1/#2 en .suit/memory/bugs/videos-multiples-fallas.md). Rompe la automatización 100%-servidor actual: agrega dependencia de una NLE de escritorio + scripting, y probablemente un paso semi-manual."
+    severity: low
+    type: feature
+    related_files: []
+    dependencies:
+      - "DaVinci Resolve instalado localmente (usuario confirma que sí lo tiene)"
+      - "DaVinci Resolve scripting API (Python/Lua) — validar alcance real en la edición gratuita antes de comprometerse"
+      - "MCP wrapper para DaVinci (no existe uno oficial conocido; habría que construirlo o evaluar opciones de la comunidad)"
+    created: "2026-07-30"
+    status: deferred
+    defer_reason: "Se prioriza que el usuario haga la prueba manual del pipeline VIDE ya mejorado esta sesión (avatarPath, GAS, duración/audio, logo/avatar+contraste, overlay de contacto, wrap de texto, voz neuronal Edge TTS, dimensiones/modelo de imagen) antes de invertir en esta integración, de mayor alcance y riesgo. Si la prueba muestra gaps que FFmpeg genuinamente no puede resolver (color grading, mezcla compleja), esta es la vía a retomar."
+
+  - id: TD-016
+    description: "Probar SuitAI en vivo: arrancar server.js, configurar OPENROUTER_API_KEY y OPENCODE_API_KEY en .env, probar GET /api/ai/models, POST /api/ai/chat, verificar circuit breaker con modelo falso, verificar fallback a Google Gemini."
+    severity: medium
+    related_files:
+      - "SuitAI/index.js"
+      - "SuitAI/services/modelScanner.js"
+      - "SuitAI/services/modelRouter.js"
+      - "SuitAI/services/circuitBreaker.js"
+      - ".env"
+    created: "2026-07-09"
+    status: open

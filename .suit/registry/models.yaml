@@ -1,0 +1,72 @@
+models:
+  claude-sonnet:
+    provider: claude
+    model: claude-sonnet-4-20250514
+    capabilities:
+      - code
+      - analysis
+      - planning
+    cost_per_1k_input: 0.003
+    cost_per_1k_output: 0.015
+    context_window: 200000
+    preferred_for:
+      - planning
+      - architecture
+      - review
+    enabled: true
+
+  claude-haiku:
+    provider: claude
+    model: claude-haiku-3-5-20241022
+    capabilities:
+      - code
+      - quick-analysis
+    cost_per_1k_input: 0.0008
+    cost_per_1k_output: 0.004
+    context_window: 200000
+    preferred_for:
+      - quick-tasks
+      - simple-edits
+    enabled: true
+
+  deepseek-flash:
+    provider: opencode
+    model: opencode/deepseek-v4-flash-free
+    capabilities:
+      - code
+      - general
+    cost_per_1k_input: 0
+    cost_per_1k_output: 0
+    context_window: 128000
+    preferred_for:
+      - general
+      - cost-sensitive
+    enabled: true
+
+  gemini-flash:
+    provider: google
+    model: gemini-2.0-flash
+    capabilities:
+      - analysis
+      - content
+      - vision
+    cost_per_1k_input: 0.0001
+    cost_per_1k_output: 0.0004
+    context_window: 1000000
+    preferred_for:
+      - long-context
+      - vision-tasks
+    enabled: true
+
+  openrouter-fallback:
+    provider: openrouter
+    model: openrouter/auto
+    capabilities:
+      - general
+      - fallback
+    cost_per_1k_input: 0
+    cost_per_1k_output: 0
+    context_window: 128000
+    preferred_for:
+      - fallback
+    enabled: true

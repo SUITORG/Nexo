@@ -1,0 +1,147 @@
+routing:
+  intents:
+    - patterns:
+        - "implement"
+        - "add feature"
+        - "create module"
+        - "new functionality"
+      workflow: feature
+      priority: 10
+      agent: fullstack-dev
+
+    - patterns:
+        - "ui"
+        - "pagina"
+        - "vista"
+        - "componente"
+        - "boton"
+        - "formulario"
+        - "tabla html"
+        - "modal"
+        - "sidebar"
+        - "navbar"
+        - "header"
+        - "footer"
+      workflow: feature
+      priority: 15
+      agent: fullstack-dev
+      skills_override:
+        - frontend
+        - responsive-design
+
+    - patterns:
+        - "api"
+        - "endpoint"
+        - "handler"
+        - "crud"
+        - "middleware"
+        - "consulta"
+        - "supabase"
+        - "base de datos"
+        - "servicio"
+      workflow: feature
+      priority: 15
+      agent: fullstack-dev
+      skills_override:
+        - backend
+        - multi-tenant
+
+    - patterns:
+        - "responsive"
+        - "movil"
+        - "layout"
+        - "adaptar"
+        - "media query"
+        - "celular"
+        - "tablet"
+      workflow: feature
+      priority: 15
+      agent: fullstack-dev
+      skills_override:
+        - responsive-design
+        - frontend
+
+    - patterns:
+        - "fix"
+        - "bug"
+        - "error"
+        - "crash"
+        - "not working"
+      workflow: bugfix
+      priority: 20
+
+    - patterns:
+        - "audit"
+        - "analyze"
+        - "review architecture"
+        - "diagnose"
+      workflow: audit
+      priority: 5
+
+    - patterns:
+        - "deploy"
+        - "release"
+        - "publish"
+      workflow: deploy
+      priority: 30
+
+    - patterns:
+        - "document"
+        - "docs"
+        - "readme"
+      workflow: docs
+      priority: 5
+
+    - patterns:
+        - "migrate"
+        - "migration"
+        - "schema change"
+      workflow: migration
+      priority: 30
+
+    - patterns:
+        - "research"
+        - "search"
+        - "investigate"
+        - "find"
+      workflow: research
+      priority: 5
+
+    - patterns:
+        - "review"
+        - "validate"
+        - "check"
+        - "verify"
+      workflow: review
+      priority: 5
+
+    - patterns:
+        - "revisa"
+        - "analiza seguridad"
+        - "audita codigo"
+        - "reportero"
+        - "encuentra problemas en"
+      workflow: review
+      priority: 15
+      agent: reportero
+      skills_override:
+        - code-review
+        - security-audit
+
+    - patterns:
+        - "prueba"
+        - "test"
+        - "smoke test"
+        - "probador"
+        - "verifica servidor"
+        - "corre tests"
+      workflow: test
+      priority: 15
+      agent: probador
+      skills_override:
+        - system-analysis
+
+  overrides:
+    - if:
+        workflow: feature
+      agent: fullstack-dev

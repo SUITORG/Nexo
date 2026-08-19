@@ -129,11 +129,13 @@
                 <li><a href="#staff-pos">Venta (POS)</a></li>
                 <li><a href="#knowledge">Conocimiento</a></li>
                 <li><a href="#reports" id="nav-reports"><i class="fas fa-chart-line"></i> Reportes</a></li>
+                <li><a href="#cotizador"><i class="fas fa-calculator"></i> Cotizador</a></li>
                 <li class="nav-item-mod" data-mod="vault" onclick="app.router.navigate('#vault'); app.vault.refresh();">
                     <i class="fas fa-user-shield"></i> <span>Bóveda</span>
                 </li>
                 <li class="nav-item role-admin hidden"><a href="#quotas" onclick="app.ui.showView('view-quotas')"><i
                             class="fas fa-credit-card"></i> Cuotas</a></li>
+                <li class="nav-item role-admin hidden"><a href="#cotizador/admin"><i class="fas fa-cogs"></i> Admin Cotizador</a></li>
                 <li class="nav-item"><a href="javascript:void(0)" id="btn-staff-home" onclick="app.auth.logout()"><i class="fas fa-home"></i> Inicio</a></li>
             </ul>
         </nav>
@@ -661,7 +663,7 @@
                                     onclick="app.ui.setPosPaymentMethod('Transferencia')">
                                     <i class="fas fa-university"></i> Transf.
                                 </button>
-                                <button type="button" class="pay-btn" data-value="Tarjeta"
+                                <button type="button" id="pos-btn-tarjeta" class="pay-btn hidden" data-value="Tarjeta"
                                     onclick="app.ui.setPosPaymentMethod('Tarjeta')">
                                     <i class="fas fa-credit-card"></i> Tarjeta
                                 </button>
@@ -683,7 +685,22 @@
                                 <p style="font-size:0.7rem; text-transform:uppercase; color:#6c757d; margin:0 0 8px 0;">
                                     <i class="fas fa-lock"></i> Datos de Tarjeta
                                 </p>
-                                <div id="pos-stripe-element" style="padding: 10px; background: white; border: 1px solid #ced4da; border-radius: 6px;"></div>
+                                <label style="font-size:0.65rem; color:#6c757d; display:block; margin-bottom:3px;">Número de Tarjeta</label>
+                                <div id="pos-stripe-number" style="padding:8px; background:white; border:1px solid #ced4da; border-radius:5px; margin-bottom:8px;"></div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                    <div style="flex:1; min-width:90px;">
+                                        <label style="font-size:0.65rem; color:#6c757d; display:block; margin-bottom:3px;">Fecha (MM/AA)</label>
+                                        <div id="pos-stripe-expiry" style="padding:8px; background:white; border:1px solid #ced4da; border-radius:5px;"></div>
+                                    </div>
+                                    <div style="flex:1; min-width:70px;">
+                                        <label style="font-size:0.65rem; color:#6c757d; display:block; margin-bottom:3px;">CVC</label>
+                                        <div id="pos-stripe-cvc" style="padding:8px; background:white; border:1px solid #ced4da; border-radius:5px;"></div>
+                                    </div>
+                                    <div style="flex:1; min-width:90px;">
+                                        <label style="font-size:0.65rem; color:#6c757d; display:block; margin-bottom:3px;">CP</label>
+                                        <div id="pos-stripe-zip" style="padding:8px; background:white; border:1px solid #ced4da; border-radius:5px;"></div>
+                                    </div>
+                                </div>
                                 <div id="pos-stripe-errors" style="color: #dc3545; font-size: 0.75rem; margin-top: 6px;"></div>
                             </div>
                             <!-- CONTROL DE CAJA v5.7.1 -->
@@ -983,6 +1000,18 @@
                 </div>
             </div>
         </section>
+        <!-- SECTION: COTIZADOR (iframe) -->
+        <section id="view-cotizador" class="view-section hidden">
+            <div class="container" style="max-width:1000px;margin:0 auto;padding:20px;">
+                <div id="cotizador-content" style="min-height:500px;">
+                    <div style="text-align:center;padding:40px;">
+                        <i class="fas fa-calculator" style="font-size:48px;color:#3498db;margin-bottom:16px;"></i>
+                        <h3>Portal de Cotización</h3>
+                        <p>Cargando...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
         <!-- SECTION: CONTACT / FORM -->
         <section id="view-contact" class="view-section hidden">
             <div class="form-container">
@@ -1184,7 +1213,7 @@
                                     onclick="app.ui.setPublicPaymentMethod('Transferencia')">
                                     <i class="fas fa-university"></i> Transf.
                                 </button>
-                                <button type="button" class="pay-btn" data-value="Tarjeta"
+                                <button type="button" id="public-btn-tarjeta" class="pay-btn hidden" data-value="Tarjeta"
                                     onclick="app.ui.setPublicPaymentMethod('Tarjeta')">
                                     <i class="fas fa-credit-card"></i> Tarjeta
                                 </button>
@@ -1196,7 +1225,22 @@
                             <p style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:#6c757d; margin:0 0 10px 0;">
                                 <i class="fas fa-lock"></i> Datos de Tarjeta
                             </p>
-                            <div id="stripe-card-element" style="padding: 12px; background: white; border: 1px solid #ced4da; border-radius: 8px;"></div>
+                            <label style="font-size:0.7rem; color:#6c757d; display:block; margin-bottom:4px;">Número de Tarjeta</label>
+                            <div id="stripe-card-number" style="padding:10px; background:white; border:1px solid #ced4da; border-radius:6px; margin-bottom:10px;"></div>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <div style="flex:1; min-width:100px;">
+                                    <label style="font-size:0.7rem; color:#6c757d; display:block; margin-bottom:4px;">Fecha (MM/AA)</label>
+                                    <div id="stripe-card-expiry" style="padding:10px; background:white; border:1px solid #ced4da; border-radius:6px;"></div>
+                                </div>
+                                <div style="flex:1; min-width:80px;">
+                                    <label style="font-size:0.7rem; color:#6c757d; display:block; margin-bottom:4px;">CVC</label>
+                                    <div id="stripe-card-cvc" style="padding:10px; background:white; border:1px solid #ced4da; border-radius:6px;"></div>
+                                </div>
+                                <div style="flex:1; min-width:100px;">
+                                    <label style="font-size:0.7rem; color:#6c757d; display:block; margin-bottom:4px;">CP</label>
+                                    <div id="stripe-card-zip" style="padding:10px; background:white; border:1px solid #ced4da; border-radius:6px;"></div>
+                                </div>
+                            </div>
                             <div id="stripe-card-errors" style="color: #dc3545; font-size: 0.8rem; margin-top: 8px;"></div>
                         </div>
                         <div id="bank-info-display" class="hidden"
@@ -1632,6 +1676,7 @@
     <script src="js/modules/admin.js?v=260424-0953"></script>
     <script src="js/modules/router.js?v=260424-0953"></script>
     <script src="js/modules/pos.js?v=260424-0953"></script>
+
     <script src="app.js?v=260424-0953"></script>
     <!-- MODAL: KNOWLEDGE UPLOAD (Manual) -->
     <div id="knowledge-modal" class="modal-overlay hidden">

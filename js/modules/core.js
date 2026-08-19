@@ -5,6 +5,39 @@
  * ---------------------------------------------------------
  * Responsabilidad: Estado global, carga de datos y utilidades base.
  */
+
+// logo_url puede traer segmentos etiquetados (logo:/hero:/oferta:/cta:) en
+// cualquier posición del string, mezclados con el vector de Brief (industria:,
+// nicho:, LAPVTFU:, ...) — así el orden del campo queda libre. Si no hay
+// ninguna etiqueta, cae al formato clásico posicional "{logo}|{hero}|{oferta}|{cta}"
+// (retrocompatible con los tenants que nunca agregaron etiquetas). Gemela de
+// la copia en scripts/ssg-engine.mjs (Node, sin módulo compartido con el SPA).
+function resolveLogoUrlParts(raw) {
+    const segments = (raw || '').toString().trim().split('|').map(s => s.trim());
+    const labeled = {};
+    segments.forEach(seg => {
+        const m = seg.match(/^(logo|hero|oferta|cta)\s*:\s*([\s\S]*)$/i);
+        if (m) labeled[m[1].toLowerCase()] = m[2].trim();
+    });
+    if (Object.keys(labeled).length > 0) {
+        return { logo: labeled.logo || '', hero: labeled.hero || '', oferta: labeled.oferta || '', cta: labeled.cta || '' };
+    }
+    return { logo: segments[0] || '', hero: segments[1] || '', oferta: segments[2] || '', cta: segments[3] || '' };
+}
+
+function parseOrigenPoliticas(raw) {
+    const segments = (raw || '').toString().trim().split('|').map(s => s.trim());
+    const labeled = {};
+    segments.forEach(seg => {
+        const m = seg.match(/^(op|presentacion|lp)\s*:\s*([\s\S]*)$/i);
+        if (m) labeled[m[1].toLowerCase()] = m[2].trim();
+    });
+    if (Object.keys(labeled).length > 0) {
+        return { op: labeled.op || '', presentacion: labeled.presentacion || '', lp: labeled.lp || '' };
+    }
+    return { op: segments[0] || '', presentacion: segments[1] || '', lp: segments[2] || '' };
+}
+
 var app = {
     // --- APP CONFIG ---
     version: "260424-0953", // Sistema Inteligente (v260424-0953) - Secure Proxy 🛡️
@@ -68,7 +101,10 @@ var app = {
     utils: {
         fixDriveUrl: (url) => {
             if (!url) return "";
-            const sUrl = url.toString().trim();
+            // ronda 3 (landing-pages) + resolveLogoUrlParts (orden libre): logo_url
+            // puede traer el logo etiquetado (logo:) en cualquier posición, mezclado
+            // con el resto del vector de Brief/landing. El SPA solo consume ese logo.
+            const sUrl = resolveLogoUrlParts(url).logo;
             // 1. Detectar si es una URL de Drive estándar o el formato obsoleto 'uc?id='
             const idMatch = sUrl.match(/\/d\/([^\/?#]+)/) ||
                 sUrl.match(/[?&]id=([^&?#]+)/) ||
@@ -162,7 +198,104 @@ var app = {
         getDate: () => {
             // Formato estándar YYYY-MM-DD para campos base
             return new Date().toLocaleDateString('en-CA');
-        }
+        },
+        // --- MODO FLAGS (v7.0.0) ---
+        // Parsea el campo modo de Config_Empresas con formato VISIBILIDAD,STRIPE,EXPRESS,POS,PRODUCTOS,INVENTARIOS,BODEGA
+        // Ej: PROD,1,1,1,1,1,1 — partes faltantes default a 1 (retrocompatible)
+        parseModo: (company) => {
+            const modo = (company?.modo || '').trim();
+            if (!modo) return { hub: 'PROD', stripe: false, express: true, pos: true, productos: true, inventarios: true, bodega: true };
+            const parts = modo.split(',');
+            return {
+                hub: (parts[0] || 'PROD').trim(),
+                stripe: parts.length > 1 && parts[1].trim() === '1',
+                express: parts.length > 2 ? parts[2].trim() === '1' : true,
+                pos: parts.length > 3 ? parts[3].trim() === '1' : true,
+                productos: parts.length > 4 ? parts[4].trim() === '1' : true,
+                inventarios: parts.length > 5 ? parts[5].trim() === '1' : true,
+                bodega: parts.length > 6 ? parts[6].trim() === '1' : true
+            };
+        },
+        // --- AI CONFIG (v8.0.0) ---
+        // Normaliza usa_soporte_ia + agent_enabled en un solo objeto
+        // Devuelve { enabled, models[], hasAudit, telegramLink } independientemente del formato del campo
+        // agent_enabled acepta: TRUE[,https://t.me/bot?start=EMPRESA]
+        parseAiConfig: (biz) => {
+            const raw = (biz?.usa_soporte_ia || biz?.agent_enabled || '').toString();
+            const upper = raw.toUpperCase();
+            const hasComma = raw.includes(',');
+            const hasSlash = raw.includes('/');
+            const hasModelKeyword = hasSlash || hasComma || upper.includes('GEMINI') || upper.includes('GPT') || upper.includes('QWEN');
+            const isExplicitlyOff = upper.startsWith('FALSE') || upper.endsWith(',NO');
+            const enabled = !isExplicitlyOff && upper !== '' && (upper === 'TRUE' || hasModelKeyword);
+            const models = raw.split(',').map(m => m.trim()).filter(m => {
+                const u = m.toUpperCase();
+                return m && !['TRUE', 'FALSE', 'NO', ''].includes(u);
+            });
+            const hasAudit = (biz?.agent_enabled || '').toString().toUpperCase() === 'TRUE';
+            // --- TELEGRAM LINK desde agent_enabled (v1.0.0) ---
+            // Formato: "TRUE,https://t.me/bot?start=EMPRESA"
+            const agentRaw = (biz?.agent_enabled || '').toString();
+            const agentParts = agentRaw.split(',');
+            const telegramLink = agentParts.length > 1 && agentParts[1].trim().startsWith('https://t.me/')
+                ? agentParts[1].trim()
+                : '';
+            return { enabled, models, hasAudit, raw, telegramLink };
+        },
+        // --- SOCIAL LINKS PARSER (v17.0.0) ---
+        // Convierte un string separado por comas con URLs/usuarios de redes sociales
+        // en un array de {url, platform, icon, color, className}
+        parseSocialLinks: (rrss) => {
+            if (!rrss || typeof rrss !== 'string') return [];
+            const platforms = [
+                { patterns: ['facebook.com', 'fb.com', 'fb.me'], name: 'facebook', icon: 'fa-facebook-f', color: '#1877F2' },
+                { patterns: ['instagram.com', 'instagr.am'], name: 'instagram', icon: 'fa-instagram', color: '#E4405F' },
+                { patterns: ['tiktok.com', 'vm.tiktok.com'], name: 'tiktok', icon: 'fa-tiktok', color: '#000000' },
+                { patterns: ['youtube.com', 'youtu.be'], name: 'youtube', icon: 'fa-youtube', color: '#FF0000' },
+                { patterns: ['linkedin.com'], name: 'linkedin', icon: 'fa-linkedin-in', color: '#0A66C2' },
+                { patterns: ['twitter.com', 'x.com'], name: 'twitter', icon: 'fa-x-twitter', color: '#000000' },
+            ];
+            return rrss.split(',').map(function(entry) {
+                var url = entry.trim();
+                if (!url) return null;
+                var lower = url.toLowerCase();
+                var match = null;
+                for (var i = 0; i < platforms.length; i++) {
+                    for (var j = 0; j < platforms[i].patterns.length; j++) {
+                        if (lower.indexOf(platforms[i].patterns[j]) !== -1) {
+                            match = platforms[i];
+                            break;
+                        }
+                    }
+                    if (match) break;
+                }
+                if (match) return { url: url, platform: match.name, icon: match.icon, color: match.color, className: match.name };
+                return { url: url, platform: 'link', icon: 'fa-link', color: '#666', className: 'link' };
+            }).filter(function(item) { return item !== null; });
+        },
+        // --- GET SOCIAL LINKS (v17.0.0) ---
+        // Obtiene las redes sociales desde company, priorizando rrss unificado
+        // con fallback a los campos individuales legacy
+        getSocialLinks: (company) => {
+            if (!company) return [];
+            if (company.rrss && company.rrss.toString().trim()) {
+                return app.utils.parseSocialLinks(company.rrss.toString().trim());
+            }
+            var links = [];
+            var legacy = [
+                { field: 'rsface', platform: 'facebook', icon: 'fa-facebook-f', color: '#1877F2', className: 'facebook' },
+                { field: 'rsinsta', platform: 'instagram', icon: 'fa-instagram', color: '#E4405F', className: 'instagram' },
+                { field: 'rstik', platform: 'tiktok', icon: 'fa-tiktok', color: '#000000', className: 'tiktok' },
+                { field: 'rsyt', platform: 'youtube', icon: 'fa-youtube', color: '#FF0000', className: 'youtube' },
+            ];
+            for (var k = 0; k < legacy.length; k++) {
+                var val = company[legacy[k].field];
+                if (val && val.toString().trim()) {
+                    links.push({ url: val.toString().trim(), platform: legacy[k].platform, icon: legacy[k].icon, color: legacy[k].color, className: legacy[k].className });
+                }
+            }
+            return links;
+        },
     },
     loadEnvConfig: async () => {
         try {
@@ -302,18 +435,24 @@ var app = {
                 const hasUrlParam = !!coParam;
 
                 // If it's the first visit follow the "Main Biz" rule (v5.3.7)
-                // REFUERZO v6.2.7: El parámetro 'co' manda sobre cualquier otra lógica de inicio
-                if (!hasUrlParam && mainBiz) {
+                // DELAY v16.7.29: Muestra el hub con burbujas 8s antes de redirigir
+                const hasVisited = !!sessionStorage.getItem('suit_visited');
+                if (!hasUrlParam && mainBiz && !hasVisited) {
                     const currentHash = window.location.hash;
                     if (!currentHash || currentHash === "" || currentHash === "#orbit") {
                         const mode = (mainBiz.modo_sitio || 'HUB').toString().toUpperCase();
                         if (mode !== 'HUB') {
-                            console.log("🚀 Redirección Automática a Empresa Principal:", mainBiz.id_empresa);
-                            app.state.companyId = mainBiz.id_empresa;
-                            company = mainBiz;
-                            // En lugar de ensuciar con #home, mantenemos la URL limpia si tiene alias
-                            const dest = company.alias_seo ? `/${company.alias_seo}` : `/#home`;
-                            window.history.replaceState({}, '', dest);
+                            console.log("🌌 Mostrando hub 8s antes de redirigir a:", mainBiz.id_empresa);
+                            app.state.companyId = null;
+                            window.location.hash = '#orbit';
+                            if (app.ui && app.ui.renderOrbit) app.ui.renderOrbit();
+                            if (app._hubTimer) clearTimeout(app._hubTimer);
+                            app._hubTimer = setTimeout(() => {
+                                console.log("🚀 Redirección Automática a Empresa Principal:", mainBiz.id_empresa);
+                                sessionStorage.setItem('suit_visited', '1');
+                                app.switchCompany(mainBiz.id_empresa);
+                            }, 8000);
+                            return;
                         }
                     }
                 }
@@ -414,11 +553,40 @@ var app = {
             // No esperamos uno por uno, pedimos todo al mismo tiempo
             if (dbEngine === 'SUPABASE' && !app.PAUSE_SUPABASE) {
                 const supabaseData = await app.loadFromSupabase(fetchId);
+                const gasPromptsIA = finalData.Prompts_IA || [];
                 app.data = { ...app.data, ...supabaseData };
-                app.data.Config_Empresas = sanitizedMaster.Config_Empresas; 
+                if ((!app.data.Prompts_IA || app.data.Prompts_IA.length === 0) && gasPromptsIA.length > 0) {
+                    app.data.Prompts_IA = gasPromptsIA;
+                }
+                const sbCompanies = supabaseData.Config_Empresas || [];
+                if (sbCompanies.length > 0) {
+                    const gasCopy = [...sanitizedMaster.Config_Empresas];
+                    sbCompanies.forEach(sb => {
+                        const idx = gasCopy.findIndex(gc => String(gc.id_empresa).toUpperCase() === String(sb.id_empresa).toUpperCase());
+                        if (idx >= 0) {
+                            Object.keys(sb).forEach(key => {
+                                if (sb[key] != null) gasCopy[idx][key] = sb[key];
+                            });
+                        }
+                    });
+                    app.data.Config_Empresas = gasCopy;
+                } else {
+                    app.data.Config_Empresas = sanitizedMaster.Config_Empresas;
+                }
                 app.data.Usuarios = sanitizedMaster.Usuarios;
                 app.state.dbEngine = 'SUPABASE';
             }
+
+            // Normalize usa_reservaciones once at load time (0/1/2)
+            app.data.Config_Empresas.forEach(c => {
+                const raw = c.usa_reservaciones;
+                if (raw == null || raw === '') {
+                    c.usa_reservaciones = 0;
+                } else {
+                    const s = String(raw).trim().toUpperCase();
+                    c.usa_reservaciones = s === '2' ? 2 : (s === 'TRUE' || s === '1') ? 1 : 0;
+                }
+            });
 
             if (app.ui && app.ui.updateEstandarBarraST) app.ui.updateEstandarBarraST();
             return true;
@@ -429,7 +597,7 @@ var app = {
     },
     // EVASOL - CORE MODULE (v16.7.0 - MIGRACIÓN COMPLETA SUPABASE)
     loadFromSupabase: async (coId) => {
-        console.log(`⚡ [SECURE_DB] Cargando tablas vía Proxy para ${coId}...`);
+        console.log(`⚡ [SECURE_DB] Cargando tablas desde Supabase para ${coId}...`);
 
         const tables = [
             'Catalogo', 'Leads', 'Proyectos', 'Pagos', 'Proyectos_Pagos',
@@ -437,15 +605,21 @@ var app = {
             'Proyectos_Materiales', 'Prompts_IA', 'Logs_Chat_IA',
             'Memoria_IA_Snapshots', 'Logs', 'Config_Galeria',
             'Empresa_Galeria', 'Empresa_Documentos', 'Reservaciones',
-            'Config_SEO', 'Config_Paginas', 'Cuotas_Pagos', 'Config_IA_Notebooks'
+            'Config_Empresas', 'Config_SEO', 'Config_Paginas', 'Cuotas_Pagos', 'Config_IA_Notebooks'
         ];
+
+        if (!app.sbUrl || !app.sbKey) {
+            console.warn('⚠️ [SECURE_DB] Falta sbUrl/sbKey (revisa js/modules/config.js) — no se puede leer Supabase.');
+            return {};
+        }
 
         const results = {};
         try {
             await Promise.all(tables.map(async (table) => {
-                // Pasamos coId como filtro de consulta al proxy
-                const url = `/api/db/${table}?id_empresa=${coId}`;
-                const res = await fetch(url);
+                // Lectura directa a la REST API de Supabase (funciona igual en local y en GitHub Pages;
+                // /api/db/:table solo responde cuando server.js está corriendo, que no es el caso en producción)
+                const url = `${app.sbUrl}/rest/v1/${table}?id_empresa=eq.${encodeURIComponent(coId)}&select=*`;
+                const res = await fetch(url, { headers: { apikey: app.sbKey, Authorization: `Bearer ${app.sbKey}` } });
                 if (res.ok) {
                     const raw = await res.json();
                     results[table] = JSON.parse(JSON.stringify(raw), (key, value) =>
@@ -532,6 +706,8 @@ var app = {
         }
     },
     switchCompany: async (newId) => {
+        sessionStorage.setItem('suit_visited', '1');
+        if (app._hubTimer) { clearTimeout(app._hubTimer); app._hubTimer = null; }
         // 1. Mostrar Loader de Transición
         const loader = document.getElementById('transition-loader');
         if (loader) {

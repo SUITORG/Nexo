@@ -1,0 +1,60 @@
+skill:
+  name: telegram-bot
+  display_name: "Telegram Bot API"
+  version: 1.0.0
+  type: tool
+  domain: communication
+
+  description: "Integración con Telegram Bot API. Enviar mensajes, fotos, documentos, encuestas, gestionar comandos y miembros del chat."
+
+  package: telegram-bot-mcp-server
+  install: "npx telegram-bot-mcp-server"
+  env_vars:
+    - TELEGRAM_BOT_API_TOKEN
+
+  tools:
+    - id: tg_send_message
+      description: "Enviar mensaje de texto a un chat"
+    - id: tg_send_photo
+      description: "Enviar foto con caption opcional"
+    - id: tg_send_document
+      description: "Enviar documento/archivo (max 50MB)"
+    - id: tg_send_video
+      description: "Enviar video MPEG4 (max 50MB)"
+    - id: tg_send_audio
+      description: "Enviar audio MP3/M4A (max 50MB)"
+    - id: tg_send_location
+      description: "Enviar ubicación geográfica"
+    - id: tg_send_poll
+      description: "Enviar encuesta (regular o quiz)"
+    - id: tg_send_contact
+      description: "Enviar tarjeta de contacto"
+    - id: tg_edit_message
+      description: "Editar texto de mensaje enviado"
+    - id: tg_delete_message
+      description: "Eliminar mensaje"
+    - id: tg_get_me
+      description: "Obtener información del bot"
+    - id: tg_set_commands
+      description: "Configurar menú de comandos del bot"
+    - id: tg_get_chat
+      description: "Obtener información del chat"
+    - id: tg_ban_member
+      description: "Banear usuario del chat"
+    - id: tg_unban_member
+      description: "Desbanear usuario del chat"
+    - id: tg_export_invite
+      description: "Exportar link de invitación"
+
+  triggers:
+    - keyword: "telegram"
+    - keyword: "bot"
+    - keyword: "tg_"
+    - keyword: "send message"
+    - keyword: "mensaje telegram"
+
+  examples:
+    - scenario: "Enviar mensaje a un chat"
+      correct: 'tg_send_message(chat_id: "@usuario", text: "Hola desde el bot")'
+    - scenario: "Enviar encuesta"
+      correct: 'tg_send_poll(chat_id: "@grupo", question: "¿Qué prefieres?", options: ["A", "B"])'

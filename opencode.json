@@ -1,0 +1,116 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/deepseek-v4-flash-free",
+  "provider": {
+    "opencode": {},
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "hf.co/ornith-ai/Ornith-1.0-9B-GGUF:Q4_K_M": {
+          "name": "Ornith 1.0 9B"
+        }
+      }
+    }
+  },
+  "plugin": [
+    ".ponytail/.opencode/plugins/ponytail.mjs"
+  ],
+  "instructions": [
+    "AGENTS.md",
+    ".suit/ARCHITECTURE.md",
+    ".suit/INDEX.md"
+  ],
+  "mcp": {
+    "higgsfield": {
+      "type": "remote",
+      "url": "https://mcp.higgsfield.ai/mcp"
+    },
+    "supabase": {
+      "type": "local",
+      "command": ["node", "scripts/mcp-supabase.js"],
+      "enabled": true
+    },
+    "google-sheets": {
+      "type": "local",
+      "command": ["npx", "-y", "mcp-gsheets@latest"],
+      "enabled": true,
+      "env": {
+        "GOOGLE_PROJECT_ID": "suitorg00",
+        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\rojo-\\Downloads\\suitorg\\google-credentials.json"
+      }
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": true
+    },
+    "comfyui": {
+      "type": "local",
+      "command": ["npx", "-y", "comfyui-mcp"],
+      "enabled": true,
+      "env": {
+        "COMFYUI_HOST": "127.0.0.1",
+        "COMFYUI_PORT": "8188"
+      }
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"],
+      "enabled": true
+    },
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "enabled": true
+    }
+  },
+  "command": {
+    "suit": {
+      "description": "SuitOS Agent Operating System — consult registry, load workflows, run validations",
+      "template": "Consult SuitOS system. Action: {{action}} (registry|workflow|validate|memory|plan)"
+    },
+    "suit:registry": {
+      "description": "Query the SuitOS registry — agents, skills, workflows, projects, models, routing",
+      "template": "Read .suit/registry/{{query}}.yaml and summarize its contents. Query: {{query}}"
+    },
+    "suit:workflow": {
+      "description": "Load a SuitOS workflow definition for the current task",
+      "template": "Read .suit/workflows/{{workflow}}.yaml and use it as the process for this task. Workflow: {{workflow}}"
+    },
+    "suit:validate": {
+      "description": "Run SuitOS review profile checks on the current changes",
+      "template": "Load .suit/reviewer/profiles.yaml, select the {{profile}} profile, and run its checks on the changes made. Profile: {{profile}}"
+    },
+    "suit:memory": {
+      "description": "Write an Architecture Decision Record to SuitOS memory",
+      "template": "Write a new ADR to .suit/memory/decisions/ADR-{{number}}-{{title}}.md following SuitOS conventions. Title: {{title}}, Decision: {{decision}}"
+    },
+    "suit:plan": {
+      "description": "Create a SuitOS execution plan using planner template",
+      "template": "Load .suit/planner/template.yaml, create a plan for this task, and present it for approval before executing. Task: {{task}}"
+    },
+    "suit:commit": {
+      "description": "Hace un git add, diff y commit desde WSL con formato SuitOS: {emoji} {tipo}: {desc} (v{X.Y.Z})",
+      "template": "Ejecuta en WSL: git status, git diff, git add -A (excluye secrets), y git commit -m '{emoji} {tipo}: {desc} (v{X.Y.Z})'. Tipo puede ser feature|bugfix|docs|refactor|chore. Si falta tipo o desc, pidelos. Mensaje: {{message}}"
+    },
+    "suit:configformatos": {
+      "description": "TUI interactiva: Configurador de Formatos y Redes Sociales. Muestra dos columnas con filtros cruzados, información de medidas/objetivo/duración al hacer hover, y botón de restablecer.",
+      "template": "Ejecuta: node scripts/configurador-formatos.js"
+    },
+    "suit:configestilos": {
+      "description": "TUI interactiva: Estilos Visuales de VIDE. Navega categorías → sub-estilos leídos en vivo desde Supabase (video_categorias_estilo/video_subestilos), muestra keywords_ia y tendencia_base.",
+      "template": "Ejecuta: node scripts/configurador-estilos.js"
+    },
+    "suit:backup": {
+      "description": "Crea un respaldo ZIP con formato SuitOrgYYMMDD.zip desde WSL",
+      "template": "Ejecuta en WSL: bash scripts/backup.sh y confirma al usuario el nombre del archivo creado."
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "suitcampanas",
+  "version": "1.0.0",
+  "description": "CMS optimizado para Google Sheets",
+  "main": "local-server-node.js",
+  "scripts": {
+    "start": "node local-server-node.js",
+    "mock": "node mock-server.js",
+    "test": "echo \"Abre test.html en tu navegador\""
+  },
+  "keywords": [
+    "cms",
+    "google-sheets",
+    "frontend",
+    "optimizado"
+  ],
+  "author": "SuitOrg Team",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.107.0",
+    "dotenv": "^17.4.2"
+  }
+}

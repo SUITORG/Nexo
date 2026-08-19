@@ -77,17 +77,14 @@ CREATE TABLE public."Config_Empresas" (
     infonom TEXT,
     enlace_oficial TEXT,
     alias_seo TEXT,
-    rsface TEXT,
-    rsinsta TEXT,
-    rstik TEXT,
-    rsyt TEXT,
+    rrss TEXT,
     usa_otp_entrega TEXT DEFAULT 'FALSE',
     usa_features_estandar TEXT DEFAULT 'FALSE',
     is_isolated TEXT DEFAULT 'FALSE',
     usa_soporte_ia TEXT DEFAULT 'FALSE',
     id_notebooklm TEXT,
     usa_qr_sitio TEXT DEFAULT 'FALSE',
-    usa_reservaciones TEXT DEFAULT 'FALSE',
+    usa_reservaciones INTEGER DEFAULT 0,
     id_calendario_google TEXT,
     drive_folder_id TEXT,
     costo_envio NUMERIC DEFAULT 0,
@@ -100,6 +97,28 @@ CREATE TABLE public."Config_Empresas" (
     slogan_empresa TEXT,
     agent_enabled TEXT DEFAULT 'TRUE'
 );
+
+-- Migración: usa_reservaciones de TEXT a INTEGER (idempotente)
+-- Solo ejecuta ALTER si la columna sigue siendo TEXT (ej: bases existentes pre-migración)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'Config_Empresas'
+      AND column_name = 'usa_reservaciones' AND data_type = 'text'
+  ) THEN
+    ALTER TABLE public."Config_Empresas"
+      ALTER COLUMN usa_reservaciones TYPE INTEGER
+      USING CASE
+        WHEN usa_reservaciones IS NULL THEN 0
+        WHEN usa_reservaciones IN ('TRUE', 'true', '1') THEN 1
+        WHEN usa_reservaciones IN ('FALSE', 'false', '0') THEN 0
+        ELSE 0
+      END;
+    ALTER TABLE public."Config_Empresas"
+      ALTER COLUMN usa_reservaciones SET DEFAULT 0;
+  END IF;
+END $$;
 
 -- Config_SEO
 CREATE TABLE public."Config_SEO" (

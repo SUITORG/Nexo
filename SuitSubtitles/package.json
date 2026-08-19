@@ -1,0 +1,12 @@
+{
+  "name": "suit-subtitles",
+  "version": "1.0.0",
+  "description": "Generador de subtítulos SRT con Whisper",
+  "main": "scripts/subtitles.py",
+  "scripts": {
+    "start": "python scripts/subtitles.py"
+  },
+  "dependencies": {
+    "openai-whisper": "^20240930"
+  }
+}

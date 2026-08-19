@@ -1,0 +1,1 @@
+SuitOS Registry Query. Pregúntale al usuario qué registro quiere consultar: agents, skills, workflows, projects, models, routing, permissions, tools. Lee el archivo `.suit/registry/{query}.yaml` y resume su contenido mostrando solo lo relevante a la pregunta del usuario.

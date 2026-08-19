@@ -1,0 +1,29 @@
+workflow:
+  name: configurador-formatos
+  display_name: "Configurador de Formatos y Redes Sociales"
+  description: "TUI interactiva para consultar compatibilidad entre formatos de contenido y redes sociales, con medidas, duración y objetivo de cada formato."
+  risk: low
+  domain: tools
+
+  entry:
+    requires_planning: false
+    requires_confirmation: false
+    required_context:
+      - SuitCampanas/GUIAFMTRRSS.MD
+    required_skills:
+      - javascript
+
+  steps:
+    - id: launch_tui
+      description: "Lanzar TUI interactiva con blessed"
+      action: run
+      command: "node scripts/configurador-formatos.js"
+      validation:
+        - "TUI se muestra correctamente con dos columnas"
+        - "Filtros cruzados funcionan al seleccionar formato o red"
+
+  exit:
+    validation:
+      - "Usuario puede navegar, filtrar y consultar información"
+    notifies:
+      - telemetry
