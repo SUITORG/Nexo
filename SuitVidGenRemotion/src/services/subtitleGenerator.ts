@@ -1,4 +1,4 @@
-import type { Scene, Script } from '../types/script';
+import type { Scene } from '../types/script';
 
 export interface SubtitleEntry {
   text: string;
@@ -7,7 +7,7 @@ export interface SubtitleEntry {
   words?: { text: string; startMs: number; endMs: number }[];
 }
 
-export function generateSubtitles(scenes: Scene[], script: Script): SubtitleEntry[] {
+export function generateSubtitles(scenes: Scene[]): SubtitleEntry[] {
   const entries: SubtitleEntry[] = [];
   let elapsedMs = 0;
 

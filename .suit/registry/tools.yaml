@@ -167,3 +167,19 @@ tools:
   SuitSolve:
     path: ../SuitSolve/
     purpose: Documentos de soluciones y guías
+
+  Canva:
+    path: (remote — mcp.canva.com)
+    entry: https://mcp.canva.com/mcp
+    purpose: Diseño gráfico automatizado: crear/editar/buscar/exportar diseños vía MCP
+    mcp_server: canva
+    type: remote
+    capabilities:
+      - design: crear diseños desde texto, editar existentes
+      - assets: subir/gestionar assets y brand kits
+      - search: buscar diseños, páginas, carpetas
+      - export: PDF, PNG, JPG, PPTX, MP4, resize
+      - comments: agregar comentarios a diseños
+    params: prompt, design_id, format, dimensions
+    status: ⚠️ pendiente activación
+    note: Requiere autenticación OAuth por usuario. Gratis: todo excepto resize. Pro: resize. Enterprise: autofill templates.

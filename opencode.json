@@ -3,6 +3,17 @@
   "model": "opencode/deepseek-v4-flash-free",
   "provider": {
     "opencode": {},
+    "huggingface": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Hugging Face",
+      "options": {
+        "baseURL": "https://router.huggingface.co/v1",
+        "apiKey": "{env:HF_TOKEN}"
+      },
+      "models": {
+        "meta-llama/Llama-3.1-8B-Instruct": { "name": "Llama 3.1 8B Instruct" }
+      }
+    },
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "Ollama (local)",
@@ -12,6 +23,39 @@
       "models": {
         "hf.co/ornith-ai/Ornith-1.0-9B-GGUF:Q4_K_M": {
           "name": "Ornith 1.0 9B"
+        },
+        "qwen2.5-coder:latest": {
+          "name": "Qwen 2.5 Coder 14B (codigo)"
+        },
+        "qwen3.5:latest": {
+          "name": "Qwen 3.5 14B (general)"
+        },
+        "llama3.2:latest": {
+          "name": "Llama 3.2 3B (rapido)"
+        },
+        "gemma4:12b": {
+          "name": "Gemma 4 12B (Google)"
+        }
+      }
+    },
+    "omniroute": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OmniRoute (local)",
+      "options": {
+        "baseURL": "http://localhost:20128/v1"
+      },
+      "models": {
+        "auto/best-coding": {
+          "name": "OmniRoute Best Coding"
+        },
+        "auto/best-reasoning": {
+          "name": "OmniRoute Best Reasoning"
+        },
+        "auto/best-fast": {
+          "name": "OmniRoute Best Fast"
+        },
+        "auto/best-chat": {
+          "name": "OmniRoute Best Chat"
         }
       }
     }
@@ -68,6 +112,17 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       },
+      "enabled": true
+    },
+    "canva": {
+      "type": "remote",
+      "url": "https://mcp.canva.com/mcp",
+      "enabled": true
+    },
+    "capcut": {
+      "type": "local",
+      "command": ["C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp\\.venv\\Scripts\\python.exe", "mcp_server.py"],
+      "cwd": "C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp",
       "enabled": true
     }
   },

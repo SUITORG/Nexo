@@ -1,0 +1,6 @@
+﻿{
+    "baseUrl":  "http://localhost:11434/v1",
+    "provider":  "openai",
+    "name":  "Ollama (local)",
+    "apiKey":  "ollama-local"
+}

@@ -24,7 +24,8 @@ Proyecto local — no se despliega vía GitHub Pages. El SEO/deploy de `grupoeva
 ## Decisiones tomadas
 - Selector de alcance de producción: Completo (12) / Semanal (7) / Demo (4), idempotente.
 - `index.html` VIDE reorganizado en 3 bloques: suelto / campaña / retomar.
-- Pausado explícitamente por el usuario (no retomar sin que lo pida): conversión de guion de meditación de 20 min a video; flag `--rate` para voz más lenta en TTS.
+- Retomado (antes pausado) — conversión de guion narrativo (meditación, voz en off larga) a video: VIDE ahora genera TTS **por escena** (no un solo pase con todo el guion), con silencio real (no frame negro) entre segmentos. El guion de texto libre (`#videGuion`, sin JSON) reconoce automáticamente el formato con `[PAUSA DE SILENCIO: N SEGUNDOS]`, `[MÚSICA:]`, `[EFECTO:]`, encabezados `Sección (N minutos)` y un bloque final `Prompts para Fotografía...` (`parseGuionNarrativo()` en `local-server-node.js`). Selector de ritmo de voz (`--rate` de Edge TTS) agregado en la UI (Normal/Lento/Muy lento).
+- SFX real en VIDE (antes se parseaba `scene.sfx` y se descartaba, nunca sonaba — ver B18): tipos fijos (whoosh/glitch/pop/bassdrop) vía `sfx.py` igual que ViRe, y sonido ambiental real (cuencos, olas, campanas...) para `[EFECTO: ...]` vía API de Freesound (`FREESOUND_API_KEY` en `.env`), filtrado a licencia CC0. Requiere traducir la consulta a 1-2 sustantivos en inglés antes de buscar (Freesound es Y-lógico y está en inglés — `traducirSfxQuery()`), verificado en vivo contra la API real.
 
 ## Pendientes críticos
 - Rotar credenciales de Google Cloud (acción manual, seguridad).
@@ -32,6 +33,7 @@ Proyecto local — no se despliega vía GitHub Pages. El SEO/deploy de `grupoeva
 - Prueba manual del usuario en navegador real para cerrar validación end-to-end del pipeline.
 - Definir si se autoselecciona Formato/Plataforma desde el Brief (sin decidir aún).
 - Agregar paso de selección manual de tendencia al Agente de IMG (`agent-tendencias.js`) — hoy genera las 5 automáticamente sin que el usuario elija (a diferencia del flujo de BDSMT/VIDE).
+- TTS por escena + guion narrativo (arriba) implementado pero sin probar en servidor real todavía — validar con el guion de meditación real del usuario en su próxima corrida.
 
 ---
 

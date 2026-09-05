@@ -1,9 +1,8 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, Img } from "remotion";
-import type { TextScene } from "../types/script";
+import type { TextScene as TextSceneData } from "../../types/script";
 
-export const TextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
+export const TextScene: React.FC<{ scene: TextSceneData }> = ({ scene }) => {
   const frame = useCurrentFrame();
-  const duration = Math.round(scene.duration * 30);
   const opacity = interpolate(frame, [0, 15], [0, 1]);
   const slideUp = interpolate(frame, [0, 15], [40, 0]);
 
@@ -72,6 +71,42 @@ export const TextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
           {scene.texto_overlay || scene.body}
         </p>
       </AbsoluteFill>
+
+      {/* Miniaturas de logo/avatar sobre la imagen — mismo criterio que VIDE
+          (CLAUDE.md): nunca un slide aparte. Misma posición/tamaño que el
+          overlay de FFmpeg de VIDE (120px, 20px de margen) para que ambos
+          motores se vean consistentes. */}
+      {scene.logo_url && (
+        <Img
+          src={scene.logo_url}
+          style={{
+            position: "absolute",
+            top: 20,
+            left: 20,
+            width: 120,
+            height: 120,
+            objectFit: "contain",
+            background: "rgba(255,255,255,0.85)",
+            borderRadius: 12,
+            padding: 10,
+          }}
+        />
+      )}
+      {scene.avatar_url && (
+        <Img
+          src={scene.avatar_url}
+          style={{
+            position: "absolute",
+            bottom: 20,
+            left: 20,
+            width: 120,
+            height: 120,
+            objectFit: "cover",
+            borderRadius: "50%",
+            border: "3px solid white",
+          }}
+        />
+      )}
     </AbsoluteFill>
   );
 };

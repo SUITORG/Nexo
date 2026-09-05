@@ -14,6 +14,202 @@ const { MODELS, DEFAULT_MODEL, toOmniRouteId } = require('./models-config');
 
 const PORT = 8000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
+const FREESOUND_API_KEY = process.env.FREESOUND_API_KEY;
+
+// Respaldo cuando Pollinations devuelve algo inválido (rate limit, etc.) — foto de
+// stock real en vez de solo un fondo sólido. query = descripción visual de la
+// escena, se recorta a pocas palabras porque Pexels busca mejor así que con una
+// oración larga tipo prompt de IA.
+async function buscarImagenPexels(query, width, height) {
+    if (!PEXELS_API_KEY) return null;
+    try {
+        const simpleQuery = query.split(',')[0].trim().split(/\s+/).slice(0, 6).join(' ');
+        const orientation = height >= width ? 'portrait' : 'landscape';
+        const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(simpleQuery)}&orientation=${orientation}&per_page=1`;
+        const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.photos?.[0]?.src?.large2x || data.photos?.[0]?.src?.large || null;
+    } catch (e) {
+        serverLog('WARN', `[Pexels] Búsqueda falló: ${e.message}`);
+        return null;
+    }
+}
+
+// Sonido ambiental real (cuencos, olas, campanas...) para las marcas [EFECTO: ...]
+// de un guion narrativo — sfx.py solo sabe sintetizar 4 tonos fijos (whoosh/
+// glitch/pop/bassdrop), no interpreta descripciones libres. Filtrado a CC0
+// (Creative Commons 0): uso libre, sin atribución, seguro para video de cliente.
+//
+// Freesound busca en modo Y-lógico (TODAS las palabras deben aparecer en el
+// sonido) y está en inglés — verificado en vivo: una consulta española da 0
+// resultados siempre, y hasta traducida palabra por palabra con 5-6 términos
+// (sustantivos + adjetivos tipo "resonance"/"soft"/"long") también da 0 — el
+// AND exige que un sonido tenga TODAS esas etiquetas a la vez, algo que casi
+// ningún archivo cumple. Solución verificada: quedarse solo con 1-2 sustantivos
+// del objeto que suena ("tibetan bowl", "crystal bowl"), descartando adjetivos/
+// duración — igual a mi primera prueba manual ("tibetan bowl" → 165 resultados).
+const SFX_NOUNS_ES_EN = {
+    'cuenco tibetano': 'tibetan bowl', 'cuencos tibetanos': 'tibetan bowl',
+    'cuenco de cristal': 'crystal bowl', 'cuencos de cristal': 'crystal bowl',
+    cuenco: 'bowl', cuencos: 'bowl', campana: 'bell', campanas: 'bell', gong: 'gong',
+    ola: 'wave', olas: 'waves', mar: 'sea', océano: 'ocean', oceano: 'ocean',
+    viento: 'wind', lluvia: 'rain', trueno: 'thunder', fuego: 'fire',
+    pájaro: 'bird', pajaro: 'bird', pájaros: 'birds', pajaros: 'birds',
+    agua: 'water', río: 'river', rio: 'river', arroyo: 'stream', bosque: 'forest'
+};
+function traducirSfxQuery(text) {
+    let out = text.toLowerCase();
+    const hits = [];
+    for (const [es, en] of Object.entries(SFX_NOUNS_ES_EN)) {
+        if (hits.length >= 2) break;
+        const re = new RegExp(`\\b${es}\\b`, 'i');
+        if (re.test(out)) {
+            hits.push(en);
+            out = out.replace(new RegExp(`\\b${es}\\b`, 'gi'), '');
+        }
+    }
+    return hits.length ? hits.join(' ') : null;
+}
+
+async function buscarSonidoFreesound(query) {
+    if (!FREESOUND_API_KEY) return null;
+    try {
+        const simpleQuery = traducirSfxQuery(query.split(/[,.;]/)[0].trim());
+        if (!simpleQuery) {
+            serverLog('WARN', `[Freesound] "${query}" no matchea vocabulario conocido, se omite búsqueda`);
+            return null;
+        }
+        const filter = encodeURIComponent('license:"Creative Commons 0" duration:[0.5 TO 30]');
+        const url = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(simpleQuery)}&filter=${filter}&sort=rating_desc&fields=id,name,previews&page_size=1&token=${FREESOUND_API_KEY}`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const sound = data.results?.[0];
+        return sound?.previews?.['preview-hq-mp3'] || sound?.previews?.['preview-lq-mp3'] || null;
+    } catch (e) {
+        serverLog('WARN', `[Freesound] Búsqueda falló: ${e.message}`);
+        return null;
+    }
+}
+
+// Genera (o reusa) la imagen de UNA escena y le aplica overlay de logo/avatar si
+// hay — extraído del loop de /api/video-produce para que también lo use el
+// endpoint /api/scene-image (modo "revisar por escena"), sin duplicar la lógica.
+// Escribe el PNG final en imgPath; no retorna nada (mismo estilo que el loop
+// original, que ya trabajaba directo sobre archivos en vez de buffers en memoria).
+async function generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image_source, imgDim, imgPath, logoPath, avatarPath, existingImageUrl }) {
+    let finalBuf = null;
+
+    if (existingImageUrl) {
+        // Imagen ya aprobada en el modo "revisar por escena" — se reusa tal cual,
+        // sin volver a llamar a Pollinations/Pexels (mismo criterio que ya usa ViRe
+        // en imageProvider.js con scene.image_url).
+        if (existingImageUrl.startsWith('data:')) {
+            finalBuf = Buffer.from(existingImageUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+        } else {
+            try {
+                const res = await fetch(existingImageUrl);
+                if (res.ok) finalBuf = Buffer.from(await res.arrayBuffer());
+            } catch (e) {
+                serverLog('WARN', `[VIDE] No se pudo reusar imagen aprobada: ${e.message}`);
+            }
+        }
+    }
+
+    if (!finalBuf) {
+        const estiloPrefix = estilo_visual_keywords ? `${estilo_visual_keywords}, ` : '';
+        // Ancla de calidad fija, igual que hace ViRe (SuitVidGenRemotion/scripts/
+        // helpers/imageProvider.js) — sin esto, la nitidez dependía de si el estilo
+        // elegido traía o no términos técnicos de foto (Realista sí, Acuarela no).
+        const qualityAnchor = 'sharp focus, highly detailed, professional photography, ';
+        const prompt = qualityAnchor + estiloPrefix + visualDesc.substring(0, 200) + ', no text, no readable signage, no logos, no writing';
+        serverLog('INFO', `[VIDE] Prompt de imagen: ${prompt}`);
+        const seed = Math.floor(Math.random() * 1000000);
+        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${imgDim.w}&height=${imgDim.h}&seed=${seed}&nologo=true&model=flux`;
+
+        if (image_source === 'pexels') {
+            // Selector manual: ni se intenta Pollinations, va directo a la foto de
+            // stock (misma foto de respaldo que el fallback automático).
+            const pexelsUrl = await buscarImagenPexels(visualDesc, imgDim.w, imgDim.h);
+            if (pexelsUrl) finalBuf = Buffer.from(await (await fetch(pexelsUrl)).arrayBuffer());
+        } else {
+            const imgRes = await fetch(imgUrl);
+            const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+            // Pollinations a veces responde 200 con un JSON de error (ej. rate
+            // limit) en vez de una imagen real — sin validar, ese JSON se
+            // escribía tal cual como si fuera el PNG. Río abajo eso tronaba
+            // FFmpeg dos veces: en el overlay de esa escena ("Invalid PNG
+            // signature") y, peor, en el ensamblado final del video completo
+            // (el error verboso de decodificar basura repetido por escena
+            // parece ser lo que desbordaba el pipe de spawnSync -> ENOBUFS).
+            const isValidImage = imgRes.ok && imgBuf.length > 100 &&
+                ((imgBuf[0] === 0x89 && imgBuf[1] === 0x50) || (imgBuf[0] === 0xFF && imgBuf[1] === 0xD8));
+            if (isValidImage) {
+                finalBuf = imgBuf;
+            } else {
+                const pexelsUrl = await buscarImagenPexels(visualDesc, imgDim.w, imgDim.h);
+                if (pexelsUrl) {
+                    serverLog('WARN', `[VIDE] Imagen inválida (Pollinations HTTP ${imgRes.status}), usando foto de stock de Pexels`);
+                    finalBuf = Buffer.from(await (await fetch(pexelsUrl)).arrayBuffer());
+                } else {
+                    serverLog('WARN', `[VIDE] Imagen inválida (Pollinations HTTP ${imgRes.status}) y sin resultado de Pexels, usando fondo sólido de respaldo`);
+                }
+            }
+        }
+    }
+
+    if (finalBuf) {
+        fs.writeFileSync(imgPath, finalBuf);
+    } else {
+        ffmpeg(['-y', '-f', 'lavfi', '-i', `color=c=0x1e293b:s=${imgDim.w}x${imgDim.h}`, '-frames:v', '1', imgPath]);
+    }
+
+    // Overlay logo (top-left) and avatar (bottom-left circle), igual sin importar
+    // de dónde salió la imagen de base.
+    let hasOverlays = false;
+    let overlayInputs = [];
+    let overlayFilters = [];
+    let overlayCount = 1;
+    let lastOverlayLabel = '0:v';
+
+    if (logoPath && fs.existsSync(logoPath)) {
+        overlayInputs.push('-i', logoPath);
+        overlayFilters.push(`[${overlayCount}:v]scale=120:120:force_original_aspect_ratio=decrease,pad=120:120:(ow-iw)/2:(oh-ih)/2:color=black@0[logo_scaled]`);
+        overlayFilters.push(`[${lastOverlayLabel}]drawbox=x=10:y=10:w=140:h=140:color=white@0.85:t=fill[logo_chip]`);
+        overlayFilters.push(`[logo_chip][logo_scaled]overlay=20:20[with_logo]`);
+        lastOverlayLabel = 'with_logo';
+        overlayCount++;
+        hasOverlays = true;
+    }
+
+    if (avatarPath && fs.existsSync(avatarPath)) {
+        overlayInputs.push('-i', avatarPath);
+        overlayFilters.push(`[${overlayCount}:v]scale=120:120,format=rgba,geq=r='r(X,Y)':a='if(lte(sqrt((X-60)^2+(Y-60)^2),60),255,0)'[avatar_circle]`);
+        overlayFilters.push(`[${lastOverlayLabel}][avatar_circle]overlay=20:H-h-20[with_avatar]`);
+        lastOverlayLabel = 'with_avatar';
+        overlayCount++;
+        hasOverlays = true;
+    }
+
+    if (hasOverlays) {
+        const overlayImgPath = imgPath.replace(/\.png$/, '_ov.png');
+        try {
+            // -map target must match whichever overlay ran LAST (logo-only ends at
+            // [with_logo]; hardcoding [with_avatar] failed FFmpeg every time a scene
+            // had no avatar configured, which is the common case).
+            const filterStr = overlayFilters.join(';');
+            const ffmpegArgs = ['-y', '-i', imgPath, ...overlayInputs, '-filter_complex', filterStr, '-map', `[${lastOverlayLabel}]`, overlayImgPath];
+            ffmpeg(ffmpegArgs);
+            fs.unlinkSync(imgPath);
+            fs.renameSync(overlayImgPath, imgPath);
+        } catch (overlayErr) {
+            serverLog('WARN', `[VIDE] Error overlay: ${overlayErr.message}`);
+        }
+    }
+}
+
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzlNe28j7yJObxqfCyUg595Zeg1IjsMMjOZyf8KOK5pkCYU-zYFJrsyzwsJhNFjZy1v-A/exec';
 
 // OmniRoute (gateway local de modelos IA, puerto 20128). En WSL2 no se alcanza vía
@@ -69,6 +265,12 @@ function getAudioDurationSec(filePath) {
     } catch (e) {
         return null;
     }
+}
+
+// Silencio real (no frame negro) para escenas de pausa y para los huecos entre
+// escenas — deja que la imagen/zoom siga en pantalla mientras el audio calla.
+function makeSilenceClip(outPath, seconds) {
+    ffmpeg(['-y', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-t', String(Math.max(0.1, seconds)), outPath]);
 }
 
 function ffmpeg(args, opts = {}) {
@@ -171,6 +373,96 @@ function computeRealDuration(scenes) {
     return scenes.reduce((acc, s, i) => acc + (s.duracion || 5) + (i < scenes.length - 1 ? (s.pausa_final || 0.5) : 0), 0);
 }
 
+// Guion narrativo tipo meditación/voz en off: párrafos sueltos con marcadores
+// [PAUSA DE SILENCIO: N SEGUNDOS] / [MÚSICA:] / [EFECTO:], encabezados de sección
+// "Nombre (N minutos)" y un bloque final "Prompts para Fotografía..." con una
+// imagen por párrafo. Cada bloque hablado se vuelve una escena (duración real se
+// calcula luego con el audio TTS ya generado); cada pausa se vuelve una escena de
+// silencio que reusa la última imagen (is_silence:true, sin voz).
+function parseGuionNarrativo(text) {
+    const promptSplit = text.split(/\n\s*Prompts?\s+para\s+Fotograf[íi]a[^\n]*\n/i);
+    const body = promptSplit[0];
+    const imagePrompts = promptSplit[1]
+        ? promptSplit[1].split(/\n\s*\n/).map(p => p.replace(/\s+/g, ' ').trim()).filter(p => p.length > 15)
+        : [];
+
+    const metaLine = /^(Tema seleccionad[oa]|Inspiraci[óo]n)\s*:/i;
+    const hashtagLine = /^#\S+(\s+#\S+)*\s*$/;
+    const headerLine = /^([^\n(]{2,60})\s*\(([\d.]+)\s*minutos?\)\s*$/i;
+    const pausaLine = /\[?\s*PAUSA\s+DE\s+SILENCIO[^\]]*?(\d+(?:\.\d+)?)\s*SEGUND[^\]]*\]?/i;
+    const musicaLine = /^\[\s*M[ÚU]SICA\s*:/i;
+    const efectoLine = /^\[\s*EFECTO\s*:\s*([^\]]+)\]?\s*$/i;
+
+    const blocks = body.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+    const raw = [];
+    let currentTitle = '';
+    let lastVisual = '';
+    let imgIdx = 0;
+    // [EFECTO: ...] no es su propia escena — describe un sonido puntual que se
+    // busca en Freesound (CC0) y se mezcla sobre la SIGUIENTE escena (voz o
+    // silencio) que aparezca. Si no hay ninguna después (ej. el efecto de cierre
+    // tras el último párrafo), se pega a la última escena ya armada.
+    let pendingEfecto = null;
+
+    for (const block of blocks) {
+        if (metaLine.test(block) || hashtagLine.test(block) || musicaLine.test(block)) continue;
+
+        const efectoMatch = block.match(efectoLine);
+        if (efectoMatch) {
+            pendingEfecto = efectoMatch[1].trim();
+            continue;
+        }
+
+        const pausaMatch = block.length < 120 && block.match(pausaLine);
+        if (pausaMatch) {
+            raw.push({ title: currentTitle || 'Silencio', body: '', visual: lastVisual, is_silence: true, duracion: parseFloat(pausaMatch[1]), pausa_final: 0.3, animacion: 'ken_burns', sfx_query: pendingEfecto || undefined });
+            pendingEfecto = null;
+            continue;
+        }
+
+        const headerMatch = block.split('\n').length === 1 && block.match(headerLine);
+        if (headerMatch) {
+            currentTitle = headerMatch[1].trim();
+            continue;
+        }
+
+        // Marcadores intercalados dentro de un párrafo hablado (no en su propio
+        // bloque) se limpian para que el TTS no los lea en voz alta.
+        const spoken = block.replace(/\[[^\]]*\]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!spoken) continue;
+
+        if (imagePrompts.length) {
+            lastVisual = imagePrompts[imgIdx % imagePrompts.length];
+            imgIdx++;
+        }
+        const wordCount = spoken.split(/\s+/).length;
+        raw.push({ title: currentTitle || `Escena ${raw.length + 1}`, body: spoken, visual: lastVisual, duracion: Math.max(3, Math.round(wordCount / 2.2)), pausa_final: 0.4, animacion: 'ken_burns', sfx_query: pendingEfecto || undefined });
+        pendingEfecto = null;
+    }
+    if (pendingEfecto && raw.length) {
+        raw[raw.length - 1].sfx_query = pendingEfecto;
+    }
+
+    return raw.map((s, i) => ({
+        id: i + 1,
+        title: s.title,
+        body: s.body,
+        visual: s.visual || '',
+        texto_overlay: '',
+        duracion: s.duracion,
+        pausa_inicial: 0.3,
+        pausa_final: s.pausa_final,
+        animacion: s.animacion,
+        musica_local: null,
+        camara: null,
+        pattern_interrupt: '',
+        sfx: null,
+        sfx_query: s.sfx_query || undefined,
+        image_url: undefined,
+        is_silence: !!s.is_silence
+    }));
+}
+
 // Parses a guion (JSON {config,escenas}, JSON array, or plain text) into a
 // normalized scenes[] + videoConfig, shared by /api/video-produce (VIDE/FFmpeg)
 // and /api/vire-produce (ViRe/Remotion) so both engines read the exact same guion.
@@ -201,7 +493,8 @@ function parseGuionScenes(guion, duration, style) {
                 musica_local: s.musica_local || null,
                 camara: s.camara || null,
                 pattern_interrupt: s.pattern_interrupt || '',
-                sfx: s.sfx || null
+                sfx: s.sfx || null,
+                image_url: s.image_url || undefined
             }));
         } else if (parsed.escenas && Array.isArray(parsed.escenas)) {
             scenes = parsed.escenas.map((s, i) => ({
@@ -217,29 +510,38 @@ function parseGuionScenes(guion, duration, style) {
                 musica_local: s.musica_local || null,
                 camara: s.camara || null,
                 pattern_interrupt: s.pattern_interrupt || '',
-                sfx: s.sfx || null
+                sfx: s.sfx || null,
+                image_url: s.image_url || undefined
             }));
         } else {
             throw new Error('JSON sin estructura de escenas');
         }
     } catch (_) {
-        scenes = guion.split(/\n(?=Escena|Scene|\d+\.|\*)/i)
-            .filter(s => s.trim().length > 5)
-            .map((s, i) => {
-                const lines = s.trim().split('\n').filter(l => l.trim());
-                return {
-                    id: i + 1,
-                    title: lines[0]?.replace(/^(Escena|Scene|\d+)[\.\:\-\s]*/i, '').trim() || `Escena ${i + 1}`,
-                    body: lines.slice(1).join(' ').trim() || lines[0]?.trim() || '',
-                    visual: '',
-                    texto_overlay: '',
-                    duracion: Math.floor((videoConfig.duracion_total || 30) / Math.max(scenes.length || 3, 1)),
-                    pausa_inicial: 0.5,
-                    pausa_final: 0.5,
-                    animacion: 'fade',
-                    musica_local: null
-                };
-            });
+        // Narrativo/meditación ([PAUSA DE SILENCIO: N SEGUNDOS], [MÚSICA:], [EFECTO:],
+        // encabezados "Sección (N minutos)", bloque final de prompts de fotografía) es un
+        // formato de texto libre distinto del clásico "Escena N: texto" — se detecta por
+        // sus marcadores entre corchetes y usa su propio parser.
+        if (/\[\s*PAUSA\s+DE\s+SILENCIO|\[\s*M[ÚU]SICA\s*:|\[\s*EFECTO\s*:/i.test(guion)) {
+            scenes = parseGuionNarrativo(guion);
+        } else {
+            scenes = guion.split(/\n(?=Escena|Scene|\d+\.|\*)/i)
+                .filter(s => s.trim().length > 5)
+                .map((s, i) => {
+                    const lines = s.trim().split('\n').filter(l => l.trim());
+                    return {
+                        id: i + 1,
+                        title: lines[0]?.replace(/^(Escena|Scene|\d+)[\.\:\-\s]*/i, '').trim() || `Escena ${i + 1}`,
+                        body: lines.slice(1).join(' ').trim() || lines[0]?.trim() || '',
+                        visual: '',
+                        texto_overlay: '',
+                        duracion: Math.floor((videoConfig.duracion_total || 30) / Math.max(scenes.length || 3, 1)),
+                        pausa_inicial: 0.5,
+                        pausa_final: 0.5,
+                        animacion: 'fade',
+                        musica_local: null
+                    };
+                });
+        }
     }
     // Real duration wins: it's what actually gets rendered (sum of the scenes'
     // own timing). The UI's duration field/AI's config.duracion_total are only
@@ -1468,8 +1770,23 @@ const server = http.createServer((req, res) => {
                     serverLog('WARN', `❌ [AI_LOCAL_FAIL]: ${localErr.message}`);
                 }
 
+                // 🐑 [FALLBACK OLLAMA] Último recurso: modelo local ya corriendo en esta
+                // máquina, sin depender de OmniRoute ni de LM Studio (ninguno de los dos
+                // estaba levantado cuando este endpoint fallaba en la práctica).
+                try {
+                    serverLog('INFO', `🐑 [AI_OLLAMA] Intentando con Ollama local (${OLLAMA_FALLBACK_MODEL})...`);
+                    const systemMsg = messages.find(m => m.role === 'system')?.content || '';
+                    const userMsg = messages.filter(m => m.role === 'user').map(m => m.content).join('\n') || messages[messages.length - 1].content;
+                    const result = await callOllama(OLLAMA_FALLBACK_MODEL, systemMsg, userMsg, temperature || 0.7);
+                    serverLog('INFO', `✅ [AI_SUCCESS] Ollama local respondió correctamente.`);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({ choices: [{ message: { content: result } }] }));
+                } catch (ollamaErr) {
+                    serverLog('WARN', `❌ [AI_OLLAMA_FAIL]: ${ollamaErr.message}`);
+                }
+
                 res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: `Fallo total de red. Revisa tu Firewall o Antivirus. Detalle: ${lastError}` }));
+                res.end(JSON.stringify({ error: `Ningún modelo de IA respondió (nube, LM Studio ni Ollama local). Último error: ${lastError}` }));
 
             } catch (e) {
                 serverLog('ERROR', "❌ Error en Proxy AI:", e);
@@ -1937,13 +2254,71 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // Modo "revisar por escena": genera (o regenera) la imagen de UNA sola escena
+    // para previsualizar/aprobar antes de armar el video completo. Reusa el mismo
+    // helper que usa el loop de /api/video-produce — misma calidad, mismos overlays.
+    if (pathname === '/api/scene-image' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            let tmpDir = null;
+            try {
+                const { visual, title, body: sceneBody, estilo_visual_keywords, image_source, format, logo_url, avatar_url } = JSON.parse(body);
+                const visualDesc = visual || `${title || ''} ${sceneBody || ''}`.trim() || 'abstract background, no text';
+                const imgDim = FMT_DIMS[format] || FMT_DIMS.Reel;
+
+                tmpDir = path.join(__dirname, `tmp_sceneimg_${Date.now()}_${Math.floor(Math.random() * 1e6)}`);
+                fs.mkdirSync(tmpDir, { recursive: true });
+
+                let logoPath = null;
+                if (logo_url) {
+                    if (logo_url.startsWith('data:')) {
+                        logoPath = path.join(tmpDir, 'logo.png');
+                        fs.writeFileSync(logoPath, logo_url.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+                    } else if (logo_url.startsWith('http')) {
+                        try {
+                            const r = await fetch(logo_url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+                            if (r.ok) { logoPath = path.join(tmpDir, 'logo.png'); fs.writeFileSync(logoPath, Buffer.from(await r.arrayBuffer())); }
+                        } catch (_) { /* sin logo, no bloquea la preview */ }
+                    }
+                }
+                let avatarPath = null;
+                if (avatar_url) {
+                    if (avatar_url.startsWith('data:')) {
+                        avatarPath = path.join(tmpDir, 'avatar.png');
+                        fs.writeFileSync(avatarPath, avatar_url.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+                    } else if (avatar_url.startsWith('http')) {
+                        try {
+                            const r = await fetch(avatar_url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+                            if (r.ok) { avatarPath = path.join(tmpDir, 'avatar.png'); fs.writeFileSync(avatarPath, Buffer.from(await r.arrayBuffer())); }
+                        } catch (_) { /* sin avatar, no bloquea la preview */ }
+                    }
+                }
+
+                const imgPath = path.join(tmpDir, 'scene.png');
+                await generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image_source, imgDim, imgPath, logoPath, avatarPath });
+
+                const buf = fs.readFileSync(imgPath);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', image_url: `data:image/png;base64,${buf.toString('base64')}` }));
+            } catch (e) {
+                serverLog('ERROR', `[SceneImage] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            } finally {
+                if (tmpDir && fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
+            }
+        });
+        return;
+    }
+
     // ===== VIDE: SUITE COMPLETA DE VIDEO =====
     if (pathname === '/api/video-produce' && req.method === 'POST') {
         let body = '';
         req.on('data', d => body += d);
         req.on('end', async () => {
             try {
-                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, duration, modules, format, platform, voice } = JSON.parse(body);
+                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, duration, modules, format, platform, voice, voice_rate, estilo_visual_keywords, image_source } = JSON.parse(body);
                 serverLog('INFO', `[VIDE] Iniciando para: ${empresa} (${modules.join(', ')})`);
 
                 const tmpDir = path.join(__dirname, `tmp_vide_${Date.now()}`);
@@ -2014,87 +2389,31 @@ const server = http.createServer((req, res) => {
                     const imgDim = FMT_DIMS[format] || FMT_DIMS.Reel;
                     for (let i = 0; i < scenes.length; i++) {
                         const scene = scenes[i];
-                        // Cinematic direction (camara/pattern_interrupt), when the guion trae esos
-                        // campos, se antepone a "visual" para que realmente influya en la imagen
-                        // en vez de quedarse como metadata sin efecto.
-                        const camaraHint = scene.camara ? `${scene.camara.plano || ''} shot, ${scene.camara.movimiento || ''} camera movement, ` : '';
-                        const interruptHint = scene.pattern_interrupt ? `${scene.pattern_interrupt}, ` : '';
+                        // camara/pattern_interrupt son metadata de VIDEO (movimiento de cámara,
+                        // cortes) — no se meten al prompt de imagen fija, confunden al modelo de
+                        // difusión (ej. "camera movement" en una sola foto). El zoompan/Ken Burns
+                        // de FFmpeg ya usa scene.animacion por su cuenta (línea ~2275), no esto.
+                        // title+body es el DIÁLOGO hablado, no una descripción visual — antes se
+                        // pegaba siempre detrás de "visual" y contaminaba el prompt de imagen con
+                        // el texto que se dice en voz alta (números de teléfono, verbos de acción
+                        // como "Llama ahora", nombres...). Un modelo de imagen puede interpretar
+                        // eso literalmente (ej. "Llama ahora" generando una llama, el animal) en
+                        // vez de la escena real. Ahora title+body solo se usa si no hay "visual"
+                        // (modo texto libre, que no trae descripción visual propia).
                         // Belt-and-suspenders against garbled invented text: diffusion models
                         // can't render legible text/names reliably, so even if the guion prompt
                         // slips one in, block it here too — cheap, and this is the last point
                         // before the image actually gets generated.
-                        const prompt = camaraHint + interruptHint + (scene.visual ? scene.visual + ' -- ' : '') + `${scene.title} ${scene.body}`.substring(0, 200) + ', no text, no readable signage, no logos, no writing';
-                        const seed = Math.floor(Math.random() * 1000000);
-                        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${imgDim.w}&height=${imgDim.h}&seed=${seed}&nologo=true&model=flux`;
+                        const visualDesc = scene.visual || `${scene.title} ${scene.body}`;
 
                         try {
-                            const imgRes = await fetch(imgUrl);
-                            const imgBuf = Buffer.from(await imgRes.arrayBuffer());
                             let imgPath = path.join(imagesDir, `scene_${i}.png`);
-                            // Pollinations a veces responde 200 con un JSON de error (ej. rate
-                            // limit) en vez de una imagen real — sin validar, ese JSON se
-                            // escribía tal cual como si fuera el PNG. Río abajo eso tronaba
-                            // FFmpeg dos veces: en el overlay de esa escena ("Invalid PNG
-                            // signature") y, peor, en el ensamblado final del video completo
-                            // (el error verboso de decodificar basura repetido por escena
-                            // parece ser lo que desbordaba el pipe de spawnSync -> ENOBUFS).
-                            const isValidImage = imgRes.ok && imgBuf.length > 100 &&
-                                ((imgBuf[0] === 0x89 && imgBuf[1] === 0x50) || (imgBuf[0] === 0xFF && imgBuf[1] === 0xD8));
-                            if (!isValidImage) {
-                                serverLog('WARN', `[VIDE] Imagen de escena ${i} inválida (Pollinations HTTP ${imgRes.status}), usando fondo sólido de respaldo`);
-                                ffmpeg(['-y', '-f', 'lavfi', '-i', `color=c=0x1e293b:s=${imgDim.w}x${imgDim.h}`, '-frames:v', '1', imgPath]);
-                            } else {
-                                fs.writeFileSync(imgPath, imgBuf);
-                            }
-                            // Overlay logo on the image (top-left) and avatar (bottom-left circle)
-                            let hasOverlays = false;
-                            let overlayInputs = [];
-                            let overlayFilters = [];
-                            let overlayCount = 1;
-
-                            let lastOverlayLabel = '0:v';
-
-                            if (logoPath && fs.existsSync(logoPath)) {
-                                overlayInputs.push('-i', logoPath);
-                                // Fixed 120x120 footprint (fit + transparent pad) regardless of the
-                                // logo's own aspect ratio, so the chip behind it is a known size.
-                                overlayFilters.push(`[${overlayCount}:v]scale=120:120:force_original_aspect_ratio=decrease,pad=120:120:(ow-iw)/2:(oh-ih)/2:color=black@0[logo_scaled]`);
-                                // Semi-transparent chip behind the logo so it stays visible
-                                // regardless of the AI-generated background under it.
-                                // White chip, not black: most logos (like this one) are dark-inked
-                                // and vanish against a dark semi-transparent backing — white/light
-                                // is the safe default regardless of the logo's own colors.
-                                overlayFilters.push(`[${lastOverlayLabel}]drawbox=x=10:y=10:w=140:h=140:color=white@0.85:t=fill[logo_chip]`);
-                                overlayFilters.push(`[logo_chip][logo_scaled]overlay=20:20[with_logo]`);
-                                lastOverlayLabel = 'with_logo';
-                                overlayCount++;
-                                hasOverlays = true;
-                            }
-
-                            if (avatarPath && fs.existsSync(avatarPath)) {
-                                overlayInputs.push('-i', avatarPath);
-                                overlayFilters.push(`[${overlayCount}:v]scale=120:120,format=rgba,geq=r='r(X,Y)':a='if(lte(sqrt((X-60)^2+(Y-60)^2),60),255,0)'[avatar_circle]`);
-                                overlayFilters.push(`[${lastOverlayLabel}][avatar_circle]overlay=20:H-h-20[with_avatar]`);
-                                lastOverlayLabel = 'with_avatar';
-                                overlayCount++;
-                                hasOverlays = true;
-                            }
-
-                            if (hasOverlays) {
-                                const overlayImgPath = path.join(imagesDir, `scene_${i}_overlay.png`);
-                                try {
-                                    const filterStr = overlayFilters.join(';');
-                                    // -map target must match whichever overlay ran LAST (logo-only ends
-                                    // at [with_logo]; hardcoding [with_avatar] failed FFmpeg every time
-                                    // a scene had no avatar configured, which is the common case).
-                                    const ffmpegArgs = ['-y', '-i', imgPath, ...overlayInputs, '-filter_complex', filterStr, '-map', `[${lastOverlayLabel}]`, overlayImgPath];
-                                    ffmpeg(ffmpegArgs);
-                                    fs.unlinkSync(imgPath);
-                                    fs.renameSync(overlayImgPath, imgPath);
-                                } catch (overlayErr) {
-                                    serverLog('WARN', `[VIDE] Error overlay: ${overlayErr.message}`);
-                                }
-                            }
+                            // scene.image_url: imagen ya aprobada en modo "revisar por escena"
+                            // (ver /api/scene-image) — se reusa tal cual en vez de regenerar.
+                            await generateSceneImagePNG({
+                                visualDesc, estilo_visual_keywords, image_source, imgDim, imgPath,
+                                logoPath, avatarPath, existingImageUrl: scene.image_url || null,
+                            });
                             steps.push(`✅ Imagen ${i + 1}/${scenes.length}: ${scene.title.substring(0, 30)}`);
                         } catch (e) {
                             serverLog('WARN', `[VIDE] Error imagen ${i}: ${e.message}`);
@@ -2103,32 +2422,136 @@ const server = http.createServer((req, res) => {
                 }
 
                 if (modules.includes('voice')) {
-                    serverLog('INFO', `[VIDE] Generando voz...`);
-                    // Generate voice using all scene text
-                    const fullText = scenes.map(s => s.body).filter(Boolean).join('. ');
-                    const voicePath = path.join(tmpDir, 'voice.mp3');
+                    serverLog('INFO', `[VIDE] Generando voz por escena (${scenes.length} escenas)...`);
+                    // TTS por escena en vez de un solo pase con todo el texto junto: permite
+                    // silencio real entre escenas (no un frame negro, la imagen sigue en
+                    // pantalla) para guiones tipo meditación con pausas explícitas
+                    // ([PAUSA DE SILENCIO: N SEGUNDOS], ver parseGuionNarrativo). De paso,
+                    // scene.duracion pasa a ser la duración real del audio en vez de una
+                    // estimación — los subtítulos y el ensamblado de video quedan sincronizados
+                    // automáticamente sin el hack de "estirar la última escena".
+                    const voiceDir = path.join(tmpDir, 'voice_scenes');
+                    fs.mkdirSync(voiceDir, { recursive: true });
+                    const audioSegments = [];
+                    let voiceOk = 0;
+                    let sfxOk = 0;
 
-                    if (fullText) {
-                        // Edge TTS (voces neuronales de Microsoft, gratis, sin API key) — mucho
-                        // menos robótico que gTTS. "python -m edge_tts" reusa la misma
-                        // resolución de 'python' que ya usaba gTTS, evitando un nuevo punto de
-                        // falla de PATH (ver ADR-009, el bug de PATH de FFmpeg).
-                        const edgeResult = spawnSync('python', ['-m', 'edge_tts', '--voice', voice || 'es-MX-DaliaNeural', '--text', fullText, '--write-media', voicePath], { timeout: 60000 });
-                        if (edgeResult.status === 0 && fs.existsSync(voicePath)) {
-                            steps.push('✅ Voz generada (Edge TTS neuronal)');
-                        } else {
-                            serverLog('WARN', `[VIDE] Edge TTS falló, usando gTTS de respaldo: ${(edgeResult.stderr?.toString() || '').slice(-300)}`);
+                    // SFX puntual mezclado sobre el clip de la escena — duration=first conserva
+                    // la duración del clip original (voz o silencio), así no desalinea el
+                    // conteo de segmentos con los del video. Dos fuentes posibles:
+                    // scene.sfx (whoosh/glitch/pop/bassdrop vía sfx.py, mismo generador que
+                    // ViRe) o scene.sfx_query (texto libre de [EFECTO: ...] en un guion
+                    // narrativo, resuelto contra Freesound/CC0 — sfx.py no interpreta
+                    // descripciones como "cuenco tibetano").
+                    const sfxScript = path.join(__dirname, '../SuitMusic/scripts/sfx.py');
+                    async function resolveSfxFile(scene, index) {
+                        if (scene.sfx) {
                             try {
-                                const ttsScript = `import sys; from gtts import gTTS; tts = gTTS(text=sys.argv[1], lang='es'); tts.save(sys.argv[2])`;
-                                spawnSync('python', ['-c', ttsScript, fullText, voicePath], { timeout: 60000 });
-                                steps.push(fs.existsSync(voicePath) ? '✅ Voz generada con gTTS (respaldo)' : '⚠️ Voz no generada');
+                                const sfxPath = path.join(voiceDir, `sfx_${index}.wav`);
+                                const result = spawnSync('python', [sfxScript, '-o', sfxPath, '-t', scene.sfx], { timeout: 10000 });
+                                if (result.status === 0 && fs.existsSync(sfxPath)) return sfxPath;
+                                serverLog('WARN', `[VIDE] sfx '${scene.sfx}' desconocido en escena ${index}, se omite`);
                             } catch (e) {
-                                serverLog('WARN', `[VIDE] Error TTS respaldo: ${e.message}`);
-                                steps.push(`⚠️ Voz no generada: ${e.message}`);
+                                serverLog('WARN', `[VIDE] Error generando sfx '${scene.sfx}' en escena ${index}: ${e.message}`);
                             }
                         }
+                        if (scene.sfx_query) {
+                            const previewUrl = await buscarSonidoFreesound(scene.sfx_query);
+                            if (!previewUrl) {
+                                serverLog('WARN', `[VIDE] Freesound sin resultado para "${scene.sfx_query}" en escena ${index}`);
+                                return null;
+                            }
+                            try {
+                                const res = await fetch(previewUrl);
+                                if (!res.ok) return null;
+                                const buf = Buffer.from(await res.arrayBuffer());
+                                const fsPath = path.join(voiceDir, `freesound_${index}.mp3`);
+                                fs.writeFileSync(fsPath, buf);
+                                return fsPath;
+                            } catch (e) {
+                                serverLog('WARN', `[VIDE] Error descargando sonido Freesound en escena ${index}: ${e.message}`);
+                            }
+                        }
+                        return null;
+                    }
+                    function mixSfxFile(basePath, sfxPath, index) {
+                        try {
+                            const mixedPath = path.join(voiceDir, `mix_${index}.mp3`);
+                            ffmpeg(['-y', '-i', basePath, '-i', sfxPath, '-filter_complex', '[0:a]volume=1.0[a0];[1:a]volume=0.9[a1];[a0][a1]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]', '-map', '[aout]', mixedPath]);
+                            sfxOk++;
+                            return mixedPath;
+                        } catch (e) {
+                            serverLog('WARN', `[VIDE] Error mezclando sfx en escena ${index}: ${e.message}`);
+                            return basePath;
+                        }
+                    }
+
+                    for (let i = 0; i < scenes.length; i++) {
+                        const scene = scenes[i];
+                        let segPath;
+                        if (scene.is_silence || !scene.body) {
+                            segPath = path.join(voiceDir, `sil_${i}.wav`);
+                            makeSilenceClip(segPath, scene.duracion || 5);
+                        } else {
+                            const scenePath = path.join(voiceDir, `scene_${i}.mp3`);
+                            // Edge TTS (voces neuronales de Microsoft, gratis, sin API key) — mucho
+                            // menos robótico que gTTS. "python -m edge_tts" reusa la misma
+                            // resolución de 'python' que ya usaba gTTS, evitando un nuevo punto de
+                            // falla de PATH (ver ADR-009, el bug de PATH de FFmpeg).
+                            const edgeResult = spawnSync('python', ['-m', 'edge_tts', '--voice', voice || 'es-MX-DaliaNeural', '--rate', voice_rate || '+0%', '--text', scene.body, '--write-media', scenePath], { timeout: 60000 });
+                            let ok = edgeResult.status === 0 && fs.existsSync(scenePath);
+                            if (!ok) {
+                                serverLog('WARN', `[VIDE] Edge TTS falló en escena ${i}, usando gTTS de respaldo: ${(edgeResult.stderr?.toString() || '').slice(-300)}`);
+                                try {
+                                    const ttsScript = `import sys; from gtts import gTTS; tts = gTTS(text=sys.argv[1], lang='es'); tts.save(sys.argv[2])`;
+                                    spawnSync('python', ['-c', ttsScript, scene.body, scenePath], { timeout: 60000 });
+                                    ok = fs.existsSync(scenePath);
+                                } catch (e) {
+                                    serverLog('WARN', `[VIDE] Error TTS respaldo escena ${i}: ${e.message}`);
+                                }
+                            }
+                            if (ok) {
+                                const realDur = getAudioDurationSec(scenePath);
+                                if (realDur) scene.duracion = realDur + 0.3;
+                                segPath = scenePath;
+                                voiceOk++;
+                            } else {
+                                segPath = path.join(voiceDir, `sil_${i}.wav`);
+                                makeSilenceClip(segPath, scene.duracion || 5);
+                            }
+                        }
+                        if (scene.sfx || scene.sfx_query) {
+                            const sfxFile = await resolveSfxFile(scene, i);
+                            if (sfxFile) segPath = mixSfxFile(segPath, sfxFile, i);
+                        }
+                        audioSegments.push(segPath);
+                        if (i < scenes.length - 1 && (scene.pausa_final || 0) > 0) {
+                            const gapPath = path.join(voiceDir, `gap_${i}.wav`);
+                            makeSilenceClip(gapPath, scene.pausa_final);
+                            audioSegments.push(gapPath);
+                        }
+                    }
+
+                    // Escenas habladas ya traen su duración real (medida del audio) — el total
+                    // que usa la generación de música más abajo debe reflejarla, no la
+                    // estimación por conteo de palabras de parseGuionNarrativo.
+                    videoConfig.duracion_total = computeRealDuration(scenes);
+
+                    const voicePath = path.join(tmpDir, 'voice.mp3');
+                    if (audioSegments.length) {
+                        try {
+                            const inputArgs = audioSegments.flatMap(s => ['-i', s]);
+                            const labels = audioSegments.map((_, idx) => `[${idx}:a]aformat=sample_rates=44100:channel_layouts=stereo[a${idx}]`);
+                            const concatInputs = audioSegments.map((_, idx) => `[a${idx}]`).join('');
+                            const filterComplex = `${labels.join(';')};${concatInputs}concat=n=${audioSegments.length}:v=0:a=1[aout]`;
+                            ffmpeg(['-y', ...inputArgs, '-filter_complex', filterComplex, '-map', '[aout]', voicePath], { timeout: 120000 });
+                            steps.push(`✅ Voz por escena (${voiceOk}/${scenes.length})${sfxOk ? ` + ${sfxOk} sfx` : ''} con silencios reales`);
+                        } catch (e) {
+                            serverLog('WARN', `[VIDE] Error uniendo audio por escena: ${e.message}`);
+                            steps.push(`⚠️ Voz no generada: ${e.message}`);
+                        }
                     } else {
-                        steps.push('⚠️ Voz no generada: el guion no tiene texto narrado ("texto" vacío en todas las escenas)');
+                        steps.push('⚠️ Voz no generada: el guion no tiene texto narrado ni pausas');
                     }
                 }
 
@@ -2389,7 +2812,7 @@ const server = http.createServer((req, res) => {
         req.on('end', async () => {
             let tmpDir = null;
             try {
-                const { empresa, sitio_web, telefono, guion, style, voice, duration, format, enableMusic, enableVoice } = JSON.parse(body);
+                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, voice, duration, format, enableMusic, enableVoice, estilo_visual_keywords, visual_style, image_source } = JSON.parse(body);
                 const vozActiva = enableVoice !== false;
                 serverLog('INFO', `[ViRe] Iniciando para: ${empresa}`);
 
@@ -2475,11 +2898,24 @@ const server = http.createServer((req, res) => {
                         type: 'text',
                         duration: s.duracion || 5,
                         animation: s.animacion === 'fade' ? 'fade_in' : 'slide_up',
+                        visual_style: visual_style || undefined,
                         body: s.body || '',
-                        image_prompt: s.visual || `${s.title || ''} ${s.body || ''}`.substring(0, 200),
+                        // Mismo fix que VIDE: el estilo visual se antepone aquí en vez de
+                        // depender de que la IA lo haya aplicado bien dentro de "visual".
+                        image_prompt: (estilo_visual_keywords ? `${estilo_visual_keywords}, ` : '')
+                            + (s.visual || `${s.title || ''} ${s.body || ''}`.substring(0, 200)),
+                        // Imagen ya aprobada en modo "revisar por escena" — generateAllImages()
+                        // en imageProvider.js ya prioriza esto sobre image_prompt, no regenera.
+                        image_url: s.image_url || undefined,
                         voice_text,
                         sfx_file,
                         texto_overlay,
+                        // Igual que VIDE (CLAUDE.md: overlays como miniatura sobre la imagen,
+                        // nunca slide aparte) — se mandan tal cual (data: URI o URL http ya
+                        // resuelta desde el cliente), Remotion las carga directo, sin descargarlas
+                        // a disco: <Img>/staticFile solo hace falta para archivos locales nuevos.
+                        logo_url: logo_url || undefined,
+                        avatar_url: avatar_url || undefined,
                     };
                 });
 
@@ -2497,6 +2933,7 @@ const server = http.createServer((req, res) => {
                     voice: { provider: 'edge_tts', voice: voice || 'es-MX-DaliaNeural', speed: 1.0 },
                     background_music: musicRelPath || undefined,
                     subtitles: { enabled: true, style: 'classic' },
+                    image_source: image_source || 'ia',
                     scenes: vireScenes,
                 };
 
@@ -2711,6 +3148,82 @@ const server = http.createServer((req, res) => {
                 res.end(JSON.stringify({ status: 'error', error: e.message }));
             }
         })();
+        return;
+    }
+
+    // 🎨✨ DIRECTOR DE ESTILO IA — genera un sub-estilo nuevo a partir de una
+    // referencia en texto (o inventado si viene vacía) y lo persiste como
+    // video_subestilos real, para que quede disponible en el selector normal
+    // y alimente approveMediaPlan()/construirPromptGuion() sin tocar ese código.
+    if (pathname === '/api/estilos-visuales/generar-ia' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', () => {
+            (async () => {
+                try {
+                    const { empresa, nicho, tema, referencia } = JSON.parse(body);
+                    if (!empresa) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ status: 'error', error: 'empresa es requerida' }));
+                        return;
+                    }
+                    const prompt = await loadPromptById('CAMP-STYLEDIRECTOR');
+                    const userContent = `Nicho: ${nicho || '(no especificado)'}\nTema: ${tema || '(no especificado)'}\nReferencia del usuario: ${referencia || '(vacía — inventa un estilo original coherente con el nicho)'}\n\nGenera el estilo visual como JSON válido.`;
+                    const estilo = await callAIJson(prompt, userContent, 0.8);
+
+                    // Auto-provisiona la categoría "Generado con IA" de esta empresa si
+                    // no existe todavía — "si no existe, que ocurra la magia" también
+                    // aplica a la categoría, no solo al sub-estilo.
+                    const CAT_SLUG = 'ia-generado';
+                    let { data: cat } = await supabaseAdmin
+                        .from('video_categorias_estilo')
+                        .select('*')
+                        .eq('slug', CAT_SLUG)
+                        .eq('id_empresa', empresa)
+                        .maybeSingle();
+                    if (!cat) {
+                        const { data: nuevaCat, error: errCat } = await supabaseAdmin
+                            .from('video_categorias_estilo')
+                            .insert({ slug: CAT_SLUG, nombre: '✨ Generado con IA', icono: '✨', id_empresa: empresa, activo: true })
+                            .select()
+                            .single();
+                        if (errCat) throw errCat;
+                        cat = nuevaCat;
+                    }
+
+                    // Sufijo de timestamp: evita colisión de slug entre generaciones
+                    // sucesivas sin depender de que la IA devuelva algo único.
+                    const slugFinal = (estilo.slug || estilo.nombre || 'estilo-ia').toLowerCase()
+                        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + Date.now().toString(36);
+
+                    const { data: sub, error: errSub } = await supabaseAdmin
+                        .from('video_subestilos')
+                        .insert({
+                            id_categoria: cat.id,
+                            id_empresa: empresa,
+                            slug: slugFinal,
+                            nombre: estilo.nombre || 'Estilo IA',
+                            descripcion: estilo.descripcion || '',
+                            keywords_ia: estilo.keywords_ia || '',
+                            activo: true
+                        })
+                        .select()
+                        .single();
+                    if (errSub) throw errSub;
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        status: 'success',
+                        data: { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia }
+                    }));
+                } catch (e) {
+                    serverLog('ERROR', `[ESTILOS-IA] ${e.message}`);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: e.message }));
+                }
+            })();
+        });
         return;
     }
 

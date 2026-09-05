@@ -1,0 +1,10 @@
+﻿{
+    "messages":  [
+                     {
+                         "content":  "hi",
+                         "role":  "user"
+                     }
+                 ],
+    "model":  "auto/best-fast",
+    "max_tokens":  10
+}

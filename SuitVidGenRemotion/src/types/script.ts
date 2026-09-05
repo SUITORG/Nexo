@@ -9,6 +9,9 @@ export interface SceneBase {
   voice_text?: string;
   sfx_file?: string;
   texto_overlay?: string;
+  // Viene de video_subestilos.parametros_visuales.template (Supabase) — selecciona
+  // un componente de escena alternativo en vez del look por defecto. Ver SceneRenderer.
+  visual_style?: 'paper';
 }
 
 export interface IntroScene extends SceneBase {
@@ -25,6 +28,8 @@ export interface TextScene extends SceneBase {
   image_url?: string;
   image_prompt?: string;
   bg_color?: string;
+  logo_url?: string;
+  avatar_url?: string;
 }
 
 export interface ProductScene extends SceneBase {

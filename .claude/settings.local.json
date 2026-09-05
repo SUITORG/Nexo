@@ -117,6 +117,8 @@
     "suitcvlo-filesystem",
     "telegram-bot",
     "manychat",
-    "comfyui"
+    "comfyui",
+    "mirofish",
+    "capcut"
   ]
 }

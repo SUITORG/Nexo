@@ -34,6 +34,7 @@ function applyDefaults(script) {
     subtitles: script.subtitles || { enabled: true, style: 'classic' },
     voice: script.voice || { provider: 'edge_tts', voice: 'es-MX-DaliaNeural' },
     background_music: script.background_music,
+    image_source: script.image_source || 'ia',
     scenes: script.scenes || [],
   };
 }

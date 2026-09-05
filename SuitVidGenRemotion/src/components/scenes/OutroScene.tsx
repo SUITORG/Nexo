@@ -1,7 +1,7 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, Img } from "remotion";
-import type { OutroScene } from "../types/script";
+import type { OutroScene as OutroSceneData } from "../../types/script";
 
-export const OutroScene: React.FC<{ scene: OutroScene }> = ({ scene }) => {
+export const OutroScene: React.FC<{ scene: OutroSceneData }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const duration = Math.round(scene.duration * 30);
   const half = Math.floor(duration / 2);

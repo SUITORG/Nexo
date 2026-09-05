@@ -48,6 +48,9 @@ yarn-error.log*
 # Playground/Personal
 compendio_inteligencia_suitorg.txt
 test-backend.html
+
+# Local-only MCP tools (never publish to GitHub Pages)
+vectcutapi-mcp/
 mock_data.json
 .blackboxcli/
 

@@ -174,3 +174,106 @@ tech_debt:
       - ".env"
     created: "2026-07-09"
     status: open
+
+  - id: TD-017
+    description: "SuitMistral: módulo Mistral AI chat existe (SuitMistral/index.js) pero no está registrado en projects.yaml, no tiene .bat, no está en suitorg-menu.bat. Pendiente: entender alcance, decidir si integrar como submodulo de server.js o proyecto independiente, y registrar."
+    severity: low
+    type: investigation
+    related_files:
+      - "SuitMistral/index.js"
+      - "SuitMistral/package.json"
+    created: "2026-08-23"
+    status: open
+
+  - id: FT-003
+    description: "OpenSandbox: integrar como backend de ejecución seguro para agentes IA (SuitCampanas, SuitAI, etc.). Requiere: 1) Levantar opensandbox-server (Docker/K8s), 2) Crear skill .suit/skills/opensandbox.yaml con tools create/run_code/files, 3) Registrar en projects.yaml como servicio compartido, 4) Conectar vía MCP a opencode/Claude Code."
+    severity: medium
+    type: feature
+    related_files:
+      - ".suit/skills/opensandbox.yaml"        # por crear
+      - ".suit/registry/projects.yaml"         # registrar servicio
+      - ".suit/registry/skills.yaml"           # registrar skill
+    dependencies:
+      - "Docker/K8s para opensandbox-server"
+      - "opensandbox-server corriendo (puerto 8080)"
+    created: "2026-08-27"
+    status: deferred
+    defer_reason: "Pendiente de priorizar; útil para ejecución de código generado por usuarios/agentes en SuitCampanas y SuitAI."
+
+  - id: FT-004
+    description: "Instalar addyosmani/agent-skills (24 skills de ingeniería de producción para agentes IA). Repo: addyosmani/agent-skills (~90k ⭐ MIT). Instalación: npx skills add addyosmani/agent-skills. Incluye: code review, architecture, performance, security, debugging, refactoring, testing, docs. Funciona en Claude Code, Cursor, Codex, opencode."
+    severity: low
+    type: feature
+    related_files:
+      - ".opencode/skills/"                    # skills instaladas aquí
+    dependencies:
+      - "npm/npx disponible en entorno"
+    created: "2026-08-27"
+    status: deferred
+    defer_reason: "Roadmap pendiente; instalar cuando se priorice mejorar calidad de código con best practices de ingeniería."
+
+  - id: FT-005
+    description: "Instalar msitarzewski/agency-agents (148k ⭐ MIT): catálogo de personalidades de agentes IA especializados (frontend, security, debugging, marketing, etc.) listos para instalar en opencode, Claude Code, Cursor, Codex, Gemini CLI, etc. App nativa: agencyagents.app. Instalación: npx skills add msitarzewski/agency-agents."
+    severity: low
+    type: feature
+    related_files:
+      - ".opencode/agents/"                    # agentes instalados aquí
+    dependencies:
+      - "npm/npx disponible en entorno"
+    created: "2026-08-27"
+    status: deferred
+    defer_reason: "Roadmap pendiente; instalar cuando se priorice tener agentes especializados preconfigurados."
+
+  - id: TD-018
+    description: "Registrar OmniRoute como servicio independiente en .suit/registry/projects.yaml. Actualmente vive en SuitAI/ pero se usa como gateway de modelos IA para SuitCampanas (puerto 20128). Documentar: start-omniroute.bat, providers configurados, modelos disponibles, fallback chain."
+    severity: medium
+    type: documentation
+    related_files:
+      - ".suit/registry/projects.yaml"
+      - "start-omniroute.bat"
+      - "SuitAI/README.md"
+    created: "2026-08-27"
+    status: open
+
+  - id: FT-007
+    description: "Instalar Headroom (headroom-ai): proxy local que comprime contexto LLM, cachea respuestas, expone MCP tools (compress/retrieve/stats). Ahorro 17-45% tokens. Para OpenCode: headroom wrap opencode. Modelos: headroom/claude-sonnet-4-6, headroom/gpt-4o, headroom/gpt-4.1 (1M ctx). Instalación: pip install headroom-ai[proxy]."
+    severity: medium
+    type: feature
+    related_files:
+      - "opencode.json"                       # inyecta provider headroom
+      - ".opencode/config.json"               # MCP tools
+    dependencies:
+      - "Python 3.10+"
+      - "pip install headroom-ai[proxy]"
+    created: "2026-08-27"
+    status: deferred
+    defer_reason: "Roadmap pendiente; instalar cuando se priorice reducir costo de tokens en sesiones largas de opencode."
+
+  - id: FT-006
+    description: "Instalar opencode-claude-memory (npm plugin): memoria persistente compartida entre OpenCode y Claude Code. Auto-extracción post-sesión, auto-dream consolidation, in-repo memory (.claude/memory/). Plugin: opencode-claude-memory. Shell hook: opencode-memory."
+    severity: high
+    type: feature
+    priority: high
+    related_files:
+      - ".opencode/config.json"               # agregar plugin
+    dependencies:
+      - "npm install -g opencode-claude-memory"
+      - "Configurar shell hook en .bashrc/.zshrc"
+    created: "2026-08-27"
+    status: deferred
+    defer_reason: "Marcado como PRIORIDAD por el usuario. Instalar lo antes posible."
+
+  - id: FT-008
+    description: "Monitorear OpenCut (OpenCut-app/OpenCut) para cuando tenga MCP server o Editor API. Actualmente en reescritura (Rust core). Roadmap: Editor API, MCP server para agentes IA, headless mode, plugins de terceros. Cuando esté listo: integrar como herramienta de edición de video automatizada para SuitCampanas/VIDE."
+    severity: medium
+    type: feature
+    related_files:
+      - "https://github.com/OpenCut-app/OpenCut"
+      - "https://new.opencut.app"
+    dependencies:
+      - "OpenCut MCP server disponible"
+      - "OpenCut Editor API disponible"
+    created: "2026-08-30"
+    status: monitoring
+    monitoring_url: "https://github.com/OpenCut-app/OpenCut"
+    notes: "Verificar cada 2 semanas. README indica MCP server en roadmap. Versión actual: opencut-app/opencut-classic. Rewrite: new.opencut.app."

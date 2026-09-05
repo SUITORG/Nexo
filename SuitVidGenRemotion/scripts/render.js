@@ -69,6 +69,7 @@ async function main() {
     width: script.width,
     height: script.height,
     outputDir: IMAGES_DIR,
+    imageSource: script.image_source,
     onImage: ({ index, total, url, prompt }) => {
       reportProgress({ stage: 'images', current: index + 1, total, url, prompt });
     },

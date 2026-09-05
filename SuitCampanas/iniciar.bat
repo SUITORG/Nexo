@@ -2,10 +2,9 @@
 title SuitCampanas Server 8000
 cd /d "%~dp0"
 
-:: Kill any process using port 8000
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8000') do (
-    taskkill /F /PID %%a >nul 2>&1
-)
+:: Kill any process using port 8000 (via PowerShell — netstat/findstr/tokens
+:: fallaba en silencio con >nul 2>&1 y dejaba procesos viejos vivos)
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"
 timeout /t 1 /nobreak >nul
 
 echo Iniciando servidor CampanasAi...

@@ -1,12 +1,11 @@
-import { AbsoluteFill, Sequence, useVideoConfig, useCurrentFrame } from "remotion";
-import type { Script } from "./types/script";
+import { AbsoluteFill, Sequence, useVideoConfig } from "remotion";
+import type { EnrichedScript } from "./types/script";
 import { SceneRenderer } from "./components/SceneRenderer";
 import { SubtitleOverlay } from "./components/SubtitleOverlay";
 import { AudioLayer } from "./components/AudioLayer";
 
-export const ViReVideo: React.FC<{ script: Script }> = ({ script }) => {
+export const ViReVideo: React.FC<{ script: EnrichedScript }> = ({ script }) => {
   const { fps } = useVideoConfig();
-  const frame = useCurrentFrame();
 
   if (!script || !script.scenes || script.scenes.length === 0) {
     return (
@@ -37,7 +36,7 @@ export const ViReVideo: React.FC<{ script: Script }> = ({ script }) => {
     <AbsoluteFill style={{ background: "#000" }}>
       <AudioLayer
         scenes={script.scenes}
-        sceneAudioFiles={(script as any).sceneAudioFiles ?? []}
+        sceneAudioFiles={script.sceneAudioFiles ?? []}
         backgroundMusic={script.background_music}
         fps={fps}
       />

@@ -451,6 +451,23 @@ projects:
         port: 3013
         type: express
 
+  suit-board:
+    name: "SuitBoard — Dashboard Crypto + US Market"
+    path: SuitBoard/
+    description: "Dashboard de mercado en un solo archivo HTML estático (sin build, sin servidor). Pestaña Crypto con datos en vivo vía API pública de CoinGecko (BTC/SOL/JUP/RAY/JTO/BONK). Pestaña US Market con datos estáticos/demo (sin API real todavía). Rescatado desde Downloads el 31/08/2026."
+    type: static
+    skills:
+      - javascript
+    context:
+      - SuitBoard/CLAUDE.md
+      - SuitBoard/index.html
+    frontend:
+      public: false
+      staff: false
+    environment:
+      TYPE: static
+    notes: "No pasa por el pipeline de deploy de GitHub Pages del repo raíz (igual que SuitCampanas). No trackeado en git todavía — pendiente decisión del usuario."
+
   suit-landings:
     name: "SuitLandings — Plantilla de Landing Pages multi-tenant"
     path: SuitLandings/

@@ -314,6 +314,18 @@
                             </select>
                             <div id="autoStyleInfo" style="font-size:0.75rem; color:var(--text-dim); margin-top:4px;"></div>
                         </div>
+                        <div class="input-wrapper" id="estiloReferenciaWrapper" style="display:none;">
+                            <label for="estiloReferenciaTexto">Referencia de estilo (opcional)</label>
+                            <textarea id="estiloReferenciaTexto" rows="2" placeholder="Ej: subtítulos bold blancos con borde negro, cortes rápidos, luz cálida... o déjalo vacío y que la IA proponga uno" style="width:100%; padding:0.5rem; font-size:0.8rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; resize:vertical;"></textarea>
+                            <button type="button" id="btnGenerarEstiloIA" class="secondary-btn" style="margin-top:0.4rem; padding:0.35rem 0.7rem; font-size:0.75rem;">🎨 Generar estilo con IA</button>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="imageSourceSelect">Imágenes</label>
+                            <select id="imageSourceSelect" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
+                                <option value="ia" selected>🤖 IA generada (Pollinations)</option>
+                                <option value="pexels">📷 Foto de stock (Pexels)</option>
+                            </select>
+                        </div>
                         <div class="input-wrapper">
                             <label for="videVoice">Voz (Edge TTS neuronal)</label>
                             <select id="videVoice" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
@@ -326,8 +338,16 @@
                             </select>
                         </div>
                         <div class="input-wrapper">
+                            <label for="videVoiceRate">Ritmo de voz</label>
+                            <select id="videVoiceRate" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
+                                <option value="+0%" selected>Normal</option>
+                                <option value="-15%">Lento</option>
+                                <option value="-30%">Muy lento (meditación)</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
                             <label for="videDuration">Duración Objetivo (segundos)</label>
-                            <input type="number" id="videDuration" value="30" min="10" max="300" step="5" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
+                            <input type="number" id="videDuration" value="30" min="10" max="1800" step="5" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
                         </div>
                         <div class="input-wrapper">
                             <label for="aiTemplate">Tipo de Plantilla</label>
@@ -619,6 +639,14 @@
                         </div>
                         <textarea id="videGuion" rows="6" placeholder="Escribe tu guion aquí...&#10;&#10;Ejemplo:&#10;Escena 1: Bienvenida - Hola, somos tu marca favorita&#10;Escena 2: Producto - Nuestro producto revolucionario&#10;Escena 3: CTA - Contáctanos hoy mismo" style="width:100%; padding:0.6rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
                         <textarea id="videGuionJson" rows="6" placeholder='Pega tu JSON aquí...&#10;&#10;Ejemplo:&#10;[&#10;  {"scene": 1, "title": "Bienvenida", "text": "Hola...", "visual": "..."},&#10;  {"scene": 2, "title": "Producto", "text": "...", "visual": "..."}&#10;]' style="width:100%; padding:0.6rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; resize:vertical; font-family:inherit; display:none;"></textarea>
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.6rem;">
+                            <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.75rem; color:var(--text-dim); cursor:pointer;">
+                                <input type="checkbox" id="reviewPerSceneMode">
+                                🔍 Revisar imágenes por escena antes de generar el video
+                            </label>
+                            <button type="button" id="btnRevisarEscenas" class="secondary-btn" style="display:none; padding:0.3rem 0.6rem; font-size:0.7rem;">🖼️ Mostrar escenas</button>
+                        </div>
+                        <div id="sceneReviewPanel" style="display:none; margin-top:0.75rem; flex-direction:column; gap:0.6rem;"></div>
                     </div>
 
                     <!-- Progress Bar -->

@@ -1,6 +1,7 @@
 import type { Scene } from "../types/script";
 import { IntroScene } from "./scenes/IntroScene";
 import { TextScene } from "./scenes/TextScene";
+import { PaperTextScene } from "./scenes/PaperTextScene";
 import { ProductScene } from "./scenes/ProductScene";
 import { OutroScene } from "./scenes/OutroScene";
 
@@ -9,7 +10,7 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
     case "intro":
       return <IntroScene scene={scene} />;
     case "text":
-      return <TextScene scene={scene} />;
+      return scene.visual_style === "paper" ? <PaperTextScene scene={scene} /> : <TextScene scene={scene} />;
     case "product":
       return <ProductScene scene={scene} />;
     case "outro":

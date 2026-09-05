@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #0a1628;
+      }
+      body { font-family: system-ui, -apple-system, sans-serif; }
+      .clip { position: absolute; inset: 0; }
+
+      /* Intro */
+      .intro-bg {
+        background: linear-gradient(180deg, #0a1628 0%, #162038 50%, #0a1628 100%);
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+      }
+      .intro-logo {
+        width: 140px; height: 140px;
+        background: linear-gradient(135deg, #7c3aed, #a78bfa);
+        border-radius: 32px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 64px; font-weight: 800;
+        box-shadow: 0 12px 40px rgba(124,58,237,0.4);
+      }
+      .intro-title {
+        margin-top: 40px; font-size: 56px; font-weight: 800; color: #fff;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      }
+      .intro-sub {
+        margin-top: 16px; font-size: 28px; color: rgba(255,255,255,0.6);
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      }
+
+      /* Main — café */
+      .cafe-img {
+        width: 100%; height: 100%; object-fit: cover;
+      }
+      .cafe-gradient {
+        position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 45%, rgba(0,0,0,0.65) 100%);
+      }
+      .cafe-title {
+        position: absolute; z-index: 2;
+        bottom: 200px; left: 0; right: 0; text-align: center;
+        font-size: 52px; font-weight: 800; color: #fff;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        padding: 0 60px;
+      }
+
+      /* Outro */
+      .outro-bg {
+        background: linear-gradient(180deg, #0a1628 0%, #162038 50%, #0a1628 100%);
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+      }
+      .outro-cta {
+        font-size: 72px; font-weight: 800; color: #fff;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      }
+      .outro-url {
+        margin-top: 30px; font-size: 28px; color: rgba(255,255,255,0.5);
+      }
+
+      /* Badge ViHy */
+      .badge {
+        position: absolute; top: 40px; right: 40px; z-index: 10;
+        background: linear-gradient(135deg, #7c3aed, #06b6d4);
+        padding: 10px 20px; border-radius: 10px;
+        color: #fff; font-size: 20px; font-weight: 700;
+        box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="vihy-cafe"
+      data-start="0"
+      data-duration="16"
+      data-width="1080"
+      data-height="1920"
+    >
+      <!-- ESCENA 1: Intro (0-4s) -->
+      <div id="scene-intro" class="clip intro-bg" data-start="0" data-duration="4" data-track-index="0">
+        <div class="badge">ViHy</div>
+        <div class="intro-logo">V</div>
+        <div class="intro-title">Café Artesanal</div>
+        <div class="intro-sub">Calidad que se siente en cada sorbo</div>
+      </div>
+
+      <!-- ESCENA 2: Producto (4-12s) — imagen realista -->
+      <div id="scene-main" class="clip" data-start="4" data-duration="8" data-track-index="1">
+        <img class="cafe-img" src="cafe.jpg" />
+        <div class="cafe-gradient"></div>
+        <div class="cafe-title">Taza de café artesanal</div>
+      </div>
+
+      <!-- ESCENA 3: Outro (12-16s) — CTA -->
+      <div id="scene-outro" class="clip outro-bg" data-start="12" data-duration="4" data-track-index="2">
+        <div class="outro-cta">¡Contáctanos!</div>
+        <div class="outro-url">grupoevasol.com</div>
+      </div>
+
+      <!-- Audio de voz (escena main) -->
+      <audio id="voice-main" data-start="4" src="voice_main.mp3"></audio>
+      <!-- Audio de voz (escena outro) -->
+      <audio id="voice-outro" data-start="12" src="voice_outro.mp3"></audio>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Intro: fade in + scale logo
+      tl.from(".intro-logo", { scale: 0.5, opacity: 0, duration: 0.8, ease: "back.out(1.7)" }, 0);
+      tl.from(".intro-title", { y: 40, opacity: 0, duration: 0.6, ease: "power2.out" }, 0.4);
+      tl.from(".intro-sub", { y: 30, opacity: 0, duration: 0.6, ease: "power2.out" }, 0.7);
+
+      // Main: zoom sutil en imagen + fade title
+      tl.from(".cafe-img", { scale: 1.1, duration: 8, ease: "none" }, 4);
+      tl.from(".cafe-title", { y: 60, opacity: 0, duration: 1, ease: "power2.out" }, 5);
+
+      // Outro: fade in CTA
+      tl.from(".outro-cta", { scale: 0.8, opacity: 0, duration: 0.8, ease: "back.out(1.7)" }, 12);
+      tl.from(".outro-url", { y: 20, opacity: 0, duration: 0.6, ease: "power2.out" }, 12.5);
+
+      window.__timelines["vihy-cafe"] = tl;
+    </script>
+  </body>
+</html>

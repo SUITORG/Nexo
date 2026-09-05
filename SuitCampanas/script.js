@@ -196,6 +196,9 @@ let uploadedLogoDataUrl = null;
 let companyConfigs = [];
 let bdUploadedPhotos = [];
 let lastGeneratedContent = null;
+// Modo "revisar por escena" (VIDE Opción A): {sceneIndex: image_url aprobado}.
+// Se limpia cada vez que se muestra el panel de nuevo (guion distinto).
+let sceneImageApproved = {};
 
 // --- Scope global: funciones accesibles desde generateAIContent ---
 const INDUSTRIA_CATEGORIA = {};
@@ -325,13 +328,87 @@ document.addEventListener('DOMContentLoaded', () => {
             aiIndustry.appendChild(opt);
         });
     };
+    // Cada frase tipada por formato de gancho (pregunta/dato/contraste/reto/
+    // historia/statement) — antes eran solo 3 por nivel y una era siempre
+    // pregunta, por eso se sentía repetitivo aunque el pick fuera random.
     const CONCIENCIA_SUGGEST = {
-        Inconsciente: ['¿Sabías que...?', 'Lo que nadie te dice sobre', 'La verdad oculta de'],
-        Consciente_Problema: ['¿Estás cometiendo este error en', 'El problema oculto en', 'Por qué sigues perdiendo oportunidades en'],
-        Consciente_Solucion: ['Cómo mejorar ', 'La solución definitiva para', 'Transforma '],
-        Consciente_Producto: ['Por qué elegir ', 'La mejor opción en', 'Todo lo que necesitas saber sobre'],
-        Mas_Consciente: ['Oferta exclusiva: ', 'Última oportunidad para', 'Descuento especial en']
+        Inconsciente: [
+            { text: '¿Sabías que...?', tipo: 'pregunta' },
+            { text: '¿Qué pasaría si te dijera la verdad sobre', tipo: 'pregunta' },
+            { text: 'El dato que cambia todo sobre', tipo: 'dato' },
+            { text: 'Lo que crees vs. la realidad de', tipo: 'contraste' },
+            { text: 'Deja de ignorar esto sobre', tipo: 'reto' },
+            { text: 'Nadie me lo advirtió sobre', tipo: 'historia' },
+            { text: 'Lo que nadie te dice sobre', tipo: 'statement' },
+            { text: 'La verdad oculta de', tipo: 'statement' }
+        ],
+        Consciente_Problema: [
+            { text: '¿Estás cometiendo este error en', tipo: 'pregunta' },
+            { text: '¿Por qué te sigue pasando esto en', tipo: 'pregunta' },
+            { text: '3 señales de que algo anda mal en', tipo: 'dato' },
+            { text: 'Antes vs. después de resolver el problema en', tipo: 'contraste' },
+            { text: 'Deja de perder tiempo y dinero en', tipo: 'reto' },
+            { text: 'Así perdí una oportunidad por no resolver', tipo: 'historia' },
+            { text: 'El problema oculto en', tipo: 'statement' },
+            { text: 'Por qué sigues perdiendo oportunidades en', tipo: 'statement' }
+        ],
+        Consciente_Solucion: [
+            { text: '¿Ya probaste esto para', tipo: 'pregunta' },
+            { text: 'La forma más rápida de mejorar', tipo: 'dato' },
+            { text: 'El antes y después de aplicar esto en', tipo: 'contraste' },
+            { text: 'El método que sí funciona para', tipo: 'reto' },
+            { text: 'Cómo lo resolvimos en', tipo: 'historia' },
+            { text: 'Cómo mejorar ', tipo: 'statement' },
+            { text: 'La solución definitiva para', tipo: 'statement' },
+            { text: 'Transforma ', tipo: 'statement' }
+        ],
+        Consciente_Producto: [
+            { text: '¿Por qué elegir ', tipo: 'pregunta' },
+            { text: '5 razones para elegir ', tipo: 'dato' },
+            { text: 'Esto nos diferencia en', tipo: 'contraste' },
+            { text: 'Por qué nuestros clientes eligen ', tipo: 'historia' },
+            { text: 'La mejor opción en', tipo: 'statement' },
+            { text: 'Todo lo que necesitas saber sobre', tipo: 'statement' }
+        ],
+        Mas_Consciente: [
+            { text: '¿Ya aprovechaste la oferta en', tipo: 'pregunta' },
+            { text: 'No dejes pasar esto en', tipo: 'reto' },
+            { text: 'Oferta exclusiva: ', tipo: 'statement' },
+            { text: 'Última oportunidad para', tipo: 'statement' },
+            { text: 'Descuento especial en', tipo: 'statement' }
+        ]
     };
+
+    // Pool de ganchos por nicho, enriquecido en segundo plano con tendencias
+    // reales (mismo endpoint que ya usa el botón "Buscar Tendencias" en
+    // buscarTendencias()) — no bloquea suggestTheme(), se cachea por nicho.
+    const trendThemePool = {};
+    const trendFetchInFlight = new Set();
+    async function enrichThemePoolWithTrends(nicho) {
+        if (!nicho || trendThemePool[nicho] || trendFetchInFlight.has(nicho)) return;
+        trendFetchInFlight.add(nicho);
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const res = await fetch('/api/trends/fetch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ niche: nicho, subNiche: '', region: 'México' }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            const json = await res.json();
+            trendThemePool[nicho] = (json.status === 'success' && json.data?.trends?.length)
+                ? json.data.trends.slice(0, 5).map(t => t.titulo).filter(Boolean)
+                : [];
+        } catch (_) {
+            trendThemePool[nicho] = []; // sin red o timeout: suggestTheme() sigue con el pool estático
+        } finally {
+            trendFetchInFlight.delete(nicho);
+        }
+    }
+
+    let lastSuggestedTheme = null;
     function suggestTheme() {
         const c = aiConciencia.value;
         const ind = aiIndustry.value;
@@ -340,9 +417,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const indLabel = INDUSTRY_LABELS[nicho] || INDUSTRY_LABELS[ind]
             || (indOption && indOption.textContent.replace(/^[^\s]+\s/, '')) || 'tu sector';
         const esp = aiEspecializacion.value;
-        const phrases = CONCIENCIA_SUGGEST[c] || ['Estrategia para'];
-        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-        aiTheme.value = esp ? `${phrase} ${esp} en ${indLabel}` : `${phrase} ${indLabel}`;
+
+        const phrases = CONCIENCIA_SUGGEST[c] || [{ text: 'Estrategia para', tipo: 'statement' }];
+        // Tendencias reales ya vienen como frase completa (título real) — se
+        // usan tal cual, sin concatenar con indLabel/esp como las plantillas.
+        let candidates = phrases.map(p => esp ? `${p.text} ${esp} en ${indLabel}` : `${p.text} ${indLabel}`)
+            .concat(trendThemePool[nicho] || []);
+
+        // No repetir el mismo gancho dos veces seguidas si hay otra opción.
+        if (candidates.length > 1 && lastSuggestedTheme) {
+            const sinRepetir = candidates.filter(t => t !== lastSuggestedTheme);
+            if (sinRepetir.length > 0) candidates = sinRepetir;
+        }
+
+        const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+        aiTheme.value = chosen;
+        lastSuggestedTheme = chosen;
+
+        enrichThemePoolWithTrends(nicho);
     }
     function showCategoriaHint() {
         // Hint removed - using two separate selects now
@@ -917,8 +1009,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (agentBtn) agentBtn.addEventListener('click', ejecutarAgente);
 
     // Event Listener para VIDE (Suite Completa)
+    // OJO: sin el wrapper, addEventListener pasa el Event de click como primer
+    // argumento — generateVideVideo(overrideGuion=null) lo tomaba como si fuera
+    // el guion pre-armado y mandaba JSON.stringify(event) (ej. {"isTrusted":true})
+    // como si fuera el diálogo del video. Bug real, no cosmético.
     const videGenerateBtn = document.getElementById('videGenerateBtn');
-    if (videGenerateBtn) videGenerateBtn.addEventListener('click', generateVideVideo);
+    if (videGenerateBtn) videGenerateBtn.addEventListener('click', () => generateVideVideo());
     // Event Listener para Brief → MediaPlanner → BriefMarker (botón propio en VIDE)
     const videMediaPlanBtn = document.getElementById('videMediaPlanBtn');
     if (videMediaPlanBtn) videMediaPlanBtn.addEventListener('click', generateMediaPlanFromUI);
@@ -939,6 +1035,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const videGenerateJsonBtn = document.getElementById('videGenerateJsonBtn');
     if (videGenerateJsonBtn) videGenerateJsonBtn.addEventListener('click', generateVideJson);
+
+    // Modo "revisar por escena": el botón "Mostrar escenas" solo aparece si el
+    // toggle está activo — evita un botón muerto cuando nadie lo pidió.
+    const reviewPerSceneMode = document.getElementById('reviewPerSceneMode');
+    const btnRevisarEscenas = document.getElementById('btnRevisarEscenas');
+    if (reviewPerSceneMode && btnRevisarEscenas) {
+        reviewPerSceneMode.addEventListener('change', () => {
+            btnRevisarEscenas.style.display = reviewPerSceneMode.checked ? '' : 'none';
+            if (!reviewPerSceneMode.checked) {
+                sceneImageApproved = {};
+                const panel = document.getElementById('sceneReviewPanel');
+                if (panel) { panel.style.display = 'none'; panel.innerHTML = ''; }
+            }
+        });
+        btnRevisarEscenas.addEventListener('click', mostrarPanelRevisionEscenas);
+    }
 
     // VIDE: Guion mode toggle (texto / JSON)
     const videGuionMode = document.getElementById('videGuionMode');
@@ -2496,9 +2608,22 @@ async function renderPlanPiezas(planId, container) {
         list.style.marginTop = '0.5rem';
         piezas.forEach(p => {
             const row = document.createElement('div');
-            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.35rem 0;border-top:1px solid rgba(255,255,255,0.06);';
+            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.35rem 0;border-top:1px solid rgba(255,255,255,0.06);flex-wrap:wrap;';
             const info = document.createElement('span');
             info.innerHTML = `${p.slot_id || p.id} · <b>${p.format || 'Reel'}</b>${p.channel ? ' · ' + p.channel : ''}${p.goal ? ' · 🎯 ' + p.goal : ''}`;
+
+            // Por defecto, BriefMarker manda: su propio estilo/bpm de música y la
+            // duración real de sus escenas se respetan tal cual (Estilo Musical/
+            // Duración del formulario se ignoran). Solo si el usuario marca esto,
+            // esta pieza puntual usa lo que haya en esos campos del formulario.
+            const manualLabel = document.createElement('label');
+            manualLabel.style.cssText = 'font-size:0.65rem;color:var(--text-dim);display:flex;align-items:center;gap:3px;cursor:pointer;white-space:nowrap;';
+            const manualCk = document.createElement('input');
+            manualCk.type = 'checkbox';
+            manualCk.title = 'Usar el Estilo Musical/Duración del formulario para esta pieza, en vez de lo que decidió BriefMarker';
+            manualLabel.appendChild(manualCk);
+            manualLabel.appendChild(document.createTextNode('✏️ Manual'));
+
             const btn = document.createElement('button');
             btn.textContent = '🎬 Generar Video';
             btn.type = 'button';
@@ -2512,10 +2637,36 @@ async function renderPlanPiezas(planId, container) {
                     showToast('❌ Selecciona la empresa en DATOS / NEGOCIO antes de generar el video', 'error');
                     return;
                 }
-                generateVideVideo({ escenas: p.creative_json.scenes });
+                const auto = !manualCk.checked;
+                const overrideGuion = { escenas: p.creative_json.scenes };
+                // Reenvía la decisión de música de BriefMarker — sin esto, el
+                // config del override queda vacío y el server cae al Estilo
+                // Musical del formulario aunque el usuario no haya tocado nada.
+                if (auto && p.creative_json.music) {
+                    overrideGuion.config = {
+                        musica: {
+                            estilo: p.creative_json.music.style || 'cinematic',
+                            bpm: p.creative_json.music.bpm || 110,
+                            volumen: p.creative_json.music.volume ?? 0.8
+                        }
+                    };
+                }
+                // Mismo criterio que la música: en automático, el estilo VISUAL
+                // que ya trae la pieza (fijado al aprobar el plan) gana sobre el
+                // selector global del formulario, que puede haber cambiado desde
+                // entonces.
+                const genOpts = { skipStyleOverride: auto };
+                if (auto && p.creative_json.visual_style) {
+                    genOpts.estiloKeywords = p.creative_json.visual_style;
+                }
+                generateVideVideo(overrideGuion, genOpts);
             };
             row.appendChild(info);
-            row.appendChild(btn);
+            const controls = document.createElement('div');
+            controls.style.cssText = 'display:flex;align-items:center;gap:0.6rem;';
+            controls.appendChild(manualLabel);
+            controls.appendChild(btn);
+            row.appendChild(controls);
             list.appendChild(row);
         });
         container.appendChild(list);
@@ -3085,8 +3236,10 @@ function showStyleSelector(categorias, empresa) {
     const catSelect = document.getElementById('videEstiloCategoria');
     const subSelect = document.getElementById('videEstiloSub');
     const info = document.getElementById('autoStyleInfo');
+    const refWrapper = document.getElementById('estiloReferenciaWrapper');
     if (!wrapper || !catSelect || !subSelect) return;
     wrapper.style.display = '';
+    if (refWrapper) refWrapper.style.display = '';
 
     catSelect.innerHTML = '<option value="">🎯 Automático (recomendado por tendencias)</option>' +
         categorias.map(c => `<option value="${c.slug}">${c.icono || '📁'} ${c.nombre}</option>`).join('');
@@ -3112,7 +3265,7 @@ function showStyleSelector(categorias, empresa) {
         const cat = categorias.find(c => c.slug === catSelect.value);
         const sub = cat?.subestilos.find(s => s.slug === subSelect.value);
         if (!sub) { estiloVisualSeleccionado = null; info.textContent = ''; return; }
-        estiloVisualSeleccionado = { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia };
+        estiloVisualSeleccionado = { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia, visualTemplate: sub.parametros_visuales?.template };
         info.textContent = `${cat.nombre} → ${sub.nombre}: ${sub.descripcion || ''}`;
     };
 
@@ -3136,7 +3289,7 @@ async function autoPickStyleByTrend(empresa) {
             for (const cat of (estiloVisualData || [])) {
                 for (const sub of (cat.subestilos || [])) {
                     if (sub.id === top.id_subestilo) {
-                        return { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia };
+                        return { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia, visualTemplate: sub.parametros_visuales?.template };
                     }
                 }
             }
@@ -3148,11 +3301,59 @@ async function autoPickStyleByTrend(empresa) {
                       || estiloVisualData[0];
         if (fallback && fallback.subestilos.length > 0) {
             const sub = fallback.subestilos[0];
-            return { id: sub.id, cat: fallback.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia };
+            return { id: sub.id, cat: fallback.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia, visualTemplate: sub.parametros_visuales?.template };
         }
     }
     return null;
 }
+
+// Último recurso si estiloVisualSeleccionado sigue null al momento de generar
+// (ej. autoPickStyleByTrend aún no resolvió) — mismo orden de preferencia que
+// el fallback de arriba, pero síncrono y sin mutar estado, para no mandar
+// "sin estilo" por una condición de carrera.
+function fallbackEstiloKeywords() {
+    if (!estiloVisualData || estiloVisualData.length === 0) return '';
+    const fallback = estiloVisualData.find(c => c.slug === 'latino-virales')
+                  || estiloVisualData.find(c => c.slug === 'edits-beat')
+                  || estiloVisualData[0];
+    return fallback?.subestilos?.[0]?.keywords_ia || '';
+}
+
+// Director de estilo IA: genera (o inventa, si no hay referencia) un
+// sub-estilo nuevo y lo deja seleccionado — el backend lo persiste como
+// video_subestilos real, así que también queda disponible en el selector
+// manual y en futuras generaciones sin volver a llamar a la IA.
+document.getElementById('btnGenerarEstiloIA')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btnGenerarEstiloIA');
+    const empresa = document.getElementById('companyName')?.value?.trim();
+    if (!empresa) { showToast('❌ Escribe el nombre de la empresa primero.', 'error'); return; }
+    const nicho = document.getElementById('aiNicho')?.value || '';
+    const tema = document.getElementById('aiTheme')?.value?.trim() || '';
+    const referencia = document.getElementById('estiloReferenciaTexto')?.value?.trim() || '';
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Generando...';
+    try {
+        const res = await fetch('/api/estilos-visuales/generar-ia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ empresa, nicho, tema, referencia })
+        });
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.error || 'Error generando estilo');
+        estiloVisualSeleccionado = json.data;
+        const info = document.getElementById('autoStyleInfo');
+        if (info) info.textContent = `✨ IA generó: ${json.data.nombre} — ${json.data.keywords}`;
+        showToast('✅ Estilo generado y guardado en el catálogo.', 'success');
+        fetchEstilosVisuales();
+    } catch (e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+});
 
 // Phone digits read as one giant number by TTS ("ochenta y un mil...") sound
 // wrong — spacing them in pairs makes it read naturally, like a person would say it.
@@ -3201,7 +3402,8 @@ ESTRUCTURA DEL JSON REQUERIDO:
       "camara": { "plano": "Close-up | Medium Shot | Extreme Close-up | POV", "movimiento": "Whip Zoom | Static | Tracking Shot | Tilt Up/Down" },
       "sfx": "Efecto de sonido puntual de la escena (Whoosh, Glitch, Pop, Bass drop) o null"
     }
-  ]
+  ],
+  "cta": "Llamado a la acción de la escena final: un VERBO DE ACCIÓN explícito (Llama, Visita, Escríbenos, Agenda, Compra...) + el dato de contacto (teléfono/web). Debe coincidir con lo que dice/muestra la última escena — no un campo aparte inventado."
 }
 
 DATOS DE LA EMPRESA:
@@ -3249,7 +3451,7 @@ REGLAS DE RETENCIÓN CINEMATOGRÁFICA (OBLIGATORIAS):
 4. Cada escena define explícitamente "camara.plano", "camara.movimiento" y "sfx" — no dejes "visual" en descripciones genéricas, y respeta la Ancla de Identidad Visual definida arriba en las 4.
 5. "animacion" elige según el ritmo: zoom_in para impacto (conciencia más alta / CTA), ken_burns para narrativa (conciencia baja / storytelling), fade para transición suave.
 6. "musica_local" solo si una escena necesita un estilo distinto al global; si no, null.
-7. La última escena debe incluir un Call to Value (CTV) explícito con los datos de contacto (teléfono, web). Si dice el teléfono en voz alta, escríbelo en pares exactamente como viene arriba (ej. "52 81 10 46 37 21"), nunca como un número corrido.
+7. La última escena ES el CTA (Llamado a la Acción): debe combinar un VERBO DE ACCIÓN explícito (Llama, Visita, Escríbenos, Agenda, Compra, Reserva — el que corresponda) con los datos de contacto (teléfono, web). NO basta con solo mencionar el teléfono/web sin una orden de acción — eso es un dato, no un CTA. Si dice el teléfono en voz alta, escríbelo en pares exactamente como viene arriba (ej. "52 81 10 46 37 21"), nunca como un número corrido. El campo top-level "cta" del JSON debe reflejar exactamente esta misma frase.
 8. Serás penalizado si el guion no es 100% relevante al tema "${theme || industria || 'la empresa'}" y a la industria/nicho especificados.
 9. PROHIBIDO describir texto legible, letreros, carteles, etiquetas, nombres de producto/marca escritos, o cualquier escritura dentro de "visual" — los modelos de imagen no pueden renderizar texto correctamente y siempre sale ilegible/inventado. Describe el entorno, objetos y composición sin pedir texto visible en ningún lado de la escena.
 10. Responde SOLO con el JSON, sin markdown, sin explicaciones.`;
@@ -3417,8 +3619,108 @@ async function generateVideJson() {
     }
 }
 
+// Modo "revisar por escena": construye una tarjeta por escena del guion JSON
+// actual, cada una con su propio botón de generar/regenerar imagen — antes de
+// comprometerse a renderizar el video completo. Requiere el guion en modo JSON
+// (Opción A) porque necesita la lista de escenas ya estructurada.
+function mostrarPanelRevisionEscenas() {
+    const isJsonMode = document.getElementById('videGuionJson')?.style.display !== 'none';
+    const jsonText = document.getElementById('videGuionJson')?.value?.trim();
+    if (!isJsonMode || !jsonText) {
+        showToast('❌ Genera o pega el guion en JSON primero (📄 Pegar JSON / 🤖 Generar JSON)', 'error');
+        return;
+    }
+    let parsed;
+    try {
+        parsed = JSON.parse(jsonText);
+    } catch (e) {
+        showToast('❌ JSON inválido: ' + e.message, 'error');
+        return;
+    }
+    const scenes = Array.isArray(parsed) ? parsed : (parsed.escenas || []);
+    if (scenes.length === 0) {
+        showToast('❌ El guion no tiene escenas', 'error');
+        return;
+    }
+
+    sceneImageApproved = {};
+    const panel = document.getElementById('sceneReviewPanel');
+    if (!panel) return;
+    panel.innerHTML = '';
+    panel.style.display = 'flex';
+
+    scenes.forEach((scene, i) => {
+        const texto = scene.texto || scene.text || scene.body || scene.visual || '';
+        const titulo = scene.titulo || scene.title || `Escena ${i + 1}`;
+        const card = document.createElement('div');
+        card.style.cssText = 'border:1px solid var(--glass-border); border-radius:10px; padding:0.6rem; background:rgba(255,255,255,0.03); display:flex; gap:0.6rem; align-items:flex-start;';
+        card.innerHTML = `
+            <img id="sceneImg_${i}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;background:rgba(255,255,255,0.05);display:none;flex-shrink:0;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:0.75rem;font-weight:600;margin-bottom:2px;">${i + 1}. ${titulo}</div>
+                <div style="font-size:0.7rem;color:var(--text-dim);margin-bottom:6px;">${texto.substring(0, 100)}</div>
+                <button type="button" class="secondary-btn" id="sceneBtn_${i}" style="padding:0.25rem 0.5rem;font-size:0.7rem;">🎨 Generar imagen</button>
+                <span id="sceneStatus_${i}" style="font-size:0.7rem;color:#6ee7b7;margin-left:6px;"></span>
+            </div>
+        `;
+        panel.appendChild(card);
+        document.getElementById(`sceneBtn_${i}`).addEventListener('click', () => generarImagenEscena(i, scene));
+    });
+}
+
+// Genera (o regenera) la imagen de UNA escena vía /api/scene-image y la guarda
+// en sceneImageApproved — generateVideVideo()/generateViReVideo() la inyectan
+// en el guion antes de mandar a producir, así lo que ves aquí es lo que sale.
+async function generarImagenEscena(index, scene) {
+    const btn = document.getElementById(`sceneBtn_${index}`);
+    const img = document.getElementById(`sceneImg_${index}`);
+    const status = document.getElementById(`sceneStatus_${index}`);
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando...'; }
+    if (status) status.textContent = '';
+
+    const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
+    const estiloVisualKeywords = estiloVisualSeleccionado?.keywords || fallbackEstiloKeywords();
+    let logoUrlValue = '';
+    let avatarUrlValue = '';
+    if (uploadedLogoDataUrl) {
+        logoUrlValue = uploadedLogoDataUrl;
+    } else {
+        const parsedLogo = parseLogoUrlField(document.getElementById('companyLogo')?.value?.trim() || '');
+        logoUrlValue = parsedLogo.logoUrl;
+        avatarUrlValue = parsedLogo.avatarUrl;
+    }
+
+    try {
+        const res = await fetch('/api/scene-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                visual: scene.visual || '',
+                title: scene.titulo || scene.title || '',
+                body: scene.texto || scene.text || scene.body || '',
+                estilo_visual_keywords: estiloVisualKeywords,
+                image_source: document.getElementById('imageSourceSelect')?.value || 'ia',
+                format,
+                logo_url: logoUrlValue,
+                avatar_url: avatarUrlValue,
+            }),
+        });
+        const data = await res.json();
+        if (data.status !== 'success') throw new Error(data.error || 'Error generando imagen');
+
+        sceneImageApproved[index] = data.image_url;
+        if (img) { img.src = data.image_url; img.style.display = ''; }
+        if (btn) btn.textContent = '🔄 Regenerar';
+        if (status) status.textContent = '✅ Aprobada';
+    } catch (e) {
+        showToast(`❌ Escena ${index + 1}: ${e.message}`, 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
 // === VIDE: Suite Completa de Video ===
-async function generateVideVideo(overrideGuion = null) {
+async function generateVideVideo(overrideGuion = null, opts = {}) {
     const company = document.getElementById('companyName')?.value?.trim() || '';
     if (!company) {
         showToast('❌ Escribe o selecciona una empresa/marca en DATOS / NEGOCIO', 'error');
@@ -3447,6 +3749,13 @@ async function generateVideVideo(overrideGuion = null) {
         }
         try {
             const parsed = JSON.parse(jsonText);
+            // Modo "revisar por escena": las imágenes que aprobaste en el panel
+            // pisan lo que sea que traiga la escena — así se usa exactamente lo
+            // que viste, en vez de que el servidor genere una distinta.
+            if (document.getElementById('reviewPerSceneMode')?.checked && Object.keys(sceneImageApproved).length > 0) {
+                const targetScenes = Array.isArray(parsed) ? parsed : (parsed.escenas || []);
+                targetScenes.forEach((s, i) => { if (sceneImageApproved[i]) s.image_url = sceneImageApproved[i]; });
+            }
             guion = JSON.stringify(parsed, null, 2);
             guionParaGuardar = { tipo: 'VIDE', guion: parsed };
         } catch (e) {
@@ -3463,9 +3772,21 @@ async function generateVideVideo(overrideGuion = null) {
         guionParaGuardar = { tipo: 'VIDE', guion_texto: guion };
     }
 
-    const style = document.getElementById('videStyle')?.value || 'energetic';
+    // opts.skipStyleOverride: piezas de BriefMarker en modo automático — no
+    // mandar el Estilo Musical del formulario, así el server usa el que venga
+    // en guion.config.musica (el que BriefMarker ya decidió) en vez de pisarlo.
+    const style = opts.skipStyleOverride ? '' : (document.getElementById('videStyle')?.value || 'energetic');
     const duration = parseInt(document.getElementById('videDuration')?.value) || 30;
     const voice = document.getElementById('videVoice')?.value || 'es-MX-DaliaNeural';
+    const voiceRate = document.getElementById('videVoiceRate')?.value || '+0%';
+
+    // Estilo VISUAL (no confundir con "style"/Estilo Musical arriba) — se manda
+    // directo al server para que se inyecte determinísticamente en el prompt de
+    // imagen, en vez de depender de que la IA lo haya escrito bien en "visual".
+    // opts.estiloKeywords (piezas de BriefMarker: el estilo ya fijado en esa
+    // pieza) gana sobre el selector global; si no hay ninguno, cae al fallback
+    // en vez de mandar "sin estilo" por una condición de carrera.
+    const estiloVisualKeywords = opts.estiloKeywords || estiloVisualSeleccionado?.keywords || fallbackEstiloKeywords();
 
     // Collect selected modules from unified Producción Multimedia
     const modules = [];
@@ -3532,9 +3853,12 @@ async function generateVideVideo(overrideGuion = null) {
                 style,
                 duration,
                 voice,
+                voice_rate: voiceRate,
                 modules,
                 format,
-                platform
+                platform,
+                estilo_visual_keywords: estiloVisualKeywords,
+                image_source: document.getElementById('imageSourceSelect')?.value || 'ia'
             })
         });
 
@@ -3921,7 +4245,15 @@ async function generateViReVideo() {
             return;
         }
         try {
-            JSON.parse(guion);
+            const parsed = JSON.parse(guion);
+            // Mismo criterio que generateVideVideo(): si el guion pegado aquí
+            // coincide con el que revisaste en el panel (mismo índice de escena),
+            // se reusan las imágenes aprobadas en vez de que ViRe genere otras.
+            if (document.getElementById('reviewPerSceneMode')?.checked && Object.keys(sceneImageApproved).length > 0) {
+                const targetScenes = Array.isArray(parsed) ? parsed : (parsed.escenas || []);
+                targetScenes.forEach((s, i) => { if (sceneImageApproved[i]) s.image_url = sceneImageApproved[i]; });
+                guion = JSON.stringify(parsed, null, 2);
+            }
         } catch (e) {
             showToast('❌ JSON inválido: ' + e.message, 'error');
             vireGenerationInProgress = false;
@@ -3935,6 +4267,18 @@ async function generateViReVideo() {
     const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
     const style = document.getElementById('videStyle')?.value || 'energetic';
     const voice = document.getElementById('videVoice')?.value || 'es-MX-DaliaNeural';
+    const estiloVisualKeywords = estiloVisualSeleccionado?.keywords || fallbackEstiloKeywords();
+
+    // Mismo criterio que generateVideVideo(): sube > campo de texto de la empresa.
+    let logoUrlValue = '';
+    let avatarUrlValue = '';
+    if (uploadedLogoDataUrl) {
+        logoUrlValue = uploadedLogoDataUrl;
+    } else {
+        const parsedLogo = parseLogoUrlField(document.getElementById('companyLogo')?.value?.trim() || '');
+        logoUrlValue = parsedLogo.logoUrl;
+        avatarUrlValue = parsedLogo.avatarUrl;
+    }
 
     const btn = document.getElementById('vireGenerateBtn');
     const loader = btn?.querySelector('.vire-loader');
@@ -3963,6 +4307,8 @@ async function generateViReVideo() {
             body: JSON.stringify({
                 empresa: company,
                 sitio_web: document.getElementById('webSite')?.value?.trim() || '',
+                logo_url: logoUrlValue,
+                avatar_url: avatarUrlValue,
                 telefono: document.getElementById('contactPhone')?.value?.trim() || '',
                 guion,
                 duration,
@@ -3970,7 +4316,10 @@ async function generateViReVideo() {
                 style,
                 voice,
                 enableMusic,
-                enableVoice
+                enableVoice,
+                estilo_visual_keywords: estiloVisualKeywords,
+                visual_style: estiloVisualSeleccionado?.visualTemplate || undefined,
+                image_source: document.getElementById('imageSourceSelect')?.value || 'ia'
             })
         });
 

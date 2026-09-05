@@ -513,14 +513,40 @@ Verificado con prueba real: nicho "Cocina y electrodomésticos / Robots de cocin
 **No es un bug de código.** `callOpenRouter()` apunta a `http://localhost:20128/v1/chat/completions` — un proxy local llamado **OmniRoute** (`SuitAI/` + `start-omniroute.bat`, ver `SuitAI/README.md`), NO a la API real de OpenRouter. Si ese proceso local no está corriendo, la conexión se rechaza al instante (`ECONNREFUSED` → Node lo reporta como `fetch failed`) para los 3 modelos, y recién ahí cae al fallback de LM Studio local (que puede tardar minutos en responder según el modelo cargado). Acción: levantar OmniRoute (`start-omniroute.bat` en la raíz de SuitOrg, o `omniroute serve`) antes de usar modos que dependan de IA gratuita en la nube.
 
 ### Música no funciona
-La música usa `../SuitMusic/scripts/music.py` vía Python. Si Python o las dependencias no están instaladas, el error se atrapa con WARN y se silencia. Nota: con B10 corregido, si la música SÍ se genera correctamente ahora debería llegar a mezclarse en el video final (antes nunca llegaba a ese paso).
+La música usa `../SuitMusic/scripts/music.py` vía Python. Si Python o las dependencias no están instaladas, el error se atrapa con WARN y se silencia. Nota: con B10 corregido, si la música SÍ se genera correctamente ahora debería llegar a mezclarse en el video final (antes nunca llegaba a ese paso). Verificado de nuevo en B18: el script corre bien standalone (numpy/soundfile instalados, wav real no silencioso) — si el usuario sigue sin oírla, el sospechoso es el `python` que resuelve el proceso del server (puede haber más de uno en PATH), no el script en sí.
 
 ### Log del server se satura con `[AUTO-SYNC]`
 `logBuffer` guarda solo las últimas 200 líneas; logs de auto-sync cada ~5 min tapan el resultado final de un request de video si pasa suficiente tiempo. Para diagnósticos futuros, capturar `/api/logs` inmediatamente después de la prueba.
 
+## B18 (CORREGIDO): SFX nunca sonaba en VIDE + TTS por escena con silencios reales
+
+### Causa raíz
+Dos gaps distintos, encontrados al pedir soporte de guiones narrativos largos (meditación):
+1. `scene.sfx` se parseaba desde el guion (JSON) pero **nunca se consumía** en `/api/video-produce` — el generador (`SuitMusic/scripts/sfx.py`, whoosh/glitch/pop/bassdrop) y su mezcla solo existían en el handler de ViRe (`/api/vire-produce` → `AudioLayer.tsx`). VIDE lo parseaba y lo tiraba.
+2. La voz de VIDE se generaba en **un solo pase** de Edge TTS con todo el guion concatenado (`fullText`) — no había forma de insertar silencio real a mitad de la narración (necesario para guiones tipo meditación con pausas explícitas), y `scene.duracion` era una estimación en vez de la duración real del audio.
+
+### Fix
+- `parseGuionNarrativo()` (nueva): detecta guiones narrativos por sus marcadores (`[PAUSA DE SILENCIO: N SEGUNDOS]`, `[MÚSICA:]`, `[EFECTO:]`), reconoce encabezados `Sección (N minutos)` y separa un bloque final `Prompts para Fotografía...` para repartir imágenes entre escenas. Cada pausa se vuelve una escena `is_silence:true` (misma imagen, sin voz).
+- La generación de voz en `/api/video-produce` pasó a ser **por escena**: TTS individual (o clip de silencio real vía `anullsrc`, no frame negro) por cada escena, más un clip de silencio en cada `pausa_final` entre escenas — todo se concatena con un filtro `aformat`+`concat` al mismo `voice.mp3` que ya esperaba el resto del ensamblado (sin tocar la mezcla con música/apad/mux, que siguen igual).
+- `scene.duracion` de escenas habladas ahora es la duración real medida con `getAudioDurationSec()` (ffprobe) tras el TTS, no una estimación — video, audio y subtítulos quedan sincronizados por construcción.
+- SFX: si `scene.sfx` viene con un tipo válido, se genera con el mismo `sfx.py` que usa ViRe y se mezcla (`amix duration=first`) sobre el clip de esa escena (voz o silencio) sin alterar su duración.
+- Nuevo `voice_rate` (UI: selector "Ritmo de voz") pasado al `--rate` de Edge TTS — confirmado que el flag existe (`python -m edge_tts --help`).
+- **Sonido ambiental real para `[EFECTO: ...]` (Freesound, CC0)**: `sfx.py` solo sintetiza 4 tonos fijos (whoosh/glitch/pop/bassdrop, pensados para cortes de ads) y no interpreta descripciones libres tipo "cuenco tibetano". Se agregó `buscarSonidoFreesound()` (API de freesound.org, filtro `license:"Creative Commons 0"`) como fuente para `scene.sfx_query`, que `parseGuionNarrativo()` llena con el texto de cada `[EFECTO: ...]` (se pega a la SIGUIENTE escena que aparezca; si el efecto es el último contenido del guion, a la última escena ya armada). Bug encontrado y corregido en el camino: Freesound busca en modo Y-lógico (todas las palabras deben aparecer) — una consulta en español da 0 resultados siempre, y hasta traducida palabra por palabra con adjetivos ("resonance"/"soft"/"long") también da 0 porque exige que un sonido tenga TODAS esas etiquetas a la vez. Fix: diccionario chico ES→EN que se queda solo con 1-2 SUSTANTIVOS del objeto que suena (`traducirSfxQuery()`), descartando adjetivos/duración — "Cuenco tibetano con resonancia prolongada" → `tibetan bowl`, no la frase completa traducida.
+
+### Verificación
+- `parseGuionNarrativo()` probado con el guion real de meditación del usuario (standalone, funciones copiadas a un script de prueba): 8 escenas correctas (5 habladas + 3 silencios de 10s/20s/60s), imágenes rotadas correctamente, marcadores de música/hashtags/meta correctamente descartados, ambos `[EFECTO: ...]` capturados y pegados a la escena correcta (uno al siguiente párrafo hablado, el de cierre a la última escena por no tener nada después).
+- Filtro `aformat`+`concat` de audio probado con `ffmpeg.exe`/`ffprobe.exe` reales: 3 clips de silencio (5s+10s+3s) concatenados dieron exactamente 18.0s.
+- `sfx.py` probado standalone (genera whoosh real) + mezcla `amix duration=first` sobre un tono de 6s: salida se mantuvo en 6.0s exactos (no se alteró la duración de la escena).
+- API key real de Freesound probada en vivo con `curl`: "tibetan bowl" → 45 resultados CC0, "crystal bowl" → 27 — las dos consultas reales de los `[EFECTO: ...]` del guion del usuario, ya traducidas por `traducirSfxQuery()`. Preview mp3 descargado y mezclado con `amix duration=first` contra un clip de 10s: salida se mantuvo en 10.0s exactos.
+- Iteración de la traducción: primero se probó traducción palabra-por-palabra completa (incluidos adjetivos) → 0 resultados en Freesound real, verificado con `curl` antes de asumir que funcionaba. Se corrigió a solo-sustantivos y se re-verificó en vivo antes de dar el fix por bueno.
+- No se corrió el flujo completo contra el servidor real (había un proceso del usuario activo en el puerto 8000 — pendiente que el usuario lo pruebe en su próxima corrida).
+
+### Archivo afectado
+`SuitCampanas/local-server-node.js`, `SuitCampanas/index.html`, `SuitCampanas/script.js`
+
 ## Archivos afectados
-- `SuitCampanas/script.js` — B1, B5, B13, B17
-- `SuitCampanas/local-server-node.js` — B2, B3, B4, B6, B7, B9, B10, B11, B12, B14, B15, B16, overlay de contacto (nuevo), fix de diagnóstico stderr
+- `SuitCampanas/script.js` — B1, B5, B13, B17, B18
+- `SuitCampanas/local-server-node.js` — B2, B3, B4, B6, B7, B9, B10, B11, B12, B14, B15, B16, B18, overlay de contacto (nuevo), fix de diagnóstico stderr
 - `SuitVidGenRemotion/scripts/helpers/ttsProvider.js` — B8
 
 ## Verificación

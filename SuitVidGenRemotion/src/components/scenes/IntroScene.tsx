@@ -1,7 +1,7 @@
-import { AbsoluteFill, useCurrentFrame, interpolate, spring, Img, staticFile } from "remotion";
-import type { IntroScene } from "../types/script";
+import { AbsoluteFill, useCurrentFrame, interpolate, spring, Img } from "remotion";
+import type { IntroScene as IntroSceneData } from "../../types/script";
 
-export const IntroScene: React.FC<{ scene: IntroScene }> = ({ scene }) => {
+export const IntroScene: React.FC<{ scene: IntroSceneData }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const duration = Math.round(scene.duration * 30);
   const half = Math.floor(duration / 2);

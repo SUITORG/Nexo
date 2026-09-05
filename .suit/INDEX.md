@@ -83,7 +83,7 @@
 ## Memory
 | Directory | Purpose |
 |---|---|
-| `memory/decisions/` | Architecture Decision Records (ADR-001 a ADR-004) |
+| `memory/decisions/` | Architecture Decision Records (ADR-004 a ADR-018) |
 | `memory/bugs/` | Known bug database |
 | `memory/lessons/` | Cross-project learnings |
 | `memory/patterns/` | Reusable patterns |

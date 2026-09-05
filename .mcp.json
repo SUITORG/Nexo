@@ -62,6 +62,20 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
+    },
+    "mirofish": {
+      "command": "node",
+      "args": ["C:\\Users\\rojo-\\Downloads\\SuitOrg\\mirofish-mcp-server\\dist\\index.js"],
+      "env": {
+        "MIROFISH_BASE_URL": "http://localhost:5001"
+      }
+    },
+    "capcut": {
+      "command": "C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp\\mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp"
+      }
     }
   }
 }

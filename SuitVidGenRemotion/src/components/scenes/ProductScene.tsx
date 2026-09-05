@@ -1,7 +1,7 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, Img, spring } from "remotion";
-import type { ProductScene } from "../types/script";
+import type { ProductScene as ProductSceneData } from "../../types/script";
 
-export const ProductScene: React.FC<{ scene: ProductScene }> = ({ scene }) => {
+export const ProductScene: React.FC<{ scene: ProductSceneData }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const duration = Math.round(scene.duration * 30);
   const half = Math.floor(duration / 2);

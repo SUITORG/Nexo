@@ -10,7 +10,7 @@ export const SubtitleOverlay: React.FC<{ scenes: Scene[]; script: Script }> = ({
   const { fps } = useVideoConfig();
   const currentMs = (frame / fps) * 1000;
 
-  const entries = generateSubtitles(scenes, script);
+  const entries = generateSubtitles(scenes);
   const currentEntry = entries.find(
     (e) => currentMs >= e.startMs && currentMs < e.endMs
   );
@@ -57,7 +57,6 @@ export const SubtitleOverlay: React.FC<{ scenes: Scene[]; script: Script }> = ({
                 key={i}
                 style={{
                   color: w === currentWord ? "#fbbf24" : "white",
-                  transition: "color 0.05s",
                 }}
               >
                 {w.text}
