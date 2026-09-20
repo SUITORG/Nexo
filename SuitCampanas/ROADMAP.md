@@ -179,3 +179,9 @@ Detalle completo en `.suit/memory/pending/plan-posicionamiento-seo-multitenant.m
 - [ ] 13.11 **Fase 4 (radar, sin cambios)**: API keys hardcodeadas (`backend/core.js:13`, `SuitCampanas/script.js:8-11`, `scripts/agents/vision-audit.js:14`), CORS `*` en servidor local, sin rate limiting en endpoints públicos, `execSync` con `shell:true`. Deuda ya documentada.
 - [ ] 13.12 **Fase 5 (cuando un inquilino de prueba se vuelva cliente real)**: decidir dominio/subdominio propio (`{tenant}.suitorg.com` o dominio del cliente) — no indexarse desde grupoevasol.com a largo plazo. Decisión de negocio, no ahora.
 - [x] 13.13 **F1.5 (revisión SuitOS)** Bug encontrado en verificación independiente: `ssg-engine.mjs` nunca borraba páginas de inquilinos renombrados/eliminados de `Config_Empresas` — quedaban en `dist/` indexables (`index, follow`) con SEO genérico. Evidencia real: `roomateanl.html` (huérfano de un rename a `ROOMMATENL`), aún indexable pese al fix 13.1. Fix: `generatedFiles` Set + limpieza post-loop de cualquier `.html` en `dist/` que no esté en ese set. Re-ejecutado en vivo: eliminó `roomateanl.html` y un segundo huérfano (`.html`, de una fila vieja con `id_empresa` vacío, de antes de existir el guard `if (!coId) continue`). Ver ADR-022. `dist/` verificado post-fix: 16 archivos (1 indexable + 15 noindex), coincide exacto con los 17 inquilinos reales (SUITORG → `index.html`).
+
+---
+
+## Backlog general (ideas evaluadas, no priorizadas)
+
+- **FT-009** (`.suit/memory/pending/tech-debt.yaml`): Imagen → Prompt con Gemini Vision (gratis) — subir una foto de referencia y generar el prompt de estilo automáticamente, para el generador de imagen o el picker de Estilo Visual de ViRe. Idea tomada de meigen.ai (2026-09-04).

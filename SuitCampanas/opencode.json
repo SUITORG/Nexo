@@ -1,0 +1,44 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "supabase": {
+      "type": "local",
+      "command": [
+        "node",
+        "scripts/mcp-supabase.js"
+      ],
+      "enabled": true
+    },
+    "google-sheets": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mcp-gsheets@latest"
+      ],
+      "enabled": true,
+      "env": {
+        "GOOGLE_PROJECT_ID": "suitorg00",
+        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\rojo-\\Downloads\\suitorg\\google-credentials.json"
+      }
+    },
+    "comfyui": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "comfyui-mcp"
+      ],
+      "enabled": true,
+      "env": {
+        "COMFYUI_HOST": "127.0.0.1",
+        "COMFYUI_PORT": "8188"
+      }
+    },
+    "canva": {
+      "type": "remote",
+      "url": "https://mcp.canva.com/mcp",
+      "enabled": true
+    }
+  }
+}

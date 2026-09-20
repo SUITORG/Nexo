@@ -1,5 +1,6 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, Img } from "remotion";
 import type { TextScene as TextSceneData } from "../../types/script";
+import { AnimatedIcon } from "../AnimatedIcon";
 
 export const TextScene: React.FC<{ scene: TextSceneData }> = ({ scene }) => {
   const frame = useCurrentFrame();
@@ -106,6 +107,26 @@ export const TextScene: React.FC<{ scene: TextSceneData }> = ({ scene }) => {
             border: "3px solid white",
           }}
         />
+      )}
+
+      {(scene.icono || scene.icono_svg) && (
+        <div
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+            width: 70,
+            height: 70,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.15)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <AnimatedIcon icono={scene.icono} svgMarkup={scene.icono_svg} animacion={scene.icono_animacion} />
+        </div>
       )}
     </AbsoluteFill>
   );

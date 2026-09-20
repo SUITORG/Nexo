@@ -2,6 +2,11 @@ import type { Scene } from "../types/script";
 import { IntroScene } from "./scenes/IntroScene";
 import { TextScene } from "./scenes/TextScene";
 import { PaperTextScene } from "./scenes/PaperTextScene";
+import { PinterestAdScene } from "./scenes/PinterestAdScene";
+import { RankingTarjetasScene } from "./scenes/RankingTarjetasScene";
+import { DiarioIlustradoScene } from "./scenes/DiarioIlustradoScene";
+import { CosmicListicleScene } from "./scenes/CosmicListicleScene";
+import { PizarraMinimalistaScene } from "./scenes/PizarraMinimalistaScene";
 import { ProductScene } from "./scenes/ProductScene";
 import { OutroScene } from "./scenes/OutroScene";
 
@@ -10,7 +15,13 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
     case "intro":
       return <IntroScene scene={scene} />;
     case "text":
-      return scene.visual_style === "paper" ? <PaperTextScene scene={scene} /> : <TextScene scene={scene} />;
+      if (scene.visual_style === "paper") return <PaperTextScene scene={scene} />;
+      if (scene.visual_style === "pinterest_ad") return <PinterestAdScene scene={scene} />;
+      if (scene.visual_style === "ranking_tarjetas") return <RankingTarjetasScene scene={scene} />;
+      if (scene.visual_style === "diario_ilustrado") return <DiarioIlustradoScene scene={scene} />;
+      if (scene.visual_style === "cosmic_listicle_dorado") return <CosmicListicleScene scene={scene} />;
+      if (scene.visual_style === "pizarra_minimalista") return <PizarraMinimalistaScene scene={scene} />;
+      return <TextScene scene={scene} />;
     case "product":
       return <ProductScene scene={scene} />;
     case "outro":

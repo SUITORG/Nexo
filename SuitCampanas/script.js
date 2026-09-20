@@ -8,6 +8,24 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// Extrae el JSON de una respuesta de IA que puede venir con preámbulo
+// conversacional ("Claro, aquí tienes el JSON:") antes del bloque ```json —
+// las 4 llamadas de guion (VIDE/ViRe) solo quitaban las marcas ``` pero
+// dejaban el texto de alrededor intacto, así que JSON.parse tronaba en
+// cuanto el modelo (ej. deepseek) agregaba esa cortesía. Prioridad: bloque
+// con fences en cualquier posición > primer "{" al último "}" > texto tal
+// cual (para que el error de arriba siga siendo el mensaje real si de plano
+// no hay JSON).
+function extractJsonFromAiText(text) {
+    const raw = (text || '').trim();
+    const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenced) return fenced[1].trim();
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    if (start !== -1 && end > start) return raw.slice(start, end + 1);
+    return raw;
+}
+
 // ADR-026: logo_url puede venir en formato vector de Brief (ADR-023/025 —
 // "logo: url|avatar: url|industria: ...|LAPVTFU: url,url,,,,,|...") en vez del
 // formato legado de ADR-008 ("logoUrl,avatarUrl"). Probar etiquetas primero;
@@ -196,9 +214,53 @@ let uploadedLogoDataUrl = null;
 let companyConfigs = [];
 let bdUploadedPhotos = [];
 let lastGeneratedContent = null;
+// Ganchos (hook de la escena 1) de guiones ya generados para cada empresa en
+// esta sesión — sin esto, "Generar JSON" repetido con los mismos datos de
+// Asistente IA converge en respuestas muy parecidas (mismo problema que
+// tenía el generador de estilos: sin memoria de sus propios intentos, la IA
+// vuelve a la opción "segura"). Solo vive en memoria del navegador, se
+// pierde al recargar — suficiente para varios clics seguidos en la misma
+// sesión, que es el caso real reportado.
+let guionesPreviosPorEmpresa = {};
 // Modo "revisar por escena" (VIDE Opción A): {sceneIndex: image_url aprobado}.
 // Se limpia cada vez que se muestra el panel de nuevo (guion distinto).
 let sceneImageApproved = {};
+// Pool de fotos "trending" de Pexels (/api/pexels-trending, endpoint real
+// /v1/curated de Pexels) para el picker de imágenes con rueda del mouse —
+// mismo patrón que el picker de Estilo Visual. Un solo pool compartido por
+// todas las escenas; cada escena guarda su propio índice de navegación.
+let pexelsTrendingPool = [];
+let pexelsIndexByScene = {};
+
+async function fetchPexelsTrending() {
+    if (pexelsTrendingPool.length) return pexelsTrendingPool;
+    const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
+    try {
+        const res = await fetch(`/api/pexels-trending?format=${encodeURIComponent(format)}`);
+        const json = await res.json();
+        pexelsTrendingPool = json.photos || [];
+    } catch (e) {
+        pexelsTrendingPool = [];
+    }
+    return pexelsTrendingPool;
+}
+
+function renderPexelsStage(index) {
+    const img = document.getElementById(`sceneStageImg_${index}`);
+    if (!img || !pexelsTrendingPool.length) return;
+    const idx = pexelsIndexByScene[index] || 0;
+    img.style.opacity = 0;
+    const pre = new Image();
+    pre.onload = () => { img.src = pexelsTrendingPool[idx]; img.style.opacity = 1; };
+    pre.src = pexelsTrendingPool[idx];
+}
+
+function pexelsStep(index, dir) {
+    if (!pexelsTrendingPool.length) return;
+    const cur = pexelsIndexByScene[index] || 0;
+    pexelsIndexByScene[index] = (cur + dir + pexelsTrendingPool.length) % pexelsTrendingPool.length;
+    renderPexelsStage(index);
+}
 
 // --- Scope global: funciones accesibles desde generateAIContent ---
 const INDUSTRIA_CATEGORIA = {};
@@ -229,6 +291,8 @@ function updateEspecializacionSelect() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    checkAppHealth();
+
     // Inicializar Elementos
     form = document.getElementById('cmsForm');
     submitBtn = document.getElementById('submitBtn');
@@ -1530,9 +1594,7 @@ async function generateAIContent() {
         let generatedJson;
         
         try {
-            const rawContent = data.choices[0].message.content.trim();
-            // Limpiar posibles bloques de código de markdown si la IA los incluye
-            const jsonStr = rawContent.startsWith('```') ? rawContent.replace(/```json|```/g, '') : rawContent;
+            const jsonStr = extractJsonFromAiText(data.choices[0].message.content);
             generatedJson = JSON.parse(jsonStr);
         } catch (e) {
             console.error("Error parseando JSON de IA:", e);
@@ -1641,6 +1703,43 @@ function showToast(message, type) {
     toast.className = `toast show ${type}`;
     setTimeout(() => toast.classList.remove('show'), 4000);
 }
+
+// Avisa si falta algo que la generación con IA necesita — antes el usuario
+// solo se enteraba a mitad de "Generar JSON" con un error genérico ("La IA no
+// devolvió JSON válido"), sin pista de la causa real. Revisa 2 cosas
+// independientes: 1) OmniRoute (gateway local, puerto 20128) prendido, 2)
+// internet real disponible — un corte de conexión a mitad de sesión (ej. la
+// compu se durmió) puede tirar esto mismo sin que OmniRoute se haya apagado
+// (visto en vivo: '[PROXY_ERROR]' en GAS + 429 en imágenes de Drive al mismo
+// tiempo). Se re-chequea cada 60s (no solo al cargar la página) para agarrar
+// un corte que empieza a mitad de sesión, no solo el que ya estaba al entrar.
+// No bloquea nada — el banner se puede cerrar y se re-evalúa en el siguiente
+// chequeo (si el problema sigue, vuelve a aparecer).
+async function checkAppHealth() {
+    const banner = document.getElementById('healthBanner');
+    const text = document.getElementById('healthBannerText');
+    if (!banner || !text) return;
+    try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        if (!data.internet) {
+            text.textContent = '⚠️ No se detecta conexión a internet — la generación con IA, las imágenes y el guardado en Google Sheets no van a funcionar hasta que se restablezca.';
+            banner.style.display = 'block';
+        } else if (!data.omniroute) {
+            text.textContent = '⚠️ OmniRoute no está corriendo (localhost:20128) — la generación de guiones con IA no va a funcionar hasta que lo enciendas.';
+            banner.style.display = 'block';
+        } else {
+            banner.style.display = 'none';
+        }
+    } catch (_) {
+        // El servidor local (puerto 8000) tampoco respondió — sin servidor local
+        // no hay nada que mostrar en la página misma, el usuario ya lo nota solo.
+    }
+}
+document.getElementById('healthBannerClose')?.addEventListener('click', () => {
+    document.getElementById('healthBanner').style.display = 'none';
+});
+setInterval(checkAppHealth, 60000);
 
 async function renderCarouselPreview(text) {
     // Si el contenido pegado es un JSON de guion VIDE ({config, escenas:[...]}),
@@ -3211,6 +3310,20 @@ function syncVideFieldsFromJson(jsonText) {
 
 let estiloVisualData = null;
 let estiloVisualSeleccionado = null;
+// Paleta exacta (armada a mano o extraída del logo) para el video que se va a
+// generar — ver plan "picker con thumbnails + paleta" (idea del usuario,
+// 2026-09-04). { background, ink, accent } en hex. null = usar defaults del template.
+let brandColorsSeleccionados = null;
+let brandColorsExtraidos = null;
+
+// Estado del selector "un estilo a la vez, rueda del mouse para cambiar"
+// (reemplaza los <select> de categoría/sub-estilo en cascada — mockup
+// aprobado por el usuario, artifact "Estilo & Marca", 2026-09-04). Lista
+// aplanada de categoría+subestilo con su miniatura real (Pollinations).
+let estiloPool = [];
+let estiloPoolFiltrado = [];
+let estiloIndex = 0;
+let estiloCatActiva = 'Todos';
 
 async function fetchEstilosVisuales() {
     const empresa = document.getElementById('companyName')?.value?.trim();
@@ -3226,57 +3339,128 @@ async function fetchEstilosVisuales() {
     }
 }
 
-// Dos niveles en vez de mostrar las 12 sub-estilos de una vez (ocupaba mucho
-// espacio): primero las 4 categorías, al elegir una se ven solo sus 3 sub-estilos.
-// Mismo patrón cascada que Industria→Nicho (populateNichos()): categoría
-// primero, sub-estilo se llena al elegir una — reemplaza los botones sueltos.
+function flattenEstilos(categorias) {
+    const flat = [];
+    (categorias || []).forEach(cat => {
+        (cat.subestilos || []).forEach(sub => {
+            flat.push({
+                id: sub.id,
+                catSlug: cat.slug,
+                catNombre: cat.nombre,
+                sub: sub.slug,
+                nombre: sub.nombre,
+                keywords: sub.keywords_ia,
+                descripcion: sub.descripcion,
+                visualTemplate: sub.parametros_visuales?.template,
+                contentShape: sub.parametros_visuales?.content_shape,
+                itemCount: sub.parametros_visuales?.item_count,
+                previewUrl: sub.parametros_visuales?.preview_url || null,
+            });
+        });
+    });
+    return flat;
+}
+
+function estiloToSeleccion(e) {
+    return { id: e.id, cat: e.catSlug, sub: e.sub, nombre: e.nombre, keywords: e.keywords, visualTemplate: e.visualTemplate, contentShape: e.contentShape, itemCount: e.itemCount };
+}
+
+// Un estilo a la vez con miniatura real, en vez de dos <select> en cascada —
+// girar la rueda del mouse sobre la imagen pasa al siguiente/anterior.
 function showStyleSelector(categorias, empresa) {
     const wrapper = document.getElementById('estiloVisualWrapper');
-    const subWrapper = document.getElementById('estiloSubWrapper');
-    const catSelect = document.getElementById('videEstiloCategoria');
-    const subSelect = document.getElementById('videEstiloSub');
-    const info = document.getElementById('autoStyleInfo');
+    const stage = document.getElementById('estiloStage');
     const refWrapper = document.getElementById('estiloReferenciaWrapper');
-    if (!wrapper || !catSelect || !subSelect) return;
+    const brandWrapper = document.getElementById('brandColorsWrapper');
+    if (!wrapper || !stage) return;
     wrapper.style.display = '';
     if (refWrapper) refWrapper.style.display = '';
+    if (brandWrapper) brandWrapper.style.display = '';
 
-    catSelect.innerHTML = '<option value="">🎯 Automático (recomendado por tendencias)</option>' +
-        categorias.map(c => `<option value="${c.slug}">${c.icono || '📁'} ${c.nombre}</option>`).join('');
-
-    catSelect.onchange = () => {
-        const cat = categorias.find(c => c.slug === catSelect.value);
-        if (!cat) {
-            subWrapper.style.display = 'none';
-            estiloVisualSeleccionado = null;
-            autoPickStyleByTrend(empresa).then(r => {
-                if (r) { estiloVisualSeleccionado = r; info.textContent = `Director seleccionó: ${r.cat} → ${r.sub}`; }
-            });
-            return;
-        }
-        subWrapper.style.display = '';
-        subSelect.innerHTML = '<option value="">-- Seleccionar --</option>' +
-            (cat.subestilos || []).map(s => `<option value="${s.slug}">${s.nombre}</option>`).join('');
-        estiloVisualSeleccionado = null;
-        info.textContent = '';
-    };
-
-    subSelect.onchange = () => {
-        const cat = categorias.find(c => c.slug === catSelect.value);
-        const sub = cat?.subestilos.find(s => s.slug === subSelect.value);
-        if (!sub) { estiloVisualSeleccionado = null; info.textContent = ''; return; }
-        estiloVisualSeleccionado = { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia, visualTemplate: sub.parametros_visuales?.template };
-        info.textContent = `${cat.nombre} → ${sub.nombre}: ${sub.descripcion || ''}`;
-    };
-
-    catSelect.value = '';
-    subWrapper.style.display = 'none';
+    estiloPool = flattenEstilos(categorias);
+    estiloCatActiva = 'Todos';
+    estiloPoolFiltrado = estiloPool.slice();
+    renderEstiloPills(categorias);
 
     autoPickStyleByTrend(empresa).then(r => {
+        estiloIndex = 0;
         if (r) {
             estiloVisualSeleccionado = r;
-            info.textContent = `Director seleccionó: ${r.cat} → ${r.sub}`;
+            const idx = estiloPoolFiltrado.findIndex(e => e.id === r.id);
+            if (idx >= 0) estiloIndex = idx;
         }
+        renderEstiloStage();
+    });
+
+    if (!brandColorsSeleccionados) extraerColoresDeLogo();
+    renderBrandSwatches();
+}
+
+function renderEstiloPills(categorias) {
+    const box = document.getElementById('estiloPills');
+    if (!box) return;
+    const nombres = ['Todos', ...categorias.map(c => c.nombre)];
+    box.innerHTML = nombres.map(n => {
+        const active = n === estiloCatActiva;
+        return `<button type="button" class="estilo-pill" data-cat="${n}" style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--glass-border);background:${active ? 'var(--primary)' : 'rgba(255,255,255,0.05)'};color:${active ? '#fff' : 'var(--text-dim)'};cursor:pointer;">${n}</button>`;
+    }).join('');
+    box.querySelectorAll('.estilo-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            estiloCatActiva = btn.dataset.cat;
+            estiloPoolFiltrado = estiloCatActiva === 'Todos' ? estiloPool.slice() : estiloPool.filter(e => e.catNombre === estiloCatActiva);
+            estiloIndex = 0;
+            box.querySelectorAll('.estilo-pill').forEach(b => {
+                const isActive = b.dataset.cat === estiloCatActiva;
+                b.style.background = isActive ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
+                b.style.color = isActive ? '#fff' : 'var(--text-dim)';
+            });
+            renderEstiloStage();
+        });
+    });
+}
+
+function renderEstiloStage() {
+    if (!estiloPoolFiltrado.length) return;
+    const e = estiloPoolFiltrado[estiloIndex];
+    estiloVisualSeleccionado = estiloToSeleccion(e);
+
+    const img = document.getElementById('estiloStageImg');
+    if (img) {
+        img.style.opacity = 0;
+        if (e.previewUrl) {
+            const pre = new Image();
+            pre.onload = () => { img.src = e.previewUrl; img.style.opacity = 1; };
+            pre.src = e.previewUrl;
+        } else {
+            img.removeAttribute('src');
+        }
+    }
+    const catEl = document.getElementById('estiloStageCat');
+    const countEl = document.getElementById('estiloStageCount');
+    const nameEl = document.getElementById('estiloStageName');
+    if (catEl) catEl.textContent = e.catNombre;
+    if (countEl) countEl.textContent = `${estiloIndex + 1} / ${estiloPoolFiltrado.length}`;
+    if (nameEl) nameEl.textContent = e.nombre;
+
+    const info = document.getElementById('autoStyleInfo');
+    if (info) info.textContent = e.descripcion ? `${e.catNombre} → ${e.nombre}: ${e.descripcion}` : `${e.catNombre} → ${e.nombre}`;
+}
+
+function estiloStep(dir) {
+    if (!estiloPoolFiltrado.length) return;
+    estiloIndex = (estiloIndex + dir + estiloPoolFiltrado.length) % estiloPoolFiltrado.length;
+    renderEstiloStage();
+}
+
+const estiloStageEl = document.getElementById('estiloStage');
+if (estiloStageEl) {
+    estiloStageEl.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        estiloStep(e.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+    estiloStageEl.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); estiloStep(1); }
+        if (e.key === 'ArrowUp') { e.preventDefault(); estiloStep(-1); }
     });
 }
 
@@ -3286,25 +3470,16 @@ async function autoPickStyleByTrend(empresa) {
         const json = await res.json();
         if (json.status === 'success' && json.data.length > 0) {
             const top = json.data[0];
-            for (const cat of (estiloVisualData || [])) {
-                for (const sub of (cat.subestilos || [])) {
-                    if (sub.id === top.id_subestilo) {
-                        return { id: sub.id, cat: cat.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia, visualTemplate: sub.parametros_visuales?.template };
-                    }
-                }
-            }
+            const match = estiloPool.find(e => e.id === top.id_subestilo);
+            if (match) return estiloToSeleccion(match);
         }
     } catch (_) {}
-    if (estiloVisualData && estiloVisualData.length > 0) {
-        const fallback = estiloVisualData.find(c => c.slug === 'latino-virales')
-                      || estiloVisualData.find(c => c.slug === 'edits-beat')
-                      || estiloVisualData[0];
-        if (fallback && fallback.subestilos.length > 0) {
-            const sub = fallback.subestilos[0];
-            return { id: sub.id, cat: fallback.slug, sub: sub.slug, nombre: sub.nombre, keywords: sub.keywords_ia, visualTemplate: sub.parametros_visuales?.template };
-        }
-    }
-    return null;
+    // Nota: los slugs reales en Supabase usan guion bajo (latino_virales,
+    // edits_beat) — el fallback original tenía guion medio y nunca calzaba.
+    const fallback = estiloPool.find(e => e.catSlug === 'latino_virales')
+                  || estiloPool.find(e => e.catSlug === 'edits_beat')
+                  || estiloPool[0];
+    return fallback ? estiloToSeleccion(fallback) : null;
 }
 
 // Último recurso si estiloVisualSeleccionado sigue null al momento de generar
@@ -3312,12 +3487,241 @@ async function autoPickStyleByTrend(empresa) {
 // el fallback de arriba, pero síncrono y sin mutar estado, para no mandar
 // "sin estilo" por una condición de carrera.
 function fallbackEstiloKeywords() {
-    if (!estiloVisualData || estiloVisualData.length === 0) return '';
-    const fallback = estiloVisualData.find(c => c.slug === 'latino-virales')
-                  || estiloVisualData.find(c => c.slug === 'edits-beat')
-                  || estiloVisualData[0];
-    return fallback?.subestilos?.[0]?.keywords_ia || '';
+    const fallback = estiloPool.find(e => e.catSlug === 'latino_virales')
+                  || estiloPool.find(e => e.catSlug === 'edits_beat')
+                  || estiloPool[0];
+    return fallback ? fallback.keywords : '';
 }
+
+// ---- Paleta de marca: extracción de colores desde el logo (Canvas nativo, sin librerías) ----
+function clampByte(v) { return Math.max(0, Math.min(255, Math.round(v))); }
+function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(v => clampByte(v).toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+function hexToRgb(hex) {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s;
+    const l = (max + min) / 2;
+    if (max === min) { h = s = 0; }
+    else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            default: h = (r - g) / d + 4;
+        }
+        h *= 60;
+    }
+    return { h, s, l };
+}
+function hslToRgb(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = l - c / 2;
+    let rp, gp, bp;
+    if (h < 60) { rp = c; gp = x; bp = 0; }
+    else if (h < 120) { rp = x; gp = c; bp = 0; }
+    else if (h < 180) { rp = 0; gp = c; bp = x; }
+    else if (h < 240) { rp = 0; gp = x; bp = c; }
+    else if (h < 300) { rp = x; gp = 0; bp = c; }
+    else { rp = c; gp = 0; bp = x; }
+    return { r: (rp + m) * 255, g: (gp + m) * 255, b: (bp + m) * 255 };
+}
+
+const BRAND_SWATCH_DEFS = [
+    { key: 'background', label: 'Fondo' },
+    { key: 'ink', label: 'Texto' },
+    { key: 'accent', label: 'Acento' },
+];
+const BRAND_COLORS_DEFAULT = { background: '#F4E9D8', ink: '#2B2118', accent: '#E8722C' };
+
+function extractPaletteFromImage(img) {
+    const w = 48, h = 48;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    let data;
+    try { data = ctx.getImageData(0, 0, w, h).data; }
+    catch (e) { return null; } // logo cross-origin sin CORS: no se puede leer el pixel, se usan los defaults del template
+
+    const buckets = {};
+    for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 120) continue;
+        const key = [Math.round(data[i] / 24) * 24, Math.round(data[i + 1] / 24) * 24, Math.round(data[i + 2] / 24) * 24].join(',');
+        buckets[key] = (buckets[key] || 0) + 1;
+    }
+    const entries = Object.keys(buckets).map(k => {
+        const rgb = k.split(',').map(Number);
+        return { rgb, hsl: rgbToHsl(...rgb), count: buckets[k] };
+    }).sort((a, b) => b.count - a.count);
+    if (!entries.length) return null;
+
+    const vivid = entries.filter(e => e.hsl.s > 0.15 && e.hsl.l > 0.12 && e.hsl.l < 0.92);
+    const pool = vivid.length >= 3 ? vivid : entries;
+    const darkest = [...pool].sort((a, b) => a.hsl.l - b.hsl.l)[0];
+    const lightest = [...entries].sort((a, b) => b.hsl.l - a.hsl.l)[0];
+    const mostSaturated = [...pool].sort((a, b) => b.hsl.s - a.hsl.s)[0];
+
+    return {
+        background: rgbToHex(...lightest.rgb),
+        ink: rgbToHex(...darkest.rgb),
+        accent: rgbToHex(...mostSaturated.rgb),
+    };
+}
+
+function extraerColoresDeLogo() {
+    // El campo #companyLogo guarda "urlLogo,urlAvatar" pegados con una coma
+    // (ADR-008 legado — ver parseLogoUrlField) — pasarlo tal cual como src de
+    // <img> arma una sola URL inválida (googleusercontent.com/d/ID1,https://...ID2)
+    // que el servidor de Google rechaza con 400. Hay que separarlo y usar SOLO
+    // el logo, igual que ya hace el resto del código (renderCarouselFromJson,
+    // generateVideVideo, etc.) — visto en vivo con Toño Toques.
+    const rawField = document.getElementById('companyLogo')?.value?.trim();
+    const src = uploadedLogoDataUrl || (rawField ? normalizeDriveUrl(parseLogoUrlField(rawField).logoUrl) : '');
+    if (!src) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+        const palette = extractPaletteFromImage(img);
+        if (!palette) return;
+        brandColorsExtraidos = palette;
+        brandColorsSeleccionados = { ...palette };
+        renderBrandSwatches();
+    };
+    img.onerror = () => {}; // logo roto o URL sin CORS: se queda con los defaults del template, no bloquea nada
+    img.src = src;
+}
+
+function renderBrandSwatches() {
+    const box = document.getElementById('brandSwatches');
+    if (!box) return;
+    const colors = brandColorsSeleccionados || BRAND_COLORS_DEFAULT;
+    box.innerHTML = BRAND_SWATCH_DEFS.map(def => `
+        <div style="flex:1;text-align:center;">
+            <div class="brand-chip" data-key="${def.key}" title="Girá la rueda para ajustar" style="height:28px;border-radius:6px;border:1px solid var(--glass-border);cursor:ns-resize;background:${colors[def.key]};"></div>
+            <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">${def.label}</div>
+        </div>
+    `).join('');
+    box.querySelectorAll('.brand-chip').forEach(chip => {
+        chip.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (!brandColorsSeleccionados) brandColorsSeleccionados = { ...BRAND_COLORS_DEFAULT };
+            const key = chip.dataset.key;
+            const rgb = hexToRgb(brandColorsSeleccionados[key]);
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            const dir = e.deltaY > 0 ? 1 : -1;
+            hsl.h = (hsl.h + dir * 6 + 360) % 360;
+            const newRgb = hslToRgb(hsl.h, hsl.s || 0.55, hsl.l || 0.5);
+            brandColorsSeleccionados[key] = rgbToHex(newRgb.r, newRgb.g, newRgb.b);
+            chip.style.background = brandColorsSeleccionados[key];
+        }, { passive: false });
+    });
+}
+
+document.getElementById('btnExtraerColoresLogo')?.addEventListener('click', () => {
+    const hasLogo = uploadedLogoDataUrl || document.getElementById('companyLogo')?.value?.trim();
+    if (!hasLogo) { showToast('❌ Cargá un logo de empresa primero.', 'error'); return; }
+    extraerColoresDeLogo();
+});
+document.getElementById('btnResetColoresLogo')?.addEventListener('click', () => {
+    brandColorsSeleccionados = brandColorsExtraidos ? { ...brandColorsExtraidos } : null;
+    renderBrandSwatches();
+});
+
+// Botón "Comfy" (Datos/Negocio): prueba rápida y aislada de ComfyUI local con
+// los datos reales de la empresa ya cargados — no toca el guion ni el flujo
+// de VIDE/ViRe. Si ComfyUI/SuitComfy no están corriendo, el server responde
+// 503 con un mensaje accionable (ver ADR-031) en vez de romper nada.
+document.getElementById('comfyPreviewBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('comfyPreviewBtn');
+    const status = document.getElementById('comfyPreviewStatus');
+    const img = document.getElementById('comfyPreviewImg');
+    const empresa = document.getElementById('companyName')?.value?.trim();
+    if (!empresa) { showToast('❌ Escribe el nombre de la empresa primero.', 'error'); return; }
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Generando...';
+    if (status) status.textContent = 'Puede tardar hasta 5 min (ComfyUI corre en CPU)...';
+    try {
+        const res = await fetch('/api/comfy/quick-preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ empresa })
+        });
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.error || 'No se pudo generar la imagen');
+        if (img) { img.src = json.image; img.style.display = ''; }
+        if (status) status.textContent = '✅ Generado con ComfyUI local';
+        showToast('✅ Imagen generada con ComfyUI.', 'success');
+    } catch (e) {
+        if (status) status.textContent = '';
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+});
+
+// Botón "Generar Póster" — flujo completo Quote-Flow: frase + categoría ->
+// escena ComfyUI + overlay de tipografía (SuitComfy/quote-flow-poster.js, ver
+// ADR-032). Empresa es opcional acá (solo aporta color_tema si existe); la
+// frase sí es obligatoria. Mismo patrón de UI que comfyPreviewBtn.
+document.getElementById('comfyPosterBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('comfyPosterBtn');
+    const status = document.getElementById('comfyPreviewStatus');
+    const img = document.getElementById('comfyPreviewImg');
+    const empresa = document.getElementById('companyName')?.value?.trim();
+    const frase = document.getElementById('comfyFraseInput')?.value?.trim();
+    const categoria = document.getElementById('comfyCategoriaSelect')?.value || 'conocimiento';
+    if (!frase) { showToast('❌ Escribe una frase para el póster.', 'error'); return; }
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Generando póster...';
+    if (status) status.textContent = 'Puede tardar hasta 5 min (ComfyUI corre en CPU)...';
+    try {
+        const res = await fetch('/api/comfy/poster', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ empresa, frase, categoria })
+        });
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.error || 'No se pudo generar el póster');
+        if (img) { img.src = json.image; img.style.display = ''; }
+        if (status) status.textContent = '✅ Póster generado';
+        showToast('✅ Póster generado con ComfyUI.', 'success');
+    } catch (e) {
+        if (status) status.textContent = '';
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+});
+
+// Imagen de referencia para el Director de Estilo IA (opcional) — mismo
+// patrón que el logo (readAsDataURL, guardado en memoria como data URL).
+let estiloReferenciaImagenDataUrl = null;
+document.getElementById('estiloReferenciaImagen')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const preview = document.getElementById('estiloReferenciaPreview');
+    if (!file) { estiloReferenciaImagenDataUrl = null; if (preview) preview.style.display = 'none'; return; }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        estiloReferenciaImagenDataUrl = event.target.result;
+        if (preview) { preview.src = estiloReferenciaImagenDataUrl; preview.style.display = ''; }
+    };
+    reader.readAsDataURL(file);
+});
 
 // Director de estilo IA: genera (o inventa, si no hay referencia) un
 // sub-estilo nuevo y lo deja seleccionado — el backend lo persiste como
@@ -3331,14 +3735,22 @@ document.getElementById('btnGenerarEstiloIA')?.addEventListener('click', async (
     const tema = document.getElementById('aiTheme')?.value?.trim() || '';
     const referencia = document.getElementById('estiloReferenciaTexto')?.value?.trim() || '';
 
+    // data:image/webp;base64,XXXX -> separa el mime y el base64 puro, que es
+    // lo que espera el endpoint (arma el data URI de nuevo del lado server).
+    let imagen_base64, imagen_mime;
+    if (estiloReferenciaImagenDataUrl) {
+        const match = estiloReferenciaImagenDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) { imagen_mime = match[1]; imagen_base64 = match[2]; }
+    }
+
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ Generando...';
+    btn.textContent = imagen_base64 ? '⏳ Mirando la imagen...' : '⏳ Generando...';
     try {
         const res = await fetch('/api/estilos-visuales/generar-ia', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ empresa, nicho, tema, referencia })
+            body: JSON.stringify({ empresa, nicho, tema, referencia, imagen_base64, imagen_mime })
         });
         const json = await res.json();
         if (json.status !== 'success') throw new Error(json.error || 'Error generando estilo');
@@ -3363,6 +3775,21 @@ function formatPhoneForSpeech(phone) {
     return digits.match(/.{1,2}/g).join(' ');
 }
 
+// Trae el Brief real ya parseado del servidor (/api/empresa-brief, mismo
+// fetchEmpresaRow+parseBrief que usa "Solo Imagen sin guion") para pasárselo
+// a construirPromptGuion() — nunca bloquea la generación si falla o la
+// empresa no tiene Brief aún, solo se queda sin ese contexto extra.
+async function fetchBriefCompleto(company) {
+    if (!company) return null;
+    try {
+        const res = await fetch(`/api/empresa-brief?empresa=${encodeURIComponent(company)}`);
+        const json = await res.json();
+        return json.status === 'success' ? json.data : null;
+    } catch (_) {
+        return null;
+    }
+}
+
 // === VIDE: Generar JSON desde Contenido + Datos ===
 // Prompt de guion compartido entre VIDE y ViRe (construido a partir de
 // Empresa/Sitio/Teléfono + Asistente IA) — extraído de generateVideJson()
@@ -3372,8 +3799,22 @@ function construirPromptGuion({
     company, website, phone, logoUrl, avatarUrl,
     format, platform, style, duration, res, suggestedBpm,
     conciencia, industria, nicho, especializacion, template, slides, theme,
-    modules, estiloStr, catalogoInterrupts
+    modules, estiloStr, catalogoInterrupts, ganchosPrevios, briefCompleto,
+    contentShape, itemCount
 }) {
+    const seccionGanchosPrevios = (ganchosPrevios && ganchosPrevios.length)
+        ? `\nGANCHOS YA USADOS PARA ESTE CLIENTE (obligatorio: no repitas ninguno de estos ni una variación menor — cambia de arquetipo de comunicación y de ángulo psicológico, no solo la redacción):\n${ganchosPrevios.map(g => `- "${g}"`).join('\n')}\n`
+        : '';
+    // Brief real leído directo del servidor (fetchEmpresaRow+parseBrief) — a
+    // diferencia de Industria/Nicho/Especialización de arriba (que dependen
+    // de que el texto real coincida con la lista fija de <select> de
+    // Asistente IA, y fallan en silencio si el nicho es muy específico como
+    // "CBD Funcional de Espectro Completo"), esto es el dato real completo
+    // del cliente sin pasar por ningún catálogo cerrado.
+    const camposBrief = briefCompleto ? Object.keys(briefCompleto).filter(k => k !== 'etiqueta_legado') : [];
+    const seccionBriefReal = camposBrief.length
+        ? `\nBRIEF REAL DEL CLIENTE (prioriza esta información sobre Industria/Nicho/Especialización de arriba si hay cualquier diferencia — son el dato genérico, esto es lo real de ESTE cliente):\n${JSON.stringify(briefCompleto, null, 2)}\n`
+        : '';
     return `Eres un generador de guiones publicitarios de alto impacto visual y conversión. Respondes EXCLUSIVAMENTE con un objeto JSON válido según el schema indicado.
 
 Genera el guion publicitario completo en JSON en formato ${format} para ${platform}.
@@ -3400,11 +3841,24 @@ ESTRUCTURA DEL JSON REQUERIDO:
       "musica_local": null | "energetic" | "relaxing" | "professional" | "cinematic",
       "pattern_interrupt": "(solo escena 1) acción o sonido disruptivo en los primeros 1.5s",
       "camara": { "plano": "Close-up | Medium Shot | Extreme Close-up | POV", "movimiento": "Whip Zoom | Static | Tracking Shot | Tilt Up/Down" },
-      "sfx": "Efecto de sonido puntual de la escena (Whoosh, Glitch, Pop, Bass drop) o null"
+      "sfx": "Efecto de sonido puntual de la escena (Whoosh, Glitch, Pop, Bass drop) o null",
+      "icono": "UNA sola palabra clave EN INGLÉS que represente el concepto central de ESTA escena, del tipo que existe como ícono real (ej. 'clock' tiempo/espera, 'lightbulb' idea, 'trending-up' crecimiento, 'heart' cuidado, 'flame' urgencia) o null si ninguno aporta — no fuerces uno en cada escena. Se busca en un catálogo real de íconos: UNA sola palabra, nunca una frase (una búsqueda de varias palabras no encuentra nada).",
+      "icono_animacion": "rotar" | "flotar" | "pulsar" | "rebotar" | null${contentShape === 'lista' ? `,
+      "items": "SOLO en esta escena (ver FORMATO ESPECIAL abajo — obligatorio para este estilo): array de tarjetas {icono, titulo_item, subtitulo_item}"` : ''}
     }
   ],
-  "cta": "Llamado a la acción de la escena final: un VERBO DE ACCIÓN explícito (Llama, Visita, Escríbenos, Agenda, Compra...) + el dato de contacto (teléfono/web). Debe coincidir con lo que dice/muestra la última escena — no un campo aparte inventado."
+  "cta": "Llamado a la acción de la escena final: un VERBO DE ACCIÓN explícito (Llama, Visita, Escríbenos, Agenda, Compra...) + el dato de contacto (teléfono/web). Debe coincidir con lo que dice/muestra la última escena — no un campo aparte inventado.",
+  "aviso_ia": "SOLO si el Brief real (RLP/restricciones legales, ver abajo) exige revelar que el contenido fue creado con IA: una frase corta (ej. 'Este anuncio fue creado con inteligencia artificial.'). Si no aplica, deja este campo como null o cadena vacía. Este texto se muestra como letra pequeña en pantalla SOLO en la última escena — NUNCA se lee en voz alta, así que NO lo repitas dentro de ningún 'texto' de escena ni dentro de 'cta'."
 }
+${contentShape === 'lista' ? `
+FORMATO ESPECIAL: INFOGRAFÍA TIPO LISTA/RANKING (OBLIGATORIO — el estilo visual elegido lo requiere)
+El estilo visual seleccionado dibuja una cuadrícula de tarjetas, no una narrativa de varios beats. Por eso:
+- "escenas" debe tener EXACTAMENTE 1 escena, con "duracion" = ${duration} (el video completo — la infografía se queda en pantalla mientras la voz narra).
+- Esa escena debe traer el campo "items": un array de EXACTAMENTE ${itemCount || 5} objetos { "icono": un emoji relacionado, "titulo_item": string corto (máx 6 palabras), "subtitulo_item": string de una frase con el detalle concreto }.
+- "texto" (lo que se narra en voz alta) debe recorrer los ${itemCount || 5} puntos de forma fluida y natural (no leer la lista seca palabra por palabra).
+- "visual" debe describir SOLO una foto o textura de fondo simple y genérica (sin texto, sin íconos, sin gráficos — el diseño de las tarjetas lo dibuja el sistema, no la foto).
+- Los ${itemCount || 5} puntos deben sonar investigados sobre ESTE negocio puntual (usa el Brief real de abajo) — nunca una generalidad tipo "El X% de las personas que prueban Y..." que serviría para cualquier competidor del mismo rubro.
+` : ''}
 
 DATOS DE LA EMPRESA:
 - Nombre: ${company || '(no especificado)'}
@@ -3429,11 +3883,15 @@ CONFIGURACIÓN DEL VIDEO:
 ESTILO VISUAL (OBLIGATORIO):
 Aplica el estilo visual "${estiloStr}" en cada escena: el "visual" de cada escena y el "texto_overlay" deben usar la estética, paleta y tratamiento visual de este estilo. No generes imágenes genéricas.
 
+ÍCONO ANIMADO (opcional, por escena):
+"icono" es una palabra clave en inglés (no un emoji, no una frase) que el sistema busca en un catálogo real de íconos vectoriales y dibuja recoloreado a la marca del cliente — piensa en el nombre de archivo de un ícono típico: "clock", "leaf", "heart", "trending-up", "shield-check", "alarm", "gift", "star". Si el "icono" que propones aporta al mensaje de esa escena en concreto, elige también su animación según lo que representa — no la elijas al azar: "rotar" para proceso/tiempo/mecanismo, "flotar" para calma/naturaleza/ligereza, "pulsar" para alerta/urgencia/latido, "rebotar" para energía/logro/diversión. Úsalo solo donde de verdad sume — una escena sin ícono claro se queda con "icono": null.
+
 ANCLA DE IDENTIDAD VISUAL (OBLIGATORIO — método Pareto 20/80):
 Antes de escribir las escenas, define UNA sola dirección y aplícala en TODAS, no una distinta por escena:
 - Ritmo de montaje: cortes rápidos (<1.5s, "camara.movimiento" tipo Whip Zoom/Tracking) para conciencia alta/CTA, o plano secuencia más pausado (Static/Tilt) para conciencia baja/narrativa.
 - Dirección de luz/color: elige una y sostenla en "visual" de cada escena (ej. Teal & Orange cinematográfico, alto contraste dramático, o iluminación nativa/orgánica tipo redes sociales) — coherente con "${estiloStr || template || 'el tono general'}".
 
+${seccionBriefReal}${seccionGanchosPrevios}
 ARQUETIPO DE COMUNICACIÓN (OBLIGATORIO):
 Elige UNO para todo el guion y sostenlo en el tono de "texto": **El Mentor** (autoridad, datos, enseña) si la marca/tema pide credibilidad técnica; **El Antagonista** (desafía una creencia popular del nicho) si "${conciencia || 'No especificado'}" es baja (Inconsciente/Consciente_Problema) y conviene un choque de opinión; **El Par** (experiencia compartida, cercanía) si el objetivo es conexión/confianza. No mezcles arquetipos entre escenas.
 
@@ -3451,10 +3909,62 @@ REGLAS DE RETENCIÓN CINEMATOGRÁFICA (OBLIGATORIAS):
 4. Cada escena define explícitamente "camara.plano", "camara.movimiento" y "sfx" — no dejes "visual" en descripciones genéricas, y respeta la Ancla de Identidad Visual definida arriba en las 4.
 5. "animacion" elige según el ritmo: zoom_in para impacto (conciencia más alta / CTA), ken_burns para narrativa (conciencia baja / storytelling), fade para transición suave.
 6. "musica_local" solo si una escena necesita un estilo distinto al global; si no, null.
-7. La última escena ES el CTA (Llamado a la Acción): debe combinar un VERBO DE ACCIÓN explícito (Llama, Visita, Escríbenos, Agenda, Compra, Reserva — el que corresponda) con los datos de contacto (teléfono, web). NO basta con solo mencionar el teléfono/web sin una orden de acción — eso es un dato, no un CTA. Si dice el teléfono en voz alta, escríbelo en pares exactamente como viene arriba (ej. "52 81 10 46 37 21"), nunca como un número corrido. El campo top-level "cta" del JSON debe reflejar exactamente esta misma frase.
+7. La última escena ES el CTA (Llamado a la Acción): debe combinar un VERBO DE ACCIÓN explícito (Llama, Visita, Escríbenos, Agenda, Compra, Reserva — el que corresponda) con los datos de contacto (teléfono, web). NO basta con solo mencionar el teléfono/web sin una orden de acción — eso es un dato, no un CTA. Si dice el teléfono en voz alta, escríbelo en pares exactamente como viene arriba (ej. "52 81 10 46 37 21"), nunca como un número corrido. El campo top-level "cta" del JSON debe reflejar exactamente esta misma frase. PROHIBIDO INVENTAR UN TELÉFONO: si arriba dice "(no especificado)", el CTA usa SOLO el sitio web u otro dato de contacto real disponible — jamás un número que no viene en "DATOS DE LA EMPRESA".
 8. Serás penalizado si el guion no es 100% relevante al tema "${theme || industria || 'la empresa'}" y a la industria/nicho especificados.
 9. PROHIBIDO describir texto legible, letreros, carteles, etiquetas, nombres de producto/marca escritos, o cualquier escritura dentro de "visual" — los modelos de imagen no pueden renderizar texto correctamente y siempre sale ilegible/inventado. Describe el entorno, objetos y composición sin pedir texto visible en ningún lado de la escena.
 10. Responde SOLO con el JSON, sin markdown, sin explicaciones.`;
+}
+
+// Red de seguridad determinística sobre el guion YA generado — no depende de
+// que el modelo obedezca las instrucciones del prompt (visto en vivo: las
+// ignoró dos veces con el disclosure de IA, e inventó un teléfono real de
+// OTRA empresa de la misma base cuando el campo venía vacío). Aplica DESPUÉS
+// de parsear el JSON de la IA, en los 2 generadores que comparten
+// construirPromptGuion() (VIDE "Generar JSON" y ViRe "Generar con IA").
+function aplicarSalvaguardasDeGuion(parsed, { phone, briefCompleto }) {
+    // 1) Aviso legal de "creado con IA": campo estructurado top-level
+    // (parsed.aviso_ia), independiente de texto/cta — ver construirPromptGuion()
+    // y el render en /api/video-produce (letra pequeña, solo última escena,
+    // nunca se lee en voz alta). Si el Brief real lo exige y la IA no lo puso,
+    // se rellena con una frase fija en vez de confiar en que lo recuerde sola.
+    const rlp = (briefCompleto?.restricciones_legales || '').toLowerCase();
+    const requiereAvisoIA = /(cread|generad|hech)[^.]{0,25}\b(ia|ai|inteligencia artificial)\b/.test(rlp)
+        || /\b(ia|ai)\b[^.]{0,25}(cread|generad|hech)/.test(rlp);
+    if (requiereAvisoIA && !parsed.aviso_ia) {
+        parsed.aviso_ia = 'Este anuncio fue creado con inteligencia artificial.';
+    }
+
+    // 2) Teléfono inventado: si no se proporcionó uno real (ni del formulario
+    // ni del Brief), cualquier secuencia larga de dígitos en el CTA/última
+    // escena es sospechosa de ser fabricada por el modelo — se limpia en vez
+    // de confiar en la instrucción del prompt.
+    if (!phone) {
+        const phoneLike = /(\+?\d[\d\s-]{6,}\d)/g;
+        if (parsed.cta) parsed.cta = parsed.cta.replace(phoneLike, '').replace(/\s{2,}/g, ' ').trim();
+        const ultima = parsed.escenas?.[parsed.escenas.length - 1];
+        if (ultima) {
+            if (ultima.texto_overlay) ultima.texto_overlay = ultima.texto_overlay.replace(phoneLike, '').replace(/\s{2,}/g, ' ').trim();
+            if (ultima.texto) ultima.texto = ultima.texto.replace(phoneLike, '').replace(/\s{2,}/g, ' ').trim();
+        }
+    }
+    return parsed;
+}
+
+// Red de seguridad para estilos "lista" (Ranking en Tarjetas, Cosmic Listicle
+// Dorado, Pizarra Minimalista): construirPromptGuion() ya le exige a la IA
+// devolver 1 escena con "items" cuando contentShape === 'lista', pero un
+// modelo débil (ej. el fallback local de Ollama cuando la nube está caída)
+// puede devolver JSON válido y con todos los demás campos, pero SIN items —
+// sin este chequeo eso pasaba en silencio y el template renderizaba el fondo
+// vacío, sin ninguna tarjeta (hallado en vivo generando un video de prueba
+// con los 3 templates nuevos). Mismo criterio que un JSON inválido: se pide
+// reintentar en vez de aceptar un guion a medias.
+function requiereItemsDeLista(parsed, contentShape) {
+    if (contentShape !== 'lista') return;
+    const items = parsed?.escenas?.[0]?.items;
+    if (!Array.isArray(items) || items.length === 0) {
+        throw new Error('La IA no devolvió JSON válido. Intenta de nuevo.');
+    }
 }
 
 async function generateVideJson() {
@@ -3462,7 +3972,7 @@ async function generateVideJson() {
     const website = document.getElementById('webSite')?.value?.trim() || '';
     const logoField = document.getElementById('companyLogo')?.value?.trim() || '';
     const parsedLogoUrl = parseLogoUrlField(logoField);
-    const phone = document.getElementById('contactPhone')?.value?.trim() || '';
+    const phoneForm = document.getElementById('contactPhone')?.value?.trim() || '';
     const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
     const platform = document.querySelector('.platform-tab.active')?.dataset?.platform || 'Instagram';
     const style = document.getElementById('videStyle')?.value || 'energetic';
@@ -3523,11 +4033,19 @@ async function generateVideJson() {
         }
     } catch (_) { /* sin catálogo disponible, la IA improvisa como antes */ }
 
+    const ganchosPrevios = guionesPreviosPorEmpresa[company] || [];
+    const briefCompleto = await fetchBriefCompleto(company);
+    // Teléfono real: formulario gana, Brief (Config_Empresas.telefonowhastapp)
+    // rellena si el formulario viene vacío — nunca se inventa uno (ver
+    // aplicarSalvaguardasDeGuion(), que limpia cualquier número fabricado por
+    // la IA si esto queda vacío).
+    const phone = phoneForm || (briefCompleto?.telefonowhastapp ? String(briefCompleto.telefonowhastapp) : '');
     const prompt = construirPromptGuion({
         company, website, phone, logoUrl: parsedLogoUrl.logoUrl, avatarUrl: parsedLogoUrl.avatarUrl,
         format, platform, style, duration, res, suggestedBpm,
         conciencia, industria, nicho, especializacion, template, slides, theme,
-        modules, estiloStr, catalogoInterrupts
+        modules, estiloStr, catalogoInterrupts, ganchosPrevios, briefCompleto,
+        contentShape: estiloVisualSeleccionado?.contentShape, itemCount: estiloVisualSeleccionado?.itemCount
     });
 
     try {
@@ -3539,8 +4057,13 @@ async function generateVideJson() {
                     { role: 'system', content: 'Eres un generador de guiones publicitarios. Siempre respondes exclusivamente con JSON válido siguiendo el schema exacto proporcionado.' },
                     { role: 'user', content: prompt }
                 ],
-                temperature: 0.7,
-                model: 'openrouter/free'
+                temperature: 0.85,
+                // openrouter/free enruta al combo "auto/best-free" de OmniRoute, que
+                // depende de un proveedor (Augment) con cupo agotado — devuelve
+                // HTTP 200 con un mensaje de error como si fuera contenido real, así
+                // que ni siquiera dispara el fallback normal. deepseek-v4-flash es
+                // el modelo confiable verificado en vivo (ver SuitCampanas/CLAUDE.md).
+                model: 'deepseek/deepseek-v4-flash'
             })
         });
 
@@ -3550,8 +4073,7 @@ async function generateVideJson() {
         }
 
         const data = await response.json();
-        let rawContent = data.choices[0].message.content.trim();
-        rawContent = rawContent.replace(/```json|```/g, '').trim();
+        const rawContent = extractJsonFromAiText(data.choices[0].message.content);
 
         let parsed;
         try {
@@ -3559,6 +4081,7 @@ async function generateVideJson() {
         } catch (e) {
             throw new Error('La IA no devolvió JSON válido. Intenta de nuevo.');
         }
+        requiereItemsDeLista(parsed, estiloVisualSeleccionado?.contentShape);
 
         // Normalize old format → new format
         if (Array.isArray(parsed)) {
@@ -3583,8 +4106,15 @@ async function generateVideJson() {
                 }))
             };
         }
+        parsed = aplicarSalvaguardasDeGuion(parsed, { phone, briefCompleto });
 
         lastGeneratedContent = { tipo: 'VIDE', guion: parsed };
+        const hook = parsed.escenas?.[0]?.texto_overlay || parsed.escenas?.[0]?.texto || '';
+        if (hook && company) {
+            if (!guionesPreviosPorEmpresa[company]) guionesPreviosPorEmpresa[company] = [];
+            guionesPreviosPorEmpresa[company].push(hook.slice(0, 120));
+            guionesPreviosPorEmpresa[company] = guionesPreviosPorEmpresa[company].slice(-5);
+        }
         const jsonStr = JSON.stringify(parsed, null, 2);
 
         const jsonTextarea = document.getElementById('videGuionJson');
@@ -3644,27 +4174,70 @@ function mostrarPanelRevisionEscenas() {
     }
 
     sceneImageApproved = {};
+    pexelsIndexByScene = {};
     const panel = document.getElementById('sceneReviewPanel');
     if (!panel) return;
     panel.innerHTML = '';
     panel.style.display = 'flex';
+
+    // Pexels trending: picker con rueda del mouse (navegar el pool, "Usar esta
+    // foto" aprueba). IA (Pollinations): se mantiene el flujo de siempre
+    // (generar/regenerar de a una), sin tocarlo.
+    const usePexels = document.getElementById('imageSourceSelect')?.value === 'pexels';
+    if (usePexels) {
+        fetchPexelsTrending().then(pool => {
+            if (!pool.length) { showToast('⚠️ No se pudieron cargar fotos trending de Pexels, revisá la API key', 'error'); return; }
+            scenes.forEach((_, i) => renderPexelsStage(i));
+        });
+    }
 
     scenes.forEach((scene, i) => {
         const texto = scene.texto || scene.text || scene.body || scene.visual || '';
         const titulo = scene.titulo || scene.title || `Escena ${i + 1}`;
         const card = document.createElement('div');
         card.style.cssText = 'border:1px solid var(--glass-border); border-radius:10px; padding:0.6rem; background:rgba(255,255,255,0.03); display:flex; gap:0.6rem; align-items:flex-start;';
-        card.innerHTML = `
-            <img id="sceneImg_${i}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;background:rgba(255,255,255,0.05);display:none;flex-shrink:0;">
-            <div style="flex:1;min-width:0;">
-                <div style="font-size:0.75rem;font-weight:600;margin-bottom:2px;">${i + 1}. ${titulo}</div>
-                <div style="font-size:0.7rem;color:var(--text-dim);margin-bottom:6px;">${texto.substring(0, 100)}</div>
-                <button type="button" class="secondary-btn" id="sceneBtn_${i}" style="padding:0.25rem 0.5rem;font-size:0.7rem;">🎨 Generar imagen</button>
-                <span id="sceneStatus_${i}" style="font-size:0.7rem;color:#6ee7b7;margin-left:6px;"></span>
-            </div>
-        `;
-        panel.appendChild(card);
-        document.getElementById(`sceneBtn_${i}`).addEventListener('click', () => generarImagenEscena(i, scene));
+
+        if (usePexels) {
+            card.innerHTML = `
+                <div id="sceneStage_${i}" tabindex="0" title="Girá la rueda del mouse para cambiar de foto (Pexels trending)"
+                     style="position:relative;width:90px;height:90px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,0.05);cursor:ns-resize;flex-shrink:0;">
+                    <img id="sceneStageImg_${i}" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .15s ease;">
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:0.75rem;font-weight:600;margin-bottom:2px;">${i + 1}. ${titulo}</div>
+                    <div style="font-size:0.7rem;color:var(--text-dim);margin-bottom:6px;">${texto.substring(0, 100)}</div>
+                    <button type="button" class="secondary-btn" id="sceneBtn_${i}" style="padding:0.25rem 0.5rem;font-size:0.7rem;">✅ Usar esta foto</button>
+                    <span id="sceneStatus_${i}" style="font-size:0.7rem;color:#6ee7b7;margin-left:6px;"></span>
+                </div>
+            `;
+            panel.appendChild(card);
+            const stage = document.getElementById(`sceneStage_${i}`);
+            stage.addEventListener('wheel', (e) => { e.preventDefault(); pexelsStep(i, e.deltaY > 0 ? 1 : -1); }, { passive: false });
+            stage.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowDown') { e.preventDefault(); pexelsStep(i, 1); }
+                if (e.key === 'ArrowUp') { e.preventDefault(); pexelsStep(i, -1); }
+            });
+            document.getElementById(`sceneBtn_${i}`).addEventListener('click', () => {
+                const idx = pexelsIndexByScene[i] || 0;
+                const url = pexelsTrendingPool[idx];
+                if (!url) { showToast('❌ Todavía no cargaron las fotos trending', 'error'); return; }
+                sceneImageApproved[i] = url;
+                const status = document.getElementById(`sceneStatus_${i}`);
+                if (status) status.textContent = '✅ Aprobada';
+            });
+        } else {
+            card.innerHTML = `
+                <img id="sceneImg_${i}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;background:rgba(255,255,255,0.05);display:none;flex-shrink:0;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:0.75rem;font-weight:600;margin-bottom:2px;">${i + 1}. ${titulo}</div>
+                    <div style="font-size:0.7rem;color:var(--text-dim);margin-bottom:6px;">${texto.substring(0, 100)}</div>
+                    <button type="button" class="secondary-btn" id="sceneBtn_${i}" style="padding:0.25rem 0.5rem;font-size:0.7rem;">🎨 Generar imagen</button>
+                    <span id="sceneStatus_${i}" style="font-size:0.7rem;color:#6ee7b7;margin-left:6px;"></span>
+                </div>
+            `;
+            panel.appendChild(card);
+            document.getElementById(`sceneBtn_${i}`).addEventListener('click', () => generarImagenEscena(i, scene));
+        }
     });
 }
 
@@ -3719,6 +4292,119 @@ async function generarImagenEscena(index, scene) {
     }
 }
 
+// "Solo Imagen" — switch compartido entre VIDE y ViRe (checkbox
+// #soloImagenCheck): en vez de un video completo, renderiza UNA sola pieza
+// estática con el Estilo Visual/marca ya elegidos (foto de fondo + overlay
+// del template — Paper, Pinterest Ad, etc.), sin voz/música. Reusa /api/vire-still
+// porque solo Remotion sabe dibujar esos overlays con color exacto; VIDE (FFmpeg)
+// no tiene esa capacidad, así que ambos botones "Generar Video" caen aquí.
+async function generarSoloImagen(company, guion) {
+    let logoUrlValue = '';
+    let avatarUrlValue = '';
+    if (uploadedLogoDataUrl) {
+        logoUrlValue = uploadedLogoDataUrl;
+    } else {
+        const parsedLogo = parseLogoUrlField(document.getElementById('companyLogo')?.value?.trim() || '');
+        logoUrlValue = parsedLogo.logoUrl;
+        avatarUrlValue = parsedLogo.avatarUrl;
+    }
+    const estiloVisualKeywords = estiloVisualSeleccionado?.keywords || fallbackEstiloKeywords();
+    const buttons = document.querySelectorAll('#videGenerateBtn, #vireGenerateBtn');
+    buttons.forEach(b => b.disabled = true);
+    showToast('🖼️ Generando imagen...', 'info');
+
+    try {
+        const res = await fetch('/api/vire-still', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                empresa: company,
+                sitio_web: document.getElementById('webSite')?.value?.trim() || '',
+                logo_url: logoUrlValue,
+                avatar_url: avatarUrlValue,
+                telefono: document.getElementById('contactPhone')?.value?.trim() || '',
+                guion,
+                // Sin guion: el server lee el Brief guardado de la empresa y
+                // completa con estos campos si el Brief no trae industria/nicho.
+                tema: document.getElementById('aiTheme')?.value?.trim() || '',
+                nicho: document.getElementById('aiNicho')?.value || '',
+                industria: document.getElementById('aiIndustry')?.value || '',
+                estilo_visual_keywords: estiloVisualKeywords,
+                visual_style: estiloVisualSeleccionado?.visualTemplate || undefined,
+                content_shape: estiloVisualSeleccionado?.contentShape || undefined,
+                item_count: estiloVisualSeleccionado?.itemCount || undefined,
+                brand_colors: brandColorsSeleccionados || undefined,
+                image_source: document.getElementById('imageSourceSelect')?.value || 'ia'
+            })
+        });
+        const data = await res.json();
+        if (data.status !== 'success') throw new Error(data.error || 'Error generando imagen');
+
+        const b64 = data.image.split(',')[1];
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const blob = new Blob([bytes], { type: 'image/png' });
+        const filename = `imagen_${company.replace(/\s+/g, '_')}_${Date.now()}.png`;
+
+        window.lastVideoBlob = blob;
+        window.lastVideoBlobUrl = URL.createObjectURL(blob);
+        const reviewPanel = document.getElementById('videReviewPanel');
+        const reviewTitle = document.getElementById('videReviewTitle');
+        const reviewPlayer = document.getElementById('videReviewPlayer');
+        const reviewImg = document.getElementById('videReviewImg');
+        if (reviewPanel && reviewPlayer && reviewImg) {
+            if (reviewTitle) reviewTitle.textContent = '🖼️ Revisa tu imagen';
+            reviewPlayer.style.display = 'none';
+            reviewImg.style.display = '';
+            reviewImg.src = window.lastVideoBlobUrl;
+            reviewPanel.style.display = 'block';
+        }
+        showToast('✅ Imagen generada — revisa y acepta para guardar', 'success');
+
+        const acceptBtn = document.getElementById('videAcceptBtn');
+        const rejectBtn = document.getElementById('videRejectBtn');
+        const cleanup = () => {
+            if (window.lastVideoBlobUrl) URL.revokeObjectURL(window.lastVideoBlobUrl);
+            window.lastVideoBlobUrl = null;
+            window.lastVideoBlob = null;
+            reviewPanel.style.display = 'none';
+            reviewImg.style.display = 'none';
+            reviewPlayer.style.display = '';
+            if (reviewTitle) reviewTitle.textContent = '🎬 Revisa tu video';
+        };
+        acceptBtn.onclick = async () => {
+            downloadFile(window.lastVideoBlobUrl, filename);
+            try {
+                await fetch(CONFIG.CAMPANAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: `camp_${Date.now()}`,
+                        empresa: company,
+                        nombre: `Imagen ${company}`.substring(0, 100),
+                        tema: document.getElementById('aiTheme')?.value?.trim() || '',
+                        formato: 'Imagen',
+                        plataforma: document.querySelector('.platform-tab.active')?.dataset?.platform || '',
+                        modo: 'IMAGEN',
+                        contenido: 'Imagen generada',
+                        estado: 'aceptado',
+                        configuracion: {}
+                    })
+                });
+            } catch (_) {}
+            cleanup();
+            showToast('✅ Imagen aceptada y descargada', 'success');
+        };
+        rejectBtn.onclick = () => {
+            cleanup();
+            showToast('❌ Imagen rechazada, no se guardó', 'info');
+        };
+    } catch (e) {
+        showToast('❌ ' + e.message, 'error');
+    } finally {
+        buttons.forEach(b => b.disabled = false);
+    }
+}
+
 // === VIDE: Suite Completa de Video ===
 async function generateVideVideo(overrideGuion = null, opts = {}) {
     const company = document.getElementById('companyName')?.value?.trim() || '';
@@ -3726,6 +4412,22 @@ async function generateVideVideo(overrideGuion = null, opts = {}) {
         showToast('❌ Escribe o selecciona una empresa/marca en DATOS / NEGOCIO', 'error');
         document.getElementById('companyName')?.focus();
         return;
+    }
+
+    // Switch compartido VIDE/ViRe: una sola pieza estática, no video completo.
+    // Va ANTES de los "guion requerido" de abajo — si no hay guion, el server
+    // lee el Brief de la empresa y genera el copy de la pieza al vuelo.
+    if (document.getElementById('soloImagenCheck')?.checked) {
+        let guionImg;
+        if (overrideGuion) {
+            guionImg = JSON.stringify(overrideGuion, null, 2);
+        } else {
+            const isJsonModeImg = document.getElementById('videGuionJson')?.style.display !== 'none';
+            guionImg = isJsonModeImg
+                ? (document.getElementById('videGuionJson')?.value?.trim() || '')
+                : (document.getElementById('videGuion')?.value?.trim() || '');
+        }
+        return generarSoloImagen(company, guionImg);
     }
 
     // Resolve guion: guion pre-armado (ej. pieza del MediaPlanner/BriefMarker),
@@ -3837,6 +4539,11 @@ async function generateVideVideo(overrideGuion = null, opts = {}) {
 
     const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
     const platform = document.querySelector('.platform-tab.active')?.dataset?.platform || 'Instagram';
+    // Tono tipográfico del Brief real (clave "tipografia" dentro del vector de
+    // logo_url) — VIDE solo puede usarlo si no hay ya una fuente fija por
+    // visual_style (ver BRIEF_FONT_TONES en el server), nunca pisa el look de
+    // un template probado.
+    const briefParaFuente = await fetchBriefCompleto(company);
 
     try {
         updateProgress(10, 'Enviando al servidor...', null);
@@ -3858,7 +4565,10 @@ async function generateVideVideo(overrideGuion = null, opts = {}) {
                 format,
                 platform,
                 estilo_visual_keywords: estiloVisualKeywords,
-                image_source: document.getElementById('imageSourceSelect')?.value || 'ia'
+                visual_style: estiloVisualSeleccionado?.visualTemplate || undefined,
+                image_source: document.getElementById('imageSourceSelect')?.value || 'ia',
+                tipografia: briefParaFuente?.tipografia || undefined,
+                transicion: document.getElementById('videTransicionSelect')?.value || 'auto'
             })
         });
 
@@ -3884,7 +4594,16 @@ async function generateVideVideo(overrideGuion = null, opts = {}) {
             window.lastVideoBlobUrl = URL.createObjectURL(blob);
             const reviewPanel = document.getElementById('videReviewPanel');
             const reviewPlayer = document.getElementById('videReviewPlayer');
+            const reviewImg = document.getElementById('videReviewImg');
+            const reviewTitle = document.getElementById('videReviewTitle');
             if (reviewPanel && reviewPlayer) {
+                // Revertir el estado que deja "Solo Imagen" (oculta el <video> y
+                // muestra el <img>) — sin esto, un video real generado después
+                // de probar Solo Imagen queda con el player oculto: el archivo
+                // existe pero no se ve ningún control de play.
+                reviewPlayer.style.display = '';
+                if (reviewImg) reviewImg.style.display = 'none';
+                if (reviewTitle) reviewTitle.textContent = '🎬 Revisa tu video';
                 reviewPlayer.src = window.lastVideoBlobUrl;
                 reviewPanel.style.display = 'block';
             }
@@ -3966,7 +4685,7 @@ async function generarGuionDesdeAsistente() {
     const website = document.getElementById('webSite')?.value?.trim() || '';
     const logoField = document.getElementById('companyLogo')?.value?.trim() || '';
     const parsedLogoUrl = parseLogoUrlField(logoField);
-    const phone = document.getElementById('contactPhone')?.value?.trim() || '';
+    const phoneForm = document.getElementById('contactPhone')?.value?.trim() || '';
     const format = document.querySelector('.format-tab.active')?.dataset?.format || 'Reel';
     const style = document.getElementById('videStyle')?.value || 'energetic';
     const duration = document.getElementById('videDuration')?.value || '30';
@@ -4004,11 +4723,15 @@ async function generarGuionDesdeAsistente() {
         }
     } catch (_) { /* sin catálogo disponible, la IA improvisa */ }
 
+    const ganchosPrevios = guionesPreviosPorEmpresa[company] || [];
+    const briefCompleto = await fetchBriefCompleto(company);
+    const phone = phoneForm || (briefCompleto?.telefonowhastapp ? String(briefCompleto.telefonowhastapp) : '');
     const prompt = construirPromptGuion({
         company, website, phone, logoUrl: parsedLogoUrl.logoUrl, avatarUrl: parsedLogoUrl.avatarUrl,
         format, platform: 'Instagram', style, duration, res, suggestedBpm,
         conciencia, industria, nicho, especializacion, template, slides, theme,
-        modules, estiloStr, catalogoInterrupts
+        modules, estiloStr, catalogoInterrupts, ganchosPrevios, briefCompleto,
+        contentShape: estiloVisualSeleccionado?.contentShape, itemCount: estiloVisualSeleccionado?.itemCount
     });
 
     const response = await fetch(CONFIG.AI_URL, {
@@ -4019,8 +4742,8 @@ async function generarGuionDesdeAsistente() {
                 { role: 'system', content: 'Eres un generador de guiones publicitarios. Siempre respondes exclusivamente con JSON válido siguiendo el schema exacto proporcionado.' },
                 { role: 'user', content: prompt }
             ],
-            temperature: 0.7,
-            model: 'openrouter/free'
+            temperature: 0.85,
+            model: 'deepseek/deepseek-v4-flash'
         })
     });
     if (!response.ok) {
@@ -4028,13 +4751,14 @@ async function generarGuionDesdeAsistente() {
         throw new Error(errorData.error || `Error ${response.status}`);
     }
     const data = await response.json();
-    const rawContent = data.choices[0].message.content.trim().replace(/```json|```/g, '').trim();
+    const rawContent = extractJsonFromAiText(data.choices[0].message.content);
     let parsed;
     try {
         parsed = JSON.parse(rawContent);
     } catch (e) {
         throw new Error('La IA no devolvió JSON válido. Intenta de nuevo.');
     }
+    requiereItemsDeLista(parsed, estiloVisualSeleccionado?.contentShape);
     if (Array.isArray(parsed)) {
         parsed = {
             config: { duracion_total: parseInt(duration), musica: { estilo: style, bpm: suggestedBpm, volumen: 0.8 }, fps: 24, resolucion: { ancho: res.ancho, alto: res.alto } },
@@ -4051,6 +4775,13 @@ async function generarGuionDesdeAsistente() {
                 musica_local: s.musica_local || null
             }))
         };
+    }
+    parsed = aplicarSalvaguardasDeGuion(parsed, { phone, briefCompleto });
+    const hook = parsed.escenas?.[0]?.texto_overlay || parsed.escenas?.[0]?.texto || '';
+    if (hook && company) {
+        if (!guionesPreviosPorEmpresa[company]) guionesPreviosPorEmpresa[company] = [];
+        guionesPreviosPorEmpresa[company].push(hook.slice(0, 120));
+        guionesPreviosPorEmpresa[company] = guionesPreviosPorEmpresa[company].slice(-5);
     }
     return parsed;
 }
@@ -4114,7 +4845,7 @@ ${prompt}`;
                 { role: 'user', content: promptIA }
             ],
             temperature: 0.7,
-            model: 'openrouter/free'
+            model: 'deepseek/deepseek-v4-flash'
         })
     });
     if (!response.ok) {
@@ -4122,7 +4853,7 @@ ${prompt}`;
         throw new Error(errorData.error || `Error ${response.status}`);
     }
     const data = await response.json();
-    let rawContent = data.choices[0].message.content.trim().replace(/```json|```/g, '').trim();
+    const rawContent = extractJsonFromAiText(data.choices[0].message.content);
     let parsed = JSON.parse(rawContent);
     if (Array.isArray(parsed)) {
         parsed = {
@@ -4212,6 +4943,18 @@ async function generateViReVideo() {
     vireGenerationInProgress = true;
 
     const company = document.getElementById('companyName')?.value?.trim() || 'Campaña';
+
+    // Switch compartido VIDE/ViRe: una sola pieza estática, no video completo.
+    // Va ANTES de los "prompt/JSON requerido" de abajo — si no hay nada
+    // escrito, el server lee el Brief de la empresa y genera el copy al vuelo.
+    if (document.getElementById('soloImagenCheck')?.checked) {
+        vireGenerationInProgress = false;
+        const isPromptModeImg = document.getElementById('virePrompt')?.style.display !== 'none';
+        const guionImg = isPromptModeImg
+            ? (document.getElementById('virePrompt')?.value?.trim() || '')
+            : (document.getElementById('vireGuionJson')?.value?.trim() || '');
+        return generarSoloImagen(company, guionImg);
+    }
 
     const isPromptMode = document.getElementById('virePrompt')?.style.display !== 'none';
     let guion;
@@ -4319,6 +5062,7 @@ async function generateViReVideo() {
                 enableVoice,
                 estilo_visual_keywords: estiloVisualKeywords,
                 visual_style: estiloVisualSeleccionado?.visualTemplate || undefined,
+                brand_colors: brandColorsSeleccionados || undefined,
                 image_source: document.getElementById('imageSourceSelect')?.value || 'ia'
             })
         });

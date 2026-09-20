@@ -1,0 +1,39 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Toño Toques",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "image_source": "pexels",
+  "scenes": [
+    {
+      "type": "text",
+      "duration": 5,
+      "animation": "slide_up",
+      "visual_style": "cosmic_listicle_dorado",
+      "brand_colors": {
+        "background": "#120A2E",
+        "ink": "#FFFFFF",
+        "accent": "#F5B93E"
+      },
+      "body": "¿Sabías que el estrés puede provocar dolores musculares y ansiedad?",
+      "icono": "exclamation",
+      "icono_animacion": "rebotar",
+      "image_prompt": "color palette: #F5B93E, #120A2E, #FFFFFF, Fondo cósmico oscuro degradado con estrellas, titular blanco de impacto con glow, lista dorada de una columna",
+      "voice_text": "¿Sabías que el estrés puede provocar dolores musculares y ansiedad?",
+      "texto_overlay": "5 razones para elige Toño Toques · www.tt.com",
+      "logo_url": "https://lh3.googleusercontent.com/d/1uTzWuAfIuHFXzbqKmTbY0mMyJYbkXKVt",
+      "avatar_url": "https://lh3.googleusercontent.com/d/1uLo--wnk12mNs4bP82oahdmeXWZp-HOp"
+    }
+  ]
+}

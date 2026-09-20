@@ -29,6 +29,7 @@
 | `workflows/cotizador.yaml` | Cotizador module development |
 | `workflows/video-generation.yaml` | Video con Remotion (ViRe) |
 | `workflows/video-generation-comfyui.yaml` | Video con ComfyUI + FFmpeg (SuitComfy) |
+| `workflows/panel-juzgador.yaml` | Evaluación multi-agente de proyectos (4 agentes + 1 juez) |
 
 ## Skills
 | Directory | Contents |
@@ -37,7 +38,7 @@
 | `skills/domain/` | multi-tenant, cotizaciones-engine |
 | `skills/language/` | javascript, gas, sql |
 | `skills/tool/` | web-search, git |
-| `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero |
+| `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador |
 
 ## Agents
 | ID | Role | Source |
@@ -48,6 +49,11 @@
 | `cotizador` | Quotation engine specialist | `.suit/registry/agents.yaml` |
 | `reportero` | Read-only code reviewer | `scripts/agents/reportero.js` |
 | `probador` | Read-only smoke tester | `scripts/agents/probador.js` |
+| `mercado-analyst` | Evaluador de mercado (Panel Juzgador) | `.suit/registry/agents.yaml` |
+| `tecnico-analyst` | Evaluador técnico (Panel Juzgador) | `.suit/registry/agents.yaml` |
+| `riesgo-analyst` | Evaluador de riesgos (Panel Juzgador) | `.suit/registry/agents.yaml` |
+| `financiero-analyst` | Evaluador financiero (Panel Juzgador) | `.suit/registry/agents.yaml` |
+| `juez-synthesizer` | Juez synthesizer (Panel Juzgador) | `.suit/registry/agents.yaml` |
 
 ## Test Suites
 | File | Purpose |

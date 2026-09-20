@@ -391,6 +391,32 @@ skills:
       - "scripts/ssg-engine.mjs"
       - "SuitLandings/landing-template.html"
 
+  panel-juzgador:
+    description: "Panel de 4 agentes especializados + 1 juez que evalúa nuevos proyectos/módulos antes de incorporarlos a SuitOrg. Basado en patrón MAJ-EVAL (ACL 2026): mercado, técnico, riesgo, financiero → juez sintetiza → veredicto."
+    version: 1.0.0
+    type: process
+    domain: evaluation
+    dependencies:
+      - system-analysis
+      - multi-tenant
+    triggers:
+      - "evaluar proyecto"
+      - "juzgar"
+      - "panel de evaluación"
+      - "aprobar módulo"
+      - "viabilidad"
+      - "nuevo proyecto"
+    inputs:
+      - "project proposal"
+    outputs:
+      - "evaluación por dimensión"
+      - "veredicto final"
+    discoverable: true
+    context_hint:
+      - "AGENTS.md"
+      - ".suit/registry/projects.yaml"
+      - ".suit/skills/process/panel-juzgador/"
+
   marketing-psicologia-progreso:
     description: "Efecto del progreso otorgado (endowed progress effect, Nunes & Drèze 2006): dar al usuario un adelanto de avance hacia una meta real (barra pre-llenada, \"ya llevas X de Y\", framing \"solo falta Z\") aumenta la motivación de completar mucho más que pedir el mismo esfuerzo restante desde cero. Aplicable siempre que haya una secuencia genuina hacia una meta (compra, cotización, plan de medios aprobado, suscripción): copy de CTA/oferta en piezas de BriefMarker, guiones de video (VIDE/ViRe/CreatorEngine), resúmenes de MediaPlanner, landing pages. Regla dura: nunca inventar pasos o progreso ficticio sin base real — es un principio de motivación, no un dark pattern; el progreso mostrado debe corresponder a avance real del usuario/lead."
     version: 1.0.0
@@ -416,3 +442,115 @@ skills:
       - "SuitCampanas/local-server-node.js (generateMediaPlan, approveMediaPlan, parseBrief)"
       - "Prompts_IA: CAMP-MEDIAPLANNER, CAMP-BRIEFMARKER"
       - ".suit/registry/skills.yaml: landing-pages"
+
+  skill-creator:
+    description: "Crea, evalúa y mejora skills de forma iterativa. Flujo: capture intent → interview → write SKILL.md → test prompts → grade → improve → repeat. Incluye optimización automática de descriptions, blind A/B comparison, benchmarking cuantitativo, y empaquetado como .skill."
+    version: 1.0.0
+    type: process
+    domain: meta
+    dependencies: []
+    triggers:
+      - "crear skill"
+      - "nueva skill"
+      - "skill creator"
+      - "evaluar skill"
+      - "mejorar skill"
+      - "optimizar description"
+      - "benchmark skill"
+      - "package skill"
+    inputs:
+      - "user intent description"
+      - "existing skill (optional)"
+    outputs:
+      - "SKILL.md"
+      - "evals.json"
+      - "benchmark.json"
+      - ".skill package"
+    discoverable: true
+    context_hint:
+      - ".claude/skills/skill-creator/SKILL.md"
+      - ".claude/skills/skill-creator/agents/"
+      - ".claude/skills/skill-creator/scripts/"
+
+  video-shotcraft:
+    description: "Crea videos de producto cinematográficos con Remotion. 157 shot recipe cards, template Ink Press validado, componentes 2.5D, beat-synced cuts, SFX. Convierte screenshots de产品 en video promo profesional."
+    version: 1.0.0
+    type: domain
+    domain: media
+    dependencies:
+      - javascript
+    triggers:
+      - "video shotcraft"
+      - "product video"
+      - "promo video"
+      - "shot card"
+      - "ink press"
+      - "cinematic promo"
+      - "remotion promo"
+      - "video de producto"
+      - "video promo"
+    inputs:
+      - "product screenshots"
+      - "webpage URL"
+      - "brand assets"
+    outputs:
+      - "rendered video (MP4)"
+      - "Remotion composition"
+    discoverable: true
+    context_hint:
+      - ".claude/skills/video-shotcraft/SKILL.md"
+      - ".claude/skills/video-shotcraft/references/pipeline.md"
+      - ".claude/skills/video-shotcraft/template/"
+
+  mcp-manager:
+    description: "Gestiona qué MCPs están activos en cada proyecto. Permite listar, activar, desactivar y configurar MCPs por proyecto."
+    version: 1.0.0
+    type: tool
+    domain: system
+    dependencies: []
+    triggers:
+      - "mcp manager"
+      - "gestionar mcp"
+      - "activar mcp"
+      - "desactivar mcp"
+      - "mcp por proyecto"
+      - "configurar mcp"
+      - "que mcp tengo"
+      - "listar mcp"
+    inputs:
+      - "project path"
+      - "mcp name"
+      - "action (list|enable|disable|status|configure)"
+    outputs:
+      - "updated opencode.json"
+      - "mcp status report"
+    discoverable: true
+    context_hint:
+      - "opencode.json"
+      - "*/opencode.json"
+
+  listado-capacidades:
+    description: "Regenera SKILLS-MCP-AGENTS-LISTADO.txt con el listado consolidado de todas las skills, MCP servers y agentes. Ejecutar después de cada cambio en skills, MCPs o agentes."
+    version: 1.0.0
+    type: process
+    domain: system
+    dependencies: []
+    triggers:
+      - "listado de skills"
+      - "listado de capacidades"
+      - "regenerar listado"
+      - "actualizar listado"
+      - "inventory skills"
+    inputs:
+      - ".suit/skills/"
+      - ".claude/skills/"
+      - ".opencode/skills/"
+      - ".suit/registry/skills.yaml"
+      - ".suit/registry/agents.yaml"
+      - ".mcp.json"
+    outputs:
+      - "SKILLS-MCP-AGENTS-LISTADO.txt"
+    discoverable: true
+    context_hint:
+      - ".suit/skills/process/listado-capacidades/SKILL.md"
+      - ".suit/skills/process/listado-capacidades/scripts/generate-list.js"

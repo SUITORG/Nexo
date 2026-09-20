@@ -1,0 +1,48 @@
+{
+  "name": "@suitorg/suitmargin",
+  "version": "0.1.0",
+  "description": "SaaS de Inteligencia de Precios para técnicos de servicios del hogar - Pricing Engine, AI Analysis, Profit Guard, Quote Generator, Learning Loop",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "db:push": "supabase db push --project-ref <ref>"
+  },
+  "keywords": [
+    "suitorg",
+    "suitmargin",
+    "pricing-engine",
+    "ai-estimation",
+    "home-services",
+    "saas",
+    "profit-guard",
+    "quote-generator"
+  ],
+  "author": "SuitOrg",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "files": [
+    "index.ts",
+    "services/",
+    "components/",
+    "db/",
+    "tests/"
+  ]
+}

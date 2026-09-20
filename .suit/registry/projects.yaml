@@ -491,3 +491,44 @@ projects:
       BUILD_TIME: "scripts/ssg-engine.mjs"
     columns: []
     notes: "Sin columnas nuevas en Config_Empresas (diseño final, ronda 3). Todo el contenido de landing vive en logo_url: \"{logo}|{hero}|{oferta}|{cta}\" (4 segmentos, ninguno requerido). Requiere fixDriveUrl() en js/modules/core.js con split('|')[0] al inicio para que el resto del SPA (10+ call sites) ignore los segmentos extra — ver ADR-023."
+
+  suit-servihogar:
+    name: "SuitServiHogar — Marketplace bilateral de servicios del hogar"
+    path: SuitServiHogar/
+    description: "Marketplace bilateral de servicios del hogar para Reynosa, Tamaulipas. React 19 + Vite + TS + Tailwind v4 | Supabase | Google OAuth | Stripe Connect. Proyecto aislado (micro-frontend) — no integra al SPA principal SuitOrg. Ver ADR-029."
+    type: standalone
+    architecture_exception: "React 19 permitido (excepción Regla #7 SuitOrg) — ver ADR-029"
+    skills:
+      - javascript
+      - multi-tenant
+    context:
+      - SuitServiHogar/AGENTS.md
+      - SuitServiHogar/Contrato.md
+      - SuitServiHogar/schema.sql
+      - SuitServiHogar/server.js
+      - SuitServiHogar/src/App.tsx
+    frontend:
+      public: true
+      public_route: "standalone (React SPA en puerto 3000 via Vite)"
+      public_gate: "none (proyecto independiente)"
+      staff: true
+      staff_route: "/admin (AdminScreen.tsx)"
+      staff_gate: "RLS admin (level >= 10)"
+      api_endpoints:
+        - POST /api/create-connect-account
+        - POST /api/create-payment-intent
+        - POST /api/validate-coupon
+        - POST /api/webhook
+        - GET /api/config
+        - GET /api/config/:key
+        - PUT /api/config/:key
+        - GET /api/config/category/:cat
+    environment:
+      PORT: 3010
+      TYPE: marketplace
+    servers:
+      - name: servihogar-api
+        path: SuitServiHogar/server.js
+        port: 3010
+        type: express
+    notes: "Proyecto aislado con React 19. No se integra al SPA principal SuitOrg. Comunicación vía URLs externas o APIs compartidas (Supabase, Stripe). Mantenido independientemente."

@@ -277,3 +277,16 @@ tech_debt:
     status: monitoring
     monitoring_url: "https://github.com/OpenCut-app/OpenCut"
     notes: "Verificar cada 2 semanas. README indica MCP server en roadmap. Versión actual: opencut-app/opencut-classic. Rewrite: new.opencut.app."
+
+  - id: FT-009
+    description: "Imagen → Prompt con Gemini Vision (gratis, misma GEMINI_API_KEY ya usada para música Lyria): el usuario sube una foto de referencia y se genera automáticamente el prompt fotográfico/de estilo, para usar en generación de imagen (Pollinations/SuitComfy) o para alimentar el picker de Estilo Visual de ViRe. Idea tomada de meigen.ai (plataforma de pago con créditos) — esta pieza puntual se puede replicar gratis con lo que ya tenemos."
+    severity: low
+    type: feature
+    related_files:
+      - "SuitCampanas/script.js"
+      - "SuitCampanas/local-server-node.js"
+    dependencies:
+      - "GEMINI_API_KEY (ya en .env, misma que usa la música de fondo con Lyria)"
+    created: "2026-09-04"
+    status: deferred
+    defer_reason: "Idea evaluada durante la sesión del picker de Estilo Visual + paleta de marca de ViRe; no priorizada todavía."

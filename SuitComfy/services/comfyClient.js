@@ -6,7 +6,7 @@ const os = require('os');
 
 const COMFYUI_URL = process.env.COMFYUI_URL || 'http://127.0.0.1:8188';
 const OUTPUT_DIR = process.env.COMFYUI_OUTPUT_DIR ||
-  path.join(os.homedir(), 'AppData', 'Local', 'Comfy-Desktop', 'ComfyUI-Installs', 'ComfyUI', 'ComfyUI', 'output');
+  path.join(os.homedir(), 'AppData', 'Local', 'Programs', 'ComfyUI1', 'output');
 
 async function submitWorkflow(workflow) {
   const res = await fetch(`${COMFYUI_URL}/prompt`, {

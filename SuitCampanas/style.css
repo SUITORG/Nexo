@@ -452,6 +452,15 @@ select {
     font-size: 1rem;
 }
 
+/* El <select> cerrado hereda el fondo oscuro de arriba, pero la lista
+   desplegada de <option> es renderizada por el SO/navegador y la ignora a
+   menos que se estilice cada <option> aparte — sin esto quedaba con fondo
+   blanco por default y texto blanco encima, ilegible. */
+select option {
+    background: var(--bg-dark);
+    color: white;
+}
+
 .secondary-btn {
     background: transparent;
     border: 1px solid var(--primary);

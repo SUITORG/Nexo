@@ -90,5 +90,12 @@ app.get('/', (req, res) => {
 module.exports = app;
 
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`[SuitComfy] http://127.0.0.1:${PORT}`));
+  const server = app.listen(PORT, () => console.log(`[SuitComfy] http://127.0.0.1:${PORT}`));
+  // Node mata conexiones entrantes a los 5min por defecto (requestTimeout) —
+  // una generación real en CPU (768x1024, ~4-6min) supera eso y el cliente ve
+  // "fetch failed"/socket hang up aunque ComfyUI siga trabajando bien. Sin
+  // límite: el AbortSignal del lado del cliente (ver SuitCampanas) ya pone su
+  // propio techo razonable.
+  server.requestTimeout = 0;
+  server.headersTimeout = 0;
 }

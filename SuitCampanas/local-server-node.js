@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const supabase = require('./lib/supabase');
 const { createClient } = require('@supabase/supabase-js');
@@ -11,10 +12,13 @@ const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
 const bdpvGenerator = require('../PresentacionesVid/bdpv-generator');
 const lpGenerator = require('./lp-generator');
 const { MODELS, DEFAULT_MODEL, toOmniRouteId } = require('./models-config');
+const { composePoster } = require('../SuitComfy/quote-flow-poster');
 
 const PORT = 8000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_DIRECT_KEY = process.env.OPENROUTER_DIRECT_KEY;
 const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
+const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
 const FREESOUND_API_KEY = process.env.FREESOUND_API_KEY;
 
 // Respaldo cuando Pollinations devuelve algo inválido (rate limit, etc.) — foto de
@@ -35,6 +39,234 @@ async function buscarImagenPexels(query, width, height) {
         serverLog('WARN', `[Pexels] Búsqueda falló: ${e.message}`);
         return null;
     }
+}
+
+// Mismo criterio que Pexels — fuente de stock alternativa, mismo API key
+// requerido en .env (UNSPLASH_ACCESS_KEY, gratis en unsplash.com/developers).
+async function buscarImagenUnsplash(query, width, height) {
+    if (!UNSPLASH_ACCESS_KEY) return null;
+    try {
+        const simpleQuery = query.split(',')[0].trim().split(/\s+/).slice(0, 6).join(' ');
+        const orientation = height >= width ? 'portrait' : (width > height ? 'landscape' : 'squarish');
+        const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(simpleQuery)}&orientation=${orientation}&per_page=1`;
+        const res = await fetch(url, { headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` } });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.results?.[0]?.urls?.regular || null;
+    } catch (e) {
+        serverLog('WARN', `[Unsplash] Búsqueda falló: ${e.message}`);
+        return null;
+    }
+}
+
+// Wikimedia Commons: API pública, sin key. A diferencia de Pexels/Unsplash el
+// licenciamiento varía por archivo (CC0, CC-BY, CC-BY-SA...) — casi siempre
+// exige atribución, que este pipeline no agrega automáticamente. "filetype:bitmap"
+// filtra SVG/PDF (diagramas, íconos) para quedarse con fotos reales; gsrnamespace=6
+// limita la búsqueda al namespace de archivos, no artículos.
+async function buscarImagenWikimedia(query, width, height) {
+    try {
+        const simpleQuery = query.split(',')[0].trim().split(/\s+/).slice(0, 6).join(' ');
+        const targetWidth = Math.max(width, height, 1080);
+        const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(simpleQuery + ' filetype:bitmap')}&gsrnamespace=6&gsrlimit=5&prop=imageinfo&iiprop=url|mime&iiurlwidth=${targetWidth}&format=json&origin=*`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const pages = Object.values(data.query?.pages || {});
+        const foto = pages.find(p => p.imageinfo?.[0]?.mime?.startsWith('image/') && !p.imageinfo[0].mime.includes('svg'));
+        return foto?.imageinfo?.[0]?.thumburl || foto?.imageinfo?.[0]?.url || null;
+    } catch (e) {
+        serverLog('WARN', `[Wikimedia] Búsqueda falló: ${e.message}`);
+        return null;
+    }
+}
+
+// BASE para el futuro sistema de íconos vectoriales (hoy scene.icono es un
+// emoji elegido por la IA, ver AnimatedIcon.tsx en SuitVidGenRemotion) — NO
+// está cableado todavía a ningún flujo real, es solo la función de búsqueda,
+// lista para cuando se arme la pieza concreta (IA propone palabra clave en vez
+// de emoji → esta función busca y devuelve el SVG → AnimatedIcon lo dibuja en
+// vez del emoji, recoloreado a brand_colors real).
+//
+// Iconify (api.iconify.design): API pública, sin key, 150k+ íconos de 238 sets.
+// A diferencia de Wikimedia, SÍ se puede filtrar por licencia con confianza:
+// restringido a ICONIFY_SAFE_SETS, una lista de sets grandes y conocidos
+// verificados en vivo contra /collections con licencia permisiva sin
+// atribución obligatoria (MIT/Apache-2.0/ISC) — Font Awesome Free, por
+// ejemplo, quedó afuera a propósito por ser CC-BY (exige crédito visible,
+// inviable en un video de cliente). El parámetro ?color= del propio API
+// recolorea el SVG de verdad (fill real, verificado en vivo) — la razón de
+// ser de este sistema: el emoji actual nunca se puede recolorear a la marca.
+const ICONIFY_SAFE_SETS = ['mdi', 'tabler', 'heroicons', 'ph', 'lucide', 'carbon', 'ic', 'fluent', 'ion', 'bi'];
+async function buscarIconoIconify(query, colorHex) {
+    try {
+        // UNA sola palabra — la búsqueda de Iconify es lógica Y entre términos
+        // (igual que Freesound, ver traducirSfxQuery()): con 2+ palabras casi
+        // nunca hay match porque exige que TODAS aparezcan en el nombre del
+        // ícono. Verificado en vivo: "leaf plant" -> 0 resultados, "leaf" solo
+        // -> 32. Cuando se cablee esto a la IA, el prompt debe pedir UNA
+        // palabra en inglés, no una frase.
+        const simpleQuery = query.trim().split(/\s+/)[0];
+        const searchUrl = `https://api.iconify.design/search?query=${encodeURIComponent(simpleQuery)}&prefixes=${ICONIFY_SAFE_SETS.join(',')}&limit=1`;
+        const searchRes = await fetch(searchUrl);
+        if (!searchRes.ok) return null;
+        const searchData = await searchRes.json();
+        const iconId = searchData.icons?.[0]; // formato "prefix:nombre"
+        if (!iconId) return null;
+        const [prefix, name] = iconId.split(':');
+        // Sin ?width=: el API devuelve width/height="1em" por default (verificado
+        // en vivo) — encaja directo con el font-size ya usado para sizear el
+        // emoji en AnimatedIcon.tsx, sin tener que forzar un tamaño fijo aquí.
+        const colorParam = colorHex ? `?color=${encodeURIComponent(colorHex)}` : '';
+        const svgRes = await fetch(`https://api.iconify.design/${prefix}/${name}.svg${colorParam}`);
+        if (!svgRes.ok) return null;
+        return await svgRes.text(); // markup SVG real, listo para incrustar
+    } catch (e) {
+        serverLog('WARN', `[Iconify] Búsqueda falló: ${e.message}`);
+        return null;
+    }
+}
+
+// Imagen local real (sin cuenta, sin costo) vía SuitComfy (../SuitComfy —
+// wrapper propio, puerto 3012, que a su vez le habla a ComfyUI/Comfy-Desktop
+// en :8188). Selector manual ("🖥️ ComfyUI (local)" en Imágenes) — nunca se
+// intenta como fallback automático de Pollinations, hay que elegirlo a
+// propósito. CPU-only en esta máquina: medido en vivo ~4 min para 768×1024
+// (ver ADR-031) — el timeout de 150s original (basado en el estimado "~1-2
+// min" de SuitComfy/README.md) abortaba generaciones reales antes de tiempo.
+const COMFY_WRAPPER_URL = process.env.COMFY_WRAPPER_URL || 'http://127.0.0.1:3012';
+async function generarImagenComfy(prompt, width, height) {
+    try {
+        const res = await fetch(`${COMFY_WRAPPER_URL}/api/image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt, width, height }),
+            signal: AbortSignal.timeout(360000)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const imgPath = data.images?.[0]?.path;
+        if (!imgPath || !fs.existsSync(imgPath)) throw new Error('SuitComfy no devolvió una imagen válida');
+        return imgPath;
+    } catch (e) {
+        serverLog('WARN', `[Comfy] No se pudo generar imagen (¿está corriendo SuitComfy en :3012 y ComfyUI en :8188?): ${e.message}`);
+        return null;
+    }
+}
+
+// Catálogo cerrado de categorías del póster "Comfy" (mismo criterio que
+// BRIEF_FONT_TONES: catálogo fijo, no texto libre, porque cada categoría trae
+// 4 piezas que tienen que combinar entre sí — escenario para ComfyUI, color
+// de acento, palabra del letrero, íconos/etiquetas/píldoras e insignia. Banco
+// de escenarios/íconos tomado del formato "Quote-Flow" (ver ADR-031/032).
+const POSTER_CATEGORIES = {
+    conocimiento: {
+        accent: '#00d4ff',
+        escenario: 'a person seen from behind walking up a staircase made of giant stacked books inside a dark old library, single dramatic beam of golden light, dust particles floating in the light, tall bookshelves fading into darkness',
+        destino: 'SABIDURÍA',
+        badge: 'MENTALIDAD DE CONOCIMIENTO',
+        icons: [
+            { icon: 'book', label: 'LEE', pill: 'HOY' },
+            { icon: 'brain', label: 'APRENDE', pill: 'CADA DÍA' },
+            { icon: 'lightbulb', label: 'ENTIENDE', pill: 'UN MES' },
+            { icon: 'key', label: 'DOMINA', pill: 'SIEMPRE' },
+        ],
+    },
+    disciplina: {
+        accent: '#ffd400',
+        escenario: 'a person seen from behind walking a rocky path under light rain at dawn, strong backlight silhouette, dramatic shadows',
+        destino: 'CIMA',
+        badge: 'FRASES DE DISCIPLINA',
+        icons: [
+            { icon: 'dumbbell', label: 'ENTRENA', pill: 'HOY' },
+            { icon: 'calendar', label: 'CONSTANCIA', pill: 'CADA DÍA' },
+            { icon: 'chart', label: 'AVANCE', pill: 'UN MES' },
+            { icon: 'trophy', label: 'VICTORIA', pill: 'SIEMPRE' },
+        ],
+    },
+    esfuerzo: {
+        accent: '#ffb020',
+        escenario: 'a person seen from behind hiking through a rocky canyon at dawn, dramatic golden rim light, dust particles, dramatic shadows',
+        destino: 'META',
+        badge: 'FRASES DE ESFUERZO',
+        icons: [
+            { icon: 'dumbbell', label: 'RESISTE', pill: 'HOY' },
+            { icon: 'calendar', label: 'INSISTE', pill: 'CADA DÍA' },
+            { icon: 'chart', label: 'AVANZA', pill: 'UN MES' },
+            { icon: 'trophy', label: 'LOGRA', pill: 'SIEMPRE' },
+        ],
+    },
+    dinero: {
+        accent: '#ffc107',
+        escenario: 'a person seen from behind climbing steps made of stacked gold coins toward a glowing vault door at dawn, warm golden light, dust particles',
+        destino: 'LIBERTAD',
+        badge: 'MENTALIDAD DE DINERO',
+        icons: [
+            { icon: 'scale', label: 'AHORRA', pill: 'HOY' },
+            { icon: 'calendar', label: 'INVIERTE', pill: 'CADA MES' },
+            { icon: 'chart', label: 'CRECE', pill: 'UN AÑO' },
+            { icon: 'key', label: 'LIBERTAD', pill: 'SIEMPRE' },
+        ],
+    },
+    calma: {
+        accent: '#2dd4bf',
+        escenario: 'a person sitting alone at the edge of a wooden dock over a calm misty lake at dawn, soft diffused light, serene atmosphere',
+        destino: 'CALMA',
+        badge: 'MENTALIDAD DE CALMA',
+        icons: [
+            { icon: 'heart', label: 'RESPIRA', pill: 'HOY' },
+            { icon: 'calendar', label: 'PAUSA', pill: 'CADA DÍA' },
+            { icon: 'scale', label: 'EQUILIBRIO', pill: 'UN MES' },
+            { icon: 'check', label: 'PAZ', pill: 'SIEMPRE' },
+        ],
+    },
+    proposito: {
+        accent: '#8b5cf6',
+        escenario: 'a person seen from behind standing at the edge of a mountain peak above the clouds at sunrise, vast open sky, warm rim light',
+        destino: 'PROPÓSITO',
+        badge: 'MENTALIDAD DE PROPÓSITO',
+        icons: [
+            { icon: 'walk', label: 'CAMINA', pill: 'HOY' },
+            { icon: 'book', label: 'REFLEXIONA', pill: 'CADA DÍA' },
+            { icon: 'key', label: 'DESBLOQUEA', pill: 'UN MES' },
+            { icon: 'trophy', label: 'LOGRA', pill: 'SIEMPRE' },
+        ],
+    },
+    creatividad: {
+        accent: '#ec4899',
+        escenario: 'a person seen from behind in a sunlit art studio, floating splashes of colorful paint frozen in the air, creative dramatic light beam',
+        destino: 'VISIÓN',
+        badge: 'MENTALIDAD CREATIVA',
+        icons: [
+            { icon: 'lightbulb', label: 'IMAGINA', pill: 'HOY' },
+            { icon: 'brain', label: 'CREA', pill: 'CADA DÍA' },
+            { icon: 'chart', label: 'EVOLUCIONA', pill: 'UN MES' },
+            { icon: 'trophy', label: 'BRILLA', pill: 'SIEMPRE' },
+        ],
+    },
+};
+
+// Reparto determinístico de la frase en renglones (sin IA, nunca revienta):
+// las últimas 1-2 palabras son la palabra clave (línea de acento) — funciona
+// bien porque la mayoría de frases motivacionales cierran con el concepto
+// fuerte ("...ES EL CONOCIMIENTO", "...DOMINA MAÑANA"); el resto se reparte en
+// hasta 2 líneas parejas por cantidad de palabras.
+function splitFraseEnLineas(frase) {
+    const words = frase.trim().toUpperCase().split(/\s+/).filter(Boolean);
+    if (words.length <= 1) return [{ text: words[0] || '', accent: true }];
+    const keywordCount = words.length >= 5 ? 2 : 1;
+    const normalWords = words.slice(0, -keywordCount);
+    const keywordWords = words.slice(-keywordCount);
+    const lines = [];
+    if (normalWords.length > 2) {
+        const mid = Math.ceil(normalWords.length / 2);
+        lines.push({ text: normalWords.slice(0, mid).join(' '), accent: false });
+        lines.push({ text: normalWords.slice(mid).join(' '), accent: false });
+    } else if (normalWords.length) {
+        lines.push({ text: normalWords.join(' '), accent: false });
+    }
+    lines.push({ text: keywordWords.join(' '), accent: true });
+    return lines;
 }
 
 // Sonido ambiental real (cuencos, olas, campanas...) para las marcas [EFECTO: ...]
@@ -134,6 +366,20 @@ async function generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image
             // stock (misma foto de respaldo que el fallback automático).
             const pexelsUrl = await buscarImagenPexels(visualDesc, imgDim.w, imgDim.h);
             if (pexelsUrl) finalBuf = Buffer.from(await (await fetch(pexelsUrl)).arrayBuffer());
+        } else if (image_source === 'unsplash') {
+            const unsplashUrl = await buscarImagenUnsplash(visualDesc, imgDim.w, imgDim.h);
+            if (unsplashUrl) finalBuf = Buffer.from(await (await fetch(unsplashUrl)).arrayBuffer());
+        } else if (image_source === 'wikimedia') {
+            const wikimediaUrl = await buscarImagenWikimedia(visualDesc, imgDim.w, imgDim.h);
+            if (wikimediaUrl) finalBuf = Buffer.from(await (await fetch(wikimediaUrl)).arrayBuffer());
+        } else if (image_source === 'comfy') {
+            const comfyPath = await generarImagenComfy(prompt, imgDim.w, imgDim.h);
+            if (comfyPath) {
+                finalBuf = fs.readFileSync(comfyPath);
+            } else {
+                const pexelsUrl = await buscarImagenPexels(visualDesc, imgDim.w, imgDim.h);
+                if (pexelsUrl) finalBuf = Buffer.from(await (await fetch(pexelsUrl)).arrayBuffer());
+            }
         } else {
             const imgRes = await fetch(imgUrl);
             const imgBuf = Buffer.from(await imgRes.arrayBuffer());
@@ -315,6 +561,75 @@ function getDefaultFontFile() {
     return _defaultFontFile;
 }
 
+// Tipografía "bonita/exagerada" por estilo visual para los subtítulos/overlay
+// de VIDE (drawtext de FFmpeg) — antes SIEMPRE usaba Arial plano sin importar
+// el estilo elegido, porque VIDE no renderiza con React/Remotion como ViRe
+// (que sí carga Google Fonts reales por template). Como FFmpeg necesita un
+// archivo .ttf/.otf real en disco (no puede bajar fuentes web), se usan
+// fuentes bold ya instaladas en Windows — mismo look "exagerado" sin
+// descargar nada, mapeadas a los templates reales (paper/pinterest_ad/
+// ranking_tarjetas) que ya existen en ViRe. Estilos sin template propio (la
+// mayoría del catálogo) siguen con el Arial de siempre — sin regresión.
+const VISUAL_STYLE_FONTS = {
+    paper: ['C:/Windows/Fonts/impact.ttf'],
+    pinterest_ad: ['C:/Windows/Fonts/ariblk.ttf'],
+    ranking_tarjetas: ['C:/Windows/Fonts/segoeuib.ttf', 'C:/Windows/Fonts/calibrib.ttf'],
+};
+// Catálogo de "tono tipográfico" elegible desde el Brief real del cliente
+// (clave "tipografia" dentro del vector de logo_url, ej. "|tipografia:moderna",
+// parseada como cualquier otra clave genérica de parseBrief()) — nombres
+// cerrados, no texto libre: FFmpeg necesita un .ttf real en disco, no
+// puede resolver "la fuente que la marca use" a ciegas. Solo aplica cuando
+// el estilo visual NO trae ya su propio font fijo arriba (esos son look
+// deliberado y probado por template, no se pisan por el Brief).
+const BRIEF_FONT_TONES = {
+    moderna: 'C:/Windows/Fonts/segoeuib.ttf',    // limpia, tech, neutra
+    audaz: 'C:/Windows/Fonts/impact.ttf',        // urgencia, alto impacto
+    elegante: 'C:/Windows/Fonts/georgiab.ttf',   // editorial, premium, serif
+    amigable: 'C:/Windows/Fonts/gothicb.ttf',    // geométrica, cercana, redondeada
+    corporativa: 'C:/Windows/Fonts/cambriab.ttf',// seria, institucional, confianza
+};
+const _fontForStyleCache = {};
+function getFontForVisualStyle(visualStyle, tipografiaMarca) {
+    if (visualStyle && VISUAL_STYLE_FONTS[visualStyle]) {
+        const cacheKey = 'style:' + visualStyle;
+        if (_fontForStyleCache[cacheKey] !== undefined) return _fontForStyleCache[cacheKey];
+        const found = VISUAL_STYLE_FONTS[visualStyle].find(c => fs.existsSync(c)) || getDefaultFontFile();
+        _fontForStyleCache[cacheKey] = found;
+        return found;
+    }
+    const tono = (tipografiaMarca || '').toLowerCase().trim();
+    if (tono && BRIEF_FONT_TONES[tono]) {
+        const cacheKey = 'tono:' + tono;
+        if (_fontForStyleCache[cacheKey] !== undefined) return _fontForStyleCache[cacheKey];
+        const found = fs.existsSync(BRIEF_FONT_TONES[tono]) ? BRIEF_FONT_TONES[tono] : getDefaultFontFile();
+        _fontForStyleCache[cacheKey] = found;
+        return found;
+    }
+    return getDefaultFontFile();
+}
+
+// Catálogo de transiciones reales entre escenas de VIDE — todas built-in del
+// filtro `xfade` de FFmpeg (ninguna requiere descargar nada de un sitio
+// externo). Antes solo existía "fade"; se cicla por este catálogo para que
+// un mismo video no se sienta repetitivo con solo un tipo de corte. Los 4
+// primeros son las más seguras/neutras para ads verticales (nunca chocan con
+// texto/overlays); los últimos 3 son más geométricos, para variedad extra.
+// Verificado en vivo (7/7) contra este build de FFmpeg antes de cablearlas:
+// sin error y con blend real confirmado en frame extraído a mitad de corte.
+const XFADE_TRANSITIONS = ['fade', 'slideleft', 'wiperight', 'circleopen', 'smoothleft', 'dissolve', 'radial'];
+// `override` = elección explícita del usuario (`videTransicionSelect` en la
+// UI, campo `transicion` del POST): un nombre del catálogo fija ESA
+// transición en todos los cortes del video; "none" pide corte directo (sin
+// mezcla visible — se resuelve con una duración de xfade casi nula, ver
+// abajo, en vez de duplicar la ruta de ensamblado vieja sin xfade);
+// "auto"/vacío/desconocido cae al ciclo automático de siempre.
+function transicionParaCorte(k, override) {
+    if (override === 'none') return 'fade';
+    if (override && XFADE_TRANSITIONS.includes(override)) return override;
+    return XFADE_TRANSITIONS[(k - 1) % XFADE_TRANSITIONS.length];
+}
+
 // Greedy word-wrap to a max line width (chars), never splitting a word mid-way.
 function wrapWords(text, maxCharsPerLine) {
     const words = text.split(/\s+/).filter(Boolean);
@@ -479,6 +794,11 @@ function parseGuionScenes(guion, duration, style) {
         if (parsed.config) {
             videoConfig = { ...videoConfig, ...parsed.config };
         }
+        // Aviso legal de "creado con IA" (campo top-level, no por-escena): texto
+        // silencioso, nunca se lee en voz alta — solo se quema como letra pequeña
+        // en la última escena (ver /api/video-produce). Separado de "cta"/"texto"
+        // a propósito: si viviera dentro del texto hablado, el TTS lo leería.
+        if (parsed.aviso_ia) videoConfig.aviso_ia = String(parsed.aviso_ia);
         if (Array.isArray(parsed)) {
             scenes = parsed.map((s, i) => ({
                 id: i + 1,
@@ -494,6 +814,9 @@ function parseGuionScenes(guion, duration, style) {
                 camara: s.camara || null,
                 pattern_interrupt: s.pattern_interrupt || '',
                 sfx: s.sfx || null,
+                items: Array.isArray(s.items) ? s.items : undefined,
+                icono: s.icono || undefined,
+                icono_animacion: s.icono_animacion || undefined,
                 image_url: s.image_url || undefined
             }));
         } else if (parsed.escenas && Array.isArray(parsed.escenas)) {
@@ -511,6 +834,9 @@ function parseGuionScenes(guion, duration, style) {
                 camara: s.camara || null,
                 pattern_interrupt: s.pattern_interrupt || '',
                 sfx: s.sfx || null,
+                items: Array.isArray(s.items) ? s.items : undefined,
+                icono: s.icono || undefined,
+                icono_animacion: s.icono_animacion || undefined,
                 image_url: s.image_url || undefined
             }));
         } else {
@@ -598,7 +924,8 @@ function normalizeDriveUrl(url) {
 const BRIEF_LIST_FIELDS = {
     dolor: 'dolor',
     pcp: 'promesa_beneficio_prueba',
-    pbm: 'promesa_beneficio_prueba',
+    pbp: 'promesa_beneficio_prueba',  // alias canónico (ADR-026)
+    pbm: 'promesa_beneficio_prueba',  // alias legado
     objecion: 'objeciones',
     competidores: 'competidores'
 };
@@ -608,9 +935,31 @@ const BRIEF_LIST_FIELDS = {
 // era una etiqueta suelta sin ":". Por eso el segmento 0 ahora se intenta
 // parsear como key:value igual que el resto; solo cae a etiqueta_legado si no
 // tiene ":" (caso legado real).
-function parseBrief(briefVectorRaw) {
+// Columnas reales de Config_Empresas que viven FUERA del vector de logo_url
+// (no vale la pena meterlas ahí dentro) pero que sí dan contexto real de copy
+// para los prompts — antes se perdían en silencio porque parseBrief() solo
+// recibía el vector, nunca la fila completa.
+const BRIEF_EXTRA_COLUMNS = ['slogan', 'descripcion', 'giro_especifico', 'foto_agente'];
+
+function parseBrief(briefVectorRaw, empresaRow) {
     const brief = { etiqueta_legado: '' };
-    if (!briefVectorRaw || typeof briefVectorRaw !== 'string') return brief;
+    // El vector (ej. "slogan:...") gana si la misma clave también existe como
+    // columna suelta — el vector es el Brief curado (ADR-026), la columna
+    // suelta es el dato genérico de la empresa. Solo rellena huecos.
+    const mergeExtras = () => {
+        if (!empresaRow) return;
+        for (const k of BRIEF_EXTRA_COLUMNS) {
+            if (empresaRow[k] && !brief[k]) brief[k] = empresaRow[k];
+        }
+        // Columna con 2 grafías vivas en Config_Empresas (el GAS real usa
+        // "telefonowhatsapp"; "telefonowhastapp" con la errata es un fallback
+        // legado que ya existía en otros puntos de este archivo — ej. la
+        // línea de /api/lp/generate). Se normaliza a una sola clave del Brief.
+        if (!brief.telefonowhastapp) {
+            brief.telefonowhastapp = empresaRow.telefonowhatsapp || empresaRow.telefonowhastapp || '';
+        }
+    };
+    if (!briefVectorRaw || typeof briefVectorRaw !== 'string') { mergeExtras(); return brief; }
     const segments = briefVectorRaw.split('|');
     for (let i = 0; i < segments.length; i++) {
         const seg = segments[i].trim();
@@ -657,6 +1006,7 @@ function parseBrief(briefVectorRaw) {
         // Resto: industria, nicho, especializacion, audiencia, tono, competidores(no), etc.
         brief[key] = value;
     }
+    mergeExtras();
     return brief;
 }
 
@@ -688,40 +1038,105 @@ async function loadPromptById(promptId) {
     return data[0].prompt_base;
 }
 
+// Modelos gratis con soporte de imagen verificados en vivo contra la API real
+// de OpenRouter (openrouter.ai/api/v1/models, filtrado a input_modalities
+// incluye "image" + ":free") — lista corta y puede rotar, por eso hay 2 de
+// respaldo. NO pasa por OmniRoute (ese gateway no tiene ningún modelo de
+// visión confirmado) — llamada directa con OPENROUTER_DIRECT_KEY.
+const VISION_MODELS_FREE = ['minimax/minimax-m3:free', 'google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'];
+
+// Describe una imagen de referencia (para "estilo desde imagen") llamando
+// directo a OpenRouter con un modelo con visión. Devuelve texto plano, no
+// JSON — ese texto se usa después como "referencia" del prompt de
+// CAMP-STYLEDIRECTOR, igual que si el usuario la hubiera escrito a mano.
+async function describirImagenReferencia(base64Data, mimeType) {
+    if (!OPENROUTER_DIRECT_KEY) throw new Error('OPENROUTER_DIRECT_KEY no configurada en .env');
+    const promptText = 'Describe en detalle el estilo visual de esta imagen para que un director de arte pueda reproducirlo sin verla: tipografía (forma, peso, si es mayúsculas), paleta de colores concreta, tipo de fondo/textura, composición/layout, iconos o ilustraciones que use, y cualquier elemento decorativo. No describas el contenido/mensaje del texto, solo el estilo visual.';
+    let lastError = 'No se recibieron errores.';
+    for (const model of VISION_MODELS_FREE) {
+        try {
+            const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${OPENROUTER_DIRECT_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model,
+                    messages: [{
+                        role: 'user',
+                        content: [
+                            { type: 'text', text: promptText },
+                            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Data}` } }
+                        ]
+                    }],
+                    max_tokens: 400
+                })
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error?.message || `HTTP ${res.status}`);
+            const content = json.choices?.[0]?.message?.content;
+            if (!content) throw new Error('Respuesta sin contenido');
+            return content;
+        } catch (e) {
+            lastError = e.message;
+            serverLog('WARN', `[VISION] ${model} falló: ${e.message}`);
+        }
+    }
+    throw new Error('Todos los modelos de visión fallaron: ' + lastError);
+}
+
+// Extrae el JSON de una respuesta de IA que puede traer preámbulo conversacional
+// ("Claro, aquí tienes el JSON:") antes del bloque ```json — el `replace`
+// anclado a ^/$ no lo quita, así que un modelo cortés (deepseek lo hace)
+// tronaba JSON.parse y el server caía innecesariamente al siguiente modelo
+// (o hasta Ollama, ~60-90s) aunque la respuesta rápida ya era usable.
+function extractJsonFromAiText(text) {
+    const raw = (text || '').trim();
+    const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenced) return fenced[1].trim();
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    if (start !== -1 && end > start) return raw.slice(start, end + 1);
+    return raw;
+}
+
 // Llama a la IA con el patrón de fallback de modelos del resto del server y
 // fuerza salida JSON (quita fences markdown). Tira error si todos fallan.
 async function callAIJson(systemContent, userContent, temperature = 0.7) {
-    // Antes el respaldo era [activeModel, "deepseek/deepseek-v4-flash"] — como
-    // activeModel YA es deepseek-v4-flash por default, tras deduplicar quedaba
-    // un solo modelo real, y cada 429 reintentaba el mismo modelo saturado.
-    // Qwen/Gemma no sirven como respaldo: models-config.js documenta que solo
-    // "deepseek/deepseek-v4-flash" y "openrouter/free" tienen mapeo verificado
-    // en OmniRoute (oc/deepseek-v4-flash-free y auto/best-free) — cualquier otro
-    // cae a "auto/best-fast", que en la práctica devolvió modelos no soportados
-    // (401) o agotó su propio límite de reintentos ("Maximum combo retry limit
-    // reached"). openrouter/free sí es un fallback real y distinto.
-    const orModels = [activeModel, "openrouter/free"]
-        .map(toOmniRouteId)
-        .filter((v, i, a) => a.indexOf(v) === i);
+    // NO usa "openrouter/free" como segundo modelo — probado en vivo (arreglando
+    // el bug gemelo de /api/ai/generate) y confirmado roto: "auto/best-free" en
+    // OmniRoute enruta a una cuenta Augment Code con cupo agotado y responde
+    // HTTP 200 con un mensaje de texto en vez de un error real. Sí se detecta
+    // aquí (JSON.parse revienta con ese texto, cae al siguiente intento), pero
+    // es tiempo desperdiciado en un modelo que nunca va a servir. Qwen/Gemma
+    // tampoco sirven: models-config.js documenta que solo deepseek tiene mapeo
+    // verificado en OmniRoute — cualquier otro cae a "auto/best-fast", que dio
+    // 401 o "Maximum combo retry limit reached". El fix real es reintentar el
+    // MISMO modelo confiable con espera en 429 (rate limit temporal), no saltar
+    // a un "segundo modelo" que en la práctica no existe.
+    const primaryModel = toOmniRouteId(activeModel);
     const messages = [
         { role: 'system', content: systemContent },
         { role: 'user', content: userContent }
     ];
+    const MAX_429_RETRIES = 2;
     let lastError = 'No se recibieron errores.';
-    for (const m of orModels) {
+    for (let attempt = 0; attempt <= MAX_429_RETRIES; attempt++) {
         try {
-            const result = await callOpenRouter(m, messages, temperature);
-            const cleaned = result.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+            const result = await callOpenRouter(primaryModel, messages, temperature);
+            const cleaned = extractJsonFromAiText(result);
             return JSON.parse(cleaned);
         } catch (err) {
             lastError = err.message;
-            serverLog('WARN', `⚠️ [AI_JSON] ${m}: ${err.message}`);
-            // 429 (rate limit): cambiar de modelo no ayuda si es el mismo gateway/IP
-            // el que está limitado — hay que esperar más que un simple ECONNRESET.
-            if (err.message.includes('429') || err.message.toLowerCase().includes('rate limit')) {
+            serverLog('WARN', `⚠️ [AI_JSON] ${primaryModel} (intento ${attempt + 1}/${MAX_429_RETRIES + 1}): ${err.message}`);
+            if (attempt >= MAX_429_RETRIES) break;
+            // 429 (rate limit): esperar unos segundos suele bastar, es temporal.
+            // err.status viene de callOpenRouter() — más confiable que buscar "429"
+            // en el texto, que no todos los proveedores detrás de OmniRoute incluyen.
+            if (err.status === 429 || err.message.includes('429') || err.message.toLowerCase().includes('rate limit')) {
                 await new Promise(r => setTimeout(r, 5000));
             } else if (err.message.includes('ECONNRESET')) {
                 await new Promise(r => setTimeout(r, 1000));
+            } else {
+                break; // error no-transitorio — reintentar no ayuda
             }
         }
     }
@@ -730,7 +1145,7 @@ async function callAIJson(systemContent, userContent, temperature = 0.7) {
     try {
         serverLog('WARN', '[AI_JSON] Modelos en la nube agotados, probando Ollama local (puede tardar ~1 min)...');
         const result = await callOllama(OLLAMA_FALLBACK_MODEL, systemContent, userContent, temperature);
-        const cleaned = result.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+        const cleaned = extractJsonFromAiText(result);
         return JSON.parse(cleaned);
     } catch (err) {
         lastError = err.message;
@@ -746,7 +1161,7 @@ async function generateMediaPlan(idEmpresa, fallbacks = {}) {
     // tipo_negocio se revirtió a su formato corto original. Fallback a
     // tipo_negocio solo por si algún tenant viejo nunca migró.
     const briefRaw = (empresaRow && (empresaRow.logo_url || empresaRow.tipo_negocio || empresaRow.tiponegocio)) || '';
-    const brief = parseBrief(briefRaw);
+    const brief = parseBrief(briefRaw, empresaRow);
     if (!brief.industria && fallbacks.industria) brief.industria = fallbacks.industria;
     if (!brief.nicho && fallbacks.nicho) brief.nicho = fallbacks.nicho;
     if (!brief.especializacion && fallbacks.especializacion) brief.especializacion = fallbacks.especializacion;
@@ -830,7 +1245,7 @@ IMPORTANTE: esta dirección SOLO controla "visual_style", "editing" y "scenes[].
         // agota el rate limit gratuito de OpenRouter tras las primeras ~4
         // (visto en vivo: 4 generadas, 8 con error 429 "Rate limit exceeded").
         if (i > 0) await new Promise(r => setTimeout(r, 3000));
-        const userContent = `Slot a producir:\n${JSON.stringify({ ...slot, brief: { audiencia: brief.audiencia, tono: brief.tono, objetivo: brief.objetivo, producto: brief.producto } }, null, 2)}${estiloTxt}\n\nGenera el JSON creativo completo de esta pieza según el schema.`;
+        const userContent = `Slot a producir:\n${JSON.stringify({ ...slot, brief: { audiencia: brief.audiencia, tono: brief.tono, objetivo: brief.objetivo, producto: brief.producto, giro_especifico: brief.giro_especifico, descripcion: brief.descripcion, slogan: brief.slogan } }, null, 2)}${estiloTxt}\n\nGenera el JSON creativo completo de esta pieza según el schema.`;
         try {
             const creative = await callAIJson(prompt, userContent, 0.7);
             const { error: insErr } = await supabase
@@ -916,6 +1331,45 @@ const server = http.createServer((req, res) => {
             DRIVE_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
             DRIVE_APP_ID: process.env.GOOGLE_CLOUD_PROJECT_ID || ''
         }));
+        return;
+    }
+
+    // 🩺 Salud de OmniRoute — la app llama esto al cargar para avisar si el
+    // gateway de IA (puerto 20128) no está prendido, antes de que el usuario
+    // se tope con el error a mitad de "Generar JSON" (ver CLAUDE.md, bug del
+    // 429/JSON inválido). Ping liviano a /v1/models: no gasta cuota de ningún
+    // modelo, solo confirma que el proceso está escuchando.
+    if (pathname === '/api/health' && req.method === 'GET') {
+        (async () => {
+            let omniroute = false;
+            let internet = false;
+            try {
+                await fetch(`${OMNIROUTE_BASE}/v1/models`, { signal: AbortSignal.timeout(3000) });
+                omniroute = true; // cualquier respuesta HTTP ya prueba que el gateway está arriba
+            } catch (_) {
+                omniroute = false;
+            }
+            try {
+                // generate_204: endpoint liviano de Google hecho para detección de
+                // conectividad (lo usan ChromeOS/Android) — responde 204 sin cuerpo,
+                // rápido, y no depende de que NUESTRO deployment de GAS esté sano
+                // (eso ya se ve aparte en los logs si falla). Detecta el caso real
+                // que motivó este chequeo: un corte de internet a mitad de sesión
+                // (ej. la compu se durmió) tira '[PROXY_ERROR]' en GAS y 429 en
+                // las imágenes de Drive al mismo tiempo — visto en vivo.
+                await fetch('https://www.google.com/generate_204', { signal: AbortSignal.timeout(3000) });
+                internet = true;
+            } catch (_) {
+                internet = false;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'success',
+                omniroute,
+                internet,
+                apiKeyConfigured: !!(OPENROUTER_API_KEY && OPENROUTER_API_KEY.length >= 10)
+            }));
+        })();
         return;
     }
 
@@ -1736,25 +2190,44 @@ const server = http.createServer((req, res) => {
 
                 // 📡 Modelo del request > activeModel > fallback (per-request, no mutate global)
                 const requestModel = (reqModel && MODELS[reqModel]) ? reqModel : activeModel;
-                const orModels = [requestModel, "deepseek/deepseek-v4-flash"]
-                    .map(toOmniRouteId)
-                    .filter((v, i, a) => a.indexOf(v) === i); // dedup tras traducir al id real de OmniRoute
-
-                let lastError = "No se recibieron errores.";
-                for (const m of orModels) {
+                const primaryModel = toOmniRouteId(requestModel);
+                // NO "openrouter/free" como segundo modelo: probado en vivo arreglando
+                // este mismo bug y confirmado roto — "auto/best-free" en OmniRoute
+                // enruta a una cuenta Augment Code con cupo agotado, y responde
+                // HTTP 200 con un mensaje de texto ("has run out of usage...") en vez
+                // de un error real, así que ni siquiera dispara el fallback normal:
+                // ese texto se cuela como "respuesta válida" y revienta en
+                // JSON.parse() del lado del cliente — el mismo síntoma reportado
+                // ("La IA no devolvió JSON válido"), solo que disfrazado. Hoy no hay
+                // un segundo modelo gratis con mapeo confiable en OmniRoute (por eso
+                // los 3 sitios que usaban openrouter/free ya se habían cambiado a
+                // deepseek antes en esta sesión) — el fix real es reintentar el MISMO
+                // modelo confiable con espera cuando el error es 429 (rate limit
+                // temporal, casi siempre se resuelve solo esperando unos segundos),
+                // en vez de saltar a un "segundo modelo" que no existe de verdad.
+                const MAX_429_RETRIES = 2;
+                let lastError = new Error("No se recibieron errores.");
+                for (let attempt = 0; attempt <= MAX_429_RETRIES; attempt++) {
                     try {
-                        serverLog('INFO', `🤖 [AI_TRY] Intentando con ${m}...`);
-                        const result = await callOpenRouter(m, messages, temperature || 0.7);
-                        serverLog('INFO', `✅ [AI_SUCCESS] ${m} respondió correctamente.`);
+                        serverLog('INFO', `🤖 [AI_TRY] Intentando con ${primaryModel} (intento ${attempt + 1}/${MAX_429_RETRIES + 1})...`);
+                        const result = await callOpenRouter(primaryModel, messages, temperature || 0.7);
+                        serverLog('INFO', `✅ [AI_SUCCESS] ${primaryModel} respondió correctamente.`);
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         return res.end(JSON.stringify({ choices: [{ message: { content: result } }] }));
                     } catch (err) {
-                        lastError = err.message;
-                        serverLog('WARN', `⚠️ [AI_FAIL] ${m}: ${err.message}`);
-                        // Si es un error de conexión pura, esperamos un poco antes de reintentar
-                        if (err.message.includes('ECONNRESET')) {
+                        lastError = err;
+                        serverLog('WARN', `⚠️ [AI_FAIL] ${primaryModel}: ${err.message}`);
+                        const esRateLimit = err.status === 429 || err.message.includes('429') || err.message.toLowerCase().includes('rate limit');
+                        const esConexion = err.message.includes('ECONNRESET');
+                        if (attempt >= MAX_429_RETRIES) break; // se acabaron los reintentos, cae a los fallbacks locales
+                        if (esRateLimit) {
+                            serverLog('INFO', "⏳ Reintentando en 5 segundos por límite de solicitudes...");
+                            await new Promise(r => setTimeout(r, 5000));
+                        } else if (esConexion) {
                             serverLog('INFO', "⏳ Reintentando en 1 segundo por reset de red...");
                             await new Promise(r => setTimeout(r, 1000));
+                        } else {
+                            break; // error no-transitorio (ej. "Model is unavailable") — reintentar no ayuda
                         }
                     }
                 }
@@ -1786,7 +2259,11 @@ const server = http.createServer((req, res) => {
                 }
 
                 res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: `Ningún modelo de IA respondió (nube, LM Studio ni Ollama local). Último error: ${lastError}` }));
+                res.end(JSON.stringify({
+                    error: lastError.status === 429
+                        ? 'Límite de solicitudes de IA alcanzado. Espera unos segundos y vuelve a intentar.'
+                        : `Ningún modelo de IA respondió (nube, LM Studio ni Ollama local). Último error: ${lastError.message}`
+                }));
 
             } catch (e) {
                 serverLog('ERROR', "❌ Error en Proxy AI:", e);
@@ -1955,10 +2432,10 @@ const server = http.createServer((req, res) => {
                 try {
                     const row = await fetchEmpresaRow(data.company);
                     if (row) {
-                        brief = parseBrief(row.logo_url || row.tipo_negocio || row.tiponegocio || '');
+                        brief = parseBrief(row.logo_url || row.tipo_negocio || row.tiponegocio || '', row);
                         if (!data.industry && brief.industria) data.industry = brief.industria;
                         if (!data.subNicho && brief.nicho) data.subNicho = brief.nicho;
-                        if (!data.phone && (row.telefonowhastapp || row.telefono)) data.phone = row.telefonowhastapp || row.telefono;
+                        if (!data.phone && (brief.telefonowhastapp || row.telefono)) data.phone = brief.telefonowhastapp || row.telefono;
                         if (!data.website && (row.enlace_oficial || row.website)) data.website = row.enlace_oficial || row.website;
                         if (!data.color) data.color = row.color_tema || '';
                     }
@@ -2312,13 +2789,44 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // Pool de fotos "trending" de Pexels (endpoint /v1/curated real de Pexels,
+    // no una búsqueda por palabra clave) para el picker de imágenes con rueda
+    // del mouse — mismo patrón que el picker de Estilo Visual (2026-09-04).
+    // Nunca falla duro: sin API key o si Pexels no responde, devuelve photos: [].
+    if (pathname === '/api/pexels-trending' && req.method === 'GET') {
+        (async () => {
+            try {
+                if (!PEXELS_API_KEY) {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'success', photos: [] }));
+                    return;
+                }
+                const format = parsedUrl.searchParams.get('format') || 'Reel';
+                const dim = FMT_DIMS[format] || FMT_DIMS.Reel;
+                const orientation = dim.w === dim.h ? 'square' : (dim.h > dim.w ? 'portrait' : 'landscape');
+                const url = `https://api.pexels.com/v1/curated?per_page=15&orientation=${orientation}`;
+                const r = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
+                if (!r.ok) throw new Error(`Pexels HTTP ${r.status}`);
+                const data = await r.json();
+                const photos = (data.photos || []).map(p => p.src?.large2x || p.src?.large).filter(Boolean);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', photos }));
+            } catch (e) {
+                serverLog('WARN', `[Pexels] Trending falló: ${e.message}`);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', photos: [] }));
+            }
+        })();
+        return;
+    }
+
     // ===== VIDE: SUITE COMPLETA DE VIDEO =====
     if (pathname === '/api/video-produce' && req.method === 'POST') {
         let body = '';
         req.on('data', d => body += d);
         req.on('end', async () => {
             try {
-                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, duration, modules, format, platform, voice, voice_rate, estilo_visual_keywords, image_source } = JSON.parse(body);
+                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, duration, modules, format, platform, voice, voice_rate, estilo_visual_keywords, visual_style, image_source, tipografia, transicion } = JSON.parse(body);
                 serverLog('INFO', `[VIDE] Iniciando para: ${empresa} (${modules.join(', ')})`);
 
                 const tmpDir = path.join(__dirname, `tmp_vide_${Date.now()}`);
@@ -2662,8 +3170,9 @@ const server = http.createServer((req, res) => {
                         const VH = dim.h;
 
                         // Create slideshow from images: each scene has own duration + pausas + text overlay
-                        const concatFile = path.join(tmpDir, 'concat.txt');
                         const segments = [];
+                        const segmentDurations = [];
+                        const transitionDurations = []; // length = segments.length - 1, hueco DESPUÉS de segments[i]
 
                         // Contact overlay (phone/website), top-right, present on every scene like
                         // logo/avatar — same text on all segments, so write it once up front.
@@ -2677,7 +3186,15 @@ const server = http.createServer((req, res) => {
                         }
 
                         for (let i = 0; i < imageFiles.length; i++) {
-                            const scene = scenes[i] || {};
+                            // El nombre de archivo (scene_N.png) trae el índice REAL de la
+                            // escena — si la imagen de una escena falla (ej. Pollinations caído),
+                            // imageFiles queda con un hueco y la posición i ya no coincide con
+                            // el índice real, desalineando todas las escenas siguientes (texto/
+                            // voz de una escena con la foto de otra) — visto en vivo generando
+                            // el ejemplo de Toño Toques.
+                            const sceneMatch = imageFiles[i].match(/^scene_(\d+)\.png$/);
+                            const sceneIdx = sceneMatch ? parseInt(sceneMatch[1], 10) : i;
+                            const scene = scenes[sceneIdx] || {};
                             const imgPath = path.join(imagesDir, imageFiles[i]).replace(/\\/g, '/');
                             const segDuration = scene.duracion || 5;
                             const overlayText = scene.texto_overlay || scene.title || '';
@@ -2703,9 +3220,16 @@ const server = http.createServer((req, res) => {
                                 const textFilePath = path.join(tmpDir, `overlay_${i}.txt`);
                                 fs.writeFileSync(textFilePath, fitted.text, 'utf8');
                                 vf += `,drawtext=textfile='${escapeFfmpegPath(textFilePath)}'`;
-                                const videFont = getDefaultFontFile();
+                                const videFont = getFontForVisualStyle(visual_style, tipografia);
                                 if (videFont) vf += `:fontfile='${escapeFfmpegPath(videFont)}'`;
-                                vf += `:fontcolor=white:fontsize=${fitted.fontsize}:x=(w-text_w)/2:y=h*0.80:shadowcolor=black:shadowx=3:shadowy=3:box=1:boxcolor=black@0.55:boxborderw=15:line_spacing=8:text_align=C`;
+                                // Los subtítulos reales (si el módulo está activo) se queman
+                                // más abajo en el pipeline también anclados al fondo del frame
+                                // (default de libass) — sin este condicional, texto_overlay y
+                                // subtítulos caían en la misma franja y quedaban ilegibles
+                                // encimados (visto en vivo). Con subtítulos, texto_overlay sube
+                                // arriba (headline corto); sin ellos, se queda abajo como antes.
+                                const overlayY = srtPath ? 'h*0.10' : 'h*0.80';
+                                vf += `:fontcolor=white:fontsize=${fitted.fontsize}:x=(w-text_w)/2:y=${overlayY}:shadowcolor=black:shadowx=3:shadowy=3:box=1:boxcolor=black@0.55:boxborderw=15:line_spacing=8:text_align=C`;
                             }
 
                             if (contactFilePath) {
@@ -2715,26 +3239,71 @@ const server = http.createServer((req, res) => {
                                 vf += `:fontcolor=white:fontsize=${contactFitted.fontsize}:x=w-text_w-20:y=20:shadowcolor=black:shadowx=2:shadowy=2:box=1:boxcolor=black@0.45:boxborderw=8`;
                             }
 
+                            // Aviso legal de "creado con IA" (videoConfig.aviso_ia, ver
+                            // parseGuionScenes): letra pequeña, SOLO en la última escena,
+                            // NUNCA se agrega a "scene.body" — esa es la única fuente que
+                            // alimenta el TTS más arriba en el pipeline, así que este texto
+                            // jamás se lee en voz alta, solo se ve en pantalla.
+                            if (videoConfig.aviso_ia && i === imageFiles.length - 1) {
+                                const avisoFitted = fitOverlayText(videoConfig.aviso_ia, VW - 80, 22, 16, 2);
+                                const avisoFilePath = path.join(tmpDir, 'aviso_ia.txt');
+                                fs.writeFileSync(avisoFilePath, avisoFitted.text, 'utf8');
+                                vf += `,drawtext=textfile='${escapeFfmpegPath(avisoFilePath)}'`;
+                                const avisoFont = getDefaultFontFile();
+                                if (avisoFont) vf += `:fontfile='${escapeFfmpegPath(avisoFont)}'`;
+                                vf += `:fontcolor=white@0.85:fontsize=${avisoFitted.fontsize}:x=(w-text_w)/2:y=h-th-12:shadowcolor=black:shadowx=1:shadowy=1:box=1:boxcolor=black@0.4:boxborderw=6:line_spacing=4:text_align=C`;
+                            }
+
                             const segPath = path.join(tmpDir, `seg_${i}.mp4`);
                             // -t as OUTPUT option (after -vf): with zoompan, -t as an INPUT option
                             // multiplies frames (default image loop rate x zoompan d), producing
                             // segments 100x too long. As an output option it correctly truncates.
                             ffmpeg(['-y', '-loop', '1', '-i', imgPath, '-vf', vf, '-t', String(segDuration), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'ultrafast', segPath]);
                             segments.push(segPath);
+                            segmentDurations.push(segDuration);
 
-                            // Add pause after scene (black frame)
-                            const pauseAfter = scene.pausa_final || 0.5;
-                            if (pauseAfter > 0 && i < imageFiles.length - 1) {
-                                const pausePath = path.join(tmpDir, `pause_${i}.mp4`);
-                                ffmpeg(['-y', '-f', 'lavfi', '-i', `color=c=black:s=${VW}x${VH}:d=${pauseAfter}`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'ultrafast', pausePath]);
-                                segments.push(pausePath);
+                            // Antes esto generaba un clip negro de pausa_final segundos
+                            // (corte seco -> negro -> corte seco). Ahora ese mismo hueco
+                            // de tiempo se usa para un fundido real entre las dos fotos —
+                            // mismo presupuesto de tiempo (la duración total no cambia),
+                            // así el audio por escena ya generado con esos tiempos se
+                            // mantiene sincronizado.
+                            if (i < imageFiles.length - 1) {
+                                transitionDurations.push(scene.pausa_final || 0.5);
                             }
                         }
 
-                        // Concat segments
-                        const listContent = segments.map(s => `file '${s}'`).join('\n');
-                        fs.writeFileSync(concatFile, listContent);
-                        ffmpeg(['-y', '-f', 'concat', '-safe', '0', '-i', concatFile, '-c', 'copy', outPath]);
+                        // Une los segmentos con un fundido real entre cada foto (xfade)
+                        // en vez del corte seco + pausa negra de antes. -c copy no sirve
+                        // aquí (xfade filtra, no puede ser stream copy), por eso se
+                        // re-codifica en este paso — antes el concat demuxer sí podía
+                        // copiar directo porque no tocaba los frames.
+                        if (segments.length === 1) {
+                            fs.copyFileSync(segments[0], outPath);
+                        } else {
+                            const inputArgs = segments.flatMap(s => ['-i', s]);
+                            const filterParts = [];
+                            let prevLabel = '0:v';
+                            let cum = segmentDurations[0];
+                            for (let k = 1; k < segments.length; k++) {
+                                // Clamp de seguridad: xfade necesita que la transición quepa
+                                // dentro de AMBOS clips que une — sin esto, una escena muy
+                                // corta con una pausa_final larga produciría un offset
+                                // negativo o un filtro inválido. "Corte directo" pide un piso
+                                // casi nulo (0.05s, imperceptible) en vez del piso normal de
+                                // 0.15s — sigue siendo xfade por dentro (mismo código, sin
+                                // ruta aparte), pero se ve como un corte seco.
+                                const minTd = transicion === 'none' ? 0.05 : 0.15;
+                                const td = Math.max(minTd, Math.min(transitionDurations[k - 1] || 0.5, segmentDurations[k - 1] * 0.9, segmentDurations[k] * 0.9));
+                                const offset = Math.max(0, cum - td);
+                                const outLabel = k === segments.length - 1 ? 'vout' : `v${k}`;
+                                const transition = transicionParaCorte(k, transicion);
+                                filterParts.push(`[${prevLabel}][${k}:v]xfade=transition=${transition}:duration=${td.toFixed(3)}:offset=${offset.toFixed(3)}[${outLabel}]`);
+                                cum = cum + segmentDurations[k] - td;
+                                prevLabel = outLabel;
+                            }
+                            ffmpeg(['-y', ...inputArgs, '-filter_complex', filterParts.join(';'), '-map', `[${prevLabel}]`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'ultrafast', outPath]);
+                        }
                         // ponytail: avatar is already baked into every scene image below
                         // (per-scene overlay, before concat) — a second pass here on the
                         // concatenated video was a duplicate compositing the same avatar
@@ -2812,7 +3381,7 @@ const server = http.createServer((req, res) => {
         req.on('end', async () => {
             let tmpDir = null;
             try {
-                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, voice, duration, format, enableMusic, enableVoice, estilo_visual_keywords, visual_style, image_source } = JSON.parse(body);
+                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, voice, duration, format, enableMusic, enableVoice, estilo_visual_keywords, visual_style, brand_colors, image_source } = JSON.parse(body);
                 const vozActiva = enableVoice !== false;
                 serverLog('INFO', `[ViRe] Iniciando para: ${empresa}`);
 
@@ -2883,6 +3452,13 @@ const server = http.createServer((req, res) => {
                 // contacto van sobre la imagen generada, nunca en un slide
                 // aparte — por eso el teléfono/sitio va ahora pegado al
                 // texto_overlay de la última escena en vez de en un outro.
+                // Mejor esfuerzo para las fotos IA: el color exacto solo se puede
+                // garantizar en el texto/fondo de Remotion (colors abajo), una foto
+                // generada solo puede acercarse al tono vía palabras en el prompt.
+                const colorPromptHint = brand_colors
+                    ? `color palette: ${[brand_colors.accent, brand_colors.background, brand_colors.ink].filter(Boolean).join(', ')}, `
+                    : '';
+
                 const vireScenes = scenes.map((s, i) => {
                     const isLast = i === scenes.length - 1;
                     const voice_text = vozActiva ? (s.body || s.title || '') : undefined;
@@ -2899,10 +3475,18 @@ const server = http.createServer((req, res) => {
                         duration: s.duracion || 5,
                         animation: s.animacion === 'fade' ? 'fade_in' : 'slide_up',
                         visual_style: visual_style || undefined,
+                        brand_colors: brand_colors || undefined,
                         body: s.body || '',
+                        // Solo lo lee RankingTarjetasScene (content_shape: "lista" del
+                        // estilo elegido) — parseGuionScenes ya preserva este campo si
+                        // la IA lo generó (ver construirPromptGuion en script.js).
+                        items: s.items || undefined,
+                        icono: s.icono || undefined,
+                        icono_animacion: s.icono_animacion || undefined,
                         // Mismo fix que VIDE: el estilo visual se antepone aquí en vez de
                         // depender de que la IA lo haya aplicado bien dentro de "visual".
                         image_prompt: (estilo_visual_keywords ? `${estilo_visual_keywords}, ` : '')
+                            + colorPromptHint
                             + (s.visual || `${s.title || ''} ${s.body || ''}`.substring(0, 200)),
                         // Imagen ya aprobada en modo "revisar por escena" — generateAllImages()
                         // en imageProvider.js ya prioriza esto sobre image_prompt, no regenera.
@@ -3025,6 +3609,302 @@ const server = http.createServer((req, res) => {
                 res.end(JSON.stringify({ status: 'accepted', jobId }));
             } catch (e) {
                 serverLog('ERROR', `[ViRe] ${e.message}`);
+                if (tmpDir && fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // 📋 BRIEF REAL de una empresa, ya parseado — mismo mecanismo que usa
+    // "Solo Imagen sin guion" (fetchEmpresaRow + parseBrief), expuesto aparte
+    // para que "Generar JSON" (VIDE/ViRe) también lo use en vez de depender
+    // SOLO de que el nicho real coincida con la lista fija de <select> de
+    // Asistente IA — un nicho específico ("CBD Funcional de Espectro
+    // Completo") casi nunca va a existir ahí, y el match fallaba en silencio.
+    if (pathname === '/api/empresa-brief' && req.method === 'GET') {
+        const empresa = parsedUrl.searchParams.get('empresa') || '';
+        (async () => {
+            try {
+                if (!empresa) throw new Error('empresa es requerida');
+                const empresaRow = await fetchEmpresaRow(empresa);
+                const briefRaw = (empresaRow && (empresaRow.logo_url || empresaRow.tipo_negocio || empresaRow.tiponegocio)) || '';
+                const brief = parseBrief(briefRaw, empresaRow);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: brief }));
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // 🖥️ COMFY QUICK PREVIEW — botón "Comfy" en Datos/Negocio: genera UNA
+    // imagen de prueba con SuitComfy/ComfyUI local, armando el prompt solo con
+    // datos reales de la empresa (industria/nicho/giro/color_tema) — no pasa
+    // por el wizard de VIDE/ViRe, es una acción aislada de prueba rápida.
+    // generarImagenComfy() (arriba) ya nunca tira excepción (devuelve null si
+    // ComfyUI/SuitComfy no responden, ver ADR-031) — acá solo se traduce ese
+    // null en un 503 con mensaje accionable, nunca en un crash del server.
+    if (pathname === '/api/comfy/quick-preview' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { empresa } = JSON.parse(body);
+                if (!empresa) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({ status: 'error', error: 'empresa es requerida' }));
+                }
+                const empresaRow = await fetchEmpresaRow(empresa);
+                const briefRaw = (empresaRow && (empresaRow.logo_url || empresaRow.tipo_negocio || empresaRow.tiponegocio)) || '';
+                const brief = parseBrief(briefRaw, empresaRow);
+                const colorTema = (empresaRow && empresaRow.color_tema) || '';
+                const descriptores = [brief.industria, brief.nicho, brief.giro_especifico].filter(Boolean).join(', ');
+
+                const prompt = `cinematic photorealistic advertising photograph for a ${descriptores || 'local'} business` +
+                    (colorTema ? `, color palette inspired by ${colorTema}` : '') +
+                    `, professional studio lighting, high detail, no text, no watermark, no logos`;
+
+                serverLog('INFO', `[Comfy] Quick preview para "${empresa}": ${prompt}`);
+                const imgPath = await generarImagenComfy(prompt, 768, 768);
+                if (!imgPath) {
+                    res.writeHead(503, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({
+                        status: 'error',
+                        error: 'ComfyUI/SuitComfy no responde. Abrí ComfyUI Desktop y confirmá que SuitComfy esté corriendo en :3012 (ver ADR-031).'
+                    }));
+                }
+                const b64 = fs.readFileSync(imgPath).toString('base64');
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', image: `data:image/png;base64,${b64}`, prompt }));
+            } catch (e) {
+                serverLog('ERROR', `[Comfy] quick-preview: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // 🖼️ COMFY POSTER — flujo completo "Quote-Flow": frase + categoría (banco
+    // cerrado, ver POSTER_CATEGORIES) -> escena fotorrealista con ComfyUI ->
+    // overlay de tipografía/franja/insignia con SuitComfy/quote-flow-poster.js
+    // (SD1.5 no puede escribir texto, por eso van separados — ver ADR-031/032).
+    // El color de acento usa color_tema de la empresa si es un hex válido,
+    // si no cae al default de la categoría — nunca bloquea por dato faltante.
+    // El póster compuesto se arma en un archivo temporal y se borra apenas se
+    // lee (mismo criterio que quick-preview: no ensucia ninguna galería).
+    if (pathname === '/api/comfy/poster' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            let tmpPath = null;
+            try {
+                const { empresa, frase, categoria } = JSON.parse(body);
+                if (!frase || !frase.trim()) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({ status: 'error', error: 'La frase es requerida' }));
+                }
+                const cat = POSTER_CATEGORIES[categoria] || POSTER_CATEGORIES.conocimiento;
+
+                let accent = cat.accent;
+                if (empresa) {
+                    const empresaRow = await fetchEmpresaRow(empresa);
+                    const colorTema = empresaRow && empresaRow.color_tema;
+                    if (colorTema && /^#[0-9a-fA-F]{6}$/.test(colorTema)) accent = colorTema;
+                }
+
+                const lines = splitFraseEnLineas(frase);
+                const prompt = `cinematic photorealistic HDR photo, ${cat.escenario}, high contrast, dramatic shadows, no text, no watermark`;
+
+                serverLog('INFO', `[Comfy] Generando póster "${categoria || 'conocimiento'}" para "${empresa || '(sin empresa)'}": "${frase}"`);
+                const imgPath = await generarImagenComfy(prompt, 768, 1024);
+                if (!imgPath) {
+                    res.writeHead(503, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({
+                        status: 'error',
+                        error: 'ComfyUI/SuitComfy no responde. Abrí ComfyUI Desktop y confirmá que SuitComfy esté corriendo en :3012 (ver ADR-031).'
+                    }));
+                }
+
+                tmpPath = path.join(os.tmpdir(), `suitcampanas-poster-${Date.now()}.png`);
+                await composePoster({
+                    backgroundPath: imgPath,
+                    outputPath: tmpPath,
+                    spec: { W: 768, H: 1024, accent, lines, destino: cat.destino, badge: cat.badge, icons: cat.icons }
+                });
+
+                const b64 = fs.readFileSync(tmpPath).toString('base64');
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', image: `data:image/png;base64,${b64}` }));
+            } catch (e) {
+                serverLog('ERROR', `[Comfy] poster: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            } finally {
+                if (tmpPath && fs.existsSync(tmpPath)) fs.unlink(tmpPath, () => {});
+            }
+        });
+        return;
+    }
+
+    // 🖼️ SOLO IMAGEN — una pieza estática (foto de fondo + overlay del
+    // template elegido: Paper, Pinterest Ad, etc.) sin voz/música/video.
+    // Reusa el mismo guion/estilo/marca que VIDE y ViRe (comparten el switch
+    // "Solo Imagen"), pero renderiza UN frame vía Remotion en vez del video
+    // completo — mucho más rápido (sin voces, sin encode de video). Solo la
+    // primera escena del guion se usa; el resto se ignora si hay más de una.
+    if (pathname === '/api/vire-still' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            let tmpDir = null;
+            try {
+                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, tema, nicho, industria, estilo_visual_keywords, visual_style, brand_colors, image_source, content_shape, item_count } = JSON.parse(body);
+                serverLog('INFO', `[ViReStill] Generando imagen para: ${empresa}`);
+
+                const vireDir = path.join(__dirname, '../SuitVidGenRemotion');
+                const vireRenderScript = path.join(vireDir, 'scripts/render.js');
+                if (!fs.existsSync(vireRenderScript)) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: `ViRe no está instalado (no se encontró ${vireRenderScript})` }));
+                    return;
+                }
+
+                tmpDir = path.join(__dirname, `tmp_virestill_${Date.now()}`);
+                fs.mkdirSync(tmpDir, { recursive: true });
+
+                let s;
+                if (guion && guion.trim()) {
+                    const { scenes } = parseGuionScenes(guion, 5, '');
+                    if (!scenes.length) throw new Error('El guion no tiene contenido para generar una imagen');
+                    s = scenes[0];
+                } else {
+                    // Sin guion pegado/generado: lee el Brief real de la empresa
+                    // (mismo vector que generateMediaPlan() — ADR-026: vive en
+                    // logo_url, con fallback a tipo_negocio para tenants viejos)
+                    // y la IA arma el copy de UNA sola pieza al vuelo. Así "Solo
+                    // Imagen" no obliga a pasar antes por Generar Plan de Medios
+                    // ni por Generar JSON.
+                    serverLog('INFO', `[ViReStill] Sin guion, generando desde el Brief de ${empresa}...`);
+                    const empresaRow = await fetchEmpresaRow(empresa);
+                    const briefRaw = (empresaRow && (empresaRow.logo_url || empresaRow.tipo_negocio || empresaRow.tiponegocio)) || '';
+                    const brief = parseBrief(briefRaw, empresaRow);
+                    if (!brief.industria && industria) brief.industria = industria;
+                    if (!brief.nicho && nicho) brief.nicho = nicho;
+                    if (tema) brief.tema_solicitado = tema;
+                    if (!brief.producto && !brief.industria && !brief.nicho && !tema) {
+                        throw new Error('No hay guion ni Brief guardado para esta empresa — escribe contenido o completa el Brief primero');
+                    }
+
+                    if (content_shape === 'lista') {
+                        // Estilos tipo infografía/ranking (video_subestilos.parametros_visuales
+                        // .content_shape === "lista", ej. "Ranking en Tarjetas") necesitan N
+                        // puntos reales, no una sola frase — y tienen que sonar investigados
+                        // sobre ESTE negocio puntual, no una plantilla ("El 87% de..." que
+                        // sirve para cualquier competidor del rubro fue el fallo real detectado).
+                        const N = Math.max(3, Math.min(8, parseInt(item_count, 10) || 5));
+                        const systemPromptLista = `Eres un copywriter/investigador publicitario. A partir del BRIEF REAL de un negocio (no un genérico de su rubro), genera el contenido de una infografía tipo ranking/lista de EXACTAMENTE ${N} puntos para redes sociales.
+
+Debes sonar como si hubieras investigado a fondo ESTE negocio puntual: usa su producto, nicho, audiencia, objetivo, tono y prueba social (todo lo que venga en el brief) para inventar ${N} puntos específicos y creíbles — razones, pasos, señales, mitos vs. realidad, tips o beneficios, el ángulo que mejor calce con el objetivo del brief. PROHIBIDO usar plantillas vacías tipo "El X% de las personas que prueban Y..." — cada punto debe mencionar o implicar algo propio de ESTE negocio, nunca una generalidad que serviría para cualquier competidor del mismo rubro.
+
+Responde EXCLUSIVAMENTE con un objeto JSON válido:
+{
+  "titulo": string, titular corto y llamativo para el ranking completo,
+  "items": [ { "icono": un emoji relacionado, "titulo_item": string corto (máx 6 palabras), "subtitulo_item": string de una frase con el detalle concreto } ] — EXACTAMENTE ${N} elementos,
+  "visual": string en inglés describiendo SOLO una foto o textura de fondo simple y genérica (sin texto, sin íconos, sin gráficos — el diseño lo dibuja el sistema, no la foto)
+}`;
+                        const userContent = `Empresa: ${empresa}\nBrief:\n${JSON.stringify(brief, null, 2)}\n\nGenera exactamente ${N} items.`;
+                        const pieza = await callAIJson(systemPromptLista, userContent, 0.7);
+                        s = { title: pieza.titulo, items: (Array.isArray(pieza.items) ? pieza.items : []).slice(0, N), visual: pieza.visual };
+                    } else {
+                        const systemPrompt = 'Eres un copywriter publicitario. A partir del brief de un negocio, genera el contenido de UNA sola pieza gráfica publicitaria (no un guion de video, no una campaña completa). Responde EXCLUSIVAMENTE con un objeto JSON válido: {"titulo": string corto tipo hook/titular, "body": string breve de 1 frase (puede incluir una cifra u oferta concreta si el brief la sugiere), "visual": string en inglés describiendo la foto/escena de fondo para un generador de imágenes IA, "icono": UNA sola palabra clave en inglés (no un emoji, no una frase — se busca en un catálogo real de íconos vectoriales, ej. "clock", "leaf", "heart") que represente el concepto central de la pieza, o null si ninguno aporta, "icono_animacion": "rotar"|"flotar"|"pulsar"|"rebotar"|null (rotar=proceso/tiempo, flotar=calma/naturaleza, pulsar=alerta/urgencia, rebotar=energía/logro — elige según lo que el ícono representa, o null si no hay ícono)}.';
+                        const userContent = `Empresa: ${empresa}\nBrief:\n${JSON.stringify(brief, null, 2)}`;
+                        const pieza = await callAIJson(systemPrompt, userContent, 0.7);
+                        s = { title: pieza.titulo, body: pieza.body, visual: pieza.visual, icono: pieza.icono || undefined, icono_animacion: pieza.icono_animacion || undefined };
+                    }
+                }
+
+                // Mismo criterio que /api/vire-produce: el color exacto solo se
+                // garantiza en el overlay de Remotion (brand_colors abajo); la
+                // foto IA solo puede acercarse al tono vía palabras en el prompt.
+                const colorPromptHint = brand_colors
+                    ? `color palette: ${[brand_colors.accent, brand_colors.background, brand_colors.ink].filter(Boolean).join(', ')}, `
+                    : '';
+                let texto_overlay = s.texto_overlay || s.title || undefined;
+                if (telefono || sitio_web) {
+                    const contacto = [telefono, sitio_web].filter(Boolean).join(' · ');
+                    texto_overlay = texto_overlay ? `${texto_overlay} · ${contacto}` : contacto;
+                }
+
+                const vireScript = {
+                    format: 'story',
+                    width: 1080,
+                    height: 1920,
+                    fps: 24,
+                    empresa: empresa || '',
+                    tema: 'still',
+                    voice: { provider: 'none' },
+                    subtitles: { enabled: false },
+                    image_source: image_source || 'ia',
+                    scenes: [{
+                        type: 'text',
+                        duration: 5,
+                        animation: 'fade_in',
+                        visual_style: visual_style || undefined,
+                        brand_colors: brand_colors || undefined,
+                        body: s.body || '',
+                        items: s.items || undefined,
+                        icono: s.icono || undefined,
+                        icono_animacion: s.icono_animacion || undefined,
+                        image_prompt: (estilo_visual_keywords ? `${estilo_visual_keywords}, ` : '')
+                            + colorPromptHint
+                            + (s.visual || `${s.title || ''} ${s.body || ''}`.substring(0, 200)),
+                        image_url: s.image_url || undefined,
+                        texto_overlay,
+                        logo_url: logo_url || undefined,
+                        avatar_url: avatar_url || undefined,
+                    }],
+                };
+
+                const vireScriptPath = path.join(tmpDir, 'vire_script.json');
+                const outputPngPath = path.join(tmpDir, 'still.png');
+                fs.writeFileSync(vireScriptPath, JSON.stringify(vireScript, null, 2));
+
+                serverLog('INFO', `[ViReStill] Renderizando frame único...`);
+                await new Promise((resolve, reject) => {
+                    const child = spawn('node', [
+                        vireRenderScript,
+                        '--guion', vireScriptPath,
+                        '--output', outputPngPath,
+                        '--empresa', empresa || 'ViRe',
+                        '--still'
+                    ], { cwd: vireDir });
+                    let stderrTail = '';
+                    const timer = setTimeout(() => {
+                        child.kill();
+                        reject(new Error('Timeout generando la imagen (90s)'));
+                    }, 90000);
+                    child.stderr.on('data', (d) => { stderrTail = (stderrTail + d.toString()).slice(-2000); });
+                    child.on('error', (err) => { clearTimeout(timer); reject(err); });
+                    child.on('close', (code) => {
+                        clearTimeout(timer);
+                        if (code === 0) resolve(); else reject(new Error(stderrTail || `render.js salió con código ${code}`));
+                    });
+                });
+
+                if (!fs.existsSync(outputPngPath)) throw new Error('No se generó el archivo de imagen');
+                const imgBase64 = fs.readFileSync(outputPngPath).toString('base64');
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+                tmpDir = null;
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', image: `data:image/png;base64,${imgBase64}` }));
+            } catch (e) {
+                serverLog('ERROR', `[ViReStill] ${e.message}`);
                 if (tmpDir && fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ status: 'error', error: e.message }));
@@ -3161,15 +4041,44 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             (async () => {
                 try {
-                    const { empresa, nicho, tema, referencia } = JSON.parse(body);
+                    const { empresa, nicho, tema, referencia, imagen_base64, imagen_mime } = JSON.parse(body);
                     if (!empresa) {
                         res.writeHead(400, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({ status: 'error', error: 'empresa es requerida' }));
                         return;
                     }
+
+                    // Si viene una imagen de referencia, un modelo con visión la
+                    // describe en texto primero — de ahí para abajo es EXACTAMENTE
+                    // el mismo flujo que una referencia escrita a mano, para no
+                    // duplicar la lógica de CAMP-STYLEDIRECTOR.
+                    let referenciaFinal = referencia || '';
+                    if (imagen_base64) {
+                        serverLog('INFO', '[ESTILOS-IA] Describiendo imagen de referencia con modelo de visión...');
+                        const descripcionImagen = await describirImagenReferencia(imagen_base64, imagen_mime || 'image/jpeg');
+                        referenciaFinal = referenciaFinal
+                            ? `${referenciaFinal}\n\nDescripción visual de la imagen de referencia:\n${descripcionImagen}`
+                            : descripcionImagen;
+                    }
+
                     const prompt = await loadPromptById('CAMP-STYLEDIRECTOR');
-                    const userContent = `Nicho: ${nicho || '(no especificado)'}\nTema: ${tema || '(no especificado)'}\nReferencia del usuario: ${referencia || '(vacía — inventa un estilo original coherente con el nicho)'}\n\nGenera el estilo visual como JSON válido.`;
-                    const estilo = await callAIJson(prompt, userContent, 0.8);
+
+                    // Sin esto la IA no tiene memoria de sus propias generaciones
+                    // anteriores y repite la misma idea obvia del nicho cada vez
+                    // (ej. "Robots de Cocina Futuristas" x7 para Noe Thermomix) —
+                    // se le pasa el catálogo real (de esta empresa + el compartido)
+                    // para que evite proponer una variación menor de algo que ya existe.
+                    const { data: existentes } = await supabaseAdmin
+                        .from('video_subestilos')
+                        .select('nombre, descripcion')
+                        .or(`id_empresa.eq.${empresa},id_empresa.eq.ALL`)
+                        .eq('activo', true);
+                    const estilosExistentesStr = (existentes || [])
+                        .map(s => `- ${s.nombre}${s.descripcion ? `: ${s.descripcion}` : ''}`)
+                        .join('\n') || '(ninguno todavía)';
+
+                    const userContent = `Nicho: ${nicho || '(no especificado)'}\nTema: ${tema || '(no especificado)'}\nReferencia del usuario: ${referenciaFinal || '(vacía — inventa un estilo original coherente con el nicho)'}\n\nEstilos que YA existen en el catálogo (no propongas una variación menor de estos, cambia de ángulo):\n${estilosExistentesStr}\n\nGenera el estilo visual como JSON válido.`;
+                    const estilo = await callAIJson(prompt, userContent, 0.9);
 
                     // Auto-provisiona la categoría "Generado con IA" de esta empresa si
                     // no existe todavía — "si no existe, que ocurra la magia" también
@@ -3383,15 +4292,36 @@ async function callOpenRouter(model, messages, temperature = 0.7) {
                 model: model,
                 messages: messages,
                 temperature: temperature,
-                stream: false
-            })
+                stream: false,
+                // Sin este tope, el default del gateway puede cortar a mitad un
+                // guion de varias escenas (JSON válido pero incompleto — visto en
+                // vivo generando 5 escenas para Toño Toques v2, la respuesta se
+                // cortaba justo después de "config"). 4096 da margen de sobra para
+                // el guion más largo real del schema.
+                max_tokens: 4096
+            }),
+            // Sin esto, una ruta "auto/*" de OmniRoute que reintenta varios
+            // proveedores por su cuenta puede tardar 2-3 MINUTOS en fallar
+            // ("Maximum combo retry limit reached") — visto en vivo probando el
+            // fix de respaldo con 2 modelos: el segundo modelo (openrouter/free)
+            // dejó el endpoint colgado varios minutos antes de caer a Ollama/LM
+            // Studio. 25s es generoso para una respuesta real (las exitosas
+            // tardan 1-3s en los logs) pero corta cualquier intento colgado
+            // rápido, dejando que el loop de respaldo pruebe el siguiente modelo.
+            signal: AbortSignal.timeout(25000)
         });
 
         const data = await response.json();
 
         if (!response.ok) {
             const msg = data.error ? (data.error.message || data.error) : `Error HTTP ${response.status}`;
-            throw new Error(msg);
+            // .status adjunto al error: el texto del mensaje no siempre menciona
+            // "429" literal (depende del proveedor detrás de OmniRoute), así que
+            // detectar rate-limit por el código HTTP real es más confiable que
+            // buscar la palabra en el string.
+            const error = new Error(msg);
+            error.status = response.status;
+            throw error;
         }
 
         if (data.choices && data.choices[0]) {
@@ -3493,7 +4423,12 @@ async function callLocalLMS(prompt) {
             port: 1234,
             path: '/v1/chat/completions',
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            // Sin esto se quedaba pensando indefinido con un guion real grande
+            // (11KB de prompt) — nunca fallaba, solo tardaba, así que el fallback
+            // a Ollama (con un modelo mejor para JSON, ver OLLAMA_FALLBACK_MODEL)
+            // nunca llegaba a intentarse. 120s es generoso para este modelo de 7B.
+            timeout: 120000
         };
 
         const req = http.request(options, (res) => {
@@ -3511,6 +4446,7 @@ async function callLocalLMS(prompt) {
             });
         });
         req.on('error', e => reject(e));
+        req.on('timeout', () => req.destroy(new Error('Timeout de LM Studio tras 120s')));
         req.write(postData);
         req.end();
     });

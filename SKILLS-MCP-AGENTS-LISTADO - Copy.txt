@@ -1,0 +1,184 @@
+=========================================================================
+  LISTADO COMPLETO — SKILLS, MCP SERVERS Y AGENTES
+  Generado: 2026-09-16
+=========================================================================
+
+
+=========================================================================
+  1. SKILLS — SUITOS REGISTRY (.suit/skills/)
+=========================================================================
+
+  DOMINIO (.suit/skills/domain/)
+  ────────────────────────────────
+  cotizaciones-engine.yaml    .suit/skills/domain/cotizaciones-engine.yaml
+  geo-exif.yaml               .suit/skills/domain/geo-exif.yaml
+  hybrid-db.yaml              .suit/skills/domain/hybrid-db.yaml
+  multi-tenant.yaml           .suit/skills/domain/multi-tenant.yaml
+  panoramic-ocr.yaml          .suit/skills/domain/panoramic-ocr.yaml
+  report-pdf.yaml             .suit/skills/domain/report-pdf.yaml
+  vision-yolo.yaml            .suit/skills/domain/vision-yolo.yaml
+  yolo-training.yaml          .suit/skills/domain/yolo-training.yaml
+
+  LENGUAJE (.suit/skills/language/)
+  ────────────────────────────────
+  javascript.yaml             .suit/skills/language/javascript.yaml
+  sql.yaml                    .suit/skills/language/sql.yaml
+
+  PROCESO (.suit/skills/process/)
+  ────────────────────────────────
+  code-review.yaml            .suit/skills/process/code-review.yaml
+  panel-juzgador.yaml         .suit/skills/process/panel-juzgador.yaml
+  panel-juzgador/             .suit/skills/process/panel-juzgador/
+    prompts/financiero.md     .suit/skills/process/panel-juzgador/prompts/financiero.md
+    prompts/juez.md           .suit/skills/process/panel-juzgador/prompts/juez.md
+    prompts/mercado.md        .suit/skills/process/panel-juzgador/prompts/mercado.md
+    prompts/riesgo.md         .suit/skills/process/panel-juzgador/prompts/riesgo.md
+    prompts/tecnico.md        .suit/skills/process/panel-juzgador/prompts/tecnico.md
+  pdf-generation.yaml         .suit/skills/process/pdf-generation.yaml
+  ponytail-ladder.yaml        .suit/skills/process/ponytail-ladder.yaml
+  probador.yaml               .suit/skills/process/probador.yaml
+  reportero.yaml              .suit/skills/process/reportero.yaml
+  security-audit.yaml         .suit/skills/process/security-audit.yaml
+
+  SISTEMA (.suit/skills/system/)
+  ────────────────────────────────
+  context-loader.yaml         .suit/skills/system/context-loader.yaml
+  index-navigator.yaml        .suit/skills/system/index-navigator.yaml
+
+  HERRAMIENTA (.suit/skills/tool/)
+  ────────────────────────────────
+  manychat.yaml               .suit/skills/tool/manychat.yaml
+  telegram-bot.yaml           .suit/skills/tool/telegram-bot.yaml
+  web-search.yaml             .suit/skills/tool/web-search.yaml
+
+  TOTAL SUITOS: 23 skills (8 domain + 2 language + 8 process + 2 system + 3 tool)
+
+
+=========================================================================
+  2. SKILLS — CLAUDE CODE (.claude/skills/)
+=========================================================================
+
+  ── Skills locales (propias) ──
+  bat-launcher                .claude/skills/bat-launcher/SKILL.md
+  mejoras-proyecto            .claude/skills/mejoras-proyecto/SKILL.md
+  preparar-produccion         .claude/skills/preparar-produccion/SKILL.md
+
+  ── Skills enlazados (symlinks) ──
+  captions-overlay            .claude/skills/captions-overlay/SKILL.md
+  changelog-video             .claude/skills/changelog-video/SKILL.md
+  cut-the-curve               .claude/skills/cut-the-curve/SKILL.md
+  embedded-captions           .claude/skills/embedded-captions/SKILL.md
+  faceless-explainer          .claude/skills/faceless-explainer/SKILL.md
+  figma                       .claude/skills/figma/SKILL.md
+  general-video               .claude/skills/general-video/SKILL.md
+  hyperframes                 .claude/skills/hyperframes/SKILL.md
+  hyperframes-animation       .claude/skills/hyperframes-animation/SKILL.md
+  hyperframes-audio           .claude/skills/hyperframes-audio/SKILL.md
+  hyperframes-cli             .claude/skills/hyperframes-cli/SKILL.md
+  hyperframes-core            .claude/skills/hyperframes-core/SKILL.md
+  hyperframes-creative        .claude/skills/hyperframes-creative/SKILL.md
+  hyperframes-keyframes       .claude/skills/hyperframes-keyframes/SKILL.md
+  hyperframes-registry        .claude/skills/hyperframes-registry/SKILL.md
+  media-use                   .claude/skills/media-use/SKILL.md
+  motion-doctrine             .claude/skills/motion-doctrine/SKILL.md
+  motion-graphics             .claude/skills/motion-graphics/SKILL.md
+  music-to-video              .claude/skills/music-to-video/SKILL.md
+  oversized-cursor            .claude/skills/oversized-cursor/SKILL.md
+  pr-to-video                 .claude/skills/pr-to-video/SKILL.md
+  product-launch-video        .claude/skills/product-launch-video/SKILL.md
+  remotion-to-hyperframes     .claude/skills/remotion-to-hyperframes/SKILL.md
+  seam-craft                  .claude/skills/seam-craft/SKILL.md
+  slideshow                   .claude/skills/slideshow/SKILL.md
+  talking-head-recut          .claude/skills/talking-head-recut/SKILL.md
+
+  TOTAL CLAUDE: 29 skills (3 locales + 26 symlinks)
+
+
+=========================================================================
+  3. SKILLS — OPENCODE (.opencode/skills/)
+=========================================================================
+
+  multi-tenant-saas           .opencode/skills/multi-tenant-saas/SKILL.md
+
+  TOTAL OPENCODE: 1 skill
+
+
+=========================================================================
+  4. SKILLS — SUITOS REGISTRY INDEX (.suit/registry/skills.yaml)
+=========================================================================
+
+  Las siguientes skills están declaradas en el registry YAML:
+  system-analysis, multi-tenant, javascript, gas, code-review,
+  security-audit, sql, deployment, preparar-produccion,
+  cotizaciones-engine, reservations-engine, remotion-video,
+  ponytail-ladder, comfy-ui, pdf-generation, landing-pages,
+  panel-juzgador, marketing-psicologia-progreso
+
+  TOTAL REGISTRY: 18 skills declaradas (algunas apuntan a .suit/skills/,
+  otras son de referencia sin archivo .yaml dedicado)
+
+
+=========================================================================
+  5. MCP SERVERS (.mcp.json)
+=========================================================================
+
+  NOMBRE               COMANDO / URL                                          ESTADO
+  ─────────────────────────────────────────────────────────────────────────────────────
+  supabase             node scripts/mcp-supabase.js                           ✗ CLOSED
+  whatsapp             npx -y wweb-mcp                                        ✗ TIMEOUT
+  higgsfield           https://mcp.higgsfield.ai/mcp                          ⚠ SIN TYPE
+  google-sheets        npx -y mcp-gsheets@latest                              ✗ TIMEOUT
+  playwright           npx @playwright/mcp@latest                              ✓ OK
+  suitcvlo-filesystem  npx -y @modelcontextprotocol/server-filesystem         (sin test)
+                       C:\Users\rojo-\Downloads\suitorg\SuitCVLO
+  telegram-bot         npx -y telegram-bot-mcp-server                         ⚠ SIN TOKEN
+  manychat             npx -y github:fabienbutz/manychat-mcp                  ⚠ SIN KEY
+  comfyui              npx -y comfyui-mcp                                      (sin test)
+                       COMFYUI_HOST=127.0.0.1:8188
+  chrome-devtools      npx -y chrome-devtools-mcp@latest                      ✓ OK
+  github               npx -y @modelcontextprotocol/server-github             ✓ OK
+  mirofish             node mirofish-mcp-server/dist/index.js                 (sin test)
+                       MIROFISH_BASE_URL=http://localhost:5001
+  capcut               vectcutapi-mcp/.venv/Scripts/python.exe                (sin test)
+                       mcp_server.py
+
+  TOTAL MCP: 12 servers (4 OK, 2 fallidos, 2 sin config, 4 sin test)
+
+
+=========================================================================
+  6. AGENTES (.suit/registry/agents.yaml)
+=========================================================================
+
+  NOMBRE                DOMINIO      RIESGO   SKILLS REQUERIDOS
+  ───────────────────────────────────────────────────────────────────
+  architect             system       high     system-analysis, multi-tenant
+  developer             code         medium   javascript, gas
+  reviewer              quality      low      code-review, security-audit
+  cotizador             sales        medium   cotizaciones-engine, pdf-generation,
+                                             javascript, multi-tenant
+  reportero             quality      low      code-review, security-audit,
+                                             system-analysis
+  mercado-analyst       evaluation   low      panel-juzgador, system-analysis
+  tecnico-analyst       evaluation   low      panel-juzgador, system-analysis,
+                                             multi-tenant
+  riesgo-analyst        evaluation   low      panel-juzgador, system-analysis
+  financiero-analyst    evaluation   low      panel-juzgador
+  juez-synthesizer      evaluation   low      panel-juzgador
+  probador              quality      low      system-analysis, javascript
+
+  TOTAL AGENTES: 11
+
+
+=========================================================================
+  RESUMEN TOTAL
+=========================================================================
+
+  Skills SuitOS (archivos .yaml):      23
+  Skills Claude Code (.claude/skills):  29
+  Skills OpenCode (.opencode/skills):    1
+  Skills en registry YAML:             18
+  MCP Servers:                         12
+  Agentes registrados:                 11
+
+  TOTAL CAPACIDADES: 84 entradas
+=========================================================================

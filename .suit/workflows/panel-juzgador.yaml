@@ -1,0 +1,88 @@
+workflow:
+  name: panel-juzgador
+  display_name: "Panel Juzgador — Evaluación Multi-Agente"
+  description: "Evalúa nuevos proyectos/módulos con 4 agentes especializados + 1 juez. Produce veredicto: APROBADO / APROBADO CONDICIONAL / RECHAZADO / POSPUESTO."
+  risk: low
+  domain: evaluation
+
+  entry:
+    requires_planning: false
+    requires_confirmation: false
+    required_context:
+      - AGENTS.md
+      - .suit/registry/projects.yaml
+    required_skills:
+      - panel-juzgador
+      - system-analysis
+
+  steps:
+    - id: receive_proposal
+      description: "Recibir la propuesta del proyecto: nombre, descripción, alcance, stack propuesto, justificación"
+      action: read
+      produces: proposal.md
+      validation:
+        - "Propuesta contiene nombre y descripción"
+        - "Alcance definido"
+
+    - id: run_mercado
+      description: "Ejecutar agente Mercado: evaluar oportunidad de negocio, competencia, target, timing, diferenciación"
+      action: run
+      agent: mercado
+      prompt: ".suit/skills/process/panel-juzgador/prompts/mercado.md"
+      input: proposal.md
+      produces: eval_mercado.md
+      parallel: true
+
+    - id: run_tecnico
+      description: "Ejecutar agente Técnico: evaluar stack, complejidad, integración con SuitOrg, mantenimiento, escalabilidad"
+      action: run
+      agent: tecnico
+      prompt: ".suit/skills/process/panel-juzgador/prompts/tecnico.md"
+      input: proposal.md
+      produces: eval_tecnico.md
+      parallel: true
+
+    - id: run_riesgo
+      description: "Ejecutar agente Riesgo: evaluar riesgos técnico, negocio, operativo, regulatorio, dependencias"
+      action: run
+      agent: riesgo
+      prompt: ".suit/skills/process/panel-juzgador/prompts/riesgo.md"
+      input: proposal.md
+      produces: eval_riesgo.md
+      parallel: true
+
+    - id: run_financiero
+      description: "Ejecutar agente Financiero: evaluar costos, revenue potencial, ROI, alternativas"
+      action: run
+      agent: financiero
+      prompt: ".suit/skills/process/panel-juzgador/prompts/financiero.md"
+      input: proposal.md
+      produces: eval_financiero.md
+      parallel: true
+
+    - id: run_juez
+      description: "Ejecutar Juez: sintetizar las 4 evaluaciones, ponderar, emitir veredicto final"
+      action: run
+      agent: juez
+      prompt: ".suit/skills/process/panel-juzgador/prompts/juez.md"
+      input:
+        - eval_mercado.md
+        - eval_tecnico.md
+        - eval_riesgo.md
+        - eval_financiero.md
+      produces: veredicto.md
+      validation:
+        - "Veredicto contiene scores de las 4 dimensiones"
+        - "Veredicto contiene veredicto final explícito"
+        - "Si es APROBADO CONDICIONAL, lista condiciones claras"
+
+    - id: present
+      description: "Presentar veredicto al usuario con resumen ejecutivo"
+      action: read
+      produces: panel_juzgador_reporte.md
+
+  exit:
+    validation:
+      - "Veredicto guardado en .suit/logs/panel-juzgador/"
+    notifies:
+      - telemetry

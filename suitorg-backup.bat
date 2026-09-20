@@ -12,10 +12,11 @@ if exist "%OUT%" (
 )
 
 echo [*] Creando backup %OUT% (esto puede tardar varios minutos) ...
+REM tar.exe se cae (0xC0000005) con nombres CJK/emoji: se excluyen abajo (MCP_??_??.md y el .html con emoji). Otro asi = renombrar o excluir.
 tar -a -c -f "%OUT%" ^
   --exclude=node_modules ^
   --exclude=.git ^
-  --exclude=.venv ^
+  --exclude=.venv* ^
   --exclude=__pycache__ ^
   --exclude=.wwebjs_auth ^
   --exclude=.wwebjs_cache ^
@@ -37,6 +38,10 @@ tar -a -c -f "%OUT%" ^
   --exclude=SuitCVLO/dataset_yolo ^
   --exclude=out ^
   --exclude=dist ^
+  --exclude=jdk-21.0.2 ^
+  --exclude=neo4j-community-5.26.0 ^
+  --exclude=MCP_??_??.md ^
+  --exclude=*-v33-FINAL-COMPLETA-44-SECCIONES-ENRIQUECIDO-EDGE-OK.html ^
   .
 
 if errorlevel 1 (

@@ -1,0 +1,40 @@
+skill:
+  name: panel-juzgador
+  display_name: "Panel Juzgador — Evaluación Multi-Agente de Proyectos"
+  version: 1.0.0
+  type: process
+  domain: evaluation
+
+  description: >
+    Panel de 4 agentes especializados + 1 juez que evalúa nuevos proyectos
+    o módulos antes de ser incorporados a SuitOrg. Cada agente evalúa una
+    dimensión distinta (mercado, técnico, riesgo, financiero), el juez
+    sintetiza y emite veredicto final: APROBADO / APROBADO CONDICIONAL /
+    RECHAZADO / POSPUESTO. Basado en el patrón MAJ-EVAL (ACL 2026).
+
+  dependencies:
+    - system-analysis
+    - multi-tenant
+
+  triggers:
+    - keyword: "evaluar proyecto"
+    - keyword: "juzgar"
+    - keyword: "panel de evaluación"
+    - keyword: "aprobar módulo"
+    - keyword: "viabilidad"
+    - keyword: "evaluar módulo"
+    - keyword: "nuevo proyecto"
+
+  inputs:
+    - "project proposal (nombre, descripción, alcance, stack propuesto)"
+
+  outputs:
+    - "evaluación por dimensión (4 reportes)"
+    - "veredicto final del juez"
+    - "recomendaciones y condiciones"
+
+  context_hint:
+    - "AGENTS.md"
+    - "contexto.md"
+    - ".suit/registry/projects.yaml"
+    - ".suit/skills/process/panel-juzgador/"

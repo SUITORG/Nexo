@@ -1,0 +1,38 @@
+skill:
+  name: mcp-manager
+  display_name: "MCP Manager — Gestión de MCPs por Proyecto"
+  version: 1.0.0
+  type: tool
+  domain: system
+
+  dependencies: []
+
+  triggers:
+    - "mcp manager"
+    - "gestionar mcp"
+    - "activar mcp"
+    - "desactivar mcp"
+    - "mcp por proyecto"
+    - "configurar mcp"
+    - "que mcp tengo"
+    - "listar mcp"
+    - "mcp enable"
+    - "mcp disable"
+    - file_pattern: "*/opencode.json"
+
+  inputs:
+    - "project path (optional)"
+    - "mcp name (for enable/disable)"
+    - "action (list|enable|disable|status|sync|optimal)"
+
+  outputs:
+    - "updated opencode.json"
+    - "mcp status report"
+    - "sync report"
+    - "optimal config report"
+
+  discoverable: true
+
+  context_hint:
+    - "opencode.json"
+    - "*/opencode.json"

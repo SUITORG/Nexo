@@ -1,0 +1,38 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Toño Toques",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "image_source": "pexels",
+  "scenes": [
+    {
+      "type": "text",
+      "duration": 5,
+      "animation": "slide_up",
+      "visual_style": "pizarra_minimalista",
+      "brand_colors": {
+        "background": "#FAFAF7",
+        "ink": "#1A1A1A",
+        "accent": "#E23E3E"
+      },
+      "body": "¿Sabías que un 70% de las personas con dolores musculares no encuentran alivio con medicamentos tradicionales?",
+      "icono": "medical-cross",
+      "image_prompt": "color palette: #E23E3E, #FAFAF7, #1A1A1A, Una imagen genérica de un hombre en el gimnasio sufriendo espalda, en tonos de teal y orange con un subrayado rojo.",
+      "voice_text": "¿Sabías que un 70% de las personas con dolores musculares no encuentran alivio con medicamentos tradicionales?",
+      "texto_overlay": "¿Sabías que un 70% no encuentra alivio con medicamentos tradicionales? · www.tt.com",
+      "logo_url": "https://lh3.googleusercontent.com/d/1uTzWuAfIuHFXzbqKmTbY0mMyJYbkXKVt",
+      "avatar_url": "https://lh3.googleusercontent.com/d/1uLo--wnk12mNs4bP82oahdmeXWZp-HOp"
+    }
+  ]
+}

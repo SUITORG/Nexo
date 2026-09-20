@@ -1,0 +1,64 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Toño Toques",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "image_source": "pexels",
+  "scenes": [
+    {
+      "type": "text",
+      "duration": 6,
+      "animation": "slide_up",
+      "visual_style": "pizarra_minimalista",
+      "brand_colors": {
+        "background": "#FAFAF7",
+        "ink": "#1A1A1A",
+        "accent": "#E23E3E"
+      },
+      "body": "¿Sabías que hay mejores formas de elegir Toño Toques?",
+      "items": [
+        {
+          "icono": "checkmark",
+          "titulo_item": "Sí",
+          "subtitulo_item": "Comprueba las calificaciones en línea"
+        },
+        {
+          "icono": "cancel",
+          "titulo_item": "No",
+          "subtitulo_item": "Evita contratar a empresas sin reseñas"
+        },
+        {
+          "icono": "checkmark",
+          "titulo_item": "Sí",
+          "subtitulo_item": "Pide referencias anteriores"
+        },
+        {
+          "icono": "cancel",
+          "titulo_item": "No",
+          "subtitulo_item": "Omita preguntas sobre satisfacción del cliente"
+        },
+        {
+          "icono": "checkmark",
+          "titulo_item": "Sí",
+          "subtitulo_item": "Solicita ejemplos de trabajo"
+        }
+      ],
+      "icono": "clock",
+      "icono_animacion": "rotar",
+      "image_prompt": "color palette: #E23E3E, #FAFAF7, #1A1A1A, Un fondo blanco con una ilustración lineal minimalista negra de una lápiz y un teléfono en la esquina superior derecha.",
+      "voice_text": "¿Sabías que hay mejores formas de elegir Toño Toques?",
+      "texto_overlay": "¿Quieres ahorrar tiempo? · www.tt.com"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Toño Toques",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "image_source": "pexels",
+  "scenes": [
+    {
+      "type": "text",
+      "duration": 5,
+      "animation": "slide_up",
+      "visual_style": "diario_ilustrado",
+      "brand_colors": {
+        "background": "#F3EDDD",
+        "ink": "#2E3A6B",
+        "accent": "#6B3FA0"
+      },
+      "body": "¿Sabías que puedes mejorar tu bienestar sin salir de casa?",
+      "image_prompt": "color palette: #6B3FA0, #F3EDDD, #2E3A6B, Ilustración de una persona relajada en su sofá, mirando un dispositivo electrónico. Iluminación suave, colores serenos, fondo blanco con notas de texto tipo post-it en azul marino.",
+      "voice_text": "¿Sabías que puedes mejorar tu bienestar sin salir de casa?",
+      "texto_overlay": "Estilo Diario Ilustrado IA",
+      "logo_url": "https://lh3.googleusercontent.com/d/1uTzWuAfIuHFXzbqKmTbY0mMyJYbkXKVt",
+      "avatar_url": "https://lh3.googleusercontent.com/d/1uLo--wnk12mNs4bP82oahdmeXWZp-HOp"
+    },
+    {
+      "type": "text",
+      "duration": 6,
+      "animation": "slide_up",
+      "visual_style": "diario_ilustrado",
+      "brand_colors": {
+        "background": "#F3EDDD",
+        "ink": "#2E3A6B",
+        "accent": "#6B3FA0"
+      },
+      "body": "Dolor muscular, problemas de sueño y ansiedad, ya no son tu problema.",
+      "image_prompt": "color palette: #6B3FA0, #F3EDDD, #2E3A6B, Ilustración de una persona realizando ejercicios de estiramientos y meditación, iluminación natural, fondo de papeles amarillos con notas y textos tipo boceto.",
+      "voice_text": "Dolor muscular, problemas de sueño y ansiedad, ya no son tu problema.",
+      "sfx_file": "generated/sfx/sfx_1789232889398_1.wav",
+      "texto_overlay": "Tu bienestar, hoy",
+      "logo_url": "https://lh3.googleusercontent.com/d/1uTzWuAfIuHFXzbqKmTbY0mMyJYbkXKVt",
+      "avatar_url": "https://lh3.googleusercontent.com/d/1uLo--wnk12mNs4bP82oahdmeXWZp-HOp"
+    },
+    {
+      "type": "text",
+      "duration": 5,
+      "animation": "slide_up",
+      "visual_style": "diario_ilustrado",
+      "brand_colors": {
+        "background": "#F3EDDD",
+        "ink": "#2E3A6B",
+        "accent": "#6B3FA0"
+      },
+      "body": "Descubre los beneficios de los cannabinoides funcionales.",
+      "icono": "pill",
+      "icono_animacion": "flotar",
+      "image_prompt": "color palette: #6B3FA0, #F3EDDD, #2E3A6B, Ilustración de una persona tomando una goma de CBD, entorno acogedor, iluminación cálida, papel crema con notas tipo post-it.",
+      "voice_text": "Descubre los beneficios de los cannabinoides funcionales.",
+      "sfx_file": "generated/sfx/sfx_1789232892007_2.wav",
+      "texto_overlay": "CBD Funcional",
+      "logo_url": "https://lh3.googleusercontent.com/d/1uTzWuAfIuHFXzbqKmTbY0mMyJYbkXKVt",
+      "avatar_url": "https://lh3.googleusercontent.com/d/1uLo--wnk12mNs4bP82oahdmeXWZp-HOp"
+    },
+    {
+      "type": "text",
+      "duration": 3,
+      "animation": "fade_in",
+      "visual_style": "diario_ilustrado",
+      "brand_colors": {
+        "background": "#F3EDDD",
+        "ink": "#2E3A6B",
+        "accent": "#6B3FA0"
+      },
+      "body": "Quiero mi guía de bienestar!",
+      "image_prompt": "color palette: #6B3FA0, #F3EDDD, #2E3A6B, Ilustración de una persona satisfecha, con el logotipo de la empresa en la pantalla del dispositivo electrónico, fondo blanco con notas y texto tipo boceto.",
+      "voice_text": "Quiero mi guía de bienestar!",
+      "texto_overlay": "Conoce tu bienestar hoy · www.tt.com",
+      "logo_url": "https://lh3.googleusercontent.com/d/1uTzWuAfIuHFXzbqKmTbY0mMyJYbkXKVt",
+      "avatar_url": "https://lh3.googleusercontent.com/d/1uLo--wnk12mNs4bP82oahdmeXWZp-HOp"
+    }
+  ]
+}

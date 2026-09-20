@@ -1,10 +1,11 @@
 import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig, Img } from "remotion";
 import type { TextScene } from "../../types/script";
 import { paperHeadlineFont } from "./paperFonts";
+import { AnimatedIcon } from "../AnimatedIcon";
 
-const ORANGE = "#E8722C";
-const INK = "#2B2118";
-const CREAM = "#F4E9D8";
+const DEFAULT_ACCENT = "#E8722C";
+const DEFAULT_INK = "#2B2118";
+const DEFAULT_BACKGROUND = "#F4E9D8";
 const PAPER_TEXTURE =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
@@ -32,6 +33,10 @@ export const PaperTextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
   const imageOpacity = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
   const imageScale = interpolate(frame, [0, 12], [0.9, 1], { extrapolateRight: "clamp" });
 
+  const background = scene.brand_colors?.background || DEFAULT_BACKGROUND;
+  const ink = scene.brand_colors?.ink || DEFAULT_INK;
+  const accent = scene.brand_colors?.accent || DEFAULT_ACCENT;
+
   const hasImage = Boolean(scene.image_url);
   // El guion real de ViRe (local-server-node.js) nunca llena scene.title —
   // el texto de la escena viaja en texto_overlay/body. Ese es el titular
@@ -41,7 +46,7 @@ export const PaperTextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
   const contentWidth = hasImage ? 900 : 800;
 
   return (
-    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", backgroundColor: CREAM }}>
+    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", backgroundColor: background }}>
       <AbsoluteFill style={{ backgroundImage: PAPER_TEXTURE, mixBlendMode: "multiply", opacity: 0.35 }} />
 
       <div style={{ width: contentWidth, display: "flex", flexDirection: "column", alignItems: "center", padding: 40 }}>
@@ -69,7 +74,7 @@ export const PaperTextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
                 fontFamily: paperHeadlineFont,
                 fontSize: hasImage ? 46 : 60,
                 fontWeight: 400,
-                color: INK,
+                color: ink,
                 margin: 0,
                 letterSpacing: 0.5,
                 lineHeight: 1.15,
@@ -88,7 +93,7 @@ export const PaperTextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
               <path
                 d={`M 16 16 Q ${(contentWidth - 40) / 2} 3, ${contentWidth - 56} 14`}
                 fill="none"
-                stroke={ORANGE}
+                stroke={accent}
                 strokeWidth={10}
                 strokeLinecap="round"
                 pathLength={1}
@@ -132,6 +137,25 @@ export const PaperTextScene: React.FC<{ scene: TextScene }> = ({ scene }) => {
             border: "3px solid white",
           }}
         />
+      )}
+
+      {(scene.icono || scene.icono_svg) && (
+        <div
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+            width: 70,
+            height: 70,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <AnimatedIcon icono={scene.icono} svgMarkup={scene.icono_svg} animacion={scene.icono_animacion} />
+        </div>
       )}
     </AbsoluteFill>
   );

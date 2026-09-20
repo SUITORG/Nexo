@@ -1,0 +1,6 @@
+{
+  "name": "ServiciosHogar Reynosa",
+  "description": "Plataforma de servicios para el hogar verificados con garantía Escrow y tabulador bimonetario para Reynosa.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

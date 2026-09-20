@@ -120,6 +120,18 @@ routing:
       priority: 15
 
     - patterns:
+        - "evaluar proyecto"
+        - "juzgar"
+        - "panel de evaluación"
+        - "aprobar modulo"
+        - "aprobar módulo"
+        - "viabilidad"
+        - "nuevo proyecto"
+        - "panel juzgador"
+      workflow: panel-juzgador
+      priority: 10
+
+    - patterns:
         - "prospeccion"
         - "prospectos"
         - "oportunidades comerciales"

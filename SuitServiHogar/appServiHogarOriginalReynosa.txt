@@ -1,0 +1,72 @@
+Quiero realizar una investigación profunda para crear una aplicación Android funcional centrada en [Tengo en mente una app para contratar servicios para el hogar: plomería, albañilería, pintura, limpieza, electricidad y más. 
+1 busca cuales son las mejores practicas, 
+2 en esta app hay dos tipos de usuarios, 
+2.1 los que ofrecen los servicios y su especialidad y 
+2.2 los que buscan esos servicios, debe haber , 
+3 solo se comunican a travez de la plataforma, 
+4 se pueden intercambiar solo fotos de los trabajos realizados o de lo que hay que componer, 5 deberia estar validados de los dos lados o certificados de seriedad de los dos lados, 
+6 deberiamos tener un tabulador de precios en pesos mexicanos 
+6.1 y o su conversion a dolares americanos consultado de fuentes reales que sea dinamico
+7. nosotros los due;os de la app ganariamos por dos partes el desarrolador y el due;o de la idea. por ofrecer la plataforma y un porcentaje de lo que se deposita a la plataforma para hacer el pago.
+8 tambien se debe considerar un tabulador de alguna fuente real  
+9 un programa de incentivos para los que ofrecen los servicios y/o para quienes solicitan de ellos.
+9.1 insentivos por invitar a personas a dar servicios, por servicios terminados, por obtener buenas calificaciones, etc. 
+9.2 insentivos por invitar a usuarios a que se unan a la app , por solicitar servicios
+10 agrega como se manejaria la parte de pago de impuestos de la app por las ganancias, 
+11 necesito un forntend y su respectivo backend.
+11.1 debe ser capaz de dar ubicaciones y direcciones de donde se dar'a el servicio hasta que que lleguen a un acuerdo e indicaciones 
+12 apegarse a las mejores practicas
+13 por el tama'o del negocio no es multiinquilino
+14 usaras para empzar supabase
+15 los contadores empezaran 0001
+16 estatus y calificaciones de ambos lados, 
+17 reportes de mejoras por parte de los usuarios
+18 incluye reportes para el backoffice
+19 suguiereme, logo, avatar, brief basico con colores de la empresa, y puedes usar datos ficticios hasta colocarlo en produccion
+20 seguridad en el aplicativo
+21 que se puedan firmar con una cuanta de google
+22 que en una de las formas de pago pueda ser google pay
+23 y suguiereme el nombre de la app ServiciosHogar Reynosa. ].
+23 penalizaciones por parte de los servidores o por los solicitantes
+24 tomar una parte monto o porcentaje para caridad o una association
+25 que se actualice el dolar en la app de acuerdo a la parte cambiaria en la frontera de USD a MMX.
+26 entregar documentacion completa
+27 definicion de flujos completos de Cliente y Tecnico
+28 terminos locales o regionales en Reynosa para hacer la tropicalizacion con terminos familares
+29 Definicion y pantallas de operacion del uso del backend
+30 que funcione 100% en celular
+31 la definiciones de impuesto las manejamos en el backend
+32 las caridades Tambien van en el backend
+33 que el sistema quede protegido ante ataques de virus y malware con las mejores practicas para este tipo de sistemas
+34 si los usuarios sube o comparten fotos que sean solo dentro de la plataforma, al igual de la comunicacion
+35 acuedos fuera de las plataforma no podemos protegerlos asique se puede a;adir comentarios
+36 usuarios y tecnicos pueden calificar despues del servicio unos a otros y dejar comentarios , no se permiten ofensas
+
+39 indicar si el sistema esta fuera de line o sin internet
+40 modo de prueba para desarroladores
+41 opcion de negociar en el caso de que el precio no este deacuerdo el cliente o el tecnico
+42 incluir politicas de privacidad (debe incluir Tambien especificamente que los datos compartidos bajo la appa no se compartiran)
+43 que el usuario o el tecnico firme por medio de un checkbox que esta de acuerdo con el uso de la appl y que el la empresa se deslinda de mal uso, busca leyes mexicanas de proteccion del desarrollador, del tecnico,  y del usuario final. el documento debe evitar demandas colectivas. en pocas palabras hacer un blindaje legal y soberania de costos
+
+
+
+
+ Necesito que organices toda la información en torno a cuatro pilares:
+1. Fundamentos expertos del sector.
+Reúne estudios, informes, papers y referencias fiables que expliquen qué funciona realmente en este sector, qué principios son importantes y qué debería tener en cuenta una solución bien planteada.
+2. Análisis de apps de éxito del sector.
+Investiga aplicaciones actuales líderes o muy bien valoradas dentro de este nicho. Identifica funcionalidades, enfoques, patrones comunes, propuestas de valor y elementos que han demostrado funcionar.
+3. Necesidades reales de los usuarios.
+Analiza reviews, foros, comentarios y valoraciones en tiendas de apps. Detecta problemas frecuentes, funciones que echan en falta, frustraciones, deseos y mejoras solicitadas.
+4. Tendencias, oportunidades y posicionamiento del nicho.
+Investiga tendencias actuales, subnichos en crecimiento, perfiles de usuario más interesantes, oportunidades poco cubiertas, problemas emergentes y posibles ángulos diferenciales para crear una aplicación con una propuesta clara.
+
+
+
+prompt para documento de notebook LLM
+
+Genera un documento ejecutivo que sintetice los hallazgos más relevantes de la investigación, destacando patrones comunes, oportunidades detectadas, funcionalidades recomendadas, perfiles de usuario, diferenciadores potenciales y conclusiones prácticas que sirvan como referencia para diseñar el prototipo de la aplicació
+
+
+
+el resultado descargarlo a .MD 

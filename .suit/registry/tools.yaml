@@ -168,6 +168,32 @@ tools:
     path: ../SuitSolve/
     purpose: Documentos de soluciones y guías
 
+  ObsStudio:
+    path: ./obs-mcp/
+    entry: .venv/Scripts/obs-mcp.exe
+    purpose: Control de OBS Studio vía MCP (escenas, audio, streaming, grabación)
+    mcp_server: obs-mcp
+    cli: .venv/Scripts/obs-mcp.exe
+    transport: stdio
+    capabilities:
+      - scenes: listar, crear, cambiar, eliminar escenas
+      - sources: agregar, configurar, mostrar/ocultar fuentes
+      - audio: volumen, mute, filtros, monitoreo
+      - recording: iniciar, pausar, detener grabación
+      - streaming: iniciar/detener stream, diagnóstico de salud
+      - transitions: transiciones personalizadas, modo estudio
+      - filters: agregar/remover filtros de audio y video
+      - media: control de reproducción de medios
+      - hotkeys: triggers de teclado
+      - diagnostics: diagnóstico de frames, stream, audio
+      - automation: prepare_recording, prepare_stream, end_session
+    params: host, port, password
+    output: MCP tools (89 herramientas)
+    status: ✅ instalado
+    install_date: 2026-09-18
+    note: Requiere OBS WebSocket habilitado (Tools → WebSocket Server Settings)
+    env_file: ./obs-mcp/.env
+
   Canva:
     path: (remote — mcp.canva.com)
     entry: https://mcp.canva.com/mcp

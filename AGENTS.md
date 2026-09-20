@@ -43,6 +43,43 @@ Before any operation, the agent MUST:
 | **Record decisions** | Write ADR to `.suit/memory/decisions/` for architectural choices | `memory/` |
 | **Log** | Record execution in `.suit/telemetry/` following `schema.yaml` | `telemetry/` |
 
+## Token Efficiency (mandatory)
+
+**Regla:** Cargar SOLO el contexto necesario. No sobrecargar tokens.
+
+| Estrategia | Tokens | Cuándo usarla |
+|---|---|---|
+| `minimal` | ~2K | Preguntas simples, revisiones rápidas, queries |
+| `standard` | ~8K | Features, bugfixes, tareas típicas |
+| `deep` | ~20K | Auditorías completas, arquitectura, migraciones |
+
+**Proceso obligatorio:**
+1. Clasificar la solicitud → determinar nivel de complejidad
+2. Seleccionar estrategia en `.suit/loader/strategy.yaml`
+3. Cargar SOLO archivos listados en `includes` de esa estrategía
+4. Si el archivo es INDEX_FUNCIONES.md → leer solo las funciones necesarias (file:line)
+5. No cargar archivos de memoria/decisions/ a menos que sea `deep`
+
+**Archivos clave:**
+- `.suit/loader/strategy.yaml` — define qué cargar por estrategia
+- `INDEX_FUNCIONES.md` — ubicar funciones específicas sin leer archivos completos
+- `.suit/skills/system/context-loader.yaml` — skill de carga de contexto
+
+**Ejemplo correcto:**
+```
+Usuario: "¿Cuál es el puerto de SuitPos?"
+→ Estrategia: minimal (2K)
+→ Cargar: AGENTS.md + projects.yaml (lookup puerto)
+→ Responder: 3006
+```
+
+**Ejemplo incorrecto (lo que pasó antes):**
+```
+Usuario: "Evalúa SuitServiHogar"
+→ Se cargaron: 5 prompts completos + 60 archivos del proyecto
+→ Debió ser: AGENTS.md + Contrato.md + schema.sql (standard/8K)
+```
+
 ## Registry quick reference
 
 - `.suit/registry/agents.yaml` — agent roles (architect, developer, reviewer, cotizador)
@@ -72,6 +109,7 @@ Before any operation, the agent MUST:
 ## Architecture (non-obvious)
 - 4 independent servers: `server.js` (Express, 3001), `SuitCampanas/local-server-node.js` (http, 8000), `citas/index.js` (Express, 3002), `SuitVidGenRemotion/` (Remotion Studio, 3004)
 - **ViRe** (`SuitVidGenRemotion/`): Módulo de video con Remotion. Usa `npm run dev` para abrir el estudio en puerto 3004.
+- **SuitServiHogar** (`SuitServiHogar/`): Micro-frontend aislado (React 19, ADR-029). Puerto 3010. No integra al SPA principal.
 - Dual backend: GAS (`backend/`) does core CRUD on Google Sheets; Node.js proxies to Supabase, Gemini, Stripe
 - Hybrid DB: 5 MASTER tables always in Sheets (`Config_Empresas`, `Usuarios`, `Config_Roles`, `Config_SEO`, `Prompts_IA`); PRIVATE tables migrate to Supabase per-tenant via `db_engine`
 - Two Supabase projects: backend `egyxgnlnzanxpqyuvmsg`, vision-audit `hmrpotibipxhsnowgjvq`
@@ -156,6 +194,7 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
     | 3008 | SuitInventarios |
     | 3009 | SuitBodega |
     | 3010 | SuitAI |
+    | 3010 | SuitServiHogar (micro-frontend aislado, ADR-029) |
     | 3011 | SuitChatTG |
     | 3013 | SuitDiccionario |
     | 8000 | CampanasAi |

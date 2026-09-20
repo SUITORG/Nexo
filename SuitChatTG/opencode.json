@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "supabase": {
+      "type": "local",
+      "command": ["node", "scripts/mcp-supabase.js"],
+      "enabled": true
+    },
+    "telegram-bot": {
+      "type": "local",
+      "command": ["npx", "-y", "telegram-bot-mcp-server"],
+      "env": {
+        "TELEGRAM_BOT_API_TOKEN": "${TELEGRAM_BOT_API_TOKEN}"
+      },
+      "enabled": true
+    }
+  }
+}

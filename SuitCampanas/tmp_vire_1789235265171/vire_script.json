@@ -1,0 +1,62 @@
+{
+  "format": "story",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "empresa": "Toño Toques",
+  "tema": "vide",
+  "voice": {
+    "provider": "edge_tts",
+    "voice": "es-MX-DaliaNeural",
+    "speed": 1
+  },
+  "subtitles": {
+    "enabled": true,
+    "style": "classic"
+  },
+  "image_source": "pexels",
+  "scenes": [
+    {
+      "type": "text",
+      "duration": 4,
+      "animation": "slide_up",
+      "visual_style": "cosmic_listicle_dorado",
+      "brand_colors": {
+        "background": "#120A2E",
+        "ink": "#FFFFFF",
+        "accent": "#F5B93E"
+      },
+      "body": "¿Sabías que 95% de los clientes elige a Toño Toques?",
+      "items": [
+        {
+          "icono": ":star:",
+          "titulo_item": "Calidad superior",
+          "subtitulo_item": "Ofrecemos productos de alta calidad"
+        },
+        {
+          "icono": ":heart:",
+          "titulo_item": "Atención al cliente",
+          "subtitulo_item": "Experiencia personalizada y rápida"
+        },
+        {
+          "icono": ":moneybag:",
+          "titulo_item": "Precios competitivos",
+          "subtitulo_item": "Ofrecemos los mejores precios del mercado"
+        },
+        {
+          "icono": ":gear:",
+          "titulo_item": "Servicio postventa",
+          "subtitulo_item": "Soporte técnico y garantías robustas"
+        },
+        {
+          "icono": ":handshake:",
+          "titulo_item": "Relaciones sólidas",
+          "subtitulo_item": "Conexiones duraderas con nuestros clientes"
+        }
+      ],
+      "image_prompt": "color palette: #F5B93E, #120A2E, #FFFFFF, Fondo cósmico oscuro degradado con estrellas, titular blanco de impacto con glow",
+      "voice_text": "¿Sabías que 95% de los clientes elige a Toño Toques?",
+      "texto_overlay": "Toño Toques: Elección del 95% · www.tt.com"
+    }
+  ]
+}

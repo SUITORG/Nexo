@@ -1,0 +1,304 @@
+========================================================================
+  LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
+  Generado: 2026-09-17
+  Auto-generado por: .suit/skills/process/listado-capacidades/
+========================================================================
+
+========================================================================
+  1. SKILLS - SUITOS (.suit/skills/)
+========================================================================
+
+  -- DOMINIO (.suit/skills/domain/)
+
+  NOMBRE                 RUTA
+  ------------------------------------------------------------------------
+  cotizaciones-engine       .suit/skills/domain/cotizaciones-engine.yaml
+  geo-exif                  .suit/skills/domain/geo-exif.yaml
+  hybrid-db                 .suit/skills/domain/hybrid-db.yaml
+  multi-tenant              .suit/skills/domain/multi-tenant.yaml
+  panoramic-ocr             .suit/skills/domain/panoramic-ocr.yaml
+  report-pdf                .suit/skills/domain/report-pdf.yaml
+  vision-yolo               .suit/skills/domain/vision-yolo.yaml
+  yolo-training             .suit/skills/domain/yolo-training.yaml
+
+  -- LENGUAJE (.suit/skills/language/)
+
+  NOMBRE                 RUTA
+  ------------------------------------------------------------------------
+  javascript                .suit/skills/language/javascript.yaml
+  sql                       .suit/skills/language/sql.yaml
+
+  -- PROCESO (.suit/skills/process/)
+
+  NOMBRE                 RUTA
+  ------------------------------------------------------------------------
+  code-review               .suit/skills/process/code-review.yaml
+  panel-juzgador            .suit/skills/process/panel-juzgador.yaml
+  pdf-generation            .suit/skills/process/pdf-generation.yaml
+  ponytail-ladder           .suit/skills/process/ponytail-ladder.yaml
+  probador                  .suit/skills/process/probador.yaml
+  reportero                 .suit/skills/process/reportero.yaml
+  security-audit            .suit/skills/process/security-audit.yaml
+
+  -- SISTEMA (.suit/skills/system/)
+
+  NOMBRE                 RUTA
+  ------------------------------------------------------------------------
+  context-loader            .suit/skills/system/context-loader.yaml
+  index-navigator           .suit/skills/system/index-navigator.yaml
+
+  -- HERRAMIENTA (.suit/skills/tool/)
+
+  NOMBRE                 RUTA
+  ------------------------------------------------------------------------
+  manychat                  .suit/skills/tool/manychat.yaml
+  telegram-bot              .suit/skills/tool/telegram-bot.yaml
+  web-search                .suit/skills/tool/web-search.yaml
+
+  TOTAL SUITOS: 22 skills
+
+
+========================================================================
+  2. SKILLS - CLAUDE CODE (.claude/skills/)
+========================================================================
+
+  -- Skills locales (propias)
+
+  bat-launcher              .claude/skills/bat-launcher
+  mejoras-proyecto          .claude/skills/mejoras-proyecto
+  preparar-produccion       .claude/skills/preparar-produccion
+  skill-creator             .claude/skills/skill-creator
+                            Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or opt
+
+  -- Skills enlazados (junctions)
+
+  captions-overlay          .claude/skills/captions-overlay
+                            -> .agents\skills\captions-overlay
+                            Overlay doctrine for the embedded-captions workflow — the caption MODEL (drop / rail / embed) and the rule that captions are an OVERLAY composited on 
+  changelog-video           .claude/skills/changelog-video
+                            -> .agents\skills\changelog-video
+                            Turn a weekly changelog .md into a finished branded changelog video (square 1080, ~45-60s, Annie VO, animated brand background, mock-UI visualizations
+  cut-the-curve             .claude/skills/cut-the-curve
+                            -> .agents\skills\cut-the-curve
+                            The technique catalog: five velocity-matched SEAMS (zoom-through, INVERSE zoom-through, cut-the-curve, waterfall cut, rack-focus blur-cut) plus the tw
+  embedded-captions         .claude/skills/embedded-captions
+                            -> .agents\skills\embedded-captions
+                            Add captions or subtitles to an existing single-subject talking-head video without editing the footage. Use for plain verbatim captions, cinematic cap
+  faceless-explainer        .claude/skills/faceless-explainer
+                            -> .agents\skills\faceless-explainer
+                            Turn arbitrary text — an article, notes, a topic, a brief — into a faceless explainer video: there is no site or footage to capture, so the visuals ar
+  figma                     .claude/skills/figma
+                            -> .agents\skills\figma
+                            Import Figma content into a HyperFrames composition — rendered assets, brand tokens, components, storyboard sections → reconstructed motion (frames re
+  general-video             .claude/skills/general-video
+                            -> .agents\skills\general-video
+                            Author or edit a custom HyperFrames composition when no specialized workflow fits, or when BRIEF.md sets flow: companion. Use for longer or multi-scen
+  hyperframes               .claude/skills/hyperframes
+                            -> .agents\skills\hyperframes
+                            Mandatory entry point: read this first for any request to make, create, edit, animate, or render a video, animation, or motion graphic, including a pr
+  hyperframes-animation     .claude/skills/hyperframes-animation
+                            -> .agents\skills\hyperframes-animation
+                            All animation knowledge for HyperFrames — atomic motion rules, multi-phase scene blueprints, scene transitions, broader motion-design techniques, AND 
+  hyperframes-audio         .claude/skills/hyperframes-audio
+                            -> .agents\skills\hyperframes-audio
+                            Use when audio already placed in a HyperFrames composition needs to be mixed: fade-in/fade-out, crossfade, track gain or volume, volume automation, du
+  hyperframes-cli           .claude/skills/hyperframes-cli
+                            -> .agents\skills\hyperframes-cli
+                            Use the HyperFrames CLI development loop: init, add, catalog, capture, lint, check, snapshot, compare, grade-compare, preview, play, present, beats, k
+  hyperframes-core          .claude/skills/hyperframes-core
+                            -> .agents\skills\hyperframes-core
+                            The HyperFrames composition contract — build one renderable project. Use for composition structure, the `data-*` timing attributes, `class="clip"`, tr
+  hyperframes-creative      .claude/skills/hyperframes-creative
+                            -> .agents\skills\hyperframes-creative
+                            Non-animation creative direction for HyperFrames videos. Use for design spec (frame.md / design.md) handling, palettes, typography, narration, beat pl
+  hyperframes-keyframes     .claude/skills/hyperframes-keyframes
+                            -> .agents\skills\hyperframes-keyframes
+                            Use when a HyperFrames composition needs a punch-in, punch-out, zoom, reframe, Ken Burns treatment, camera move, visual match/whip handoff, or other s
+  hyperframes-registry      .claude/skills/hyperframes-registry
+                            -> .agents\skills\hyperframes-registry
+                            Install, discover, and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add or hyperframes catalog, ins
+  media-use                 .claude/skills/media-use
+                            -> .agents\skills\media-use
+                            Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT 
+  motion-doctrine           .claude/skills/motion-doctrine
+                            -> .agents\skills\motion-doctrine
+                            GATEWAY — load FIRST before composing any HyperFrames animation or video. The high-level motion law that makes a multi-scene video feel like ONE conti
+  motion-graphics           .claude/skills/motion-graphics
+                            -> .agents\skills\motion-graphics
+                            A short, design-led motion graphic where motion is the message — kinetic typography, stat count-up, chart/data-viz hit, logo sting / brand lockup, low
+  music-to-video            .claude/skills/music-to-video
+                            -> .agents\skills\music-to-video
+                            Turn a music track (an audio file, a video to pull audio from, or a track generated from a mood brief) into a beat-synced video — lyric video, slidesh
+  oversized-cursor          .claude/skills/oversized-cursor
+                            -> .agents\skills\oversized-cursor
+                            House-style oversized macOS cursor technique for HyperFrames launch videos. Load whenever a scene involves cursors or a pointer-led action, when kicki
+  pr-to-video               .claude/skills/pr-to-video
+                            -> .agents\skills\pr-to-video
+                            Turn a GitHub pull request (a PR URL, owner/repo#N, or 'this PR' in a checked-out repo) into a code-change explainer video — changelog, feature reveal
+  product-launch-video      .claude/skills/product-launch-video
+                            -> .agents\skills\product-launch-video
+                            Turn a product or marketing URL, pasted script, or brief into a product launch / promo video — SaaS promos, feature reveals, product demos, app and co
+  remotion-to-hyperframes   .claude/skills/remotion-to-hyperframes
+                            -> .agents\skills\remotion-to-hyperframes
+                            Port an existing Remotion (React) composition's source to HyperFrames HTML. Use ONLY on an explicit ask to port/convert/migrate/translate a Remotion s
+  seam-craft                .claude/skills/seam-craft
+                            -> .agents\skills\seam-craft
+                            Render-correctness doctrine for scene-to-scene seams in HyperFrames launch videos — the prerequisites that make transitions composite correctly on the
+  slideshow                 .claude/skills/slideshow
+                            -> .agents\skills\slideshow
+                            Author a HyperFrames slideshow — a presentation, pitch deck, or interactive deck with discrete slides, fragment reveals, branching, hotspot navigation
+  talking-head-recut        .claude/skills/talking-head-recut
+                            -> .agents\skills\talking-head-recut
+                            Package an existing talking-head / interview / podcast video with timed, designed GRAPHIC OVERLAY cards — kinetic titles, lower-thirds, data callouts,
+  video-shotcraft           .claude/skills/video-shotcraft
+                            -> .agents\skills\video-shotcraft
+                            Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
+
+  TOTAL CLAUDE: 31 (4 locales + 27 symlinks)
+
+
+========================================================================
+  3. SKILLS - OPENCODE (.opencode/skills/)
+========================================================================
+
+  multi-tenant-saas         .opencode/skills/multi-tenant-saas
+
+  TOTAL OPENCODE: 1
+
+
+========================================================================
+  4. SKILLS - REGISTRY (.suit/registry/skills.yaml)
+========================================================================
+
+  system-analysis                     Analyze system architecture, identify patterns, detect issues
+  multi-tenant                        Multi-tenant isolation rules and patterns
+  javascript                          JavaScript/Node.js development
+  gas                                 Google Apps Script development
+  code-review                         Code review according to project standards
+  security-audit                      Security audit for hardcoded keys, CSP, RBAC
+  sql                                 SQL migrations and schema management
+  deployment                          Deployment procedures for GAS and GH Pages
+  preparar-produccion                 Clasifica archivos modificados/nuevos (git status) en Producción-Públi
+  cotizaciones-engine                 Motor de cálculo para cotizaciones configurables por proceso, producto
+  reservations-engine                 Motor de reservaciones vía WhatsApp + Google Calendar. Detecta intenci
+  remotion-video                      Generación de video profesional con Remotion. Crea composiciones anima
+  ponytail-ladder                     Forces the simplest, shortest solution that works. YAGNI ladder: skip 
+  comfy-ui                            Generación de imagen con ComfyUI y video profesional con FFmpeg, 100% 
+  pdf-generation                      Genera PDFs de cotizaciones usando backend/DriveManager.js. Almacena e
+  landing-pages                       Generación estática de landing pages de conversión multi-tenant vía sc
+  panel-juzgador                      Panel de 4 agentes especializados + 1 juez que evalúa nuevos proyectos
+  marketing-psicologia-progreso       Efecto del progreso otorgado (endowed progress effect, Nunes & Drèze 2
+  skill-creator                       Crea, evalúa y mejora skills de forma iterativa. Flujo: capture intent
+  video-shotcraft                     Crea videos de producto cinematográficos con Remotion. 157 shot recipe
+  listado-capacidades                 Regenera SKILLS-MCP-AGENTS-LISTADO.txt con el listado consolidado de t
+
+  TOTAL REGISTRY: 21 skills declaradas
+
+
+========================================================================
+  5. MCP SERVERS (.mcp.json)
+========================================================================
+
+  NOMBRE               COMANDO / URL
+  ------------------------------------------------------------------------
+  supabase                  node scripts/mcp-supabase.js
+                            Conexion a base de datos Supabase (SQL, auth, storage)
+  whatsapp                  npx -y wweb-mcp
+                            Envio/recepcion de mensajes WhatsApp via wweb-mcp
+  higgsfield                https://mcp.higgsfield.ai/mcp
+                            Generacion de video/imagen AI (remoto)
+  google-sheets             npx -y mcp-gsheets@latest
+                            Lectura/escritura de Google Sheets (backend SuitOrg)
+  playwright                npx @playwright/mcp@latest
+                            Automatizacion de navegador (Playwright)
+  suitcvlo-filesystem       npx -y @modelcontextprotocol/server-filesystem C:\Users
+                            Acceso a filesystem del proyecto SuitCVLO
+  telegram-bot              npx -y telegram-bot-mcp-server
+                            Bot de Telegram (envio/recepcion de mensajes)
+  manychat                  npx -y github:fabienbutz/manychat-mcp
+                            Integracion con ManyChat (chatbot/marketing)
+  comfyui                   npx -y comfyui-mcp
+                            Generacion de imagen/video con ComfyUI local
+  chrome-devtools           npx -y chrome-devtools-mcp@latest --no-usage-statistics
+                            DevTools MCP para debugging e inspeccion
+  github                    npx -y @modelcontextprotocol/server-github
+                            API de GitHub (repos, PRs, issues)
+  mirofish                  node C:\Users\rojo-\Downloads\SuitOrg\mirofish-mcp-serv
+                            Swarm intelligence / prediccion (MiroFish)
+  capcut                    C:\Users\rojo-\Downloads\SuitOrg\vectcutapi-mcp\.venv\S
+                            Edicion de video via CapCut API
+
+  TOTAL MCP: 13 servers
+
+
+========================================================================
+  6. AGENTES (.suit/registry/agents.yaml)
+========================================================================
+
+  NOMBRE                DOMINIO      RIESGO
+  ------------------------------------------------------------------------
+  architect             system       high
+  developer             code         medium
+  reviewer              quality      low
+  cotizador             sales        medium
+  reportero             quality      low
+  mercado-analyst       evaluation   low
+  tecnico-analyst       evaluation   low
+  riesgo-analyst        evaluation   low
+  financiero-analyst    evaluation   low
+  juez-synthesizer      evaluation   low
+  probador              quality      low
+
+  TOTAL AGENTES: 11
+
+
+========================================================================
+  7. COMANDOS PERSONALIZADOS (opencode.json)
+========================================================================
+
+  suit                   SuitOS Agent Operating System — consult registry, load workflows, run validations
+  suit:registry          Query the SuitOS registry — agents, skills, workflows, projects, models, routing
+  suit:workflow          Load a SuitOS workflow definition for the current task
+  suit:validate          Run SuitOS review profile checks on the current changes
+  suit:memory            Write an Architecture Decision Record to SuitOS memory
+  suit:plan              Create a SuitOS execution plan using planner template
+  suit:commit            Hace un git add, diff y commit desde WSL con formato SuitOS: {emoji} {tipo}: {desc} (v{X.Y
+  suit:configformatos    TUI interactiva: Configurador de Formatos y Redes Sociales. Muestra dos columnas con filtr
+  suit:configestilos     TUI interactiva: Estilos Visuales de VIDE. Navega categorías → sub-estilos leídos en vivo 
+  suit:backup            Crea un respaldo ZIP con formato SuitOrgYYMMDD.zip desde WSL
+
+  TOTAL COMANDOS: 10
+
+
+========================================================================
+  8. UBICACIONES DE INSTALACION
+========================================================================
+
+  RUTA                          PROPOSITO                              TOOL
+  ------------------------------------------------------------------------
+  .agents/skills/                Skills universales (compartidas)       Cualquier agente
+  .claude/skills/                Skills para Claude Code                Claude
+  .opencode/skills/              Skills de OpenCode                     OpenCode
+  opencode.json                  Config MCPs + comandos personalizados  OpenCode
+  .mcp.json                      Config MCPs de Claude Code             Claude
+  .suit/registry/agents.yaml     Registro de agentes SuitOS             Ambos
+  scripts/agents/                Scripts de agente ejecutables          Ambos
+
+
+========================================================================
+  RESUMEN TOTAL
+========================================================================
+
+  CAPACIDAD              TOTAL   SUITORG   PROYECTO
+  =============================================
+  Skills SuitOS (.yaml)    22      22         0
+  Skills Claude Code       31        4        27
+  Skills OpenCode            1        1         0
+  Registry YAML           21      21         0
+  MCP Servers             13       ?         ?
+  Agentes                 11      11         0
+  =============================================
+  TOTAL                   99
+
+  Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
+========================================================================

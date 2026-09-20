@@ -1,6 +1,4 @@
 Datos y Brief:
-\* tipo\_negocio: tomar del campo tipo\_negocio
-\* tipo\_negocio: galeria: si\_galeria o no\_galeria
 1 Industria: ,
 2 Nicho:
 3 Especializacion:,
@@ -26,7 +24,7 @@ Datos y Brief:
 
 19 Cta\_texto: llamado a la accion ,
 
-
+20 Tipografia: Segoe UI Bold
 
 OK BRIEF y LANDIG
 
@@ -88,13 +86,13 @@ Profesional, cercano, premium, divertido, directo.
 
 
 
-tipo\_negocio: Servicio de Software asistido por AI: |galeria: no\_galeria |industria: Tecnología |nicho: Software |especializacion: IA |vendes: Soluciones asistidas por AI |audiencia: Hombre y mujeres emprendedores del noreste de México, amantes de la tecnología deseosos de implementar soluciones con AI, dinámicos, curiosos de 27 a 55 años con poder adquisitivo medio alto |dolor: poco tiempo para investigar tendencias tecnológicas, que desconozcan lo que la AI pueden hacer por ellos o su negocio, falta de organización, falta de creatividad en sus negocios, falta de creatividad en sus campañas publicitarias,  |PCP: Tu desarrollo por demanda, ahorro de tiempo, testimonios en redes sociales por usar Software asistido por la AI |lograr: alcance |vivir: TikTok |LAVTFU:https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,,,, |PM: 32000.00,8% |objecion: es caro, no tengo tiempo para citas, no soy capaz de usar aplicaciones, incredulidad, Desconfianza |competidores:|tono: dinamico |PS: |RLP: decir que el anuncio fue creado con AI
+industria: Tecnología |nicho: Software |especializacion: IA |vendes: Soluciones asistidas por AI |audiencia: Hombre y mujeres emprendedores del noreste de México, amantes de la tecnología deseosos de implementar soluciones con AI, dinámicos, curiosos de 27 a 55 años con poder adquisitivo medio alto |dolor: poco tiempo para investigar tendencias tecnológicas, que desconozcan lo que la AI pueden hacer por ellos o su negocio, falta de organización, falta de creatividad en sus negocios, falta de creatividad en sus campañas publicitarias,  |PCP: Tu desarrollo por demanda, ahorro de tiempo, testimonios en redes sociales por usar Software asistido por la AI |lograr: alcance |vivir: TikTok |LAVTFU:https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,,,, |PM: 32000.00,8% |objecion: es caro, no tengo tiempo para citas, no soy capaz de usar aplicaciones, incredulidad, Desconfianza |competidores:|tono: dinamico |PS: |RLP: decir que el anuncio fue creado con AI
 
 
 
 
 
-|industria: Tecnología |nicho: Software |especializacion: IA |vendes: Soluciones asistidas por AI |audiencia: Hombre y mujeres emprendedores del noreste de México, amantes de la tecnología deseosos de implementar soluciones con AI, dinámicos, curiosos de 27 a 55 años con poder adquisitivo medio alto |dolor: poco tiempo para investigar tendencias tecnológicas, que desconozcan lo que la AI pueden hacer por ellos o su negocio, falta de organización, falta de creatividad en sus negocios, falta de creatividad en sus campañas publicitarias,  |PCP: Tu desarrollo por demanda, ahorro de tiempo, testimonios en redes sociales por usar Software asistido por la AI |lograr: alcance |vivir: TikTok |LAVTFU:https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,https://drive.google.com/file/d/17ga2dN9ebPVL49Rcd4eFvWa5r1q3tqW3/view?usp=drive\_link,https://drive.google.com/file/d/1soSCtPdGbQys1Mxc9FpKwJlz3GmvBOCZ/view?usp=drive\_link,https://drive.google.com/file/d/1soSCtPdGbQys1Mxc9FpKwJlz3GmvBOCZ/view?usp=drive\_link,, |PM: 32000.00,8% |objecion: es caro, no tengo tiempo para citas, no soy capaz de usar aplicaciones, incredulidad, Desconfianza |competidores:|tono: dinamico |PS: |RLP: decir que el anuncio fue creado con AI
+industria: Tecnología |nicho: Software |especializacion: IA |vendes: Soluciones asistidas por AI |audiencia: Hombre y mujeres emprendedores del noreste de México, amantes de la tecnología deseosos de implementar soluciones con AI, dinámicos, curiosos de 27 a 55 años con poder adquisitivo medio alto |dolor: poco tiempo para investigar tendencias tecnológicas, que desconozcan lo que la AI pueden hacer por ellos o su negocio, falta de organización, falta de creatividad en sus negocios, falta de creatividad en sus campañas publicitarias,  |PCP: Tu desarrollo por demanda, ahorro de tiempo, testimonios en redes sociales por usar Software asistido por la AI |lograr: alcance |vivir: TikTok |LAVTFU:https://drive.google.com/file/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm/view?usp=sharing,https://drive.google.com/file/d/17ga2dN9ebPVL49Rcd4eFvWa5r1q3tqW3/view?usp=drive\_link,https://drive.google.com/file/d/1soSCtPdGbQys1Mxc9FpKwJlz3GmvBOCZ/view?usp=drive\_link,https://drive.google.com/file/d/1soSCtPdGbQys1Mxc9FpKwJlz3GmvBOCZ/view?usp=drive\_link,, |PM: 32000.00,8% |objecion: es caro, no tengo tiempo para citas, no soy capaz de usar aplicaciones, incredulidad, Desconfianza |competidores:|tono: dinamico |PS: |RLP: decir que el anuncio fue creado con AI
 
 
 
@@ -105,4 +103,30 @@ tipo\_negocio: Servicio de Software asistido por AI: |galeria: no\_galeria |indu
 
 
 &#x20;|industria: Recreación |nicho: herbolarea |especializacion:weed |vendes: Mariguana |audiencia: hombres de 21 años en adente del noreste de Mexico, con dolencias, estresados, que requieran de medicina no convencional , curiosas o con secuelas de cobid con poder adquisitivo medio alto |dolor: poco tiempo para atenderse, falta de tiempo o contactos , |PCP: hacer felices propia, ahorro de tiempo, testimonios en redes sociales lograr: contactos |vivir: TikTok, instagram, X |LAVTFU:,,,,, |PM: 5000,0% |objecion: es caro, no tengo tiempo para citas, no soy capaz de salir de mi casa., incredulidad |competidores:|tono: dinamico|PS: |RLP: decir que el anuncio fue creado con AI
+
+prompt:
+
+Aquí tienes el prompt reutilizable para automatizar las tres instrucciones (barra `|` antes de cada campo excepto el primero, todo en un solo renglon):
+
+
+
+```
+
+Toma el brief de entrada y devuelvelo en UN SOLO RENGLON, con una barra | al inicio de cada campo excepto el primero, manteniendo el formato "campo: valor |campo: valor". No agregues lineas en blanco ni texto extra.
+
+```
+
+
+
+
+
+tipografia - moderna → Segoe UI Bold
+
+\- audaz → Impact
+
+\- elegante → Georgia Bold
+
+\- amigable → Century Gothic Bold
+
+\- corporativa → Cambria Bold
 

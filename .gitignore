@@ -111,3 +111,11 @@ revision-produccion/
 # Secretos accidentales (visto: SuitCampanas/.env.test con token real)
 *.env.test
 
+# Runtimes descargados (JDK / Neo4j): jdk-21.0.2/lib/modules pesa 131 MB y GitHub rechaza archivos >100 MB
+jdk-21.0.2/
+neo4j-community-5.26.0/
+
+# Variantes de .env con credenciales (visto: .env.neon con URL de Postgres); solo .env.example se versiona
+.env.*
+!.env.example
+

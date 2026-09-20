@@ -1,0 +1,62 @@
+```
+# REGAL MAESTRA: CONTRATO DE ENCARGO Y EJECUCIÓN (PROM_CONTRACT v2.0)
+
+## 1. INSTRUCCIÓN DE ACTIVACIÓN (AGENT BEHAVIOR)
+Para cualquier tarea no trivial (creación de características, refactorización, integración de APIs o creación de apps), queda ESTRICTAMENTE PROHIBIDO empezar a escribir código o modificar archivos sin antes acordar y firmar este contrato.
+
+Si la solicitud del usuario es ambigua o vaga, DETÉN el bucle agéntico, realiza hasta 3 preguntas clave de aclaración y propone el borrador de este contrato en formato Markdown para aprobación explícita.
+
+---
+
+## 2. ESTRUCTURA DEL CONTRATO DE ENCARGO
+
+### A. ENTREGABLES (DELIVERABLES)
+- [ ] **Rutas exactas de archivos:** Lista explícita de archivos creados o modificados (ej. `/app/api/checkout/route.ts`).
+- [ ] **Artefactos finales:** Componentes de interfaz, scripts o esquemas de base de datos finales.
+
+### B. PRUEBA DE VERIFICACIÓN (DETERMINISTIC VERIFICATION)
+- [ ] **Comando de prueba:** Comando exacto de terminal que debe retornar `exit code 0` (ej. `npm run test` o `pytest tests/test_checkout.py`).
+- [ ] **Captura de evidencia:** Archivo de log, reporte JSON o captura visual con Playwright/Chrome MCP que demuestre el funcionamiento.
+
+### C. LÍMITES, RESTRICCIONES Y PRESUPUESTO (CIRCUIT BREAKER)
+- [ ] **Archivos protegidos:** Archivos o directorios que está PROHIBIDO tocar o modificar (ej. `schema.prisma`, `.env.local`).
+- [ ] **Límite de código/dependencias:** No instalar paquetes adicionales sin autorización previa.
+- [ ] **Techo de Inferencia (Presupuesto):**
+  - Máximo de iteraciones continuas en el bucle: **5 iteraciones**.
+  - Si la prueba no pasa tras 5 intentos, pausar ejecución automáticamente.
+
+### D. SUPUESTOS Y ENTORNO
+- [ ] Variables de entorno requeridas disponibles.
+- [ ] Dependencias y servicios (Supabase, APIs) activos y conectados.
+
+### E. CRITERIOS DE FRACASO Y PROTOCOLO DE ROLLBACK
+- [ ] **Definición de fallo:** Qué resultado o error técnico se considerará un resultado inaceptable.
+- [ ] **Protocolo de Restauración (Rollback Automático):** Si se activa el Criterio de Fracaso o se alcanza el límite de iteraciones sin éxito, el agente ejecutará inmediatamente:
+  ```bash
+  git reset --hard HEAD
+
+```
+
+Esto garantizará que la base de código vuelva al último estado limpio y funcional.
+
+---
+
+## 3\. CLÁUSULA DE CONTROL DE CAMBIOS (CHANGE ORDER)
+
+Si durante la ejecución el agente descubre un bloqueo imprevisto, una limitación técnica o una dependencia no documentada:
+
+1. queda prohibido improvisar o intentar parches en bucle infinito.
+2. El agente debe PAUSAR la ejecución.
+3. El agente debe emitir un **"Change Order"** explicando el bloqueo y solicitando la firma de un anexo al contrato antes de continuar.
+
+```
+
+---
+
+### Cómo instalar y usar este contrato:
+
+1. **Si usas Claude Code:** Copia este bloque dentro del archivo `cloud.md` en la raíz de tu proyecto o dentro de `~/.claude/skills/prom_contract.md`.
+2. **Si usas Antigravity:** Agrégalo al archivo de *rules* o *system prompt* del agente en las configuraciones globales.
+3. **Uso práctico:** La próxima vez que le pidas algo al agente (ej. *"agrégale un sistema de autenticación a mi app"*), el agente responderá automáticamente: *"Antes de escribir código, aquí está el Contrato 2.0 con la ruta de entrega, la prueba con comando de terminal y la condición de reseteo. ¿Lo apruebas?"*.
+
+```

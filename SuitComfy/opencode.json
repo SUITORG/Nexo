@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "comfyui": {
+      "type": "local",
+      "command": ["npx", "-y", "comfyui-mcp"],
+      "env": {
+        "COMFYUI_HOST": "127.0.0.1",
+        "COMFYUI_PORT": "8188"
+      },
+      "enabled": true
+    }
+  }
+}

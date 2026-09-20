@@ -69,43 +69,6 @@
     ".suit/INDEX.md"
   ],
   "mcp": {
-    "higgsfield": {
-      "type": "remote",
-      "url": "https://mcp.higgsfield.ai/mcp"
-    },
-    "supabase": {
-      "type": "local",
-      "command": ["node", "scripts/mcp-supabase.js"],
-      "enabled": true
-    },
-    "google-sheets": {
-      "type": "local",
-      "command": ["npx", "-y", "mcp-gsheets@latest"],
-      "enabled": true,
-      "env": {
-        "GOOGLE_PROJECT_ID": "suitorg00",
-        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\rojo-\\Downloads\\suitorg\\google-credentials.json"
-      }
-    },
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "@playwright/mcp@latest"],
-      "enabled": true
-    },
-    "comfyui": {
-      "type": "local",
-      "command": ["npx", "-y", "comfyui-mcp"],
-      "enabled": true,
-      "env": {
-        "COMFYUI_HOST": "127.0.0.1",
-        "COMFYUI_PORT": "8188"
-      }
-    },
-    "chrome-devtools": {
-      "type": "local",
-      "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"],
-      "enabled": true
-    },
     "github": {
       "type": "local",
       "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
@@ -114,15 +77,24 @@
       },
       "enabled": true
     },
-    "canva": {
-      "type": "remote",
-      "url": "https://mcp.canva.com/mcp",
+    "supabase": {
+      "type": "local",
+      "command": ["node", "scripts/mcp-supabase.js"],
       "enabled": true
     },
-    "capcut": {
+    "playwright": {
       "type": "local",
-      "command": ["C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp\\.venv\\Scripts\\python.exe", "mcp_server.py"],
-      "cwd": "C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": true
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"],
+      "enabled": true
+    },
+    "neon": {
+      "type": "remote",
+      "url": "https://mcp.neon.tech/mcp",
       "enabled": true
     }
   },
@@ -166,6 +138,10 @@
     "suit:backup": {
       "description": "Crea un respaldo ZIP con formato SuitOrgYYMMDD.zip desde WSL",
       "template": "Ejecuta en WSL: bash scripts/backup.sh y confirma al usuario el nombre del archivo creado."
+    },
+    "suit:mcp": {
+      "description": "Gestiona MCPs por proyecto. Acciones: list [proyecto], enable <mcp> [proyecto], disable <mcp> [proyecto], status",
+      "template": "Ejecuta: node scripts/mcp-manager.js {{action}} {{args}}"
     }
   }
 }

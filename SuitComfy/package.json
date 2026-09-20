@@ -8,5 +8,9 @@
     "dev": "node index.js",
     "verify": "node SuitFFmpeg/scripts/verify.js"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "express": "^5.2.1",
+    "sharp": "^0.35.4"
+  }
 }

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "supabase": {
+      "type": "local",
+      "command": ["node", "scripts/mcp-supabase.js"],
+      "enabled": true
+    },
+    "comfyui": {
+      "type": "local",
+      "command": ["npx", "-y", "comfyui-mcp"],
+      "enabled": true,
+      "env": {
+        "COMFYUI_HOST": "127.0.0.1",
+        "COMFYUI_PORT": "8188"
+      }
+    },
+    "obs-mcp": {
+      "type": "local",
+      "command": ["C:\\Users\\rojo-\\Downloads\\SuitOrg\\obs-mcp\\.venv\\Scripts\\obs-mcp.exe"],
+      "enabled": true,
+      "env": {
+        "OBS_HOST": "localhost",
+        "OBS_PORT": "4455",
+        "OBS_PASSWORD": "Cro200"
+      }
+    },
+    "capcut": {
+      "type": "local",
+      "command": ["C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp\\.venv\\Scripts\\python.exe", "mcp_server.py"],
+      "cwd": "C:\\Users\\rojo-\\Downloads\\SuitOrg\\vectcutapi-mcp",
+      "enabled": true
+    }
+  }
+}

@@ -13,6 +13,10 @@
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
+    <div id="healthBanner" style="display:none; position:fixed; top:0; left:0; width:100%; z-index:1000; background:#7c2d12; color:#fecaca; padding:0.7rem 1.25rem; text-align:center; font-size:0.85rem; box-sizing:border-box;">
+        <span id="healthBannerText">⚠️</span>
+        <button id="healthBannerClose" style="margin-left:1rem; background:none; border:1px solid #fecaca; color:#fecaca; border-radius:6px; padding:0.15rem 0.6rem; cursor:pointer; font-size:0.8rem;">✕</button>
+    </div>
     <div class="background-blobs">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
@@ -127,6 +131,27 @@
                             <input type="text" id="contactPhone" placeholder="Ej: +52...">
                         </div>
                     </div>
+                    <div style="display:flex; align-items:center; gap:0.6rem; margin-top:0.6rem;">
+                        <button type="button" id="comfyPreviewBtn" class="secondary-btn" title="Genera una imagen de prueba con ComfyUI local usando los datos reales de esta empresa (industria/nicho/color de marca)" style="width:auto; padding:0.4rem 0.8rem; font-size:0.8rem; background:rgba(250,204,21,0.12); border:1px solid rgba(250,204,21,0.4); color:#fde68a;">🖥️ Comfy</button>
+                        <span id="comfyPreviewStatus" style="font-size:0.72rem; color:var(--text-dim);"></span>
+                    </div>
+                    <div style="margin-top:0.6rem; padding-top:0.6rem; border-top:1px dashed var(--glass-border);">
+                        <label for="comfyFraseInput" style="font-size:0.75rem;">🖼️ Póster con frase (ComfyUI + tipografía)</label>
+                        <input type="text" id="comfyFraseInput" placeholder="Ej: Tu mejor arma es el conocimiento" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; margin-top:0.3rem;">
+                        <div style="display:flex; gap:0.5rem; margin-top:0.4rem; flex-wrap:wrap;">
+                            <select id="comfyCategoriaSelect" style="flex:1; min-width:160px; padding:0.5rem; font-size:0.8rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
+                                <option value="conocimiento">🧠 Conocimiento</option>
+                                <option value="disciplina">🏋️ Disciplina</option>
+                                <option value="esfuerzo">⛰️ Esfuerzo</option>
+                                <option value="dinero">💰 Dinero</option>
+                                <option value="calma">🌊 Calma</option>
+                                <option value="proposito">🌅 Propósito</option>
+                                <option value="creatividad">🎨 Creatividad</option>
+                            </select>
+                            <button type="button" id="comfyPosterBtn" class="secondary-btn" style="flex:1; min-width:160px; padding:0.5rem; font-size:0.8rem; background:rgba(250,204,21,0.12); border:1px solid rgba(250,204,21,0.4); color:#fde68a;">🖼️ Generar Póster</button>
+                        </div>
+                    </div>
+                    <img id="comfyPreviewImg" alt="Preview ComfyUI" style="display:none; max-width:220px; max-height:280px; margin-top:0.5rem; border-radius:8px; border:1px solid var(--glass-border);">
                 </div>
 
                 <!-- Contenedor de fotos locales para modo BD (Secuencial) -->
@@ -302,28 +327,62 @@
                             </select>
                         </div>
                         <div class="input-wrapper" id="estiloVisualWrapper" style="display:none;">
-                            <label for="videEstiloCategoria">Estilo Visual</label>
-                            <select id="videEstiloCategoria">
-                                <option value="">🎯 Automático (recomendado por tendencias)</option>
-                            </select>
-                        </div>
-                        <div class="input-wrapper" id="estiloSubWrapper" style="display:none;">
-                            <label for="videEstiloSub">Sub-estilo</label>
-                            <select id="videEstiloSub">
-                                <option value="">-- Seleccionar --</option>
-                            </select>
-                            <div id="autoStyleInfo" style="font-size:0.75rem; color:var(--text-dim); margin-top:4px;"></div>
+                            <label>Estilo Visual</label>
+                            <div id="estiloStage" tabindex="0" title="Girá la rueda del mouse para cambiar de estilo"
+                                 style="position:relative; height:100px; border-radius:10px; overflow:hidden; border:1px solid var(--glass-border); cursor:ns-resize; background:rgba(255,255,255,0.03);">
+                                <img id="estiloStageImg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s ease;">
+                                <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,0) 38%, rgba(15,23,42,0.8) 100%);"></div>
+                                <div style="position:absolute; top:6px; left:6px; right:6px; display:flex; justify-content:space-between;">
+                                    <span id="estiloStageCat" style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; background:rgba(0,0,0,.45); color:#fff; padding:2px 7px; border-radius:999px;"></span>
+                                    <span id="estiloStageCount" style="font-size:9px; font-weight:600; background:rgba(0,0,0,.45); color:rgba(255,255,255,.85); padding:2px 7px; border-radius:999px;"></span>
+                                </div>
+                                <div id="estiloStageName" style="position:absolute; left:8px; bottom:6px; font-size:12.5px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.5);"></div>
+                            </div>
+                            <div id="estiloPills" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;"></div>
+                            <div id="autoStyleInfo" style="font-size:0.7rem; color:var(--text-dim); margin-top:4px;"></div>
                         </div>
                         <div class="input-wrapper" id="estiloReferenciaWrapper" style="display:none;">
                             <label for="estiloReferenciaTexto">Referencia de estilo (opcional)</label>
                             <textarea id="estiloReferenciaTexto" rows="2" placeholder="Ej: subtítulos bold blancos con borde negro, cortes rápidos, luz cálida... o déjalo vacío y que la IA proponga uno" style="width:100%; padding:0.5rem; font-size:0.8rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px; resize:vertical;"></textarea>
+                            <label for="estiloReferenciaImagen" style="font-size:0.7rem; margin-top:0.4rem; display:block;">📷 O sube una imagen de referencia (opcional, un modelo con visión la describe solo)</label>
+                            <input type="file" id="estiloReferenciaImagen" accept="image/*" style="width:100%; font-size:0.75rem; margin-top:0.2rem;">
+                            <img id="estiloReferenciaPreview" style="display:none; max-height:80px; margin-top:0.4rem; border-radius:6px;">
                             <button type="button" id="btnGenerarEstiloIA" class="secondary-btn" style="margin-top:0.4rem; padding:0.35rem 0.7rem; font-size:0.75rem;">🎨 Generar estilo con IA</button>
+                        </div>
+                        <div class="input-wrapper" id="brandColorsWrapper" style="display:none;">
+                            <label>Colores de marca <span style="font-weight:400; color:var(--text-dim); font-size:0.7rem;">(girá la rueda sobre un color para ajustarlo)</span></label>
+                            <div id="brandSwatches" style="display:flex; gap:6px;"></div>
+                            <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                                <button type="button" id="btnExtraerColoresLogo" class="secondary-btn" style="padding:0.3rem 0.6rem; font-size:0.7rem;">🎨 Extraer del logo</button>
+                                <button type="button" id="btnResetColoresLogo" style="background:none;border:none;color:var(--text-dim);font-size:0.7rem;text-decoration:underline;cursor:pointer;padding:0;">restablecer</button>
+                            </div>
+                        </div>
+                        <div class="input-wrapper" style="display:flex; align-items:center; gap:8px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:10px; padding:0.6rem 0.8rem;">
+                            <input type="checkbox" id="soloImagenCheck" style="width:16px; height:16px; margin:0; flex-shrink:0;">
+                            <label for="soloImagenCheck" style="margin:0; font-size:0.8rem; cursor:pointer;">🖼️ Solo imagen (sin video) — genera una sola pieza estática con el Estilo Visual elegido, sin voz/música/render de video. Aplica al botón "Generar Video" de VIDE o ViRe, el que uses.</label>
                         </div>
                         <div class="input-wrapper">
                             <label for="imageSourceSelect">Imágenes</label>
                             <select id="imageSourceSelect" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
-                                <option value="ia" selected>🤖 IA generada (Pollinations)</option>
+                                <option value="ia" selected>🤖 IA generada (Flux, vía Pollinations)</option>
                                 <option value="pexels">📷 Foto de stock (Pexels)</option>
+                                <option value="unsplash">📷 Foto de stock (Unsplash)</option>
+                                <option value="wikimedia">🌐 Wikimedia Commons (requiere atribución según licencia)</option>
+                                <option value="comfy">🖥️ ComfyUI (local, más lento)</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="videTransicionSelect">Transición entre escenas (solo VIDE)</label>
+                            <select id="videTransicionSelect" style="width:100%; padding:0.5rem; font-size:0.85rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; border-radius:8px;">
+                                <option value="auto" selected>🎲 Automático (varía por corte)</option>
+                                <option value="fade">🌫️ Fundido</option>
+                                <option value="slideleft">➡️ Deslizar</option>
+                                <option value="wiperight">🧹 Barrido</option>
+                                <option value="circleopen">⭕ Círculo</option>
+                                <option value="smoothleft">〰️ Suave</option>
+                                <option value="dissolve">✨ Disolución</option>
+                                <option value="radial">🌀 Radial</option>
+                                <option value="none">✂️ Corte directo (sin transición)</option>
                             </select>
                         </div>
                         <div class="input-wrapper">
@@ -670,8 +729,9 @@
 
                     <!-- Video Review Panel: Aceptar/Rechazar antes de guardar -->
                     <div id="videReviewPanel" style="display:none; margin-top:1rem; padding:1rem; background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); border-radius:12px;">
-                        <h4 style="margin:0 0 0.5rem; font-size:0.85rem;">🎬 Revisa tu video</h4>
+                        <h4 id="videReviewTitle" style="margin:0 0 0.5rem; font-size:0.85rem;">🎬 Revisa tu video</h4>
                         <video id="videReviewPlayer" controls style="max-width:100%; border-radius:8px; background:#000;"></video>
+                        <img id="videReviewImg" style="display:none; max-width:100%; border-radius:8px; background:#000;">
                         <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
                             <button type="button" id="videAcceptBtn" class="secondary-btn" style="flex:1; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.4); color:#4ade80; padding:0.6rem;">
                                 ✅ Aceptar y Guardar

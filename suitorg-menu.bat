@@ -17,14 +17,16 @@ echo   [4] Sistemas             - Dicc SuitOrg Campanas Board
 echo   [5] MoneyPrinterTurbo    - Video corto IA: tema -^> GCSM
 echo   [6] Pinokio              - Lanzador de apps IA
 echo   [7] Salir                - Cerrar el menu
-echo   [D] Ver documentos       - Brief / GeneralToolsRP / Docs IA
+echo   [D] Ver documentos       - Brief / Listado / Docs IA
 echo   [T] Terminales           - CMD, PS, WSL, Git W
-echo   [A] Agentes IA          - openclaude, opencode, hermes, openclaw
+echo   [A] Agentes IA          - openclaude, opencode, hermes, openclaw, pi
 echo   [F] Freebuff             - Agente de codificacion gratis
 echo   [L] Tools IA Local       - OmniRoute, MiroFish, Ask HF, ComfyUI
+echo   [S] SaaS Factory         - saas-factory / saas-factory-oc (admin)
 echo ============================================================
-choice /c 1234567DTAFL /n /m "Selecciona una opcion: "
+choice /c 1234567DTAFLS /n /m "Selecciona una opcion: "
 
+if errorlevel 13 goto :menu_saas
 if errorlevel 12 goto :tools_ia_local
 if errorlevel 11 goto :freebuff
 if errorlevel 10 goto :menu_agentes
@@ -63,10 +65,12 @@ echo ============================================================
 echo   [1] Nueva sesion
 echo   [2] Ultima sesion (continue)
 echo   [3] Ver sesiones (listar)
+echo   [4] Consulta (limpio, sin MCPs)
 echo   [0] Volver
 echo ============================================================
-choice /c 1230 /n /m "Selecciona: "
-if errorlevel 4 goto :menu
+choice /c 12340 /n /m "Selecciona: "
+if errorlevel 5 goto :menu
+if errorlevel 4 goto :opencode_consulta
 if errorlevel 3 goto :opencode_sesiones
 if errorlevel 2 opencode -c
 if errorlevel 1 opencode
@@ -75,6 +79,13 @@ goto :menu
 :opencode_sesiones
 cls
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0opencode-sessions.ps1"
+goto :menu
+
+:opencode_consulta
+cls
+pushd "C:\Users\rojo-\Downloads\SuitConsulta" || (echo No existe SuitConsulta & pause & goto :menu)
+opencode
+popd
 goto :menu
 
 :menu_agentes
@@ -86,14 +97,24 @@ echo   [1] openclaude     - Asistente IA de Claude
 echo   [2] opencode       - Asistente IA de desarrollo
 echo   [3] hermes         - Hermes Agent (Nous Research)
 echo   [4] openclaw       - OpenClaw (asistente personal)
+echo   [5] pi             - pi + Qwen3.6 35B (Ollama local)
 echo   [0] Volver
 echo ============================================================
-choice /c 12340 /n /m "Selecciona: "
-if errorlevel 5 goto :menu
+choice /c 123450 /n /m "Selecciona: "
+if errorlevel 6 goto :menu
+if errorlevel 5 goto :launch_pi
 if errorlevel 4 goto :launch_openclaw
 if errorlevel 3 goto :launch_hermes
 if errorlevel 2 goto :menu_opencode
 if errorlevel 1 goto :menu_openclaude
+goto :menu
+
+:launch_pi
+cls
+echo ============================================================
+echo   pi + Qwen3.6 35B (Ollama local) - Iniciando...
+echo ============================================================
+pi --provider ollama --model qwen36-uncensored-32k --no-skills
 goto :menu
 
 :launch_hermes
@@ -112,6 +133,29 @@ echo ============================================================
 echo   OpenClaw - Abriendo terminal (TUI)...
 echo ============================================================
 start "OpenClaw TUI" cmd /k "set PATH=C:\Users\rojo-\AppData\Roaming\npm;C:\Users\rojo-\AppData\Roaming\fnm\node-versions\v24.19.0\installation;%PATH% && title OpenClaw TUI && openclaw tui --local"
+goto :menu
+
+:menu_saas
+cls
+echo ============================================================
+echo   SaaS Factory - Selecciona opcion (PowerShell admin)
+echo ============================================================
+echo   [1] saas-factory     - Claude Code en saas-factory
+echo   [2] saas-factory-oc  - opencode en saas-factory
+echo   [0] Volver
+echo ============================================================
+choice /c 120 /n /m "Selecciona: "
+if errorlevel 3 goto :menu
+if errorlevel 2 goto :saas_factory_oc
+if errorlevel 1 goto :saas_factory
+goto :menu
+
+:saas_factory
+powershell -NoProfile -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoExit','-Command','saas-factory'"
+goto :menu
+
+:saas_factory_oc
+powershell -NoProfile -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoExit','-Command','saas-factory-oc'"
 goto :menu
 
 :menu_terminal
@@ -139,18 +183,18 @@ echo ============================================================
 echo   Ver documentos - Selecciona opcion
 echo ============================================================
 echo   [1] Brief
-echo   [2] GeneralToolsRP
-echo   [3] docs/OLLAMA_INTEGRACION.md
-echo   [4] SuitAI/README.md
-echo   [5] docs/ (carpeta completa)
+echo   [2] docs/OLLAMA_INTEGRACION.md
+echo   [3] SuitAI/README.md
+echo   [4] docs/ (carpeta completa)
+echo   [5] Listado Skills/MCP/Agentes
 echo   [0] Volver
 echo ============================================================
 choice /c 123450 /n /m "Selecciona: "
 if errorlevel 6 goto :menu
-if errorlevel 5 goto :open_docs_folder
-if errorlevel 4 goto :read_suitai_readme
-if errorlevel 3 goto :read_ollama_doc
-if errorlevel 2 goto :ver_tools
+if errorlevel 5 goto :ver_listado_capacidades
+if errorlevel 4 goto :open_docs_folder
+if errorlevel 3 goto :read_suitai_readme
+if errorlevel 2 goto :read_ollama_doc
 if errorlevel 1 goto :ver_brief
 goto :menu
 
@@ -164,12 +208,12 @@ echo.
 pause
 goto :menu
 
-:ver_tools
+:ver_listado_capacidades
 cls
 echo ============================================================
-echo   GENERALTOOLSRP (solo lectura - navega con Enter, Salir con Q)
+echo   LISTADO SKILLS/MCP/AGENTES (solo lectura - Enter/Q)
 echo ============================================================
-more "%~dp0GeneralToolsRP.MD"
+more "%~dp0SKILLS-MCP-AGENTS-LISTADO.txt"
 echo.
 pause
 goto :menu
@@ -181,10 +225,14 @@ echo   Tools SuitOrg - Selecciona opcion
 echo ============================================================
 echo   [1] Backup              - Zip comprimido del proyecto
 echo   [2] Commit + push       - Subir cambios a GitHub
+echo   [3] Virus Scan          - Windows Defender offline (REINICIA)
+echo   [4] System Backup       - Imagen de sistema en disco externo
 echo   [0] Volver
 echo ============================================================
-choice /c 120 /n /m "Selecciona: "
-if errorlevel 3 goto :menu
+choice /c 12340 /n /m "Selecciona: "
+if errorlevel 5 goto :menu
+if errorlevel 4 goto :system_backup
+if errorlevel 3 goto :virus_scan
 if errorlevel 2 goto :commit
 if errorlevel 1 goto :backup
 goto :menu
@@ -195,6 +243,102 @@ goto :menu
 
 :commit
 call suitorg-commit.bat
+goto :menu
+
+:virus_scan
+:: Check admin
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   Requiere Administrador.
+    echo   Click derecho en el .bat -^> Ejecutar como administrador
+    echo.
+    pause
+    goto :menu
+)
+cls
+echo ============================================================
+echo   Windows Defender - Escaneo Offline
+echo ============================================================
+echo.
+echo   ATENCION: Este comando reiniciara tu computadora
+echo   para escanear malware fuera de Windows.
+echo.
+echo   Guarda todo tu trabajo antes de continuar.
+echo.
+echo   El escaneo tarda ~15-30 min y se ejecuta
+echo   antes de que Windows cargue completamente.
+echo.
+choice /c SN /n /m "Continuar? (S/N): "
+if errorlevel 2 goto :menu
+echo.
+echo   Iniciando escaneo offline...
+echo   La computadora se reiniciara en 10 segundos...
+echo   Presiona Ctrl+C para cancelar.
+timeout /t 10
+Start-MpWDOScan
+goto :menu
+
+:system_backup
+:: Check admin
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   Requiere Administrador.
+    echo   Click derecho en el .bat -^> Ejecutar como administrador
+    echo.
+    pause
+    goto :menu
+)
+cls
+echo ============================================================
+echo   Windows System Backup - Imagen de Sistema
+echo ============================================================
+echo.
+echo   Crea una imagen completa del disco C en otro disco.
+echo   Selecciona la unidad de destino (E:, F:, etc.)
+echo.
+echo   NOTA: El disco destino debe ser NTFS (no FAT32/exFAT).
+echo.
+echo   Unidades disponibles:
+echo.
+wmic logicaldisk get deviceid,volumename,filesystem,size,freespace 2>nul
+echo.
+set /p "backup_dest=Unidad de destino (ej: E): "
+if "%backup_dest%"=="" goto :menu
+if not "%backup_dest:~-1%"==":" set "backup_dest=%backup_dest%:"
+echo.
+:: Check NTFS format
+for /f "tokens=2 delims==" %%i in ('wmic logicaldisk where "DeviceID='%backup_dest%'" get FileSystem /value 2^>nul') do set "fs=%%i"
+if /i not "%fs%"=="NTFS" (
+    echo   [ERROR] El disco %backup_dest% no es NTFS.
+    echo   Formato detectado: %fs%
+    echo.
+    echo   wbadmin requiere NTFS para imagenes de sistema.
+    echo   Formatea el disco a NTFS o usa otro disco.
+    echo.
+    pause
+    goto :menu
+)
+echo   Destino: %backup_dest%\
+echo   Origen:  C: (disco del sistema + critical)
+echo.
+echo   ADVERTENCIA: Se borraran copias anteriores de WindowsImageBackup
+echo   en %backup_dest%\ si existen.
+echo.
+choice /c SN /n /m "Continuar con backup? (S/N): "
+if errorlevel 2 goto :menu
+echo.
+echo   Iniciando backup de imagen de sistema...
+echo   Esto puede tardar 30-60 min segun el disco.
+echo.
+wbadmin start backup -backupTarget:"%backup_dest%\" -include:C: -allCritical -quiet
+if %errorlevel% neq 0 (
+    echo.
+    echo   [ERROR] Backup fallo. Verifica:
+    echo   - La unidad %backup_dest% existe y tiene espacio
+    echo   - Ejecutar como Administrador
+)
+echo.
+pause
 goto :menu
 
 :mpt
@@ -257,15 +401,22 @@ echo  Puerto: 8000
 echo  URL:    http://localhost:8000
 echo.
 
-REM Verificar si ya esta corriendo
-netstat -ano | findstr ":8000" | findstr "LISTENING" >nul 2>&1
-if errorlevel 1 (
-    echo  [1/3] Iniciando servidor CampanasAi...
-    start "" /min cmd /c "cd /d %~dp0SuitCampanas && node local-server-node.js"
-    timeout /t 3 /nobreak >nul
-) else (
-    echo  [1/3] Servidor ya esta corriendo en :8000
+REM Detener cualquier instancia previa (si no, el server viejo se queda
+REM corriendo y nunca toma cambios de codigo nuevos) y levantar una fresca.
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":8000" ^| findstr "LISTENING"') do (
+    taskkill /F /PID %%a >nul 2>&1
 )
+set /a campkilltries=0
+:campanas_killwait
+set /a campkilltries+=1
+if %campkilltries% gtr 15 goto campanas_killdone
+netstat -aon | findstr ":8000" | findstr "LISTENING" >nul 2>&1
+if not errorlevel 1 ( timeout /t 1 /nobreak >nul & goto campanas_killwait )
+:campanas_killdone
+
+echo  [1/3] Iniciando servidor CampanasAi...
+start "" /min cmd /c "cd /d %~dp0SuitCampanas && node local-server-node.js"
+timeout /t 3 /nobreak >nul
 
 REM Verificar si responde
 set /a tries=0
@@ -317,8 +468,8 @@ goto :menu
 
 :comfyui
 echo.
-echo [1/2] Iniciando ComfyUI (CPU, puerto 8188)...
-start "ComfyUI Server" cmd /k call "C:\Users\rojo-\AppData\Local\Comfy-Desktop\ComfyUI-Installs\ComfyUI\ComfyUI\.ci\windows_nvidia_base_files\run_cpu.bat"
+echo [1/2] Iniciando ComfyUI (Comfy Desktop)...
+start "" "C:\Users\rojo-\AppData\Local\Programs\ComfyUI\ComfyUI.exe"
 echo [2/2] Abriendo opencode (MCP comfyui-mcp ya conectado) para pedir generacion...
 start "" cmd /k "cd /d %~dp0 && title SuitOrg - opencode (ComfyUI) && opencode"
 goto :menu

@@ -1,0 +1,129 @@
+Impromptu Google Meet Meeting - June 15
+VIEW RECORDING: 
+Propósito de la reunión
+
+Ricardo Silva comparte su recorrido y consejos prácticos para dominar SaaS Factory.
+
+Puntos clave
+
+  - Adoptar una mentalidad "Terminal-First": Céntrate en tu idea y solicita directamente al terminal, ignorando la complejidad inicial de archivos. Este bucle iterativo de "preguntar, ver, revisar" es la forma más rápida de aprender.
+  - Usa Neon para el prototipado de bases de datos: Neon ofrece un nivel gratuito con bases de datos y ramas ilimitadas, resolviendo la limitación de dos de Supabase y evitando el enredo entre proyectos.
+  - Gestiona los costos de tokens cambiando de modelo: Cuando te queden pocos tokens, pídele a tu modelo actual su contexto y pégalo en un modelo nuevo (p. ej., Antigravity) para continuar el trabajo sin interrupciones.
+  - Prioriza el valor empresarial: Cambia de una mentalidad de "freelancer técnico" a "socio de negocio". Enfócate en diagnosticar problemas del cliente y entregar ROI, no solo en construir software.
+
+Temas
+
+El método de aprendizaje "Terminal-First"
+
+  - Problema: La estructura inicial de archivos de la descarga de GitHub es abrumadora.
+  - Solución: Ignora los archivos y trata el terminal como tu interfaz principal.
+  - Proceso:
+    1.  Preguntar: Indica tu idea al terminal en lenguaje sencillo.
+    2.  Ver: Ejecuta npm run dev para ver la app local.
+    3.  Revisar: Inspecciona visualmente la UI y luego prueba la funcionalidad (botones, formularios).
+    4.  Iterar: Solicita cambios específicos en el terminal.
+  - Justificación: Este bucle iterativo construye comprensión práctica más rápido que estudiar documentación.
+
+El recorrido de 21 pasos hacia un SaaS vendible
+
+  - Fundación:
+      - Cuentas: GitHub, Vercel, Neon (BD).
+      - Elección de base de datos: Se eligió Neon sobre Supabase por el nivel gratuito con bases de datos y ramas ilimitadas, lo cual evita el enredo entre proyectos.
+      - Automatización: Se vincularon las cuentas para que el terminal pueda gestionar despliegues y commits.
+  - Productización:
+      - Multitenencia: Se le pidió al terminal refactorizar la app para multitenencia, garantizando el aislamiento de datos para múltiples usuarios.
+      - Planes de precios: Se definieron los niveles "Básico", "Profesional" y "Ultimate".
+      - Integración con Stripe: Se configuraron productos y webhooks de Stripe para la gestión automatizada de suscripciones.
+  - Resultado: Este proceso culminó en un SaaS vendible para una empresa de taxis, demostrando un recorrido completo de la idea al mercado.
+
+Estrategias avanzadas y modelos de negocio
+
+  - Flujo de trabajo híbrido: Usa niveles gratuitos (p. ej., Antigravity) para los primeros borradores y luego paga por modelos premium (p. ej., Claude) para refinar el código.
+  - Diseño de UI: Usa herramientas gratuitas como Lobo Board para maquetas de UI, expórtalas a GitHub y luego indica al terminal que implemente el diseño sin alterar la estructura central.
+  - Modelos de negocio para agencias:
+      - Precio fijo: Construye y entrega la app, luego entrega las llaves.
+      - Precio fijo + mantenimiento: Agrega una tarifa recurrente por hosting y soporte básico, con límites de alcance claramente definidos.
+      - Socio de transformación con IA: Un modelo de mayor valor en el que actúas como consultor estratégico, cobrando una tarifa mensual para resolver problemas de negocio con IA, no solo construir apps.
+
+Preguntas y respuestas de la comunidad
+
+  - P: ¿Cómo ahorrar tokens?
+      - R: Usa la "compro skill" para eliminar palabras de relleno de los prompts.
+      - R: Agrupa las solicitudes anotando todos los cambios necesarios (visuales, BD, conexiones) y enviándolos en un solo prompt.
+  - P: ¿Cómo migrar un proyecto existente?
+      - R: Coloca el proyecto en la carpeta de SaaS Factory y luego pide al terminal que lo analice para verificar compatibilidad antes de realizar cambios.
+  - P: ¿Qué son los archivos cloud.md y gemini.md?
+      - R: Son archivos paralelos que contienen el mismo prompt del sistema. cloud.md lo lee Claude y gemini.md lo lee Antigravity. Solo necesitas mantener el correspondiente a tu modelo principal.
+
+Próximos pasos
+
+  - Ricardo Silva: Organizar sesiones semanales los lunes para principiantes, cubriendo temas como subidas de lo local a GitHub y automatización de despliegues.
+  - Miembros de la comunidad:
+      - Enviar mensaje directo a Ricardo en la plataforma para ayuda 1 a 1.
+      - Revisar las publicaciones detalladas de Ricardo sobre la actualización de SaaS Factory v5 antes de aplicarla a los proyectos.
+      - Usar Neon para prototipado para aprovechar su nivel gratuito y bases de datos ilimitadas.
+
+
+
+
+
+clase 2
+
+Impromptu Google Meet Meeting - June 22
+VIEW RECORDING: 
+Propósito de la reunión
+
+Solucionar un bloqueo técnico y revisar las actualizaciones de la SaaS Factory lideradas por la comunidad.
+
+Puntos clave
+
+  - El desarrollo de Hernán está bloqueado por un problema de sincronización con OneDrive; la solución es mover la carpeta del proyecto a una unidad local (C: o D:).
+  - Ricardo está desarrollando la v6 de Business OS, que incluye un avatar interactivo predeterminado y salvaguardas legales críticas para mitigar riesgos como multas de la FTC y demandas colectivas.
+  - Neon es una alternativa gratuita recomendada a Supabase para pruebas, ofreciendo bases de datos ilimitadas (Ricardo tiene 68) antes de comprometerse con un plan de pago.
+  - La comunidad está explorando Hermes como alternativa de menor costo y de código abierto a Claude Opus, pero su compatibilidad con la SaaS Factory necesita validación.
+
+Temas
+
+Bloqueo técnico: problema de OneDrive de Hernán
+
+  - Problema: El desarrollo de Hernán está bloqueado porque la carpeta del proyecto antigravity está vinculada a OneDrive, que no está sincronizando, dejando la carpeta vacía.
+  - Solución: Mover la carpeta del proyecto a una unidad local (C: o D:) para garantizar que los archivos sean accesibles y que el desarrollo pueda continuar.
+
+Business OS v6 de Ricardo y salvaguardas legales
+
+  - Ricardo está desarrollando la v6 de Business OS como una actualización liderada por la comunidad, tras su lanzamiento de la v5 (aprobada por Daniel).
+  - Características clave de la v6:
+      - Avatar interactivo predeterminado: Un avatar más natural y conversacional que se incluirá por defecto en todos los nuevos proyectos de la SaaS Factory.
+      - Integración omnicanal: Conecta WhatsApp, Telegram, TikTok, YouTube y Facebook para una comunicación centralizada.
+  - Salvaguardas legales: Para mitigar riesgos financieros y legales significativos, la v6 incluirá:
+      - Cláusula de no exageración: Previene multas de la FTC (hasta $53k) por afirmaciones falsas.
+      - Cláusula de riesgo: Evita demandas colectivas al requerir arbitraje local uno a uno.
+      - Declaración de datos: Cumple con CCPA/GDPR para prevenir multas (hasta $150k) por manejo inadecuado de datos.
+      - Agente MSA: Un agente de bajo costo ($6/3 años) que puede proporcionar una capa adicional de protección legal.
+
+Discusión de la comunidad: Hermes y la SaaS Factory
+
+  - Objetivo: Explorar Hermes como alternativa de menor costo y de código abierto a Claude Opus.
+  - Desafío: La SaaS Factory está construida para Claude; su compatibilidad con Hermes no está confirmada.
+  - Prueba propuesta: Integrar Hermes con el repositorio de Business OS para validar su rendimiento y rentabilidad.
+
+Recomendación de herramienta: base de datos Neon
+
+  - Recomendación: Usar Neon para pruebas y aprendizaje antes de comprometerse con un plan de pago de Supabase.
+  - Motivo: El nivel gratuito ofrece bases de datos ilimitadas (Ricardo tiene 68) y una configuración simple, lo que lo hace ideal para la experimentación.
+
+Metodología de desarrollo de Ricardo
+
+  - Proceso: Comenzar con un prompt sencillo y capturas de pantalla, luego iterar con la IA del terminal para construir el proyecto.
+  - Proyecto de ejemplo: Un centro de llamadas que rastrea empresas, exporta contactos a una base de datos y usa Twilio para comunicaciones automatizadas impulsadas por IA.
+
+Próximos pasos
+
+  - Hernán: Mover la carpeta del proyecto antigravity a una unidad local (C: o D:).
+  - Ricardo:
+      - Grabar y compartir un video tutorial para instalar Hermes.
+      - Compartir enlaces a sus videos de metodología de desarrollo.
+      - Probar la integración de Hermes con el repositorio de Business OS.
+      - Reunirse con Hunter a las 2 PM MX / 3 PM CO.
+  - Marcos: Compartir el video tutorial actualizado para obtener la API de Meta.
+
