@@ -52,9 +52,9 @@ echo   [0] Volver
 echo ============================================================
 choice /c 1230 /n /m "Selecciona: "
 if errorlevel 4 goto :menu
-if errorlevel 3 claude -r
-if errorlevel 2 claude -c
-if errorlevel 1 claude
+if errorlevel 3 claude -r & goto :menu
+if errorlevel 2 claude -c & goto :menu
+if errorlevel 1 claude & goto :menu
 goto :menu
 
 :menu_opencode
@@ -72,8 +72,8 @@ choice /c 12340 /n /m "Selecciona: "
 if errorlevel 5 goto :menu
 if errorlevel 4 goto :opencode_consulta
 if errorlevel 3 goto :opencode_sesiones
-if errorlevel 2 opencode -c
-if errorlevel 1 opencode
+if errorlevel 2 opencode -c & goto :menu
+if errorlevel 1 opencode & goto :menu
 goto :menu
 
 :opencode_sesiones
@@ -171,10 +171,10 @@ echo   [0] Volver
 echo ============================================================
 choice /c 12340 /n /m "Selecciona: "
 if errorlevel 5 goto :menu
-if errorlevel 4 start "" "C:\Program Files\Git\git-bash.exe"
-if errorlevel 3 wsl
-if errorlevel 2 powershell
-if errorlevel 1 cmd
+if errorlevel 4 start "" "C:\Program Files\Git\git-bash.exe" & goto :menu
+if errorlevel 3 wsl & goto :menu
+if errorlevel 2 powershell & goto :menu
+if errorlevel 1 cmd & goto :menu
 goto :menu
 
 :ver_documentos
@@ -274,8 +274,9 @@ echo.
 echo   Iniciando escaneo offline...
 echo   La computadora se reiniciara en 10 segundos...
 echo   Presiona Ctrl+C para cancelar.
-timeout /t 10
-Start-MpWDOScan
+timeout /t 10 /nobreak
+powershell -NoProfile -Command "Start-MpWDOScan"
+pause
 goto :menu
 
 :system_backup
@@ -300,14 +301,17 @@ echo   NOTA: El disco destino debe ser NTFS (no FAT32/exFAT).
 echo.
 echo   Unidades disponibles:
 echo.
-wmic logicaldisk get deviceid,volumename,filesystem,size,freespace 2>nul
+powershell -NoProfile -Command "Get-Volume | Where-Object DriveLetter | Format-Table DriveLetter,FileSystemLabel,FileSystem,@{n='TamanoGB';e={[math]::Round($_.Size/1GB)}},@{n='LibreGB';e={[math]::Round($_.SizeRemaining/1GB)}} -AutoSize"
 echo.
+set "backup_dest="
 set /p "backup_dest=Unidad de destino (ej: E): "
 if "%backup_dest%"=="" goto :menu
 if not "%backup_dest:~-1%"==":" set "backup_dest=%backup_dest%:"
 echo.
 :: Check NTFS format
-for /f "tokens=2 delims==" %%i in ('wmic logicaldisk where "DeviceID='%backup_dest%'" get FileSystem /value 2^>nul') do set "fs=%%i"
+set "fs="
+for /f %%i in ('powershell -NoProfile -Command "(Get-Volume -DriveLetter %backup_dest:~0,1%).FileSystem" 2^>nul') do set "fs=%%i"
+if not defined fs set "fs=unidad no encontrada"
 if /i not "%fs%"=="NTFS" (
     echo   [ERROR] El disco %backup_dest% no es NTFS.
     echo   Formato detectado: %fs%
@@ -330,7 +334,7 @@ echo.
 echo   Iniciando backup de imagen de sistema...
 echo   Esto puede tardar 30-60 min segun el disco.
 echo.
-wbadmin start backup -backupTarget:"%backup_dest%\" -include:C: -allCritical -quiet
+wbadmin start backup -backupTarget:%backup_dest% -include:C: -allCritical -quiet
 if %errorlevel% neq 0 (
     echo.
     echo   [ERROR] Backup fallo. Verifica:
