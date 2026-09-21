@@ -80,6 +80,30 @@ Usuario: "Evalúa SuitServiHogar"
 → Debió ser: AGENTS.md + Contrato.md + schema.sql (standard/8K)
 ```
 
+## Autocompactación (siempre activa)
+
+Al llegar a ~60% de la ventana de contexto, **compactar antes de seguir**. No esperar al límite duro.
+
+**Conservar:**
+1. Contrato activo (ruta + reglas clave)
+2. Objetivo de la sesión y lista 20/80
+3. Decisiones tomadas y aprobaciones del usuario
+4. Errores y aprendizajes de esta sesión
+5. Rutas de archivos tocados y pendientes abiertos
+
+**Borrar:**
+1. Todo lo ajeno al alcance activo (otros subproyectos, búsquedas web, tangentes)
+2. Salidas crudas largas (logs, dumps, HTML, respuestas completas de API) — dejar solo la línea concluyente
+3. Exploraciones descartadas y código que ya no existe en el repo
+4. Repeticiones del contrato — guardar la regla, no el archivo completo
+
+**Después de compactar:**
+1. Releer el contrato activo
+2. Escribir resumen de estado de 5 líneas
+3. Seguir con la tarea pendiente
+
+*Ref: `KITCiclo/.claude/skills/ciclo/references/compactacion.md`*
+
 ## Registry quick reference
 
 - `.suit/registry/agents.yaml` — agent roles (architect, developer, reviewer, cotizador, copywriter, researcher)
