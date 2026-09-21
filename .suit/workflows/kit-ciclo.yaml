@@ -4,8 +4,8 @@ workflow:
   description: >
     Mandatory pre/post-flight for any code modification. Orchestrates the
     8-phase maintenance cycle: Contrato → Encuadre → Implementación →
-    Validación → Iteración → Plan Sync → Sync → Push. Runs automatically
-    when maintenance keywords are detected or when code changes are made.
+    Validación → Iteración → Plan Sync → Sync → Push. Auto-chains phases
+    based on results. Entry phase determined by routing keywords.
   risk: medium
   domain: governance
 
@@ -20,8 +20,13 @@ workflow:
       - contrato-subproyecto
       - iteration-loop
       - multi-tenant
-    forbidden_if:
-      - "No code changes detected"
+    entry_phases:
+      full: "f0-contrato"      # Full cycle: F0→F1→F2→F3→(F4)→(F5→F6)→(F7)
+      f0: "f0-contrato"        # Contract only
+      f1: "f1-encuadre"        # Prioritization only
+      f3: "f3-validacion"      # Validation only (after code changes)
+      f5: "f5-plan-sync"       # Schema sync only
+      f6: "f6-sync"            # Data cleanup only
 
   steps:
     # ── F0: Contrato ───────────────────────────────────────────────────
@@ -32,6 +37,9 @@ workflow:
         - contrato-subproyecto
       condition: always
       produces: CONTRATO.md
+      auto_chain_next: f1-encuadre
+      skip_if:
+        - "CONTRATO.md already exists and scope hasn't changed"
       validation:
         - "CONTRATO.md exists in scope"
         - "POR CONFIRMAR items listed for unverified rules"
@@ -45,6 +53,7 @@ workflow:
       description: "Prioritize: impact vs effort, discard explicitly"
       action: plan
       condition: always
+      auto_chain_next: f2-implementacion
       validation:
         - "Scope defined within contract boundaries"
         - "Items prioritized by impact/effort"
@@ -58,6 +67,7 @@ workflow:
       description: "Execute code changes within scope"
       action: write
       condition: always
+      auto_chain_next: f3-validacion
       validation:
         - "Changes match scope defined in F0"
         - "No modifications outside scope without permission"
@@ -76,6 +86,13 @@ workflow:
         - iteration-loop
       condition: always
       produces: VALIDACION.md
+      auto_chain_rules:
+        - if: "all checks PASA and no DB files changed in diff"
+          then: stop  # Cycle complete, no sync needed
+        - if: "all checks PASA and DB files changed in diff"
+          then: f5-plan-sync
+        - if: "any check FALLA"
+          then: f4-iteracion
       validation:
         - "All checks recorded in VALIDACION.md table"
         - "Each check has verdict: PASA or FALLA"
@@ -92,6 +109,13 @@ workflow:
         - iteration-loop
       condition: "if F3 verdict is FALLA"
       produces: CORRECCIONES.md
+      auto_chain_rules:
+        - if: "all checks PASA after fix"
+          then: f3-validacion  # Re-validate
+        - if: "round < 3 and still FAIL"
+          then: f4-iteracion  # Iterate again
+        - if: "round = 3 and still FAIL"
+          then: stop_and_ask  # Escalate to user
       validation:
         - "All checks PASA after iterations"
         - "CORRECCIONES.md updated with root cause + fix"
@@ -110,6 +134,13 @@ workflow:
         - multi-tenant
       condition: "if schema delta detected (new columns, type changes, renames)"
       produces: PLAN-SYNC.md
+      auto_chain_rules:
+        - if: "approval is APROBADO"
+          then: f6-sync
+        - if: "approval is RECHAZADO"
+          then: stop
+        - if: "no schema delta found"
+          then: stop  # No sync needed
       validation:
         - "Delta documented per column: NUEVA/ELIMINADA/RENOMBRADA/TIPO"
         - "Per-company actions with db_engine classification"
@@ -128,6 +159,7 @@ workflow:
         - data-cleanup
         - multi-tenant
       condition: "if F5 approval is APROBADO (TOTAL or PARCIAL)"
+      auto_chain_next: stop
       validation:
         - "Each company synced independently"
         - "Idempotent re-run verified"
@@ -164,3 +196,4 @@ workflow:
       - deepseek-flash
     max_iterations: 3
     auto_commit_per_phase: true
+    auto_chain: true

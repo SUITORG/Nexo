@@ -191,18 +191,36 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 
 **This overlay is AUTOMATIC — do not skip it for "small changes".**
 
-Keywords that trigger KITCiclo: `mejoras`, `cambios`, `mantenimiento`, `modificaciones`, `compactar`, `compactacion`, `depuracion`, `ciclo`, `fase`, `contrato`, `refactorizar`, `optimizar`, `limpiar codigo`.
+### Entry phases (routing determines start point)
 
-| Phase | Skill | Produces | Commit |
-|---|---|---|---|
-| F0 | `contrato-subproyecto` | `CONTRATO.md` | `ciclo(f0/contrato)` |
-| F1 | inline | scope prioritization | `ciclo(f1/encuadre)` |
-| F2 | inline | code changes | `ciclo(f2/implementacion)` |
-| F3 | `iteration-loop` | `VALIDACION.md` | `ciclo(f3/validacion)` |
-| F4 | `iteration-loop` | `CORRECCIONES.md` | `ciclo(f4/iteracion)` |
-| F5 | `data-sync` | `PLAN-SYNC.md` | `ciclo(f5/plan-sync)` |
-| F6 | `data-sync`/`data-cleanup` | synced data | `ciclo(f6/sync)` |
-| F7 | git push | deployed | manual |
+| Keyword pattern | Entry phase | What runs |
+|---|---|---|
+| `mejoras`, `cambios`, `mantenimiento`, `ciclo` | F0 (full) | F0→F1→F2→F3→(F4)→(F5→F6)→(F7) |
+| `verifica contrato`, `crea contrato` | F0 only | Scope detection + CONTRATO.md |
+| `prioriza`, `encuadre` | F1 only | Prioritization 20/80 |
+| `valida`, `verifica cambios`, `checa` | F3 only | Validation (post code change) |
+| `sincroniza`, `sync schema`, `delta` | F5→F6 | Schema sync only |
+| `depura datos`, `compactar datos` | F6 only | Data cleanup only |
+
+### Auto-chain rules
+
+Phases chain automatically based on results:
+
+```
+F2 completada → F3 (siempre)
+F3 PASA + no DB changes → STOP (ciclo completo)
+F3 PASA + DB files changed → F5→F6
+F3 FALLA → F4 (max 3 rondas)
+F4 → F3 (re-validate after fix)
+F5 APROBADO → F6
+F5 RECHAZADO → STOP
+F6 completado → STOP
+F7 solo si usuario confirma
+```
+
+### Keywords that trigger KITCiclo
+
+`mejoras`, `cambios`, `mantenimiento`, `modificaciones`, `compactar`, `compactacion`, `depuracion`, `ciclo`, `fase`, `contrato`, `refactorizar`, `optimizar`, `limpiar codigo`.
 
 ## Brief generation cycle (CampanasAi)
 

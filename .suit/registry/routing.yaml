@@ -177,14 +177,66 @@ routing:
         - "ciclo"
         - "ciclo de mantenimiento"
         - "fase"
-        - "contrato"
-        - "validar cambios"
         - "actualizar codigo"
         - "refactorizar"
         - "optimizar"
         - "limpiar codigo"
       workflow: kit-ciclo
       priority: 25
+      entry_phase: full  # F0→F1→F2→F3→(F4)→(F5→F6)→(F7)
+
+    # ── KITCiclo phase-specific routing ──────────────────────────────
+    - patterns:
+        - "verifica contrato"
+        - "revisa contrato"
+        - "actualiza contrato"
+        - "contrato de"
+        - "contrato del proyecto"
+        - "crea contrato"
+      workflow: kit-ciclo
+      priority: 28
+      entry_phase: f0  # Solo F0
+
+    - patterns:
+        - "prioriza"
+        - "encuadre"
+        - "que hago primero"
+        - "orden de cambios"
+        - "priorizar"
+      workflow: kit-ciclo
+      priority: 28
+      entry_phase: f1  # Solo F1
+
+    - patterns:
+        - "valida"
+        - "validar"
+        - "verifica cambios"
+        - "verificar"
+        - "checa"
+        - "revisa codigo"
+      workflow: kit-ciclo
+      priority: 28
+      entry_phase: f3  # Solo F3
+
+    - patterns:
+        - "sincroniza"
+        - "sincronizar"
+        - "sync schema"
+        - "migrar esquema"
+        - "delta de esquema"
+      workflow: kit-ciclo
+      priority: 28
+      entry_phase: f5  # Solo F5→F6
+
+    - patterns:
+        - "depura datos"
+        - "depuracion"
+        - "limpiar datos"
+        - "compactar datos"
+        - "datos huérfanos"
+      workflow: kit-ciclo
+      priority: 28
+      entry_phase: f6  # Solo F6 (data cleanup)
 
     - patterns:
         - "color"
