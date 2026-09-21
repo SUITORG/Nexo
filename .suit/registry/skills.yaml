@@ -648,3 +648,35 @@ skills:
     context_hint:
       - ".suit/templates/CORRECCIONES.md"
       - ".suit/templates/VALIDACION.md"
+
+  design-system:
+    description: "Visual identity for landings: colors, typography, palettes and templates"
+    version: 1.0.0
+    type: domain
+    domain: design
+    dependencies: []
+    triggers:
+      - "color"
+      - "tema"
+      - "theme"
+      - "tipografía"
+      - "typography"
+      - "diseño visual"
+      - "paleta"
+      - "palette"
+      - "landing"
+      - "font"
+      - "fuente"
+    inputs:
+      - "presets.json"
+      - "theme.schema.json"
+      - "color_tema field"
+    outputs:
+      - "CSS variables"
+      - "font import URL"
+      - "applied theme"
+    discoverable: true
+    context_hint:
+      - "KitPlantillaDinamicaLandigPage/presets.json"
+      - "KitPlantillaDinamicaLandigPage/theme.schema.json"
+      - "scripts/parse-theme.js"

@@ -37,7 +37,7 @@
 | Directory | Contents |
 |---|---|
 | `skills/system/` | context-loader, index-navigator, registry-query |
-| `skills/domain/` | multi-tenant, cotizaciones-engine, contrato-subproyecto, data-sync, data-cleanup |
+| `skills/domain/` | multi-tenant, cotizaciones-engine, contrato-subproyecto, data-sync, data-cleanup, design-system |
 | `skills/language/` | javascript, gas, sql |
 | `skills/tool/` | web-search, git |
 | `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador, iteration-loop |

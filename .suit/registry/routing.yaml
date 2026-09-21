@@ -166,6 +166,21 @@ routing:
       workflow: data-cleanup
       priority: 25
 
+    - patterns:
+        - "color"
+        - "tema"
+        - "theme"
+        - "tipografía"
+        - "typography"
+        - "diseño visual"
+        - "paleta"
+        - "font"
+        - "fuente"
+      workflow: feature
+      priority: 15
+      skills_override:
+        - design-system
+
   overrides:
     - if:
         project: campanas-ai
