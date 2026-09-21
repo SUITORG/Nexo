@@ -14,6 +14,17 @@ const lpGenerator = require('./lp-generator');
 const { MODELS, DEFAULT_MODEL, toOmniRouteId } = require('./models-config');
 const { composePoster } = require('../SuitComfy/quote-flow-poster');
 
+// Extract hex color from pipe-delimited color_tema (#hex|candado:0|pal:pal-teal|...)
+function extractHexColor(colorTema) {
+    if (!colorTema || typeof colorTema !== 'string') return '';
+    const t = colorTema.trim();
+    if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(t)) return t;
+    for (const part of t.split('|')) {
+        if (/^#[0-9a-fA-F]{3,6}$/.test(part.trim())) return part.trim();
+    }
+    return t.split('|')[0] || '';
+}
+
 const PORT = 8000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_DIRECT_KEY = process.env.OPENROUTER_DIRECT_KEY;
@@ -3661,7 +3672,7 @@ const server = http.createServer((req, res) => {
                 const empresaRow = await fetchEmpresaRow(empresa);
                 const briefRaw = (empresaRow && (empresaRow.logo_url || empresaRow.tipo_negocio || empresaRow.tiponegocio)) || '';
                 const brief = parseBrief(briefRaw, empresaRow);
-                const colorTema = (empresaRow && empresaRow.color_tema) || '';
+                const colorTema = extractHexColor(empresaRow && empresaRow.color_tema);
                 const descriptores = [brief.industria, brief.nicho, brief.giro_especifico].filter(Boolean).join(', ');
 
                 const prompt = `cinematic photorealistic advertising photograph for a ${descriptores || 'local'} business` +
@@ -3713,8 +3724,8 @@ const server = http.createServer((req, res) => {
                 let accent = cat.accent;
                 if (empresa) {
                     const empresaRow = await fetchEmpresaRow(empresa);
-                    const colorTema = empresaRow && empresaRow.color_tema;
-                    if (colorTema && /^#[0-9a-fA-F]{6}$/.test(colorTema)) accent = colorTema;
+                    const colorTema = extractHexColor(empresaRow && empresaRow.color_tema);
+                    if (colorTema) accent = colorTema;
                 }
 
                 const lines = splitFraseEnLineas(frase);

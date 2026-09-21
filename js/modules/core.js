@@ -99,6 +99,15 @@ var app = {
         currentLeadId: null
     },
     utils: {
+        hexColor: (colorTema) => {
+            if (!colorTema || typeof colorTema !== 'string') return '#2563eb';
+            const t = colorTema.trim();
+            if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(t)) return t;
+            for (const part of t.split('|')) {
+                if (/^#[0-9a-fA-F]{3,6}$/.test(part.trim())) return part.trim();
+            }
+            return t.split('|')[0] || '#2563eb';
+        },
         fixDriveUrl: (url) => {
             if (!url) return "";
             // ronda 3 (landing-pages) + resolveLogoUrlParts (orden libre): logo_url

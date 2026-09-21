@@ -152,7 +152,7 @@ app.agents = {
         // --- COLOREAR CHAT INSTITUCIONAL (v16.7.28) ---
         const company = app.data.Config_Empresas.find(c => (c.id_empresa || "").toUpperCase() === app.state.companyId.toUpperCase());
         if (company && company.color_tema) {
-            const raw = company.color_tema;
+            const raw = app.utils.hexColor(company.color_tema);
             // Generar versión Light (Pastel) para fondo
             document.documentElement.style.setProperty('--chat-bg', `${raw}15`); // Opacidad 15 hex (aprox 8%)
         } else {

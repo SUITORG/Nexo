@@ -255,7 +255,7 @@ app.public = {
         if (isPersonal) {
             document.body.classList.add('is-personal-brand');
             if (personalNode) {
-                personalNode.style.background = company.color_tema || company.colortema || '#034c3c';
+                personalNode.style.background = app.utils.hexColor(company.color_tema || company.colortema);
                 personalNode.innerHTML = `
                     <style>
                         .personal-responsive-container {
@@ -446,7 +446,7 @@ app.public = {
                             <div class="personal-section">
                                 <!-- TARJETA PREMIUM CON COLOR TEMA -->
                                 <div class="personal-content-viewer personal-card-base" 
-                                     style="background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${app.utils.fixDriveUrl(company.logo_url || company.foto_agente)}') center center / cover no-repeat; background-color: ${company.color_tema || '#034c3c'}; padding:45px; z-index:15; flex-direction:column; gap:30px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.5s ease; color: white;">
+                                     style="background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${app.utils.fixDriveUrl(company.logo_url || company.foto_agente)}') center center / cover no-repeat; background-color: ${app.utils.hexColor(company.color_tema)}; padding:45px; z-index:15; flex-direction:column; gap:30px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.5s ease; color: white;">
                                     
                                     <!-- MOTOR DE BOTONES DINÁMICO (Ahora dentro de la tarjeta) -->
                                     <div class="personal-pages-nav" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-start; margin-bottom:10px; width:100%;">
@@ -506,7 +506,7 @@ app.public = {
                                     
                                     <div style="margin-top:auto; padding-top:10px;">
                                         <button class="btn-primary" 
-                                                style="width:100%; padding: 20px; border-radius: 50px; font-weight:900; background:${company.color_tema || '#034c3c'}; color:white; border:none; cursor:pointer;" 
+                                                style="width:100%; padding: 20px; border-radius: 50px; font-weight:900; background:${app.utils.hexColor(company.color_tema)}; color:white; border:none; cursor:pointer;" 
                                                 onclick="window.location.hash='#contact'">
                                             MÁS INFORMACIÓN
                                         </button>
@@ -656,7 +656,7 @@ app.public = {
                 heroBanner.style.padding = '0';
                 heroBanner.style.minHeight = '80vh';
                 heroBanner.style.backgroundImage = 'none';
-                heroBanner.style.backgroundColor = company.color_tema || company.colortema || '#034c3c';
+                heroBanner.style.backgroundColor = app.utils.hexColor(company.color_tema || company.colortema);
                 heroBanner.style.position = 'relative';
                 heroBanner.style.overflow = 'hidden';
 
@@ -736,7 +736,7 @@ app.public = {
                         
                         <!-- SECCIÓN 1: SLOGAN (Part 1/3) -->
                         <div class="grid-sec-1">
-                            <h2 class="animate-cascade-std ui-std-mobile" style="margin:0; width:100%; font-size:var(--font-size-small, 0.7rem); text-transform:uppercase; letter-spacing:2px; font-weight:800; text-shadow:0 5px 15px rgba(0,0,0,0.9); color:white; border-left:4px solid ${company.color_tema}; padding-left:15px; line-height:1.2; animation-delay: 0.3s; padding-top:5px; padding-bottom:5px;">
+                            <h2 class="animate-cascade-std ui-std-mobile" style="margin:0; width:100%; font-size:var(--font-size-small, 0.7rem); text-transform:uppercase; letter-spacing:2px; font-weight:800; text-shadow:0 5px 15px rgba(0,0,0,0.9); color:white; border-left:4px solid ${app.utils.hexColor(company.color_tema)}; padding-left:15px; line-height:1.2; animation-delay: 0.3s; padding-top:5px; padding-bottom:5px;">
                                 ${company.slogan || ''}
                             </h2>
                         </div>
@@ -1429,7 +1429,7 @@ app.public = {
 
             const bubbleEl = document.createElement('div');
             bubbleEl.className = `enterprise-bubble ${isPriority ? 'priority' : 'shaded'}`;
-            const themeColor = co.color_tema || '#00d2ff';
+            const themeColor = app.utils.hexColor(co.color_tema);
             const gradient = isEvasol
                 ? `radial-gradient(circle at 30% 30%, ${themeColor}, #000, #001a14)`
                 : `radial-gradient(circle at 30% 30%, ${themeColor}, #000)`;
@@ -1487,7 +1487,7 @@ app.public = {
             bubbleEl.onclick = () => {
                 // Guardar tema en caché rápida para Logic 3 (v16.7.28)
                 localStorage.setItem(`suit_theme_cache_${co.id_empresa}`, JSON.stringify({
-                    color: co.color_tema,
+                    color: app.utils.hexColor(co.color_tema),
                     logo: co.logo_url || co.url_logo || co.foto_agente
                 }));
                 app.switchCompany(co.id_empresa);
@@ -1695,7 +1695,7 @@ app.public = {
         section.classList.remove('hidden');
         section.style.display = 'block';
 
-        const tema = company.color_tema || company.colortema || '#034c3c';
+        const tema = app.utils.hexColor(company.color_tema || company.colortema);
         section.style.background = tema;
         section.style.borderTop = "none";
 
