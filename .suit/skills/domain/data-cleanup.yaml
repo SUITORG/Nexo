@@ -1,0 +1,67 @@
+skill:
+  name: data-cleanup
+  display_name: "Depuración de Datos"
+  version: 1.0.0
+  type: domain
+  domain: data
+  description: >
+    Limpieza destructiva de datos por motor (GSHEETS/SUPABASE/NEON).
+    Siempre en modo propuesta, siempre con respaldo, siempre con
+    visto bueno nominal. Es la operación más destructiva del ciclo.
+  dependencies:
+    - multi-tenant
+  triggers:
+    - keyword: "depura"
+    - keyword: "depurar"
+    - keyword: "limpiar datos"
+    - keyword: "basura"
+    - keyword: "filas huérfanas"
+    - keyword: "duplicados"
+    - keyword: "compactar datos"
+  context_hint:
+    - "AGENTS.md"
+    - ".suit/templates/PLAN-DEPURA.md"
+    - ".suit/templates/VALIDACION.md"
+  rules:
+    - id: dc-001
+      description: "Diagnosticar en solo lectura antes de proponer — prohibido escribir"
+      severity: error
+    - id: dc-002
+      description: "Exigir respaldo verificado (conteo de filas + ruta) antes de ejecutar"
+      severity: error
+    - id: dc-003
+      description: "Ejecutar por empresa, nunca en lote"
+      severity: error
+    - id: dc-004
+      description: "DROP, DELETE, TRUNCATE requieren aprobación nominal citada en commit"
+      severity: error
+    - id: dc-005
+      description: "Si la validación post-depuración falla, restaurar del respaldo"
+      severity: error
+    - id: dc-006
+      description: "No depurar datos de una empresa cuyo db_engine no coincide con el motor"
+      severity: error
+  process:
+    - "Diagnóstico (solo lectura): medir antes de proponer"
+    - "Propuesta: llenar PLAN-DEPURA.md con hallazgos y evidencia"
+    - "20/80: ejecutar solo los 2-3 primeros por riesgo eliminado"
+    - "Respaldo: verificar conteo de filas y ruta del archivo/snapshot"
+    - "Ejecutar por empresa, verificar después de cada una"
+    - "Validación post-depuración obligatoria en VALIDACION.md"
+    - "Commit con aprobación nominal citada"
+  engines:
+    GSHEETS:
+      - "Filas y columnas vacías dentro del rango usado"
+      - "Rangos con nombre rotos"
+      - "Duplicados de la clave de empresa"
+      - "Fórmulas volátiles en Config_Empresas"
+      - "Hojas de respaldo olvidadas"
+    SUPABASE:
+      - "Filas huérfanas sin empresa válida"
+      - "Columnas declaradas y nunca leídas"
+      - "Índices duplicados o ausentes"
+      - "Tablas temporales de migraciones"
+      - "Bloat: VACUUM (ANALYZE), VACUUM FULL solo en ventana acordada"
+    NEON:
+      - "Está vacía — depurar = no heredar basura"
+      - "Crear esquema con columnas que el código realmente usa"

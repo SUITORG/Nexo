@@ -1,0 +1,45 @@
+skill:
+  name: iteration-loop
+  display_name: "Bucle de Iteración con Tope"
+  version: 1.0.0
+  type: process
+  domain: quality
+  description: >
+    Maneja iteraciones cuando la validación falla. Máximo 3 rondas.
+    Cada ronda: corregir → validar → registrar en CORRECCIONES.md.
+    A la cuarta, detenerse y consultar al usuario.
+  dependencies: []
+  triggers:
+    - keyword: "fallo"
+    - keyword: "falla"
+    - keyword: "no pasa"
+    - keyword: "error en validación"
+    - keyword: "iterar"
+  context_hint:
+    - ".suit/templates/CORRECCIONES.md"
+    - ".suit/templates/VALIDACION.md"
+  rules:
+    - id: il-001
+      description: "Máximo 3 rondas de iteración"
+      severity: error
+    - id: il-002
+      description: "A la cuarta ronda, detenerse y consultar al usuario"
+      severity: error
+    - id: il-003
+      description: "Cada iteración debe generar una entrada en CORRECCIONES.md"
+      severity: error
+    - id: il-004
+      description: "Una causa raíz, no una lista de sospechas"
+      severity: error
+    - id: il-005
+      description: "Arreglar lo mínimo — no refactorizar durante la iteración"
+      severity: error
+  process:
+    - "Leer CORRECCIONES.md antes de iterar"
+    - "Identificar causa raíz del fallo"
+    - "Arreglar lo mínimo necesario"
+    - "Reejecutar la prueba que falló Y las que dependían"
+    - "Registrar en CORRECCIONES.md: síntoma, causa, arreglo, regla preventiva"
+    - "Si PASS: continuar con la siguiente fase"
+    - "Si FALLA y ronda < 3: repetir"
+    - "Si FALLA y ronda = 3: detenerse, resumir hipótesis agotadas, preguntar"

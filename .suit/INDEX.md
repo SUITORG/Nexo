@@ -30,15 +30,17 @@
 | `workflows/video-generation.yaml` | Video con Remotion (ViRe) |
 | `workflows/video-generation-comfyui.yaml` | Video con ComfyUI + FFmpeg (SuitComfy) |
 | `workflows/panel-juzgador.yaml` | Evaluación multi-agente de proyectos (4 agentes + 1 juez) |
+| `workflows/data-sync.yaml` | Sincronización multi-engine (GSHEETS/SUPABASE/NEON) |
+| `workflows/data-cleanup.yaml` | Depuración destructiva de datos con respaldo |
 
 ## Skills
 | Directory | Contents |
 |---|---|
 | `skills/system/` | context-loader, index-navigator, registry-query |
-| `skills/domain/` | multi-tenant, cotizaciones-engine |
+| `skills/domain/` | multi-tenant, cotizaciones-engine, contrato-subproyecto, data-sync, data-cleanup |
 | `skills/language/` | javascript, gas, sql |
 | `skills/tool/` | web-search, git |
-| `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador |
+| `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador, iteration-loop |
 
 ## Agents
 | ID | Role | Source |

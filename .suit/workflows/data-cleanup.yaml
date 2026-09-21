@@ -1,0 +1,95 @@
+workflow:
+  name: data-cleanup
+  display_name: "Depuración de Datos"
+  description: >
+    Limpieza destructiva de datos por motor. Siempre en modo propuesta,
+    siempre con respaldo, siempre con visto bueno nominal.
+  risk: high
+  domain: data
+
+  entry:
+    requires_planning: true
+    requires_confirmation: true
+    required_context:
+      - AGENTS.md
+      - contexto.md
+    required_skills:
+      - data-cleanup
+      - multi-tenant
+    forbidden_if:
+      - "Un ciclo de mantenimiento está en progreso"
+
+  steps:
+    - id: diagnose
+      description: "Diagnóstico en solo lectura — medir antes de proponer"
+      action: read
+      skills:
+        - data-cleanup
+      produces: PLAN-DEPURA.md
+      validation:
+        - "Solo lectura, no se escribe nada"
+        - "Hallazgos medidos con evidencia"
+
+    - id: propose
+      description: "Proponer acciones 20/80 con evidencia"
+      action: write
+      produces: PLAN-DEPURA.md
+      validation:
+        - "PLAN-DEPURA.md con hallazgos y acciones"
+        - "Solo 2-3 acciones de alto impacto"
+
+    - id: approve
+      description: "Esperar visto bueno nominal del usuario"
+      action: confirm
+      validation:
+        - "Cada acción aprobada individualmente"
+        - "Solo acciones aprobadas se ejecutan"
+
+    - id: backup
+      description: "Crear respaldo verificado"
+      action: run
+      validation:
+        - "Conteo de filas previo documentado"
+        - "Ruta del respaldo verificada"
+
+    - id: execute
+      description: "Ejecutar por empresa, verificar después de cada una"
+      action: write
+      skills:
+        - data-cleanup
+      validation:
+        - "Cada empresa verificada"
+        - "Estado registrado en PLAN-DEPURA.md"
+
+    - id: validate
+      description: "Validación post-depuración obligatoria"
+      action: review
+      skills:
+        - data-cleanup
+        - multi-tenant
+      validation:
+        - "VALIDACION.md con veredicto"
+        - "Si falla, restaurar del respaldo"
+
+    - id: commit
+      description: "Commit con aprobación nominal citada"
+      action: git
+      command: "bash scripts/commit-fase.sh 6 cleanup 'depuración completada' {{target_path}} {{db_engine}}"
+      condition: "si hubo cambios"
+
+  exit:
+    validation:
+      - "Depuración completada y verificada"
+      - "PLAN-DEPURA.md actualizado"
+      - "VALIDACION.md con veredicto"
+    requires_commit: true
+    notifies:
+      - memory/lessons
+      - telemetry
+
+  config:
+    allowed_models:
+      - claude-sonnet
+      - deepseek-flash
+    max_steps_without_confirmation: 1
+    auto_rollback_on_failure: true

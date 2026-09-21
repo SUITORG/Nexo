@@ -1,0 +1,100 @@
+workflow:
+  name: data-sync
+  display_name: "Sincronización Multi-Engine"
+  description: >
+    Sincroniza esquema y datos entre GSHEETS, SUPABASE y NEON
+    basándose en Config_Empresas.db_engine. Nunca en medio de un ciclo.
+  risk: high
+  domain: data
+
+  entry:
+    requires_planning: true
+    requires_confirmation: true
+    required_context:
+      - AGENTS.md
+      - contexto.md
+      - INDEX_FUNCIONES.md
+    required_skills:
+      - data-sync
+      - multi-tenant
+    forbidden_if:
+      - "Un ciclo de mantenimiento está en progreso"
+
+  steps:
+    - id: scope
+      description: "Resolver alcance, contrato y cambios pendientes"
+      action: run
+      command: "bash scripts/detectar-cambios.sh {{target_path}}"
+      skills:
+        - contrato-subproyecto
+      produces: scope_output
+      validation:
+        - "Alcance definido"
+        - "Contrato existe o se crea"
+
+    - id: analyze
+      description: "Detectar delta de esquema: encabezados vs código/clase"
+      action: read+analyze
+      skills:
+        - data-sync
+      produces: PLAN-SYNC.md
+      validation:
+        - "Delta identificado (NUEVA/ELIMINADA/RENOMBRADA/TIPO)"
+        - "Clasificación por empresa"
+
+    - id: plan
+      description: "Llenar PLAN-SYNC.md con acciones por empresa"
+      action: write
+      produces: PLAN-SYNC.md
+      validation:
+        - "Acciones definidas por empresa"
+        - "Riesgos y rollback documentados"
+        - "PLAN-SYNC.md escrito"
+
+    - id: approve
+      description: "Esperar visto bueno explícito del usuario"
+      action: confirm
+      validation:
+        - "Usuario aprueba total o parcial"
+        - "Solo empresas aprobadas se ejecutan"
+
+    - id: sync
+      description: "Ejecutar sincronización por empresa, nunca en lote"
+      action: write
+      skills:
+        - data-sync
+      validation:
+        - "Cada empresa verificada después de sincronizar"
+        - "Estado registrado en PLAN-SYNC.md"
+
+    - id: validate
+      description: "Validación completa post-sincronización"
+      action: review
+      skills:
+        - data-sync
+        - multi-tenant
+      validation:
+        - "Todos los motores con los datos esperados"
+        - "No hay cruzar filas entre empresas"
+
+    - id: commit
+      description: "Commit con resultado del ciclo"
+      action: git
+      command: "bash scripts/commit-fase.sh 6 sync 'sincronización completada' {{target_path}} {{db_engine}}"
+      condition: "si hubo cambios"
+
+  exit:
+    validation:
+      - "Todos los motores con los datos esperados"
+      - "PLAN-SYNC.md actualizado"
+    requires_commit: true
+    notifies:
+      - memory/lessons
+      - telemetry
+
+  config:
+    allowed_models:
+      - claude-sonnet
+      - deepseek-flash
+    max_steps_without_confirmation: 1
+    auto_rollback_on_failure: true

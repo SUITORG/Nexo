@@ -17,6 +17,26 @@ workflow:
       - system-analysis
 
   steps:
+    - id: scope-check
+      description: "Resolve scope, contract and pending changes"
+      action: run
+      command: "bash scripts/detectar-cambios.sh {{target_path}}"
+      skills:
+        - contrato-subproyecto
+      condition: "if target_path is provided"
+      validation:
+        - "Scope defined"
+        - "Contract exists or created"
+
+    - id: contract-check
+      description: "Verify CONTRACT.md exists in the scope"
+      action: read
+      skills:
+        - contrato-subproyecto
+      validation:
+        - "CONTRATO.md exists in the scope"
+        - "If missing, create it before proceeding"
+
     - id: reproduce
       description: "Understand the bug (read error, trace, affected code)"
       action: read
@@ -49,9 +69,22 @@ workflow:
     - id: verify_fix
       description: "Verify the bug is fixed and no regressions"
       action: test
+      skills:
+        - iteration-loop
       validation:
         - "Bug scenario now works"
         - "Existing functionality preserved"
+
+    - id: iterate
+      description: "If validation fails, iterate up to 3 rounds"
+      action: loop
+      skills:
+        - iteration-loop
+      condition: "if verify_fix fails"
+      max_rounds: 3
+      validation:
+        - "Each iteration logged in CORRECCIONES.md"
+        - "After 3 rounds, stop and ask user"
 
     - id: document
       description: "Document the bug and fix"

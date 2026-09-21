@@ -554,3 +554,97 @@ skills:
     context_hint:
       - ".suit/skills/process/listado-capacidades/SKILL.md"
       - ".suit/skills/process/listado-capacidades/scripts/generate-list.js"
+
+  # --- KITCiclo Integration Skills ---
+
+  contrato-subproyecto:
+    description: "Create, extend, detail or normalize the CONTRACT.md of a subproject"
+    version: 1.0.0
+    type: domain
+    domain: governance
+    dependencies: []
+    triggers:
+      - "contrato"
+      - "CONTRATO.md"
+      - "reglas del proyecto"
+      - "invariantes"
+    inputs:
+      - "source code files"
+      - "CONTRATO.md"
+    outputs:
+      - "CONTRATO.md"
+    discoverable: true
+    context_hint:
+      - "AGENTS.md"
+      - ".suit/templates/CONTRATO.md"
+      - "contexto.md"
+
+  data-sync:
+    description: "Sync schema and data between GSHEETS, SUPABASE and NEON based on db_engine"
+    version: 1.0.0
+    type: domain
+    domain: data
+    dependencies:
+      - multi-tenant
+    triggers:
+      - "sync"
+      - "sincronizar"
+      - "schema"
+      - "esquema"
+      - "migrar datos"
+    inputs:
+      - "PLAN-SYNC.md"
+      - "Config_Empresas"
+    outputs:
+      - "PLAN-SYNC.md"
+    discoverable: true
+    context_hint:
+      - "AGENTS.md"
+      - "backend/core.js"
+      - ".suit/templates/PLAN-SYNC.md"
+
+  data-cleanup:
+    description: "Destructive data cleanup per engine with backup and approval"
+    version: 1.0.0
+    type: domain
+    domain: data
+    dependencies:
+      - multi-tenant
+    triggers:
+      - "depura"
+      - "depurar"
+      - "limpiar datos"
+      - "basura"
+      - "filas huérfanas"
+      - "duplicados"
+    inputs:
+      - "PLAN-DEPURA.md"
+      - "VALIDACION.md"
+    outputs:
+      - "PLAN-DEPURA.md"
+    discoverable: true
+    context_hint:
+      - "AGENTS.md"
+      - ".suit/templates/PLAN-DEPURA.md"
+
+  iteration-loop:
+    description: "Iteration loop with max 3 rounds when validation fails"
+    version: 1.0.0
+    type: process
+    domain: quality
+    dependencies: []
+    triggers:
+      - "fallo"
+      - "falla"
+      - "no pasa"
+      - "error en validación"
+      - "iterar"
+    inputs:
+      - "CORRECCIONES.md"
+      - "VALIDACION.md"
+    outputs:
+      - "CORRECCIONES.md"
+    discoverable: true
+    context_hint:
+      - ".suit/templates/CORRECCIONES.md"
+      - ".suit/templates/VALIDACION.md"

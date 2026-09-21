@@ -19,6 +19,16 @@ workflow:
       - "Uncommitted changes in working directory"
 
   steps:
+    - id: sync-check
+      description: "Verify no pending data sync before deploy"
+      action: read
+      skills:
+        - data-sync
+      condition: "if schema changes detected"
+      validation:
+        - "No PLAN-SYNC.md with PENDIENTE status"
+        - "All data syncs completed or explicitly deferred"
+
     - id: preflight
       description: "Check deployment readiness"
       action: validate

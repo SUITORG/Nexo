@@ -174,6 +174,45 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 9. **Log** — record execution in `.suit/logs/` following telemetry schema
 10. **Smoke test manually**
 
+## Maintenance cycle (KITCiclo integration)
+
+When modifying code in any subproject, the agent automatically applies the maintenance cycle. The cycle runs **automatically** — you don't need to invoke it manually.
+
+### Phases (max 7 per cycle)
+
+| Phase | Name | What happens | Commit |
+|-------|------|--------------|--------|
+| F0 | Alcance + Contrato | Resolve scope, find/create `CONTRATO.md` | Yes |
+| F1 | Encuadre 20/80 | Prioritize: impact vs effort, discard explicitly | Yes |
+| F2 | Implementación | Execute only what was planned | Yes |
+| F3 | Validación | Run tests with evidence (see `VALIDACION.md`) | Yes |
+| F4 | Iteración (if fails) | Max 3 rounds, then stop and ask | Yes (if iterated) |
+| F5 | Plan de sync | Detect schema delta per engine | Yes |
+| F6 | Sync ejecutado | Apply sync per company with approval | Yes |
+| F7 | Push GitHub | Only if user decides | Yes |
+
+### Key rules
+
+- **Contract first**: No F1 without CONTRACT.md in the scope
+- **Commit per phase**: Each phase closes with its own commit
+- **Iterate max 3**: If validation fails, iterate up to 3 rounds, then stop
+- **Cleanup**: Always backup before destructive data operations
+- **No cross-company sync**: Each company syncs independently
+- **Data sync only in F5-F6**: Never in the middle of a code cycle
+- **Manual invocation**: `/ciclo [ruta] [objetivo]` for explicit cycles
+
+### Files used
+
+| File | Purpose |
+|------|---------|
+| `CONTRATO.md` (per subproject) | Scope, rules, invariants |
+| `VALIDACION.md` | Test evidence and verdicts |
+| `CORRECCIONES.md` | Learnings from iteration |
+| `PLAN-SYNC.md` | Schema sync plan |
+| `PLAN-DEPURA.md` | Data cleanup plan |
+| `scripts/detectar-cambios.sh` | Resolve scope and changes |
+| `scripts/commit-fase.sh` | Commit with phase format |
+
 ## Standard for new modules (SuitReservaciones pattern)
 
 Al crear un nuevo módulo independiente, seguir este procedimiento:

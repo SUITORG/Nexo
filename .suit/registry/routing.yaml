@@ -147,6 +147,25 @@ routing:
         - prospeccion-ia-monterrey
         - google-places-business-finder
 
+    - patterns:
+        - "sync"
+        - "sincronizar"
+        - "schema"
+        - "esquema"
+        - "migrar datos"
+      workflow: data-sync
+      priority: 25
+
+    - patterns:
+        - "depura"
+        - "depurar"
+        - "limpiar datos"
+        - "basura"
+        - "filas huérfanas"
+        - "duplicados"
+      workflow: data-cleanup
+      priority: 25
+
   overrides:
     - if:
         project: campanas-ai

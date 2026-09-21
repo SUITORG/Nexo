@@ -1,0 +1,64 @@
+skill:
+  name: data-sync
+  display_name: "Sincronización Multi-Engine"
+  version: 1.0.0
+  type: domain
+  domain: data
+  description: >
+    Sincroniza esquema y registros entre GSHEETS, SUPABASE y NEON
+    basándose en Config_Empresas.db_engine. Detecta deltas de esquema,
+    propone cambios, ejecuta por empresa con visto bueno explícito.
+  dependencies:
+    - multi-tenant
+  triggers:
+    - keyword: "sync"
+    - keyword: "sincronizar"
+    - keyword: "schema"
+    - keyword: "esquema"
+    - keyword: "migrar datos"
+    - keyword: "columnas"
+    - file_pattern: "**/db/*.sql"
+    - file_pattern: "**/db/schema*"
+  context_hint:
+    - "AGENTS.md"
+    - "backend/core.js"
+    - "backend/database.js"
+    - ".suit/templates/PLAN-SYNC.md"
+  rules:
+    - id: ds-001
+      description: "Nunca sincronizar en medio del ciclo — solo en F5-F6"
+      severity: error
+    - id: ds-002
+      description: "Identificar filas por clave de empresa, nunca por posición"
+      severity: error
+    - id: ds-003
+      description: "Cambios destructivos requieren respaldo previo y aprobación nominal"
+      severity: error
+    - id: ds-004
+      description: "Idempotencia: reejecutar no debe duplicar filas ni columnas"
+      severity: error
+    - id: ds-005
+      description: "Si una empresa falla, detener el resto y reportar estado"
+      severity: error
+  process:
+    - "Detectar delta: comparar encabezados hoja vs código/clase"
+    - "Clasificar: NUEVA/ELIMINADA/RENOMBRADA/TIPO CAMBIADO/REORDENADA"
+    - "Escribir PLAN-SYNC.md con el delta"
+    - "Mostrar plan y esperar visto bueno"
+    - "Ejecutar por empresa, nunca en lote ciego"
+    - "Verificar después de cada empresa"
+    - "Registrar estado en PLAN-SYNC.md"
+  engines:
+    GSHEETS:
+      - "La hoja ya es el destino — sincronizar solo encabezados y validaciones"
+      - "Escribir por rango explícito, jamás sobrescribir la hoja completa"
+      - "Respetar el orden de columnas"
+    SUPABASE:
+      - "Aplicar como migración SQL versionada"
+      - "Columnas nuevas NULL o con default"
+      - "Nunca DROP COLUMN sin aprobación nominal"
+      - "Verificar con MCP de Supabase antes y después"
+    NEON:
+      - "Está vacía — crear esquema completo desde el contrato"
+      - "No asumir paridad con Supabase"
+      - "Cargar datos solo si el usuario lo pide"

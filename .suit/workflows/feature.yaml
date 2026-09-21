@@ -18,6 +18,26 @@ workflow:
       - "No AGENTS.md loaded"
 
   steps:
+    - id: scope-check
+      description: "Resolve scope, contract and pending changes"
+      action: run
+      command: "bash scripts/detectar-cambios.sh {{target_path}}"
+      skills:
+        - contrato-subproyecto
+      condition: "if target_path is provided"
+      validation:
+        - "Scope defined"
+        - "Contract exists or created"
+
+    - id: contract-check
+      description: "Verify CONTRACT.md exists in the scope"
+      action: read
+      skills:
+        - contrato-subproyecto
+      validation:
+        - "CONTRATO.md exists in the scope"
+        - "If missing, create it before proceeding"
+
     - id: analyze
       description: "Analyze requirements and existing code"
       action: read

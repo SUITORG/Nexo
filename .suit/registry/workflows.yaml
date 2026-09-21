@@ -188,3 +188,33 @@ workflows:
       - "quote"
       - "calculadora"
       - "proceso"
+
+  data-sync:
+    path: .suit/workflows/data-sync.yaml
+    risk: high
+    domain: data
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 8000
+    trigger_keywords:
+      - "sync"
+      - "sincronizar"
+      - "schema"
+      - "esquema"
+      - "migrar datos"
+      - "columnas"
+
+  data-cleanup:
+    path: .suit/workflows/data-cleanup.yaml
+    risk: high
+    domain: data
+    requires_review: true
+    requires_planning: true
+    estimated_tokens: 6000
+    trigger_keywords:
+      - "depura"
+      - "depurar"
+      - "limpiar datos"
+      - "basura"
+      - "filas huérfanas"
+      - "duplicados"

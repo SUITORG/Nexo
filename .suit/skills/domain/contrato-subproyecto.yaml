@@ -1,0 +1,38 @@
+skill:
+  name: contrato-subproyecto
+  display_name: "Contrato por Subproyecto"
+  version: 1.0.0
+  type: domain
+  domain: governance
+  description: >
+    Crea, amplía, detalla o normaliza el CONTRATO.md de un subproyecto.
+    El contrato define: propósito, stack, datos multi-inquilino, invariantes,
+    límites y definición de terminado. Es la autoridad del alcance.
+  dependencies: []
+  triggers:
+    - keyword: "contrato"
+    - keyword: "CONTRATO.md"
+    - keyword: "reglas del proyecto"
+    - keyword: "invariantes"
+    - file_pattern: "**/CONTRATO.md"
+  context_hint:
+    - "AGENTS.md"
+    - ".suit/templates/CONTRATO.md"
+    - "contexto.md"
+  rules:
+    - id: ct-001
+      description: "Sin contrato no se ejecuta F1"
+      severity: error
+    - id: ct-002
+      description: "No inventar reglas de negocio — si no está en código ni lo dijo el usuario, va como POR CONFIRMAR"
+      severity: error
+    - id: ct-003
+      description: "El contrato del subproyecto gana sobre el de la raíz en conflicto"
+      severity: warning
+  process:
+    - "Leer código del alcance: README, package.json, estructura, config, esquema"
+    - "Leer contrato padre si existe"
+    - "Rellenar templates/CONTRATO.md con hechos verificados"
+    - "Marcar POR CONFIRMAR todo lo no verificado"
+    - "Mostrar diff y lista de POR CONFIRMAR al usuario"
+    - "Commit como fase 0"
