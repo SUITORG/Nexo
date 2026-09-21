@@ -216,6 +216,31 @@ skills:
     outputs:
       - "responsive styles"
     discoverable: true
+  web-research:
+    name: "web-research"
+    display_name: "Web Research"
+    version: "1.0.0"
+    type: "tool"
+    domain: "knowledge"
+    description: "Structured web research for business intelligence. Runs 3-5 parallel queries with reformulations, prioritizes primary sources, discards undated content. Returns JSON with findings, consensus, sources, and confidence score."
+    triggers:
+      - "keyword: research"
+      - "keyword: investigate"
+      - "keyword: search"
+      - "keyword: competitor"
+      - "keyword: audience"
+      - "keyword: market"
+      - "keyword: tendencias"
+      - "keyword: legal"
+    inputs:
+      - "query topic"
+      - "niche/industry"
+      - "geography"
+    outputs:
+      - "findings[]"
+      - "sources[{title, url, date}]"
+      - "confidence (A/B/C)"
+    discoverable: true
   telegram-bot:
     name: "telegram-bot"
     display_name: "Telegram Bot API"

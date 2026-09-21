@@ -1,0 +1,129 @@
+skill:
+  name: brief-engine
+  display_name: "Brief Engine - Marketing Brief Generator"
+  version: 1.0.0
+  type: domain
+  domain: marketing
+  description: >
+    Generates complete Marketing Briefs (20 fields, pipe-delimited) from a single id_empresa.
+    Reads Config_Empresas, queries Supabase taxonomy catalogs (industrias/nichos),
+    infers missing fields via AI + web research, and writes the Brief vector to logo_url.
+    Validates format: no pipe characters in values, all 20 fields present, enlaces verified.
+    Backs up previous logo_url before overwriting.
+  dependencies:
+    - multi-tenant
+    - javascript
+  triggers:
+    - "brief"
+    - "brief de marketing"
+    - "generar brief"
+    - "crear brief"
+    - "marketing brief"
+    - "logo_url vector"
+    - "20 campos"
+    - "LAPVTFU"
+    - file_pattern: "SuitCampanas/**/*.js"
+    - file_pattern: "**/brief*"
+  context_hint:
+    - "SuitCampanas/BRIEF.MD"
+    - "SuitCampanas/local-server-node.js"
+    - "SuitCampanas/scripts/tmp_test_parser.js"
+    - "backend/core.js"
+    - "backend/seeds_master.js"
+    - ".suit/skills/domain/design-system.yaml"
+  rules:
+    - id: be-001
+      description: "Brief lives in Config_Empresas.logo_url — no new columns"
+      severity: error
+    - id: be-002
+      description: "20 fields in fixed order: industria, nicho, especializacion, vendes, audiencia, dolor, PBP, lograr, vivir, LAPVTFU, PM, objecion, competidores, tono, PS, RLP, slogan, oferta, descripcion, cta, tipografia"
+      severity: error
+    - id: be-003
+      description: "LAPVTFU always has 7 positions — empty slots use [PENDIENTE - Activo]"
+      severity: error
+    - id: be-004
+      description: "No pipe characters inside field values — escape with ⁄ if needed"
+      severity: error
+    - id: be-005
+      description: "Customer fields (slogan, descripcion, color_tema) are never overwritten"
+      severity: error
+    - id: be-006
+      description: "Empty fields must not be silent — write [PENDIENTE - reason]"
+      severity: warning
+    - id: be-007
+      description: "Every field marked confidence B must have a source URL"
+      severity: warning
+    - id: be-008
+      description: "Backup previous logo_url before overwriting"
+      severity: error
+  fields:
+    - { num: 1, name: "industria", source: "Supabase catalog", confidence: "A/B" }
+    - { num: 2, name: "nicho", source: "Supabase catalog", confidence: "A/B" }
+    - { num: 3, name: "especializacion", source: "Supabase nichos.especializaciones[]", confidence: "A/B" }
+    - { num: 4, name: "vendes", source: "Config or inferred", confidence: "A/C" }
+    - { num: 5, name: "audiencia", source: "Web research", confidence: "B" }
+    - { num: 6, name: "dolor", source: "Web research", confidence: "B" }
+    - { num: 7, name: "PBP", source: "Creative + Web", confidence: "B/C" }
+    - { num: 8, name: "lograr", source: "Config or choice", confidence: "A" }
+    - { num: 9, name: "vivir", source: "Derived from #8+#5", confidence: "B" }
+    - { num: 10, name: "LAPVTFU", source: "Drive assets", confidence: "A" }
+    - { num: 11, name: "PM", source: "Config or market", confidence: "A/C" }
+    - { num: 12, name: "objecion", source: "Web research", confidence: "B" }
+    - { num: 13, name: "competidores", source: "Web research", confidence: "B" }
+    - { num: 14, name: "tono", source: "Supabase or creative", confidence: "A/C" }
+    - { num: 15, name: "PS", source: "Config or Drive", confidence: "A" }
+    - { num: 16, name: "RLP", source: "Web research", confidence: "B" }
+    - { num: 17, name: "slogan", source: "Config only — never invent", confidence: "A" }
+    - { num: 18, name: "oferta", source: "Config or creative", confidence: "A/C" }
+    - { num: 19, name: "descripcion", source: "Config only — never invent", confidence: "A" }
+    - { num: 20, name: "tipografia", source: "Config or standard pair", confidence: "A/C" }
+  format: |
+    industria: X |nicho: Y |especializacion: Z |vendes: W |audiencia: A |dolor: B |PBP: C |lograr: D |vivir: E |LAPVTFU: url1,url2,url3,url4,url5,url6,url7 |PM: 0000.00,00% |objecion: F |competidores: G |tono: H |PS: I |RLP: J |slogan: K |oferta: L |descripcion: M |cta: N |tipografia: O
+  subagents:
+    - id: A_TAXONOMIA
+      description: "Resolve industry/niche/specialization from Supabase catalogs"
+      input: "giro_especifico, nombreempresa, descripcion"
+      output: "industria, nicho, especializacion, tono"
+      execution: parallel
+    - id: B_AVATAR
+      description: "Infer audience, pain points, objections via web research"
+      input: "nicho, especializacion, geo"
+      output: "audiencia, dolor, objecion"
+      execution: parallel
+    - id: C_COMPETENCIA
+      description: "Find competitors, market prices, platform recommendation"
+      input: "nicho, especializacion, geo"
+      output: "competidores, PM range, vivir"
+      execution: parallel
+    - id: D_LEGAL
+      description: "Determine legal restrictions for the industry"
+      input: "industria, producto, plataformas"
+      output: "RLP"
+      execution: parallel
+    - id: E_OFERTA_COPY
+      description: "Generate offer, CTA, description, slogan options"
+      input: "A-D outputs + Config fields"
+      output: "vendes, PBP, lograr, slogan, oferta, descripcion, cta, tipografia"
+      execution: sequential (depends on A-D)
+    - id: F_ACTIVOS
+      description: "Generate or verify LAPVTFU assets in Drive"
+      input: "id_empresa, nicho, color_tema"
+      output: "LAPVTFU URLs"
+      execution: parallel (from start)
+    - id: G_GUION
+      description: "Generate ad scripts and CTAs from consolidated Brief"
+      input: "Brief consolidado"
+      output: "guiones, hooks, CTAs"
+      execution: sequential (final)
+  process:
+    - "1. Read Config_Empresas by id_empresa (fetchEmpresaRow)"
+    - "2. Parse existing Brief vector if present (parseBrief)"
+    - "3. Run A+B+C+D in parallel (taxonomy, avatar, competition, legal)"
+    - "4. Run F in parallel (asset generation/verification)"
+    - "5. Run E after A-D complete (consolidate offer/copy)"
+    - "6. Run G at end (generate scripts)"
+    - "7. Assemble 20-field vector in fixed order"
+    - "8. Validate: no pipes in values, all fields present"
+    - "9. Backup previous logo_url to cte<id>/_brief/historial/"
+    - "10. Write Brief vector to Config_Empresas.logo_url via GAS"
+    - "11. Save brief.json + confianza.json to cte<id>/_brief/ in Drive"

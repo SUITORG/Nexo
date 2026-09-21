@@ -126,3 +126,26 @@ agents:
     required_reviewers: []
     max_tokens: 12000
     temperature: 0.1
+
+  copywriter:
+    description: "Genera copy de marketing: briefs, hooks, CTAs, guiones de video, ofertas. Usa frameworks PAS/AIDA, investiga audiencia vía web research, respeta RLP y tono de marca."
+    domain: marketing
+    risk_level: low
+    required_skills:
+      - brief-engine
+      - web-research
+      - multi-tenant
+    required_reviewers: []
+    max_tokens: 16000
+    temperature: 0.4
+
+  researcher:
+    description: "Investigación de mercado: audiencia, competidores, tendencias, precios, RLP. Ejecuta búsquedas web estructuradas con fuentes verificadas."
+    domain: knowledge
+    risk_level: low
+    required_skills:
+      - web-research
+      - system-analysis
+    required_reviewers: []
+    max_tokens: 16000
+    temperature: 0.3

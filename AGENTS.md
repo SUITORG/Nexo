@@ -82,7 +82,7 @@ Usuario: "Evalúa SuitServiHogar"
 
 ## Registry quick reference
 
-- `.suit/registry/agents.yaml` — agent roles (architect, developer, reviewer, cotizador)
+- `.suit/registry/agents.yaml` — agent roles (architect, developer, reviewer, cotizador, copywriter, researcher)
 - `.suit/registry/skills.yaml` — skill definitions (domain, language, process, tool)
 - `.suit/registry/workflows.yaml` — workflow index
 - `.suit/registry/projects.yaml` — subproject definitions and overrides
@@ -95,9 +95,9 @@ Usuario: "Evalúa SuitServiHogar"
 | Category | Contents |
 |---|---|
 | `system/` | context-loader, index-navigator, registry-query |
-| `domain/` | multi-tenant, cotizaciones-engine, system-analysis, remotion-video |
+| `domain/` | multi-tenant, cotizaciones-engine, system-analysis, remotion-video, design-system, brief-engine |
 | `language/` | javascript, gas, sql |
-| `tool/` | web-search, git |
+| `tool/` | web-search, git, web-research |
 | `process/` | code-review, security-audit, deployment, pdf-generation |
 
 ## Start here
@@ -173,6 +173,22 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 8. **Commit** — format `{emoji} {tipo}: {desc} (v{X.Y.Z})`
 9. **Log** — record execution in `.suit/logs/` following telemetry schema
 10. **Smoke test manually**
+
+## Brief generation cycle (CampanasAi)
+
+When generating a Marketing Brief (workflow `brief-generation`), follow this cycle:
+
+1. **Parse existing** — `brief.parse` MCP tool or `parseBrief()` to load current `Config_Empresas.logo_url`
+2. **Fill from DB** — `brief-engine` skill reads `Config_Empresas` + Supabase catalogs (`industrias`, `nichos`)
+3. **Research** — `web-research` skill runs parallel queries (audience, pain, competitors, legal)
+4. **Verify assets** — check LAPVTFU completeness, mark `[PENDIENTE]` gaps
+5. **Consolidate** — agent assembles vector, applies confidence semaphores (A/B/C)
+6. **Confirm** — show diff to user before writing
+7. **Write** — `brief.assemble` MCP tool or direct Sheets write
+8. **Save metadata** — `brief.json` + `confianza.json` in workspace
+
+**MCP server**: `SuitCampanas/mcp/brief-server.js` (stdio transport, 4 tools)
+**Command**: `/brief [empresa]` (OpenCode + Claude Code)
 
 ## Maintenance cycle (KITCiclo integration)
 

@@ -1,0 +1,136 @@
+workflow:
+  name: brief-generation
+  display_name: "Marketing Brief Generation"
+  description: "Generate a complete 20-field Marketing Brief from id_empresa"
+  risk: medium
+  domain: marketing
+
+  entry:
+    requires_planning: false
+    requires_confirmation: true
+    required_context:
+      - AGENTS.md
+      - SuitCampanas/BRIEF.MD
+      - SuitCampanas/local-server-node.js
+    required_skills:
+      - brief-engine
+      - multi-tenant
+      - web-research
+    forbidden_if:
+      - "No id_empresa provided"
+
+  steps:
+    - id: validate-input
+      description: "Validate id_empresa exists in Config_Empresas"
+      action: read
+      skills:
+        - multi-tenant
+      validation:
+        - "id_empresa found in Config_Empresas"
+        - "Company is active (habilitado = TRUE)"
+
+    - id: read-current
+      description: "Read current Brief vector and company data"
+      action: read
+      skills:
+        - brief-engine
+      produces: current_brief.json
+      validation:
+        - "parseBrief() succeeds on existing vector"
+        - "BRIEF_EXTRA_COLUMNS extracted (slogan, descripcion, giro_especifico, foto_agente)"
+
+    - id: taxonomy-resolve
+      description: "Resolve industry/niche/specialization from Supabase catalogs"
+      action: read
+      skills:
+        - brief-engine
+      parallel: true
+      validation:
+        - "Best match found in industrias table"
+        - "Child nicho exists for matched industria"
+        - "Especializacion found in nichos.especializaciones[]"
+
+    - id: web-research
+      description: "Research audience, pain points, competitors, legal restrictions"
+      action: search
+      skills:
+        - web-research
+        - brief-engine
+      parallel: true
+      validation:
+        - "At least 3 sources consulted per field"
+        - "Every B-confidence field has a URL"
+
+    - id: asset-verify
+      description: "Verify existing LAPVTFU assets in Drive"
+      action: read
+      skills:
+        - brief-engine
+      parallel: true
+      validation:
+        - "Existing assets identified"
+        - "Missing assets marked as [PENDIENTE]"
+
+    - id: consolidate
+      description: "Assemble 20-field Brief vector from all sources"
+      action: plan
+      skills:
+        - brief-engine
+      produces: brief_vector.txt
+      validation:
+        - "All 20 fields present in fixed order"
+        - "No pipe characters in field values"
+        - "LAPVTFU has exactly 7 positions"
+        - "Customer fields preserved (not overwritten)"
+
+    - id: confirm-with-user
+      description: "Show Brief preview and get user approval"
+      action: read
+      validation:
+        - "User approves the generated Brief"
+        - "No unresolved PENDIENTES without justification"
+
+    - id: backup-previous
+      description: "Backup current logo_url before overwriting"
+      action: run
+      validation:
+        - "Previous logo_url saved to cte<id>/_brief/historial/"
+
+    - id: write-brief
+      description: "Write Brief vector to Config_Empresas.logo_url via GAS"
+      action: write
+      skills:
+        - gas
+        - multi-tenant
+      validation:
+        - "logo_url updated successfully"
+        - "Brief vector parseable by parseBrief()"
+
+    - id: save-metadata
+      description: "Save brief.json, confianza.json, prompts_imagenes.json to Drive"
+      action: write
+      validation:
+        - "Metadata files saved to cte<id>/_brief/"
+
+    - id: commit
+      description: "Commit changes if any code was modified"
+      action: git
+      condition: "if code files were modified"
+      validation:
+        - "Commit message follows convention"
+
+  exit:
+    validation:
+      - "Brief is complete and parseable"
+      - "No customer data was overwritten"
+      - "Every B-confidence field has a source URL"
+      - "Metadata saved to Drive"
+    requires_commit: false
+    notifies:
+      - telemetry
+
+  config:
+    allowed_models:
+      - claude-sonnet
+      - deepseek-flash
+    max_steps_without_confirmation: 3

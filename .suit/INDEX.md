@@ -8,7 +8,7 @@
 ## Registry
 | File | Purpose |
 |---|---|
-| `registry/agents.yaml` | Agent types and capabilities (architect, developer, reviewer, cotizador, reportero) |
+| `registry/agents.yaml` | Agent types and capabilities (architect, developer, reviewer, cotizador, reportero, copywriter, researcher) |
 | `registry/skills.yaml` | Reusable skill modules |
 | `registry/workflows.yaml` | Workflow index |
 | `registry/projects.yaml` | Subproject definitions |
@@ -26,6 +26,7 @@
 | `workflows/review.yaml` | Code review via reportero agent (read-only) |
 | `workflows/research.yaml` | Information gathering |
 | `workflows/deploy.yaml` | Production deployment |
+| `workflows/brief-generation.yaml` | Marketing Brief generation from id_empresa |
 | `workflows/cotizador.yaml` | Cotizador module development |
 | `workflows/video-generation.yaml` | Video con Remotion (ViRe) |
 | `workflows/video-generation-comfyui.yaml` | Video con ComfyUI + FFmpeg (SuitComfy) |
@@ -37,9 +38,9 @@
 | Directory | Contents |
 |---|---|
 | `skills/system/` | context-loader, index-navigator, registry-query |
-| `skills/domain/` | multi-tenant, cotizaciones-engine, contrato-subproyecto, data-sync, data-cleanup, design-system |
+| `skills/domain/` | multi-tenant, cotizaciones-engine, contrato-subproyecto, data-sync, data-cleanup, design-system, brief-engine |
 | `skills/language/` | javascript, gas, sql |
-| `skills/tool/` | web-search, git |
+| `skills/tool/` | web-search, git, web-research |
 | `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador, iteration-loop |
 
 ## Agents
@@ -49,6 +50,8 @@
 | `developer` | Code implementation | `.suit/registry/agents.yaml` |
 | `reviewer` | Code and architecture review | `.suit/registry/agents.yaml` |
 | `cotizador` | Quotation engine specialist | `.suit/registry/agents.yaml` |
+| `copywriter` | Marketing copy: briefs, hooks, CTAs, scripts | `.suit/registry/agents.yaml` |
+| `researcher` | Market research: audience, competitors, trends | `.suit/registry/agents.yaml` |
 | `reportero` | Read-only code reviewer | `scripts/agents/reportero.js` |
 | `probador` | Read-only smoke tester | `scripts/agents/probador.js` |
 | `mercado-analyst` | Evaluador de mercado (Panel Juzgador) | `.suit/registry/agents.yaml` |

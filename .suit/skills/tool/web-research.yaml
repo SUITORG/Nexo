@@ -1,0 +1,76 @@
+skill:
+  name: web-research
+  display_name: "Web Research - Business Intelligence"
+  version: 1.0.0
+  type: tool
+  domain: knowledge
+  description: >
+    Structured web research for business intelligence. Runs 3-5 parallel queries
+    with reformulations, prioritizes primary sources (regulators, official sites,
+    industry reports), discards undated or low-authority content. Returns JSON
+    with findings, consensus, dissent, sources with dates, and confidence score.
+    Replaces the /ConsultaWeb concept from the Brief mega-prompt.
+  dependencies: []
+  triggers:
+    - "research"
+    - "investigate"
+    - "search"
+    - "web"
+    - "competitor"
+    - "audience"
+    - "market"
+    - "tendencia"
+    - "tendencias"
+    - "legal"
+    - "regulacion"
+    - "dolor"
+    - "objeciones"
+    - "avatar"
+  context_hint:
+    - "SuitCampanas/BRIEF.MD"
+  rules:
+    - id: wr-001
+      description: "Every B-confidence claim must have at least one source URL"
+      severity: error
+    - id: wr-002
+      description: "Prioritize primary sources: government, industry associations, official docs"
+      severity: warning
+    - id: wr-003
+      description: "Discard content without date or from low-authority sources"
+      severity: warning
+    - id: wr-004
+      description: "Run 3-5 parallel queries with reformulations for comprehensive coverage"
+      severity: info
+    - id: wr-005
+      description: "Recency default: last 12 months unless specified otherwise"
+      severity: info
+  intents:
+    - id: avatar
+      description: "Who is the ideal customer — demographics, geography, psychographics, purchasing power"
+      query_pattern: "¿quiénes son los clientes de [nicho] en [geo]? Perfil demográfico, psicográfico, poder adquisitivo"
+    - id: pain
+      description: "Main pain points and frustrations of the target audience"
+      query_pattern: "¿Cuáles son los problemas más comunes de [avatar] al buscar [producto/servicio]?"
+    - id: objections
+      description: "Common objections and barriers to purchase"
+      query_pattern: "¿Por qué los clientes no compran [producto/servicio]? Objeciones comunes de [nicho]"
+    - id: competitors
+      description: "Direct competitors and inspiration brands"
+      query_pattern: "Competidores de [nicho] en [geo]. Empresas similares que ofrecen [servicio]"
+    - id: legal
+      description: "Legal restrictions and platform ad policies"
+      query_pattern: "Restricciones legales para anunciar [producto] en [plataforma]. Regulador aplicable en [geo]"
+    - id: trends
+      description: "Current market trends and best practices"
+      query_pattern: "Tendencias de marketing para [nicho] 2026. Mejores prácticas [industria]"
+    - id: pricing
+      description: "Market price ranges"
+      query_pattern: "¿Cuánto cuesta [producto/servicio] en [geo]? Rango de precios [nicho]"
+  output_format: |
+    {
+      "hallazgos": ["finding1", "finding2"],
+      "consenso": "Summary of main consensus",
+      "disidencias": ["dissent1"],
+      "fuentes": [{ "titulo": "...", "url": "...", "fecha": "YYYY-MM-DD" }],
+      "confianza": "A|B|C"
+    }

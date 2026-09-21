@@ -680,3 +680,69 @@ skills:
       - "KitPlantillaDinamicaLandigPage/presets.json"
       - "KitPlantillaDinamicaLandigPage/theme.schema.json"
       - "scripts/parse-theme.js"
+
+  # --- Brief Engine Skills ---
+
+  brief-engine:
+    description: "Generación de Brief de Marketing completo (20 campos, pipe-delimited) desde un solo id_empresa. Lee Config_Empresas, consulta catálogos Supabase, infiere campos faltantes vía IA + web research, escribe vector en logo_url."
+    version: 1.0.0
+    type: domain
+    domain: marketing
+    dependencies:
+      - multi-tenant
+      - javascript
+    triggers:
+      - "brief"
+      - "brief de marketing"
+      - "generar brief"
+      - "crear brief"
+      - "LAPVTFU"
+      - "logo_url vector"
+      - "20 campos"
+      - file_pattern: "SuitCampanas/**/*.js"
+      - file_pattern: "**/brief*"
+    inputs:
+      - "id_empresa"
+      - "Config_Empresas row"
+    outputs:
+      - "Brief vector (pipe-delimited)"
+      - "brief.json metadata"
+      - "confianza.json"
+    discoverable: true
+    context_hint:
+      - "SuitCampanas/BRIEF.MD"
+      - "SuitCampanas/local-server-node.js"
+      - ".suit/skills/domain/brief-engine.yaml"
+      - ".suit/workflows/brief-generation.yaml"
+
+  web-research:
+    description: "Investigación web estructurada para inteligencia de negocio. Ejecuta 3-5 queries en paralelo con reformulaciones, prioriza fuentes primarias, descarta contenido sin fecha. Salida JSON con hallazgos/consenso/fuentes/confianza."
+    version: 1.0.0
+    type: tool
+    domain: knowledge
+    dependencies: []
+    triggers:
+      - "research"
+      - "investigate"
+      - "search"
+      - "competitor"
+      - "audience"
+      - "market"
+      - "tendencia"
+      - "legal"
+      - "dolor"
+      - "objeciones"
+      - "avatar"
+    inputs:
+      - "query topic"
+      - "niche/industry"
+      - "geography"
+      - "intent"
+    outputs:
+      - "findings[]"
+      - "sources[{title, url, date}]"
+      - "confidence (A/B/C)"
+    discoverable: true
+    context_hint:
+      - "SuitCampanas/BRIEF.MD"
+      - ".suit/skills/tool/web-research.yaml"
