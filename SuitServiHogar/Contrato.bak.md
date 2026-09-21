@@ -1,10 +1,9 @@
-# CONTRATO DE ENCARGO — SuitServiHogar
+# CONTRATO DE ENCARGO — SuitServiHogar Reynosa
 
-**Versión:** 6.0
-**Fecha:** 2026-09-21
-**Fuentes:** `Contrato.md` v5.0 (43 requisitos) + `CONTRATO.md` raíz (clasificación)
-**Estado:** ✅ APROBADO
-**Backup:** `Contrato.bak.md` (v5.0)
+**Versión:** 5.0  
+**Fecha:** 2026-09-16  
+**Fuentes:** `appServiHogarOriginalReynosa.txt` (43 requisitos) + `Informe Ejecutivo` + `AGENTS.md` + auditoría del código  
+**Estado:** ✅ APROBADO  
 
 ---
 
@@ -34,10 +33,6 @@ Mercado bilateral hiper-local en Reynosa, Tamaulipas. Motor: formalización de s
 | Pagos | Stripe Connect (15% platform / 85% tech) |
 | DB | `egyxgnlnzanxpqyuvmsg.supabase.co`, prefix `sh_` |
 | Dev server | Vite (3000) + Express (3010) |
-
-### 2.4 Excepción Arquitectónica (ADR-029)
-
-SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA principal SuitOrg. Usa React 19 (excepción a la Regla #7 SuitOrg: vanilla JS only). Standalone, comunica vía URLs externas o APIs compartidas.
 
 ---
 
@@ -102,81 +97,46 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 
 | Estado | Cantidad | % |
 |---|:---:|:---:|
-| ✅ Completo | 35 | 81% |
-| ⚠️ Parcial | 6 | 14% |
-| ❌ No implementado | 2 | 5% |
+| ✅ Completo | 43 | 100% |
+| ⚠️ Parcial | 0 | 0% |
+| ❌ No implementado | 0 | 0% |
 | **Total** | **43** | **100%** |
 
----
+### Capacidades faltantes agrupadas por módulo
 
-## 5. REQUISITOS CLASIFICADOS POR SECCIÓN
-
-### 5.1 Requerimientos Frontend (orden de importancia)
-
-| # | Requerimiento | Severidad | Req# | Archivos | Estado |
-|---|---|---|:---:|---|:---:|
-| F1 | **React 19 + Vite + TS** — Excepción ADR-029. No migrar a vanilla JS. | error | 11 | `package.json`, `src/` | ✅ |
-| F2 | **Tipos de usuario: técnico/cliente** — Portales diferenciados. ProPortalScreen, TechnicianOrdersScreen, ExploreScreen. | error | 2 | `LoginScreen`, `ProPortalScreen`, `TechnicianOrdersScreen` | ✅ |
-| F3 | **Chat dentro de plataforma** — Mensajes texto + fotos solo en sh_messages. Sin comunicación externa. | error | 3, 4, 35 | `messageService.ts`, `ChatScreen.tsx`, `sh_messages` | ✅ |
-| F4 | **100% móvil / PWA** — manifest.json, service worker, splash screen, responsive Tailwind. | error | 31 | `manifest.json`, `sw.js`, `index.html` | ✅ |
-| F5 | **Privacidad + Términos legales** — Producción-blocking. Checkbox aceptación, blindaje mexicano LFPDPPP. | error | 42, 43 | `PrivacyPolicyScreen.tsx`, `TermsScreen.tsx`, `src/data/legal/` | ✅ |
-| F6 | **Calificación bidireccional** — ReviewForm con estrellas + comentario + moderação de ofensas. | warning | 5, 17, 37 | `ReviewForm.tsx`, `reviewService.ts`, `sh_reviews` | ✅ |
-| F7 | **Negociación de precios** — PriceNegotiation con chat + booking. | warning | 41 | `PriceNegotiation.tsx`, `sh_price_negotiations` | ✅ |
-| F8 | **Ubicación GPS** — Geolocalización + ofuscación espacial (150-250m) + Google Maps embed. | warning | 12 | `gpsService.ts`, `GoogleMapEmbed.tsx` | ✅ |
-| F9 | **Feedback flotante** — Widget de reportes de mejoras por usuarios. | warning | 18 | `FeedbackWidget.tsx` | ✅ |
-| F10 | **Galería de fotos cliente** — Subir problema antes del servicio. | info | 4 | `BookingEscrowScreen.tsx` | ✅ |
-| F11 | **Glossario local Reynosa** — 8 términos locales con tooltip. | info | 29 | `glossary.ts`, `GlossaryScreen.tsx` | ✅ |
-| F12 | **Brand: Logo + Splash** — icon-192.svg, icon-512.svg, splash SH. | info | 20 | SVG icons, `index.html` splash | ✅ |
-| F13 | **Indicador offline** — navigator.onLine + service worker state. | warning | 39 | `useOnlineStatus.ts` (pendiente) | ❌ |
-
-### 5.2 Requerimientos Backend (orden de importancia)
-
-| # | Requerimiento | Severidad | Req# | Archivos | Estado |
-|---|---|---|:---:|---|:---:|
-| B1 | **Supabase como DB** — PostgreSQL 15+, prefix `sh_`. Single-tenant. | error | 14, 15 | `src/lib/supabase.ts`, `schema.sql` | ✅ |
-| B2 | **Google OAuth** — Auth vía Supabase Auth + onAuthStateChange. | error | 22 | `authService.ts` | ✅ |
-| B3 | **Stripe Connect Escrow** — Split configurable (15% default), paymentIntent + transfer. | error | 7 | `server.js`, `useStripePayment.ts`, `BookingEscrowScreen.tsx` | ✅ |
-| B4 | **Status machine de órdenes** — draft→funded→in_progress→completed→released. | error | 11 | `schema.sql`, `bookingService.ts` | ✅ |
-| B5 | **Catálogo de servicios** — 13 categorías con base_price_mxn. | error | 6, 8 | `sh_service_categories`, `ExploreScreen` | ✅ |
-| B6 | **Penalizaciones** — process_client_cancellation + process_specialist_cancellation. | error | 24 | `bookingService.ts` | ✅ |
-| B7 | **Donaciones caridad** — 1% configurable, "Fundación Hogar Digno AC". | warning | 25, 33 | `calculate_charity_fee()`, `accumulate_monthly_charity()` | ✅ |
-| B8 | **Incentivos/Referidos** — $150 MXN técnico, $100 cupón cliente, volume discount 10%. | warning | 9, 9.1, 9.2 | `sh_referrals`, `sh_coupons`, `referralService.ts` | ✅ |
-| B9 | **Backoffice/Admin** — Dashboard, CRUD técnicos, disputas, configuración sh_config. | warning | 19, 30 | `AdminScreen.tsx` | ✅ |
-| B10 | **Configuración desde admin** — sh_config con 8 parámetros, caché 5 min. | info | 7, 9.1, 25 | `server.js`, `AdminScreen.tsx` | ✅ |
-| B11 | **CFDI / Facturación electrónica** — XML 4.0 + Complemento Traslado + mock PAC. | warning | 10, 32 | `server/cfdiGenerator.js`, `src/services/cfdi.ts` | ⚠️ |
-| B12 | **Tipo de cambio real** — Fixer.io API en vez de tasa hardcoded. | info | 26 | `src/services/exchangeRate.ts` | ⚠️ |
-| B13 | **IDs secuenciales** — ORD-001 format, secuencia auto-incremental real. | info | 16 | `schema.sql` | ⚠️ |
-
-### 5.3 Requerimientos Seguridad (orden de importancia)
-
-| # | Requerimiento | Severidad | Req# | Archivos | Estado |
-|---|---|---|:---:|---|:---:|
-| S1 | **Auth JWT en Express** — Verificar Authorization header con JWT de Supabase en /api/*. | error | 21 | `server.js` | ✅ |
-| S2 | **Rate limiting** — express-rate-limit en /api/* para prevenir abuso. | error | 34 | `server.js`, `package.json` | ⚠️ |
-| S3 | **Helmet (CSP + X-Frame-Options)** — Content-Security-Policy, X-Frame-Options DENY. | error | 34 | `server.js` | ⚠️ |
-| S4 | **CORS restrictivo** — Solo permitir origen real del frontend. | error | 21 | `server.js` | ✅ |
-| S5 | **RLS Supabase** — sh_orders con auth.uid() checks. Migración 003_security_rls.sql. | error | 21 | `migrations/003_security_rls.sql` | ✅ |
-| S6 | **Webhook secret** — Rechazar sin STRIPE_WEBHOOK_SECRET configurado. | error | 21 | `server.js` | ✅ |
-| S7 | **Eliminar dev bypass** — Quitar `?tech` de App.tsx. | error | 21 | `App.tsx` | ✅ |
-| S8 | **Bucket evidencia privado** — sh-evidence no público, solo participantes de la orden. | warning | 35 | `migrations/004_chat_messages.sql` | ⚠️ |
-| S9 | **Google Pay via Stripe** — PaymentRequest API como alternativa a tarjeta. | info | 23 | `StripeCardInput.tsx` | ❌ |
+| Módulo | Requisitos | Prioridad |
+|---|---|---|
+| ✅ **Comunicación** | #3, #4, #35, #36 | COMPLETADA |
+| ✅ **Calificación/Validación** | #5, #17, #37 | COMPLETADA |
+| ✅ **Seguridad** | #21, #34 | COMPLETADA |
+| **Privacidad/Legal** | #42, #43 | **ALTA — Producción-blocking** |
+| **Incentivos** | #9, #9.1, #9.2 | ALTA — Crecimiento |
+| **Backoffice/Admin** | #19, #30 | ALTA — Operación |
+| **Ubicación/GPS** | #12, #26 | ALTA — Servicio |
+| **Pagos avanzados** | #23, #10, #32 | MEDIA — Google Pay, CFDI |
+| **Mobile/PWA** | #31 | MEDIA — Experiencia |
+| **Terminología** | #29 | BAJA — Polish |
+| **Brand** | #20 | BAJA — Marketing |
+| **Feedback usuarios** | #18, #36 | MEDIA — Mejora continua |
 
 ---
 
-## 6. INVARIANTES ABSOLUTAS
+## 5. PRUEBA DE VERIFICACIÓN
 
-| # | Invariante | Fuente | Verificación |
-|---|---|---|---|
-| 1 | **Single-tenant** — No hay `id_empresa`. Un solo tenant. | Req#14 | `schema.sql` sin columna `id_empresa` |
-| 2 | **Stripe Split** — `application_fee_amount` + `transfer_data.destination` | Req#7 | `server.js:63` |
-| 3 | **Status machine** — 5 estados con transiciones documentadas | Req#11 | `bookingService.ts` |
-| 4 | **Soft delete** — `activo = FALSE`, nunca DELETE físico | AGENTS.md | Verificar en queries |
-| 5 | **Bimonetario** — MXN/USD, montos en centavos INTEGER | Req#6 | `constants.ts`, `schema.sql` |
-| 6 | **Auth Google OAuth** — No hay registro por email/password | Req#22 | `authService.ts` |
+```bash
+npx tsc --noEmit          # TypeScript compila limpio (exit code 0)
+npm run build              # Build de producción (exit code 0)
+npm run lint               # Alias de tsc --noEmit
+```
+
+### Evidencia requerida
+- Capturas en `evidence/` de cada flujo nuevo
+- Log de terminal mostrando `exit code 0` en build
+- Cada cambio funcional debe tener su captura correspondiente
 
 ---
 
-## 7. LÍMITES
+## 6. LÍMITES Y RESTRICCIONES
 
 ### Archivos protegidos (no modificar sin autorización)
 - `.env` — credenciales de Supabase y Stripe
@@ -193,22 +153,7 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 
 ---
 
-## 8. PRUEBA DE VERIFICACIÓN
-
-```bash
-npx tsc --noEmit          # TypeScript compila limpio (exit code 0)
-npm run build              # Build de producción (exit code 0)
-npm run lint               # Alias de tsc --noEmit
-```
-
-### Evidencia requerida
-- Capturas en `evidence/` de cada flujo nuevo
-- Log de terminal mostrando `exit code 0` en build
-- Cada cambio funcional debe tener su captura correspondiente
-
----
-
-## 9. CRITERIOS DE FRACASO Y ROLLBACK
+## 7. CRITERIOS DE FRACASO Y ROLLBACK
 
 ### Definición de fallo
 - TypeScript compilation falla
@@ -223,7 +168,7 @@ git reset --hard HEAD
 
 ---
 
-## 10. CLÁUSULA DE CONTROL DE CAMBIOS
+## 8. CLÁUSULA DE CONTROL DE CAMBIOS
 
 Si se descubre un bloqueo imprevisto:
 1. **PAUSAR** ejecución
@@ -233,7 +178,7 @@ Si se descubre un bloqueo imprevisto:
 
 ---
 
-## 11. PLAN DE EJECUCIÓN POR FASES
+## 9. PLAN DE EJECUCIÓN POR FASES
 
 ### Fase 1: Seguridad (producción-blocking) ✅ COMPLETADA
 
@@ -269,9 +214,9 @@ Si se descubre un bloqueo imprevisto:
 | 3.4 | Badges dinámicos ("Certificado de Confianza" a 10 servicios 5★) | #5, #9.1 | Lógica en BD + UI | ✅ |
 | 3.5 | Reseñas visibles en perfil del técnico | #17 | `ProPortalScreen.tsx` (sección Reseñas) | ✅ |
 
-### Fase 4: Incentivos (crecimiento) ✅ COMPLETADA
+### Fase 4: Incentivos (crecimiento) ✅
 
-| # | Tarea | Requisitos | Archivos | Estado |
+| # | Tarea | Requisitos | Archivos | Esfuerzo |
 |---|---|:---:|---|:---:|
 | 4.1 | Tabla `sh_referrals` + generador de código único | #9, #9.1, #9.2 | Nueva migración + servicio | ✅ |
 | 4.2 | Flujo de referido técnico ($150 MXN al completar primer servicio) | #9.1 | `bookingService.ts` | ✅ |
@@ -280,9 +225,9 @@ Si se descubre un bloqueo imprevisto:
 | 4.5 | UI de referidos en perfil (compartir código) | #9, #9.1, #9.2 | `ProPortalScreen.tsx` | ✅ |
 | 4.6 | Reducción comisión al 10% para 20+ servicios/mes con rating >4.7 | #9.1 | `server.js` (lógica de split) | ✅ |
 
-### Fase 5: Backoffice/Admin (operación) ✅ COMPLETADA
+### Fase 5: Backoffice/Admin (operación) ✅
 
-| # | Tarea | Requisitos | Archivos | Estado |
+| # | Tarea | Requisitos | Archivos | Esfuerzo |
 |---|---|:---:|---|:---:|
 | 5.1 | Dashboard admin con métricas (Órdenes/día, ingresos, técnicos activos) | #19, #30 | `AdminScreen.tsx` (tab Dashboard) | ✅ |
 | 5.2 | CRUD de técnicos (aprobar, suspender, editar) | #30 | `AdminScreen.tsx` (tab Técnicos + suspender/activar) | ✅ |
@@ -306,26 +251,26 @@ Si se descubre un bloqueo imprevisto:
 
 **Flujo:** `server.js` lee de `sh_config` al iniciar con caché 5 min. AdminScreen tab Configuración permite editar en tiempo real.
 
-### Fase 6: GPS/Ubicación ✅ COMPLETADA
+### Fase 6: GPS/Ubicación ✅
 
-| # | Tarea | Requisitos | Archivos | Estado |
+| # | Tarea | Requisitos | Archivos | Esfuerzo |
 |---|---|:---:|---|:---:|
 | 6.1 | Captura de dirección literal (calle, número, colonia) | #12 | `BookingEscrowScreen.tsx` (sección Dirección) | ✅ |
 | 6.2 | Geolocalización del cliente (GPS browser API) | #12 | `gpsService.ts` (getCurrentPosition) | ✅ |
 | 6.3 | Ofuscación espacial (radio 150-250m, no ubicación exacta) | #12 (Informe) | `gpsService.ts` (obfuscateLocation) | ✅ |
 | 6.4 | Google Maps embed para ver ubicación del técnico | #12 | `GoogleMapEmbed.tsx` (iframe + static) | ✅ |
 
-### Fase 7: Pagos avanzados + Fiscal ✅ COMPLETADA
+### Fase 7: Pagos avanzados + Fiscal ✅
 
-| # | Tarea | Requisitos | Archivos | Estado |
+| # | Tarea | Requisitos | Archivos | Esfuerzo |
 |---|---|:---:|---|:---:|
 | 7.1 | Google Pay integration (via Stripe PaymentRequest) | #23 | `StripeCardInput.tsx`, `BookingEscrowScreen.tsx`, `useStripePayment.ts` | ✅ |
 | 7.2 | CFDI 4.0 (XML 4.0 + Complemento Traslado + mock PAC) | #10, #32 | `server/cfdiGenerator.js`, `server.js`, `src/services/cfdi.ts` | ✅ |
 | 7.3 | Tipo de cambio real (Fixer.io API) | #26 | `src/services/exchangeRate.ts`, `src/lib/constants.ts` | ✅ |
 
-### Fase 8: Mobile/PWA + Polish ✅ COMPLETADA
+### Fase 8: Mobile/PWA + Polish ✅
 
-| # | Tarea | Requisitos | Archivos | Estado |
+| # | Tarea | Requisitos | Archivos | Esfuerzo |
 |---|---|:---:|---|:---:|
 | 8.1 | PWA manifest + service worker | #31 | `manifest.json`, `sw.js`, `index.html` | ✅ |
 | 8.2 | Splash screen + iconos | #20, #31 | `index.html` inline splash, SVG icons | ✅ |
@@ -350,12 +295,12 @@ Si se descubre un bloqueo imprevisto:
 | 10.1 | Política de privacidad (datos no se comparten con terceros) | #42 | `src/screens/PrivacyPolicyScreen.tsx`, `src/data/legal/privacy.ts` | 1h |
 | 10.2 | Términos y condiciones (responsabilidad, deslinde, prohibición de demandas colectivas) | #43 | `src/screens/TermsScreen.tsx`, `src/data/legal/terms.ts` | 1.5h |
 | 10.3 | Checkbox de aceptación obligatoria en registro/login | #42, #43 | `LoginScreen.tsx`, `RegisterScreen.tsx` | 30 min |
-| 10.4 | Blindaje legal mexicano (LFPDPPP, Consumer Protection, prevención demandas colectivas) | #42, #43 | `src/data/legal/legalClauses.ts` | 1.5h |
+| 10.4 | Blindaje legal mexicano (LFPDPPP,Consumer Protection,prevención demandas colectivas) | #42, #43 | `src/data/legal/legalClauses.ts` | 1.5h |
 | 10.5 | Soberanía de costos (arbitraje obligatorio, jurisdicción) | #43 | `src/data/legal/terms.ts` | 30 min |
 
 ---
 
-## 12. ORDEN DE EJECUCIÓN
+## 10. ORDEN DE EJECUCIÓN
 
 ```
 Fase 1 (Seguridad) → Fase 2 (Comunicación) → Fase 3 (Calificación) →
@@ -368,13 +313,13 @@ Fase 10 (Privacidad/Legal) → Fase 11 (Modo Desarrollador/Test)
 
 ---
 
-## 13. PRESUPUESTO TOTAL ESTIMADO
+## 11. PRESUPUESTO TOTAL ESTIMADO
 
 | Fase | Esfuerzo | Requisitos cubiertos |
 |---|:---:|:---:|
-| Fase 1: Seguridad | ~1.5 h ✅ | #21, #34 |
-| Fase 2: Comunicación | ~2 h ✅ | #3, #4, #35, #36 |
-| Fase 3: Calificación | ~1.5 h ✅ | #5, #17, #37 |
+| Fase 1: Seguridad | ~1.5 h | #21, #34 |
+| Fase 2: Comunicación | ~2 h | #3, #4, #35, #36 |
+| Fase 3: Calificación | ~1.5 h | #5, #17, #37 |
 | Fase 4: Incentivos | ~2 h ✅ | #9, #9.1, #9.2 |
 | Fase 5: Backoffice | ~2.5 h ✅ | #19, #30, #36 |
 | Fase 6: GPS | ~1.25 h ✅ | #12, #26 |
@@ -402,7 +347,7 @@ Fase 10 (Privacidad/Legal) → Fase 11 (Modo Desarrollador/Test)
 
 ---
 
-## 14. PENDIENTES / OPCIONALES
+## PENDIENTES / OPCIONALES
 
 ### 🟡 PENDIENTES (Core App - Producción-blocking)
 | # | Tarea | Esfuerzo | Archivos objetivo |
@@ -437,10 +382,10 @@ Fase 10 (Privacidad/Legal) → Fase 11 (Modo Desarrollador/Test)
 
 ---
 
-## 15. FIRMA
+## 12. FIRMA
 
-Al aprobar este contrato, el usuario autoriza al agente a proceder con las tareas descritas en la Sección 11, en el orden de la Sección 12.
+Al aprobar este contrato, el usuario autoriza al agente a proceder con las tareas descritas en la Sección 9, en el orden de la Sección 10.
 
 ```
-Aprobado: ✅ FIRMADO                          Fecha: 2026-09-21
+Aprobado: ✅ FIRMADO                          Fecha: 2026-09-16
 ```
