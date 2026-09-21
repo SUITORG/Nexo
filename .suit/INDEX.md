@@ -20,6 +20,7 @@
 ## Workflows
 | File | Purpose |
 |---|---|
+| `workflows/kit-ciclo.yaml` | KITCiclo — mandatory maintenance cycle wrapper (F0→F7) |
 | `workflows/feature.yaml` | New feature implementation |
 | `workflows/bugfix.yaml` | Bug fixing process |
 | `workflows/audit.yaml` | System audit |

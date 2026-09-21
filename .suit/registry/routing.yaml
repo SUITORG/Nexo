@@ -167,6 +167,26 @@ routing:
       priority: 25
 
     - patterns:
+        - "mejoras"
+        - "cambios"
+        - "mantenimiento"
+        - "modificaciones"
+        - "compactar"
+        - "compactacion"
+        - "depuracion"
+        - "ciclo"
+        - "ciclo de mantenimiento"
+        - "fase"
+        - "contrato"
+        - "validar cambios"
+        - "actualizar codigo"
+        - "refactorizar"
+        - "optimizar"
+        - "limpiar codigo"
+      workflow: kit-ciclo
+      priority: 25
+
+    - patterns:
         - "color"
         - "color_tema"
         - "tema"

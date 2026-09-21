@@ -14,6 +14,11 @@ skill:
     - keyword: "CONTRATO.md"
     - keyword: "reglas del proyecto"
     - keyword: "invariantes"
+    - keyword: "mejoras"
+    - keyword: "cambios"
+    - keyword: "mantenimiento"
+    - keyword: "fase"
+    - keyword: "alcance"
     - file_pattern: "**/CONTRATO.md"
   context_hint:
     - "AGENTS.md"

@@ -17,6 +17,7 @@ skill:
     - keyword: "esquema"
     - keyword: "migrar datos"
     - keyword: "columnas"
+    - keyword: "compactacion"
     - file_pattern: "**/db/*.sql"
     - file_pattern: "**/db/schema*"
   context_hint:

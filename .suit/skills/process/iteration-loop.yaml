@@ -15,6 +15,10 @@ skill:
     - keyword: "no pasa"
     - keyword: "error en validación"
     - keyword: "iterar"
+    - keyword: "compactar"
+    - keyword: "compactacion"
+    - keyword: "reintento"
+    - keyword: "ronda"
   context_hint:
     - ".suit/templates/CORRECCIONES.md"
     - ".suit/templates/VALIDACION.md"

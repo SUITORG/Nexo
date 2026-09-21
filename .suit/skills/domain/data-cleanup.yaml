@@ -18,6 +18,7 @@ skill:
     - keyword: "filas huérfanas"
     - keyword: "duplicados"
     - keyword: "compactar datos"
+    - keyword: "depuracion"
   context_hint:
     - "AGENTS.md"
     - ".suit/templates/PLAN-DEPURA.md"

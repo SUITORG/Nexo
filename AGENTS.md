@@ -174,6 +174,36 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 9. **Log** — record execution in `.suit/logs/` following telemetry schema
 10. **Smoke test manually**
 
+## KITCiclo — Mandatory Overlay (auto-wrapper)
+
+**Before ANY code modification**, the agent MUST:
+
+1. Check if scope has `CONTRATO.md` → if not, create it (F0)
+2. Run `bash scripts/detectar-cambios.sh <scope>` to resolve scope
+3. Apply `kit-ciclo` workflow phases as appropriate
+
+**After ANY code modification**, the agent MUST:
+
+1. Run validation (F3) — record in `VALIDACION.md`
+2. Commit per phase using `scripts/commit-fase.sh` (not at the end)
+3. Detect schema delta (F5) if DB files changed
+4. Sync if needed (F6) — only with user approval
+
+**This overlay is AUTOMATIC — do not skip it for "small changes".**
+
+Keywords that trigger KITCiclo: `mejoras`, `cambios`, `mantenimiento`, `modificaciones`, `compactar`, `compactacion`, `depuracion`, `ciclo`, `fase`, `contrato`, `refactorizar`, `optimizar`, `limpiar codigo`.
+
+| Phase | Skill | Produces | Commit |
+|---|---|---|---|
+| F0 | `contrato-subproyecto` | `CONTRATO.md` | `ciclo(f0/contrato)` |
+| F1 | inline | scope prioritization | `ciclo(f1/encuadre)` |
+| F2 | inline | code changes | `ciclo(f2/implementacion)` |
+| F3 | `iteration-loop` | `VALIDACION.md` | `ciclo(f3/validacion)` |
+| F4 | `iteration-loop` | `CORRECCIONES.md` | `ciclo(f4/iteracion)` |
+| F5 | `data-sync` | `PLAN-SYNC.md` | `ciclo(f5/plan-sync)` |
+| F6 | `data-sync`/`data-cleanup` | synced data | `ciclo(f6/sync)` |
+| F7 | git push | deployed | manual |
+
 ## Brief generation cycle (CampanasAi)
 
 When generating a Marketing Brief (workflow `brief-generation`), follow this cycle:
