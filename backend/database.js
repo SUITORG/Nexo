@@ -228,6 +228,12 @@ function onOpen() {
       .addItem('Generar SUDO para empresa activa', 'generarSUDOparaSeleccion')
       .addToUi();
   } catch(e) {}
+  try {
+    addToMenuTemas(SpreadsheetApp.getUi());
+  } catch(e) {}
+  try {
+    addToMenuBrief(SpreadsheetApp.getUi());
+  } catch(e) {}
 }
 
 function avisar(msg) {

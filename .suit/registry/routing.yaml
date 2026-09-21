@@ -168,6 +168,7 @@ routing:
 
     - patterns:
         - "color"
+        - "color_tema"
         - "tema"
         - "theme"
         - "tipografía"
@@ -176,10 +177,47 @@ routing:
         - "paleta"
         - "font"
         - "fuente"
+        - "candado"
+        - "pipe-delimited"
+        - "hexColor"
+        - "parse-theme"
+        - "template ID"
+        - "presets"
       workflow: feature
       priority: 15
       skills_override:
         - design-system
+
+    - patterns:
+        - "brief"
+        - "brief de marketing"
+        - "generar brief"
+        - "crear brief"
+        - "LAPVTFU"
+        - "logo_url vector"
+        - "20 campos"
+        - "20 fields"
+      workflow: brief-generation
+      priority: 20
+
+    - patterns:
+        - "investigar"
+        - "research"
+        - "investigar mercado"
+        - "investigar audiencia"
+        - "competidores"
+        - "tendencias"
+        - "dolores del cliente"
+        - "objeciones"
+        - "avatar ideal"
+        - "RLP"
+      workflow: research
+      priority: 15
+      agent: copywriter
+      skills_override:
+        - brief-engine
+        - web-research
+        - multi-tenant
 
   overrides:
     - if:

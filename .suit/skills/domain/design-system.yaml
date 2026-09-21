@@ -11,8 +11,10 @@ skill:
   dependencies: []
   triggers:
     - keyword: "color"
+    - keyword: "color_tema"
     - keyword: "tema"
     - keyword: "theme"
+    - keyword: "theme-sidebar"
     - keyword: "tipografía"
     - keyword: "typography"
     - keyword: "diseño visual"
@@ -21,8 +23,16 @@ skill:
     - keyword: "landing"
     - keyword: "font"
     - keyword: "fuente"
+    - keyword: "candado"
+    - keyword: "pipe-delimited"
+    - keyword: "hexColor"
+    - keyword: "parse-theme"
+    - keyword: "template ID"
+    - keyword: "presets"
     - file_pattern: "**/presets.json"
     - file_pattern: "**/theme*"
+    - file_pattern: "**/theme-sidebar.js"
+    - file_pattern: "**/parse-theme.js"
   context_hint:
     - "KitPlantillaDinamicaLandigPage/presets.json"
     - "KitPlantillaDinamicaLandigPage/theme.schema.json"
