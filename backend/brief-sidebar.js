@@ -19,6 +19,7 @@ const BRIEF_FIELDS = [
 
 // ── Menu Brief (se llama desde onOpen de database.js) ─────────────
 function addToMenuBrief(ui) {
+  ui = ui || SpreadsheetApp.getUi();
   ui.createMenu(' Brief')
     .addItem('Generar Brief (abre sidebar)', 'showBriefSidebar')
     .addItem('Validar Brief de empresa activa', 'validarBriefSeleccion')

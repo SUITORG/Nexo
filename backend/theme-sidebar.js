@@ -48,6 +48,7 @@ const PRESETS = {
 
 // ── Menu temas (se llama desde onOpen de database.js) ─────────────────────
 function addToMenuTemas(ui) {
+  ui = ui || SpreadsheetApp.getUi();
   ui.createMenu(' Temas')
     .addItem('Abrir selector de temas', 'showThemeSidebar')
     .addToUi();
