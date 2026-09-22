@@ -104,39 +104,14 @@ Al llegar a ~60% de la ventana de contexto, **compactar antes de seguir**. No es
 
 *Ref: `KITCiclo/.claude/skills/ciclo/references/compactacion.md`*
 
-## Enfoque 20/80 (Pareto) — siempre activo
-
-Antes de ejecutar cualquier solicitud del usuario:
-
-1. **Identificar** el 20% de acciones que resuelve el 80% del impacto/valor
-2. **Ejecutar** solo eso primero
-3. **Preguntar** si se debe continuar con el resto
-4. **No ejecutar** tareas de bajo impacto sin confirmación explícita
-
-*Ref: `kit-ciclo.yaml` F1 (Encuadre 20/80), `data-cleanup.yaml` process*
-
-## Confirmación antes de ejecutar — siempre activa
-
-No ejecutar modificaciones hasta no estar al **95% segura**.
-
-| Situación | Acción |
-|---|---|
-| Hay duda sobre el alcance | **Preguntar** |
-| Hay 3+ opciones posibles | **Preguntar** |
-| Cambio destructivo (DELETE, DROP, overwrite) | **SIEMPRE preguntar** |
-| Solo es adición/lectura, sin riesgo | Ejecutar |
-| Usuario dio instrucción explícita y clara | Ejecutar |
-
-*Ref: `contrato-subproyecto.yaml` ct-001, `iteration-loop.yaml` il-002, `data-cleanup.yaml` dc-001*
-
 ## Registry quick reference
 
-- `.suit/registry/agents.yaml` — agent roles
-- `.suit/registry/skills.yaml` — skill definitions
+- `.suit/registry/agents.yaml` — agent roles (architect, developer, reviewer, cotizador, copywriter, researcher)
+- `.suit/registry/skills.yaml` — skill definitions (domain, language, process, tool)
 - `.suit/registry/workflows.yaml` — workflow index
-- `.suit/registry/projects.yaml` — subproject definitions
+- `.suit/registry/projects.yaml` — subproject definitions and overrides
 - `.suit/registry/models.yaml` — AI model registry
-- `.suit/registry/permissions.yaml` — access control
+- `.suit/registry/permissions.yaml` — access control rules
 - `.suit/registry/routing.yaml` — intent-to-workflow mapping
 
 ## Worker skills (`.suit/skills/`)
@@ -157,9 +132,9 @@ No ejecutar modificaciones hasta no estar al **95% segura**.
 
 ## Architecture (non-obvious)
 - 4 independent servers: `server.js` (Express, 3001), `SuitCampanas/local-server-node.js` (http, 8000), `citas/index.js` (Express, 3002), `SuitVidGenRemotion/` (Remotion Studio, 3004)
-- **ViRe** (`SuitVidGenRemotion/`): Módulo de video con Remotion. Puerto 3004.
+- **ViRe** (`SuitVidGenRemotion/`): Módulo de video con Remotion. Usa `npm run dev` para abrir el estudio en puerto 3004.
 - **SuitServiHogar** (`SuitServiHogar/`): Micro-frontend aislado (React 19, ADR-029). Puerto 3010. No integra al SPA principal.
-- Dual backend: GAS (`backend/`) CRUD on Google Sheets; Node.js proxies to Supabase, Gemini, Stripe
+- Dual backend: GAS (`backend/`) does core CRUD on Google Sheets; Node.js proxies to Supabase, Gemini, Stripe
 - Hybrid DB: 5 MASTER tables always in Sheets (`Config_Empresas`, `Usuarios`, `Config_Roles`, `Config_SEO`, `Prompts_IA`); PRIVATE tables migrate to Supabase per-tenant via `db_engine`
 - Two Supabase projects: backend `egyxgnlnzanxpqyuvmsg`, vision-audit `hmrpotibipxhsnowgjvq`
 - Frontend: vanilla JS SPA, hash routing (`#orbit`, `#pos`, `#home`, `#leads`, `#catalog`, `#agents`)
@@ -252,6 +227,8 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 | `depura datos`, `compactar datos` | F6 only | Data cleanup only |
 
 ### Auto-chain rules
+
+Phases chain automatically based on results:
 
 ```
 F2 completada → F3 (siempre)

@@ -645,6 +645,44 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// ─── CAPA 2: Reactive Sync (GAS _EventLog → Supabase) ───
+const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbzhWR6LoS7wirxWPhQBZIZJ2ynuQHa_VYzrIILR5rasOuCSE55Fk4f3M07fCmnyzEwN/exec';
+const SYNC_INTERVAL_MS = (process.env.SYNC_INTERVAL_MIN || 30) * 60 * 1000;
+
+async function pollEventLog() {
+    try {
+        const resp = await fetch(`${GAS_URL}?action=getUnsyncedEvents`);
+        if (!resp.ok) return;
+        const json = await resp.json();
+        const events = json.events || [];
+        if (events.length === 0) return;
+
+        console.log(`🔄 [CAPA2] ${events.length} eventos sin sync`);
+
+        for (const ev of events) {
+            try {
+                const table = ev.sheet;
+                const { error } = await supabaseAdmin
+                    .from(table)
+                    .upsert({ id_empresa: ev.id_empresa, [ev.column]: ev.new_value }, { onConflict: 'id' });
+                if (error) {
+                    console.error(`❌ [CAPA2] ${table}:${ev.row}`, error.message);
+                    continue;
+                }
+                await fetch(`${GAS_URL}?action=markEventSynced&rowIndex=${ev.rowIndex}`);
+                console.log(`✅ [CAPA2] ${table}:${ev.row}:${ev.column} sync OK`);
+            } catch (e) {
+                console.error(`❌ [CAPA2_EVENT]`, e.message);
+            }
+        }
+    } catch (e) {
+        console.error(`❌ [CAPA2_POLL]`, e.message);
+    }
+}
+
+setInterval(pollEventLog, SYNC_INTERVAL_MS);
+console.log(`🔄 [CAPA2] Polling cada ${SYNC_INTERVAL_MS / 60000} min`);
+
 app.listen(PORT, 'localhost', () => {
     console.log(`
 🚀 SUITORG SECURE SERVER RUNNING

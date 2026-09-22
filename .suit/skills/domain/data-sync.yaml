@@ -18,8 +18,14 @@ skill:
     - keyword: "migrar datos"
     - keyword: "columnas"
     - keyword: "compactacion"
+    - keyword: "reactivo"
+    - keyword: "onEdit"
+    - keyword: "eventlog"
+    - keyword: "capa 2"
+    - keyword: "polling"
     - file_pattern: "**/db/*.sql"
     - file_pattern: "**/db/schema*"
+    - file_pattern: "**/event-logger*"
   context_hint:
     - "AGENTS.md"
     - "backend/core.js"
@@ -63,3 +69,15 @@ skill:
       - "Está vacía — crear esquema completo desde el contrato"
       - "No asumir paridad con Supabase"
       - "Cargar datos solo si el usuario lo pide"
+  capa2:
+    description: "Reactive sync: GAS onEdit → _EventLog → Node.js polling (30min) → Supabase"
+    files:
+      - "backend/event-logger.gs"   # onEdit trigger + _EventLog sheet
+      - "server.js"                 # pollEventLog() cada 30 min
+    tables:                         # Solo PRIVATE_TABLES
+      - Leads, Proyectos, Proyectos_Etapas, Proyectos_Pagos
+      - Proyectos_Bitacora, Catalogo, Logs, Pagos
+      - Empresa_Documentos, Reservaciones, Config_Galeria
+      - Logs_Chat_IA, Memoria_IA_Snapshots, Logs_Consultas_SOP
+    flow: "edición en Sheets → onEdit → _EventLog row → Node.js polls → upsert Supabase → mark synced"
+    setup: "Ejecutar createOnOpenTrigger() en editor GAS una vez"

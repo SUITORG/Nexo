@@ -65,6 +65,34 @@ function doGet(e) {
              CONFIG.PRIVATE_TABLES.forEach(t => { try { result[t] = getSheetData(ss, t, coId); } catch (err) { result[t] = []; } });
         }
         result.status = "OK";
+    } else if (action === "getUnsyncedEvents") {
+        var logSheet = ss.getSheetByName("_EventLog");
+        if (logSheet) {
+          var logData = logSheet.getDataRange().getValues();
+          var events = [];
+          for (var i = 1; i < logData.length; i++) {
+            if (String(logData[i][7]).trim() === "false") {
+              events.push({
+                timestamp: logData[i][0], sheet: logData[i][1], row: logData[i][2],
+                column: logData[i][3], old_value: logData[i][4], new_value: logData[i][5],
+                id_empresa: logData[i][6], rowIndex: i + 1
+              });
+            }
+          }
+          result.events = events;
+          result.count = events.length;
+        } else {
+          result.events = [];
+          result.count = 0;
+        }
+        result.status = "OK";
+    } else if (action === "markEventSynced") {
+        var logSheet2 = ss.getSheetByName("_EventLog");
+        var rIdx = (e && e.parameter && e.parameter.rowIndex) ? parseInt(e.parameter.rowIndex) : 0;
+        if (logSheet2 && rIdx > 0) {
+          logSheet2.getRange(rIdx, 8).setValue("true");
+        }
+        result.status = "OK";
     } else if (action === "ping") {
         result.message = "Pong! Backend Modular v15.9.1 Online";
         result.status = "OK";
