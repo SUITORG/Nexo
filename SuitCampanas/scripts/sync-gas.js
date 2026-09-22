@@ -3,7 +3,7 @@ const https = require('https');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzlNe28j7yJObxqfCyUg595Zeg1IjsMMjOZyf8KOK5pkCYU-zYFJrsyzwsJhNFjZy1v-A/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbyojUmiKkUImjDfkUAMNvetI_Fhj9gIHDyFeCm6x6VyzhtK526z4QQThEeb-2B_uC/exec';
 const SECRET_TOKEN = "SUITORG_SECURE_TOKEN_2026";
 
 function postToGAS(payload) {

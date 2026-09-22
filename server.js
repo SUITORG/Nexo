@@ -639,6 +639,9 @@ app.get('/api/market/news', async (req, res) => {
     }
 });
 
+// Brief generator (SuitOrg) — must mount BEFORE the SPA catch-all
+app.use(require('./scripts/brief-generate'));
+
 // For SPA routing
 app.get('*', (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');

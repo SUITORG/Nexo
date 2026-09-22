@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brief Generator</title>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 24px; background: #1a1a2e; color: #e0e0e0; max-width: 720px; margin-inline: auto; }
+  h1 { color: #00d4aa; font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .status { padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; display: none; }
+  .status-ok { background: #0d3320; border: 1px solid #00d4aa; }
+  .status-warn { background: #3d2e00; border: 1px solid #ffb700; }
+  .status-error { background: #3d0000; border: 1px solid #ff4444; }
+  select { width: 100%; padding: 10px; background: #0f0f23; color: #e0e0e0; border: 1px solid #333; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+  .btn { display: inline-block; padding: 10px 18px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; margin: 4px 4px 4px 0; }
+  .btn-primary { background: #00d4aa; color: #000; font-weight: 600; }
+  .btn-secondary { background: #333; color: #e0e0e0; }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .section { margin-top: 18px; }
+  .section-title { color: #00d4aa; font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #333; font-size: 13px; gap: 12px; }
+  .field-name { color: #aaa; flex-shrink: 0; }
+  .field-val { color: #fff; text-align: right; word-break: break-word; }
+  .confidence-A { color: #00d4aa; }
+  .confidence-B { color: #ffb700; }
+  .confidence-C { color: #ff6b6b; }
+  .progress-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; margin: 12px 0; overflow: hidden; display: none; }
+  .progress-fill { height: 100%; background: #00d4aa; width: 0%; transition: width 0.3s; }
+  .progress-text { font-size: 12px; color: #888; margin-top: 4px; }
+  #result { display: none; margin-top: 14px; padding: 12px; border-radius: 6px; font-size: 13px; line-height: 1.5; }
+  #vectorBox { width: 100%; min-height: 80px; background: #0f0f23; color: #ccc; border: 1px solid #333; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 12px; box-sizing: border-box; resize: vertical; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+  <h1>⚡ Brief Generator</h1>
+  <div class="sub">Servido en localhost:8000 — mismo origen, sin Mixed Content.</div>
+
+  <div class="section">
+    <div class="section-title">Empresa</div>
+    <select id="companySelect" onchange="loadBrief()">
+      <option value="">— Seleccionar empresa —</option>
+    </select>
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <div id="fields" class="section" style="display:none;">
+    <div class="section-title">Brief actual</div>
+    <div id="fieldsList"></div>
+  </div>
+
+  <div class="section">
+    <button class="btn btn-primary" id="btnGenerate" onclick="generarBrief()">⚡ Generar Brief con IA</button>
+    <button class="btn btn-secondary" onclick="copyVector()">📋 Copiar Vector</button>
+    <button class="btn btn-secondary" onclick="exportarJSON()">📤 Exportar JSON</button>
+  </div>
+
+  <div class="progress-bar" id="progress"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText" style="display:none;"></div>
+  <div id="result"></div>
+
+  <textarea id="vectorBox" readonly placeholder="El vector del Brief aparecerá aquí…"></textarea>
+
+<script>
+let currentVector = '';
+let companies = [];
+
+const BRIEF_KEYS = ['industria','nicho','especializacion','vendes','audiencia','dolor','PBP','lograr','vivir','LAPVTFU','PM','objecion','competidores','tono','PS','RLP','slogan','oferta','descripcion','cta','tipografia'];
+
+function showStatus(msg, cls) {
+  const el = document.getElementById('status');
+  el.style.display = 'block';
+  el.className = 'status ' + cls;
+  el.textContent = msg;
+}
+function hideStatus() { document.getElementById('status').style.display = 'none'; }
+
+function setProgress(pct, text) {
+  const bar = document.getElementById('progress');
+  const fill = document.getElementById('progressFill');
+  const txt = document.getElementById('progressText');
+  if (pct === null) { bar.style.display = 'none'; txt.style.display = 'none'; return; }
+  bar.style.display = 'block'; txt.style.display = 'block';
+  fill.style.width = pct + '%';
+  txt.textContent = text;
+}
+
+async function loadCompanies() {
+  try {
+    const res = await fetch('/api/brief/companies');
+    const data = await res.json();
+    if (data.status !== 'success' || !Array.isArray(data.data)) throw new Error(data.message || 'Error cargando empresas');
+    companies = data.data.filter(c => c.id_empresa);
+    const sel = document.getElementById('companySelect');
+    companies.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id_empresa;
+      opt.textContent = c.id_empresa + ' — ' + (c.nomempresa || '');
+      sel.appendChild(opt);
+    });
+    showStatus(companies.length + ' empresas cargadas.', 'status-ok');
+    setTimeout(hideStatus, 3000);
+
+    const params = new URLSearchParams(window.location.search);
+    const pre = params.get('empresa');
+    if (pre) {
+      sel.value = pre;
+      if (sel.value) loadBrief();
+    }
+  } catch (e) {
+    showStatus('Error cargando empresas: ' + e.message, 'status-error');
+  }
+}
+
+async function loadBrief() {
+  const id = document.getElementById('companySelect').value;
+  const fieldsEl = document.getElementById('fields');
+  if (!id) { fieldsEl.style.display = 'none'; currentVector = ''; document.getElementById('vectorBox').style.display = 'none'; return; }
+
+  try {
+    const res = await fetch('/api/brief/empresa?empresa=' + encodeURIComponent(id));
+    const data = await res.json();
+    if (data.status !== 'success') throw new Error(data.error || 'No se pudo cargar el Brief');
+    const brief = data.data || {};
+    renderFields(brief);
+    currentVector = BRIEF_KEYS.map(k => {
+      const v = brief[k];
+      const s = Array.isArray(v) ? v.join(', ') : (v || '');
+      return k + ': ' + s;
+    }).join(' | ');
+    document.getElementById('vectorBox').value = currentVector;
+    document.getElementById('vectorBox').style.display = 'block';
+    const filled = BRIEF_KEYS.filter(k => brief[k] && String(brief[k]).trim() && !String(brief[k]).includes('[PENDIENTE')).length;
+    showStatus(filled + '/' + BRIEF_KEYS.length + ' campos con dato.', filled === BRIEF_KEYS.length ? 'status-ok' : 'status-warn');
+  } catch (e) {
+    showStatus('Error: ' + e.message, 'status-error');
+    fieldsEl.style.display = 'none';
+  }
+}
+
+function renderFields(brief) {
+  const box = document.getElementById('fieldsList');
+  box.innerHTML = BRIEF_KEYS.map((k, i) => {
+    let raw = brief[k];
+    if (Array.isArray(raw)) raw = raw.join(', ');
+    raw = raw == null ? '' : String(raw);
+    let conf = '';
+    const m = raw.match(/\s*\[([ABC])\]\s*$/i);
+    if (m) { conf = m[1].toUpperCase(); raw = raw.replace(/\s*\[[ABC]\]\s*$/i, ''); }
+    const display = raw.length > 80 ? raw.slice(0, 80) + '…' : (raw || '[PENDIENTE]');
+    const cls = conf ? 'confidence-' + conf : (raw ? '' : 'confidence-C');
+    return '<div class="field-row"><span class="field-name">' + (i+1) + '. ' + k + '</span><span class="field-val ' + cls + '">' + escapeHtml(display) + '</span></div>';
+  }).join('');
+  document.getElementById('fields').style.display = 'block';
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function generarBrief() {
+  const id = document.getElementById('companySelect').value;
+  if (!id) { showStatus('Selecciona una empresa primero', 'status-warn'); return; }
+
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = true;
+  document.getElementById('result').style.display = 'none';
+
+  try {
+    setProgress(10, 'Leyendo datos de la empresa…');
+    const res = await fetch('/api/brief/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_empresa: id })
+    });
+    setProgress(70, 'Procesando resultado…');
+    const data = await res.json();
+    if (data.status === 'error') throw new Error(data.error);
+
+    setProgress(100, '¡Brief generado!');
+    const brief = data.data.brief;
+    const c = data.data.completitud;
+    const full = c.filled === c.total;
+
+    const resultEl = document.getElementById('result');
+    resultEl.style.display = 'block';
+    resultEl.style.background = full ? '#0d3320' : '#3d2e00';
+    resultEl.style.border = '1px solid ' + (full ? '#00d4aa' : '#ffb700');
+    resultEl.innerHTML = '<strong>✓ Brief generado</strong><br>' + c.filled + '/' + c.total + ' campos completos' +
+      (data.data.vector ? '<br><span style="color:#888;font-size:12px;">Vector listo para copiar abajo</span>' : '');
+
+    if (data.data.vector) {
+      currentVector = data.data.vector;
+      document.getElementById('vectorBox').value = currentVector;
+      document.getElementById('vectorBox').style.display = 'block';
+      try { navigator.clipboard.writeText(currentVector); } catch(_) {}
+    }
+
+    renderFields(brief);
+
+    fetch('/api/brief/metadata', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_empresa: id, vector: data.data.vector, confianza: data.data.confidence || {} })
+    }).catch(e => console.warn('Metadata save failed (non-blocking):', e));
+
+    setTimeout(() => setProgress(null), 1500);
+  } catch (err) {
+    setProgress(100, 'Error');
+    const resultEl = document.getElementById('result');
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#3d0000';
+    resultEl.style.border = '1px solid #ff4444';
+    resultEl.innerHTML = '<strong>Error al generar</strong><br>' + escapeHtml(err.message);
+    setTimeout(() => setProgress(null), 2000);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function copyVector() {
+  if (!currentVector) { showStatus('Primero genera o carga un Brief', 'status-warn'); return; }
+  navigator.clipboard.writeText(currentVector).then(() => showStatus('Vector copiado al portapapeles', 'status-ok'));
+}
+
+function exportarJSON() {
+  if (!currentVector) { showStatus('Primero genera o carga un Brief', 'status-warn'); return; }
+  const obj = {};
+  BRIEF_KEYS.forEach(k => {
+    const m = currentVector.match(new RegExp(k + ':\\s*([^|]*)', 'i'));
+    if (m) obj[k] = m[1].replace(/\s*\[[ABC]\]\s*$/i, '').trim();
+  });
+  const json = JSON.stringify(obj, null, 2);
+  navigator.clipboard.writeText(json).then(() => showStatus('JSON copiado al portapapeles', 'status-ok'));
+}
+
+loadCompanies();
+</script>
+</body>
+</html>

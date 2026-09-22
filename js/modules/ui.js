@@ -2,6 +2,57 @@
  * EVASOL - UI GLUE PLAYER (v4.7.0)
  * Responsabilidad: Actuar como capa de compatibilidad y orquestar sub-módulos.
  */
+
+// ── Browser-compatible theme parser (mirrors scripts/parse-theme.js) ──────
+app.themeParser = {
+    _hexToRgb(hex) {
+        const h = hex.replace('#', '');
+        const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+        return { r: parseInt(full.slice(0, 2), 16), g: parseInt(full.slice(2, 4), 16), b: parseInt(full.slice(4, 6), 16) };
+    },
+    _colorDist(a, b) {
+        const ca = this._hexToRgb(a), cb = this._hexToRgb(b);
+        return Math.sqrt((ca.r - cb.r) ** 2 + (ca.g - cb.g) ** 2 + (ca.b - cb.b) ** 2);
+    },
+    _palettes: [
+        { id: 'pal-teal', primary: '#01696F', primaryHover: '#0C4E54', bg: '#F7F6F2', surface: '#F9F8F5', border: '#D4D1CA', text: '#28251D', textMuted: '#7A7974', onPrimary: '#FFFFFF' },
+        { id: 'pal-navy', primary: '#12395E', primaryHover: '#0B2740', bg: '#FAFAF8', surface: '#F2F4F7', border: '#D5DAE2', text: '#121A2B', textMuted: '#5B6675', onPrimary: '#FFFFFF' },
+        { id: 'pal-terra', primary: '#A84B2F', primaryHover: '#83381F', bg: '#FBF7F3', surface: '#F5EDE6', border: '#E0D0C2', text: '#2A1F18', textMuted: '#7B6656', onPrimary: '#FFF8F4' },
+        { id: 'pal-forest', primary: '#2F6B3A', primaryHover: '#204E2A', bg: '#F6F8F4', surface: '#EDF2E9', border: '#CFDAC6', text: '#1B2418', textMuted: '#5E6C57', onPrimary: '#FFFFFF' },
+        { id: 'pal-violet', primary: '#5B3BC4', primaryHover: '#432B96', bg: '#FAF9FC', surface: '#F2EFF9', border: '#D9D2EA', text: '#1D172A', textMuted: '#635B78', onPrimary: '#FFFFFF' },
+        { id: 'pal-mono', primary: '#111111', primaryHover: '#000000', bg: '#FFFFFF', surface: '#F4F4F4', border: '#DDDDDD', text: '#111111', textMuted: '#6B6B6B', onPrimary: '#FFFFFF' },
+    ],
+    parse(raw) {
+        if (!raw || typeof raw !== 'string') return { color: '#2563eb', candado: 0, pal: null, tp: null, tpl: null };
+        const t = raw.trim();
+        if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(t)) return { color: t, candado: 0, pal: null, tp: null, tpl: null };
+        const r = { color: null, candado: 0, pal: null, tp: null, tpl: null };
+        for (const part of t.split('|')) {
+            const [k, ...v] = part.split(':');
+            const val = v.join(':').trim();
+            const key = k.trim().toLowerCase();
+            if (key === 'candado') r.candado = val === '1' ? 1 : 0;
+            else if (key === 'pal') r.pal = val || null;
+            else if (key === 'tp') r.tp = val || null;
+            else if (key === 'tpl') r.tpl = val || null;
+            else if (/^#[0-9a-fA-F]{3,6}$/.test(part.trim())) r.color = part.trim();
+            else if (key === 'color' || key === 'color_tema' || key === 'tema') r.color = val || null;
+        }
+        return r;
+    },
+    resolve(parsed) {
+        let pal = null;
+        if (parsed.pal) pal = this._palettes.find(p => p.id === parsed.pal);
+        if (!pal && parsed.color) {
+            let best = Infinity;
+            for (const p of this._palettes) { const d = this._colorDist(parsed.color, p.primary); if (d < best) { best = d; pal = p; } }
+        }
+        if (!pal) pal = this._palettes[0];
+        const color = parsed.color || pal.primary;
+        return { color, candado: parsed.candado, pal, tp: parsed.tp, tpl: parsed.tpl };
+    }
+};
+
 app.ui = {
     // --- CORE SYSTEM UI ---
     updateConsole: (msg, isError = false) => {
@@ -343,7 +394,17 @@ app.ui = {
             }
         }
 
-        if (company.color_tema) document.documentElement.style.setProperty('--primary-color', company.color_tema);
+        if (company.color_tema) {
+            const theme = app.themeParser.resolve(app.themeParser.parse(company.color_tema));
+            document.documentElement.style.setProperty('--primary-color', theme.color);
+            document.documentElement.style.setProperty('--color-primary', theme.color);
+            document.documentElement.style.setProperty('--color-bg', theme.pal.bg);
+            document.documentElement.style.setProperty('--color-surface', theme.pal.surface);
+            document.documentElement.style.setProperty('--color-text', theme.pal.text);
+            document.documentElement.style.setProperty('--color-text-muted', theme.pal.textMuted);
+            document.documentElement.style.setProperty('--color-border', theme.pal.border);
+            document.documentElement.style.setProperty('--color-on-primary', theme.pal.onPrimary);
+        }
 
         // Delegate Public Rendering (v6.5.3 Secured)
         if (app.public) {

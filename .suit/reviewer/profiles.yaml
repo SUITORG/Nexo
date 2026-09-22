@@ -35,6 +35,12 @@ profiles:
         check: "file includes cotizador route AND has giro_especifico check"
         file_pattern: "server.js"
 
+      - id: gas-error-handling
+        description: "google.script.run calls have withFailureHandler"
+        severity: error
+        file_pattern: "*sidebar*.js"
+        note: "Every google.script.run chain must include .withFailureHandler() to prevent silent failures in GAS sidebars"
+
   standard:
     description: "Standard validation - medium risk workflows"
     extends: quick

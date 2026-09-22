@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://suit.local/schemas/theme.schema.json",
+  "title": "LandingTheme",
+  "description": "Contrato unico que tu app lee (pegado en un campo o descargado de una URL) para renderizar una landing page dinamica por cliente.",
+  "type": "object",
+  "required": ["version", "meta", "type", "tokens", "sections"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.0" },
+    "meta": {
+      "type": "object",
+      "required": ["name", "client", "locale"],
+      "properties": {
+        "name": { "type": "string" },
+        "client": { "type": "string" },
+        "locale": { "type": "string", "examples": ["es-MX", "en-US"] },
+        "source": { "type": "string", "format": "uri", "description": "URL original del preset si vino de un enlace" },
+        "goal": { "type": "string", "enum": ["lead", "venta", "cita", "descarga", "registro", "waitlist", "llamada"] }
+      }
+    },
+    "type": {
+      "type": "string",
+      "description": "Tipo de landing; define secciones obligatorias y densidad de copy.",
+      "enum": [
+        "squeeze", "lead-capture", "click-through", "sales-long-form", "product-detail",
+        "webinar", "event", "app-download", "waitlist-coming-soon", "saas-trial",
+        "local-service", "booking", "course", "ebook-lead-magnet", "vsl",
+        "pricing", "comparison", "thank-you", "link-in-bio", "microsite-brand"
+      ]
+    },
+    "tokens": {
+      "type": "object",
+      "required": ["color", "typography", "layout"],
+      "properties": {
+        "color": {
+          "type": "object",
+          "required": ["light"],
+          "properties": {
+            "mode": { "enum": ["light", "dark", "auto"], "default": "light" },
+            "light": { "$ref": "#/$defs/palette" },
+            "dark": { "$ref": "#/$defs/palette" },
+            "chart": { "type": "array", "items": { "$ref": "#/$defs/colorValue" }, "maxItems": 8 }
+          }
+        },
+        "typography": {
+          "type": "object",
+          "required": ["heading", "body"],
+          "properties": {
+            "heading": { "$ref": "#/$defs/font" },
+            "body": { "$ref": "#/$defs/font" },
+            "mono": { "$ref": "#/$defs/font" },
+            "scale": {
+              "type": "object",
+              "description": "Escala tipografica en px (web).",
+              "properties": {
+                "ratio": { "type": "number", "default": 1.25 },
+                "base": { "type": "number", "default": 17 },
+                "hero": { "type": "number", "minimum": 24 },
+                "h1": { "type": "number" }, "h2": { "type": "number" },
+                "h3": { "type": "number" }, "body": { "type": "number", "minimum": 16 },
+                "caption": { "type": "number", "minimum": 12 }
+              }
+            },
+            "leading": {
+              "type": "object",
+              "properties": {
+                "heading": { "type": "number", "default": 1.15 },
+                "body": { "type": "number", "default": 1.55 }
+              }
+            },
+            "measure": { "type": "string", "default": "68ch", "description": "Ancho de linea objetivo 45-75ch" }
+          }
+        },
+        "layout": {
+          "type": "object",
+          "properties": {
+            "container": { "type": "string", "default": "1120px" },
+            "spacingUnit": { "type": "number", "default": 8 },
+            "radius": { "enum": ["none", "sm", "md", "lg", "pill"], "default": "md" },
+            "borderWidth": { "type": "number", "default": 1 },
+            "shadow": { "enum": ["none", "soft", "elevated"], "default": "soft" },
+            "density": { "enum": ["compact", "normal", "airy"], "default": "normal" },
+            "gridColumns": { "type": "integer", "default": 12 }
+          }
+        },
+        "motion": {
+          "type": "object",
+          "properties": {
+            "preset": { "enum": ["none", "subtle", "expressive"], "default": "subtle" },
+            "durationMs": { "type": "integer", "default": 350 },
+            "easing": { "type": "string", "default": "cubic-bezier(.2,.8,.2,1)" },
+            "respectReducedMotion": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Orden = orden de render. Cada bloque mapea 1:1 a un componente de tu libreria.",
+      "items": {
+        "type": "object",
+        "required": ["id", "block"],
+        "properties": {
+          "id": { "type": "string" },
+          "block": {
+            "type": "string",
+            "enum": [
+              "navbar", "hero", "hero-split", "hero-video", "hero-form",
+              "logos", "value-props", "features-grid", "features-alternating",
+              "how-it-works", "stats", "testimonials", "case-study", "gallery",
+              "video", "pricing", "comparison-table", "faq", "team",
+              "lead-form", "calendar-embed", "cta-band", "countdown",
+              "guarantee", "bonus-stack", "map-hours", "footer", "custom-html"
+            ]
+          },
+          "variant": { "type": "string", "examples": ["center", "left", "image-right", "cards", "accordion"] },
+          "background": { "enum": ["base", "surface", "accent", "inverse", "image"], "default": "base" },
+          "content": { "type": "object", "additionalProperties": true, "description": "Copy, imagenes, items, campos de formulario" },
+          "visible": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "properties": {
+        "formEndpoint": { "type": "string", "format": "uri" },
+        "supabaseTable": { "type": "string" },
+        "analytics": { "type": "array", "items": { "type": "string" } },
+        "pixels": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "seo": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 60 },
+        "description": { "type": "string", "maxLength": 160 },
+        "ogImage": { "type": "string" },
+        "schemaOrg": { "type": "object", "additionalProperties": true }
+      }
+    }
+  },
+  "$defs": {
+    "colorValue": { "type": "string", "pattern": "^(#|rgb|hsl|oklch)" },
+    "palette": {
+      "type": "object",
+      "required": ["bg", "text", "primary"],
+      "properties": {
+        "bg": { "$ref": "#/$defs/colorValue" },
+        "surface": { "$ref": "#/$defs/colorValue" },
+        "surfaceAlt": { "$ref": "#/$defs/colorValue" },
+        "border": { "$ref": "#/$defs/colorValue" },
+        "text": { "$ref": "#/$defs/colorValue" },
+        "textMuted": { "$ref": "#/$defs/colorValue" },
+        "primary": { "$ref": "#/$defs/colorValue" },
+        "primaryHover": { "$ref": "#/$defs/colorValue" },
+        "onPrimary": { "$ref": "#/$defs/colorValue" },
+        "success": { "$ref": "#/$defs/colorValue" },
+        "warning": { "$ref": "#/$defs/colorValue" },
+        "error": { "$ref": "#/$defs/colorValue" }
+      }
+    },
+    "font": {
+      "type": "object",
+      "required": ["family"],
+      "properties": {
+        "family": { "type": "string", "examples": ["Satoshi", "Instrument Serif", "DM Sans"] },
+        "provider": { "enum": ["fontshare", "google", "bunny", "local", "custom"], "default": "fontshare" },
+        "weights": { "type": "array", "items": { "type": "integer" }, "maxItems": 3 },
+        "fallback": { "type": "string", "default": "ui-sans-serif, system-ui, sans-serif" },
+        "href": { "type": "string", "format": "uri", "description": "CSS del proveedor; si falta, se resuelve por provider+family" }
+      }
+    }
+  }
+}

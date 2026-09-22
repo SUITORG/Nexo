@@ -467,7 +467,7 @@ async function generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image
     }
 }
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzlNe28j7yJObxqfCyUg595Zeg1IjsMMjOZyf8KOK5pkCYU-zYFJrsyzwsJhNFjZy1v-A/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbyojUmiKkUImjDfkUAMNvetI_Fhj9gIHDyFeCm6x6VyzhtK526z4QQThEeb-2B_uC/exec';
 
 // OmniRoute (gateway local de modelos IA, puerto 20128). En WSL2 no se alcanza vía
 // localhost (la IP del host Windows es la del gateway NAT), así que se resuelve al arranque.
@@ -983,6 +983,9 @@ function parseBrief(briefVectorRaw, empresaRow) {
         const key = seg.slice(0, colon).trim().toLowerCase();
         let value = seg.slice(colon + 1).trim();
         if (!value) continue;
+        // Strip confidence tags [A], [B], [C] del final del valor
+        // (generados por assembleCompleteBrief para trazabilidad)
+        value = value.replace(/\s*\[([ABC])\]\s*$/i, '').trim();
         // LAPVTFU: 7 slots POSICIONALES (Logo,Avatar,FotoPersonal,Videos,
         // Testimonios,Fotos,UGC) — a diferencia de objecion/competidores (listas
         // sin orden), filtrar vacíos aquí desalinearía las posiciones (ADR-025:
@@ -1021,16 +1024,19 @@ function parseBrief(briefVectorRaw, empresaRow) {
     return brief;
 }
 
-// Trae la fila de Config_Empresas por id_empresa desde el backend GAS (action=config).
-// Reusa el mismo deployment que /api/history y /api/save — el CMS CampanasAi.
+// Trae la fila de Config_Empresas por id_empresa desde el backend GAS.
+// Usa action=getAll (las tablas globales incluyen Config_Empresas) —
+// action=config NO existe en el deployment vigente (core.js solo tiene
+// getAll/ping/getUnsyncedEvents/markEventSynced) y devolvía {status:INIT}
+// sin data → "empresa no encontrada" en /api/brief/generate.
 async function fetchEmpresaRow(idEmpresa) {
-    const url = GAS_URL.includes('?') ? (GAS_URL + '&action=config') : (GAS_URL + '?action=config');
+    const url = GAS_URL.includes('?') ? (GAS_URL + '&action=getAll') : (GAS_URL + '?action=getAll');
     const gasBody = await new Promise((resolve, reject) => {
         fetchWithRedirects(url, (data, statusCode) => {
             try { resolve(JSON.parse(data)); } catch (e) { reject(new Error('GAS config parse error: ' + String(data).substring(0, 200))); }
         });
     });
-    const rows = gasBody?.data || [];
+    const rows = gasBody?.Config_Empresas || gasBody?.data || [];
     return rows.find(c => String(c.id_empresa || '').toLowerCase() === String(idEmpresa || '').toLowerCase())
         || rows.find(c => String(c.nomempresa || '').toLowerCase() === String(idEmpresa || '').toLowerCase())
         || null;
@@ -1200,6 +1206,334 @@ async function generateMediaPlan(idEmpresa, fallbacks = {}) {
         .single();
     if (error) throw error;
     return data;
+}
+
+// ── BRIEF GENERATOR HELPERS ────────────────────────────────────────────────
+
+// Resuelve taxonomía (industria/nicho/especializacion) desde Supabase catalogs.
+// Busca por similitud de texto con el giro específico de la empresa.
+async function resolverTaxonomia(giro, nombre) {
+    const result = { industria: '', nicho: '', especializacion: '', tono: '' };
+    if (!giro && !nombre) return result;
+
+    // 1. Buscar industria más probable
+    const { data: industrias } = await supabase
+        .from('industrias')
+        .select('id, categoria, nichos(id, nombre, especializaciones, sinonimos)')
+        .limit(50);
+
+    if (!industrias || industrias.length === 0) return result;
+
+    const searchText = `${giro} ${nombre}`.toLowerCase();
+    let bestMatch = null;
+    let bestScore = 0;
+
+    for (const ind of industrias) {
+        const catLower = (ind.categoria || '').toLowerCase();
+        const descLower = (ind.descripcion || '').toLowerCase();
+        // Score simple: coincidencia de palabras clave
+        const words = searchText.split(/\s+/).filter(w => w.length > 3);
+        let score = 0;
+        for (const w of words) {
+            if (catLower.includes(w)) score += 2;
+            if (descLower.includes(w)) score += 1;
+            // Check sinonimos de nichos
+            for (const nicho of (ind.nichos || [])) {
+                const nichoName = (nicho.nombre || '').toLowerCase();
+                const sinos = (nicho.sinonimos || []).map(s => s.toLowerCase());
+                if (nichoName.includes(w)) score += 3;
+                if (sinos.some(s => s.includes(w))) score += 2;
+            }
+        }
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = ind;
+        }
+    }
+
+    if (bestMatch && bestScore > 0) {
+        result.industria = bestMatch.categoria || '';
+
+        // 2. Buscar nicho más probable dentro de la industria
+        let bestNicho = null;
+        let bestNichoScore = 0;
+        for (const nicho of (bestMatch.nichos || [])) {
+            const nichoName = (nicho.nombre || '').toLowerCase();
+            const sinos = (nicho.sinonimos || []).map(s => s.toLowerCase());
+            let nScore = 0;
+            const words = searchText.split(/\s+/).filter(w => w.length > 3);
+            for (const w of words) {
+                if (nichoName.includes(w)) nScore += 3;
+                if (sinos.some(s => s.includes(w))) nScore += 2;
+            }
+            if (nScore > bestNichoScore) {
+                bestNichoScore = nScore;
+                bestNicho = nicho;
+            }
+        }
+
+        if (bestNicho) {
+            result.nicho = bestNicho.nombre || '';
+            // 3. Especializaciones son un array en el nicho
+            const esps = bestNicho.especializaciones || [];
+            if (esps.length === 1) {
+                result.especializacion = esps[0];
+            } else if (esps.length > 1) {
+                // Elegir la más relevante
+                let bestEsp = esps[0];
+                let bestEspScore = 0;
+                for (const esp of esps) {
+                    const espLower = esp.toLowerCase();
+                    let eScore = 0;
+                    const words = searchText.split(/\s+/).filter(w => w.length > 3);
+                    for (const w of words) {
+                        if (espLower.includes(w)) eScore += 2;
+                    }
+                    if (eScore > bestEspScore) {
+                        bestEspScore = eScore;
+                        bestEsp = esp;
+                    }
+                }
+                result.especializacion = bestEsp;
+            }
+        }
+    }
+
+    return result;
+}
+
+// Construye el system prompt para el generador de Brief.
+// Compacto pero completo — incluye las 20 reglas y el formato exacto.
+function buildBriefGeneratorPrompt() {
+    return `Eres un Director de Marketing experto. Genera campos faltantes de un Brief de Marketing de 20 campos.
+
+# REGLAS
+- Responde EXCLUSIVAMENTE con JSON válido, sin texto extra.
+- Nunca sobrescribas datos del cliente (campos ya presentes en "existente").
+- Campos vacíos/vacíos se generan; campos con valor se respetan.
+- Cada campo inferido lleva confianza: "A" (cliente), "B" (inferido con fuente), "C" (creativo).
+- Si no puedes generar un campo, escribe "[PENDIENTE - razón]".
+- Idioma: español (México).
+
+# CAMPOS DEL BRIEF (orden fijo)
+1. industria - De catálogo Supabase (ya resuelto en taxonomia.industria)
+2. nicho - De catálogo Supabase (ya resuelto en taxonomia.nicho)
+3. especializacion - De catálogo Supabase (ya resuelto en taxonomia.especializacion)
+4. vendes - Producto(s) o Servicio. UNO solo.
+5. audiencia - Demografía + geografía + psicografía + poder adquisitivo, en una frase densa.
+6. dolor - 3-5 dolores reales del cliente ideal, en su lenguaje.
+7. PBP - Promesa + Beneficio + Prueba. Prueba: evidencia de categoría, jamás inventes testimonios.
+8. lograr - Uno solo: Ventas | Leads | Awareness | Contenido.
+9. vivir - Plataforma(s) con justificación de 1 línea.
+10. LAPVTFU - 7 posiciones: logo,avatar,fotoPersonal,videos,testimonios,fotos,ugc. Vacías = [PENDIENTE].
+11. PM - Precio,margen. Formato: 0000.00,00%. Si falta: sugiere rango de mercado (confianza C).
+12. objecion - 4-6 objeciones en primera persona del avatar.
+13. competidores - Competidores directos y referentes/inspiración.
+14. tono - Tono de marca (profesional, cercano, divertido, directo, premium, etc.)
+15. PS - Prueba social. Si no hay: [PENDIENTE - Prueba social].
+16. RLP - Restricciones legales: regulador + políticas de plataformas + disclosure IA.
+17. slogan - Si existe en cliente, copiar. Si no, propone 3 opciones (confianza C).
+18. oferta - Si existe en cliente, copiar. Si no, arma oferta: qué incluye + garantía + facilidad.
+19. cta - Hook + copy alineado a #8. Ventas=imperativo; Leads=bajo riesgo; Awareness=curiosidad; Contenido=suscripción.
+20. tipografia - Par display+texto coherente con #14. Catálogo: moderna/audaz/elegante/amigable/corporativa.
+
+# FORMATO DE SALIDA
+{
+  "campos": {
+    "vendes": { "valor": "...", "confianza": "A|B|C" },
+    "audiencia": { "valor": "...", "confianza": "B" },
+    "dolor": { "valor": "...", "confianza": "B" },
+    "PBP": { "valor": "...", "confianza": "B|C" },
+    "lograr": { "valor": "...", "confianza": "A" },
+    "vivir": { "valor": "...", "confianza": "B" },
+    "PM": { "valor": "...", "confianza": "C" },
+    "objecion": { "valor": "...", "confianza": "B" },
+    "competidores": { "valor": "...", "confianza": "B" },
+    "tono": { "valor": "...", "confianza": "C" },
+    "PS": { "valor": "...", "confianza": "A|B" },
+    "RLP": { "valor": "...", "confianza": "B" },
+    "slogan": { "valor": "...", "confianza": "A|C" },
+    "oferta": { "valor": "...", "confianza": "C" },
+    "descripcion": { "valor": "...", "confianza": "A" },
+    "cta": { "valor": "...", "confianza": "C" },
+    "tipografia": { "valor": "...", "confianza": "C" }
+  }
+}`;
+}
+
+// Construye el input del usuario con todos los datos disponibles.
+function buildBriefGeneratorInput(empresaRow, existingBrief, taxonomia) {
+    const empresa = {
+        id_empresa: empresaRow.id_empresa || '',
+        nombre: empresaRow.nomempresa || '',
+        giro_especifico: empresaRow.giro_especifico || '',
+        descripcion: empresaRow.descripcion || '',
+        slogan: empresaRow.slogan || '',
+        color_tema: empresaRow.color_tema || '',
+        tipo_negocio: empresaRow.tipo_negocio || ''
+    };
+
+    // Campos que YA existen en el brief (no se sobrescriben)
+    const existente = {};
+    if (existingBrief.industria) existente.industria = existingBrief.industria;
+    if (existingBrief.nicho) existente.nicho = existingBrief.nicho;
+    if (existingBrief.especializacion) existente.especializacion = existingBrief.especializacion;
+    if (existingBrief.producto) existente.vendes = existingBrief.producto;
+    if (existingBrief.audiencia) existente.audiencia = existingBrief.audiencia;
+    if (existingBrief.dolor) existente.dolor = Array.isArray(existingBrief.dolor) ? existingBrief.dolor.join(', ') : existingBrief.dolor;
+    if (existingBrief.pbp) existente.PBP = existingBrief.pbp;
+    if (existingBrief.objetivo) existente.lograr = existingBrief.objetivo;
+    if (existingBrief.canal_principal) existente.vivir = existingBrief.canal_principal;
+    if (existingBrief.activos) {
+        const a = existingBrief.activos;
+        existente.LAPVTFU = [a.logo, a.avatar, a.fotoPersonal, a.videos, a.testimonios, a.fotos, a.ugc].join(',');
+    }
+    if (existingBrief.precio_margen) existente.PM = `${existingBrief.precio_margen.precio},${existingBrief.precio_margen.margen}`;
+    if (existingBrief.objeciones) existente.objecion = existingBrief.objeciones.join(', ');
+    if (existingBrief.competidores) existente.competidores = existingBrief.competidores;
+    if (existingBrief.tono) existente.tono = existingBrief.tono;
+    if (existingBrief.prueba_social) existente.PS = existingBrief.prueba_social;
+    if (existingBrief.restricciones_legales) existente.RLP = existingBrief.restricciones_legales;
+    if (existingBrief.slogan) existente.slogan = existingBrief.slogan;
+    if (existingBrief.oferta) existente.oferta = existingBrief.oferta;
+    if (existingBrief.descripcion) existente.descripcion = existingBrief.descripcion;
+    if (existingBrief.cta) existente.cta = existingBrief.cta;
+    if (existingBrief.tipografia) existente.tipografia = existingBrief.tipografia;
+
+    return JSON.stringify({
+        empresa,
+        taxonomia,
+        existente,
+        instruccion: 'Genera SOLO los campos que faltan en "existente". Respeta los que ya tienen valor.'
+    }, null, 2);
+}
+
+// Ensambla el vector Brief completo: prioriza datos del cliente, luego generados, luego taxonomía.
+// Incluye etiquetas de confianza [A], [B], [C] en cada campo para trazabilidad.
+function assembleCompleteBrief(existingBrief, generated, taxonomia, empresaRow) {
+    const campos = generated?.campos || {};
+    const BRIEF_FIELD_ORDER = [
+        'industria', 'nicho', 'especializacion', 'vendes', 'audiencia',
+        'dolor', 'PBP', 'lograr', 'vivir', 'LAPVTFU', 'PM', 'objecion',
+        'competidores', 'tono', 'PS', 'RLP', 'slogan', 'oferta', 'descripcion', 'cta', 'tipografia'
+    ];
+
+    function getVal(field) {
+        // Prioridad: 1) existente del brief, 2) taxonomía, 3) generado por IA
+        // Retorna { valor, confianza } para incluir tag en el vector
+        switch (field) {
+            case 'industria':
+                if (existingBrief.industria) return { valor: existingBrief.industria, confianza: 'A' };
+                if (taxonomia.industria) return { valor: taxonomia.industria, confianza: 'B' };
+                return { valor: '', confianza: 'C' };
+            case 'nicho':
+                if (existingBrief.nicho) return { valor: existingBrief.nicho, confianza: 'A' };
+                if (taxonomia.nicho) return { valor: taxonomia.nicho, confianza: 'B' };
+                return { valor: '', confianza: 'C' };
+            case 'especializacion':
+                if (existingBrief.especializacion) return { valor: existingBrief.especializacion, confianza: 'A' };
+                if (taxonomia.especializacion) return { valor: taxonomia.especializacion, confianza: 'B' };
+                return { valor: '', confianza: 'C' };
+            case 'vendes':
+                if (existingBrief.producto) return { valor: existingBrief.producto, confianza: 'A' };
+                if (campos.vendes?.valor) return { valor: campos.vendes.valor, confianza: campos.vendes.confianza || 'C' };
+                return { valor: '', confianza: 'C' };
+            case 'audiencia':
+                if (existingBrief.audiencia) return { valor: existingBrief.audiencia, confianza: 'A' };
+                if (campos.audiencia?.valor) return { valor: campos.audiencia.valor, confianza: campos.audiencia.confianza || 'B' };
+                return { valor: '', confianza: 'C' };
+            case 'dolor': {
+                const d = existingBrief.dolor;
+                if (d) return { valor: (Array.isArray(d) ? d.join(', ') : d), confianza: 'A' };
+                if (campos.dolor?.valor) return { valor: campos.dolor.valor, confianza: campos.dolor.confianza || 'B' };
+                return { valor: '', confianza: 'C' };
+            }
+            case 'PBP':
+                if (existingBrief.pbp) return { valor: existingBrief.pbp, confianza: 'A' };
+                if (campos.PBP?.valor) return { valor: campos.PBP.valor, confianza: campos.PBP.confianza || 'B' };
+                return { valor: '', confianza: 'C' };
+            case 'lograr':
+                if (existingBrief.objetivo) return { valor: existingBrief.objetivo, confianza: 'A' };
+                if (campos.lograr?.valor) return { valor: campos.lograr.valor, confianza: campos.lograr.confianza || 'A' };
+                return { valor: '', confianza: 'C' };
+            case 'vivir':
+                if (existingBrief.canal_principal) return { valor: existingBrief.canal_principal, confianza: 'A' };
+                if (campos.vivir?.valor) return { valor: campos.vivir.valor, confianza: campos.vivir.confianza || 'B' };
+                return { valor: '', confianza: 'C' };
+            case 'LAPVTFU': {
+                if (existingBrief.activos) {
+                    const a = existingBrief.activos;
+                    return { valor: [a.logo, a.avatar, a.fotoPersonal, a.videos, a.testimonios, a.fotos, a.ugc].join(','), confianza: 'A' };
+                }
+                return { valor: ',,,,,,', confianza: 'C' };
+            }
+            case 'PM': {
+                if (existingBrief.precio_margen) {
+                    return { valor: `${existingBrief.precio_margen.precio},${existingBrief.precio_margen.margen}`, confianza: 'A' };
+                }
+                if (campos.PM?.valor) return { valor: campos.PM.valor, confianza: campos.PM.confianza || 'C' };
+                return { valor: '', confianza: 'C' };
+            }
+            case 'objecion': {
+                const o = existingBrief.objeciones;
+                if (o) return { valor: (Array.isArray(o) ? o.join(', ') : o), confianza: 'A' };
+                if (campos.objecion?.valor) return { valor: campos.objecion.valor, confianza: campos.objecion.confianza || 'B' };
+                return { valor: '', confianza: 'C' };
+            }
+            case 'competidores':
+                if (existingBrief.competidores) return { valor: existingBrief.competidores, confianza: 'A' };
+                if (campos.competidores?.valor) return { valor: campos.competidores.valor, confianza: campos.competidores.confianza || 'B' };
+                return { valor: '', confianza: 'C' };
+            case 'tono':
+                if (existingBrief.tono) return { valor: existingBrief.tono, confianza: 'A' };
+                if (campos.tono?.valor) return { valor: campos.tono.valor, confianza: campos.tono.confianza || 'C' };
+                return { valor: '', confianza: 'C' };
+            case 'PS':
+                if (existingBrief.prueba_social) return { valor: existingBrief.prueba_social, confianza: 'A' };
+                if (campos.PS?.valor) return { valor: campos.PS.valor, confianza: campos.PS.confianza || 'A' };
+                return { valor: '[PENDIENTE - Prueba social]', confianza: 'C' };
+            case 'RLP':
+                if (existingBrief.restricciones_legales) return { valor: existingBrief.restricciones_legales, confianza: 'A' };
+                if (campos.RLP?.valor) return { valor: campos.RLP.valor, confianza: campos.RLP.confianza || 'B' };
+                return { valor: '', confianza: 'C' };
+            case 'slogan':
+                if (existingBrief.slogan) return { valor: existingBrief.slogan, confianza: 'A' };
+                if (empresaRow.slogan) return { valor: empresaRow.slogan, confianza: 'A' };
+                if (campos.slogan?.valor) return { valor: campos.slogan.valor, confianza: campos.slogan.confianza || 'C' };
+                return { valor: '', confianza: 'C' };
+            case 'oferta':
+                if (existingBrief.oferta) return { valor: existingBrief.oferta, confianza: 'A' };
+                if (campos.oferta?.valor) return { valor: campos.oferta.valor, confianza: campos.oferta.confianza || 'C' };
+                return { valor: '', confianza: 'C' };
+            case 'descripcion':
+                if (existingBrief.descripcion) return { valor: existingBrief.descripcion, confianza: 'A' };
+                if (empresaRow.descripcion) return { valor: empresaRow.descripcion, confianza: 'A' };
+                if (campos.descripcion?.valor) return { valor: campos.descripcion.valor, confianza: campos.descripcion.confianza || 'A' };
+                return { valor: '', confianza: 'C' };
+            case 'cta':
+                if (existingBrief.cta) return { valor: existingBrief.cta, confianza: 'A' };
+                if (campos.cta?.valor) return { valor: campos.cta.valor, confianza: campos.cta.confianza || 'C' };
+                return { valor: '', confianza: 'C' };
+            case 'tipografia':
+                if (existingBrief.tipografia) return { valor: existingBrief.tipografia, confianza: 'A' };
+                if (campos.tipografia?.valor) return { valor: campos.tipografia.valor, confianza: campos.tipografia.confianza || 'C' };
+                return { valor: 'moderna', confianza: 'C' };
+            default:
+                return { valor: '', confianza: 'C' };
+        }
+    }
+
+    // Ensamblar vector pipe-delimited con tags de confianza
+    const parts = BRIEF_FIELD_ORDER.map(field => {
+        const { valor, confianza } = getVal(field);
+        let val = typeof valor === 'string' ? valor : String(valor);
+        // Sanitizar: sin pipes dentro de valores
+        val = val.replace(/\|/g, '⁄');
+        if (!val || val.trim() === '') val = '[PENDIENTE]';
+        return `${field}: ${val} [${confianza}]`;
+    });
+
+    return parts.join(' |');
 }
 
 // Procesa cada content_slot del plan con BriefMarker (N llamadas, caras — cap 12).
@@ -1386,15 +1720,17 @@ const server = http.createServer((req, res) => {
 
     // 🔄 PROXY DE CONFIGURACIÓN (Empresas)
     if (pathname.includes('/api/config')) {
-        // action=config del backend CMS CampanasAi devuelve Config_Empresas real
-        // (getAll era del backend SUITSTORE01, no existe en este deployment).
-        const configUrl = GAS_URL.includes('?') ? (GAS_URL + '&action=config') : (GAS_URL + '?action=config');
-        serverLog('INFO', "🏢 [PROXY] Solicitando Config_Empresas vía action=config...");
+        // action=getAll (tablas globales → Config_Empresas). action=config no existe
+        // en el GAS deployado y caía siempre al mock DEMO (que generate no encuentra).
+        const configUrl = GAS_URL.includes('?') ? (GAS_URL + '&action=getAll') : (GAS_URL + '?action=getAll');
+        serverLog('INFO', "🏢 [PROXY] Solicitando Config_Empresas vía action=getAll...");
         fetchWithRedirects(configUrl, (data, statusCode) => {
             try {
                 const parsed = JSON.parse(data);
-                if (parsed.data && Array.isArray(parsed.data)) {
-                    const companies = parsed.data.map(c => ({
+                const rows = Array.isArray(parsed.Config_Empresas) ? parsed.Config_Empresas
+                    : (Array.isArray(parsed.data) ? parsed.data : null);
+                if (rows) {
+                    const companies = rows.map(c => ({
                         nomempresa: c.nomempresa || c.nombre_empresa || '',
                         logo_url: c.logo_url || '',
                         telefonowhastapp: c.telefonowhatsapp || c.telefonowhastapp || '',
@@ -3652,6 +3988,231 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ── BRIEF GENERATOR — POST /api/brief/generate ─────────────────────────
+    // Genera un Brief completo de 20 campos a partir de id_empresa.
+    // Lee Config_Empresas, resuelve taxonomía desde Supabase, infiere campos
+    // faltantes vía IA, y retorna el vector ensamblado. NO escribe a GAS
+    // automáticamente — el sidebar muestra preview y el usuario confirma.
+    if (pathname === '/api/brief/generate' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { id_empresa } = JSON.parse(body);
+                if (!id_empresa) throw new Error('id_empresa es requerido');
+
+                serverLog('INFO', `[BRIEF_GEN] Iniciando generación para "${id_empresa}"`);
+
+                // 1. Leer empresa desde GAS
+                const empresaRow = await fetchEmpresaRow(id_empresa);
+                if (!empresaRow) throw new Error(`Empresa "${id_empresa}" no encontrada en Config_Empresas`);
+
+                // 2. Parsear brief existente
+                const briefRaw = (empresaRow.logo_url || empresaRow.tipo_negocio || empresaRow.tiponegocio || '').trim();
+                const existingBrief = parseBrief(briefRaw, empresaRow);
+
+                // 3. Resolver taxonomía desde Supabase (industrias → nichos → especializaciones)
+                let taxonomia = { industria: '', nicho: '', especializacion: '' };
+                try {
+                    const giro = empresaRow.giro_especifico || empresaRow.descripcion || '';
+                    const nombre = empresaRow.nomempresa || '';
+                    taxonomia = await resolverTaxonomia(giro, nombre);
+                } catch (e) {
+                    serverLog('WARN', `[BRIEF_GEN] Taxonomía fallback: ${e.message}`);
+                }
+
+                // 4. Construir el prompt con el MegaPrompt + datos de la empresa
+                const systemPrompt = buildBriefGeneratorPrompt();
+                const userContent = buildBriefGeneratorInput(empresaRow, existingBrief, taxonomia);
+
+                // 5. Llamar a IA para generar campos faltantes
+                const generated = await callAIJson(systemPrompt, userContent, 0.4);
+
+                // 6. Ensamblar vector completo (respetar datos del cliente)
+                const vector = assembleCompleteBrief(existingBrief, generated, taxonomia, empresaRow);
+
+                // 7. Calcular completitud y confianza
+                const parsed = parseBrief(vector, empresaRow);
+                const totalFields = 20;
+                const filledFields = Object.values(parsed).filter(v => v && typeof v === 'string' && !v.includes('[PENDIENTE')).length;
+
+                // Extraer mapa de confianza del vector [A]/[B]/[C]
+                const confidenceMap = {};
+                const confSegments = vector.split('|');
+                for (const seg of confSegments) {
+                    const match = seg.trim().match(/^([^:]+):\s*.*\[([ABC])\]$/i);
+                    if (match) {
+                        confidenceMap[match[1].trim().toLowerCase()] = match[2].toUpperCase();
+                    }
+                }
+
+                serverLog('INFO', `[BRIEF_GEN] Brief generado: ${filledFields}/${totalFields} campos para "${id_empresa}"`);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'success',
+                    data: {
+                        id_empresa,
+                        vector,
+                        brief: parsed,
+                        confidence: confidenceMap,
+                        completitud: { filled: filledFields, total: totalFields },
+                        existente: existingBrief
+                    }
+                }));
+            } catch (e) {
+                serverLog('ERROR', `[BRIEF_GEN] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ── BRIEF METADATA — POST /api/brief/metadata ────────────────────────
+    // Guarda brief.json + confianza.json en Drive vía GAS (saveBriefMetadata).
+    if (pathname === '/api/brief/metadata' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { id_empresa, vector, confianza } = JSON.parse(body);
+                if (!id_empresa || !vector) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', error: 'id_empresa y vector requeridos' }));
+                    return;
+                }
+                // Llamar a GAS saveBriefMetadata (fetch nativo: sigue el 302 de GAS
+                // sin re-POSTear — fetchWithRedirects re-POSTea y googleusercontent 405)
+                const gasRes = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'saveBriefMetadata', id_empresa, vector, confianza })
+                });
+                const gasResult = await gasRes.json();
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(gasResult));
+            } catch (e) {
+                serverLog('ERROR', `[BRIEF_META] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ── BRIEF FOLDERS — POST /api/brief/folders ───────────────────────────
+    // Crea estructura cte<id>/ si no existe (idempotente).
+    if (pathname === '/api/brief/folders' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { id_empresa } = JSON.parse(body);
+                if (!id_empresa) throw new Error('id_empresa es requerido');
+
+                const gasRes = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'ensureCteFolders', id_empresa })
+                });
+                const gasResult = await gasRes.json();
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(gasResult));
+            } catch (e) {
+                serverLog('ERROR', `[BRIEF_FOLDERS] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ── BRIEF ASSETS — POST /api/brief/assets ─────────────────────────────
+    // Genera assets LAPVTFU para una empresa. Lee el brief existente,
+    // descarga imágenes/videos de las URLs, y los guarda en Drive.
+    if (pathname === '/api/brief/assets' && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const { id_empresa } = JSON.parse(body);
+                if (!id_empresa) throw new Error('id_empresa es requerido');
+
+                // 1. Asegurar carpetas
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'ensureCteFolders', id_empresa })
+                });
+
+                // 2. Obtener brief de la empresa
+                const empresaRow = await fetchEmpresaRow(id_empresa);
+                if (!empresaRow) throw new Error(`Empresa "${id_empresa}" no encontrada`);
+
+                const existingBrief = parseBrief(empresaRow.logo_url || empresaRow.tipo_negocio || '', empresaRow);
+                const activos = existingBrief.activos || {};
+
+                // 3. Generar todos los assets
+                const gasRes = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'generateAllAssets', id_empresa, activos })
+                });
+                const gasResult = await gasRes.json();
+
+                serverLog('INFO', `[BRIEF_ASSETS] ${gasResult.generated || 0}/${gasResult.total || 0} assets generados para "${id_empresa}"`);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'success',
+                    data: {
+                        id_empresa,
+                        total: gasResult.total,
+                        generated: gasResult.generated,
+                        results: gasResult.results || []
+                    }
+                }));
+            } catch (e) {
+                serverLog('ERROR', `[BRIEF_ASSETS] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ── BRIEF ASSETS STATUS — GET /api/brief/assets?id=xxx ────────────────
+    // Retorna URLs de assets LAPVTFU existentes para una empresa.
+    if (pathname === '/api/brief/assets' && req.method === 'GET') {
+        const urlParams = parsedUrl.searchParams;
+        const id_empresa = urlParams.get('id');
+        if (!id_empresa) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'error', error: 'id requerido' }));
+            return;
+        }
+
+        (async () => {
+            try {
+                const gasRes = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getBriefAssets', id_empresa })
+                });
+                const gasResult = await gasRes.json();
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data: gasResult }));
+            } catch (e) {
+                serverLog('ERROR', `[BRIEF_ASSETS_GET] ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        })();
+        return;
+    }
+
     // 🖥️ COMFY QUICK PREVIEW — botón "Comfy" en Datos/Negocio: genera UNA
     // imagen de prueba con SuitComfy/ComfyUI local, armando el prompt solo con
     // datos reales de la empresa (industria/nicho/giro/color_tema) — no pasa
@@ -4463,14 +5024,24 @@ async function callLocalLMS(prompt) {
     });
 }
 
-function fetchWithRedirects(url, callback) {
+function fetchWithRedirects(url, optionsOrCallback, maybeCallback) {
+    // Firma dual: (url, callback) = GET, como siempre. (url, options, callback) = con
+    // método/body (POST). Antes el objeto options se trataba como callback y la ruta
+    // brief mataba el proceso entero con "callback is not a function".
+    const hasOptions = typeof optionsOrCallback === 'object' && optionsOrCallback !== null;
+    const callback = hasOptions ? maybeCallback : optionsOrCallback;
+    const extra = hasOptions ? optionsOrCallback : {};
+    const method = String(extra.method || 'GET').toUpperCase();
+
     const options = {
+        method,
         headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            ...(extra.headers || {})
         }
     };
 
-    https.get(url, options, (res) => {
+    const req = https.request(url, options, (res) => {
         // Manejar Redirecciones (301, 302, 307, 308)
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
             let nextUrl = res.headers.location;
@@ -4480,7 +5051,16 @@ function fetchWithRedirects(url, callback) {
                 nextUrl = new URL(nextUrl, origin).href;
             }
             serverLog('INFO', `↪️ Redireccionando a: ${nextUrl}`);
-            return fetchWithRedirects(nextUrl, callback);
+            res.resume();
+            // 301/302/303 → GET sin body (estándar; re-POSTear a googleusercontent da 405)
+            // 307/308 → preservar método y body
+            if (res.statusCode === 307 || res.statusCode === 308) {
+                return fetchWithRedirects(nextUrl, hasOptions ? extra : callback, callback);
+            }
+            if (hasOptions) {
+                return fetchWithRedirects(nextUrl, callback, callback);
+            }
+            return fetchWithRedirects(nextUrl, callback, callback);
         }
 
         let data = '';
@@ -4491,9 +5071,9 @@ function fetchWithRedirects(url, callback) {
             if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || !trimmed.startsWith('{')) {
                 serverLog('WARN', "⚠️ [PROXY] Respuesta no válida (posible error de Google o Redirección):");
                 serverLog('INFO', trimmed.substring(0, 500));
-                
-                const errorObj = { 
-                    status: 'error', 
+
+                const errorObj = {
+                    status: 'error',
                     message: trimmed.includes('Not Found') ? 'URL de Google no válida o no publicada' : 'Respuesta errónea de Google',
                     raw: trimmed.substring(0, 100)
                 };
@@ -4502,10 +5082,13 @@ function fetchWithRedirects(url, callback) {
                 callback(data, res.statusCode);
             }
         });
-    }).on('error', (e) => {
+    });
+    req.on('error', (e) => {
         serverLog('ERROR', "❌ [PROXY_ERROR]:", e.message);
         callback(JSON.stringify({ status: 'error', message: e.message }), 500);
     });
+    if (extra.body) req.write(extra.body);
+    req.end();
 }
 
 

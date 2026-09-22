@@ -65,6 +65,7 @@
   ],
   "instructions": [
     "AGENTS.md",
+    "CLAUDE.md",
     ".suit/ARCHITECTURE.md",
     ".suit/INDEX.md"
   ],
@@ -80,6 +81,11 @@
     "supabase": {
       "type": "local",
       "command": ["node", "scripts/mcp-supabase.js"],
+      "enabled": true
+    },
+    "brief": {
+      "type": "local",
+      "command": ["node", "scripts/mcp/brief-server.js"],
       "enabled": true
     },
     "playwright": {

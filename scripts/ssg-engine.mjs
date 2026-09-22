@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { parseTheme, resolveTheme, getFontCssImport } = require('./parse-theme.js');
 
 /**
  * EVASOL SSG ENGINE (v2.0.0)
@@ -137,7 +140,8 @@ function renderLanding(tpl, company, coSeo, file, suitorgCompany = {}) {
     const telefono = company.telefonowhatsapp || '';
     const correo = company.correoempresarial || '';
     const ctaHref = telefono ? `https://wa.me/${telefono}` : (correo ? `mailto:${correo}` : '');
-    const colorTema = company.color_tema || '#2563eb';
+    const theme = resolveTheme(parseTheme(company.color_tema));
+    const colorTema = theme.color;
     const suitorgLogoRaw = resolveLogoUrlParts(suitorgCompany.logo_url).logo;
     const logo = logoRaw || suitorgLogoRaw || '';
     // orden final heroSrc: hero propio → foto_agente → logo propio → coSeo.imagen_url → logo SUITORG
@@ -156,6 +160,17 @@ function renderLanding(tpl, company, coSeo, file, suitorgCompany = {}) {
         .replace(/{{LOGO}}/g, directDriveImage(logo))
         .replace(/{{IMAGEN_HERO}}/g, heroSrc || '')
         .replace(/{{COLOR_TEMA}}/g, colorTema)
+        .replace(/{{FONT_HEADING}}/g, theme.css['--font-heading'] || 'system-ui, sans-serif')
+        .replace(/{{FONT_BODY}}/g, theme.css['--font-body'] || 'system-ui, sans-serif')
+        .replace(/{{FONT_CSS_IMPORT}}/g, getFontCssImport(theme.tp))
+        .replace(/{{RADIUS}}/g, theme.css['--radius'] || '16px')
+        .replace(/{{SHADOW}}/g, theme.css['--shadow'] || '0 4px 24px rgba(0,0,0,0.08)')
+        .replace(/{{CONTAINER_MAX}}/g, theme.css['--container-max'] || '1120px')
+        .replace(/{{COLOR_BG}}/g, theme.css['--color-bg'] || '#F7F6F2')
+        .replace(/{{COLOR_SURFACE}}/g, theme.css['--color-surface'] || '#F9F8F5')
+        .replace(/{{COLOR_TEXT}}/g, theme.css['--color-text'] || '#28251D')
+        .replace(/{{COLOR_TEXT_MUTED}}/g, theme.css['--color-text-muted'] || '#7A7974')
+        .replace(/{{COLOR_BORDER}}/g, theme.css['--color-border'] || '#D4D1CA')
         .replace(/{{URL}}/g, `${CONFIG.baseUrl}/${file}`)
         .replace(/{{TELEFONO}}/g, telefono)
         .replace(/{{CORREO}}/g, correo)

@@ -35,3 +35,9 @@ skill:
       description: "Comprobar que index.html tenga el script cargado"
       severity: error
       check: "If new js/modules/*.js file, add <script> tag in index.html"
+
+    - id: js-005
+      description: "google.script.run calls must have withFailureHandler"
+      severity: error
+      note: "Sidebar GAS calls without error handling fail silently. Always chain .withFailureHandler() before the server-side function call."
+      file_pattern: "*sidebar*.js"

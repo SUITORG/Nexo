@@ -35,10 +35,10 @@ function runMasterSeeds(ss) {
     usa_features_estandar: "FALSE", habilitado: "TRUE", modo: "PROD", db_engine: "SUPABASE", usa_soporte_ia: "TRUE", autodepuracion: 60, usa_reservaciones: 1
   });
 
-  // Semilla: EVASOL (Motor Estándar)
+  // Semilla: EVASOL (Motor Estándar) — formato pipe-delimited: #hex|candado|pal|tp|tpl
   ensureSeed(ss, "Config_Empresas", "id_empresa", "EVASOL", {
     id_empresa: "EVASOL", nomempresa: "EVASOL", tipo_negocio: "Energía Solar", slogan: "Energía para tu vida",
-    color_tema: "#2e7d32", accent_color: "#ffa000", usa_features_estandar: "TRUE", habilitado: "TRUE", modo: "PROD",     db_engine: "SUPABASE", usa_soporte_ia: "TRUE"
+    color_tema: "#2e7d32|candado:0|pal:pal-forest|tp:tp-08", accent_color: "#ffa000", usa_features_estandar: "TRUE", habilitado: "TRUE", modo: "PROD",     db_engine: "SUPABASE", usa_soporte_ia: "TRUE"
   });
 
   const secureAdminPass = PropertiesService.getScriptProperties().getProperty('ADMIN_PAPER_PASS') || "paper_admin_v1";

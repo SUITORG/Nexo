@@ -13,9 +13,23 @@
     <meta property="og:image" content="{{IMAGEN_HERO}}">
     <meta name="twitter:title" content="{{NOMBRE}}">
     <meta name="twitter:description" content="{{DESCRIPCION}}">
+    {{FONT_CSS_IMPORT}}
     <style>
         :root {
             --accent: {{COLOR_TEMA}};
+            --color-primary: {{COLOR_TEMA}};
+            --color-primary-hover: {{COLOR_TEMA}};
+            --color-on-primary: #ffffff;
+            --color-bg: {{COLOR_BG}};
+            --color-surface: {{COLOR_SURFACE}};
+            --color-text: {{COLOR_TEXT}};
+            --color-text-muted: {{COLOR_TEXT_MUTED}};
+            --color-border: {{COLOR_BORDER}};
+            --font-heading: {{FONT_HEADING}};
+            --font-body: {{FONT_BODY}};
+            --radius: {{RADIUS}};
+            --shadow: {{SHADOW}};
+            --container-max: {{CONTAINER_MAX}};
             --bg: #0b0f1a;
             --card: rgba(255, 255, 255, 0.04);
             --text: #f5f6fa;
@@ -23,7 +37,7 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: var(--font-body, 'Segoe UI', system-ui, -apple-system, sans-serif);
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
@@ -61,7 +75,7 @@
             filter: drop-shadow(0 4px 16px rgba(0,0,0,0.5));
         }
         .logo[src=""] { display: none; }
-        h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; margin-bottom: 0.75rem; }
+        h1 { font-family: var(--font-heading, inherit); font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; margin-bottom: 0.75rem; }
         .slogan { font-size: clamp(1rem, 2.4vw, 1.25rem); color: var(--text-dim); margin-bottom: 1.5rem; }
         .oferta {
             display: inline-block;

@@ -309,11 +309,15 @@ function getSidebarHtml() {
   function copyOutput() {
     const text = buildOutput();
     navigator.clipboard.writeText(text);
-    google.script.run.showToast('Copiado: ' + text);
+    google.script.run
+      .withFailureHandler(err => console.warn('showToast failed:', err))
+      .showToast('Copiado: ' + text);
   }
 
   function applyToSheet() {
-    google.script.run.applyThemeToSelection(buildOutput());
+    google.script.run
+      .withFailureHandler(err => console.warn('applyTheme failed:', err))
+      .applyThemeToSelection(buildOutput());
   }
 
   updatePreview();

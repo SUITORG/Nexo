@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vista previa — plantillas, tipografías y paletas</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&family=Bricolage+Grotesque:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Archivo:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,general-sans@400,500,600,700,switzer@400,500,600,700,bespoke-serif@400,500,600,700&display=swap">
+<style>
+:root{--bg:#F7F6F2;--sur:#FFFFFF;--bd:#D4D1CA;--tx:#28251D;--mu:#7A7974;--pri:#01696F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:48px 24px 96px}
+h1{font-family:'Bricolage Grotesque','DM Sans',sans-serif;font-weight:700;font-size:clamp(30px,5vw,46px);line-height:1.08;letter-spacing:-.02em;margin:0 0 12px}
+.lede{font-size:18px;color:var(--mu);max-width:62ch;margin:0 0 28px}
+h2{font-family:'Bricolage Grotesque','DM Sans',sans-serif;font-size:26px;letter-spacing:-.01em;margin:64px 0 6px;padding-top:24px;border-top:1px solid var(--bd)}
+h2 + p{color:var(--mu);margin:0 0 24px;max-width:62ch}
+.nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.nav a{font-size:13px;color:var(--pri);text-decoration:none;border:1px solid var(--bd);border-radius:999px;padding:4px 11px;background:var(--sur)}
+.nav a:hover{border-color:var(--pri)}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+.card{background:var(--sur);border:1px solid var(--bd);border-radius:14px;padding:18px;scroll-margin-top:20px}
+.ch{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.card h3{font-family:'IBM Plex Sans',monospace;font-size:15px;margin:0 0 4px;letter-spacing:-.01em}
+.uc{font-size:13.5px;color:var(--mu);margin:0;max-width:44ch}
+.meta{text-align:right;flex:none}
+.sw{display:flex;gap:3px;justify-content:flex-end;margin-bottom:6px}
+.sw i{width:15px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.12);display:block}
+.ft{font-size:12px;color:var(--mu);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 14px}
+.chip{font-size:11.5px;color:var(--mu);border:1px solid var(--bd);border-radius:5px;padding:2px 7px}
+.frame{border:1px solid var(--bd);overflow:hidden}
+.wb{border-bottom:1px solid rgba(0,0,0,.06)}
+.wb:last-child{border-bottom:0}
+.rw{display:flex;align-items:center} .rw.top{align-items:flex-start}
+.sb{justify-content:space-between} .g8{gap:8px} .g10{gap:10px} .g14{gap:14px} .cen{text-align:center}
+.pair{display:grid;grid-template-columns:62px 1fr 190px;gap:18px;align-items:center;background:var(--sur);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:12px}
+.pid{font-family:'IBM Plex Sans',monospace;font-size:12px;color:var(--mu)}
+.pm{display:flex;flex-direction:column;font-size:12.5px;color:var(--mu);text-align:right}
+.pm b{color:var(--tx);font-size:13.5px} .prov{font-size:11px;opacity:.75}
+.palcard{background:var(--sur);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+.palcard h4{font-size:15px;margin:0 0 12px} .palcard code{font-size:11.5px;color:var(--mu);font-weight:400}
+.palrow{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.lab{font-size:11.5px;color:var(--mu);width:48px;flex:none}
+.pcs{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+.pc{flex:1;min-width:92px;border:1px solid rgba(0,0,0,.1);border-radius:7px;padding:8px 9px;display:flex;flex-direction:column;gap:2px}
+.pc span{font-size:10.5px;opacity:.85} .pc code{font-size:10.5px;opacity:.7;color:inherit}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--bd);font-size:13px;color:var(--mu)}
+@media (max-width:760px){.pair{grid-template-columns:1fr}.pm{text-align:left}.grid{grid-template-columns:1fr}}
+</style></head>
+<body><div class="wrap">
+<h1>Vista previa del kit de plantillas</h1>
+<p class="lede">Esquemas de las 12 plantillas de <code>presets.json</code>, los 10 pares tipográficos renderizados con sus fuentes reales y las 6 paletas en claro y oscuro. Cada esquema muestra el orden exacto de bloques que tu renderizador va a dibujar.</p>
+<nav class="nav"><a href="#lp-squeeze-minimal">squeeze-minimal</a><a href="#lp-saas-trial">saas-trial</a><a href="#lp-sales-longform">sales-longform</a><a href="#lp-local-service">local-service</a><a href="#lp-webinar">webinar</a><a href="#lp-product-ecom">product-ecom</a><a href="#lp-booking">booking</a><a href="#lp-waitlist">waitlist</a><a href="#lp-vsl">vsl</a><a href="#lp-clinica-salud">clinica-salud</a><a href="#lp-comparison">comparison</a><a href="#lp-link-in-bio">link-in-bio</a></nav>
+
+<h2>Plantillas</h2>
+<p>Cada tarjeta es un tipo de landing con su par tipográfico, paleta, ancho de contenedor y secuencia de bloques.</p>
+<div class="grid">
+<article class="card" id="lp-squeeze-minimal">
+  <header class="ch">
+    <div>
+      <h3>lp-squeeze-minimal</h3>
+      <p class="uc">Captura de email con lead magnet. Una sola pantalla, sin navegacion.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FFFFFF" title="bg: #FFFFFF"></i><i style="background:#F4F4F4" title="surface: #F4F4F4"></i><i style="background:#DDDDDD" title="border: #DDDDDD"></i><i style="background:#111111" title="text: #111111"></i><i style="background:#6B6B6B" title="textMuted: #6B6B6B"></i><i style="background:#111111" title="primary: #111111"></i></div>
+      <p class="ft"><span style="font-family:'Archivo',sans-serif;font-weight:700">Archivo 700</span> · <span style="font-family:'Public Sans',sans-serif">Public Sans 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">squeeze</span>
+      <span class="chip">objetivo: lead</span>
+      <span class="chip">760px</span>
+      <span class="chip">4 bloques</span></div>
+  <div class="frame" style="--pri:#111111;--txt:#111111;--bg:#FFFFFF;--bd:#DDDDDD;background:#FFFFFF;border-radius:4px;box-shadow:none">
+    <div class="wb" style="background:#F4F4F4;padding:22px"><div class="cen"><div style="width:62%;height:18px;background:#111111;border-radius:3px;margin:0 auto 8px"></div><div style="width:46%;height:18px;background:#111111;border-radius:3px;margin:0 auto 10px"></div><div style="width:70%;height:7px;background:#6B6B6B;border-radius:3px;margin:0 auto 4px"></div><div style="width:54%;height:7px;background:#6B6B6B;border-radius:3px;margin:0 auto"></div><div class="rw g8" style="margin-top:10px"><div style="width:58%;height:22px;background:transparent;border-radius:3px;border:1px solid #DDDDDD;background:#F4F4F4"></div><div style="width:30%;height:22px;background:#111111;border-radius:3px;border-radius:6px"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#111111;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#111111;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#111111;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#111111;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#111111;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#111111;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:#F4F4F4;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#DDDDDD"></div><div style="width:44%;height:6px;background:#111111;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#DDDDDD"></div><div style="width:44%;height:6px;background:#111111;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#6B6B6B;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#6B6B6B;border-radius:3px;"></div><div style="width:30px;height:6px;background:#6B6B6B;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-saas-trial">
+  <header class="ch">
+    <div>
+      <h3>lp-saas-trial</h3>
+      <p class="uc">Prueba gratis de software B2B con prueba social y precios.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FAF9FC" title="bg: #FAF9FC"></i><i style="background:#F2EFF9" title="surface: #F2EFF9"></i><i style="background:#D9D2EA" title="border: #D9D2EA"></i><i style="background:#1D172A" title="text: #1D172A"></i><i style="background:#635B78" title="textMuted: #635B78"></i><i style="background:#5B3BC4" title="primary: #5B3BC4"></i></div>
+      <p class="ft"><span style="font-family:'Satoshi',sans-serif;font-weight:700">Satoshi 700</span> · <span style="font-family:'Satoshi',sans-serif">Satoshi 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">saas-trial</span>
+      <span class="chip">objetivo: registro</span>
+      <span class="chip">1120px</span>
+      <span class="chip">11 bloques</span></div>
+  <div class="frame" style="--pri:#5B3BC4;--txt:#1D172A;--bg:#FAF9FC;--bd:#D9D2EA;background:#FAF9FC;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06)">
+    <div class="wb" style="background:transparent;padding:10px"><div class="rw sb"><div class="rw g8"><div style="width:26px;height:9px;background:#1D172A;border-radius:3px;"></div><div style="width:34px;height:6px;background:#635B78;border-radius:3px;"></div><div style="width:30px;height:6px;background:#635B78;border-radius:3px;"></div><div style="width:28px;height:6px;background:#635B78;border-radius:3px;"></div></div><div style="width:52px;height:16px;background:#5B3BC4;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:#F2EFF9;padding:20px"><div class="rw g14 top"><div style="flex:1"><div style="width:90%;height:17px;background:#1D172A;border-radius:3px;margin-bottom:8px"></div><div style="width:62%;height:17px;background:#1D172A;border-radius:3px;margin-bottom:10px"></div><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:92%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:86px;height:20px;background:#5B3BC4;border-radius:3px;border-radius:6px;margin-top:10px"></div></div><div style="flex:1;aspect-ratio:4/3;background:#D9D2EA;border-radius:8px"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g14" style="justify-content:space-between;opacity:.5"><div style="width:14%;height:14px;background:#635B78;border-radius:3px;"></div><div style="width:14%;height:14px;background:#635B78;border-radius:3px;"></div><div style="width:14%;height:14px;background:#635B78;border-radius:3px;"></div><div style="width:14%;height:14px;background:#635B78;border-radius:3px;"></div><div style="width:14%;height:14px;background:#635B78;border-radius:3px;"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D9D2EA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#5B3BC4;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D9D2EA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#5B3BC4;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D9D2EA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#5B3BC4;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#5B3BC4;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#635B78;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#5B3BC4;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#635B78;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#5B3BC4;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#635B78;border-radius:3px;margin:0 auto"></div></div></div></div><div class="wb" style="background:#F2EFF9;padding:16px"><div class="rw g10"><div style="flex:1;text-align:center"><div style="width:50%;height:20px;background:#5B3BC4;border-radius:3px;margin:0 auto 6px"></div><div style="width:74%;height:6px;background:#635B78;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:50%;height:20px;background:#5B3BC4;border-radius:3px;margin:0 auto 6px"></div><div style="width:74%;height:6px;background:#635B78;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:50%;height:20px;background:#5B3BC4;border-radius:3px;margin:0 auto 6px"></div><div style="width:74%;height:6px;background:#635B78;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:50%;height:20px;background:#5B3BC4;border-radius:3px;margin:0 auto 6px"></div><div style="width:74%;height:6px;background:#635B78;border-radius:3px;margin:0 auto"></div></div></div></div><div class="wb" style="background:#F2EFF9;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D9D2EA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D9D2EA"></div><div style="width:44%;height:6px;background:#1D172A;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D9D2EA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D9D2EA"></div><div style="width:44%;height:6px;background:#1D172A;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D9D2EA;border-radius:10px;padding:12px"><div style="width:50%;height:7px;background:#635B78;border-radius:3px;margin-bottom:8px"></div><div style="width:40%;height:20px;background:#1D172A;border-radius:3px;margin-bottom:10px"></div><div style="width:90%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:100%;height:18px;background:#D9D2EA;border-radius:3px;border-radius:6px;margin-top:10px"></div></div><div style="flex:1;border:2px solid #5B3BC4;border-radius:10px;padding:12px"><div style="width:50%;height:7px;background:#635B78;border-radius:3px;margin-bottom:8px"></div><div style="width:40%;height:20px;background:#1D172A;border-radius:3px;margin-bottom:10px"></div><div style="width:90%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:100%;height:18px;background:#5B3BC4;border-radius:3px;border-radius:6px;margin-top:10px"></div></div><div style="flex:1;border:1px solid #D9D2EA;border-radius:10px;padding:12px"><div style="width:50%;height:7px;background:#635B78;border-radius:3px;margin-bottom:8px"></div><div style="width:40%;height:20px;background:#1D172A;border-radius:3px;margin-bottom:10px"></div><div style="width:90%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:100%;height:18px;background:#D9D2EA;border-radius:3px;border-radius:6px;margin-top:10px"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D9D2EA"><div style="width:56%;height:7px;background:#1D172A;border-radius:3px;"></div><div style="width:9px;height:9px;background:#635B78;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D9D2EA"><div style="width:56%;height:7px;background:#1D172A;border-radius:3px;"></div><div style="width:9px;height:9px;background:#635B78;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D9D2EA"><div style="width:56%;height:7px;background:#1D172A;border-radius:3px;"></div><div style="width:9px;height:9px;background:#635B78;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D9D2EA"><div style="width:56%;height:7px;background:#1D172A;border-radius:3px;"></div><div style="width:9px;height:9px;background:#635B78;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:#5B3BC4;padding:18px"><div class="rw sb"><div style="flex:1"><div style="width:52%;height:13px;background:#FFFFFF;border-radius:3px;"></div></div><div style="width:96px;height:22px;background:#FFFFFF;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#635B78;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#635B78;border-radius:3px;"></div><div style="width:30px;height:6px;background:#635B78;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-sales-longform">
+  <header class="ch">
+    <div>
+      <h3>lp-sales-longform</h3>
+      <p class="uc">Carta de ventas larga para infoproducto o curso, con garantia y bonos.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FBF7F3" title="bg: #FBF7F3"></i><i style="background:#F5EDE6" title="surface: #F5EDE6"></i><i style="background:#E0D0C2" title="border: #E0D0C2"></i><i style="background:#2A1F18" title="text: #2A1F18"></i><i style="background:#7B6656" title="textMuted: #7B6656"></i><i style="background:#A84B2F" title="primary: #A84B2F"></i></div>
+      <p class="ft"><span style="font-family:'Fraunces',sans-serif;font-weight:600">Fraunces 600</span> · <span style="font-family:'Work Sans',sans-serif">Work Sans 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">sales-long-form</span>
+      <span class="chip">objetivo: venta</span>
+      <span class="chip">820px</span>
+      <span class="chip">13 bloques</span></div>
+  <div class="frame" style="--pri:#A84B2F;--txt:#2A1F18;--bg:#FBF7F3;--bd:#E0D0C2;background:#FBF7F3;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06)">
+    <div class="wb" style="background:#F5EDE6;padding:22px"><div class="cen"><div style="width:62%;height:18px;background:#2A1F18;border-radius:3px;margin:0 auto 8px"></div><div style="width:46%;height:18px;background:#2A1F18;border-radius:3px;margin:0 auto 10px"></div><div style="width:70%;height:7px;background:#7B6656;border-radius:3px;margin:0 auto 4px"></div><div style="width:54%;height:7px;background:#7B6656;border-radius:3px;margin:0 auto"></div><div class="rw g8" style="margin-top:12px;justify-content:center"><div style="width:90px;height:20px;background:#A84B2F;border-radius:3px;border-radius:6px"></div><div style="width:70px;height:20px;background:transparent;border-radius:3px;border:1px solid #E0D0C2"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div style="aspect-ratio:16/9;background:#2A1F18;border-radius:8px"></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #E0D0C2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#A84B2F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#2A1F18;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #E0D0C2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#A84B2F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#2A1F18;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #E0D0C2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#A84B2F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#2A1F18;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g14 top" style=""><div style="flex:1"><div style="width:60%;height:11px;background:#2A1F18;border-radius:3px;margin-bottom:7px"></div><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:78%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;height:52px;background:#E0D0C2;border-radius:8px"></div></div><div style="height:12px"></div><div class="rw g14 top" style="flex-direction:row-reverse"><div style="flex:1"><div style="width:60%;height:11px;background:#2A1F18;border-radius:3px;margin-bottom:7px"></div><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:78%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;height:52px;background:#E0D0C2;border-radius:8px"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #E0D0C2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#E0D0C2"></div><div style="width:44%;height:6px;background:#2A1F18;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #E0D0C2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#E0D0C2"></div><div style="width:44%;height:6px;background:#2A1F18;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:#F5EDE6;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #E0D0C2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#E0D0C2"></div><div style="width:44%;height:6px;background:#2A1F18;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #E0D0C2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#E0D0C2"></div><div style="width:44%;height:6px;background:#2A1F18;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:#F5EDE6;padding:14px"><div class="rw g8" style="align-items:center;padding:7px 0"><div style="width:12px;height:12px;border-radius:3px;background:#A84B2F"></div><div style="width:62%;height:6px;background:#2A1F18;border-radius:3px;"></div><div style="width:10%;height:6px;background:#7B6656;border-radius:3px;"></div></div><div class="rw g8" style="align-items:center;padding:7px 0"><div style="width:12px;height:12px;border-radius:3px;background:#A84B2F"></div><div style="width:62%;height:6px;background:#2A1F18;border-radius:3px;"></div><div style="width:10%;height:6px;background:#7B6656;border-radius:3px;"></div></div><div class="rw g8" style="align-items:center;padding:7px 0"><div style="width:12px;height:12px;border-radius:3px;background:#A84B2F"></div><div style="width:62%;height:6px;background:#2A1F18;border-radius:3px;"></div><div style="width:10%;height:6px;background:#7B6656;border-radius:3px;"></div></div><div class="rw g8" style="align-items:center;padding:7px 0"><div style="width:12px;height:12px;border-radius:3px;background:#A84B2F"></div><div style="width:62%;height:6px;background:#2A1F18;border-radius:3px;"></div><div style="width:10%;height:6px;background:#7B6656;border-radius:3px;"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #E0D0C2;border-radius:10px;padding:12px"><div style="width:50%;height:7px;background:#7B6656;border-radius:3px;margin-bottom:8px"></div><div style="width:40%;height:20px;background:#2A1F18;border-radius:3px;margin-bottom:10px"></div><div style="width:90%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:100%;height:18px;background:#E0D0C2;border-radius:3px;border-radius:6px;margin-top:10px"></div></div><div style="flex:1;border:2px solid #A84B2F;border-radius:10px;padding:12px"><div style="width:50%;height:7px;background:#7B6656;border-radius:3px;margin-bottom:8px"></div><div style="width:40%;height:20px;background:#2A1F18;border-radius:3px;margin-bottom:10px"></div><div style="width:90%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:100%;height:18px;background:#A84B2F;border-radius:3px;border-radius:6px;margin-top:10px"></div></div><div style="flex:1;border:1px solid #E0D0C2;border-radius:10px;padding:12px"><div style="width:50%;height:7px;background:#7B6656;border-radius:3px;margin-bottom:8px"></div><div style="width:40%;height:20px;background:#2A1F18;border-radius:3px;margin-bottom:10px"></div><div style="width:90%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#7B6656;border-radius:3px;margin-bottom:5px;"></div><div style="width:100%;height:18px;background:#E0D0C2;border-radius:3px;border-radius:6px;margin-top:10px"></div></div></div></div><div class="wb" style="background:#F5EDE6;padding:14px"><div class="rw g10" style="align-items:center"><div style="width:34px;height:34px;border-radius:50%;border:2px solid #A84B2F"></div><div style="flex:1"><div style="width:40%;height:8px;background:#2A1F18;border-radius:3px;margin-bottom:6px"></div><div style="width:80%;height:6px;background:#7B6656;border-radius:3px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #E0D0C2"><div style="width:56%;height:7px;background:#2A1F18;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7B6656;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #E0D0C2"><div style="width:56%;height:7px;background:#2A1F18;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7B6656;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #E0D0C2"><div style="width:56%;height:7px;background:#2A1F18;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7B6656;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #E0D0C2"><div style="width:56%;height:7px;background:#2A1F18;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7B6656;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g8" style="justify-content:center"><div style="width:40px;height:40px;background:#F5EDE6;border:1px solid #E0D0C2;border-radius:6px"></div><div style="width:40px;height:40px;background:#F5EDE6;border:1px solid #E0D0C2;border-radius:6px"></div><div style="width:40px;height:40px;background:#F5EDE6;border:1px solid #E0D0C2;border-radius:6px"></div><div style="width:40px;height:40px;background:#F5EDE6;border:1px solid #E0D0C2;border-radius:6px"></div></div></div><div class="wb" style="background:#A84B2F;padding:18px"><div class="rw sb"><div style="flex:1"><div style="width:52%;height:13px;background:#FFF8F4;border-radius:3px;"></div></div><div style="width:96px;height:22px;background:#FFF8F4;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#7B6656;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#7B6656;border-radius:3px;"></div><div style="width:30px;height:6px;background:#7B6656;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-local-service">
+  <header class="ch">
+    <div>
+      <h3>lp-local-service</h3>
+      <p class="uc">Negocio local (clinica, taller, despacho): telefono visible, mapa y horarios.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#F6F8F4" title="bg: #F6F8F4"></i><i style="background:#EDF2E9" title="surface: #EDF2E9"></i><i style="background:#CFDAC6" title="border: #CFDAC6"></i><i style="background:#1B2418" title="text: #1B2418"></i><i style="background:#5E6C57" title="textMuted: #5E6C57"></i><i style="background:#2F6B3A" title="primary: #2F6B3A"></i></div>
+      <p class="ft"><span style="font-family:'Outfit',sans-serif;font-weight:600">Outfit 600</span> · <span style="font-family:'Manrope',sans-serif">Manrope 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">local-service</span>
+      <span class="chip">objetivo: llamada</span>
+      <span class="chip">1060px</span>
+      <span class="chip">9 bloques</span></div>
+  <div class="frame" style="--pri:#2F6B3A;--txt:#1B2418;--bg:#F6F8F4;--bd:#CFDAC6;background:#F6F8F4;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06)">
+    <div class="wb" style="background:transparent;padding:10px"><div class="rw sb"><div class="rw g8"><div style="width:26px;height:9px;background:#1B2418;border-radius:3px;"></div><div style="width:34px;height:6px;background:#5E6C57;border-radius:3px;"></div><div style="width:30px;height:6px;background:#5E6C57;border-radius:3px;"></div><div style="width:28px;height:6px;background:#5E6C57;border-radius:3px;"></div></div><div style="width:52px;height:16px;background:#2F6B3A;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:#EDF2E9;padding:22px"><div class="cen"><div style="width:62%;height:18px;background:#1B2418;border-radius:3px;margin:0 auto 8px"></div><div style="width:46%;height:18px;background:#1B2418;border-radius:3px;margin:0 auto 10px"></div><div style="width:70%;height:7px;background:#5E6C57;border-radius:3px;margin:0 auto 4px"></div><div style="width:54%;height:7px;background:#5E6C57;border-radius:3px;margin:0 auto"></div><div class="rw g8" style="margin-top:10px"><div style="width:58%;height:22px;background:transparent;border-radius:3px;border:1px solid #CFDAC6;background:#EDF2E9"></div><div style="width:30%;height:22px;background:#2F6B3A;border-radius:3px;border-radius:6px"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #CFDAC6;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#2F6B3A;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1B2418;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #CFDAC6;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#2F6B3A;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1B2418;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #CFDAC6;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#2F6B3A;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1B2418;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g8"><div style="flex:1;aspect-ratio:1;background:#CFDAC6;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#CFDAC6;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#CFDAC6;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#CFDAC6;border-radius:6px"></div></div></div><div class="wb" style="background:#EDF2E9;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #CFDAC6;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#CFDAC6"></div><div style="width:44%;height:6px;background:#1B2418;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #CFDAC6;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#CFDAC6"></div><div style="width:44%;height:6px;background:#1B2418;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #CFDAC6"><div style="width:56%;height:7px;background:#1B2418;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5E6C57;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #CFDAC6"><div style="width:56%;height:7px;background:#1B2418;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5E6C57;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #CFDAC6"><div style="width:56%;height:7px;background:#1B2418;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5E6C57;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #CFDAC6"><div style="width:56%;height:7px;background:#1B2418;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5E6C57;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g14 top"><div style="flex:1.3;height:74px;background:#CFDAC6;border-radius:8px"></div><div style="flex:1"><div style="width:80%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:64%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:72%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div><div style="width:56%;height:6px;background:#5E6C57;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:#2F6B3A;padding:18px"><div class="rw sb"><div style="flex:1"><div style="width:52%;height:13px;background:#FFFFFF;border-radius:3px;"></div></div><div style="width:96px;height:22px;background:#FFFFFF;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#5E6C57;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#5E6C57;border-radius:3px;"></div><div style="width:30px;height:6px;background:#5E6C57;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-webinar">
+  <header class="ch">
+    <div>
+      <h3>lp-webinar</h3>
+      <p class="uc">Registro a webinar o masterclass con cuenta regresiva y ponente.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FAFAF8" title="bg: #FAFAF8"></i><i style="background:#F2F4F7" title="surface: #F2F4F7"></i><i style="background:#D5DAE2" title="border: #D5DAE2"></i><i style="background:#121A2B" title="text: #121A2B"></i><i style="background:#5B6675" title="textMuted: #5B6675"></i><i style="background:#12395E" title="primary: #12395E"></i></div>
+      <p class="ft"><span style="font-family:'Space Grotesk',sans-serif;font-weight:600">Space Grotesk 600</span> · <span style="font-family:'IBM Plex Sans',sans-serif">IBM Plex Sans 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">webinar</span>
+      <span class="chip">objetivo: registro</span>
+      <span class="chip">980px</span>
+      <span class="chip">7 bloques</span></div>
+  <div class="frame" style="--pri:#12395E;--txt:#121A2B;--bg:#FAFAF8;--bd:#D5DAE2;background:#FAFAF8;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.08),0 16px 40px rgba(0,0,0,.12)">
+    <div class="wb" style="background:#F2F4F7;padding:22px"><div class="cen"><div style="width:62%;height:18px;background:#121A2B;border-radius:3px;margin:0 auto 8px"></div><div style="width:46%;height:18px;background:#121A2B;border-radius:3px;margin:0 auto 10px"></div><div style="width:70%;height:7px;background:#5B6675;border-radius:3px;margin:0 auto 4px"></div><div style="width:54%;height:7px;background:#5B6675;border-radius:3px;margin:0 auto"></div><div class="rw g8" style="margin-top:10px"><div style="width:58%;height:22px;background:transparent;border-radius:3px;border:1px solid #D5DAE2;background:#F2F4F7"></div><div style="width:30%;height:22px;background:#12395E;border-radius:3px;border-radius:6px"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g8" style="justify-content:center"><div style="width:40px;height:40px;background:#F2F4F7;border:1px solid #D5DAE2;border-radius:6px"></div><div style="width:40px;height:40px;background:#F2F4F7;border:1px solid #D5DAE2;border-radius:6px"></div><div style="width:40px;height:40px;background:#F2F4F7;border:1px solid #D5DAE2;border-radius:6px"></div><div style="width:40px;height:40px;background:#F2F4F7;border:1px solid #D5DAE2;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#12395E;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#5B6675;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#12395E;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#5B6675;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#12395E;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#5B6675;border-radius:3px;margin:0 auto"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:#F2F4F7;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#5B6675;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:30px;height:6px;background:#5B6675;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-product-ecom">
+  <header class="ch">
+    <div>
+      <h3>lp-product-ecom</h3>
+      <p class="uc">Producto fisico con galeria, especificaciones y comparativa.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#F7F6F2" title="bg: #F7F6F2"></i><i style="background:#F9F8F5" title="surface: #F9F8F5"></i><i style="background:#D4D1CA" title="border: #D4D1CA"></i><i style="background:#28251D" title="text: #28251D"></i><i style="background:#7A7974" title="textMuted: #7A7974"></i><i style="background:#01696F" title="primary: #01696F"></i></div>
+      <p class="ft"><span style="font-family:'Instrument Serif',sans-serif;font-weight:400">Instrument Serif 400</span> · <span style="font-family:'DM Sans',sans-serif">DM Sans 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">product-detail</span>
+      <span class="chip">objetivo: venta</span>
+      <span class="chip">1180px</span>
+      <span class="chip">11 bloques</span></div>
+  <div class="frame" style="--pri:#01696F;--txt:#28251D;--bg:#F7F6F2;--bd:#D4D1CA;background:#F7F6F2;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06)">
+    <div class="wb" style="background:transparent;padding:10px"><div class="rw sb"><div class="rw g8"><div style="width:26px;height:9px;background:#28251D;border-radius:3px;"></div><div style="width:34px;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:30px;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:28px;height:6px;background:#7A7974;border-radius:3px;"></div></div><div style="width:52px;height:16px;background:#01696F;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:#F9F8F5;padding:20px"><div class="rw g14 top"><div style="flex:1"><div style="width:90%;height:17px;background:#28251D;border-radius:3px;margin-bottom:8px"></div><div style="width:62%;height:17px;background:#28251D;border-radius:3px;margin-bottom:10px"></div><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:92%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:86px;height:20px;background:#01696F;border-radius:3px;border-radius:6px;margin-top:10px"></div></div><div style="flex:1;aspect-ratio:4/3;background:#D4D1CA;border-radius:8px"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g8"><div style="flex:1;aspect-ratio:1;background:#D4D1CA;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#D4D1CA;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#D4D1CA;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#D4D1CA;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#01696F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#01696F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#01696F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g8" style="padding-bottom:6px"><div style="width:40%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:14%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:14%;height:7px;background:#7A7974;border-radius:3px;"></div><div style="width:14%;height:7px;background:#7A7974;border-radius:3px;"></div></div><div class="rw g8" style="padding:6px 0;border-top:1px solid #D4D1CA"><div style="width:40%;height:6px;background:#28251D;border-radius:3px;"></div><div style="width:14%;height:6px;background:#01696F;border-radius:3px;"></div><div style="width:14%;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:14%;height:6px;background:#7A7974;border-radius:3px;"></div></div><div class="rw g8" style="padding:6px 0;border-top:1px solid #D4D1CA"><div style="width:40%;height:6px;background:#28251D;border-radius:3px;"></div><div style="width:14%;height:6px;background:#01696F;border-radius:3px;"></div><div style="width:14%;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:14%;height:6px;background:#7A7974;border-radius:3px;"></div></div><div class="rw g8" style="padding:6px 0;border-top:1px solid #D4D1CA"><div style="width:40%;height:6px;background:#28251D;border-radius:3px;"></div><div style="width:14%;height:6px;background:#01696F;border-radius:3px;"></div><div style="width:14%;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:14%;height:6px;background:#7A7974;border-radius:3px;"></div></div><div class="rw g8" style="padding:6px 0;border-top:1px solid #D4D1CA"><div style="width:40%;height:6px;background:#28251D;border-radius:3px;"></div><div style="width:14%;height:6px;background:#01696F;border-radius:3px;"></div><div style="width:14%;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:14%;height:6px;background:#7A7974;border-radius:3px;"></div></div></div><div class="wb" style="background:#F9F8F5;padding:16px"><div class="rw g10"><div style="flex:1;text-align:center"><div style="width:50%;height:20px;background:#01696F;border-radius:3px;margin:0 auto 6px"></div><div style="width:74%;height:6px;background:#7A7974;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:50%;height:20px;background:#01696F;border-radius:3px;margin:0 auto 6px"></div><div style="width:74%;height:6px;background:#7A7974;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:50%;height:20px;background:#01696F;border-radius:3px;margin:0 auto 6px"></div><div style="width:74%;height:6px;background:#7A7974;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:50%;height:20px;background:#01696F;border-radius:3px;margin:0 auto 6px"></div><div style="width:74%;height:6px;background:#7A7974;border-radius:3px;margin:0 auto"></div></div></div></div><div class="wb" style="background:#F9F8F5;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D4D1CA"></div><div style="width:44%;height:6px;background:#28251D;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D4D1CA"></div><div style="width:44%;height:6px;background:#28251D;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D4D1CA"><div style="width:56%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7A7974;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D4D1CA"><div style="width:56%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7A7974;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D4D1CA"><div style="width:56%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7A7974;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D4D1CA"><div style="width:56%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7A7974;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:#F9F8F5;padding:14px"><div class="rw g10" style="align-items:center"><div style="width:34px;height:34px;border-radius:50%;border:2px solid #01696F"></div><div style="flex:1"><div style="width:40%;height:8px;background:#28251D;border-radius:3px;margin-bottom:6px"></div><div style="width:80%;height:6px;background:#7A7974;border-radius:3px;"></div></div></div></div><div class="wb" style="background:#01696F;padding:18px"><div class="rw sb"><div style="flex:1"><div style="width:52%;height:13px;background:#FFFFFF;border-radius:3px;"></div></div><div style="width:96px;height:22px;background:#FFFFFF;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#7A7974;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:30px;height:6px;background:#7A7974;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-booking">
+  <header class="ch">
+    <div>
+      <h3>lp-booking</h3>
+      <p class="uc">Agenda una consultoria: calendario embebido arriba del pliegue.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FAFAF8" title="bg: #FAFAF8"></i><i style="background:#F2F4F7" title="surface: #F2F4F7"></i><i style="background:#D5DAE2" title="border: #D5DAE2"></i><i style="background:#121A2B" title="text: #121A2B"></i><i style="background:#5B6675" title="textMuted: #5B6675"></i><i style="background:#12395E" title="primary: #12395E"></i></div>
+      <p class="ft"><span style="font-family:'General Sans',sans-serif;font-weight:600">General Sans 600</span> · <span style="font-family:'Inter',sans-serif">Inter 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">booking</span>
+      <span class="chip">objetivo: cita</span>
+      <span class="chip">960px</span>
+      <span class="chip">6 bloques</span></div>
+  <div class="frame" style="--pri:#12395E;--txt:#121A2B;--bg:#FAFAF8;--bd:#D5DAE2;background:#FAFAF8;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06)">
+    <div class="wb" style="background:#F2F4F7;padding:22px"><div class="cen"><div style="width:62%;height:18px;background:#121A2B;border-radius:3px;margin:0 auto 8px"></div><div style="width:46%;height:18px;background:#121A2B;border-radius:3px;margin:0 auto 10px"></div><div style="width:70%;height:7px;background:#5B6675;border-radius:3px;margin:0 auto 4px"></div><div style="width:54%;height:7px;background:#5B6675;border-radius:3px;margin:0 auto"></div><div class="rw g8" style="margin-top:12px;justify-content:center"><div style="width:90px;height:20px;background:#12395E;border-radius:3px;border-radius:6px"></div><div style="width:70px;height:20px;background:transparent;border-radius:3px;border:1px solid #D5DAE2"></div></div></div></div><div class="wb" style="background:#F2F4F7;padding:14px"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div><div style="aspect-ratio:1;background:#D5DAE2;border-radius:3px"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#12395E;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#12395E;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#12395E;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#5B6675;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:30px;height:6px;background:#5B6675;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-waitlist">
+  <header class="ch">
+    <div>
+      <h3>lp-waitlist</h3>
+      <p class="uc">Prelanzamiento: una promesa, un campo de email.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FFFFFF" title="bg: #FFFFFF"></i><i style="background:#F4F4F4" title="surface: #F4F4F4"></i><i style="background:#DDDDDD" title="border: #DDDDDD"></i><i style="background:#111111" title="text: #111111"></i><i style="background:#6B6B6B" title="textMuted: #6B6B6B"></i><i style="background:#111111" title="primary: #111111"></i></div>
+      <p class="ft"><span style="font-family:'Bespoke Serif',sans-serif;font-weight:500">Bespoke Serif 500</span> · <span style="font-family:'Switzer',sans-serif">Switzer 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">waitlist-coming-soon</span>
+      <span class="chip">objetivo: waitlist</span>
+      <span class="chip">680px</span>
+      <span class="chip">3 bloques</span></div>
+  <div class="frame" style="--pri:#111111;--txt:#111111;--bg:#FFFFFF;--bd:#DDDDDD;background:#FFFFFF;border-radius:999px;box-shadow:none">
+    <div class="wb" style="background:#F4F4F4;padding:22px"><div class="cen"><div style="width:62%;height:18px;background:#111111;border-radius:3px;margin:0 auto 8px"></div><div style="width:46%;height:18px;background:#111111;border-radius:3px;margin:0 auto 10px"></div><div style="width:70%;height:7px;background:#6B6B6B;border-radius:3px;margin:0 auto 4px"></div><div style="width:54%;height:7px;background:#6B6B6B;border-radius:3px;margin:0 auto"></div><div class="rw g8" style="margin-top:10px"><div style="width:58%;height:22px;background:transparent;border-radius:3px;border:1px solid #DDDDDD;background:#F4F4F4"></div><div style="width:30%;height:22px;background:#111111;border-radius:3px;border-radius:6px"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#111111;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#111111;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#111111;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#111111;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#111111;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#111111;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#6B6B6B;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#6B6B6B;border-radius:3px;"></div><div style="width:30px;height:6px;background:#6B6B6B;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-vsl">
+  <header class="ch">
+    <div>
+      <h3>lp-vsl</h3>
+      <p class="uc">Video sales letter: video dominante, CTA que aparece despues.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FFFFFF" title="bg: #FFFFFF"></i><i style="background:#F4F4F4" title="surface: #F4F4F4"></i><i style="background:#DDDDDD" title="border: #DDDDDD"></i><i style="background:#111111" title="text: #111111"></i><i style="background:#6B6B6B" title="textMuted: #6B6B6B"></i><i style="background:#111111" title="primary: #111111"></i></div>
+      <p class="ft"><span style="font-family:'Archivo',sans-serif;font-weight:700">Archivo 700</span> · <span style="font-family:'Public Sans',sans-serif">Public Sans 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">vsl</span>
+      <span class="chip">objetivo: venta</span>
+      <span class="chip">900px</span>
+      <span class="chip">6 bloques</span></div>
+  <div class="frame" style="--pri:#111111;--txt:#111111;--bg:#FFFFFF;--bd:#DDDDDD;background:#FFFFFF;border-radius:4px;box-shadow:none">
+    <div class="wb" style="background:#F4F4F4;padding:20px"><div><div style="width:58%;height:17px;background:#111111;border-radius:3px;margin:0 auto 10px"></div><div style="aspect-ratio:16/9;background:#111111;border-radius:8px;display:grid;place-items:center"><div style="width:0;height:0;border-left:16px solid #FFFFFF;border-top:10px solid transparent;border-bottom:10px solid transparent"></div></div><div style="width:120px;height:20px;background:#111111;border-radius:3px;border-radius:6px;margin:10px auto 0"></div></div></div><div class="wb" style="background:#111111;padding:18px"><div class="rw sb"><div style="flex:1"><div style="width:52%;height:13px;background:#FFFFFF;border-radius:3px;"></div></div><div style="width:96px;height:22px;background:#FFFFFF;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:#F4F4F4;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#DDDDDD"></div><div style="width:44%;height:6px;background:#111111;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #DDDDDD;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#6B6B6B;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#DDDDDD"></div><div style="width:44%;height:6px;background:#111111;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:#F4F4F4;padding:14px"><div class="rw g10" style="align-items:center"><div style="width:34px;height:34px;border-radius:50%;border:2px solid #111111"></div><div style="flex:1"><div style="width:40%;height:8px;background:#111111;border-radius:3px;margin-bottom:6px"></div><div style="width:80%;height:6px;background:#6B6B6B;border-radius:3px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #DDDDDD"><div style="width:56%;height:7px;background:#111111;border-radius:3px;"></div><div style="width:9px;height:9px;background:#6B6B6B;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #DDDDDD"><div style="width:56%;height:7px;background:#111111;border-radius:3px;"></div><div style="width:9px;height:9px;background:#6B6B6B;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #DDDDDD"><div style="width:56%;height:7px;background:#111111;border-radius:3px;"></div><div style="width:9px;height:9px;background:#6B6B6B;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #DDDDDD"><div style="width:56%;height:7px;background:#111111;border-radius:3px;"></div><div style="width:9px;height:9px;background:#6B6B6B;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#6B6B6B;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#6B6B6B;border-radius:3px;"></div><div style="width:30px;height:6px;background:#6B6B6B;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-clinica-salud">
+  <header class="ch">
+    <div>
+      <h3>lp-clinica-salud</h3>
+      <p class="uc">Salud y bienestar: tono confiable, prueba social y formulario corto.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#F7F6F2" title="bg: #F7F6F2"></i><i style="background:#F9F8F5" title="surface: #F9F8F5"></i><i style="background:#D4D1CA" title="border: #D4D1CA"></i><i style="background:#28251D" title="text: #28251D"></i><i style="background:#7A7974" title="textMuted: #7A7974"></i><i style="background:#01696F" title="primary: #01696F"></i></div>
+      <p class="ft"><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:600">Bricolage Grotesque 600</span> · <span style="font-family:'Source Sans 3',sans-serif">Source Sans 3 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">lead-capture</span>
+      <span class="chip">objetivo: cita</span>
+      <span class="chip">1080px</span>
+      <span class="chip">10 bloques</span></div>
+  <div class="frame" style="--pri:#01696F;--txt:#28251D;--bg:#F7F6F2;--bd:#D4D1CA;background:#F7F6F2;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06)">
+    <div class="wb" style="background:transparent;padding:10px"><div class="rw sb"><div class="rw g8"><div style="width:26px;height:9px;background:#28251D;border-radius:3px;"></div><div style="width:34px;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:30px;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:28px;height:6px;background:#7A7974;border-radius:3px;"></div></div><div style="width:52px;height:16px;background:#01696F;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:#F9F8F5;padding:20px"><div class="rw g14 top"><div style="flex:1"><div style="width:90%;height:17px;background:#28251D;border-radius:3px;margin-bottom:8px"></div><div style="width:62%;height:17px;background:#28251D;border-radius:3px;margin-bottom:10px"></div><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:92%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:70%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:86px;height:20px;background:#01696F;border-radius:3px;border-radius:6px;margin-top:10px"></div></div><div style="flex:1;aspect-ratio:4/3;background:#D4D1CA;border-radius:8px"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#01696F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#01696F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#01696F;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D4D1CA"></div><div style="width:44%;height:6px;background:#28251D;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D4D1CA"></div><div style="width:44%;height:6px;background:#28251D;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D4D1CA"></div><div style="width:44%;height:6px;background:#28251D;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#01696F;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#7A7974;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#01696F;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#7A7974;border-radius:3px;margin:0 auto"></div></div><div style="flex:1;text-align:center"><div style="width:22px;height:22px;border-radius:50%;background:#01696F;margin:0 auto 8px"></div><div style="width:70%;height:8px;background:#28251D;border-radius:3px;margin:0 auto 5px"></div><div style="width:90%;height:6px;background:#7A7974;border-radius:3px;margin:0 auto"></div></div></div></div><div class="wb" style="background:#F9F8F5;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D4D1CA"></div><div style="width:44%;height:6px;background:#28251D;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D4D1CA;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D4D1CA"></div><div style="width:44%;height:6px;background:#28251D;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:#F9F8F5;padding:20px"><div style="max-width:78%;margin:0 auto"><div style="width:60%;height:14px;background:#28251D;border-radius:3px;margin:0 auto 10px"></div><div style="width:100%;height:20px;background:transparent;border-radius:3px;border:1px solid #D4D1CA;background:#F7F6F2;margin-bottom:8px"></div><div style="width:100%;height:20px;background:transparent;border-radius:3px;border:1px solid #D4D1CA;background:#F7F6F2;margin-bottom:8px"></div><div style="width:100%;height:20px;background:transparent;border-radius:3px;border:1px solid #D4D1CA;background:#F7F6F2;margin-bottom:8px"></div><div style="width:100%;height:22px;background:#01696F;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D4D1CA"><div style="width:56%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7A7974;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D4D1CA"><div style="width:56%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7A7974;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D4D1CA"><div style="width:56%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7A7974;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D4D1CA"><div style="width:56%;height:7px;background:#28251D;border-radius:3px;"></div><div style="width:9px;height:9px;background:#7A7974;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g14 top"><div style="flex:1.3;height:74px;background:#D4D1CA;border-radius:8px"></div><div style="flex:1"><div style="width:80%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:64%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:72%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div><div style="width:56%;height:6px;background:#7A7974;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#7A7974;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#7A7974;border-radius:3px;"></div><div style="width:30px;height:6px;background:#7A7974;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-comparison">
+  <header class="ch">
+    <div>
+      <h3>lp-comparison</h3>
+      <p class="uc">Pagina &#x27;nosotros vs competencia&#x27; para trafico de intencion alta.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FAFAF8" title="bg: #FAFAF8"></i><i style="background:#F2F4F7" title="surface: #F2F4F7"></i><i style="background:#D5DAE2" title="border: #D5DAE2"></i><i style="background:#121A2B" title="text: #121A2B"></i><i style="background:#5B6675" title="textMuted: #5B6675"></i><i style="background:#12395E" title="primary: #12395E"></i></div>
+      <p class="ft"><span style="font-family:'Source Serif 4',sans-serif;font-weight:600">Source Serif 4 600</span> · <span style="font-family:'Source Sans 3',sans-serif">Source Sans 3 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">comparison</span>
+      <span class="chip">objetivo: lead</span>
+      <span class="chip">1100px</span>
+      <span class="chip">8 bloques</span></div>
+  <div class="frame" style="--pri:#12395E;--txt:#121A2B;--bg:#FAFAF8;--bd:#D5DAE2;background:#FAFAF8;border-radius:4px;box-shadow:none">
+    <div class="wb" style="background:transparent;padding:10px"><div class="rw sb"><div class="rw g8"><div style="width:26px;height:9px;background:#121A2B;border-radius:3px;"></div><div style="width:34px;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:30px;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:28px;height:6px;background:#5B6675;border-radius:3px;"></div></div><div style="width:52px;height:16px;background:#12395E;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:#F2F4F7;padding:22px"><div class="cen"><div style="width:62%;height:18px;background:#121A2B;border-radius:3px;margin:0 auto 8px"></div><div style="width:46%;height:18px;background:#121A2B;border-radius:3px;margin:0 auto 10px"></div><div style="width:70%;height:7px;background:#5B6675;border-radius:3px;margin:0 auto 4px"></div><div style="width:54%;height:7px;background:#5B6675;border-radius:3px;margin:0 auto"></div><div class="rw g8" style="margin-top:12px;justify-content:center"><div style="width:90px;height:20px;background:#12395E;border-radius:3px;border-radius:6px"></div><div style="width:70px;height:20px;background:transparent;border-radius:3px;border:1px solid #D5DAE2"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g8" style="padding-bottom:6px"><div style="width:40%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:14%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:14%;height:7px;background:#5B6675;border-radius:3px;"></div><div style="width:14%;height:7px;background:#5B6675;border-radius:3px;"></div></div><div class="rw g8" style="padding:6px 0;border-top:1px solid #D5DAE2"><div style="width:40%;height:6px;background:#121A2B;border-radius:3px;"></div><div style="width:14%;height:6px;background:#12395E;border-radius:3px;"></div><div style="width:14%;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:14%;height:6px;background:#5B6675;border-radius:3px;"></div></div><div class="rw g8" style="padding:6px 0;border-top:1px solid #D5DAE2"><div style="width:40%;height:6px;background:#121A2B;border-radius:3px;"></div><div style="width:14%;height:6px;background:#12395E;border-radius:3px;"></div><div style="width:14%;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:14%;height:6px;background:#5B6675;border-radius:3px;"></div></div><div class="rw g8" style="padding:6px 0;border-top:1px solid #D5DAE2"><div style="width:40%;height:6px;background:#121A2B;border-radius:3px;"></div><div style="width:14%;height:6px;background:#12395E;border-radius:3px;"></div><div style="width:14%;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:14%;height:6px;background:#5B6675;border-radius:3px;"></div></div><div class="rw g8" style="padding:6px 0;border-top:1px solid #D5DAE2"><div style="width:40%;height:6px;background:#121A2B;border-radius:3px;"></div><div style="width:14%;height:6px;background:#12395E;border-radius:3px;"></div><div style="width:14%;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:14%;height:6px;background:#5B6675;border-radius:3px;"></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#12395E;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#12395E;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#12395E;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#121A2B;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:#F2F4F7;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div><div style="flex:1;border:1px solid #D5DAE2;border-radius:8px;padding:10px"><div style="width:100%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:95%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div style="width:60%;height:6px;background:#5B6675;border-radius:3px;margin-bottom:5px;"></div><div class="rw g8" style="margin-top:8px;align-items:center"><div style="width:18px;height:18px;border-radius:50%;background:#D5DAE2"></div><div style="width:44%;height:6px;background:#121A2B;border-radius:3px;"></div></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div><div class="rw sb" style="padding:9px 0;border-bottom:1px solid #D5DAE2"><div style="width:56%;height:7px;background:#121A2B;border-radius:3px;"></div><div style="width:9px;height:9px;background:#5B6675;border-radius:3px;border-radius:50%"></div></div></div><div class="wb" style="background:#12395E;padding:18px"><div class="rw sb"><div style="flex:1"><div style="width:52%;height:13px;background:#FFFFFF;border-radius:3px;"></div></div><div style="width:96px;height:22px;background:#FFFFFF;border-radius:3px;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#5B6675;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#5B6675;border-radius:3px;"></div><div style="width:30px;height:6px;background:#5B6675;border-radius:3px;"></div></div></div></div>
+  </div>
+</article><article class="card" id="lp-link-in-bio">
+  <header class="ch">
+    <div>
+      <h3>lp-link-in-bio</h3>
+      <p class="uc">Hub de enlaces para redes sociales, movil primero.</p>
+    </div>
+    <div class="meta">
+      <div class="sw"><i style="background:#FAF9FC" title="bg: #FAF9FC"></i><i style="background:#F2EFF9" title="surface: #F2EFF9"></i><i style="background:#D9D2EA" title="border: #D9D2EA"></i><i style="background:#1D172A" title="text: #1D172A"></i><i style="background:#635B78" title="textMuted: #635B78"></i><i style="background:#5B3BC4" title="primary: #5B3BC4"></i></div>
+      <p class="ft"><span style="font-family:'Satoshi',sans-serif;font-weight:700">Satoshi 700</span> · <span style="font-family:'Satoshi',sans-serif">Satoshi 400</span></p>
+    </div>
+  </header>
+  <div class="chips">
+      <span class="chip">link-in-bio</span>
+      <span class="chip">objetivo: descarga</span>
+      <span class="chip">520px</span>
+      <span class="chip">4 bloques</span></div>
+  <div class="frame" style="--pri:#5B3BC4;--txt:#1D172A;--bg:#FAF9FC;--bd:#D9D2EA;background:#FAF9FC;border-radius:999px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06)">
+    <div class="wb" style="background:#F2EFF9;padding:22px"><div class="cen"><div style="width:62%;height:18px;background:#1D172A;border-radius:3px;margin:0 auto 8px"></div><div style="width:46%;height:18px;background:#1D172A;border-radius:3px;margin:0 auto 10px"></div><div style="width:70%;height:7px;background:#635B78;border-radius:3px;margin:0 auto 4px"></div><div style="width:54%;height:7px;background:#635B78;border-radius:3px;margin:0 auto"></div><div class="rw g8" style="margin-top:12px;justify-content:center"><div style="width:90px;height:20px;background:#5B3BC4;border-radius:3px;border-radius:6px"></div><div style="width:70px;height:20px;background:transparent;border-radius:3px;border:1px solid #D9D2EA"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g10"><div style="flex:1;border:1px solid #D9D2EA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#5B3BC4;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D9D2EA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#5B3BC4;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div></div><div style="flex:1;border:1px solid #D9D2EA;border-radius:8px;padding:10px"><div style="width:18px;height:18px;background:#5B3BC4;border-radius:3px;border-radius:5px;margin-bottom:8px"></div><div style="width:70%;height:8px;background:#1D172A;border-radius:3px;margin-bottom:6px"></div><div style="width:100%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div><div style="width:80%;height:6px;background:#635B78;border-radius:3px;margin-bottom:5px;"></div></div></div></div><div class="wb" style="background:transparent;padding:14px"><div class="rw g8"><div style="flex:1;aspect-ratio:1;background:#D9D2EA;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#D9D2EA;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#D9D2EA;border-radius:6px"></div><div style="flex:1;aspect-ratio:1;background:#D9D2EA;border-radius:6px"></div></div></div><div class="wb" style="background:transparent;padding:12px"><div class="rw sb" style="opacity:.6"><div style="width:70px;height:7px;background:#635B78;border-radius:3px;"></div><div class="rw g8"><div style="width:34px;height:6px;background:#635B78;border-radius:3px;"></div><div style="width:30px;height:6px;background:#635B78;border-radius:3px;"></div></div></div></div>
+  </div>
+</article>
+</div>
+
+<h2>Pares tipográficos</h2>
+<p>Mismo copy en las diez combinaciones, con las fuentes cargadas desde Google Fonts y Fontshare.</p>
+<div class="pair">
+      <span class="pid">tp-01</span>
+      <div class="pv">
+        <div style="font-family:'Satoshi',serif;font-weight:700;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'Satoshi',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>SaaS moderno</b><span>Satoshi + Satoshi</span><span class="prov">fontshare</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-02</span>
+      <div class="pv">
+        <div style="font-family:'Instrument Serif',serif;font-weight:400;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'DM Sans',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Editorial premium</b><span>Instrument Serif + DM Sans</span><span class="prov">google</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-03</span>
+      <div class="pv">
+        <div style="font-family:'General Sans',serif;font-weight:600;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'Inter',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Corporativo sobrio</b><span>General Sans + Inter</span><span class="prov">fontshare+google</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-04</span>
+      <div class="pv">
+        <div style="font-family:'Space Grotesk',serif;font-weight:600;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'IBM Plex Sans',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Tech / dev</b><span>Space Grotesk + IBM Plex Sans</span><span class="prov">google</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-05</span>
+      <div class="pv">
+        <div style="font-family:'Fraunces',serif;font-weight:600;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'Work Sans',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Lujo / boutique</b><span>Fraunces + Work Sans</span><span class="prov">google</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-06</span>
+      <div class="pv">
+        <div style="font-family:'Bricolage Grotesque',serif;font-weight:600;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'Source Sans 3',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Salud / confianza</b><span>Bricolage Grotesque + Source Sans 3</span><span class="prov">google</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-07</span>
+      <div class="pv">
+        <div style="font-family:'Archivo',serif;font-weight:700;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'Public Sans',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Infoproducto directo</b><span>Archivo + Public Sans</span><span class="prov">google</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-08</span>
+      <div class="pv">
+        <div style="font-family:'Outfit',serif;font-weight:600;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'Manrope',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Servicio local</b><span>Outfit + Manrope</span><span class="prov">google</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-09</span>
+      <div class="pv">
+        <div style="font-family:'Source Serif 4',serif;font-weight:600;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'Source Sans 3',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Fintech autoridad</b><span>Source Serif 4 + Source Sans 3</span><span class="prov">google</span></div>
+    </div><div class="pair">
+      <span class="pid">tp-10</span>
+      <div class="pv">
+        <div style="font-family:'Bespoke Serif',serif;font-weight:500;font-size:30px;line-height:1.1">Duplica tus citas este mes</div>
+        <p style="font-family:'Switzer',sans-serif;font-weight:400;font-size:16px;line-height:1.55;max-width:62ch;margin:.5rem 0 0;color:#6b6a66">Diagnóstico digital sin costo, plan por escrito y financiamiento a 12 meses. Agenda en menos de dos minutos.</p>
+      </div>
+      <div class="pm"><b>Creativo expresivo</b><span>Bespoke Serif + Switzer</span><span class="prov">fontshare</span></div>
+    </div>
+
+<h2>Paletas</h2>
+<p>Seis paletas con modo claro y oscuro. Los roles son los que espera el schema.</p>
+<div class="palcard"><h4>Nexus teal <code>pal-teal</code></h4>
+      <div class="palrow"><span class="lab">claro</span><div class="pcs"><div class="pc" style="background:#F7F6F2;color:#28251D"><span>bg</span><code>#F7F6F2</code></div><div class="pc" style="background:#F9F8F5;color:#28251D"><span>surface</span><code>#F9F8F5</code></div><div class="pc" style="background:#D4D1CA;color:#28251D"><span>border</span><code>#D4D1CA</code></div><div class="pc" style="background:#28251D;color:#fff"><span>text</span><code>#28251D</code></div><div class="pc" style="background:#7A7974;color:#28251D"><span>textMuted</span><code>#7A7974</code></div><div class="pc" style="background:#01696F;color:#fff"><span>primary</span><code>#01696F</code></div><div class="pc" style="background:#0C4E54;color:#fff"><span>primaryHover</span><code>#0C4E54</code></div><div class="pc" style="background:#FFFFFF;color:#28251D"><span>onPrimary</span><code>#FFFFFF</code></div><div class="pc" style="background:#437A22;color:#28251D"><span>success</span><code>#437A22</code></div><div class="pc" style="background:#964219;color:#28251D"><span>warning</span><code>#964219</code></div><div class="pc" style="background:#A12C7B;color:#28251D"><span>error</span><code>#A12C7B</code></div></div></div>
+      <div class="palrow"><span class="lab">oscuro</span><div class="pcs"><div class="pc" style="background:#171614;color:#CDCCCA"><span>bg</span><code>#171614</code></div><div class="pc" style="background:#1C1B19;color:#CDCCCA"><span>surface</span><code>#1C1B19</code></div><div class="pc" style="background:#393836;color:#CDCCCA"><span>border</span><code>#393836</code></div><div class="pc" style="background:#CDCCCA;color:#CDCCCA"><span>text</span><code>#CDCCCA</code></div><div class="pc" style="background:#797876;color:#CDCCCA"><span>textMuted</span><code>#797876</code></div><div class="pc" style="background:#4F98A3;color:#CDCCCA"><span>primary</span><code>#4F98A3</code></div><div class="pc" style="background:#227F8B;color:#CDCCCA"><span>primaryHover</span><code>#227F8B</code></div><div class="pc" style="background:#0B1112;color:#CDCCCA"><span>onPrimary</span><code>#0B1112</code></div></div></div></div><div class="palcard"><h4>Navy fintech <code>pal-navy</code></h4>
+      <div class="palrow"><span class="lab">claro</span><div class="pcs"><div class="pc" style="background:#FAFAF8;color:#121A2B"><span>bg</span><code>#FAFAF8</code></div><div class="pc" style="background:#F2F4F7;color:#121A2B"><span>surface</span><code>#F2F4F7</code></div><div class="pc" style="background:#D5DAE2;color:#121A2B"><span>border</span><code>#D5DAE2</code></div><div class="pc" style="background:#121A2B;color:#fff"><span>text</span><code>#121A2B</code></div><div class="pc" style="background:#5B6675;color:#121A2B"><span>textMuted</span><code>#5B6675</code></div><div class="pc" style="background:#12395E;color:#fff"><span>primary</span><code>#12395E</code></div><div class="pc" style="background:#0B2740;color:#fff"><span>primaryHover</span><code>#0B2740</code></div><div class="pc" style="background:#FFFFFF;color:#121A2B"><span>onPrimary</span><code>#FFFFFF</code></div></div></div>
+      <div class="palrow"><span class="lab">oscuro</span><div class="pcs"><div class="pc" style="background:#0C1320;color:#DCE3ED"><span>bg</span><code>#0C1320</code></div><div class="pc" style="background:#141D2D;color:#DCE3ED"><span>surface</span><code>#141D2D</code></div><div class="pc" style="background:#2A3547;color:#DCE3ED"><span>border</span><code>#2A3547</code></div><div class="pc" style="background:#DCE3ED;color:#DCE3ED"><span>text</span><code>#DCE3ED</code></div><div class="pc" style="background:#8895A8;color:#DCE3ED"><span>textMuted</span><code>#8895A8</code></div><div class="pc" style="background:#6EA3D8;color:#DCE3ED"><span>primary</span><code>#6EA3D8</code></div><div class="pc" style="background:#4A85C2;color:#DCE3ED"><span>primaryHover</span><code>#4A85C2</code></div><div class="pc" style="background:#0C1320;color:#DCE3ED"><span>onPrimary</span><code>#0C1320</code></div></div></div></div><div class="palcard"><h4>Terracota calida <code>pal-terra</code></h4>
+      <div class="palrow"><span class="lab">claro</span><div class="pcs"><div class="pc" style="background:#FBF7F3;color:#2A1F18"><span>bg</span><code>#FBF7F3</code></div><div class="pc" style="background:#F5EDE6;color:#2A1F18"><span>surface</span><code>#F5EDE6</code></div><div class="pc" style="background:#E0D0C2;color:#2A1F18"><span>border</span><code>#E0D0C2</code></div><div class="pc" style="background:#2A1F18;color:#fff"><span>text</span><code>#2A1F18</code></div><div class="pc" style="background:#7B6656;color:#2A1F18"><span>textMuted</span><code>#7B6656</code></div><div class="pc" style="background:#A84B2F;color:#fff"><span>primary</span><code>#A84B2F</code></div><div class="pc" style="background:#83381F;color:#fff"><span>primaryHover</span><code>#83381F</code></div><div class="pc" style="background:#FFF8F4;color:#2A1F18"><span>onPrimary</span><code>#FFF8F4</code></div></div></div>
+      <div class="palrow"><span class="lab">oscuro</span><div class="pcs"><div class="pc" style="background:#1A1512;color:#EBE0D8"><span>bg</span><code>#1A1512</code></div><div class="pc" style="background:#221B17;color:#EBE0D8"><span>surface</span><code>#221B17</code></div><div class="pc" style="background:#3C302A;color:#EBE0D8"><span>border</span><code>#3C302A</code></div><div class="pc" style="background:#EBE0D8;color:#EBE0D8"><span>text</span><code>#EBE0D8</code></div><div class="pc" style="background:#9A8879;color:#EBE0D8"><span>textMuted</span><code>#9A8879</code></div><div class="pc" style="background:#D97B57;color:#EBE0D8"><span>primary</span><code>#D97B57</code></div><div class="pc" style="background:#BC5E3C;color:#EBE0D8"><span>primaryHover</span><code>#BC5E3C</code></div><div class="pc" style="background:#1A1512;color:#EBE0D8"><span>onPrimary</span><code>#1A1512</code></div></div></div></div><div class="palcard"><h4>Verde sostenible <code>pal-forest</code></h4>
+      <div class="palrow"><span class="lab">claro</span><div class="pcs"><div class="pc" style="background:#F6F8F4;color:#1B2418"><span>bg</span><code>#F6F8F4</code></div><div class="pc" style="background:#EDF2E9;color:#1B2418"><span>surface</span><code>#EDF2E9</code></div><div class="pc" style="background:#CFDAC6;color:#1B2418"><span>border</span><code>#CFDAC6</code></div><div class="pc" style="background:#1B2418;color:#fff"><span>text</span><code>#1B2418</code></div><div class="pc" style="background:#5E6C57;color:#1B2418"><span>textMuted</span><code>#5E6C57</code></div><div class="pc" style="background:#2F6B3A;color:#fff"><span>primary</span><code>#2F6B3A</code></div><div class="pc" style="background:#204E2A;color:#fff"><span>primaryHover</span><code>#204E2A</code></div><div class="pc" style="background:#FFFFFF;color:#1B2418"><span>onPrimary</span><code>#FFFFFF</code></div></div></div>
+      <div class="palrow"><span class="lab">oscuro</span><div class="pcs"><div class="pc" style="background:#111511;color:#DCE4D9"><span>bg</span><code>#111511</code></div><div class="pc" style="background:#181E18;color:#DCE4D9"><span>surface</span><code>#181E18</code></div><div class="pc" style="background:#2C352C;color:#DCE4D9"><span>border</span><code>#2C352C</code></div><div class="pc" style="background:#DCE4D9;color:#DCE4D9"><span>text</span><code>#DCE4D9</code></div><div class="pc" style="background:#84917F;color:#DCE4D9"><span>textMuted</span><code>#84917F</code></div><div class="pc" style="background:#6FB07B;color:#DCE4D9"><span>primary</span><code>#6FB07B</code></div><div class="pc" style="background:#4F8F5C;color:#DCE4D9"><span>primaryHover</span><code>#4F8F5C</code></div><div class="pc" style="background:#111511;color:#DCE4D9"><span>onPrimary</span><code>#111511</code></div></div></div></div><div class="palcard"><h4>Violeta producto <code>pal-violet</code></h4>
+      <div class="palrow"><span class="lab">claro</span><div class="pcs"><div class="pc" style="background:#FAF9FC;color:#1D172A"><span>bg</span><code>#FAF9FC</code></div><div class="pc" style="background:#F2EFF9;color:#1D172A"><span>surface</span><code>#F2EFF9</code></div><div class="pc" style="background:#D9D2EA;color:#1D172A"><span>border</span><code>#D9D2EA</code></div><div class="pc" style="background:#1D172A;color:#fff"><span>text</span><code>#1D172A</code></div><div class="pc" style="background:#635B78;color:#1D172A"><span>textMuted</span><code>#635B78</code></div><div class="pc" style="background:#5B3BC4;color:#fff"><span>primary</span><code>#5B3BC4</code></div><div class="pc" style="background:#432B96;color:#fff"><span>primaryHover</span><code>#432B96</code></div><div class="pc" style="background:#FFFFFF;color:#1D172A"><span>onPrimary</span><code>#FFFFFF</code></div></div></div>
+      <div class="palrow"><span class="lab">oscuro</span><div class="pcs"><div class="pc" style="background:#120F1A;color:#E1DCEE"><span>bg</span><code>#120F1A</code></div><div class="pc" style="background:#191424;color:#E1DCEE"><span>surface</span><code>#191424</code></div><div class="pc" style="background:#302840;color:#E1DCEE"><span>border</span><code>#302840</code></div><div class="pc" style="background:#E1DCEE;color:#E1DCEE"><span>text</span><code>#E1DCEE</code></div><div class="pc" style="background:#8B83A3;color:#E1DCEE"><span>textMuted</span><code>#8B83A3</code></div><div class="pc" style="background:#A88BF0;color:#E1DCEE"><span>primary</span><code>#A88BF0</code></div><div class="pc" style="background:#8A68DE;color:#E1DCEE"><span>primaryHover</span><code>#8A68DE</code></div><div class="pc" style="background:#120F1A;color:#E1DCEE"><span>onPrimary</span><code>#120F1A</code></div></div></div></div><div class="palcard"><h4>Mono alto contraste <code>pal-mono</code></h4>
+      <div class="palrow"><span class="lab">claro</span><div class="pcs"><div class="pc" style="background:#FFFFFF;color:#111111"><span>bg</span><code>#FFFFFF</code></div><div class="pc" style="background:#F4F4F4;color:#111111"><span>surface</span><code>#F4F4F4</code></div><div class="pc" style="background:#DDDDDD;color:#111111"><span>border</span><code>#DDDDDD</code></div><div class="pc" style="background:#111111;color:#fff"><span>text</span><code>#111111</code></div><div class="pc" style="background:#6B6B6B;color:#111111"><span>textMuted</span><code>#6B6B6B</code></div><div class="pc" style="background:#111111;color:#fff"><span>primary</span><code>#111111</code></div><div class="pc" style="background:#000000;color:#fff"><span>primaryHover</span><code>#000000</code></div><div class="pc" style="background:#FFFFFF;color:#111111"><span>onPrimary</span><code>#FFFFFF</code></div></div></div>
+      <div class="palrow"><span class="lab">oscuro</span><div class="pcs"><div class="pc" style="background:#0D0D0D;color:#EDEDED"><span>bg</span><code>#0D0D0D</code></div><div class="pc" style="background:#161616;color:#EDEDED"><span>surface</span><code>#161616</code></div><div class="pc" style="background:#2E2E2E;color:#EDEDED"><span>border</span><code>#2E2E2E</code></div><div class="pc" style="background:#EDEDED;color:#EDEDED"><span>text</span><code>#EDEDED</code></div><div class="pc" style="background:#8C8C8C;color:#EDEDED"><span>textMuted</span><code>#8C8C8C</code></div><div class="pc" style="background:#EDEDED;color:#EDEDED"><span>primary</span><code>#EDEDED</code></div><div class="pc" style="background:#FFFFFF;color:#EDEDED"><span>primaryHover</span><code>#FFFFFF</code></div><div class="pc" style="background:#0D0D0D;color:#EDEDED"><span>onPrimary</span><code>#0D0D0D</code></div></div></div></div>
+
+<footer>Generado desde presets.json · esquemas, no capturas: reflejan la estructura real que interpretará tu código.</footer>
+</div><script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+
+</script></body></html>
