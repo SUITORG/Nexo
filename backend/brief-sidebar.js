@@ -17,6 +17,14 @@ const BRIEF_FIELDS = [
   'descripcion', 'cta', 'tipografia'
 ];
 
+// ── Menu Brief (se llama desde onOpen de database.js) ─────────────
+function addToMenuBrief(ui) {
+  ui.createMenu(' Brief')
+    .addItem('Generar Brief (abre sidebar)', 'showBriefSidebar')
+    .addItem('Validar Brief de empresa activa', 'validarBriefSeleccion')
+    .addToUi();
+}
+
 // ── Show Brief Sidebar ──────────────────────────────────────────────────
 function showBriefSidebar() {
   const html = HtmlService.createHtmlOutput(getBriefSidebarHtml())
