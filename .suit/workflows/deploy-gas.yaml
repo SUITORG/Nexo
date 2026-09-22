@@ -1,0 +1,60 @@
+workflow:
+  name: deploy-gas
+  display_name: "GAS Deploy (clasp push + triggers)"
+  description: "Detecta cambios en backend/, valida sintaxis, hace clasp push, reporta triggers pendientes. Friction Zero."
+  risk: high
+  domain: operations
+
+  entry:
+    requires_planning: false
+    requires_confirmation: true
+    required_context:
+      - AGENTS.md
+    required_skills:
+      - gas
+      - javascript
+    forbidden_if:
+      - "Uncommitted changes without explicit user request"
+
+  steps:
+    - id: detect-changes
+      description: "Detectar cambios en backend/*.js y backend/*.gs"
+      action: run
+      command: "git diff --name-only HEAD~5 -- backend/"
+
+    - id: syntax-check
+      description: "Validar sintaxis de archivos .js modificados"
+      action: run
+      command: "node --check"
+      condition: "if .js files in changed list"
+      validation:
+        - "All files pass node --check"
+
+    - id: clasp-push
+      description: "Subir archivos a GAS via clasp"
+      action: run
+      command: "clasp push --force"
+      validation:
+        - "Output contains 'Pushed'"
+
+    - id: check-triggers
+      description: "Verificar si hay funciones de trigger nuevas que el usuario deba ejecutar"
+      action: read
+      skills:
+        - gas
+      validation:
+        - "Listar triggers pendientes de ejecutar manualmente en el editor GAS"
+
+    - id: report
+      description: "Reportar resultado al usuario"
+      action: read
+      validation:
+        - "Mostrar archivos subidos"
+        - "Mostrar triggers pendientes"
+
+  exit:
+    validation:
+      - "clasp push exitoso"
+    requires_commit: false
+    notifies:
+      - user

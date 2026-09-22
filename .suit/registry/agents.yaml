@@ -149,3 +149,16 @@ agents:
     required_reviewers: []
     max_tokens: 16000
     temperature: 0.3
+
+  deployer:
+    description: "Automatiza deploy a GAS: clasp push, verificación de triggers, validación de sintaxis. Minimiza fricción operativa — Friction Zero."
+    domain: operations
+    risk_level: high
+    required_skills:
+      - gas
+      - javascript
+      - git
+    required_reviewers:
+      - security
+    max_tokens: 4000
+    temperature: 0.1

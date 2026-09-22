@@ -336,3 +336,14 @@ routing:
         project: campanas-ai
       workflow: video-generation
       priority: 80
+
+    - patterns:
+        - "deploy gas"
+        - "subir gas"
+        - "push gas"
+        - "clasp push"
+        - "subir a gas"
+        - "actualizar gas"
+      workflow: deploy-gas
+      priority: 30
+      agent: deployer

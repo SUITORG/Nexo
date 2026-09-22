@@ -218,3 +218,18 @@ workflows:
       - "basura"
       - "filas huérfanas"
       - "duplicados"
+
+  deploy-gas:
+    path: .suit/workflows/deploy-gas.yaml
+    risk: high
+    domain: operations
+    requires_review: false
+    requires_planning: false
+    estimated_tokens: 3000
+    trigger_keywords:
+      - "deploy gas"
+      - "subir gas"
+      - "push gas"
+      - "clasp push"
+      - "subir a gas"
+      - "actualizar gas"

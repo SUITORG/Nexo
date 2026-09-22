@@ -1,0 +1,37 @@
+skill:
+  name: deployer
+  display_name: "Friction Zero — Deploy GAS Automatizado"
+  version: 1.0.0
+  type: process
+  domain: operations
+  description: >
+    Elimina fricción del deploy a GAS. Detecta cambios,
+    valida sintaxis, sube con clasp, reporta triggers pendientes.
+    Objetivo: que el usuario no tenga que pensar en el proceso.
+  dependencies:
+    - gas
+    - javascript
+    - git
+  triggers:
+    - "deploy gas"
+    - "subir gas"
+    - "push gas"
+    - "clasp"
+    - "friction zero"
+  context_hint:
+    - ".clasp.json"
+    - "backend/*.gs"
+    - "backend/*.js"
+  rules:
+    - id: dz-001
+      description: "Siempre validar sintaxis antes de push"
+      severity: error
+    - id: dz-002
+      description: "Nunca hacer deploy sin confirmación del usuario"
+      severity: error
+    - id: dz-003
+      description: "Reportar siempre qué triggers quedan pendientes de ejecutar en el editor"
+      severity: warning
+    - id: dz-004
+      description: "Si clasp push falla, NO reintentar — reportar el error"
+      severity: error
