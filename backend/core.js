@@ -23,11 +23,42 @@ function setupOpenRouterKey() {
 const CONFIG = {
   VERSION: "15.9.9", // Sistema Estable (v15.9.9)
   DB_ID: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8", 
-  DRIVE_ROOT_ID: "1mJWzX-xRVOOCt4fSRDLUk6QhOMCzfKhL", 
   GLOBAL_TABLES: ["Config_Auth", "Config_Empresas", "Config_Roles", "Usuarios", "Config_SEO", "Prompts_IA", "Cuotas_Pagos", "Config_Reportes", "Config_Dashboard", "Config_Flujo_Proyecto", "Config_Galeria", "Config_Paginas"], 
   PRIVATE_TABLES: ["Leads", "Proyectos", "Proyectos_Etapas", "Proyectos_Pagos", "Proyectos_Bitacora", "Catalogo", "Logs", "Pagos", "Empresa_Documentos", "Reservaciones", "Config_Galeria", "Logs_Chat_IA", "Memoria_IA_Snapshots", "Logs_Consultas_SOP"],
   AUDIT: { total: 14780, status: "GOLDEN_SYNC" }
 };
+
+/**
+ * Raíz de Drive para carpetas cte<id>.
+ * Orden: Script Property DRIVE_ROOT_ID → My Drive root (getFolderById resuelve
+ * IDs inválidos lanzando, por eso se usa getRootFolder cuando no hay property).
+ * ADR-028: los IDs hardcodeados previos (1mJWzX.../1BxmUT...) estaban
+ * desincronizados de la estructura real (cte* viven en My Drive root).
+ */
+function getRootFolder_() {
+  var prop = PropertiesService.getScriptProperties().getProperty('DRIVE_ROOT_ID');
+  if (prop) {
+    try { return DriveApp.getFolderById(prop); } catch (e) { /* property inválida → root */ }
+  }
+  return DriveApp.getRootFolder();
+}
+
+/**
+ * Busca cte<id> en la raíz de forma case-insensitive (ADR-028).
+ * Carpetas reales usan "CteTOPLUXF", el código pide "cteTOPLUXF".
+ * @returns {Folder|null}
+ */
+function findCteFolder_(rootFolder, idEmpresa) {
+  var want = ("cte" + idEmpresa).toLowerCase();
+  var it = rootFolder.getFoldersByName("cte" + idEmpresa);
+  if (it.hasNext()) return it.next();
+  var all = rootFolder.getFolders();
+  while (all.hasNext()) {
+    var f = all.next();
+    if (f.getName().toLowerCase() === want) return f;
+  }
+  return null;
+}
 
 function getSS() {
     try {
@@ -404,6 +435,9 @@ function updateBriefVector(idEmpresa, vector) {
   var sheet = ss.getSheetByName("Config_Empresas");
   if (!sheet) return { success: false, error: "SHEET_NOT_FOUND" };
 
+  // Respaldo best-effort a _brief/historial/ antes de sobrescribir (no bloquea)
+  try { backupBriefVector(idEmpresa); } catch (e) { /* sin cte/_brief → seguir */ }
+
   var data = sheet.getDataRange().getValues();
   var headers = data[0].map(function(h) { return String(h).toLowerCase().trim().replace(/\s+/g, '_'); });
   var idIdx = headers.indexOf('id_empresa');
@@ -461,13 +495,11 @@ function backupBriefVector(idEmpresa) {
 
   try {
     // Buscar carpeta cte<id> en Drive
-    var rootFolder = DriveApp.getFolderById(CONFIG.DRIVE_ROOT_ID);
-    var cteFolderName = "cte" + idEmpresa;
-    var cteFolders = rootFolder.getFoldersByName(cteFolderName);
-    if (!cteFolders.hasNext()) {
-      return { success: false, error: "CTE_FOLDER_NOT_FOUND: " + cteFolderName };
+    var rootFolder = getRootFolder_();
+    var cteFolder = findCteFolder_(rootFolder, idEmpresa);
+    if (!cteFolder) {
+      return { success: false, error: "CTE_FOLDER_NOT_FOUND: cte" + idEmpresa };
     }
-    var cteFolder = cteFolders.next();
 
     // Buscar o crear subcarpeta _brief/historial
     var briefFolders = cteFolder.getFoldersByName("_brief");
@@ -579,13 +611,11 @@ function saveBriefMetadata(idEmpresa, vector, confianza) {
   }
 
   try {
-    var rootFolder = DriveApp.getFolderById(CONFIG.DRIVE_ROOT_ID);
-    var cteFolderName = "cte" + idEmpresa;
-    var cteFolders = rootFolder.getFoldersByName(cteFolderName);
-    if (!cteFolders.hasNext()) {
-      return { success: false, error: "CTE_FOLDER_NOT_FOUND: " + cteFolderName };
+    var rootFolder = getRootFolder_();
+    var cteFolder = findCteFolder_(rootFolder, idEmpresa);
+    if (!cteFolder) {
+      return { success: false, error: "CTE_FOLDER_NOT_FOUND: cte" + idEmpresa };
     }
-    var cteFolder = cteFolders.next();
 
     // Buscar o crear _brief
     var briefFolders = cteFolder.getFoldersByName("_brief");
@@ -626,7 +656,7 @@ function saveBriefMetadata(idEmpresa, vector, confianza) {
     if (briefFiles.hasNext()) {
       briefFiles.next().setContent(JSON.stringify(briefData, null, 2));
     } else {
-      briefFolder.createFile("brief.json", JSON.stringify(briefData, null, 2), MimeType.JSON);
+      briefFolder.createFile("brief.json", JSON.stringify(briefData, null, 2), "application/json");
     }
 
     // Guardar confianza.json
@@ -652,7 +682,7 @@ function saveBriefMetadata(idEmpresa, vector, confianza) {
     if (confFiles.hasNext()) {
       confFiles.next().setContent(JSON.stringify(confianzaData, null, 2));
     } else {
-      briefFolder.createFile("confianza.json", JSON.stringify(confianzaData, null, 2), MimeType.JSON);
+      briefFolder.createFile("confianza.json", JSON.stringify(confianzaData, null, 2), "application/json");
     }
 
     return {
@@ -672,8 +702,8 @@ function saveBriefMetadata(idEmpresa, vector, confianza) {
 //   │   ├── historial/     ← respaldos de vectors
 //   │   ├── brief.json
 //   │   └── confianza.json
+//   ├── logo.png         ← slot 1 LAPVTFU (directo en cte<id>, ADR-028)
 //   ├── _activos/
-//   │   ├── logo/
 //   │   ├── avatar/
 //   │   ├── fotos-personales/
 //   │   ├── videos/
@@ -691,12 +721,12 @@ function saveBriefMetadata(idEmpresa, vector, confianza) {
  */
 function ensureCteFolders(idEmpresa) {
   try {
-    var rootFolder = DriveApp.getFolderById(CONFIG.DRIVE_ROOT_ID);
+    var rootFolder = getRootFolder_();
     var cteFolderName = "cte" + idEmpresa;
 
-    // Buscar o crear cte<id>/
-    var cteFolders = rootFolder.getFoldersByName(cteFolderName);
-    var cteFolder = cteFolders.hasNext() ? cteFolders.next() : rootFolder.createFolder(cteFolderName);
+    // Buscar (case-insensitive) o crear cte<id>/
+    var cteFolder = findCteFolder_(rootFolder, idEmpresa);
+    if (!cteFolder) cteFolder = rootFolder.createFolder(cteFolderName);
 
     var created = [];
 
@@ -714,7 +744,7 @@ function ensureCteFolders(idEmpresa) {
     var activosFolder = activosFolders.hasNext() ? activosFolders.next() : cteFolder.createFolder("_activos");
     if (!activosFolders.hasNext()) created.push("_activos");
 
-    var lapvtfuSubfolders = ["logo", "avatar", "fotos-personales", "videos", "testimonios", "fotos", "ugc"];
+    var lapvtfuSubfolders = ["avatar", "fotos-personales", "videos", "testimonios", "fotos", "ugc"];
     for (var i = 0; i < lapvtfuSubfolders.length; i++) {
       var subName = lapvtfuSubfolders[i];
       var subFolders = activosFolder.getFoldersByName(subName);
@@ -765,13 +795,24 @@ function generateAsset(idEmpresa, tipo, opts) {
   }
 
   try {
-    var rootFolder = DriveApp.getFolderById(CONFIG.DRIVE_ROOT_ID);
-    var cteFolderName = "cte" + idEmpresa;
-    var cteFolders = rootFolder.getFoldersByName(cteFolderName);
-    if (!cteFolders.hasNext()) {
+    var rootFolder = getRootFolder_();
+    var cteFolder = findCteFolder_(rootFolder, idEmpresa);
+    if (!cteFolder) {
       return { success: false, error: "Carpeta cte" + idEmpresa + " no existe. Ejecuta ensureCteFolders primero." };
     }
-    var cteFolder = cteFolders.next();
+
+    // ADR-028: logo.png vive directo en cte<id>/ (nombre fijo, overwrite)
+    if (tipo === "logo") {
+      var existing = cteFolder.getFilesByName("logo.png");
+      while (existing.hasNext()) existing.next().setTrashed(true);
+      if (opts.imageUrl) {
+        var logoBlob = UrlFetchApp.fetch(opts.imageUrl).getBlob();
+        var logoFile = cteFolder.createFile(logoBlob.setName("logo.png"));
+        return { success: true, fileName: "logo.png", fileUrl: logoFile.getUrl(), tipo: "logo" };
+      }
+      return _createPlaceholderAsset(cteFolder, "logo", idEmpresa, "logo", opts, "logo.png");
+    }
+
     var activosFolders = cteFolder.getFoldersByName("_activos");
     if (!activosFolders.hasNext()) {
       return { success: false, error: "Carpeta _activos no existe" };
@@ -840,8 +881,9 @@ function generateAsset(idEmpresa, tipo, opts) {
 
 /**
  * Crea un asset placeholder (imagen con texto) para logo/avatar.
+ * @param {string} [fixedName] - nombre fijo de archivo (ej "logo.png") en vez de timestamp
  */
-function _createPlaceholderAsset(folder, fileName, idEmpresa, tipo, opts) {
+function _createPlaceholderAsset(folder, fileName, idEmpresa, tipo, opts, fixedName) {
   try {
     var texto = opts.texto || idEmpresa;
     // Crear imagen placeholder con CanvasService (GAS)
@@ -860,17 +902,17 @@ function _createPlaceholderAsset(folder, fileName, idEmpresa, tipo, opts) {
     ctx.fillText(texto.substring(0, 10).toUpperCase(), 200, 200);
 
     var blob = Trends.newBlob(canvas, 'image/png');
-    fileName += '.png';
-    folder.createFile(blob.setName(fileName));
-    return { success: true, fileName: fileName, fileUrl: folder.getUrl(), tipo: tipo };
+    var outName = fixedName || (fileName + '.png');
+    var outFile = folder.createFile(blob.setName(outName));
+    return { success: true, fileName: outName, fileUrl: outFile.getUrl(), tipo: tipo };
   } catch (e) {
     // Fallback: crear archivo de texto con instrucciones
     var instructions = tipo === 'logo'
       ? "LOGO PLACEHOLDER — Reemplazar con el logo real de " + idEmpresa
       : "AVATAR PLACEHOLDER — Reemplazar con el avatar real de " + idEmpresa;
-    fileName += '.txt';
-    folder.createFile(fileName, instructions, MimeType.PLAIN_TEXT);
-    return { success: true, fileName: fileName, fileUrl: folder.getUrl(), tipo: tipo, placeholder: true };
+    var txtName = fixedName ? fixedName.replace(/\.png$/, '.txt') : (fileName + '.txt');
+    folder.createFile(txtName, instructions, MimeType.PLAIN_TEXT);
+    return { success: true, fileName: txtName, fileUrl: folder.getUrl(), tipo: tipo, placeholder: true };
   }
 }
 
@@ -933,20 +975,31 @@ function generateAllAssets(idEmpresa, activos) {
  */
 function getBriefAssets(idEmpresa) {
   try {
-    var rootFolder = DriveApp.getFolderById(CONFIG.DRIVE_ROOT_ID);
-    var cteFolders = rootFolder.getFoldersByName("cte" + idEmpresa);
-    if (!cteFolders.hasNext()) return { success: true, assets: {} };
+    var rootFolder = getRootFolder_();
+    var cteFolder = findCteFolder_(rootFolder, idEmpresa);
+    if (!cteFolder) return { success: true, assets: {} };
 
-    var cteFolder = cteFolders.next();
-    var activosFolders = cteFolder.getFoldersByName("_activos");
-    if (!activosFolders.hasNext()) return { success: true, assets: {} };
-
-    var activosFolder = activosFolders.next();
     var assets = {};
     var tipos = ["logo", "avatar", "fotos-personales", "videos", "testimonios", "fotos", "ugc"];
 
+    // ADR-028: logo desde raíz de cte<id> — cualquier archivo con "logo" en el
+    // nombre (reales: "Logo", "TopLuxFinance-removebg-logo.jpg"); fallback _activos/logo/
+    assets["logo"] = _listFilesInfo_(cteFolder.getFiles(), /logo/i);
+    if (!assets["logo"].length) {
+      var actFolders = cteFolder.getFoldersByName("_activos");
+      if (actFolders.hasNext()) {
+        var logoOldFolders = actFolders.next().getFoldersByName("logo");
+        if (logoOldFolders.hasNext()) assets["logo"] = _listFilesInfo_(logoOldFolders.next().getFiles());
+      }
+    }
+
+    var activosFolders = cteFolder.getFoldersByName("_activos");
+    var activosFolder = activosFolders.hasNext() ? activosFolders.next() : null;
+
     for (var i = 0; i < tipos.length; i++) {
       var tipo = tipos[i];
+      if (tipo === "logo") continue;
+      if (!activosFolder) { assets[tipo] = []; continue; }
       var tipoFolders = activosFolder.getFoldersByName(tipo);
       if (!tipoFolders.hasNext()) { assets[tipo] = []; continue; }
 
@@ -972,104 +1025,31 @@ function getBriefAssets(idEmpresa) {
   }
 }
 
-// ── NODE.JS PROXY FUNCTIONS (llamadas desde sidebar vía google.script.run) ──
-// Estas funciones hacen fetch a Node.js (localhost:3001) desde GAS.
-// Server-to-server: GAS (HTTPS) → Node.js (HTTP localhost) está PERMITIDO.
-// El sidebar (GS HTTPS) NO puede fetch directo a localhost (Mixed Content),
-// pero SÍ puede llamar a estas funciones vía google.script.run.
-
-const NODE_BASE_URL = 'http://localhost:3001';
-
-function fetchNode(endpoint, payload) {
-  try {
-    var options = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true
-    };
-    var response = UrlFetchApp.fetch(NODE_BASE_URL + endpoint, options);
-    var code = response.getResponseCode();
-    var text = response.getContentText();
-    if (code >= 400) throw new Error('HTTP ' + code + ': ' + text);
-    return JSON.parse(text);
-  } catch (e) {
-    return { status: 'error', error: e.message };
-  }
-}
-
 /**
- * Genera Brief vía Node.js (proxy desde GAS).
- * @param {string} idEmpresa
- * @returns {object} { status, data: { vector, brief, confidence, ... } }
+ * Convierte un FileIterator en array de metadatos.
+ * @param {FileIterator} files
+ * @param {RegExp} [nameFilter] - filtro opcional sobre el nombre del archivo
+ * @returns {object[]}
  */
-function generateBriefViaNode(idEmpresa) {
-  return fetchNode('/api/brief/generate', { id_empresa: idEmpresa });
-}
-
-/**
- * Escribe vector de Brief a Config_Empresas.logo_url vía Node.js → GAS.
- * @param {string} idEmpresa
- * @param {string} vector
- * @returns {object} { success, previousValue, row }
- */
-function writeBriefVectorViaNode(idEmpresa, vector) {
-  return fetchNode('/api/brief/write', { id_empresa: idEmpresa, vector: vector });
-}
-
-/**
- * Guarda metadata (brief.json, confianza.json) en Drive vía Node.js → GAS.
- * @param {string} idEmpresa
- * @param {string} vector
- * @param {object} confianza
- * @returns {object} { success, briefFile, confianzaFile }
- */
-function saveBriefMetadataViaNode(idEmpresa, vector, confianza) {
-  return fetchNode('/api/brief/metadata', { id_empresa: idEmpresa, vector: vector, confianza: confianza });
-}
-
-/**
- * Genera assets LAPVTFU vía Node.js → GAS.
- * @param {string} idEmpresa
- * @returns {object} { success, total, generated, results }
- */
-function generateAssetsViaNode(idEmpresa) {
-  return fetchNode('/api/brief/assets', { id_empresa: idEmpresa });
-}
-
-/**
- * Obtiene assets LAPVTFU existentes vía Node.js → GAS.
- * @param {string} idEmpresa
- * @returns {object} { success, assets }
- */
-function getBriefAssetsViaNode(idEmpresa) {
-  try {
-    var response = UrlFetchApp.fetch(NODE_BASE_URL + '/api/brief/assets?id=' + encodeURIComponent(idEmpresa), {
-      muteHttpExceptions: true
+function _listFilesInfo_(files, nameFilter) {
+  var out = [];
+  while (files.hasNext()) {
+    var file = files.next();
+    if (nameFilter && !nameFilter.test(file.getName())) continue;
+    out.push({
+      name: file.getName(),
+      url: file.getUrl(),
+      id: file.getId(),
+      size: file.getSize(),
+      created: file.getDateCreated().toISOString()
     });
-    var code = response.getResponseCode();
-    var text = response.getContentText();
-    if (code >= 400) throw new Error('HTTP ' + code + ': ' + text);
-    return JSON.parse(text);
-  } catch (e) {
-    return { status: 'error', error: e.message };
   }
+  return out;
 }
 
-/**
- * Obtiene lista de empresas para el selector del sidebar.
- * @returns {object} { status, data: [{ id, nomempresa, logo_url, ... }] }
- */
-function getBriefCompaniesViaNode() {
-  try {
-    var response = UrlFetchApp.fetch(NODE_BASE_URL + '/api/brief/companies', {
-      muteHttpExceptions: true
-    });
-    var code = response.getResponseCode();
-    var text = response.getContentText();
-    if (code >= 400) throw new Error('HTTP ' + code + ': ' + text);
-    return JSON.parse(text);
-  } catch (e) {
-    return { status: 'error', error: e.message };
-  }
-}
+// Los proxies Node.js del sidebar de Brief (fetchNode, generateBriefViaNode,
+// writeBriefVectorViaNode, saveBriefMetadataViaNode, generateAssetsViaNode,
+// getBriefAssetsViaNode, getBriefCompaniesViaNode) viven en brief-sidebar.js —
+// estaban duplicados acá (mismo NODE_BASE_URL) y GAS junta todos los archivos
+// en un solo scope global, lo que rompía onOpen() con
+// "Identifier 'NODE_BASE_URL' has already been declared".

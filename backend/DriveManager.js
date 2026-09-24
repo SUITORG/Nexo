@@ -4,8 +4,7 @@
 const DriveManager = {
   initDriveStructure: (idEmpresa) => {
     try {
-      const rootId = CONFIG.DRIVE_ROOT_ID;
-      const rootFolder = DriveApp.getFolderById(rootId);
+      const rootFolder = getRootFolder_();
       const coId = idEmpresa ? idEmpresa.trim().toUpperCase() : "GLOBAL";
 
       if (coId.includes("CMARJAV")) {

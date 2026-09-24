@@ -12,17 +12,58 @@ const router = express.Router();
 // NO usar el GAS_URL de server.js (event log / sync) — son deployments distintos.
 const GAS_URL = process.env.BRIEF_GAS_URL
     || process.env.SUITCAMPANAS_GAS_URL
-    || 'https://script.google.com/macros/s/AKfycbwbyojUmiKkUImjDfkUAMNvetI_Fhj9gIHDyFeCm6x6VyzhtK526z4QQThEeb-2B_uC/exec';
+    // Deployment canónico de "EVASOL Backend" (scriptId 1ne8mrUA...). SÍ tiene
+    // updateBriefVector. Se estabilizó el 2026-09-23 (ping + write verificados
+    // tras la propagación inicial) — reemplaza al "stable" anterior que nunca
+    // tuvo ese case. Ver .suit/registry/gas-deployments.yaml.
+    || 'https://script.google.com/macros/s/AKfycbzlkAI09chbtmf3VX5jKA9N4-6Ka2pcc6P65YqCXHn9amzACDCjuJBpFm2A8tPFyDwrsA/exec';
 
-const supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '',
-    { auth: { persistSession: false } }
-);
+// Lazy Supabase client - solo se crea cuando se necesita
+let _supabase = null;
+function getSupabase() {
+    if (!_supabase) {
+        const url = process.env.SUPABASE_URL;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+        if (!url || !key) {
+            throw new Error('SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY requeridos en .env');
+        }
+        _supabase = createClient(url, key, { auth: { persistSession: false } });
+    }
+    return _supabase;
+}
 
 function serverLog(level, ...args) {
     const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
     console.log(`[${new Date().toLocaleTimeString()}] [${level}] ${msg}`);
+}
+
+// fetch a GAS con reintento — Google intermitentemente devuelve una página HTML
+// ("ppConfig...") en vez de ejecutar el script (visto en vivo 2026-09-23, en
+// ambos deployments probados). No es un bug de este código: 1 reintento tras
+// una pausa corta resuelve la gran mayoría de estos casos.
+// Timeout de 15s por intento — sin esto, un Google lento hace que los 3 intentos
+// juntos superen el límite de 100s del túnel cloudflared (HTTP 524 opaco en el
+// sidebar en vez de un error claro, visto en vivo 2026-09-23).
+async function fetchGasJson(url, options, retries = 2, timeoutMs = 15000) {
+    let lastErr;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const res = await fetch(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
+            const text = await res.text();
+            let json;
+            try {
+                json = JSON.parse(text);
+            } catch (e) {
+                throw new Error(`GAS no devolvió JSON (¿HTML de Google?): ${text.slice(0, 120)}`);
+            }
+            return { res, json };
+        } catch (e) {
+            lastErr = e.name === 'TimeoutError' ? new Error(`GAS no respondió en ${timeoutMs / 1000}s`) : e;
+            serverLog('WARN', `[GAS_FETCH] intento ${attempt + 1}/${retries + 1} falló: ${lastErr.message}`);
+            if (attempt < retries) await new Promise(r => setTimeout(r, 1500));
+        }
+    }
+    throw lastErr;
 }
 
 function normalizeDriveUrl(url) {
@@ -33,13 +74,15 @@ function normalizeDriveUrl(url) {
 }
 
 // ── Web Research con Fallback Chain ───────────────────────────────────────────
-// Cadena: 1) Google Custom Search / SerpAPI → 2) SuitAI (puerto 3010) → 3) Ollama local
-// Cada paso: timeout 15s, retry 1, log fallback
+// Cadena: 1) Google Custom Search / SerpAPI (búsqueda real) → 2) callAiJson
+// (Gemini→SuitAI, que ya cae a Ollama/OmniRoute internamente — ver más abajo).
+// Antes el paso 2 llamaba a SuitAI /api/research, que nunca existió (404 fijo,
+// confirmado en vivo 2026-09-23) — todo el research caía siempre a Ollama directo
+// sin razón. Unificado a la misma cadena que usa la generación del Brief.
 
 const RESEARCH_CHAIN = [
     { name: 'google', fn: researchGoogle, timeout: 15000 },
-    { name: 'suitai', fn: researchSuitAI, timeout: 15000 },
-    { name: 'ollama', fn: researchOllama, timeout: 20000 }
+    { name: 'ai', fn: researchAI, timeout: 90000 }
 ];
 
 async function researchWithFallback(query, intent) {
@@ -88,37 +131,13 @@ async function researchGoogle(query, intent) {
     };
 }
 
-async function researchSuitAI(query, intent) {
-    // SuitAI corre en puerto 3010 (mismo proceso que server.js)
-    const suitaiUrl = process.env.SUITAI_URL || 'http://localhost:3010';
+async function researchAI(query, intent) {
+    const system = 'Eres un investigador de mercado. Responde EXCLUSIVAMENTE con JSON válido, sin texto extra.';
+    const user = `Investiga sobre: ${query}\nIntención: ${intent}\nResponde en JSON: {"findings":[{"title":"","snippet":"","url":""}],"consensus":"","sources":[],"confidence":"C"}`;
     try {
-        const res = await fetch(`${suitaiUrl}/api/research`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, intent })
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.json();
+        return await callAiJson(system, user);
     } catch (e) {
-        throw new Error(`SuitAI unavailable: ${e.message}`);
-    }
-}
-
-async function researchOllama(query, intent) {
-    const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
-    const model = process.env.OLLAMA_RESEARCH_MODEL || 'qwen2.5:7b';
-    try {
-        const prompt = `Investiga sobre: ${query}\nIntención: ${intent}\nResponde en JSON: {"findings":[{"title":"","snippet":"","url":""}],"consensus":"","sources":[],"confidence":"C"}`;
-        const res = await fetch(`${ollamaUrl}/api/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model, prompt, stream: false, format: 'json' })
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        return JSON.parse(data.response);
-    } catch (e) {
-        throw new Error(`Ollama unavailable: ${e.message}`);
+        throw new Error(`AI research falló: ${e.message}`);
     }
 }
 
@@ -237,15 +256,22 @@ function parseBrief(briefVectorRaw, empresaRow) {
 // fetch nativo GET sigue el 302 de GAS automáticamente (sin re-POSTear).
 async function fetchEmpresaRow(idEmpresa) {
     const url = GAS_URL.includes('?') ? (GAS_URL + '&action=getAll') : (GAS_URL + '?action=getAll');
-    const res = await fetch(url, { redirect: 'follow' });
-    const gasBody = await res.json();
+    const { json: gasBody } = await fetchGasJson(url, { redirect: 'follow' });
     const rows = gasBody?.Config_Empresas || gasBody?.data || [];
     return rows.find(c => String(c.id_empresa || '').toLowerCase() === String(idEmpresa || '').toLowerCase())
         || rows.find(c => String(c.nomempresa || '').toLowerCase() === String(idEmpresa || '').toLowerCase())
         || null;
 }
 
-// ── IA: OpenRouter directo (deepseek, max_tokens 4096, retry 429) ────────────
+// ── IA: Gemini directo (rápido, con crédito) → SuitAI (Ollama/OmniRoute) de respaldo ──
+// Antes le pegaba directo a OpenRouter (OPENROUTER_DIRECT_KEY) sin fallback — sin
+// crédito, todo Brief fallaba con "Insufficient credits". Probado en vivo (2026-09-23):
+// SuitAI prioriza Ollama local por latencia de escaneo, pero Ollama tarda 120s+ por
+// intento con este prompt grande y falla igual (2/2 fallos reales) — con 17 modelos
+// Ollama en la cola, el timeout de fetch (~5min) revienta antes de llegar a nada más.
+// OmniRoute (oc/*, "auto/*") está caído ahora mismo (401/403/"unavailable"/cuelgues de
+// 45s+) — no es un bug de este código, es el proveedor. Gemini directo (misma
+// GEMINI_API_KEY que ya usa server.js) respondió 200 OK en ~2s: se usa primero.
 
 function extractJsonFromAiText(text) {
     const raw = (text || '').trim();
@@ -257,46 +283,73 @@ function extractJsonFromAiText(text) {
     return raw;
 }
 
-async function callOpenRouterJson(systemContent, userContent, temperature = 0.4) {
-    const key = process.env.OPENROUTER_DIRECT_KEY || process.env.OPENROUTER_API_KEY;
-    if (!key) throw new Error('OPENROUTER_DIRECT_KEY no configurada en .env');
-    const model = process.env.BRIEF_MODEL || 'deepseek/deepseek-v4-flash';
+async function callGeminiJson(systemContent, userContent) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('GEMINI_API_KEY no configurada');
+    const model = process.env.BRIEF_GEMINI_MODEL || 'gemini-flash-latest';
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: `${systemContent}\n\n${userContent}` }] }],
+            // responseMimeType fuerza JSON sintácticamente válido — sin esto, Gemini
+            // ocasionalmente mete una comilla sin escapar en un campo largo (ej.
+            // audiencia/PBP) y JSON.parse revienta ("Expected ',' or '}'...", visto
+            // en vivo 2026-09-23). maxOutputTokens en 8192 (antes 4096): con prompts
+            // grandes (research de 3 sub-agentes embebido) el modelo gasta tokens
+            // "pensando" antes del JSON final y con 4096 se cortaba a medias, dejando
+            // texto de razonamiento sin cerrar en vez de JSON (visto en vivo).
+            generationConfig: { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: 'application/json' }
+        })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error?.message || `Gemini HTTP ${res.status}`);
+    const content = json.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) throw new Error('Gemini: respuesta sin contenido (posible bloqueo de safety)');
+    return content;
+}
+
+async function callSuitAiJson(systemContent, userContent) {
     const messages = [
         { role: 'system', content: systemContent },
         { role: 'user', content: userContent }
     ];
-    const MAX_429_RETRIES = 2;
-    let lastError = 'No se recibieron errores.';
-    for (let attempt = 0; attempt <= MAX_429_RETRIES; attempt++) {
-        try {
-            const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model, messages, temperature, max_tokens: 4096 })
-            });
-            const json = await res.json();
-            if (!res.ok) {
-                const err = new Error(json.error?.message || `HTTP ${res.status}`);
-                err.status = res.status;
-                throw err;
-            }
-            const content = json.choices?.[0]?.message?.content;
-            if (!content) throw new Error('Respuesta sin contenido');
-            return JSON.parse(extractJsonFromAiText(content));
-        } catch (err) {
-            lastError = err.message;
-            serverLog('WARN', `[BRIEF_AI] ${model} (intento ${attempt + 1}/${MAX_429_RETRIES + 1}): ${err.message}`);
-            if (attempt >= MAX_429_RETRIES) break;
-            if (err.status === 429 || err.message.includes('429') || err.message.toLowerCase().includes('rate limit')) {
-                await new Promise(r => setTimeout(r, 5000));
-            } else if (err.message.includes('ECONNRESET')) {
-                await new Promise(r => setTimeout(r, 1000));
-            } else {
-                break;
-            }
-        }
+    const suitaiUrl = process.env.SUITAI_URL || 'http://localhost:3010';
+    const res = await fetch(`${suitaiUrl}/api/ai/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || `SuitAI HTTP ${res.status}`);
+    const content = json.choices?.[0]?.message?.content;
+    if (!content) throw new Error('SuitAI: respuesta sin contenido');
+    serverLog('INFO', `[BRIEF_AI] SuitAI modelo: ${json.model || 'desconocido'} (${json.latency_ms ?? '?'}ms)`);
+    return content;
+}
+
+// Cadena única de IA para todo el módulo (generación de Brief Y research):
+// Gemini directo (rápido, con crédito) → SuitAI (Ollama/OmniRoute de respaldo).
+// Se probó priorizar Ollama local (2026-09-23): con el prompt real completo
+// (research de 3 sub-agentes embebido) ningún modelo local disponible terminó
+// a tiempo — timeouts de 90s en qwen3.6/qwen2.5-coder, JSON mal formado en
+// llama3.2 — y el research en paralelo (hasta 7 llamadas simultáneas) satura
+// un solo modelo local. Se revirtió a Gemini-primero.
+async function callAiJson(systemContent, userContent) {
+    let content;
+    try {
+        content = await callGeminiJson(systemContent, userContent);
+        serverLog('INFO', '[BRIEF_AI] Gemini directo OK');
+    } catch (e) {
+        serverLog('WARN', `[BRIEF_AI] Gemini falló (${e.message}), cae a SuitAI...`);
+        content = await callSuitAiJson(systemContent, userContent);
     }
-    throw new Error('Todos los modelos fallaron al generar JSON. Último error: ' + lastError);
+    try {
+        return JSON.parse(extractJsonFromAiText(content));
+    } catch (e) {
+        serverLog('ERROR', `[BRIEF_AI] JSON inválido, texto crudo: ${content}`);
+        throw e;
+    }
 }
 
 // ── Taxonomía (Supabase catalogs: industrias → nichos → especializaciones) ───
@@ -305,7 +358,7 @@ async function resolverTaxonomia(giro, nombre) {
     const result = { industria: '', nicho: '', especializacion: '', tono: '' };
     if (!giro && !nombre) return result;
 
-    const { data: industrias } = await supabase
+    const { data: industrias } = await getSupabase()
         .from('industrias')
         .select('id, categoria, nichos(id, nombre, especializaciones, sinonimos)')
         .limit(50);
@@ -649,8 +702,7 @@ function assembleCompleteBrief(existingBrief, generated, taxonomia, empresaRow, 
 router.get('/api/brief/companies', async (req, res) => {
     try {
         const url = GAS_URL.includes('?') ? (GAS_URL + '&action=getAll') : (GAS_URL + '?action=getAll');
-        const gasRes = await fetch(url, { redirect: 'follow' });
-        const parsed = await gasRes.json();
+        const { json: parsed } = await fetchGasJson(url, { redirect: 'follow' });
         const rows = Array.isArray(parsed.Config_Empresas) ? parsed.Config_Empresas
             : (Array.isArray(parsed.data) ? parsed.data : null);
         if (!rows) throw new Error('GAS no devolvió Config_Empresas');
@@ -732,7 +784,7 @@ router.post('/api/brief/generate', async (req, res) => {
         const systemPrompt = buildBriefGeneratorPrompt();
         const userContent = buildBriefGeneratorInput(empresaRow, existingBrief, taxonomia, researchData);
 
-        const generated = await callOpenRouterJson(systemPrompt, userContent, 0.4);
+        const generated = await callAiJson(systemPrompt, userContent);
 
         const vector = assembleCompleteBrief(existingBrief, generated, taxonomia, empresaRow, researchData);
 
@@ -773,13 +825,12 @@ router.post('/api/brief/metadata', async (req, res) => {
         if (!id_empresa || !vector) {
             return res.status(400).json({ status: 'error', error: 'id_empresa y vector requeridos' });
         }
-        const gasRes = await fetch(GAS_URL, {
+        const { json: gasResult } = await fetchGasJson(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'saveBriefMetadata', id_empresa, vector, confianza }),
             redirect: 'follow'
         });
-        const gasResult = await gasRes.json();
         res.json(gasResult);
     } catch (e) {
         serverLog('ERROR', `[BRIEF_META] ${e.message}`);
@@ -794,13 +845,12 @@ router.post('/api/brief/write', async (req, res) => {
         if (!id_empresa || !vector) {
             return res.status(400).json({ status: 'error', error: 'id_empresa y vector requeridos' });
         }
-        const gasRes = await fetch(GAS_URL, {
+        const { json: gasResult } = await fetchGasJson(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'updateBriefVector', id_empresa, vector }),
             redirect: 'follow'
         });
-        const gasResult = await gasRes.json();
         res.json(gasResult);
     } catch (e) {
         serverLog('ERROR', `[BRIEF_WRITE] ${e.message}`);
@@ -813,13 +863,12 @@ router.post('/api/brief/folders', async (req, res) => {
     try {
         const { id_empresa } = req.body || {};
         if (!id_empresa) return res.status(400).json({ status: 'error', error: 'id_empresa es requerido' });
-        const gasRes = await fetch(GAS_URL, {
+        const { json: gasResult } = await fetchGasJson(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'ensureCteFolders', id_empresa }),
             redirect: 'follow'
         });
-        const gasResult = await gasRes.json();
         res.json(gasResult);
     } catch (e) {
         serverLog('ERROR', `[BRIEF_FOLDERS] ${e.message}`);
@@ -833,7 +882,7 @@ router.post('/api/brief/assets', async (req, res) => {
         const { id_empresa } = req.body || {};
         if (!id_empresa) return res.status(400).json({ status: 'error', error: 'id_empresa es requerido' });
 
-        await fetch(GAS_URL, {
+        await fetchGasJson(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'ensureCteFolders', id_empresa }),
@@ -846,13 +895,12 @@ router.post('/api/brief/assets', async (req, res) => {
         const existingBrief = parseBrief(empresaRow.logo_url || empresaRow.tipo_negocio || '', empresaRow);
         const activos = existingBrief.activos || {};
 
-        const gasRes = await fetch(GAS_URL, {
+        const { json: gasResult } = await fetchGasJson(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'generateAllAssets', id_empresa, activos }),
             redirect: 'follow'
         });
-        const gasResult = await gasRes.json();
 
         serverLog('INFO', `[BRIEF_ASSETS] ${gasResult.generated || 0}/${gasResult.total || 0} assets generados para "${id_empresa}"`);
 
@@ -876,13 +924,12 @@ router.get('/api/brief/assets', async (req, res) => {
     try {
         const id_empresa = req.query.id;
         if (!id_empresa) return res.status(400).json({ status: 'error', error: 'id requerido' });
-        const gasRes = await fetch(GAS_URL, {
+        const { json: gasResult } = await fetchGasJson(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'getBriefAssets', id_empresa }),
             redirect: 'follow'
         });
-        const gasResult = await gasRes.json();
         res.json({ status: 'success', data: gasResult });
     } catch (e) {
         serverLog('ERROR', `[BRIEF_ASSETS_GET] ${e.message}`);

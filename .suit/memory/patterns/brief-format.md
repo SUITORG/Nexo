@@ -1,9 +1,11 @@
 # Pattern: Formato del Brief (vector en `logo_url`)
 
-**Fuente de verdad:** `SuitCampanas/BRIEF.MD` (diccionario oficial de campos)
-**ADR primaria:** ADR-025 (contrato de datos), ADR-026 (consolidación + fixes)
-**Parser:** `SuitCampanas/local-server-node.js` → `parseBrief()`
+**Fuente de verdad:** `scripts/brief-generate.js` → `BRIEF_FIELD_ORDER` (root, post ADR-035)
+**ADR primaria:** ADR-035 (generación movida a root, formato de 21 segmentos vigente) — reemplaza el criterio de ADR-025 sobre `slogan`/`cta_texto` (ver abajo). ADR-026 (consolidación + fixes de parseo) sigue vigente.
+**Parsers:** `scripts/brief-generate.js` → `parseBrief()` (root, escribe) · `SuitCampanas/local-server-node.js` → `parseBrief()` (legado, aún presente, solo debería leer — ver ADR-035)
 **Consumidores:** MediaPlanner, BriefMarker, renderLanding (root)
+
+> **2026-09-23:** actualizado tras verificar en vivo que `scripts/brief-generate.js`, `backend/brief-sidebar.js` y el generador legado de `SuitCampanas/local-server-node.js` ya coinciden en usar `cta` (no `cta_texto`) e incluir `slogan`/`tipografia` dentro del vector — contradice lo que decía esta doc y ADR-025 hasta ahora. No es un bug de contrato activo, era la documentación la que estaba desactualizada.
 
 ---
 
@@ -17,12 +19,12 @@ El Brief vive en **`Config_Empresas.logo_url`** (Google Sheets), NO en `tipo_neg
 Pipe-delimited (`|`), segmentos `etiqueta: valor`:
 
 ```
-industria: valor|nicho: valor|especializacion: valor|...|cta: texto
+industria: valor|nicho: valor|especializacion: valor|...|cta: texto|tipografia: valor
 ```
 
 Segmento 0 puede ser etiqueta libre (sin `:`) para legado, o `industria: valor` si ya está migrado.
 
-## Los 19 campos canónicos
+## Los 21 campos canónicos (`BRIEF_FIELD_ORDER`, `scripts/brief-generate.js`)
 
 | # | Etiqueta | Significado | Tipo | Notas |
 |---|---|---|---|---|
@@ -44,9 +46,11 @@ Segmento 0 puede ser etiqueta libre (sin `:`) para legado, o `industria: valor` 
 | 14 | `tono` | Tono de la marca | texto libre | |
 | 15 | `PS` | Prueba social / caso de éxito | texto libre | |
 | 16 | `RLP` | Restricciones legales o de plataforma | texto libre | Ej. "declarar que el anuncio fue creado con AI" |
-| 17 | `oferta` | Oferta principal | texto libre | |
-| 18 | `descripcion` | Descripción de la oferta | texto libre | **Lleva tilde: `descripcion`** |
-| 19 | `cta_texto` | Llamado a la acción | texto libre | Mapea a `cta` |
+| 17 | `slogan` | Slogan de la empresa | texto libre | **Vigente desde ADR-035** — ya SÍ va dentro del vector (contradice a ADR-025/versión anterior de esta doc). Solo se copia del campo `Config_Empresas.slogan`; si falta, propone 3 opciones (confianza C) |
+| 18 | `oferta` | Oferta principal | texto libre | |
+| 19 | `descripcion` | Descripción de la oferta | texto libre | **Lleva tilde: `descripcion`** |
+| 20 | `cta` | Llamado a la acción | texto libre | **Etiqueta canónica: `cta`** (NO `cta_texto` — la doc anterior tenía este nombre desactualizado) |
+| 21 | `tipografia` | Par tipográfico de marca | texto libre | Catálogo cerrado: `moderna`/`audaz`/`elegante`/`amigable`/`corporativa` (ver `SuitCampanas/CLAUDE.md`, `BRIEF_FONT_TONES`) |
 
 ## `LAPVTFU` — slots posicionales
 
@@ -54,7 +58,7 @@ Posiciones fijas (NO filtrar vacíos — desalinea las posiciones):
 
 | Slot | Nombre | Notas |
 |---|---|---|
-| 1 | Logo | |
+| 1 | Logo | **Ruta en Drive (ADR-028):** `raíz\cte<id_empresa>\logo.png` (directo en la carpeta cte, nombre fijo). Fallback lectura: `_activos/logo/` |
 | 2 | Avatar | Fallback: copia del slot 1 (Logo) |
 | 3 | Foto Personal | Opcional |
 | 4 | Videos | |
@@ -85,14 +89,15 @@ industria: Alimentos y Bebidas Artesanales|nicho: Quesos artesanales y derivados
 |---|---|
 | `PCP` en vez de `PBP` | La etiqueta canónica es `PBP` (Promesa, Beneficio y Prueba). `PCP` funciona como alias pero es confuso |
 | `LAVTFU` en vez de `LAPVTFU` | Ambos aliases funcionan, pero `LAPVTFU` es el nombre canónico |
-| `slogan` en el vector | `slogan` vive en su propio campo de Config_Empresas, NO en `logo_url` |
 | `descripcion` sin tilde | Correcto: la etiqueta es `descripcion` (sin tilde en el key del parser) |
 | Duplicar `telefonowhatsapp`/`color_tema` | Ya tienen su propia columna en Config_Empresas — no duplicar |
-| `oferta`/`cta` en formato viejo | En `logo_url`, son `oferta: texto` y `cta: texto` (etiquetados), no posicionales |
+| `cta_texto` en vez de `cta` | La etiqueta vigente (post ADR-035) es `cta`. `cta_texto` era el nombre viejo — sigue funcionando por el fallback genérico del parser (`brief[key] = value`), pero ya no es lo que escribe el generador |
 
-## Código relevant
+## Código relevante
 
-- **Parser:** `SuitCampanas/local-server-node.js:647` → `parseBrief()`
+- **Generador + parser (root, vigente):** `scripts/brief-generate.js` → `BRIEF_FIELD_ORDER`, `parseBrief()`, `assembleCompleteBrief()`
+- **Sidebar (root, vigente):** `backend/brief-sidebar.js` → `BRIEF_FIELDS`
+- **Parser legado (SuitCampanas, solo debería leer — ver ADR-035):** `SuitCampanas/local-server-node.js:647` → `parseBrief()`
 - **Aliases:** `local-server-node.js:634` → `BRIEF_LIST_FIELDS`
 - **Landing (root):** `scripts/ssg-engine.mjs` → `resolveBriefParts()`
 - **Frontend (logo split):** `SuitCampanas/script.js:15` → `parseLogoUrlField()`

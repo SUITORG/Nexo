@@ -29,9 +29,22 @@ function getSidebarSS() {
 }
 
 // ── PROXY FUNCTIONS (llamadas desde sidebar HTML vía google.script.run) ──
-// Estas funciones en GAS hacen fetch a Node.js (server-to-server, sin Mixed Content).
+// Estas funciones en GAS hacen fetch a Node.js. UrlFetchApp corre en la nube de
+// Google, no en la PC del usuario — 'localhost' NO sirve acá (Error DNS
+// confirmado en vivo). Usa un túnel público (cloudflared) hacia el server real.
+// Si el túnel se reinicia, la URL cambia: actualiza la Script Property
+// NODE_BASE_URL (Configuración del proyecto > Propiedades del script) en vez
+// de tocar código.
 
-const NODE_BASE_URL = 'http://localhost:3001';
+// Valida la property: localhost/127.0.0.1 no sirve desde UrlFetchApp (nube) → DNS error.
+// Si la property está vacía o apunta a la PC local, usa el túnel vivo.
+const NODE_BASE_URL = (function () {
+  const v = (getConfigValue('NODE_BASE_URL') || '').trim();
+  if (!v || /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(v) || /knock-align-relation-test/.test(v)) {
+    return 'https://kitty-accessibility-packaging-semiconductor.trycloudflare.com';
+  }
+  return v;
+})();
 
 function fetchNode(endpoint, payload) {
   try {
@@ -521,13 +534,17 @@ function mostrarHistorialBrief() {
   const idEmpresa = String(rowData[idIdx] || '').trim();
 
   try {
-    const rootFolder = DriveApp.getFolderById(getConfigValue('DRIVE_ROOT_ID'));
-    const cteFolders = rootFolder.getFoldersByName('cte' + idEmpresa);
-    if (!cteFolders.hasNext()) {
+    // getRootFolder_/findCteFolder_ viven en core.js (mismo scope GAS, ADR-028)
+    const rootFolder = typeof getRootFolder_ === 'function'
+      ? getRootFolder_()
+      : DriveApp.getFolderById(getConfigValue('DRIVE_ROOT_ID'));
+    const cteFolder = typeof findCteFolder_ === 'function'
+      ? findCteFolder_(rootFolder, idEmpresa)
+      : rootFolder.getFoldersByName('cte' + idEmpresa).next();
+    if (!cteFolder) {
       SpreadsheetApp.getUi().alert('No hay historial para ' + idEmpresa);
       return;
     }
-    const cteFolder = cteFolders.next();
     const briefFolders = cteFolder.getFoldersByName('_brief');
     if (!briefFolders.hasNext()) {
       SpreadsheetApp.getUi().alert('No hay carpeta _brief para ' + idEmpresa);
@@ -560,9 +577,12 @@ function getConfigValue(key) {
   const props = PropertiesService.getScriptProperties();
   const val = props.getProperty(key);
   if (val) return val;
-  // Fallback hardcoded (mismo patrón que core.js)
+  // Fallback: My Drive root para DRIVE_ROOT_ID (ADR-028 — el ID anterior
+  // 1BxmUT... daba 404); el resto sigue hardcodeado.
+  if (key === 'DRIVE_ROOT_ID') {
+    try { return DriveApp.getRootFolder().getId(); } catch (e) { return ''; }
+  }
   const CONFIG = {
-    DRIVE_ROOT_ID: '1BxmUTRHS1s72s1pL1Y5s7UzH63Ck2vQk',
     DB_ID: '1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8'
   };
   return CONFIG[key] || '';
@@ -987,61 +1007,6 @@ function getBriefSidebarHtml() {
           alert('Error: ' + err.message);
         })
         .getBriefAssetsViaNode(id);
-    }
-
-        fillEl.style.width = '80%';
-        textEl.textContent = 'Procesando resultado...';
-
-        const data = await response.json();
-
-        if (data.status === 'error') throw new Error(data.error);
-
-        fillEl.style.width = '100%';
-        textEl.textContent = '¡Brief generado!';
-
-        // Mostrar resultado
-        const brief = data.data.brief;
-        const completitud = data.data.completitud;
-        resultEl.style.display = 'block';
-        resultEl.style.background = completitud.filled === completitud.total ? '#0d3320' : '#3d2e00';
-        resultEl.style.border = '1px solid ' + (completitud.filled === completitud.total ? '#00d4aa' : '#ffb700');
-        resultEl.innerHTML = '<strong>✓ Brief generado</strong><br>' +
-          completitud.filled + '/' + completitud.total + ' campos completos<br>' +
-          '<span style="font-size:11px; color:#888;">Vector copiado al portapapeles</span>';
-
-        // Copiar vector al portapapeles
-        if (data.data.vector) {
-          navigator.clipboard.writeText(data.data.vector);
-          currentVector = data.data.vector;
-        }
-
-        // Guardar metadata en Drive (brief.json + confianza.json)
-        try {
-          await fetch('http://' + baseUrl + '/api/brief/metadata', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id_empresa: id,
-              vector: data.data.vector,
-              confianza: data.data.confidence || {}
-            })
-          });
-        } catch (metaErr) {
-          console.warn('Metadata save failed (non-blocking):', metaErr);
-        }
-
-        // Recargar vista
-        setTimeout(() => { loadBrief(); }, 500);
-
-      } catch (err) {
-        fillEl.style.width = '100%';
-        fillEl.style.background = '#ff4444';
-        textEl.textContent = 'Error: ' + err.message;
-        resultEl.style.display = 'block';
-        resultEl.style.background = '#3d0000';
-        resultEl.style.border = '1px solid #ff4444';
-        resultEl.innerHTML = '<strong>Error al generar</strong><br>' + err.message;
-      }
     }
 
     // ── Resumen de confianza ──────────────────────────────────────────────

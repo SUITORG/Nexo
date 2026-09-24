@@ -1,0 +1,68 @@
+# Registro canónico de proyectos y deployments de Google Apps Script.
+# Fuente de verdad: qué scriptId es el real, qué URL de Web App usar, y qué
+# acciones expone. Se armó 2026-09-23 tras ~40 min de debugging por confundir
+# 3 proyectos GAS distintos que todos apuntan al mismo spreadsheet (DB_ID) —
+# ver .suit/memory/decisions/ (ADR de esta sesión) para el relato completo.
+
+canonical_project:
+  name: "EVASOL Backend"
+  scriptId: "1ne8mrUAM7fir4_jTVtnTELoEQcMXwwfoOfbafcWPhRQ5DICGcnhGpKQ1"
+  clasp_config: ".clasp.json (raíz del repo, rootDir: backend)"
+  bound_to: "Spreadsheet SUITORG01-2026 (DB_ID abajo) — container-bound, corre onOpen()/onEdit() como triggers simples"
+  push_command: "clasp push (desde la raíz del repo)"
+  source_files: "backend/*.js (mapea 1:1 a los .gs del proyecto real)"
+  onOpen_menus:
+    - "SuitOrg (backend/database.js) — bootstrap de rol/usuario SUDO por empresa, no relacionado a Brief"
+    - "Temas (backend/theme-sidebar.js)"
+    - "Brief (backend/brief-sidebar.js)"
+
+spreadsheet:
+  name: "SUITORG01-2026"
+  id: "1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8"
+  url: "https://docs.google.com/spreadsheets/d/1uyy2hzj8HWWQFnm6xy-XCwvvGh3odjV4fRlDh5SBxu8/edit"
+
+web_app_deployments:
+  # Antes "stable": respondía rápido pero nunca tuvo updateBriefVector
+  # (ACTION_WAITING). Reemplazado por pending_stabilization el 2026-09-23 tras
+  # estabilizarse. Mantenido solo como referencia histórica — NO usar.
+  legacy_without_brief_write:
+    url: "https://script.google.com/macros/s/AKfycbwbyojUmiKkUImjDfkUAMNvetI_Fhj9gIHDyFeCm6x6VyzhtK526z4QQThEeb-2B_uC/exec"
+    scriptId: "desconocido (no es 1ne8mrUAM7fir4_...) — pendiente de identificar"
+    status: "LEGACY — sin updateBriefVector, reemplazado 2026-09-23"
+    missing_actions:
+      - "updateBriefVector (da 'ACTION_WAITING: updateBriefVector')"
+    verified: "2026-09-23 — ping/getAll consistentes en >10 pruebas"
+
+  # Creado con `clasp deploy` desde canonical_project (2026-09-23) — tiene
+  # updateBriefVector. Falló intermitente las primeras ~30-60 min (propagación
+  # de Google), pero se estabilizó el 2026-09-23: ping 200 + write test
+  # (EMPRESA_NOT_FOUND, no ACTION_WAITING) verificados. AHORA EN USO:
+  # .env BRIEF_GAS_URL + fallback en scripts/brief-generate.js apuntan aquí.
+  active:
+    url: "https://script.google.com/macros/s/AKfycbzlkAI09chbtmf3VX5jKA9N4-6Ka2pcc6P65YqCXHn9amzACDCjuJBpFm2A8tPFyDwrsA/exec"
+    scriptId: "1ne8mrUAM7fir4_jTVtnTELoEQcMXwwfoOfbafcWPhRQ5DICGcnhGpKQ1 (canonical_project)"
+    status: "ACTIVO — BRIEF_GAS_URL desde 2026-09-23"
+    created: "2026-09-23"
+    stabilized: "2026-09-23"
+
+  # scriptId encontrado por accidente (primer clasp push de la sesión, antes de
+  # descubrir cuál era el proyecto real). NO tiene relación con el spreadsheet real
+  # que se pudo confirmar. No usar.
+  orphaned:
+    scriptId: "1pSFYiYl_blIOzZ_kBSYDB-2CRjx6b44LENqkodgmqg_QI7e5S4WwpiJS"
+    status: "huérfano — no usar, no se sabe qué contiene ni para qué se creó"
+
+actions:
+  doGet:
+    - "ping — healthcheck, {status, version, message}"
+    - "getAll — todas las GLOBAL_TABLES (+ PRIVATE_TABLES si se pasa id_empresa)"
+    - "getUnsyncedEvents — Capa 2 (sync a Supabase)"
+    - "markEventSynced — Capa 2 (sync a Supabase)"
+  doPost:
+    - "repairDatabase, askGemini, askNotebookLM, syncDrive, processFullOrder, updateProjectStatus"
+    - "getLeadByVisitor, createLead, updateLead"
+    - "saveAiConversation, saveAiMemory, getAiMemory, listAiModels"
+    - "createSupportTicket, updateRow, orchestrate, createReservation"
+    - "getAll (variante POST), syncToSupabase, migrateRRSS"
+    - "saveBriefMetadata, ensureCteFolders, generateAsset, generateAllAssets, getBriefAssets, updateBriefVector — grupo Brief (backend/core.js:325-390)"
+  default_fallback: '"ACTION_WAITING: " + action — el error que se ve cuando el deployment NO tiene ese case todavía (síntoma de deployment desactualizado, no de código)'

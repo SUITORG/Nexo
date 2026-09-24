@@ -29,24 +29,29 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 
 app.use(express.json());
 
+// Brief generator (SuitOrg) — mount FIRST before submodules to ensure routing priority
+console.log('[SERVER] Loading Brief Generator...');
+app.use(require('./scripts/brief-generate'));
+console.log('[SERVER] Brief Generator mounted');
+
 // 🛡️ Seguridad: Configuración de Security Headers via Helmet
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            "default-src": ["'self'"],
-            "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.googleapis.com", "https://kit.fontawesome.com", "https://cdn.jsdelivr.net", "https://js.stripe.com"],
-            "script-src-attr": ["'unsafe-inline'"],
-            "connect-src": ["'self'", "http://localhost:3003", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://openrouter.ai", "https://ka-f.fontawesome.com", "https://*.googleusercontent.com", "https://api.stripe.com", "https://cdn.jsdelivr.net"],
-            "img-src": ["'self'", "data:", "https://loremflickr.com", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://*.googleusercontent.com", "https://*.stripe.com"],
-            "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://kit.fontawesome.com", "https://cdnjs.cloudflare.com"],
-            "font-src": ["'self'", "https://fonts.gstatic.com", "https://ka-f.fontawesome.com", "https://cdnjs.cloudflare.com"],
-            "frame-src": ["'self'", "http://localhost:3003", "https://*.google.com", "https://*.googleusercontent.com", "https://js.stripe.com"],
-            "upgrade-insecure-requests": [],
-        },
-    },
-    crossOriginEmbedderPolicy: false, 
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+// app.use(helmet({
+//     contentSecurityPolicy: {
+//         directives: {
+//             "default-src": ["'self'"],
+//             "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.googleapis.com", "https://kit.fontawesome.com", "https://cdn.jsdelivr.net", "https://js.stripe.com"],
+//             "script-src-attr": ["'unsafe-inline'"],
+//             "connect-src": ["'self'", "http://localhost:3003", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://openrouter.ai", "https://ka-f.fontawesome.com", "https://*.googleusercontent.com", "https://api.stripe.com", "https://cdn.jsdelivr.net"],
+//             "img-src": ["'self'", "data:", "https://loremflickr.com", "https://*.supabase.co", "https://*.google.com", "https://*.googleapis.com", "https://*.googleusercontent.com", "https://*.stripe.com"],
+//             "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://kit.fontawesome.com", "https://cdnjs.cloudflare.com"],
+//             "font-src": ["'self'", "https://fonts.gstatic.com", "https://ka-f.fontawesome.com", "https://cdnjs.cloudflare.com"],
+//             "frame-src": ["'self'", "http://localhost:3003", "https://*.google.com", "https://*.googleusercontent.com", "https://js.stripe.com"],
+//             "upgrade-insecure-requests": [],
+//         },
+//     },
+//     crossOriginEmbedderPolicy: false, 
+//     crossOriginResourcePolicy: { policy: "cross-origin" }
+// }));
 
 // ENDPOINT DE GUARDADO LOCAL (v1.0.0)
 // Permite a módulos locales guardar JSONs en el disco duro de forma segura
@@ -329,40 +334,67 @@ app.post('/api/webhook/citas', (req, res) => {
 });
 
 // Montar SuitAI (model discovery + auto-routing + circuit breaker) — debe ir ANTES de /api/ai/* sueltos
+console.log('[SERVER] Loading SuitAI...');
 const suitAiApp = require('./SuitAI/index');
+console.log('[SERVER] SuitAI loaded, mounting...');
 app.use(suitAiApp);
+console.log('[SERVER] SuitAI mounted');
 
 // Montar módulo de Citas (webhook WhatsApp + API)
+console.log('[SERVER] Loading Citas...');
 const citasApp = require('./citas/index');
+console.log('[SERVER] Citas loaded, mounting...');
 app.use(citasApp);
+console.log('[SERVER] Citas mounted');
 
 // Montar SuitReservaciones (webhook WhatsApp + API) — módulo migrado
+console.log('[SERVER] Loading SuitReservaciones...');
 const reservacionesApp = require('./SuitReservaciones/index');
+console.log('[SERVER] SuitReservaciones loaded, mounting...');
 app.use(reservacionesApp);
+console.log('[SERVER] SuitReservaciones mounted');
 
 // Montar SuitPedidoExpress (menú digital + órdenes) — módulo nuevo
+console.log('[SERVER] Loading SuitPedidoExpress...');
 const pedidoExpressApp = require('./SuitPedidoExpress/index');
+console.log('[SERVER] SuitPedidoExpress loaded, mounting...');
 app.use(pedidoExpressApp);
+console.log('[SERVER] SuitPedidoExpress mounted');
 
 // Montar SuitPos (POS + monitor) — módulo nuevo
+console.log('[SERVER] Loading SuitPos...');
 const posApp = require('./SuitPos/index');
+console.log('[SERVER] SuitPos loaded, mounting...');
 app.use(posApp);
+console.log('[SERVER] SuitPos mounted');
 
 // Montar SuitProductos (catálogo + precios) — módulo nuevo
+console.log('[SERVER] Loading SuitProductos...');
 const productosApp = require('./SuitProductos/index');
+console.log('[SERVER] SuitProductos loaded, mounting...');
 app.use(productosApp);
+console.log('[SERVER] SuitProductos mounted');
 
 // Montar SuitInventarios (stock + movimientos) — módulo nuevo
+console.log('[SERVER] Loading SuitInventarios...');
 const inventariosApp = require('./SuitInventarios/index');
+console.log('[SERVER] SuitInventarios loaded, mounting...');
 app.use(inventariosApp);
+console.log('[SERVER] SuitInventarios mounted');
 
 // Montar SuitBodega (ubicaciones + transferencias) — módulo nuevo
+console.log('[SERVER] Loading SuitBodega...');
 const bodegaApp = require('./SuitBodega/index');
+console.log('[SERVER] SuitBodega loaded, mounting...');
 app.use(bodegaApp);
+console.log('[SERVER] SuitBodega mounted');
 
 // Montar SuitMistral (chat completion + historial) — módulo nuevo
+console.log('[SERVER] Loading SuitMistral...');
 const mistralApp = require('./SuitMistral/index');
+console.log('[SERVER] SuitMistral loaded, mounting...');
 app.use(mistralApp);
+console.log('[SERVER] SuitMistral mounted');
 
 // =====================================================================
 // 💳 STRIPE PAYMENT ENDPOINTS
@@ -446,11 +478,11 @@ app.get('/api/service-health/telegram', (req, res) => {
 });
 
 // Serve static files from the current directory
-app.use((req, res, next) => {
-    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
-    next();
-});
-app.use(express.static(__dirname, { etag: false, lastModified: false }));
+// app.use((req, res, next) => {
+//     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+//     next();
+// });
+// app.use(express.static(__dirname, { etag: false, lastModified: false }));
 
 // SuitOpComer — Google Places API (requiere API key del usuario, free tier $200/mes)
 app.post('/api/suitopcomer/places', async (req, res) => {
@@ -639,9 +671,6 @@ app.get('/api/market/news', async (req, res) => {
     }
 });
 
-// Brief generator (SuitOrg) — must mount BEFORE the SPA catch-all
-app.use(require('./scripts/brief-generate'));
-
 // For SPA routing
 app.get('*', (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -683,10 +712,21 @@ async function pollEventLog() {
     }
 }
 
-setInterval(pollEventLog, SYNC_INTERVAL_MS);
-console.log(`🔄 [CAPA2] Polling cada ${SYNC_INTERVAL_MS / 60000} min`);
+// setInterval(pollEventLog, SYNC_INTERVAL_MS);
+// console.log(`🔄 [CAPA2] Polling cada ${SYNC_INTERVAL_MS / 60000} min`);
 
-app.listen(PORT, 'localhost', () => {
+// Global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ [UNHANDLED_REJECTION]', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('❌ [UNCAUGHT_EXCEPTION]', err);
+    process.exit(1);
+});
+
+const server = app.listen(PORT, '127.0.0.1', () => {
+    console.log(`[SERVER] listen callback fired, server.address() =`, server.address());
+    console.log(`[SERVER] server.listening =`, server.listening);
     console.log(`
 🚀 SUITORG SECURE SERVER RUNNING
 -------------------------------
@@ -694,5 +734,18 @@ URL: http://localhost:${PORT}
 Status: Protected (AI Proxy & DB Admin Proxy Active)
 -------------------------------
     `);
+    
+    // Verify server stays alive
+    setInterval(() => {
+        console.log(`[SERVER] heartbeat: listening=${server.listening}, address=${JSON.stringify(server.address())}`);
+    }, 10000);
+});
+
+server.on('error', (err) => {
+    console.error('❌ [SERVER_ERROR]', err);
+});
+
+server.on('close', () => {
+    console.error('❌ [SERVER_CLOSED] Server socket closed');
 });
 
