@@ -40,8 +40,8 @@ function getSidebarSS() {
 // Si la property está vacía o apunta a la PC local, usa el túnel vivo.
 const NODE_BASE_URL = (function () {
   const v = (getConfigValue('NODE_BASE_URL') || '').trim();
-  if (!v || /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(v) || /knock-align-relation-test/.test(v)) {
-    return 'https://kitty-accessibility-packaging-semiconductor.trycloudflare.com';
+  if (!v || /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(v) || /knock-align-relation-test/.test(v) || /kitty-accessibility-packaging-semiconductor/.test(v)) {
+    return 'https://reservation-ross-checks-douglas.trycloudflare.com';
   }
   return v;
 })();
@@ -92,6 +92,14 @@ function getBriefAssetsViaNode(idEmpresa) {
   } catch (e) {
     return { status: 'error', error: e.message };
   }
+}
+
+function ensureLogoViaNode(idEmpresa) {
+  return fetchNode('/api/brief/ensure-logo', { id_empresa: idEmpresa });
+}
+
+function ensureAvatarViaNode(idEmpresa) {
+  return fetchNode('/api/brief/ensure-avatar', { id_empresa: idEmpresa });
 }
 
 function getBriefCompaniesViaNode() {
@@ -702,6 +710,10 @@ function getBriefSidebarHtml() {
       <button class="btn btn-secondary" onclick="verAssets()" style="flex:1;min-width:120px;">📂 Ver Assets</button>
     </div>
     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+      <button class="btn btn-primary" onclick="asegurarLogo()" style="flex:1;min-width:120px;">🎯 Asegurar Logo</button>
+      <button class="btn btn-primary" onclick="asegurarAvatar()" style="flex:1;min-width:120px;">👤 Asegurar Avatar</button>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
       <button class="btn btn-secondary" onclick="mostrarResumen()" style="flex:1;min-width:120px;">📊 Resumen</button>
       <button class="btn btn-secondary" onclick="mostrarPendientes()" style="flex:1;min-width:120px;">🔄 Pendientes</button>
     </div>
@@ -970,6 +982,107 @@ function getBriefSidebarHtml() {
           resultEl.innerHTML = '<strong>Error generando assets</strong><br>' + err.message;
         })
         .generateAssetsViaNode(id);
+    }
+
+    // ── Asegurar Logo slot 1 LAPVTFU ──────────────────────────────────────
+    function asegurarLogo() {
+      const id = document.getElementById('companySelect').value;
+      if (!id) { alert('Selecciona una empresa'); return; }
+
+      const progressEl = document.getElementById('progress');
+      const fillEl = document.getElementById('progressFill');
+      const textEl = document.getElementById('progressText');
+      const resultEl = document.getElementById('result');
+
+      progressEl.style.display = 'block';
+      resultEl.style.display = 'none';
+      fillEl.style.width = '30%';
+      textEl.textContent = 'Asegurando logo.png (limpiar / crear / compartir)...';
+
+      google.script.run
+        .withSuccessHandler(data => {
+          progressEl.style.display = 'none';
+          if (!data || data.status === 'error') {
+            resultEl.style.display = 'block';
+            resultEl.style.background = '#3d0000';
+            resultEl.style.border = '1px solid #ff4444';
+            resultEl.innerHTML = '<strong>Error logo</strong><br>' + ((data && data.error) || 'desconocido');
+            return;
+          }
+          const d = data.data || {};
+          const ok = d.success !== false && d.url;
+          resultEl.style.display = 'block';
+          resultEl.style.background = ok ? '#0d3320' : '#3d2e00';
+          resultEl.style.border = '1px solid ' + (ok ? '#00d4aa' : '#ffb700');
+          resultEl.innerHTML = ok
+            ? '<strong>✅ Logo asegurado</strong><br>' +
+              '<span style="font-size:11px;">origen: ' + (d.source || '?') + ' · vector: ' + (d.vectorUpdated ? 'slot 1 escrito' : 'sin cambio') + '</span><br>' +
+              '<a href="' + d.url + '" target="_blank" style="font-size:11px; color:#00d4aa;">Abrir logo.png</a>' +
+              (d.faviconUrl ? ' · <a href="' + d.faviconUrl + '" target="_blank" style="font-size:11px; color:#00d4aa;">favicon.png</a>' : '')
+            : '<strong>⚠️ Logo</strong><br>' + (d.error || d.status || 'sin URL');
+        })
+        .withFailureHandler(err => {
+          progressEl.style.display = 'none';
+          resultEl.style.display = 'block';
+          resultEl.style.background = '#3d0000';
+          resultEl.style.border = '1px solid #ff4444';
+          resultEl.innerHTML = '<strong>Error logo</strong><br>' + err.message;
+        })
+        .ensureLogoViaNode(id);
+    }
+
+    // ── Asegurar Avatar slot 2 LAPVTFU ────────────────────────────────────
+    // Gate = fotopersonal.png en cte<id>/ (la sube el usuario; nunca se crea).
+    function asegurarAvatar() {
+      const id = document.getElementById('companySelect').value;
+      if (!id) { alert('Selecciona una empresa'); return; }
+
+      const progressEl = document.getElementById('progress');
+      const fillEl = document.getElementById('progressFill');
+      const textEl = document.getElementById('progressText');
+      const resultEl = document.getElementById('result');
+
+      progressEl.style.display = 'block';
+      resultEl.style.display = 'none';
+      fillEl.style.width = '30%';
+      textEl.textContent = 'Asegurando avatar.png (fotopersonal → caricatura)...';
+
+      google.script.run
+        .withSuccessHandler(data => {
+          progressEl.style.display = 'none';
+          if (!data || data.status === 'error') {
+            resultEl.style.display = 'block';
+            resultEl.style.background = '#3d0000';
+            resultEl.style.border = '1px solid #ff4444';
+            resultEl.innerHTML = '<strong>Error avatar</strong><br>' + ((data && data.error) || 'desconocido');
+            return;
+          }
+          const d = data.data || {};
+          resultEl.style.display = 'block';
+          if (d.status === 'no_foto') {
+            resultEl.style.background = '#3d2e00';
+            resultEl.style.border = '1px solid #ffb700';
+            resultEl.innerHTML = '<strong>⚠️ Sin fotopersonal.png</strong><br>' +
+              '<span style="font-size:11px;">' + (d.reason || 'Sube fotopersonal.png a la raíz de cte' + id + ' y vuelve a intentar') + '</span>';
+            return;
+          }
+          const ok = d.success !== false && d.url;
+          resultEl.style.background = ok ? '#0d3320' : '#3d0000';
+          resultEl.style.border = '1px solid ' + (ok ? '#00d4aa' : '#ff4444');
+          resultEl.innerHTML = ok
+            ? '<strong>✅ Avatar asegurado</strong><br>' +
+              '<span style="font-size:11px;">origen: ' + (d.source || '?') + ' · vector: ' + (d.vectorUpdated ? 'slot 2 escrito' : 'sin cambio') + '</span><br>' +
+              '<a href="' + d.url + '" target="_blank" style="font-size:11px; color:#00d4aa;">Abrir avatar.png</a>'
+            : '<strong>⚠️ Avatar</strong><br>' + (d.error || d.status || 'sin URL');
+        })
+        .withFailureHandler(err => {
+          progressEl.style.display = 'none';
+          resultEl.style.display = 'block';
+          resultEl.style.background = '#3d0000';
+          resultEl.style.border = '1px solid #ff4444';
+          resultEl.innerHTML = '<strong>Error avatar</strong><br>' + err.message;
+        })
+        .ensureAvatarViaNode(id);
     }
 
     // ── Ver Assets existentes vía GAS proxy → Node.js ─────────────────────

@@ -64,5 +64,5 @@ actions:
     - "saveAiConversation, saveAiMemory, getAiMemory, listAiModels"
     - "createSupportTicket, updateRow, orchestrate, createReservation"
     - "getAll (variante POST), syncToSupabase, migrateRRSS"
-    - "saveBriefMetadata, ensureCteFolders, generateAsset, generateAllAssets, getBriefAssets, updateBriefVector — grupo Brief (backend/core.js:325-390)"
+    - "saveBriefMetadata, ensureCteFolders, generateAsset, generateAllAssets, getBriefAssets, updateBriefVector, ensureLogoUrl, ensureAvatarUrl — grupo Brief (backend/core.js)"
   default_fallback: '"ACTION_WAITING: " + action — el error que se ve cuando el deployment NO tiene ese case todavía (síntoma de deployment desactualizado, no de código)'

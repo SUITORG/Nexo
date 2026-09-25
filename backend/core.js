@@ -404,6 +404,14 @@ function handlePostAction(data, result) {
         output.success = assetsResult.success;
         output.assets = assetsResult.assets || {};
         break;
+      case "ensureLogoUrl":
+        var ensureLogoResult = ensureLogoUrl(data.id_empresa, data.opts || {});
+        for (var elrKey in ensureLogoResult) output[elrKey] = ensureLogoResult[elrKey];
+        break;
+      case "ensureAvatarUrl":
+        var ensureAvatarResult = ensureAvatarUrl(data.id_empresa, data.opts || {});
+        for (var eavrKey in ensureAvatarResult) output[eavrKey] = ensureAvatarResult[eavrKey];
+        break;
       case "updateBriefVector":
         var vectorResult = updateBriefVector(data.id_empresa, data.vector);
         output.success = vectorResult.success;
@@ -703,6 +711,7 @@ function saveBriefMetadata(idEmpresa, vector, confianza) {
 //   │   ├── brief.json
 //   │   └── confianza.json
 //   ├── logo.png         ← slot 1 LAPVTFU (directo en cte<id>, ADR-028)
+//   ├── favicon.png      ← espejo de logo.png (se crea/sincroniza en ensureLogoUrl)
 //   ├── _activos/
 //   │   ├── avatar/
 //   │   ├── fotos-personales/
@@ -803,14 +812,21 @@ function generateAsset(idEmpresa, tipo, opts) {
 
     // ADR-028: logo.png vive directo en cte<id>/ (nombre fijo, overwrite)
     if (tipo === "logo") {
-      var existing = cteFolder.getFilesByName("logo.png");
-      while (existing.hasNext()) existing.next().setTrashed(true);
       if (opts.imageUrl) {
         var logoBlob = UrlFetchApp.fetch(opts.imageUrl).getBlob();
-        var logoFile = cteFolder.createFile(logoBlob.setName("logo.png"));
-        return { success: true, fileName: "logo.png", fileUrl: logoFile.getUrl(), tipo: "logo" };
+        _writeLogoPng_(cteFolder, logoBlob);
+        var createdLogo = cteFolder.getFilesByName("logo.png").next();
+        return { success: true, fileName: "logo.png", fileUrl: createdLogo.getUrl(), tipo: "logo" };
       }
-      return _createPlaceholderAsset(cteFolder, "logo", idEmpresa, "logo", opts, "logo.png");
+      // No destruir logo.png existente ni basura vieja — reutilizar ensureLogoUrl
+      return ensureLogoUrl(idEmpresa, {});
+    }
+
+    // ADR-028: avatar.png vive directo en cte<id>/ — gate = fotopersonal.png.
+    // Nunca placeholder ni descarga del slot: ensureAvatarUrl decide
+    // (no_foto → skip | existing → reutiliza | needs_generate → Node+Gemini).
+    if (tipo === "avatar") {
+      return ensureAvatarUrl(idEmpresa, {});
     }
 
     var activosFolders = cteFolder.getFoldersByName("_activos");
@@ -829,19 +845,7 @@ function generateAsset(idEmpresa, tipo, opts) {
     var fileName = tipo + "_" + idEmpresa + "_" + timestamp;
 
     // ── Generar según tipo ───────────────────────────────────────────────
-    if (tipo === "logo" || tipo === "avatar") {
-      // Logo y avatar: descargar de URL proporcionada o crear placeholder
-      if (opts.imageUrl) {
-        var blob = UrlFetchApp.fetch(opts.imageUrl).getBlob();
-        var ext = opts.imageUrl.match(/\.(png|jpg|jpeg|gif|svg)/i)?.[1] || 'png';
-        fileName += '.' + ext;
-        tipoFolder.createFile(blob.setName(fileName));
-        return { success: true, fileName: fileName, fileUrl: tipoFolder.getUrl(), tipo: tipo };
-      }
-      // Placeholder: crear imagen con texto
-      return _createPlaceholderAsset(tipoFolder, fileName, idEmpresa, tipo, opts);
-
-    } else if (tipo === "fotos-personales" || tipo === "fotos") {
+    if (tipo === "fotos-personales" || tipo === "fotos") {
       // Fotos: descargar de URL (Pexels/Unsplash)
       if (opts.imageUrl) {
         var blob = UrlFetchApp.fetch(opts.imageUrl).getBlob();
@@ -880,40 +884,315 @@ function generateAsset(idEmpresa, tipo, opts) {
 }
 
 /**
- * Crea un asset placeholder (imagen con texto) para logo/avatar.
- * @param {string} [fixedName] - nombre fijo de archivo (ej "logo.png") en vez de timestamp
+ * Asegura logo.png en cte<id>, lo comparte (anyone-with-link) y escribe la URL
+ * en el slot 1 del segmento LAPVTFU del vector (sobrescribe solo ese slot).
+ *
+ * opts:
+ *   { base64: string }  → crear/overwrite logo.png desde base64 (procesado rembg)
+ *   { createInitials: true } → forzar creación de iniciales aunque haya candidatos
+ *
+ * @returns {object} { success, status, url?, fileId?, vectorUpdated?, candidates?, base64?, source? }
+ *   status: ready | needs_clean | created
  */
-function _createPlaceholderAsset(folder, fileName, idEmpresa, tipo, opts, fixedName) {
+function ensureLogoUrl(idEmpresa, opts) {
+  opts = opts || {};
   try {
-    var texto = opts.texto || idEmpresa;
-    // Crear imagen placeholder con CanvasService (GAS)
-    var canvas = Trends.newCanvas(400, 400);
-    var ctx = Trends.newContext(canvas);
+    ensureCteFolders(idEmpresa);
+    var rootFolder = getRootFolder_();
+    var cteFolder = findCteFolder_(rootFolder, idEmpresa);
+    if (!cteFolder) return { success: false, error: "cte" + idEmpresa + " no existe" };
 
-    // Fondo
-    ctx.fillStyle = tipo === 'logo' ? '#1a1a2e' : '#0d3320';
-    ctx.fillRect(0, 0, 400, 400);
+    var empresa = _getEmpresaRow_(idEmpresa) || {};
 
-    // Texto
-    ctx.fillStyle = '#00d4aa';
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(texto.substring(0, 10).toUpperCase(), 200, 200);
+    // 1) opts.base64 → escribir logo.png procesado
+    if (opts.base64) {
+      var bytes = Utilities.base64Decode(opts.base64);
+      _writeLogoPng_(cteFolder, Utilities.newBlob(bytes, 'image/png', 'logo.png'));
+      return _finalizeLogo_(cteFolder, idEmpresa, 'processed');
+    }
 
-    var blob = Trends.newBlob(canvas, 'image/png');
-    var outName = fixedName || (fileName + '.png');
-    var outFile = folder.createFile(blob.setName(outName));
-    return { success: true, fileName: outName, fileUrl: outFile.getUrl(), tipo: tipo };
+    // 2) logo.png ya existe → compartir + write-back
+    var existingPng = cteFolder.getFilesByName('logo.png');
+    if (existingPng.hasNext()) {
+      return _finalizeLogo_(cteFolder, idEmpresa, 'existing');
+    }
+
+    // 3) candidatos con "logo" en el nombre → pedir limpieza (Node hace rembg)
+    if (!opts.createInitials) {
+      var candidates = _listFilesInfo_(cteFolder.getFiles(), /logo/i);
+      if (!candidates.length) {
+        // fallback _activos/logo/
+        var actFolders = cteFolder.getFoldersByName('_activos');
+        if (actFolders.hasNext()) {
+          var logoOld = actFolders.next().getFoldersByName('logo');
+          if (logoOld.hasNext()) candidates = _listFilesInfo_(logoOld.next().getFiles());
+        }
+      }
+      if (candidates.length) {
+        var best = _pickBestLogoCandidate_(candidates);
+        var bestBase64 = '';
+        try {
+          bestBase64 = Utilities.base64Encode(DriveApp.getFileById(best.id).getBlob().getBytes());
+        } catch (eBest) { /* continuar sin base64 */ }
+        return { success: true, status: 'needs_clean', candidates: candidates, best: best, base64: bestBase64 };
+      }
+    }
+
+    // 4) nada → crear iniciales (opción A) con color_tema del registro
+    var nombre = empresa.nomempresa || empresa.nombreempresa || idEmpresa;
+    var color = empresa.color_tema || '#2563eb';
+    var ini = _inicialesDe_(nombre);
+    var phUrl = 'https://placehold.co/400x400/' + String(color).replace('#', '') + '/ffffff/png?text=' + encodeURIComponent(ini);
+    var iniBlob = UrlFetchApp.fetch(phUrl).getBlob();
+    _writeLogoPng_(cteFolder, iniBlob);
+    return _finalizeLogo_(cteFolder, idEmpresa, 'initials');
   } catch (e) {
-    // Fallback: crear archivo de texto con instrucciones
-    var instructions = tipo === 'logo'
-      ? "LOGO PLACEHOLDER — Reemplazar con el logo real de " + idEmpresa
-      : "AVATAR PLACEHOLDER — Reemplazar con el avatar real de " + idEmpresa;
-    var txtName = fixedName ? fixedName.replace(/\.png$/, '.txt') : (fileName + '.txt');
-    folder.createFile(txtName, instructions, MimeType.PLAIN_TEXT);
-    return { success: true, fileName: txtName, fileUrl: folder.getUrl(), tipo: tipo, placeholder: true };
+    return { success: false, error: 'ENSURE_LOGO_ERROR: ' + e.message };
   }
+}
+
+function _finalizeLogo_(cteFolder, idEmpresa, source) {
+  var files = cteFolder.getFilesByName('logo.png');
+  if (!files.hasNext()) return { success: false, error: 'logo.png no encontrado tras crear' };
+  var logoFile = files.next();
+  logoFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  var url = 'https://drive.google.com/uc?export=view&id=' + logoFile.getId();
+
+  var currentVector = _getLogoUrlVector_(idEmpresa);
+  var newVector = _setLapvtfuSlot_(currentVector, 0, url);
+  var vectorUpdated = false;
+  if (newVector !== currentVector) {
+    var wr = updateBriefVector(idEmpresa, newVector);
+    vectorUpdated = !!(wr && wr.success);
+  }
+
+  // favicon.png en cte<id> (best-effort — un fallo no tumba el logo).
+  // source='existing' → logo no cambió en esta pasada: solo crear si falta.
+  var fav = _ensureFavicon_(cteFolder, logoFile, source !== 'existing');
+
+  return {
+    success: true,
+    status: 'ready',
+    url: url,
+    fileId: logoFile.getId(),
+    fileName: 'logo.png',
+    source: source,
+    vectorUpdated: vectorUpdated,
+    faviconUrl: fav ? fav.url : '',
+    faviconFileId: fav ? fav.fileId : ''
+  };
+}
+
+/**
+ * favicon.png en cte<id> — copia del blob de logo.png, compartido
+ * anyone-with-link. force=true (logo recién escrito) → sobrescribe el
+ * favicon viejo para mantenerlos sincronizados; force=false → solo crea
+ * si falta. Devuelve { url, fileId } o null (best-effort).
+ */
+function _ensureFavicon_(cteFolder, logoFile, force) {
+  try {
+    var existing = cteFolder.getFilesByName('favicon.png');
+    if (existing.hasNext()) {
+      if (!force) {
+        var cur = existing.next();
+        return { url: 'https://drive.google.com/uc?export=view&id=' + cur.getId(), fileId: cur.getId() };
+      }
+      while (existing.hasNext()) existing.next().setTrashed(true); // solo favicon.png
+    }
+    var fav = cteFolder.createFile(logoFile.getBlob().setName('favicon.png'));
+    fav.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return { url: 'https://drive.google.com/uc?export=view&id=' + fav.getId(), fileId: fav.getId() };
+  } catch (eFav) {
+    return null;
+  }
+}
+
+/**
+ * Asegura avatar.png en cte<id>/ (raíz, ADR-028), lo comparte y escribe la URL
+ * en el slot 2 del segmento LAPVTFU.
+ *
+ * Regla del usuario (2026-09-24):
+ *   - SIN fotopersonal.png → status 'no_foto': NO se crea avatar, jamás
+ *     placeholder, jamás fallback al logo. La foto la sube el usuario a mano.
+ *   - CON fotopersonal.png y sin avatar.png → status 'needs_generate' con
+ *     base64 de la foto: Node llama a Gemini 2.5 Flash Image (caricatura
+ *     fiel a la foto) y re-postea opts.base64.
+ *
+ * opts:
+ *   { base64: string } → escribe avatar.png desde base64 (caricatura generada)
+ *
+ * @returns {object} { success, status, url?, fileId?, vectorUpdated?, base64?, mime?, foto?, source? }
+ *   status: ready | needs_generate | no_foto
+ */
+function ensureAvatarUrl(idEmpresa, opts) {
+  opts = opts || {};
+  try {
+    ensureCteFolders(idEmpresa);
+    var rootFolder = getRootFolder_();
+    var cteFolder = findCteFolder_(rootFolder, idEmpresa);
+    if (!cteFolder) return { success: false, error: "cte" + idEmpresa + " no existe" };
+
+    // 1) opts.base64 → escribir avatar.png (caricatura desde Gemini)
+    if (opts.base64) {
+      var bytes = Utilities.base64Decode(opts.base64);
+      _writeAvatarPng_(cteFolder, Utilities.newBlob(bytes, 'image/png', 'avatar.png'));
+      return _finalizeAvatar_(cteFolder, idEmpresa, 'generated');
+    }
+
+    // 2) avatar.png ya existe → compartir + write-back (idempotente)
+    var existingPng = cteFolder.getFilesByName('avatar.png');
+    if (existingPng.hasNext()) {
+      return _finalizeAvatar_(cteFolder, idEmpresa, 'existing');
+    }
+
+    // 3) fotopersonal.png en raíz de cte<id> → pedir generación (Node+Gemini)
+    var fotos = _listFilesInfo_(cteFolder.getFiles(), /^fotopersonal\.(png|jpe?g|webp)$/i);
+    if (!fotos.length) {
+      return {
+        success: true,
+        status: 'no_foto',
+        reason: 'fotopersonal.png no existe en cte' + idEmpresa + ' — súbela a la raíz de la carpeta (la sube el usuario, nunca se genera)'
+      };
+    }
+    var foto = fotos[0];
+    var ext = (foto.name.match(/\.(png|jpe?g|webp)$/i) || [])[1] || 'png';
+    var mime = /jpe?g/i.test(ext) ? 'image/jpeg' : (/webp/i.test(ext) ? 'image/webp' : 'image/png');
+    var fotoBase64 = Utilities.base64Encode(DriveApp.getFileById(foto.id).getBlob().getBytes());
+    return { success: true, status: 'needs_generate', foto: foto, base64: fotoBase64, mime: mime };
+  } catch (e) {
+    return { success: false, error: 'ENSURE_AVATAR_ERROR: ' + e.message };
+  }
+}
+
+function _finalizeAvatar_(cteFolder, idEmpresa, source) {
+  var files = cteFolder.getFilesByName('avatar.png');
+  if (!files.hasNext()) return { success: false, error: 'avatar.png no encontrado tras crear' };
+  var avatarFile = files.next();
+  avatarFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  var url = 'https://drive.google.com/uc?export=view&id=' + avatarFile.getId();
+
+  var currentVector = _getLogoUrlVector_(idEmpresa);
+  var newVector = _setLapvtfuSlot_(currentVector, 1, url);
+  var vectorUpdated = false;
+  if (newVector !== currentVector) {
+    var wr = updateBriefVector(idEmpresa, newVector);
+    vectorUpdated = !!(wr && wr.success);
+  }
+
+  return {
+    success: true,
+    status: 'ready',
+    url: url,
+    fileId: avatarFile.getId(),
+    fileName: 'avatar.png',
+    source: source,
+    vectorUpdated: vectorUpdated
+  };
+}
+
+/** Sobrescribe SOLO avatar.png en la raíz de cte<id>. */
+function _writeAvatarPng_(folder, blob) {
+  var existing = folder.getFilesByName('avatar.png');
+  while (existing.hasNext()) existing.next().setTrashed(true); // solo avatar.png
+  return folder.createFile(blob.setName('avatar.png'));
+}
+
+/**
+ * Lee el vector actual de Config_Empresas.logo_url para id_empresa.
+ * (Extraído de _finalizeLogo_ — usado también por _finalizeAvatar_.)
+ */
+function _getLogoUrlVector_(idEmpresa) {
+  var ss = getSS();
+  var sheet = ss.getSheetByName('Config_Empresas');
+  if (!sheet) return '';
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0].map(function(h) { return String(h).toLowerCase().trim().replace(/\s+/g, '_'); });
+  var idIdx = headers.indexOf('id_empresa');
+  var logoIdx = headers.indexOf('logo_url');
+  if (idIdx === -1 || logoIdx === -1) return '';
+  for (var r = 1; r < data.length; r++) {
+    if (String(data[r][idIdx]).trim().toLowerCase() === String(idEmpresa).trim().toLowerCase()) {
+      return String(data[r][logoIdx] || '').trim();
+    }
+  }
+  return '';
+}
+
+/**
+ * Sobrescribe SOLO el slot `idx` del segmento LAPVTFU; conserva los otros 6.
+ * idx: 0 = logo, 1 = avatar (sin fallback avatar=logo — decisión 2026-09-24).
+ */
+function _setLapvtfuSlot_(vector, idx, url) {
+  function blankVector() {
+    var slots = ['', '', '', '', '', '', ''];
+    slots[idx] = url;
+    return 'LAPVTFU: ' + slots.join(',');
+  }
+  if (!vector || !String(vector).trim()) return blankVector();
+  var segs = String(vector).split('|');
+  var found = false;
+  for (var i = 0; i < segs.length; i++) {
+    if (/^\s*LAPVTFU\s*:/i.test(segs[i])) {
+      var colon = segs[i].indexOf(':');
+      var parts = segs[i].slice(colon + 1).split(',');
+      while (parts.length < 7) parts.push('');
+      parts[idx] = url;
+      segs[i] = 'LAPVTFU: ' + parts.join(',');
+      found = true;
+      break;
+    }
+  }
+  if (!found) segs.push(blankVector());
+  return segs.join('|');
+}
+
+function _writeLogoPng_(folder, blob) {
+  var existing = folder.getFilesByName('logo.png');
+  while (existing.hasNext()) existing.next().setTrashed(true); // solo logo.png; basura vieja se queda
+  return folder.createFile(blob.setName('logo.png'));
+}
+
+function _inicialesDe_(nombre) {
+  var words = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return 'XX';
+  if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+  return words.slice(0, 3).map(function(w) { return w.charAt(0); }).join('').toUpperCase();
+}
+
+function _getEmpresaRow_(idEmpresa) {
+  try {
+    var ss = getSS();
+    var sheet = ss.getSheetByName('Config_Empresas');
+    if (!sheet) return null;
+    var data = sheet.getDataRange().getValues();
+    var headers = data[0].map(function(h) { return String(h).toLowerCase().trim().replace(/\s+/g, '_'); });
+    var idIdx = headers.indexOf('id_empresa');
+    if (idIdx === -1) return null;
+    for (var r = 1; r < data.length; r++) {
+      if (String(data[r][idIdx]).trim().toLowerCase() === String(idEmpresa).trim().toLowerCase()) {
+        var row = {};
+        for (var h = 0; h < headers.length; h++) row[headers[h]] = data[r][h];
+        return row;
+      }
+    }
+  } catch (e) { /* best-effort */ }
+  return null;
+}
+
+/** Prefiere logo.png exacto > *removebg* > .png > .jpg > más grande. */
+function _pickBestLogoCandidate_(candidates) {
+  var scored = candidates.map(function(c) {
+    var name = String(c.name || '');
+    var s = 0;
+    if (name === 'logo.png') s += 1000;
+    if (/removebg/i.test(name)) s += 100;
+    if (/\.png$/i.test(name)) s += 50;
+    if (/\.jpe?g$/i.test(name)) s += 30;
+    s += Math.min(Number(c.size || 0) / 10000, 20);
+    return { c: c, s: s };
+  });
+  scored.sort(function(a, b) { return b.s - a.s; });
+  return scored[0].c;
 }
 
 /**
@@ -937,6 +1216,14 @@ function generateAllAssets(idEmpresa, activos) {
   for (var i = 0; i < tipos.length; i++) {
     var t = tipos[i];
     var valor = activos[t.campo] || '';
+
+    // Avatar: el gate es fotopersonal.png (ensureAvatarUrl decide),
+    // NO el contenido del slot — así "Crear assets" nunca duplica el logo.
+    if (t.tipo === "avatar") {
+      results.push({ tipo: t.tipo, ...generateAsset(idEmpresa, "avatar", {}) });
+      continue;
+    }
+
     if (!valor || valor.trim() === '' || valor.includes('[PENDIENTE')) {
       results.push({ tipo: t.tipo, status: "skipped", reason: "campo vacío" });
       continue;
@@ -982,9 +1269,11 @@ function getBriefAssets(idEmpresa) {
     var assets = {};
     var tipos = ["logo", "avatar", "fotos-personales", "videos", "testimonios", "fotos", "ugc"];
 
-    // ADR-028: logo desde raíz de cte<id> — cualquier archivo con "logo" en el
-    // nombre (reales: "Logo", "TopLuxFinance-removebg-logo.jpg"); fallback _activos/logo/
-    assets["logo"] = _listFilesInfo_(cteFolder.getFiles(), /logo/i);
+    // ADR-028: logo desde raíz de cte<id> — preferir match exacto logo.png (G4);
+    // si no, cualquier archivo con "logo" en el nombre; fallback _activos/logo/
+    var logoFiles = _listFilesInfo_(cteFolder.getFiles(), /logo/i);
+    var exactPng = logoFiles.filter(function(f) { return f.name === 'logo.png'; });
+    assets["logo"] = exactPng.length ? exactPng : logoFiles;
     if (!assets["logo"].length) {
       var actFolders = cteFolder.getFoldersByName("_activos");
       if (actFolders.hasNext()) {
@@ -993,12 +1282,26 @@ function getBriefAssets(idEmpresa) {
       }
     }
 
+    // ADR-028: avatar.png también vive en raíz de cte<id>; fallback _activos/avatar/
+    var avatarFiles = _listFilesInfo_(cteFolder.getFiles(), /^avatar\.png$/i);
+    assets["avatar"] = avatarFiles;
+
     var activosFolders = cteFolder.getFoldersByName("_activos");
     var activosFolder = activosFolders.hasNext() ? activosFolders.next() : null;
 
     for (var i = 0; i < tipos.length; i++) {
       var tipo = tipos[i];
       if (tipo === "logo") continue;
+      if (tipo === "avatar") {
+        // raíz ya resuelta arriba; si vacía, caer a _activos/avatar/ (legado)
+        if (assets["avatar"].length) continue;
+        if (activosFolder) {
+          var avFolders = activosFolder.getFoldersByName("avatar");
+          if (avFolders.hasNext()) assets["avatar"] = _listFilesInfo_(avFolders.next().getFiles());
+        }
+        if (!assets["avatar"].length) assets["avatar"] = [];
+        continue;
+      }
       if (!activosFolder) { assets[tipo] = []; continue; }
       var tipoFolders = activosFolder.getFoldersByName(tipo);
       if (!tipoFolders.hasNext()) { assets[tipo] = []; continue; }

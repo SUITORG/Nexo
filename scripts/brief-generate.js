@@ -227,7 +227,9 @@ function parseBrief(briefVectorRaw, empresaRow) {
             const parts = value.split(',').map(s => s.trim());
             while (parts.length < 7) parts.push('');
             const [logo, avatarRaw, fotoPersonal, videos, testimonios, fotos, ugc] = parts;
-            brief.activos = { logo, avatar: avatarRaw || logo, fotoPersonal, videos, testimonios, fotos, ugc };
+            // Sin fallback avatar=logo (decisión 2026-09-24) — el avatar real
+            // lo escribe ensureAvatarUrl en el slot 2 desde fotopersonal.png.
+            brief.activos = { logo, avatar: avatarRaw, fotoPersonal, videos, testimonios, fotos, ugc };
             continue;
         }
         if (BRIEF_LIST_FIELDS[key]) {
@@ -887,7 +889,7 @@ router.post('/api/brief/assets', async (req, res) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'ensureCteFolders', id_empresa }),
             redirect: 'follow'
-        });
+        }, 2, 180000);
 
         const empresaRow = await fetchEmpresaRow(id_empresa);
         if (!empresaRow) throw new Error(`Empresa "${id_empresa}" no encontrada`);
@@ -900,7 +902,30 @@ router.post('/api/brief/assets', async (req, res) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'generateAllAssets', id_empresa, activos }),
             redirect: 'follow'
-        });
+        }, 2, 180000);
+
+        // Avatar delegado a ensureAvatarUrl: si GAS pidió generación,
+        // completar acá con Gemini y re-postear (mismo patrón que ensure-logo).
+        const results = gasResult.results || [];
+        const avIdx = results.findIndex(r => r.tipo === 'avatar' && r.status === 'needs_generate' && r.base64);
+        if (avIdx !== -1) {
+            try {
+                const avatarB64 = await generateAvatarImage(results[avIdx].base64, results[avIdx].mime);
+                const { json: fin } = await fetchGasJson(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'ensureAvatarUrl', id_empresa, opts: { base64: avatarB64 } }),
+                    redirect: 'follow'
+                }, 2, 180000);
+                results[avIdx] = { tipo: 'avatar', ...fin };
+                serverLog('INFO', `[BRIEF_ASSETS] ${id_empresa}: avatar generado (${fin.status || 'error'})`);
+            } catch (eAv) {
+                serverLog('ERROR', `[BRIEF_ASSETS] avatar Gemini falló: ${eAv.message}`);
+                results[avIdx] = { tipo: 'avatar', status: 'error', error: 'Gemini: ' + eAv.message };
+            }
+            gasResult.results = results;
+            gasResult.generated = results.filter(r => r.success).length;
+        }
 
         serverLog('INFO', `[BRIEF_ASSETS] ${gasResult.generated || 0}/${gasResult.total || 0} assets generados para "${id_empresa}"`);
 
@@ -933,6 +958,168 @@ router.get('/api/brief/assets', async (req, res) => {
         res.json({ status: 'success', data: gasResult });
     } catch (e) {
         serverLog('ERROR', `[BRIEF_ASSETS_GET] ${e.message}`);
+        res.status(500).json({ status: 'error', error: e.message });
+    }
+});
+
+// ── POST /api/brief/ensure-logo — slot 1 LAPVTFU ─────────────────────────
+// Flujo: GAS ensureLogoUrl → si needs_clean: rembg local → re-post con base64
+// → GAS escribe logo.png, comparte (anyone-with-link) y actualiza solo el
+// slot 1 del segmento LAPVTFU (los otros 6 slots intactos).
+async function removeBgBase64(inputB64) {
+    const { execFile } = require('child_process');
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+    const py = [
+        'import sys, base64, io',
+        'from rembg import remove',
+        'from PIL import Image',
+        'raw = base64.b64decode(sys.stdin.buffer.read())',
+        'img = Image.open(io.BytesIO(raw))',
+        'out = remove(img)',
+        'buf = io.BytesIO()',
+        'out.save(buf, format="PNG")',
+        'sys.stdout.buffer.write(base64.b64encode(buf.getvalue()))'
+    ].join('\n');
+    return new Promise((resolve, reject) => {
+        const child = execFile('python', ['-c', py], {
+            timeout: 90000,
+            maxBuffer: 32 * 1024 * 1024,
+            windowsHide: true
+        }, (err, stdout, stderr) => {
+            if (err) return reject(new Error(`rembg falló: ${err.message}${stderr ? ' — ' + stderr.slice(0, 200) : ''}`));
+            resolve(String(stdout).trim());
+        });
+        child.stdin.write(inputB64);
+        child.stdin.end();
+    });
+}
+
+router.post('/api/brief/ensure-logo', async (req, res) => {
+    try {
+        const { id_empresa } = req.body || {};
+        if (!id_empresa) return res.status(400).json({ status: 'error', error: 'id_empresa requerido' });
+
+        await fetchGasJson(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'ensureCteFolders', id_empresa }),
+            redirect: 'follow'
+        });
+
+        let { json: result } = await fetchGasJson(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'ensureLogoUrl', id_empresa, opts: {} }),
+            redirect: 'follow'
+        });
+
+        if (result.status === 'needs_clean' && result.base64) {
+            serverLog('INFO', `[ENSURE_LOGO] ${id_empresa}: limpiando candidato "${result.best?.name || '?'}" con rembg`);
+            try {
+                const cleaned = await removeBgBase64(result.base64);
+                ({ json: result } = await fetchGasJson(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'ensureLogoUrl', id_empresa, opts: { base64: cleaned } }),
+                    redirect: 'follow'
+                }));
+            } catch (eRembg) {
+                serverLog('WARN', `[ENSURE_LOGO] rembg falló (${eRembg.message}) → creando iniciales`);
+                ({ json: result } = await fetchGasJson(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'ensureLogoUrl', id_empresa, opts: { createInitials: true } }),
+                    redirect: 'follow'
+                }));
+            }
+        }
+
+        serverLog('INFO', `[ENSURE_LOGO] ${id_empresa}: status=${result.status || 'error'} url=${result.url || '-'} vector=${result.vectorUpdated}`);
+        res.json({ status: result.success === false ? 'error' : 'success', data: result });
+    } catch (e) {
+        serverLog('ERROR', `[ENSURE_LOGO] ${e.message}`);
+        res.status(500).json({ status: 'error', error: e.message });
+    }
+});
+
+// ── POST /api/brief/ensure-avatar — slot 2 LAPVTFU ────────────────────────
+// Flujo: GAS ensureAvatarUrl → ¿fotopersonal.png? no → no_foto (skip, nunca
+// placeholder); sí → Gemini 2.5 Flash Image (Nano Banana) genera la caricatura
+// fiel a la foto → re-post base64 → GAS escribe avatar.png, comparte y
+// actualiza solo el slot 2 (los otros 6 intactos).
+// Verificado en vivo 2026-09-24: GEMINI_API_KEY tiene gemini-2.5-flash-image
+// habilitado — acepta imagen de entrada y devuelve PNG (~1.3MB).
+async function generateAvatarImage(photoB64, photoMime) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('GEMINI_API_KEY no configurada');
+    const prompt = 'Rehaz a la persona de esta foto como una ilustración de caricatura digital semirrealista. ' +
+        'Conserva fielmente sus rasgos faciales, piel, peinado y expresión — debe ser claramente reconocible como la misma persona. ' +
+        'Estilo: caricatura profesional pulida, ilustración digital de alta calidad, trazo limpio. ' +
+        'Composición cuadrada, medio busto, fondo liso neutro. Sin texto ni marcas de agua. Devuelve solo la imagen.';
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [
+                { text: prompt },
+                { inline_data: { mime_type: photoMime || 'image/png', data: photoB64 } }
+            ]}]
+        }),
+        signal: AbortSignal.timeout(60000)
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error?.message || `Gemini HTTP ${res.status}`);
+    const parts = json.candidates?.[0]?.content?.parts || [];
+    const imgPart = parts.find(p => (p.inlineData?.data || p.inline_data?.data));
+    if (!imgPart) {
+        const txt = parts.find(p => p.text)?.text || '';
+        throw new Error('Gemini no devolvió imagen' + (txt ? `: ${txt.slice(0, 150)}` : ''));
+    }
+    const d = imgPart.inlineData || imgPart.inline_data;
+    return d.data;
+}
+
+router.post('/api/brief/ensure-avatar', async (req, res) => {
+    try {
+        const { id_empresa } = req.body || {};
+        if (!id_empresa) return res.status(400).json({ status: 'error', error: 'id_empresa requerido' });
+
+        await fetchGasJson(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'ensureCteFolders', id_empresa }),
+            redirect: 'follow'
+        }, 2, 180000);
+
+        let { json: result } = await fetchGasJson(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'ensureAvatarUrl', id_empresa, opts: {} }),
+            redirect: 'follow'
+        }, 2, 180000);
+
+        if (result.status === 'needs_generate' && result.base64) {
+            serverLog('INFO', `[ENSURE_AVATAR] ${id_empresa}: generando caricatura con Nano Banana desde "${result.foto?.name || '?'}"`);
+            try {
+                const avatarB64 = await generateAvatarImage(result.base64, result.mime);
+                ({ json: result } = await fetchGasJson(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'ensureAvatarUrl', id_empresa, opts: { base64: avatarB64 } }),
+                    redirect: 'follow'
+                }, 2, 180000));
+            } catch (eGem) {
+                serverLog('ERROR', `[ENSURE_AVATAR] Gemini falló: ${eGem.message}`);
+                result = { success: false, status: 'error', error: 'Gemini: ' + eGem.message };
+            }
+        }
+
+        serverLog('INFO', `[ENSURE_AVATAR] ${id_empresa}: status=${result.status || 'error'} url=${result.url || '-'} vector=${result.vectorUpdated}`);
+        res.json({ status: result.success === false ? 'error' : 'success', data: result });
+    } catch (e) {
+        serverLog('ERROR', `[ENSURE_AVATAR] ${e.message}`);
         res.status(500).json({ status: 'error', error: e.message });
     }
 });
