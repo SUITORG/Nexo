@@ -1,18 +1,22 @@
 skill:
   name: brief-engine
   display_name: "Brief Engine - Marketing Brief Generator"
-  version: 1.0.0
+  version: 1.1.0
   type: domain
   domain: marketing
   description: >
-    Generates complete Marketing Briefs (20 fields, pipe-delimited) from a single id_empresa.
+    Generates complete Marketing Briefs (21 segments: 20 content + LAPVTFU at position 10,
+    pipe-delimited) from a single id_empresa.
     Reads Config_Empresas, queries Supabase taxonomy catalogs (industrias/nichos),
     infers missing fields via AI + web research, and writes the Brief vector to logo_url.
-    Validates format: no pipe characters in values, all 20 fields present, enlaces verified.
+    Boundary (SUBCONTRATO-BRIEF.md): writing content preserves the LAPVTFU segment
+    byte-a-byte — assets belong to the lapvtfu skill.
+    Validates format: no pipe characters in values, all 21 segments present, enlaces verified.
     Backs up previous logo_url before overwriting.
   dependencies:
     - multi-tenant
     - javascript
+    - lapvtfu
   triggers:
     - "brief"
     - "brief de marketing"
@@ -25,18 +29,21 @@ skill:
     - file_pattern: "SuitCampanas/**/*.js"
     - file_pattern: "**/brief*"
   context_hint:
+    - "SUBCONTRATO-BRIEF.md"
+    - "scripts/brief-generate.js"
+    - "brief.html"
+    - "backend/brief-sidebar.js"
+    - ".suit/workflows/brief-generation.yaml"
     - "SuitCampanas/BRIEF.MD"
-    - "SuitCampanas/local-server-node.js"
-    - "SuitCampanas/scripts/tmp_test_parser.js"
     - "backend/core.js"
-    - "backend/seeds_master.js"
     - ".suit/skills/domain/design-system.yaml"
+    - ".suit/skills/domain/lapvtfu.yaml"
   rules:
     - id: be-001
       description: "Brief lives in Config_Empresas.logo_url — no new columns"
       severity: error
     - id: be-002
-      description: "20 fields in fixed order: industria, nicho, especializacion, vendes, audiencia, dolor, PBP, lograr, vivir, LAPVTFU, PM, objecion, competidores, tono, PS, RLP, slogan, oferta, descripcion, cta, tipografia"
+      description: "21 segments in fixed order (20 content + LAPVTFU at position 10): industria, nicho, especializacion, vendes, audiencia, dolor, PBP, lograr, vivir, LAPVTFU, PM, objecion, competidores, tono, PS, RLP, slogan, oferta, descripcion, cta, tipografia"
       severity: error
     - id: be-003
       description: "LAPVTFU always has 7 positions — empty slots use [PENDIENTE - Activo]"
@@ -55,6 +62,9 @@ skill:
       severity: warning
     - id: be-008
       description: "Backup previous logo_url before overwriting"
+      severity: error
+    - id: be-009
+      description: "Cell boundary: writing the 20 content segments preserves LAPVTFU byte-a-byte; assets are written only by the lapvtfu skill (SUBCONTRATO-ACTIVOS.md)"
       severity: error
   fields:
     - { num: 1, name: "industria", source: "Supabase catalog", confidence: "A/B" }
@@ -76,7 +86,8 @@ skill:
     - { num: 17, name: "slogan", source: "Config only — never invent", confidence: "A" }
     - { num: 18, name: "oferta", source: "Config or creative", confidence: "A/C" }
     - { num: 19, name: "descripcion", source: "Config only — never invent", confidence: "A" }
-    - { num: 20, name: "tipografia", source: "Config or standard pair", confidence: "A/C" }
+    - { num: 20, name: "cta", source: "Config or creative", confidence: "A/C" }
+    - { num: 21, name: "tipografia", source: "Config or standard pair", confidence: "A/C" }
   format: |
     industria: X |nicho: Y |especializacion: Z |vendes: W |audiencia: A |dolor: B |PBP: C |lograr: D |vivir: E |LAPVTFU: url1,url2,url3,url4,url5,url6,url7 |PM: 0000.00,00% |objecion: F |competidores: G |tono: H |PS: I |RLP: J |slogan: K |oferta: L |descripcion: M |cta: N |tipografia: O
   subagents:
@@ -106,7 +117,7 @@ skill:
       output: "vendes, PBP, lograr, slogan, oferta, descripcion, cta, tipografia"
       execution: sequential (depends on A-D)
     - id: F_ACTIVOS
-      description: "Generate or verify LAPVTFU assets in Drive"
+      description: "Generate or verify LAPVTFU assets in Drive — delegado a la skill lapvtfu (SUBCONTRATO-ACTIVOS.md)"
       input: "id_empresa, nicho, color_tema"
       output: "LAPVTFU URLs"
       execution: parallel (from start)
@@ -122,8 +133,8 @@ skill:
     - "4. Run F in parallel (asset generation/verification)"
     - "5. Run E after A-D complete (consolidate offer/copy)"
     - "6. Run G at end (generate scripts)"
-    - "7. Assemble 20-field vector in fixed order"
-    - "8. Validate: no pipes in values, all fields present"
+    - "7. Assemble 21-segment vector in fixed order (LAPVTFU preservada byte a byte)"
+    - "8. Validate: no pipes in values, all 21 segments present"
     - "9. Backup previous logo_url to cte<id>/_brief/historial/"
     - "10. Write Brief vector to Config_Empresas.logo_url via GAS"
     - "11. Save brief.json + confianza.json to cte<id>/_brief/ in Drive"

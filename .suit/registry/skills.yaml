@@ -373,6 +373,9 @@ skills:
   brief-engine:
     path: .suit/skills/domain/brief-engine.yaml
 
+  lapvtfu:
+    path: .suit/skills/domain/lapvtfu.yaml
+
   prompt-reviewer:
     path: .suit/skills/process/prompt-reviewer.yaml
 
