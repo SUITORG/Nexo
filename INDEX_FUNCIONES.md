@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-09-25 | **Total archivos:** 1560 JS/GS
+**Generado:** 2026-09-26 | **Total archivos:** 1566 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -279,11 +279,12 @@
 | 17 | `isSymlink` |
 | 21 | `getSymlinkTarget` |
 | 25 | `parseSkillsYaml` |
-| 44 | `parseAgentsYaml` |
-| 67 | `parseMcpJson` |
-| 77 | `parseOpencodeCommands` |
-| 82 | `description` |
-| 115 | `getSkillDesc` |
+| 52 | `parseAgentsYaml` |
+| 75 | `parseMcpJson` |
+| 85 | `parseOpencodeCommands` |
+| 90 | `description` |
+| 123 | `getSkillDesc` |
+| 143 | `getSuitSkillDesc` |
 
 ## `AmbuRide/app/src/screens/HomeScreen.js`
 
@@ -10298,6 +10299,45 @@
 | 439 | `imageThumb` |
 | 444 | `escapeHtml` |
 
+## `SuitDashboard/scan.js`
+
+| Línea | Función |
+|-------|---------|
+| 30 | `readJson` |
+| 33 | `exists` |
+| 34 | `readText` |
+| 37 | `parseRegistry` |
+| 65 | `parseOptimal` |
+| 78 | `parseAgentsRegistry` |
+| 98 | `scanClaudeAgents` |
+| 119 | `scanParallelGroups` |
+| 201 | `buildTriggerSources` |
+| 203 | `add` |
+| 213 | `walk` |
+| 235 | `triggersFor` |
+| 236 | `esc` |
+| 260 | `scanScripts` |
+| 286 | `desc` |
+| 295 | `scanPlugins` |
+| 316 | `readSkillDesc` |
+| 329 | `yamlDesc` |
+| 334 | `collectSkills` |
+| 365 | `findPort` |
+| 372 | `checkPort` |
+| 375 | `done` |
+| 384 | `loadEnvKeys` |
+| 395 | `claudeCmdArr` |
+| 402 | `countSkillDirs` |
+| 410 | `claudeContext` |
+| 434 | `pathCheck` |
+| 441 | `test` |
+| 462 | `envRequired` |
+| 464 | `scan` |
+| 473 | `stripAnsi` |
+| 476 | `probeOpenCode` |
+| 494 | `probeClaude` |
+| 508 | `scanProject` |
+
 ## `SuitOSCore/ai-router/circuitBreaker.js`
 
 | Línea | Función |
@@ -10802,46 +10842,47 @@
 | Línea | Función |
 |-------|---------|
 | 23 | `getSidebarSS` |
-| 41 | `NODE_BASE_URL` |
-| 49 | `fetchNode` |
-| 67 | `generateBriefViaNode` |
-| 71 | `writeBriefVectorViaNode` |
-| 75 | `saveBriefMetadataViaNode` |
-| 79 | `generateAssetsViaNode` |
-| 83 | `getBriefAssetsViaNode` |
-| 97 | `ensureLogoViaNode` |
-| 101 | `ensureAvatarViaNode` |
-| 105 | `getBriefCompaniesViaNode` |
-| 120 | `addToMenuBrief` |
-| 137 | `showBriefSidebar` |
-| 145 | `validarBriefSeleccion` |
-| 198 | `parseBriefLocal` |
-| 231 | `generarBriefDesdeMenu` |
-| 260 | `generarAssetsDesdeMenu` |
-| 289 | `copiarVectorDesdeMenu` |
-| 319 | `mostrarResumenConfianza` |
-| 364 | `mostrarPendientes` |
-| 404 | `importarBriefJSON` |
-| 456 | `exportarBriefJSON` |
-| 493 | `shareBriefLink` |
-| 524 | `mostrarHistorialBrief` |
-| 584 | `getConfigValue` |
-| 600 | `getBriefCompanies` |
-| 634 | `getBriefDetails` |
-| 657 | `getBriefSidebarHtml` |
-| 764 | `loadBrief` |
-| 810 | `copyVector` |
-| 819 | `generarBrief` |
-| 929 | `generarAssets` |
-| 988 | `asegurarLogo` |
-| 1036 | `asegurarAvatar` |
-| 1089 | `verAssets` |
-| 1126 | `mostrarResumen` |
-| 1145 | `mostrarPendientes` |
-| 1164 | `exportarJSON` |
-| 1183 | `importarJSON` |
-| 1200 | `shareLink` |
-| 1209 | `mostrarHistorial` |
+| 44 | `NODE_BASE_URL` |
+| 61 | `setNodeBaseUrl_` |
+| 71 | `fetchNode` |
+| 89 | `generateBriefViaNode` |
+| 93 | `writeBriefVectorViaNode` |
+| 97 | `saveBriefMetadataViaNode` |
+| 101 | `generateAssetsViaNode` |
+| 105 | `getBriefAssetsViaNode` |
+| 119 | `ensureLogoViaNode` |
+| 123 | `ensureAvatarViaNode` |
+| 127 | `getBriefCompaniesViaNode` |
+| 142 | `addToMenuBrief` |
+| 159 | `showBriefSidebar` |
+| 167 | `validarBriefSeleccion` |
+| 220 | `parseBriefLocal` |
+| 253 | `generarBriefDesdeMenu` |
+| 282 | `generarAssetsDesdeMenu` |
+| 311 | `copiarVectorDesdeMenu` |
+| 341 | `mostrarResumenConfianza` |
+| 386 | `mostrarPendientes` |
+| 426 | `importarBriefJSON` |
+| 478 | `exportarBriefJSON` |
+| 515 | `shareBriefLink` |
+| 546 | `mostrarHistorialBrief` |
+| 606 | `getConfigValue` |
+| 622 | `getBriefCompanies` |
+| 656 | `getBriefDetails` |
+| 679 | `getBriefSidebarHtml` |
+| 786 | `loadBrief` |
+| 832 | `copyVector` |
+| 841 | `generarBrief` |
+| 951 | `generarAssets` |
+| 1010 | `asegurarLogo` |
+| 1058 | `asegurarAvatar` |
+| 1111 | `verAssets` |
+| 1148 | `mostrarResumen` |
+| 1167 | `mostrarPendientes` |
+| 1186 | `exportarJSON` |
+| 1205 | `importarJSON` |
+| 1222 | `shareLink` |
+| 1231 | `mostrarHistorial` |
 
 ### `backend/core.js`
 
@@ -10855,28 +10896,28 @@
 | 86 | `doGet` |
 | 135 | `doPost` |
 | 146 | `handlePostAction` |
-| 441 | `updateBriefVector` |
-| 475 | `backupBriefVector` |
-| 543 | `generateAndWriteBrief` |
-| 603 | `saveBriefMetadata` |
-| 731 | `ensureCteFolders` |
-| 800 | `generateAsset` |
-| 897 | `ensureLogoUrl` |
-| 954 | `_finalizeLogo_` |
-| 992 | `_ensureFavicon_` |
-| 1027 | `ensureAvatarUrl` |
-| 1067 | `_finalizeAvatar_` |
-| 1094 | `_writeAvatarPng_` |
-| 1104 | `_getLogoUrlVector_` |
-| 1125 | `_setLapvtfuSlot_` |
-| 1126 | `blankVector` |
-| 1149 | `_writeLogoPng_` |
-| 1155 | `_inicialesDe_` |
-| 1162 | `_getEmpresaRow_` |
-| 1183 | `_pickBestLogoCandidate_` |
-| 1204 | `generateAllAssets` |
-| 1263 | `getBriefAssets` |
-| 1337 | `_listFilesInfo_` |
+| 445 | `updateBriefVector` |
+| 479 | `backupBriefVector` |
+| 547 | `generateAndWriteBrief` |
+| 607 | `saveBriefMetadata` |
+| 735 | `ensureCteFolders` |
+| 804 | `generateAsset` |
+| 901 | `ensureLogoUrl` |
+| 958 | `_finalizeLogo_` |
+| 996 | `_ensureFavicon_` |
+| 1031 | `ensureAvatarUrl` |
+| 1071 | `_finalizeAvatar_` |
+| 1098 | `_writeAvatarPng_` |
+| 1108 | `_getLogoUrlVector_` |
+| 1129 | `_setLapvtfuSlot_` |
+| 1130 | `blankVector` |
+| 1153 | `_writeLogoPng_` |
+| 1159 | `_inicialesDe_` |
+| 1166 | `_getEmpresaRow_` |
+| 1187 | `_pickBestLogoCandidate_` |
+| 1208 | `generateAllAssets` |
+| 1267 | `getBriefAssets` |
+| 1341 | `_listFilesInfo_` |
 
 ### `backend/database.js`
 
@@ -11481,6 +11522,13 @@
 | 47 | `extractFunctions` |
 | 106 | `buildIndex` |
 
+### `scripts/install-skill.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `fail` |
+| 15 | `exists` |
+
 ### `scripts/mcp-manager.js`
 
 | Línea | Función |
@@ -11538,6 +11586,16 @@
 |-------|---------|
 | 17 | `checkPort` |
 | 20 | `done` |
+
+### `scripts/tunel.js`
+
+| Línea | Función |
+|-------|---------|
+| 38 | `log` |
+| 40 | `registerUrl` |
+| 62 | `killExistingTunnels` |
+| 73 | `main` |
+| 89 | `onChunk` |
 
 ### `scripts/whatsapp-test.js`
 

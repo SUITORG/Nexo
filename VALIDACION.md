@@ -34,3 +34,25 @@
 **Verdict:** PASS (rutas no_foto, delegaciÃ³n, integridad de vector, E2E generaciÃ³n + write-back slot 2 + idempotencia).
 
 **Sin pendientes bloqueados.** Sin commits (decisiÃ³n: cerrar LAPVTFU primero).
+
+---
+
+## Ciclo gobernanza BRIEF/LAPVTFU (2026-09-25) — F3
+
+| # | Check | Resultado |
+|---|-------|-----------|
+| 1 | `node --check backend/brief-sidebar.js` / `backend/core.js` / `scripts/tunel.js` | PASS |
+| 2 | Parse YAML `lapvtfu.yaml`, `brief-engine.yaml`, `registry/skills.yaml` (js-yaml) | PASS |
+| 3 | `clasp push` + `clasp deploy -i AKfycbz... -d` (ADR-028) | PASS — **@19** |
+| 4 | `POST action=setNodeBaseUrl` con token + URL cloudflared | PASS `{"success":true}` |
+| 5 | `node scripts/tunel.js` E2E: mata túnel previo ? URL nueva ? registra en GAS | PASS `owen-logistics-happy-town` ? property |
+| 6 | `GET {túnel}/api/brief/companies` (sidebar real, GET) | PASS HTTP 200 + empresas |
+| 7 | `node scripts/generate-index.js` (incluye `setNodeBaseUrl_`, `tunel.js`) | PASS 1566 archivos |
+| 8 | Invariante celda #7 en CONTRATO.md + 2 sub-contratos creados | PASS commit `6511736` |
+| 9 | Sidebar GAS (UI en Sheets) | **PENDIENTE — verificación manual del usuario** |
+
+**Verdict:** PASS (9/10 — el check 9 requiere abrir el sidebar en Sheets).
+
+**Commits:** `6511736` f0 contrato · `3a803a7` f2 fix-tunel · pendiente f2/skills + f3.
+**Operación:** para levantar el túnel en el futuro: `node scripts/tunel.js` (auto-registra la URL en GAS).
+**Push a origin:** aplazado — pendiente decisión del usuario.
