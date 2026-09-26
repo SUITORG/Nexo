@@ -423,6 +423,10 @@ function handlePostAction(data, result) {
           output.error = vectorResult.error;
         }
         break;
+      case "setNodeBaseUrl":
+        var nbResult = setNodeBaseUrl_(data.url, data.token);
+        for (var nbrKey in nbResult) output[nbrKey] = nbResult[nbrKey];
+        break;
       default: output.error = "ACTION_WAITING: " + action;
     }
   } finally { lock.releaseLock(); }

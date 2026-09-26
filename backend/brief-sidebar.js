@@ -38,13 +38,35 @@ function getSidebarSS() {
 
 // Valida la property: localhost/127.0.0.1 no sirve desde UrlFetchApp (nube) → DNS error.
 // Si la property está vacía o apunta a la PC local, usa el túnel vivo.
+// Auto-heal: scripts/tunel.js re-registra la URL viva en la property NODE_BASE_URL
+// (action setNodeBaseUrl) cada vez que se reinicia el túnel — este fallback es
+// último recurso, no la fuente de verdad.
 const NODE_BASE_URL = (function () {
   const v = (getConfigValue('NODE_BASE_URL') || '').trim();
-  if (!v || /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(v) || /knock-align-relation-test/.test(v) || /kitty-accessibility-packaging-semiconductor/.test(v)) {
-    return 'https://reservation-ross-checks-douglas.trycloudflare.com';
+  const dead = [
+    'knock-align-relation-test',
+    'kitty-accessibility-packaging-semiconductor',
+    'reservation-ross-checks-douglas',
+    'married-vocabulary-themselves-korea' // túnel muerto que produjo el Error DNS 2026-09-25
+  ];
+  if (!v || /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(v) || dead.some(h => v.includes(h))) {
+    return 'https://stainless-bidder-night-nebraska.trycloudflare.com';
   }
   return v;
 })();
+
+// ── setNodeBaseUrl_: auto-heal del túnel (llamado vía action setNodeBaseUrl) ──
+// scripts/tunel.js publica acá la URL viva de cloudflared. Valida token +
+// host (solo túnel quick de cloudflared) antes de tocar la Script Property.
+function setNodeBaseUrl_(url, token) {
+  if (token !== 'PROTON-77-X') return { success: false, error: 'ERROR_AUTH' };
+  const u = String(url || '').trim();
+  if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com\/?$/.test(u)) {
+    return { success: false, error: 'INVALID_URL: solo https://<túnel>.trycloudflare.com' };
+  }
+  PropertiesService.getScriptProperties().setProperty('NODE_BASE_URL', u.replace(/\/$/, ''));
+  return { success: true, url: u.replace(/\/$/, '') };
+}
 
 function fetchNode(endpoint, payload) {
   try {
