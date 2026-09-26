@@ -43,8 +43,6 @@ prompt para documento de notebook LLM
 
 Genera un documento ejecutivo que sintetice los hallazgos más relevantes de la investigación, destacando patrones comunes, oportunidades detectadas, funcionalidades recomendadas, perfiles de usuario, diferenciadores potenciales y conclusiones prácticas que sirvan como referencia para diseñar el prototipo de la aplicació
 
-
-
 el resultado descargarlo a .MD 
 
 

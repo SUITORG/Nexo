@@ -85,7 +85,7 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
     if (!cancelOrderId) return;
     setCancelling(true);
     try {
-      const result = await processSpecialistCancellation(cancelOrderId, technician.id);
+      await processSpecialistCancellation(cancelOrderId, technician.id);
       setCancelOrderId(null);
       await loadOrders();
     } catch (err) {

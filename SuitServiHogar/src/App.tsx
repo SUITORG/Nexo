@@ -25,6 +25,8 @@ import { GlossaryScreen } from './components/screens/GlossaryScreen';
 import { AdminScreen } from './components/screens/AdminScreen';
 import { PrivacyPolicyScreen } from './components/screens/PrivacyPolicyScreen';
 import { TermsScreen } from './components/screens/TermsScreen';
+import { MarginScreen } from './modules/margin/MarginScreen';
+import { Quote, QuoteGenerator, readSharedQuote } from './modules/margin/components/QuoteGenerator';
 import { TechnicianProfileModal } from './components/modals/TechnicianProfileModal';
 import { ColoniaSelectorModal } from './components/modals/ColoniaSelectorModal';
 import { ScheduleVisitModal } from './components/modals/ScheduleVisitModal';
@@ -80,6 +82,20 @@ export default function App() {
     setCurrentTechnician,
     setAuthLoading,
   });
+
+  // SuitMargin: cotización pública compartida vía enlace #margin-quote=...
+  const [sharedQuote, setSharedQuote] = useState<Quote | null>(null);
+  useEffect(() => {
+    const read = () => setSharedQuote(readSharedQuote(window.location.hash));
+    read();
+    window.addEventListener('hashchange', read);
+    return () => window.removeEventListener('hashchange', read);
+  }, []);
+
+  const closeSharedQuote = () => {
+    setSharedQuote(null);
+    window.history.replaceState(null, '', window.location.pathname);
+  };
 
   // Auth listener
   useEffect(() => {
@@ -164,6 +180,8 @@ export default function App() {
       setCurrentScreen('perfil');
     } else if (currentScreen === 'admin') {
       setCurrentScreen('perfil');
+    } else if (currentScreen === 'margin') {
+      setCurrentScreen('perfil');
     } else if (currentScreen === 'privacy' || currentScreen === 'terms') {
       setCurrentScreen('inicio');
     }
@@ -204,34 +222,6 @@ export default function App() {
     showToast(msg);
   };
 
-  const handlePay = async () => {
-    if (!stripePromise) {
-      handlePayError('Stripe no disponible');
-      return;
-    }
-    const stripe = await stripePromise;
-    if (!stripe) {
-      handlePayError('No se pudo cargar Stripe');
-      return;
-    }
-    const { error } = await stripe.confirmCardPayment(
-      currentOrder.clientSecret || '',
-      { payment_method: { card: null } }
-    );
-    if (error) {
-      handlePayError(error.message || 'Error al procesar el pago');
-    } else {
-      handlePaySuccess();
-    }
-  };
-
-  const formatMxnUsd = (mxn: number, usd: number) => {
-    if (currency === 'USD') {
-      return `$${usd.toFixed(2)} USD (~$${mxn.toFixed(2)} MXN)`;
-    }
-    return `$${mxn.toFixed(2)} MXN (~$${usd.toFixed(2)} USD)`;
-  };
-
   if (authLoading) {
     return (
       <Elements stripe={stripePromise}>
@@ -240,6 +230,16 @@ export default function App() {
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             <p className="text-body-md text-text-muted">Cargando...</p>
           </div>
+        </div>
+      </Elements>
+    );
+  }
+
+  if (sharedQuote) {
+    return (
+      <Elements stripe={stripePromise}>
+        <div className="min-h-screen bg-surface py-6 px-4 max-w-lg mx-auto">
+          <QuoteGenerator quote={sharedQuote} onBack={closeSharedQuote} />
         </div>
       </Elements>
     );
@@ -270,10 +270,13 @@ export default function App() {
       <div className="min-h-screen bg-surface flex flex-col">
         <Header
           currentScreen={currentScreen}
-          onNavigate={handleNavigate}
+          selectedColonia={selectedColonia}
+          currency={currency}
+          onSelectColoniaClick={() => setShowColoniaModal(true)}
+          onToggleCurrency={setCurrency}
+          onBack={handleBack}
+          onShare={() => showToast('Compartiendo comprobante...')}
           user={user}
-          technician={currentTechnician}
-          isAdmin={isAdmin}
           onLogout={async () => {
             await signOut();
             setUser(null);
@@ -281,9 +284,13 @@ export default function App() {
             setIsAdmin(false);
             setCurrentScreen('inicio');
           }}
-          currency={currency}
-          onCurrencyChange={setCurrency}
         />
+
+        {toastMessage && (
+          <div role="alert" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-primary text-on-primary px-4 py-2 rounded-full shadow-lg text-label-sm font-bold max-w-[90%] text-center">
+            {toastMessage}
+          </div>
+        )}
 
         <main className="flex-1 pb-20 overflow-y-auto">
           {showColoniaModal && (
@@ -297,10 +304,9 @@ export default function App() {
           {!dataLoading && currentScreen === 'inicio' && (
             <HomeScreen
               onNavigate={handleNavigate}
-              selectedColonia={selectedColonia}
-              onColoniaChange={setSelectedColonia}
+              onSelectCategory={setSelectedCategoryFilter}
+              onRequestService={() => handleNavigate('explorar')}
               currency={currency}
-              technicians={technicians}
               categories={categories}
             />
           )}
@@ -308,12 +314,14 @@ export default function App() {
           {!dataLoading && currentScreen === 'explorar' && (
             <ExploreScreen
               technicians={technicians}
-              categories={categories}
-              selectedCategory={selectedCategoryFilter}
-              onCategoryChange={setSelectedCategoryFilter}
-              onBookTechnician={handleBookTechnician}
               currency={currency}
-              onNavigate={handleNavigate}
+              selectedColonia={selectedColonia}
+              onSelectColoniaClick={() => setShowColoniaModal(true)}
+              onToggleCurrency={setCurrency}
+              selectedCategoryFilter={selectedCategoryFilter}
+              onSelectCategoryFilter={setSelectedCategoryFilter}
+              onSelectTechnician={setSelectedTechnician}
+              onBookTechnician={handleBookTechnician}
             />
           )}
 
@@ -347,7 +355,7 @@ export default function App() {
               onDownloadXml={() => showToast('Descargando XML timbrado ante el SAT...')}
               onViewMonthlyEarnings={() => showToast('Cargando corte acumulado del mes (Octubre 2024)...')}
               onAskClarification={() => showToast('Mesa de mediación fiscal abierta con soporte Reynosa.')}
-              onShare={handleNavigate}
+              onShare={() => showToast('Compartiendo comprobante...')}
             />
           )}
 
@@ -425,6 +433,10 @@ export default function App() {
           {!dataLoading && currentScreen === 'terms' && (
             <TermsScreen onBack={handleBack} />
           )}
+
+          {!dataLoading && currentScreen === 'margin' && (
+            <MarginScreen onBack={handleBack} />
+          )}
         </main>
 
         {currentScreen !== 'chat' && (
@@ -441,6 +453,15 @@ export default function App() {
             onClose={() => setShowColoniaModal(false)}
           />
         )}
+
+        <TechnicianProfileModal
+          technician={selectedTechnician}
+          onClose={() => setSelectedTechnician(null)}
+          onBook={(tech) => {
+            setSelectedTechnician(null);
+            handleBookTechnician(tech);
+          }}
+        />
 
         {showScheduleModal && (
           <ScheduleVisitModal

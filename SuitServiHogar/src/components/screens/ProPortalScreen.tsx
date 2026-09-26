@@ -25,16 +25,20 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
 
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const refType = isTechnician ? 'technician' : 'client';
-      let code = await getReferralCode(refType, user.id);
-      if (!code) {
-        code = await createReferralCode(refType, user.id, isTechnician ? 150 : 100);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const refType = isTechnician ? 'technician' : 'client';
+        let code = await getReferralCode(refType, user.id);
+        if (!code) {
+          code = await createReferralCode(refType, user.id, isTechnician ? 150 : 100);
+        }
+        if (code) setReferralCode(code);
+        const stats = await getMyReferralStats(refType, user.id);
+        if (stats) setReferralStats({ totalReferrals: stats.totalReferrals, completedReferrals: stats.completedReferrals, pendingReward: stats.totalRewardsMxn });
+      } catch (err) {
+        console.warn('Referral code no disponible:', err);
       }
-      if (code) setReferralCode(code);
-      const stats = await getMyReferralStats(refType, user.id);
-      if (stats) setReferralStats({ totalReferrals: stats.totalReferrals, completedReferrals: stats.completedReferrals, pendingReward: stats.totalRewardsMxn });
     })();
   }, [isTechnician]);
 
@@ -529,6 +533,14 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
           Disponibilidad en sectores: Las Fuentes, Jarachina, Ribereña, Del Prado e Hidalgo.
         </p>
       </div>
+
+      <button
+        onClick={() => onNavigate('margin')}
+        className="w-full bg-primary hover:bg-trust-blue-dark py-3 rounded-lg text-label-md text-on-primary font-bold flex items-center gap-2 transition-colors"
+      >
+        <span className="material-symbols-outlined text-[18px]">calculate</span>
+        <span>SuitMargin — Cotizador con IA</span>
+      </button>
 
       <button
         onClick={() => onNavigate('glossary')}

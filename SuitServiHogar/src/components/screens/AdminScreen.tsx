@@ -34,9 +34,8 @@ interface TechnicianRow {
 
 interface DisputeRow {
   id: string;
-  service_name: string;
-  client_name: string;
-  technician_name: string;
+  service_title: string | null;
+  technician_id: string | null;
   status: string;
   total_mxn: number;
   created_at: string;
@@ -54,7 +53,7 @@ interface ConfigItemRowProps {
 }
 
 const ConfigItemRow: React.FC<ConfigItemRowProps> = ({
-  config, index, isEditing, editValue, onStartEdit, onCancelEdit, onUpdate, onEditValueChange,
+  config, isEditing, editValue, onStartEdit, onCancelEdit, onUpdate, onEditValueChange,
 }) => (
   <div className="bg-surface-alt rounded-lg p-3 space-y-2">
     <div className="flex items-start justify-between">
@@ -118,7 +117,7 @@ export const AdminScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       const [ordersRes, techRes, disputesRes] = await Promise.all([
         supabase.from('sh_orders').select('id, status, total_mxn, created_at'),
         supabase.from('sh_technicians').select('id, name, email, rating, review_count, category_ids, active, role'),
-        supabase.from('sh_orders').select('id, service_name, client_name, technician_name, status, total_mxn, created_at')
+        supabase.from('sh_orders').select('id, service_title, technician_id, status, total_mxn, created_at')
           .in('status', ['cancelled', 'disputed']),
       ]);
 
@@ -131,8 +130,11 @@ export const AdminScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         totalOrders: orders.length,
         ordersToday: orders.filter(o => o.created_at?.startsWith(todayStr)).length,
         totalRevenue: orders.filter(o => o.status === 'released').reduce((s, o) => s + (o.total_mxn || 0), 0),
-        activeTechnicians: techs.filter(t => t.active).length,
-        avgRating: techs.length ? +(techs.reduce((s, t) => s + (t.rating || 0), 0) / techs.length).toFixed(1) : 0,
+        activeTechnicians: techs.filter(t => t.active && t.role !== 'admin').length,
+        avgRating: (() => {
+          const rated = techs.filter(t => t.role !== 'admin');
+          return rated.length ? +(rated.reduce((s, t) => s + (t.rating || 0), 0) / rated.length).toFixed(1) : 0;
+        })(),
         pendingDisputes: (disputesRes.data ?? []).filter(d => d.status === 'disputed').length,
       });
 
@@ -164,15 +166,17 @@ export const AdminScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const handleConfigUpdate = async (key: string, newValue: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('sh_config')
         .update({ 
           value: newValue, 
           updated_by: user?.id,
           updated_at: new Date().toISOString()
         })
-        .eq('key', key);
+        .eq('key', key)
+        .select('key');
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Escritura bloqueada por RLS (sesión sin rol admin)');
       setConfigs(prev => prev.map(c => c.key === key ? { ...c, value: newValue, updated_at: new Date().toISOString() } : c));
       setEditingKey(null);
     } catch (err: any) {
@@ -276,8 +280,8 @@ export const AdminScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   {d.status === 'disputed' ? 'Disputa' : 'Cancelada'}
                 </span>
               </div>
-              <p className="text-body-sm text-text-muted">{d.service_name} — {d.total_mxn} MXN</p>
-              <p className="text-label-sm text-text-muted">Cliente: {d.client_name} | Técnico: {d.technician_name}</p>
+              <p className="text-body-sm text-text-muted">{d.service_title || 'Sin servicio'} — {d.total_mxn} MXN</p>
+              <p className="text-label-sm text-text-muted">Técnico: {technicians.find(t => t.id === d.technician_id)?.name ?? '—'}</p>
             </div>
           ))}
         </div>

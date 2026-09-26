@@ -1,6 +1,6 @@
 export type Currency = 'MXN' | 'USD';
 
-export type ScreenId = 'inicio' | 'explorar' | 'escrow' | 'perfil' | 'solicitud' | 'tecnico' | 'chat' | 'review' | 'glossary' | 'admin' | 'privacy' | 'terms';
+export type ScreenId = 'inicio' | 'explorar' | 'escrow' | 'perfil' | 'solicitud' | 'tecnico' | 'chat' | 'review' | 'glossary' | 'admin' | 'privacy' | 'terms' | 'margin';
 
 export interface Technician {
   id: string;

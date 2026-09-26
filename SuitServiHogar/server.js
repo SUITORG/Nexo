@@ -7,11 +7,12 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { generateCFDIXML, escapeXML, generateUUID } from './server/cfdiGenerator.js';
 
-dotenv.config();
+// override: true — hay una OPENROUTER_API_KEY stale a nivel de Windows User que gana sobre .env
+dotenv.config({ override: true });
 
 const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
@@ -76,6 +77,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// ─── Body parser (webhook excluido: necesita body crudo para verificar firma) ───
+const jsonBody = express.json();
+app.use((req, res, next) => (req.path === '/api/webhook' ? next() : jsonBody(req, res, next)));
 
 // ─── Auth Middleware (Supabase JWT) ───
 async function requireAuth(req, res, next) {
@@ -434,6 +439,7 @@ if (IS_DEV) {
       timestamp: new Date().toISOString()
     });
   });
+}
 
   // ─── Configuration API (for backoffice) ───
   // Get all configurations
@@ -688,6 +694,94 @@ if (IS_DEV) {
       res.status(500).json({ error: err.message });
     }
   });
+
+// ─── SuitMargin: AI Job Analysis (proxy OpenRouter — la clave nunca sale del server) ───
+// ponytail: sin requireAuth, control de abuso solo por rate-limit; agregar auth si se expone públicamente
+const aiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
+
+const AI_SYSTEM_PROMPT = `Eres el analizador de trabajos del hogar de SuitMargin. Interpretas la descripción del trabajo de un emprendedor y devuelves SOLO un objeto JSON, sin texto adicional, con esta forma exacta (los valores son EJEMPLOS, reemplázalos con valores reales y comillas dobles siempre):
+{
+ "job_type": "",
+ "complexity": "baja",
+ "estimated_hours": 0,
+ "materials": [{"name": "", "est_cost_mxn": 0}],
+ "missing_information": [""],
+ "risks": [""],
+ "questions": [""],
+ "scope": {"included": [""], "exclusions": [""], "assumptions": [""]}
+}
+REGLAS:
+- JSON estricto: claves y cadenas SIEMPRE entre comillas dobles; números sin comillas. Nunca uses los nombres de tipo (string, number) como valores.
+- NO inventes datos. Si algo no está en la descripción, usa "" o 0 y repítelo en missing_information.
+- complexity debe ser exactamente "baja", "media" o "alta".
+- questions: máximo 5, cortas, en español, solo las que mejoren la cotización.
+- No des precios finales ni montos de cotización; solo horas y materiales estimados.
+- Responde en español.
+- PRIMER carácter de tu respuesta debe ser { y ÚLTIMO debe ser }. Cero texto, cero razonamiento.`;
+
+// Modelos free — los que existen rotan; se reintenta con el siguiente en 404/429
+const AI_MODELS = [...new Set([
+  process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3-super-120b-a12b:free',
+  'z-ai/glm-5.2:free',
+  'qwen/qwen3.8-27b:free',
+  'google/gemma-4-31b-it:free',
+])];
+
+app.post('/api/ai/analyze', aiLimiter, async (req, res) => {
+  try {
+    const description = String(req.body?.description || '').trim().slice(0, 4000);
+    if (!description) return res.status(400).json({ error: 'Descripción requerida' });
+
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) return res.status(503).json({ error: 'IA no configurada (OPENROUTER_API_KEY)' });
+
+    let analysis = null;
+    for (const model of AI_MODELS) {
+      const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          temperature: 0.2,
+          max_tokens: 2000,
+          reasoning: { effort: 'none' },
+          messages: [
+            { role: 'system', content: AI_SYSTEM_PROMPT },
+            { role: 'user', content: description },
+          ],
+        }),
+      });
+      if (!upstream.ok) {
+        console.error('OpenRouter error:', model, upstream.status);
+        if (upstream.status === 429) {
+          const wait = Math.min(Number(upstream.headers.get('retry-after')) || 6, 20) * 1000;
+          await new Promise((r) => setTimeout(r, wait));
+          continue;
+        }
+        if (upstream.status !== 404) return res.status(502).json({ error: 'IA no disponible' });
+        continue;
+      }
+      const data = await upstream.json();
+      const text = data?.choices?.[0]?.message?.content || '';
+      // Algunos modelos free agregan razonamiento antes/después del JSON
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      const cleaned = (start !== -1 && end > start ? text.slice(start, end + 1) : text).trim();
+      try {
+        const parsed = JSON.parse(cleaned);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) { analysis = parsed; break; }
+        console.error('AI bad shape:', model);
+      } catch (e) {
+        console.error('AI JSON parse failed:', model, e.message, cleaned.slice(0, 120));
+      }
+    }
+    if (!analysis) return res.status(502).json({ error: 'IA no disponible' });
+    res.json({ analysis });
+  } catch (err) {
+    console.error('AI analyze error:', err.message);
+    res.status(502).json({ error: 'IA no disponible' });
+  }
+});
 
 const PORT = process.env.STRIPE_PORT || 3010;
 app.listen(PORT, () => {

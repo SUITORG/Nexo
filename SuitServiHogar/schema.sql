@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS public.sh_technicians (
     category_ids        TEXT[] DEFAULT ARRAY[]::text[],
     email               TEXT,
     stripe_account_id   TEXT,
+    role                TEXT DEFAULT 'technician',
     active              BOOLEAN DEFAULT TRUE,
     created_at          TIMESTAMPTZ DEFAULT NOW()
 );

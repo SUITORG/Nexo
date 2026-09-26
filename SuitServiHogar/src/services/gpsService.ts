@@ -48,7 +48,7 @@ export function obfuscateLocation(point: GeoPoint): ObfuscatedLocation {
 }
 
 export function getGoogleMapsStaticUrl(point: ObfuscatedLocation, zoom = 15, size = '400x300'): string {
-  const { lat, lng, radius } = point;
+  const { lat, lng } = point;
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const base = 'https://maps.googleapis.com/maps/api/staticmap';
   const params = new URLSearchParams({

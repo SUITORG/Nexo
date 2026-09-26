@@ -39,12 +39,10 @@ export function useOnlineStatus(options?: {
     window.addEventListener('offline', handleOffline);
 
     // 2. Heartbeat opcional para detectar conectividad real (no solo interfaz de red)
-    let heartbeatTimer: ReturnType<typeof setInterval>;
-    
     const checkConnectivity = async () => {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), heartbeatTimeout);
         
         const res = await fetch(heartbeatUrl, {
           method: 'HEAD',
@@ -71,7 +69,7 @@ export function useOnlineStatus(options?: {
     checkConnectivity();
 
     // Heartbeat periódico
-    heartbeatTimer = setInterval(checkConnectivity, heartbeatInterval);
+    const heartbeatTimer = setInterval(checkConnectivity, heartbeatInterval);
 
     return () => {
       window.removeEventListener('online', handleOnline);

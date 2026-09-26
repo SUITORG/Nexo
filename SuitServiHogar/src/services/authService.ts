@@ -31,7 +31,7 @@ export async function getTechnicianByEmail(email: string) {
     .from('sh_technicians')
     .select('*')
     .ilike('email', email)
-    .eq('activo', true)
+    .eq('active', true)
     .single();
 
   if (error || !data) return null;

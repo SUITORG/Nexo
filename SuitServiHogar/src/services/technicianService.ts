@@ -54,6 +54,7 @@ export async function fetchTechnicians(colonia?: string): Promise<Technician[]> 
     .from('sh_technicians')
     .select('*')
     .eq('active', true)
+    .neq('role', 'admin') // admins no aparecen en listados públicos
     .order('rating', { ascending: false });
 
   if (colonia && colonia !== 'Todas') {
@@ -81,6 +82,7 @@ export async function fetchTechniciansByCategory(categoryId: string, colonia?: s
     .from('sh_technicians')
     .select('*')
     .eq('active', true)
+    .neq('role', 'admin')
     .contains('category_ids', [categoryId])
     .order('rating', { ascending: false });
 

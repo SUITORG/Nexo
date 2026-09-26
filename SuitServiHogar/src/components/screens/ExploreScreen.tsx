@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Currency, Technician } from '../../types';
+import { useTaxInfo } from '../../hooks/useTaxInfo';
 
 interface ExploreScreenProps {
   currency: Currency;
@@ -27,6 +28,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistance, setSelectedDistance] = useState('5km');
   const [showAllSpecialties, setShowAllSpecialties] = useState(false);
+  const showTaxInfo = useTaxInfo();
 
   const categories = [
     { id: 'climas', name: 'Climas / Minisplits', count: 24, icon: 'ac_unit' },
@@ -217,7 +219,9 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
             Filtro Antifraude & Seguridad Física
           </h3>
           <p className="text-body-sm text-text-muted mt-0.5 leading-relaxed">
-            Técnicos auditados en domicilio fiscal de Reynosa con retención SAT (2.1% ISR / 8% IVA) y fondo Escrow asegurado.
+            {showTaxInfo
+              ? 'Técnicos auditados en domicilio fiscal de Reynosa con retención SAT (2.1% ISR / 8% IVA) y fondo Escrow asegurado.'
+              : 'Técnicos auditados presencialmente en Reynosa con fondo Escrow asegurado.'}
           </p>
         </div>
       </section>
@@ -380,11 +384,15 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
             <span className="material-symbols-outlined text-[16px]">check_circle</span>
             Sin cobros ocultos
           </span>
-          <span>•</span>
-          <span className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-            Facturación CFDI 4.0
-          </span>
+          {showTaxInfo && (
+            <>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                Facturación CFDI 4.0
+              </span>
+            </>
+          )}
         </div>
       </section>
     </div>

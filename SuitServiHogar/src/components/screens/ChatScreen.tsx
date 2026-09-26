@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Message, fetchMessages, sendMessage, uploadChatPhoto, subscribeToMessages } from '../../services/messageService';
-import { supabase } from '../../lib/supabase';
 import { PriceNegotiation } from '../PriceNegotiation';
-import { formatPrice } from '../../lib/constants';
 
 interface ChatScreenProps {
   orderId: string;

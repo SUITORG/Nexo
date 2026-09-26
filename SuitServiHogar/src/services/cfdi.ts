@@ -1,5 +1,3 @@
-import { generateCFDI } from '../utils/cfdi';
-
 // Tipos para CFDI 4.0
 export interface CFDIData {
   // Emisor (la plataforma)
@@ -193,7 +191,7 @@ export const CFDI_CONFIG = {
     '81111515': 'Servicios de pintura',
     '81111516': 'Servicios de carpintería',
     '81111517': 'Servicios de cerrajería',
-    '81111517': 'Servicios de mudanza',
+    '81111519': 'Servicios de mudanza',
     '81111518': 'Servicios de fumigación',
   },
   

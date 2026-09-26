@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { CardElement, useStripe } from '@stripe/react-stripe-js';
 
 const CARD_STYLE = {
   style: {
@@ -17,13 +17,12 @@ const CARD_STYLE = {
 };
 
 export const StripeCardInput: React.FC<{
-  onGooglePayClick?: () => void;
+  onGooglePayClick?: (paymentMethodId: string) => void;
   googlePayAvailable?: boolean;
   amount?: number;
   currency?: string;
 }> = ({ onGooglePayClick, googlePayAvailable, amount, currency = 'MXN' }) => {
   const stripe = useStripe();
-  const elements = useElements();
   const [paymentRequest, setPaymentRequest] = useState<any>(null);
   const [prReady, setPrReady] = useState(false);
 

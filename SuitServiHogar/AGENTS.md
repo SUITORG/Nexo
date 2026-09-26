@@ -25,7 +25,7 @@ schema.sql       → sh_service_categories, sh_technicians, sh_orders
 
 ## DB (Supabase `egyxgnlnzanxpqyuvmsg`)
 - `sh_service_categories` — 13 categorías
-- `sh_technicians` — 115+ técnicos (email, stripe_account_id)
+- `sh_technicians` — 6 filas: 4 técnicos demo + 2 admins (email, stripe_account_id, active, role)
 - `sh_orders` — Órdenes escrow + status machine
 - `sh-evidence` bucket — fotos de evidencia
 
@@ -55,7 +55,7 @@ Perfil → "Ver Mis Órdenes" → tabs Activas/Historial
 ```
 
 ## Conventions
-- Single-tenant | Soft delete (`activo = FALSE`) | Sequential IDs (no UUIDs)
+- Single-tenant | Soft delete (`active = false` en esta DB; columna se llama `active`, no `activo`) | Sequential IDs (no UUIDs)
 - Bimonetary MXN/USD, rate 18.0 | Montos centavos INTEGER en BD
 - Stripe Connect: `application_fee_amount` (configurable desde `sh_config`) + `transfer_data.destination`
 

@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit && npx eslint src --ext .ts,.tsx --max-warnings 0",
+    "lint": "tsc --noEmit && eslint src --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -36,6 +36,7 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -47,11 +48,13 @@
     "@vitest/ui": "^5.0.1",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "eslint": "^10.11.0",
     "jsdom": "^29.1.1",
     "playwright": "^1.63.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.70.1",
     "vite": "^6.2.3",
     "vitest": "^5.0.1"
   }

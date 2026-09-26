@@ -151,3 +151,17 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* SuitMargin — imprimir solo la cotización (PDF vía window.print) */
+@media print {
+  body * { visibility: hidden; }
+  .quote-sheet, .quote-sheet * { visibility: visible; }
+  .quote-sheet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

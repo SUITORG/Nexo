@@ -1,30 +1,17 @@
-// Server-side CFDI 4.0 Generator (CommonJS for server.js)
-const crypto = require('crypto');
+// Server-side CFDI 4.0 Generator (ESM — package.json tiene "type":"module")
+import crypto from 'crypto';
 
 function escapeXML(str) {
   return String(str)
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 }
 
 function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-function escapeXML(str) {
-  return String(str)
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
-    .replace(/'/g, '&apos;');
+  return crypto.randomUUID();
 }
 
 function generateCFDIXML(data) {
@@ -115,21 +102,4 @@ function generateCFDIXML(data) {
   return xml;
 }
 
-function escapeXML(str) {
-  return String(str)
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
-    .replace(/'/g, '&apos;');
-}
-
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-module.exports = { generateCFDIXML, escapeXML, generateUUID };
+export { generateCFDIXML, escapeXML, generateUUID };

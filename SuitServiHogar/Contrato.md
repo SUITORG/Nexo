@@ -61,36 +61,36 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 | 9 | Programa de incentivos | ✅ | `sh_referrals`, `sh_coupons`, `referralService.ts`, `BookingEscrowScreen.tsx` | — |
 | 9.1 | Incentivos para proveedores (invitar, completar, calificaciones) | ✅ | `referralService.ts`, `bookingService.ts` ($150 MXN ref tech), volume discount 10% | — |
 | 9.2 | Incentivos para clientes (invitar, solicitar) | ✅ | `referralService.ts`, `BookingEscrowScreen.tsx` ($100 cupón cliente) | — |
-| 10 | Manejo de impuestos | ⚠️ | `sh_orders.sat_retention_mxn` | Cálculo existe en BD pero **sin CFDI**, sin generación de complemento SAT |
+| 10 | Manejo de impuestos | ⚠️ | `sh_orders.sat_retention_mxn`, `server/cfdiGenerator.js` | CFDI 4.0 se genera con **PAC mock** — timbrado real = PAC + CSD (opcional §14) |
 | 11 | Frontend + backend | ✅ | React + Supabase + Express | — |
 | 12 | Ubicaciones y direcciones del servicio | ✅ | `BookingEscrowScreen.tsx`, `gpsService.ts`, `GoogleMapEmbed.tsx` | — |
 | 13 | Best practices | ⚠️ | Parcial en AGENTS.md | No hay validación formal |
 | 14 | No multi-inquilino | ✅ | Single-tenant confirmado | — |
 | 15 | Usar Supabase | ✅ | `src/lib/supabase.ts` | — |
 | 16 | Contadores empiezan en 0001 | ⚠️ | `schema.sql` | IDs son texto (`'ORD-001'`), no hay secuencia auto-incremental real |
-| 17 | Status y calificaciones de ambos lados | ❌ | — | **Sin sistema de calificaciones** para ninguna de las dos partes |
+| 17 | Status y calificaciones de ambos lados | ✅ | `ReviewForm.tsx`, `reviewService.ts`, `sh_reviews`, `ProPortalScreen.tsx` (sección Reseñas) | — |
 | 18 | Reportes de mejoras por usuarios | ✅ | `FeedbackWidget.tsx` (feedback flotante + guardado en BD) | — |
 | 19 | Reportes para el backoffice | ✅ | `AdminScreen.tsx` (dashboard + orders + technicians + disputes) | — |
 | 20 | Logo, avatar, brief con colores | ✅ | `icon-192.svg`, `icon-512.svg`, splash screen SH logo | — |
 | 21 | Seguridad | ✅ | helmet, rate-limit, RLS 003, auth JWT, CORS restrictive | — |
 | 22 | Firmar con cuenta de Google | ✅ | `authService.ts:signInWithGoogle()` | — |
-| 23 | Google Pay como opción de pago | ❌ | — | Solo Stripe Card. **Sin Google Pay** |
+| 23 | Google Pay como opción de pago | ✅ | `StripeCardInput.tsx` (PaymentRequest + `googlePayAvailable`), `useStripePayment.ts` | — |
 | 24 | Penalizaciones servidores/solicitantes | ✅ | `process_client_cancellation()`, `process_specialist_cancellation()` | Reglas documentadas en AGENTS.md |
 | 25 | Porcentaje para caridad/asociación | ✅ | `calculate_charity_fee()` (1%), "Fundación Hogar Digno AC" | — |
-| 26 | Actualización del dólar (frontera) | ⚠️ | `EXCHANGE_RATE_MXN_USD = 18.0` (fijo) | **Sin API de tipo de cambio real** |
+| 26 | Actualización del dólar (frontera) | ✅ | `src/services/exchangeRate.ts` (Fixer.io API, fallback 18.0) | — |
 | 27 | Documentación completa | ✅ | `MANUAL_CLIENTE.md`, `MANUAL_TECNICO.md` | — |
 | 28 | Flujos completos cliente/técnico | ✅ | Documentados en manuales + diagramas | — |
 | 29 | Terminología local Reynosa | ✅ | `glossary.ts`, `GlossaryScreen.tsx` (8 términos) | — |
 | 30 | Pantallas operación backend | ✅ | `AdminScreen.tsx` (dashboard, technicians, disputes) | — |
 | 31 | 100% en celular | ✅ | `manifest.json`, `sw.js`, `index.html` (PWA + splash + icons) | — |
-| 32 | Impuestos en backend | ⚠️ | `sat_retention_mxn` en BD | Cálculo existe pero sin generación de CFDI |
+| 32 | Impuestos en backend | ⚠️ | `sat_retention_mxn` en BD, `server/cfdiGenerator.js` | Generación CFDI existe pero con PAC mock (timbrado real pendiente, opcional) |
 | 33 | Caridades en backend | ✅ | `accumulate_monthly_charity()` | — |
-| 34 | Protegido contra ataques (best practices) | ⚠️ | RLS + OAuth | **Sin rate limiting**, sin helmet, sin CSP |
-| 35 | Fotos/communication solo dentro de plataforma | ⚠️ | `sh-evidence` bucket | Bucket público (cualquiera lee). **Sin chat restringido** |
-| 36 | Comentarios sobre acuerdos fuera de plataforma | ❌ | — | Sin sistema de reportes/comentarios post-servicio |
-| 37 | Calificación mutua + comentarios (sin ofensas) | ❌ | — | **Sin tabla de reseñas**, sin moderación |
+| 34 | Protegido contra ataques (best practices) | ✅ | `server.js` (helmet, express-rate-limit, CORS restrictivo), `migrations/20260914212400_security_rls.sql` | — |
+| 35 | Fotos/communication solo dentro de plataforma | ⚠️ | Chat: `sh_messages` + RLS participantes + bucket `sh-chat-photos` privado | `sh-evidence` **sigue público** (lectura anónima) — migrar a privado + URLs firmadas (~30 min) |
+| 36 | Comentarios sobre acuerdos fuera de plataforma | ✅ | `AdminScreen.tsx` (tab Disputas: escalar/resolver) | — |
+| 37 | Calificación mutua + comentarios (sin ofensas) | ✅ | `ReviewForm.tsx` (estrellas + moderación de ofensas), `sh_reviews` | — |
 | 38 | Nombre: ServiciosHogar Reynosa | ✅ | Título en `HomeScreen` | — |
-| 39 | Indicador sistema fuera de línea / sin internet | ❌ | — | **Sin indicador de conectividad** (navigator.onLine, service worker) |
+| 39 | Indicador sistema fuera de línea / sin internet | ✅ | `useOnlineStatus.ts` (heartbeat 30s), `OnlineStatusBanner.tsx`, indicador en `Header.tsx` | — |
 | 40 | Modo de prueba para desarrolladores | ✅ | `MANUAL_DESARROLLADOR.md`, `useDevAuth`, `devMode` | — |
 | 41 | Opción negociar precio si cliente/técnico no acuerdan | ✅ | `PriceNegotiation.tsx`, `ChatScreen.tsx`, `BookingEscrowScreen.tsx`, `sh_price_negotiations` | — |
 | 42 | Políticas de privacidad + checkbox aceptación + blindaje legal mexicano | ✅ | `PrivacyPolicyScreen.tsx`, `LoginScreen.tsx`, `src/data/legal/privacy.ts` | — |
@@ -102,10 +102,12 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 
 | Estado | Cantidad | % |
 |---|:---:|:---:|
-| ✅ Completo | 35 | 81% |
+| ✅ Completo | 37 | 86% |
 | ⚠️ Parcial | 6 | 14% |
-| ❌ No implementado | 2 | 5% |
+| ❌ No implementado | 0 | 0% |
 | **Total** | **43** | **100%** |
+
+> Verificado 2026-09-25 contra código y DB en vivo. Los 6 ⚠️ son de endurecimiento/producción: #1/#13 (auditoría formal), #10/#32 (CFDI con PAC mock), #16 (IDs secuenciales manuales, no auto-increment), #35 (`sh-evidence` aún público). Ninguno bloquea el MVP.
 
 ---
 
@@ -127,7 +129,7 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 | F10 | **Galería de fotos cliente** — Subir problema antes del servicio. | info | 4 | `BookingEscrowScreen.tsx` | ✅ |
 | F11 | **Glossario local Reynosa** — 8 términos locales con tooltip. | info | 29 | `glossary.ts`, `GlossaryScreen.tsx` | ✅ |
 | F12 | **Brand: Logo + Splash** — icon-192.svg, icon-512.svg, splash SH. | info | 20 | SVG icons, `index.html` splash | ✅ |
-| F13 | **Indicador offline** — navigator.onLine + service worker state. | warning | 39 | `useOnlineStatus.ts` (pendiente) | ❌ |
+| F13 | **Indicador offline** — navigator.onLine + service worker state. | warning | 39 | `useOnlineStatus.ts`, `OnlineStatusBanner.tsx` (verificado 2026-09-25) | ✅ |
 
 ### 5.2 Requerimientos Backend (orden de importancia)
 
@@ -155,10 +157,10 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 | S2 | **Rate limiting** — express-rate-limit en /api/* para prevenir abuso. | error | 34 | `server.js`, `package.json` | ⚠️ |
 | S3 | **Helmet (CSP + X-Frame-Options)** — Content-Security-Policy, X-Frame-Options DENY. | error | 34 | `server.js` | ⚠️ |
 | S4 | **CORS restrictivo** — Solo permitir origen real del frontend. | error | 21 | `server.js` | ✅ |
-| S5 | **RLS Supabase** — sh_orders con auth.uid() checks. Migración 003_security_rls.sql. | error | 21 | `migrations/003_security_rls.sql` | ✅ |
+| S5 | **RLS Supabase** — sh_orders con auth.uid() checks. Migración 20260914212400_security_rls.sql. | error | 21 | `migrations/20260914212400_security_rls.sql` | ✅ |
 | S6 | **Webhook secret** — Rechazar sin STRIPE_WEBHOOK_SECRET configurado. | error | 21 | `server.js` | ✅ |
 | S7 | **Eliminar dev bypass** — Quitar `?tech` de App.tsx. | error | 21 | `App.tsx` | ✅ |
-| S8 | **Bucket evidencia privado** — sh-evidence no público, solo participantes de la orden. | warning | 35 | `migrations/004_chat_messages.sql` | ⚠️ |
+| S8 | **Bucket evidencia privado** — sh-evidence no público, solo participantes de la orden. | warning | 35 | `migrations/20260914212700_chat_messages.sql` | ⚠️ |
 | S9 | **Google Pay via Stripe** — PaymentRequest API como alternativa a tarjeta. | info | 23 | `StripeCardInput.tsx` | ❌ |
 
 ---
@@ -243,7 +245,7 @@ Si se descubre un bloqueo imprevisto:
 | 1.2 | Rate limiting (`express-rate-limit`) | #34 | `server.js`, `package.json` | ✅ |
 | 1.3 | Helmet (CSP, X-Frame-Options) | #34 | `server.js`, `package.json` | ✅ |
 | 1.4 | Restrict CORS a dominio real | #21 | `server.js` | ✅ |
-| 1.5 | Fix RLS `sh_orders` (requerir auth.uid()) | #21 | `migrations/003_security_rls.sql` | ✅ |
+| 1.5 | Fix RLS `sh_orders` (requerir auth.uid()) | #21 | `migrations/20260914212400_security_rls.sql` | ✅ |
 | 1.6 | Eliminar `?tech` dev bypass | #21 | `App.tsx` | ✅ |
 | 1.7 | Webhook: rechazar sin `STRIPE_WEBHOOK_SECRET` | #21 | `server.js` | ✅ |
 | 1.8 | Implementar lógica completa del webhook | #21 | `server.js` | ✅ |
@@ -252,18 +254,18 @@ Si se descubre un bloqueo imprevisto:
 
 | # | Tarea | Requisitos | Archivos | Estado |
 |---|---|:---:|---|:---:|
-| 2.1 | Tabla `sh_messages` + RLS (solo participantes de la orden) | #3, #35 | `migrations/004_chat_messages.sql` | ✅ |
+| 2.1 | Tabla `sh_messages` + RLS (solo participantes de la orden) | #3, #35 | `migrations/20260914212700_chat_messages.sql` | ✅ |
 | 2.2 | Supabase Realtime para chat | #3 | `messageService.ts` | ✅ |
 | 2.3 | Componente `ChatScreen.tsx` (texto + fotos) | #3, #4 | `components/screens/ChatScreen.tsx` | ✅ |
 | 2.4 | Galería de fotos del cliente (subir problema) | #4 | `BookingEscrowScreen.tsx` | ✅ |
 | 2.5 | Integrar chat en flujo de orden | #3 | `App.tsx`, `TechnicianOrdersScreen.tsx` | ✅ |
-| 2.6 | Bucket privado para fotos (no público) | #35 | `migrations/004_chat_messages.sql` | ✅ |
+| 2.6 | Bucket privado para fotos (no público) | #35 | `migrations/20260914212700_chat_messages.sql` | ✅ |
 
 ### Fase 3: Calificación/Validación (confianza bidireccional) ✅ COMPLETADA
 
 | # | Tarea | Requisitos | Archivos | Estado |
 |---|---|:---:|---|:---:|
-| 3.1 | Tabla `sh_reviews` (bidireccional: client→tech Y tech→client) | #5, #17, #37 | `migrations/005_reviews.sql` | ✅ |
+| 3.1 | Tabla `sh_reviews` (bidireccional: client→tech Y tech→client) | #5, #17, #37 | `migrations/20260914213400_reviews.sql` | ✅ |
 | 3.2 | Componente `ReviewForm.tsx` (estrellas + comentario, moderação de ofensas) | #37 | `components/ReviewForm.tsx` | ✅ |
 | 3.3 | Score de confianza calculado (rating promedio + servicios completados) | #5 | `reviewService.ts` (`getTechnicianStats`) | ✅ |
 | 3.4 | Badges dinámicos ("Certificado de Confianza" a 10 servicios 5★) | #5, #9.1 | Lógica en BD + UI | ✅ |
@@ -330,9 +332,9 @@ Si se descubre un bloqueo imprevisto:
 | 8.1 | PWA manifest + service worker | #31 | `manifest.json`, `sw.js`, `index.html` | ✅ |
 | 8.2 | Splash screen + iconos | #20, #31 | `index.html` inline splash, SVG icons | ✅ |
 | 8.3 | Terminología local Reynosa (glossario) | #29 | `GlossaryScreen.tsx`, `glossary.ts` | ✅ |
-| 8.4 | Widget de feedback de usuarios | #18 | `FeedbackWidget.tsx`, `007_feedback_widget.sql` | ✅ |
+| 8.4 | Widget de feedback de usuarios | #18 | `FeedbackWidget.tsx`, `20260915080900_feedback_widget.sql` | ✅ |
 
-### Fase 9: Inteligencia de Precios (SuitMargin SaaS) 📋
+### Fase 9: Inteligencia de Precios (SuitMargin SaaS) ✅ (2026-09-24)
 
 | # | Tarea | Requisitos | Archivos | Esfuerzo |
 |---|---|:---:|---|:---:|
@@ -343,15 +345,15 @@ Si se descubre un bloqueo imprevisto:
 | 9.5 | Estimated vs Actual + AI Learning Loop | #19, #20 | `SuitMargin/services/learningLoop.ts` | 45 min |
 | 9.6 | AI Business Insights Dashboard | #21, #22 | `SuitMargin/components/InsightsDashboard.tsx` | 30 min |
 
-### Fase 10: Privacidad, Términos y Legal (producción-blocking) 📋
+### Fase 10: Privacidad, Términos y Legal (producción-blocking) ✅ COMPLETADA (2026-09-25)
 
 | # | Tarea | Requisitos | Archivos | Esfuerzo |
 |---|---|:---:|---|:---:|
-| 10.1 | Política de privacidad (datos no se comparten con terceros) | #42 | `src/screens/PrivacyPolicyScreen.tsx`, `src/data/legal/privacy.ts` | 1h |
-| 10.2 | Términos y condiciones (responsabilidad, deslinde, prohibición de demandas colectivas) | #43 | `src/screens/TermsScreen.tsx`, `src/data/legal/terms.ts` | 1.5h |
-| 10.3 | Checkbox de aceptación obligatoria en registro/login | #42, #43 | `LoginScreen.tsx`, `RegisterScreen.tsx` | 30 min |
-| 10.4 | Blindaje legal mexicano (LFPDPPP, Consumer Protection, prevención demandas colectivas) | #42, #43 | `src/data/legal/legalClauses.ts` | 1.5h |
-| 10.5 | Soberanía de costos (arbitraje obligatorio, jurisdicción) | #43 | `src/data/legal/terms.ts` | 30 min |
+| 10.1 | Política de privacidad (datos no se comparten con terceros) | #42 | `PrivacyPolicyScreen.tsx`, `src/data/legal/privacy.ts` | ✅ |
+| 10.2 | Términos y condiciones (responsabilidad, deslinde, prohibición de demandas colectivas) | #43 | `TermsScreen.tsx`, `src/data/legal/terms.ts` | ✅ |
+| 10.3 | Checkbox de aceptación obligatoria en registro/login | #42, #43 | `LoginScreen.tsx` (checkbox + links) | ✅ |
+| 10.4 | Blindaje legal mexicano (LFPDPPP, prevención demandas colectivas) | #42, #43 | cláusulas dentro de `privacy.ts` (LFPDPPP) y `terms.ts` (deslinde) | ✅ |
+| 10.5 | Soberanía de costos (arbitraje obligatorio, jurisdicción) | #43 | `src/data/legal/terms.ts` (sección 5) | ✅ |
 
 ---
 
@@ -388,14 +390,14 @@ Fase 10 (Privacidad/Legal) → Fase 11 (Modo Desarrollador/Test)
 
 **Requisitos ya completados (43):** #2, #3, #4, #5, #6, #7, #8, #9, #9.1, #9.2, #11, #12, #14, #15, #18, #19, #20, #21, #22, #24, #25, #26, #27, #28, #29, #30, #31, #33, #36, #38, #39, #40, #41, #42, #43
 
-**Pendientes:** (ninguno — solo Fase 9 SuitMargin)
+**Pendientes:** (ninguno — Fase 9 SuitMargin completada 2026-09-24)
 
 ### CI/CD + Testing (Agregado)
 
 | Componente | Estado | Detalle |
 |---|:---:|---|
 | TypeScript strict | ✅ | `tsc --noEmit` limpio |
-| Unit Tests (Vitest) | ✅ | 6 tests: constants, exchange rate, infrastructure |
+| Unit Tests (Vitest) | ✅ | 14 tests: constants, exchange rate, infrastructure, pricing engine (SuitMargin) |
 | E2E Tests (Playwright) | ✅ | 4 smoke tests: home, explorar, perfil, escrow (HTTP 200) |
 | CI Pipeline | ✅ | GitHub Actions: lint, typecheck, unit, e2e, deploy preview/prod |
 | Coverage | ⚠️ | Básico (solo services puros) |
@@ -407,17 +409,38 @@ Fase 10 (Privacidad/Legal) → Fase 11 (Modo Desarrollador/Test)
 ### 🟡 PENDIENTES (Core App - Producción-blocking)
 | # | Tarea | Esfuerzo | Archivos objetivo |
 |---|---|:---:|---|
-| 39 | Indicador sistema fuera de línea / sin internet | 30 min | `src/hooks/useOnlineStatus.ts`, `Header`/`BottomNav` |
+| — | Core: ninguno. **Manual pendiente:** smoke de login real con Google (rbtpdrn@gmail.com) → Admin Panel | — | — |
 
-### 🟡 PENDIENTES (Fase 9 - SuitMargin SaaS) - ~4h
+### ✅ COMPLETADOS (Backoffice + Fiscal + PWA + Lint) — 2026-09-25
+| # | Tarea | Archivos objetivo |
+|---|---|---|
+| 39 | Indicador offline verificado (banner top + indicador Header + heartbeat 30s) | `useOnlineStatus.ts`, `OnlineStatusBanner.tsx`, `Header.tsx` |
+| — | Backoffice accesible con `role='admin'` en DB (filas `admin-rbtpdrn`/`admin-dev`) + filtro admin en listados públicos + fix columna `active` | `authService.ts`, `technicianService.ts`, `schema.sql`, `migrations/APLICAR_EN_SUPABASE.sql` |
+| — | Info fiscal (SAT/ISR/IVA/CFDI) oculta en Home/Explore/Booking tras flag `show_tax_info` (default OFF) | `src/hooks/useTaxInfo.ts` + 3 screens |
+| — | Bug toast: `showToast` seteaba estado pero no se renderizaba | `App.tsx` |
+| — | ESLint 10 operativo: `npm run lint` = tsc + eslint, 0 errores (deps, config, ~15 fixes) | `eslint.config.mjs`, `package.json`, ~15 archivos |
+| — | PWA: PNG icons 192/512 + apple-touch-icon, manifest con PNGs primero, SW `servihogar-v2` | `public/*`, `index.html`, `sw.js` |
+| — | Fix disputas backoffice: query usaba columnas inexistentes (`service_name` etc.) | `AdminScreen.tsx` |
+| — | Smoke: login dev admin → Admin Panel (4 tabs), listados sin admins, offline/online banner, toast, vitest 14/14, build OK | — |
+| — | SQL de migración aplicado por el usuario (sh_config 7 keys + sh_price_negotiations + policies) — verificado en vivo | `migrations/APLICAR_EN_SUPABASE.sql` |
+| — | Flag `show_tax_info` probado ON→copy visible / OFF→oculto (round-trip verificado) | `useTaxInfo.ts` |
+| — | Proceso leftover `server-minimal.js` (PID 21040) terminado — 3010 liberado para `server.js` | — |
+| — | Fix: ProPortalScreen effect sin try/catch → "Uncaught (in promise)" ×2 en consola | `ProPortalScreen.tsx` |
+| — | Fix: stats del dashboard contaban admins como técnicos (6→4 reales) y ensuciaban avgRating | `AdminScreen.tsx` |
+| — | Fix: `handleConfigUpdate` reportaba éxito cuando RLS bloqueaba la escritura (0 filas) | `AdminScreen.tsx` |
+| — | Docs: AGENTS.md "115+ técnicos" → 6 reales; convención `activo` → `active` | `AGENTS.md` |
+
+### ✅ COMPLETADOS (Fase 9 - SuitMargin SaaS) — 2026-09-24
 | # | Tarea | Esfuerzo | Archivos objetivo |
 |---|---|:---:|---|
-| 9.1 | Pricing Engine central (`calculateEstimate`) | 45 min | `SuitMargin/services/pricingEngine.ts` |
-| 9.2 | Profit Guard (alerta margen < objetivo) | 30 min | `SuitMargin/components/ProfitGuard.tsx` |
-| 9.3 | AI Job Analysis + Smart Questions (máx 5) | 60 min | `SuitMargin/services/aiAnalysis.ts` |
-| 9.4 | Quote Generator (PDF/web + enlace público) | 45 min | `SuitMargin/components/QuoteGenerator.tsx` |
-| 9.5 | Estimated vs Actual + AI Learning Loop | 45 min | `SuitMargin/services/learningLoop.ts` |
-| 9.6 | AI Business Insights Dashboard | 30 min | `SuitMargin/components/InsightsDashboard.tsx` |
+| 9.1 | Pricing Engine central (`calculateEstimate`) | 45 min | `src/modules/margin/services/pricingEngine.ts` |
+| 9.2 | Profit Guard (alerta margen < objetivo) | 30 min | `src/modules/margin/components/ProfitGuard.tsx` |
+| 9.3 | AI Job Analysis + Smart Questions (máx 5) | 60 min | `src/modules/margin/services/aiAnalysis.ts` + `POST /api/ai/analyze` en `server.js` |
+| 9.4 | Quote Generator (PDF/web + enlace público) | 45 min | `src/modules/margin/components/QuoteGenerator.tsx` + print CSS en `src/index.css` |
+| 9.5 | Estimated vs Actual + AI Learning Loop | 45 min | `src/modules/margin/services/learningLoop.ts` |
+| 9.6 | AI Business Insights Dashboard | 30 min | `src/modules/margin/components/InsightsDashboard.tsx` |
+
+**Extra (necesario para 9.3):** fixes en `server.js` (llave `if` sin cerrar, `express.json()`, `dotenv override`, fallback de modelos free) y `server/cfdiGenerator.js` (declaraciones duplicadas + ESM) — el servidor no arrancaba antes de estos fixes.
 
 ### 🔵 OPCIONALES - CFDI 4.0 (Producción real)
 | Tarea | Esfuerzo | Detalle |
@@ -429,6 +452,7 @@ Fase 10 (Privacidad/Legal) → Fase 11 (Modo Desarrollador/Test)
 ### 🟢 OPCIONALES - Mejoras varias
 | Tarea | Esfuerzo | Detalle |
 |---|:---:|---|
+| Bucket `sh-evidence` a privado | ~30 min | Hoy `public=true` (lectura anónima). Cambiar a privado + URLs firmadas en `uploadEvidence`/vistas (afecta `stripe_connect.sql` + `bookingService`) |
 | Coverage >80% (Vitest) | ~1h | Tests reales para `bookingService`, `authService`, `referralService` |
 | Integración PAC real CFDI | ~2h | Configurar credenciales PAC (SWA/Factura.com) + certificado CSD |
 | Tests E2E completos (no solo smoke) | ~2h | Flujos completos cliente/técnico con Playwright |

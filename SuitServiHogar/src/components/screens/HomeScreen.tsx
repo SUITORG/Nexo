@@ -1,6 +1,7 @@
 import React from 'react';
 import { Currency, ScreenId, ServiceCategory } from '../../types';
 import { getRateSync } from '../../lib/constants';
+import { useTaxInfo } from '../../hooks/useTaxInfo';
 
 interface HomeScreenProps {
   currency: Currency;
@@ -18,6 +19,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   categories
 }) => {
   const rate = getRateSync();
+  const showTaxInfo = useTaxInfo();
   const formatPrice = (priceMxn: number) => {
     if (currency === 'USD') {
       const usd = (priceMxn / rate).toFixed(0);
@@ -87,12 +89,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </span>
           </div>
         </div>
-        <button
-          onClick={() => onNavigate('explorar')}
-          className="px-2.5 py-1 rounded bg-trust-blue-light text-primary text-label-sm font-bold border border-primary/20 hover:bg-primary hover:text-white transition-colors"
-        >
-          Tabulador SAT
-        </button>
+        {showTaxInfo && (
+          <button
+            onClick={() => onNavigate('explorar')}
+            className="px-2.5 py-1 rounded bg-trust-blue-light text-primary text-label-sm font-bold border border-primary/20 hover:bg-primary hover:text-white transition-colors"
+          >
+            Tabulador SAT
+          </button>
+        )}
       </section>
 
       {/* Servicios de Urgencia 24/7 */}
@@ -224,7 +228,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div>
           <h2 className="text-headline-sm font-bold text-white">¿Eres Profesional o Técnico?</h2>
           <p className="text-body-sm text-surface-container-low mt-1 leading-relaxed">
-            Multiplica tus ingresos con cobro garantizado semanal, clientes pre-filtrados y retención simplificada ante el SAT (ISR 2.1% e IVA 8%).
+            {showTaxInfo
+              ? 'Multiplica tus ingresos con cobro garantizado semanal, clientes pre-filtrados y retención simplificada ante el SAT (ISR 2.1% e IVA 8%).'
+              : 'Multiplica tus ingresos con cobro garantizado semanal, clientes pre-filtrados y pagos formales sin complicaciones.'}
           </p>
         </div>
 

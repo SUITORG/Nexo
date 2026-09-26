@@ -7,6 +7,7 @@ import { useElements } from '@stripe/react-stripe-js';
 import { StripeCardInput } from '../StripeCardInput';
 import { getRateSync } from '../../lib/constants';
 import { PriceNegotiation } from '../PriceNegotiation';
+import { useTaxInfo } from '../../hooks/useTaxInfo';
 
 interface BookingEscrowScreenProps {
   order: EscrowOrder;
@@ -24,15 +25,15 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
   currency,
   onPaySuccess,
   onPayError,
-  onBack,
+  onBack: _onBack,
   onShowRules,
   stripeAccountId,
   userId
 }) => {
-  const [selectedDate, setSelectedDate] = useState(order.date);
-  const [selectedWindow, setSelectedWindow] = useState(order.timeWindow);
+  const [selectedDate] = useState(order.date);
+  const [selectedWindow] = useState(order.timeWindow);
   const [photos, setPhotos] = useState<string[]>(order.evidencePhotos);
-  const [isUploading, setIsUploading] = useState(false);
+  const [, setIsUploading] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponMessage, setCouponMessage] = useState('');
@@ -43,8 +44,8 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
 
   const { createPaymentIntent, confirmPayment, processing } = useStripePayment();
   const elements = useElements();
-  const [googlePayReady, setGooglePayReady] = useState(false);
   const rate = getRateSync();
+  const showTaxInfo = useTaxInfo();
 
   const handleGooglePay = async (paymentMethodId: string) => {
     try {
@@ -58,7 +59,7 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
             gpsLat: order.gpsLat,
             gpsLng: order.gpsLng
           });
-        } catch (_) {}
+        } catch {}
         onPaySuccess();
       } else {
         onPayError(payResult.error || 'Error al procesar el pago con Google Pay');
@@ -91,7 +92,7 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
             gpsLat: order.gpsLat,
             gpsLng: order.gpsLng
           });
-        } catch (_) {}
+        } catch {}
         onPaySuccess();
       } else {
         onPayError(payResult.error || 'Error al procesar el pago');
@@ -99,13 +100,6 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
     } catch (err: any) {
       onPayError(err.message || 'Error al procesar el pago');
     }
-  };
-
-  const formatMxnUsd = (mxn: number, usd: number) => {
-    if (currency === 'USD') {
-      return `$${usd.toFixed(2)} USD (~$${mxn.toFixed(2)} MXN)`;
-    }
-    return `$${mxn.toFixed(2)} MXN (~$${usd.toFixed(2)} USD)`;
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -524,15 +518,17 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-between items-center pt-2">
-            <div>
-              <span className="text-text-primary block">Retención fiscal integrada SAT (CFDI)</span>
-              <span className="text-label-sm font-bold text-primary bg-trust-blue-light px-1.5 py-0.2 rounded border border-primary/20">
-                ISR 2.1% / IVA 8%
-              </span>
+          {showTaxInfo && (
+            <div className="flex justify-between items-center pt-2">
+              <div>
+                <span className="text-text-primary block">Retención fiscal integrada SAT (CFDI)</span>
+                <span className="text-label-sm font-bold text-primary bg-trust-blue-light px-1.5 py-0.2 rounded border border-primary/20">
+                  ISR 2.1% / IVA 8%
+                </span>
+              </div>
+              <span className="text-body-sm text-text-muted font-medium">Incluido en tarifa</span>
             </div>
-            <span className="text-body-sm text-text-muted font-medium">Incluido en tarifa</span>
-          </div>
+          )}
 
           <div className="flex justify-between items-center pt-3">
             <div>

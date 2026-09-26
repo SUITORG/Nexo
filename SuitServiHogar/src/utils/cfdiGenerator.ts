@@ -1,8 +1,6 @@
 // Generador de CFDI 4.0 XML
 // Compatible con SAT - Complemento Traslado para servicios
 
-import { CFDIData, CFDIResult, CFDI_CONFIG, formatCFDIDate, generateUUID, calculateIVA } from '../services/cfdi';
-
 /**
  * Genera la cadena original 4.0 para el sello
  * Formato según Anexo 20 SAT
@@ -185,7 +183,6 @@ export async function generateCFDI(data: any): Promise<any> {
   
   // 4. Mock timbrado (en producción: enviar a PAC)
   const uuid = generateUUID();
-  const fechaTimbrado = new Date().toISOString().replace(/\.\d{3}Z$/, '');
   const selloCFD = 'MOCK_SELLO_CFD_' + btoa(cadenaOriginal).substring(0, 40);
   const selloSAT = 'MOCK_SELLO_SAT_' + btoa(uuid).substring(0, 40);
   
