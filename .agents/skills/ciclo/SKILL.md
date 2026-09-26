@@ -33,6 +33,8 @@ Lee `references/alcance.md` siempre en este paso. Resumen: el alcance es la carp
 
 Declara siempre: `Alcance: <ruta> · Contrato: <archivo o NUEVO>`. No modifiques código fuera del alcance sin permiso explícito.
 
+**Otras skills que podrían aplicar**: antes de la fase de Implementación, revisa `.suit/registry/skills.yaml` (índice de capacidades de SuitOS — `{name, path}` apuntando a `.suit/skills/<categoría>/<nombre>.yaml`) por si el alcance toca algo con skill propia (ej. `multi-tenant`, `cotizaciones-engine`, `brief-engine`, `design-system`). Si aplica, lee esa skill antes de tocar el código correspondiente — no reinventes esas reglas dentro del ciclo.
+
 ## Modos
 
 **`contrato`** — `/ciclo contrato [ruta] [instrucción]`, o cuando el usuario pide crear, ampliar, detallar, corregir o normalizar el contrato/PRP, o aplicar una plantilla. El entregable es el contrato, no el código: editas por secciones sin borrar reglas vigentes y solo pasas al ciclo normal si las reglas nuevas exigen cambios de código. Lee `references/contrato.md`.

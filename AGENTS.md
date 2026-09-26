@@ -102,7 +102,7 @@ Al llegar a ~60% de la ventana de contexto, **compactar antes de seguir**. No es
 2. Escribir resumen de estado de 5 líneas
 3. Seguir con la tarea pendiente
 
-*Ref: `KITCiclo/.claude/skills/ciclo/references/compactacion.md`*
+*Ref: `.agents/skills/ciclo/references/compactacion.md`*
 
 ## Enfoque 20/80 (Pareto) — siempre activo
 
@@ -113,7 +113,14 @@ Antes de ejecutar cualquier solicitud del usuario:
 3. **Preguntar** si se debe continuar con el resto
 4. **No ejecutar** tareas de bajo impacto sin confirmación explícita
 
-*Ref: `kit-ciclo.yaml` F1 (Encuadre 20/80), `data-cleanup.yaml` process*
+*Ref: `.agents/skills/ciclo/SKILL.md` Fase 1 (Encuadre 20/80), `.suit/skills/domain/data-cleanup.yaml`*
+
+## Prompt pre-flight — siempre activa
+
+Antes de responder o actuar sobre cualquier pedido, correr el pre-vuelo (skill `prompt-reviewer`, sin imprimir el checklist):
+1. Revisar contexto, supuestos y 5 sesgos (ambigüedad, supuestos, acción prematura, confirmación, scope creep).
+2. **Q&A / lectura / contexto** → responder directo, 0 preguntas, salida mínima.
+3. **Modificación** → optimizar el pedido; si certeza <95% → ≤3 preguntas y esperar; si ≥95% → ejecutar. Tras ejecutar, dí-gigo extras en 1 línea.
 
 ## Confirmación antes de ejecutar — siempre activa
 
@@ -148,6 +155,13 @@ No ejecutar modificaciones hasta no estar al **95% segura**.
 | `language/` | javascript, gas, sql |
 | `tool/` | web-search, git, web-research |
 | `process/` | code-review, security-audit, deployment, pdf-generation |
+
+## Instalar una skill nueva
+
+1. **Ubicación**: la skill va primero a `.agents/skills/<nombre>/` (nunca directo a `.claude/skills/` ni `.opencode/skills/`) — esa es la única copia real.
+2. **Paridad**: crea los 2 junctions: `.claude/skills/<nombre>` → `.agents/skills/<nombre>` y `.opencode/skills/<nombre>` → `.agents/skills/<nombre>`. Usa `node scripts/install-skill.js <nombre> [ruta-origen]` — hace los pasos 1, 2 y la revisión de colisión de nombre sola.
+3. **¿Es de gobierno SuitOS?** Si la skill va a ser referenciada por un workflow o necesita reglas de negocio propias (más allá de lo que ya dice su `SKILL.md`), agrégala a `.suit/registry/skills.yaml` como `{name, path}` apuntando a su `.suit/skills/<categoría>/<nombre>.yaml` — nunca copies su `description` ahí. Si es una skill genérica, no la registres: el registry es solo para lo que SuitOS gobierna.
+4. **Regenera el inventario**: `node .suit/skills/process/listado-capacidades/scripts/generate-list.js` (el script de instalación ya lo corre solo).
 
 ## Start here
 - Read `.suit/ARCHITECTURE.md` first (above) for system design
@@ -223,49 +237,13 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 9. **Log** — record execution in `.suit/logs/` following telemetry schema
 10. **Smoke test manually**
 
-## KITCiclo — Mandatory Overlay (auto-wrapper)
+## Ciclo — Mandatory Overlay (auto-wrapper)
 
-**Before ANY code modification**, the agent MUST:
+**Fuente única**: `.agents/skills/ciclo/SKILL.md` (visible nativamente en Claude Code vía `.claude/skills/ciclo` y en OpenCode vía `.opencode/skills/ciclo` — mismo archivo, dos junctions). No restates aquí las fases, auto-chain-rules ni el detalle de modos (`contrato`, `depura`) — están ahí y en `references/fases.md`, `references/alcance.md`, `references/contrato.md`, `references/depuracion.md`, `references/db-sync.md`.
 
-1. Check if scope has `CONTRATO.md` → if not, create it (F0)
-2. Run `bash scripts/detectar-cambios.sh <scope>` to resolve scope
-3. Apply `kit-ciclo` workflow phases as appropriate
+**Esta skill es AUTOMÁTICA — no la saltes por "cambios pequeños".** Antes de cualquier modificación de código: resuelve alcance y contrato leyendo `.agents/skills/ciclo/references/alcance.md`. Después de cualquier modificación: valida y comitea por fase como indica la skill.
 
-**After ANY code modification**, the agent MUST:
-
-1. Run validation (F3) — record in `VALIDACION.md`
-2. Commit per phase using `scripts/commit-fase.sh` (not at the end)
-3. Detect schema delta (F5) if DB files changed
-4. Sync if needed (F6) — only with user approval
-
-**This overlay is AUTOMATIC — do not skip it for "small changes".**
-
-### Entry phases (routing determines start point)
-
-| Keyword pattern | Entry phase | What runs |
-|---|---|---|
-| `mejoras`, `cambios`, `mantenimiento`, `ciclo` | F0 (full) | F0→F1→F2→F3→(F4)→(F5→F6)→(F7) |
-| `verifica contrato`, `crea contrato` | F0 only | Scope detection + CONTRATO.md |
-| `prioriza`, `encuadre` | F1 only | Prioritization 20/80 |
-| `valida`, `verifica cambios`, `checa` | F3 only | Validation (post code change) |
-| `sincroniza`, `sync schema`, `delta` | F5→F6 | Schema sync only |
-| `depura datos`, `compactar datos` | F6 only | Data cleanup only |
-
-### Auto-chain rules
-
-```
-F2 completada → F3 (siempre)
-F3 PASA + no DB changes → STOP (ciclo completo)
-F3 PASA + DB files changed → F5→F6
-F3 FALLA → F4 (max 3 rondas)
-F4 → F3 (re-validate after fix)
-F5 APROBADO → F6
-F5 RECHAZADO → STOP
-F6 completado → STOP
-F7 solo si usuario confirma
-```
-
-### Keywords that trigger KITCiclo
+### Keywords que disparan ciclo (ver también `.suit/registry/routing.yaml`)
 
 `mejoras`, `cambios`, `mantenimiento`, `modificaciones`, `compactar`, `compactacion`, `depuracion`, `ciclo`, `fase`, `contrato`, `refactorizar`, `optimizar`, `limpiar codigo`.
 
@@ -284,45 +262,6 @@ When generating a Marketing Brief (workflow `brief-generation`), follow this cyc
 
 **MCP server**: `SuitCampanas/mcp/brief-server.js` (stdio transport, 4 tools)
 **Command**: `/brief [empresa]` (OpenCode + Claude Code)
-
-## Maintenance cycle (KITCiclo integration)
-
-When modifying code in any subproject, the agent automatically applies the maintenance cycle. The cycle runs **automatically** — you don't need to invoke it manually.
-
-### Phases (max 7 per cycle)
-
-| Phase | Name | What happens | Commit |
-|-------|------|--------------|--------|
-| F0 | Alcance + Contrato | Resolve scope, find/create `CONTRATO.md` | Yes |
-| F1 | Encuadre 20/80 | Prioritize: impact vs effort, discard explicitly | Yes |
-| F2 | Implementación | Execute only what was planned | Yes |
-| F3 | Validación | Run tests with evidence (see `VALIDACION.md`) | Yes |
-| F4 | Iteración (if fails) | Max 3 rounds, then stop and ask | Yes (if iterated) |
-| F5 | Plan de sync | Detect schema delta per engine | Yes |
-| F6 | Sync ejecutado | Apply sync per company with approval | Yes |
-| F7 | Push GitHub | Only if user decides | Yes |
-
-### Key rules
-
-- **Contract first**: No F1 without CONTRACT.md in the scope
-- **Commit per phase**: Each phase closes with its own commit
-- **Iterate max 3**: If validation fails, iterate up to 3 rounds, then stop
-- **Cleanup**: Always backup before destructive data operations
-- **No cross-company sync**: Each company syncs independently
-- **Data sync only in F5-F6**: Never in the middle of a code cycle
-- **Manual invocation**: `/ciclo [ruta] [objetivo]` for explicit cycles
-
-### Files used
-
-| File | Purpose |
-|------|---------|
-| `CONTRATO.md` (per subproject) | Scope, rules, invariants |
-| `VALIDACION.md` | Test evidence and verdicts |
-| `CORRECCIONES.md` | Learnings from iteration |
-| `PLAN-SYNC.md` | Schema sync plan |
-| `PLAN-DEPURA.md` | Data cleanup plan |
-| `scripts/detectar-cambios.sh` | Resolve scope and changes |
-| `scripts/commit-fase.sh` | Commit with phase format |
 
 ## Standard for new modules (SuitReservaciones pattern)
 

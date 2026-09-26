@@ -181,11 +181,12 @@ routing:
         - "refactorizar"
         - "optimizar"
         - "limpiar codigo"
-      workflow: kit-ciclo
+      workflow: ciclo
+      skill: .agents/skills/ciclo/SKILL.md
       priority: 25
       entry_phase: full  # F0→F1→F2→F3→(F4)→(F5→F6)→(F7)
 
-    # ── KITCiclo phase-specific routing ──────────────────────────────
+    # ── ciclo: phase-specific routing (skill única, ver .agents/skills/ciclo/) ──
     - patterns:
         - "verifica contrato"
         - "revisa contrato"
@@ -193,9 +194,10 @@ routing:
         - "contrato de"
         - "contrato del proyecto"
         - "crea contrato"
-      workflow: kit-ciclo
+      workflow: ciclo
+      skill: .agents/skills/ciclo/SKILL.md
       priority: 28
-      entry_phase: f0  # Solo F0
+      entry_phase: f0  # Solo F0 (modo `contrato`)
 
     - patterns:
         - "prioriza"
@@ -203,7 +205,8 @@ routing:
         - "que hago primero"
         - "orden de cambios"
         - "priorizar"
-      workflow: kit-ciclo
+      workflow: ciclo
+      skill: .agents/skills/ciclo/SKILL.md
       priority: 28
       entry_phase: f1  # Solo F1
 
@@ -214,7 +217,8 @@ routing:
         - "verificar"
         - "checa"
         - "revisa codigo"
-      workflow: kit-ciclo
+      workflow: ciclo
+      skill: .agents/skills/ciclo/SKILL.md
       priority: 28
       entry_phase: f3  # Solo F3
 
@@ -224,7 +228,8 @@ routing:
         - "sync schema"
         - "migrar esquema"
         - "delta de esquema"
-      workflow: kit-ciclo
+      workflow: ciclo
+      skill: .agents/skills/ciclo/SKILL.md
       priority: 28
       entry_phase: f5  # Solo F5→F6
 
@@ -234,9 +239,10 @@ routing:
         - "limpiar datos"
         - "compactar datos"
         - "datos huérfanos"
-      workflow: kit-ciclo
+      workflow: ciclo
+      skill: .agents/skills/ciclo/SKILL.md
       priority: 28
-      entry_phase: f6  # Solo F6 (data cleanup)
+      entry_phase: f6  # Solo F6 (modo `depura`)
 
     - patterns:
         - "color"
@@ -290,6 +296,20 @@ routing:
         - brief-engine
         - web-research
         - multi-tenant
+
+  # ── Prompt pre-flight (siempre activo vía AGENTS.md overlay; gatillo explícito) ──
+    - patterns:
+        - "revisa mi prompt"
+        - "optimiza este pedido"
+        - "revisa mi contexto"
+        - "sesgos"
+        - "ingeniero de prompts"
+        - "antes de ejecutar"
+      workflow: review
+      priority: 40
+      agent: reviewer
+      skills_override:
+        - prompt-reviewer
 
   overrides:
     - if:

@@ -20,7 +20,7 @@
 ## Workflows
 | File | Purpose |
 |---|---|
-| `workflows/kit-ciclo.yaml` | KITCiclo — mandatory maintenance cycle wrapper (F0→F7) |
+| `.agents/skills/ciclo/SKILL.md` | ciclo — mandatory maintenance cycle (F0→F7), skill única compartida por Claude Code y OpenCode |
 | `workflows/feature.yaml` | New feature implementation |
 | `workflows/bugfix.yaml` | Bug fixing process |
 | `workflows/audit.yaml` | System audit |
