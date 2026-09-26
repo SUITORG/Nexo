@@ -1,5 +1,5 @@
 # CONTRATO — SuitOrg (Raíz)
-Versión: 0.0.1 (borrador)
+Versión: 0.0.2 (2026-09-25 — sub-contratos BRIEF/ACTIVOS + invariante de celda)
 
 ## Propósito
 Monorepo de SuitOrg: sistema de orquestación de agentes (SuitOS) + motor SSG multi-tenant que genera y despliega el sitio estático de `grupoevasol.com` vía GitHub Pages. Incluye backend dual (GAS + Node.js), frontend vanilla JS SPA, y múltiples módulos independientes (CampanasAi, SuitReservaciones, SuitCotizador, ViRe, SuitServiHogar, etc.).
@@ -17,6 +17,7 @@ Monorepo de SuitOrg: sistema de orquestación de agentes (SuitOS) + motor SSG mu
 | `multi-tenant` | domain | security |
 | `contrato-subproyecto` | domain | governance |
 | `brief-engine` | domain | marketing |
+| `lapvtfu` | domain | marketing |
 | `design-system` | domain | design |
 | `data-sync` | domain | data |
 | `data-cleanup` | domain | data |
@@ -74,6 +75,15 @@ Monorepo de SuitOrg: sistema de orquestación de agentes (SuitOS) + motor SSG mu
 4. Sin frameworks frontend — vanilla JS puro
 5. Sin hardcodear secrets — usar `.env`
 6. Un solo sitio indexable: `grupoevasol.com` — el resto son demos `noindex, nofollow`
+7. **Frontera de escritura del vector Brief (`Config_Empresas.logo_url`)** — dos escritores, dos territorios: la Capa Contenido (`SUBCONTRATO-BRIEF.md`) escribe sus 20 segmentos preservando el segmento `LAPVTFU` byte a byte; la Capa Activos (`SUBCONTRATO-ACTIVOS.md`) escribe solo el segmento `LAPVTFU` (7 slots posicionales) preservando los 20 de contenido byte a byte. Cada capa escribe únicamente su territorio.
+
+## Sub-contratos
+Anexos que detallan una capa del monorepo. En conflicto con este contrato, **manda el sub en su territorio** (`alcance.md`), este sigue mandando en el marco general. No son detectados por `detectar_cambios.sh` (por diseño — el contrato vigente sigue siendo la raíz).
+
+| Archivo | Capa | Skill | Workflow / entrada |
+|---|---|---|---|
+| `SUBCONTRATO-BRIEF.md` | Contenido (20 segmentos del vector Brief) | `brief-engine` | `brief-generation` |
+| `SUBCONTRATO-ACTIVOS.md` | Activos (segmento `LAPVTFU`, 7 slots) | `lapvtfu` | botones ensure del sidebar / `POST /api/brief/ensure-*` |
 
 ## Límites
 - No sincronizar datos entre empresas
@@ -88,3 +98,7 @@ Monorepo de SuitOrg: sistema de orquestación de agentes (SuitOS) + motor SSG mu
 - [ ] Skills del proyecto documentadas
 - [ ] Requerimientos Frontend/Backend/Seguridad clasificados
 - [ ] Commit con formato `ciclo(f0/contrato)[SuitOrg]: Contrato raíz creado`
+
+## Cambios
+- 2026-09-25: v0.0.2 — invariante de celda #7 + sección Sub-contratos (`SUBCONTRATO-BRIEF.md`, `SUBCONTRATO-ACTIVOS.md`)
+- 2026-09-25: v0.0.1 — contrato raíz creado (commit `8e09ff5`)
