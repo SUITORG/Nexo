@@ -70,31 +70,29 @@ function killExistingTunnels() {
   } catch (e) { /* no había ninguno */ }
 }
 
-async function main() {
-  // 1. Origen disponible (advertencia, no bloquea)
-  try {
-    await fetch('http://localhost:3001', { signal: AbortSignal.timeout(2000) });
-  } catch (e) {
-    log('⚠ Node :3001 no responde — levántalo (node server.js) antes de usar el sidebar');
-  }
-
-  // 2. Matar túnel anterior (misma URL de trabajo) y lanzar uno nuevo
+function spawnTunnel(state) {
   killExistingTunnels();
+  state.rejected = 0;
   const child = spawn('cloudflared', ['tunnel', '--url', 'http://localhost:3001', '--no-autoupdate'], {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+  state.child = child;
 
-  const seen = new Set();
-  let matched = false;
   const onChunk = (buf) => {
     const text = buf.toString();
     process.stderr.write(text);
+    // Edge rechazó el túnel ("Tunnel not found") → el hostname ya no existe (NXDOMAIN).
+    // Al 5to rechazo seguido, relanzar para obtener URL nueva y re-registrar.
+    if (text.includes('Tunnel not found') && ++state.rejected >= 5) {
+      log('túnel rechazado por Cloudflare (5x) — relanzando para obtener URL nueva');
+      child.kill();
+      return;
+    }
     const urls = text.match(URL_RE);
     if (urls) {
       for (const u of urls) {
-        if (!seen.has(u)) {
-          seen.add(u);
-          matched = true;
+        if (!state.seen.has(u)) {
+          state.seen.add(u);
           log(`URL viva detectada: ${u}`);
           registerUrl(u);
         }
@@ -105,11 +103,23 @@ async function main() {
   child.stdout.on('data', onChunk);
 
   child.on('exit', (code) => {
-    log(`cloudflared terminó (code ${code}) — re-ejecuta: node scripts/tunel.js`);
-    process.exit(code || 1);
+    log(`cloudflared terminó (code ${code}) — relanzando en 3 s…`);
+    setTimeout(() => spawnTunnel(state), 3000);
   });
 
   log('cloudflared lanzado — esperando URL del túnel…');
+}
+
+async function main() {
+  // 1. Origen disponible (advertencia, no bloquea)
+  try {
+    await fetch('http://localhost:3001', { signal: AbortSignal.timeout(2000) });
+  } catch (e) {
+    log('⚠ Node :3001 no responde — levántalo (node server.js) antes de usar el sidebar');
+  }
+
+  // 2. Auto-heal continuo: si cloudflared muere o es rechazado, se relanza y re-registra
+  spawnTunnel({ child: null, seen: new Set(), rejected: 0 });
 }
 
 main().catch(e => { log('ERROR:', e.message); process.exit(1); });
