@@ -42,6 +42,7 @@ select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);pa
 .b-CFG{background:#1a2f4d;color:var(--info)} .b-NA{background:#1c2440;color:var(--dim)}
 .b-UP{background:#123c2c;color:var(--ok)} .b-DOWN{background:#3d1a24;color:var(--bad)}
 .b-PORT{background:#4a1520;color:#ff9aa8;animation:pulse 1.6s infinite}
+.b-CTR{background:#12304d;color:#8fd0ff} .b-NOCTR{background:#24282e;color:var(--dim)}
 @keyframes pulse{50%{opacity:.55}}
 .chips{display:flex;flex-wrap:wrap;gap:5px;min-height:24px;margin-bottom:9px}
 .mcp{font-size:.66rem;padding:3px 7px;border-radius:6px;background:#16324a;color:#9fd0ff;border:1px solid #23486b}
@@ -291,6 +292,9 @@ function card(p){
   const badges = [
     `<span class="badge b-${p.kind}">${KIND_LABEL[p.kind]||p.kind}</span>`,
     p.sync!=='NA' ? `<span class="badge b-${p.sync}">${p.sync}${p.sync==='DESYNC'?' +'+p.missing.length+'/-'+p.extra.length:''}</span>` : '',
+    p.contract
+      ? `<span class="badge b-CTR" title="Contrato: ${esc(p.contract.file)}">Eval ${p.contract.ev==null?'—':p.contract.ev+'%'} · Term ${p.contract.term==null?'—':p.contract.term+'%'}</span>`
+      : '<span class="badge b-NOCTR">sin contrato</span>',
     (p.portConflict&&p.portConflict.length) ? `<span class="badge b-PORT">PUERTO ${p.portConflict.map(c=>c.port).join(',')}</span>` : '',
     D.live && p.live ? `<span class="badge b-${p.live==='up'?'UP':'DOWN'}">${p.live==='up'?'▲ arriba':'▼ abajo'}</span>` : ''
   ].join('');

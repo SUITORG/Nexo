@@ -31,7 +31,7 @@ function readJson(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
 }
 function exists(p) { try { return fs.existsSync(p); } catch { return false; } }
-function readText(p) { try { return fs.readFileSync(p, 'utf8'); } catch { return ''; } }
+function readText(p) { try { return fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, ''); } catch { return ''; } }
 
 // --- Registry projects.yaml (parser mínimo, sin dependencias) ---
 function parseRegistry() {
@@ -197,6 +197,9 @@ const SCRIPT_DESC_ES = {
   'whatsapp-test.js': 'Prueba de conexión al MCP wappmcp: lo lanza por npx y espera el handshake.'
 };
 
+// Traducciones de descripciones de skills (EN→ES). Fuente: desc-skill-es.json.
+const SKILL_DESC_ES = readJson(path.join(__dirname, 'desc-skill-es.json')) || {};
+
 // Activadores: fuentes que referencian cada script, leídas una sola vez.
 function buildTriggerSources() {
   const src = [];
@@ -319,16 +322,70 @@ function readSkillDesc(mdPath) {
   if (txt.startsWith('---')) {
     const end = txt.indexOf('\n---', 3);
     const fm = end > 0 ? txt.slice(4, end) : txt;
-    const m = /^description:\s*[>|-]?\s*["']?(.+)$/m.exec(fm);
-    if (m) return m[1].replace(/["'\s]+$/, '').trim();
+    const m = /^description:[ \t]*([>|][+-]?)?[ \t]*(.*)$/m.exec(fm);
+    if (m) {
+      let v = (m[2] || '').replace(/^["']/, '').trim();
+      const lines = fm.split(/\r?\n/);
+      const i = lines.findIndex(l => /^description:/.test(l));
+      const cont = [];
+      for (let j = i + 1; j < lines.length; j++) {
+        if (/^\s+\S/.test(lines[j])) cont.push(lines[j].trim()); else break;
+      }
+      if (cont.length) v = (v ? v + ' ' : '') + cont.join(' ');
+      v = v.replace(/["'\s]+$/, '').replace(/\s+/g, ' ').trim();
+      if (v) return v;
+    }
   }
-  const line = txt.split(/\r?\n/).find(l => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('---'));
+  const body = txt.split(/\r?\n/);
+  const hi = body.findIndex(l => /^#{2,3}\s*(descripci[oó]n|description)\b/i.test(l.trim()));
+  if (hi >= 0) {                              // sin frontmatter: sección "## Descripción"
+    const seg = [];
+    for (let j = hi + 1; j < body.length; j++) {
+      const l = body[j].trim();
+      if (!l || /^#/.test(l)) break;
+      seg.push(l);
+    }
+    if (seg.length) return seg.join(' ').replace(/\s+/g, ' ').trim();
+  }
+  const line = body.find(l => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('---'));
   return (line || '').trim().replace(/^#+\s*/, '').slice(0, 160);
 }
 
 function yamlDesc(txt) {
-  const m = /^description:\s*(.+)$/m.exec(txt);
-  return m ? m[1].replace(/^['">|-]\s*/, '').replace(/["']+$/, '').trim().slice(0, 160) : '';
+  const m = /^\s*description:[ \t]*([>|][+-]?)?[ \t]*(.*)$/m.exec(txt);
+  if (!m) return '';
+  let v = (m[2] || '').replace(/^["'>|-]\s*/, '').trim();
+  const lines = txt.split(/\r?\n/);
+  const i = lines.findIndex(l => /^\s*description:/.test(l));
+  const di = (lines[i].match(/^\s*/) || [''])[0].length;
+  const cont = [];
+  for (let j = i + 1; j < lines.length; j++) {
+    const ind = (lines[j].match(/^\s*/) || [''])[0].length;
+    if (lines[j].trim() && ind > di) cont.push(lines[j].trim()); else break;
+  }
+  if (cont.length) v = (v ? v + ' ' : '') + cont.join(' ');
+  return v.replace(/["']+$/, '').replace(/\s+/g, ' ').trim();
+}
+
+// --- Contrato del proyecto (evaluación % + terminado %) ---
+function contractFor(dir) {
+  let entries = [];
+  try { entries = fs.readdirSync(dir); } catch { return null; }
+  const pick = (re) => entries.find(f => re.test(f));
+  const file = pick(/^contrato\.md$/i) || pick(/^contratoprp\.md$/i) || pick(/^prm\.md$/i);
+  if (!file) return null;
+  const t = readText(path.join(dir, file));
+  let ev = null;
+  const mEv = /^\|.*\|\s*(\d{1,3})\s*%\s*\|/m.exec(t);
+  if (mEv) ev = +mEv[1];
+  else {
+    const ok = (t.match(/✅/g) || []).length, par = (t.match(/⚠️/g) || []).length, no = (t.match(/❌/g) || []).length;
+    if (ok + par + no > 0) ev = Math.round((ok + par * 0.5) / (ok + par + no) * 100);
+  }
+  const done = (t.match(/\[x\]/gi) || []).length;
+  const open = (t.match(/\[ \]/g) || []).length;
+  const term = done + open > 0 ? Math.round(done / (done + open) * 100) : null;
+  return { file, ev, term };
 }
 
 function collectSkills(dir, sources) {
@@ -592,6 +649,7 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
     entry,
     ports,
     registry: r ? { key: r.key, db: r.db || null, desc: r.desc || null } : null,
+    contract: contractFor(dir),
     mcpActive, mcpOff, claudeMcp,
     mcps, skillsCli,
     skills,
@@ -638,7 +696,7 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
         if (!existing.cli.includes(cli)) existing.cli.push(cli);
         continue;
       }
-      const entry = { name: s.name, desc: s.desc, project: p.name, src: s.src, cli: [cli] };
+      const entry = { name: s.name, desc: SKILL_DESC_ES[s.name] || s.desc, project: p.name, src: s.src, cli: [cli] };
       seenSkill.set(key, entry);
       allSkills.push(entry);
     }
