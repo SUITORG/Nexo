@@ -20,6 +20,7 @@ Dashboard local HTML de solo lectura que escanea el monorepo SuitOrg (MCPs confi
 - Motores soportados: N/A — no tiene base de datos propia
 - Ubicación de esquema o migraciones: N/A
 - Fuente real de datos: lectura del filesystem del monorepo en cada corrida de `scan.js` (`.suit/registry/projects.yaml`, `scripts/mcp-manager.js` → `PROJECT_OPTIMAL`, `opencode.json`/`.mcp.json`/`package.json` de cada subcarpeta, `~/.claude.json`, `.claude/settings.json`); escribe el snapshot en `SuitDashboard/data.js` (`window.SUIT = {...}`), consumido únicamente por `index.html`
+- Activadores de scripts (`triggers`): `scan.js` lee una sola vez `AGENTS.md`, `CLAUDE.md`, `package.json`, `*.bat` de la raíz, `.suit/**/*.{yaml,md}`, `.github/workflows/*.yml` (incluye `schedule:` → cron) y `opencode.json`/`.mcp.json` (raíz + nivel-1) y detecta en ellos la referencia `scripts/<ruta>`; etiqueta `CLI manual` si nadie lo referencia. Descripciones de scripts: mapa local `SCRIPT_DESC_ES` en `scan.js` (las cabeceras de `scripts/*` quedan intactas — fuera del alcance)
 - Reglas de aislamiento entre empresas: N/A — no maneja datos de negocio ni de tenants
 
 ## Límites
@@ -48,3 +49,4 @@ Proyecto creado en otro IDE, fuera del flujo SuitOS (`/suit-plan → /suit-workf
 
 ## Cambios
 - 2026-09-25: Contrato inicial creado (fase 0), verificado contra `scan.js`, `index.html`, `abrir.bat` y `sondear.bat`
+- 2026-09-25: Ciclo mantenimiento — descripciones de scripts en español (`SCRIPT_DESC_ES`) + columna "Activadores" (fuentes de triggers en `scan.js`)

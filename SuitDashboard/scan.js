@@ -160,9 +160,107 @@ function scanParallelGroups() {
 }
 
 // --- Scripts (scripts/**/*.{js,mjs,cjs,sh,py}) ---
+
+// Descripciones en español (mapa local). Las cabeceras de scripts/ viven fuera
+// del alcance de este dashboard y no se tocan — ver CONTRATO.md.
+const SCRIPT_DESC_ES = {
+  'agents/probador.js': 'Agente SuitOS de pruebas de humo (solo lectura): corre suites de .suit/tests/*.yaml contra los servidores activos.',
+  'agents/reportero.js': 'Agente SuitOS de revisión de código (solo lectura): analiza archivos y propone hallazgos según reviewer/profiles.yaml.',
+  'agents/vision-audit.js': 'Agente de navegador: escucha Agent_Tasks en Supabase y ejecuta auditorías visuales automáticas con Playwright.',
+  'backup.sh': 'Respaldo del monorepo a ZIP en el directorio padre (excluye .git, node_modules, .venv, cachés).',
+  'brief-generate.js': 'Router Express autocontenido del Brief: parseo, validación y generación; SuitCampanas solo llama parseBrief().',
+  'check-gas-sync.sh': 'Compara backend/*.js locales contra el código desplegado en el GAS canónico (hace visible el drift antes de desplegar).',
+  'commit-fase.sh': 'Commitea el resultado de una fase del ciclo de mantenimiento con el formato ciclo(f<n>/<fase>)[alcance].',
+  'configurador-estilos.js': 'TUI de consulta de Estilos Visuales: lee en vivo video_categorias_estilo / video_subestilos desde Supabase.',
+  'configurador-formatos.js': 'TUI de consulta de formatos por red desde la matriz fija GUIAFMTRRSS.MD (medidas, duración, objetivo).',
+  'detectar-cambios.sh': 'Resuelve el alcance del ciclo, su CONTRATO.md y los cambios git pendientes de ese alcance.',
+  'find-loose-files.js': 'Busca archivos huérfanos: nombres que ningún otro archivo referencia (require/import/src/href/fetch).',
+  'generate-index.js': 'Escanea los .js/.gs del proyecto y regenera INDEX_FUNCIONES.md con funciones en archivo:línea.',
+  'get-qr.mjs': 'Obtiene el QR de vinculación de WhatsApp lanzando @kahflane/whatsapp-mcp y capturando su salida.',
+  'install-skill.js': 'Instala una skill como fuente única en .agents/skills/<nombre> y crea junctions hacia .claude/ y .opencode/.',
+  'mcp/brief-server.js': 'MCP server del Brief (herramientas brief.parse / validate / generate / write) para agentes compatibles con MCP.',
+  'mcp-github.js': 'Wrapper del MCP de GitHub: carga el .env de la raíz y lanza npx @modelcontextprotocol/server-github.',
+  'mcp-manager.js': 'Gestor de MCPs: MCP_DEFAULTS / PROJECT_OPTIMAL y sincronización de servidores en opencode.json y .mcp.json.',
+  'mcp-supabase.js': 'Wrapper del MCP de Supabase: carga el .env de la raíz y lanza npx @supabase/mcp-server-supabase.',
+  'mcp-telegram.js': 'Wrapper del MCP de Telegram: carga el .env de la raíz y lanza npx telegram-bot-mcp-server.',
+  'migrate-supabase-to-neon.js': 'Migra todas las tablas de Supabase a Neon Postgres (acepta --dry-run).',
+  'orchestrator_client.js': 'Cliente HTTP del orquestador: hace POST JSON a una URL (la usan flujos de agentes y GAS).',
+  'parse-theme.js': 'Parser del campo color_tema pipe-delimited (color, candado, pal, tp, tpl) y resolución del tema visual.',
+  'read-last.js': 'Lee el último mensaje recibido por whatsapp-web.js con la sesión local .wappmcp/profile.',
+  'run-migration-007.js': 'Ejecuta Documentacion/migrations/007_planes_medios.sql contra la API de Supabase (SUPABASE_ACCESS_TOKEN).',
+  'send-direct.js': 'Envía un mensaje directo de prueba por WhatsApp con la sesión local (whatsapp-web.js).',
+  'send-manuel.js': 'Envía un mensaje de WhatsApp a un contacto con la sesión local .wappmcp/profile (prueba de envío).',
+  'send-wa-test.mjs': 'Prueba de conexión al MCP wappmcp: lo lanza por npx y espera el handshake.',
+  'ssg-engine.mjs': 'Motor SSG multi-inquilino: genera los HTML estáticos con SEO desde Google Sheets (único generador de dist/).',
+  'system-status.js': 'Muestra qué servicios locales están activos por puerto — alternativa a netstat/tasklist.',
+  'tunel.js': 'Túnel cloudflared con auto-heal para el sidebar BRIEF: extrae la URL viva y la registra en GAS.',
+  'whatsapp-test.js': 'Prueba de conexión al MCP wappmcp: lo lanza por npx y espera el handshake.'
+};
+
+// Activadores: fuentes que referencian cada script, leídas una sola vez.
+function buildTriggerSources() {
+  const src = [];
+  const add = (rel, kind) => {
+    const t = readText(path.join(ROOT, rel));
+    if (t && t.length < 1000000) src.push({ rel, kind, text: t });
+  };
+  ['AGENTS.md', 'CLAUDE.md', 'package.json'].forEach(f => add(f, 'root'));
+  try {
+    for (const e of fs.readdirSync(ROOT, { withFileTypes: true })) {
+      if (e.isFile() && /\.bat$/i.test(e.name)) add(e.name, 'bat');
+    }
+  } catch { /* noop */ }
+  const walk = (dir, rel, re, kind) => {
+    let ents = []; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of ents) {
+      const r = rel + '/' + e.name;
+      if (e.isDirectory()) walk(path.join(dir, e.name), r, re, kind);
+      else if (re.test(e.name)) add(r, kind);
+    }
+  };
+  walk(path.join(ROOT, '.suit'), '.suit', /\.(ya?ml|md)$/i, 'suit');
+  walk(path.join(ROOT, '.github'), '.github', /\.ya?ml$/i, 'ci');
+  try {
+    for (const e of fs.readdirSync(ROOT, { withFileTypes: true })) {
+      if (!e.isDirectory() || EXCLUDE.has(e.name)) continue;
+      add(e.name + '/opencode.json', 'mcp-oc');
+      add(e.name + '/.mcp.json', 'mcp-claude');
+    }
+  } catch { /* noop */ }
+  add('opencode.json', 'mcp-oc');
+  add('.mcp.json', 'mcp-claude');
+  return src;
+}
+
+function triggersFor(rel, sources) {
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pat = new RegExp('scripts[/\\\\]' + rel.split('/').map(esc).join('[/\\\\]'), 'i');
+  const hits = sources.filter(s => pat.test(s.text));
+  const labels = [];
+  const ci = hits.filter(h => h.kind === 'ci');
+  for (const h of ci) {
+    const name = path.basename(h.rel);
+    const cron = /schedule:[\s\S]{0,500}?-\s*cron:\s*['"]?([^'"\r\n]+)/.exec(h.text);
+    labels.push(cron ? `cron ${cron[1].trim()} · ${name}` : `github workflow · ${name}`);
+  }
+  const bat = hits.filter(h => h.kind === 'bat');
+  if (bat.length) labels.push(bat.map(h => 'bat: ' + h.rel).join(', '));
+  const oc = hits.filter(h => h.kind === 'mcp-oc');
+  if (oc.length) labels.push(`opencode.json ×${oc.length}`);
+  const cl = hits.filter(h => h.kind === 'mcp-claude');
+  if (cl.length) labels.push(`.mcp.json ×${cl.length}`);
+  const root = hits.filter(h => h.kind === 'root' && h.rel !== 'package.json');
+  if (root.length) labels.push(root.map(h => h.rel).join(', '));
+  if (hits.some(h => h.rel === 'package.json')) labels.push('npm scripts');
+  const suit = hits.filter(h => h.kind === 'suit');
+  if (suit.length) labels.push(`.suit (${suit.length} refs)`);
+  return labels.length ? labels : ['CLI manual'];
+}
+
 function scanScripts() {
   const dir = path.join(ROOT, 'scripts');
   if (!exists(dir)) return [];
+  const sources = buildTriggerSources();
   const out = [];
   (function walk(d, rel) {
     let entries = [];
@@ -181,7 +279,13 @@ function scanScripts() {
         desc = m ? m[1].trim() : '';
         break;
       }
-      out.push({ name: e.name, path: 'scripts/' + relPath, ext: path.extname(e.name).slice(1).toLowerCase(), desc: desc.slice(0, 160) });
+      out.push({
+        name: e.name,
+        path: 'scripts/' + relPath,
+        ext: path.extname(e.name).slice(1).toLowerCase(),
+        desc: (SCRIPT_DESC_ES[relPath] || desc).slice(0, 160),
+        triggers: triggersFor(relPath, sources)
+      });
     }
   })(dir, '');
   return out.sort((a, b) => a.path.localeCompare(b.path));

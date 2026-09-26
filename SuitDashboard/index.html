@@ -224,7 +224,7 @@ table.cli tbody tr:hover td{background:#141d38}
     </div>
     <div class="tblwrap">
       <table class="cli">
-        <thead><tr><th>Nombre</th><th>Tipo</th><th>Ruta</th><th>Descripción</th></tr></thead>
+        <thead><tr><th>Nombre</th><th>Tipo</th><th>Ruta</th><th>Descripción</th><th>Activadores</th></tr></thead>
         <tbody id="tblScripts"></tbody>
       </table>
     </div>
@@ -569,7 +569,7 @@ function spMatch(s){
   if (spExtFilters.size && !spExtFilters.has(s.ext)) return false;
   const q = document.getElementById('spq').value.trim().toLowerCase();
   if (!q) return true;
-  return (s.name+' '+s.path+' '+s.desc).toLowerCase().includes(q);
+  return (s.name+' '+s.path+' '+s.desc+' '+(s.triggers||[]).join(' ')).toLowerCase().includes(q);
 }
 
 function renderSp(){
@@ -588,7 +588,8 @@ function renderSp(){
       <td><span class="pill ${EXT_PILL[s.ext]||'p-abs'}">.${esc(s.ext)}</span></td>
       <td class="wrap"><code>${esc(s.path)}</code></td>
       <td class="wrap">${esc(s.desc||'—')}</td>
-    </tr>`).join('') : '<tr><td colspan="4" style="color:var(--dim)">Sin resultados</td></tr>';
+      <td class="wrap">${(s.triggers||[]).map(t=>`<span class="pill p-suit">${esc(t)}</span>`).join(' ')||'—'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" style="color:var(--dim)">Sin resultados</td></tr>';
 
   document.getElementById('tblPlugins').innerHTML = SP.plugins.length ? SP.plugins.map(p=>`
     <tr>
