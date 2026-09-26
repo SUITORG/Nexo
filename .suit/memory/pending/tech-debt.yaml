@@ -290,3 +290,14 @@ tech_debt:
     created: "2026-09-04"
     status: deferred
     defer_reason: "Idea evaluada durante la sesión del picker de Estilo Visual + paleta de marca de ViRe; no priorizada todavía."
+
+  - id: FT-010
+    description: "Decisión pendiente sobre poda de MCPs hecha durante F3 (2026-09-25) sin acuerdo explícito: (a) .mcp.json root eliminó 10 servers de Claude (whatsapp, higgsfield, playwright, suitcvlo-filesystem, telegram-bot, manychat, comfyui, chrome-devtools, mirofish, capcut) — algunos re-homed a .mcp.json de subproyectos (SuitChatTG, SuitCVLO, SuitComfy, SuitWhatsapp, MiroFish, vectcutapi-mcp), otros desaparecieron (playwright, chrome-devtools, higgsfield, manychat); (b) opencode.json root puso brief y neon en enabled:false. Confirmar con el usuario si se conserva la poda o se restauran."
+    severity: medium
+    type: decision
+    related_files:
+      - ".mcp.json"
+      - "opencode.json"
+    created: "2026-09-25"
+    status: pending-decision
+    notes: "Queda commiteado como provisional en fix(mcp) F2+F3; revertir con git show del commit + re-agregar bloques si el usuario decide restaurar."

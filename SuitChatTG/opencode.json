@@ -4,14 +4,13 @@
     "supabase": {
       "type": "local",
       "command": ["node", "scripts/mcp-supabase.js"],
+      "cwd": "C:/Users/rojo-/Downloads/SuitOrg",
       "enabled": true
     },
     "telegram-bot": {
       "type": "local",
-      "command": ["npx", "-y", "telegram-bot-mcp-server"],
-      "env": {
-        "TELEGRAM_BOT_API_TOKEN": "${TELEGRAM_BOT_API_TOKEN}"
-      },
+      "command": ["node", "scripts/mcp-telegram.js"],
+      "cwd": "C:/Users/rojo-/Downloads/SuitOrg",
       "enabled": true
     }
   }

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "telegram-bot": {
+      "command": "node",
+      "args": ["C:/Users/rojo-/Downloads/SuitOrg/scripts/mcp-telegram.js"]
+    }
+  }
+}

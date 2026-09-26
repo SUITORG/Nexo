@@ -72,21 +72,21 @@
   "mcp": {
     "github": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
-      },
+      "command": ["node", "scripts/mcp-github.js"],
+      "cwd": "C:/Users/rojo-/Downloads/SuitOrg",
       "enabled": true
     },
     "supabase": {
       "type": "local",
       "command": ["node", "scripts/mcp-supabase.js"],
+      "cwd": "C:/Users/rojo-/Downloads/SuitOrg",
       "enabled": true
     },
     "brief": {
       "type": "local",
       "command": ["node", "scripts/mcp/brief-server.js"],
-      "enabled": true
+      "cwd": "C:/Users/rojo-/Downloads/SuitOrg",
+      "enabled": false
     },
     "playwright": {
       "type": "local",
@@ -101,7 +101,7 @@
     "neon": {
       "type": "remote",
       "url": "https://mcp.neon.tech/mcp",
-      "enabled": true
+      "enabled": false
     }
   },
   "command": {

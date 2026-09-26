@@ -4,6 +4,7 @@
     "supabase": {
       "type": "local",
       "command": ["node", "scripts/mcp-supabase.js"],
+      "cwd": "C:/Users/rojo-/Downloads/SuitOrg",
       "enabled": true
     },
     "comfyui": {

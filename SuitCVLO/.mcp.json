@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "suitcvlo-filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\rojo-\\Downloads\\suitorg\\SuitCVLO"]
+    }
+  }
+}

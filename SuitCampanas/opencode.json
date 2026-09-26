@@ -7,6 +7,7 @@
         "node",
         "scripts/mcp-supabase.js"
       ],
+      "cwd": "C:/Users/rojo-/Downloads/SuitOrg",
       "enabled": true
     },
     "google-sheets": {
