@@ -17,6 +17,7 @@ import { ProPortalScreen } from './components/screens/ProPortalScreen';
 import { SettlementEscrowScreen } from './components/screens/SettlementEscrowScreen';
 import { LoginScreen } from './components/screens/LoginScreen';
 import { FeedbackWidget } from './components/FeedbackWidget';
+import { DevSessions } from './components/DevSessions';
 import { OnlineStatusBanner } from './components/OnlineStatusBanner';
 import { TechnicianOrdersScreen } from './components/screens/TechnicianOrdersScreen';
 import { ChatScreen } from './components/screens/ChatScreen';
@@ -509,6 +510,7 @@ export default function App() {
 
         <OnlineStatusBanner heartbeatUrl="/" heartbeatInterval={30000} />
         <FeedbackWidget />
+        <DevSessions />
       </div>
     </Elements>
   );

@@ -62,67 +62,95 @@ export function useDevAuth(setters: DevAuthSetters) {
   useEffect(() => {
     if (!config.enabled || !config.autoLogin) return;
 
-    console.log('[DEV MODE] Auto-login activado:', config.autoLogin);
+    const role = config.autoLogin;
+    if (!MOCK_USERS[role]) return;
+    console.log('[DEV MODE] Auto-login activado:', role);
 
-    const mockUser = MOCK_USERS[config.autoLogin];
-    if (!mockUser) return;
+    let cancelled = false;
+    let cleanupMock: (() => void) | undefined;
 
-    // Simula sesión activa
-    const mockSession = {
-      access_token: 'dev-mock-token',
-      token_type: 'bearer',
-      expires_in: 3600,
-      refresh_token: 'dev-refresh-token',
-      user: mockUser,
+    const applyMock = () => {
+      const mockUser = MOCK_USERS[role];
+
+      const mockSession = {
+        access_token: 'dev-mock-token',
+        token_type: 'bearer',
+        expires_in: 3600,
+        refresh_token: 'dev-refresh-token',
+        user: mockUser,
+      };
+
+      setUser(mockUser as any);
+      setAuthLoading(false);
+
+      if (role === 'technician') {
+        setCurrentTechnician(MOCK_TECHNICIAN);
+      }
+
+      const originalGetUser = supabase.auth.getUser;
+      supabase.auth.getUser = async () => ({
+        data: { user: mockUser },
+        error: null,
+      }) as any;
+
+      const originalOnAuthStateChange = supabase.auth.onAuthStateChange;
+      supabase.auth.onAuthStateChange = ((callback: any) => {
+        setTimeout(() => callback('SIGNED_IN', { ...mockSession, user: mockUser }), 0);
+        return {
+          data: {
+            subscription: {
+              unsubscribe: () => {},
+            },
+          },
+        };
+      }) as any;
+
+      const originalSignInWithOAuth = supabase.auth.signInWithOAuth;
+      supabase.auth.signInWithOAuth = async () => ({
+        data: { user: mockUser, session: mockSession as any },
+        error: null,
+      }) as any;
+
+      const originalSignOut = supabase.auth.signOut;
+      supabase.auth.signOut = async () => ({
+        error: null,
+      });
+
+      return () => {
+        supabase.auth.getUser = originalGetUser;
+        supabase.auth.onAuthStateChange = originalOnAuthStateChange;
+        supabase.auth.signInWithOAuth = originalSignInWithOAuth;
+        supabase.auth.signOut = originalSignOut;
+      };
     };
 
-    // Setea usuario
-    setUser(mockUser as any);
-    setAuthLoading(false);
+    (async () => {
+      // 1) Sesión real contra Supabase (multi-ventana + RLS real)
+      try {
+        const res = await fetch('/api/dev/qa-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role }),
+        });
+        if (!res.ok) throw new Error(`qa-login HTTP ${res.status}`);
+        const { email, password } = await res.json();
 
-    // Si es técnico, carga datos mock
-    if (config.autoLogin === 'technician') {
-      setCurrentTechnician(MOCK_TECHNICIAN);
-    }
+        const { data: { session: current } } = await supabase.auth.getSession();
+        if (current?.user?.email?.toLowerCase() === email.toLowerCase()) return;
 
-    // Mock Supabase auth methods para desarrollo
-    const originalGetUser = supabase.auth.getUser;
-    supabase.auth.getUser = async () => ({
-      data: { user: mockUser },
-      error: null,
-    }) as any;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        if (!cancelled) console.log('[DEV MODE] Sesión real iniciada:', email);
+      } catch (err) {
+        if (cancelled) return;
+        console.warn('[DEV MODE] Login real no disponible, usando mock:', err);
+        cleanupMock = applyMock();
+      }
+    })();
 
-    const originalOnAuthStateChange = supabase.auth.onAuthStateChange;
-    supabase.auth.onAuthStateChange = ((callback: any) => {
-      // Simula evento SIGNED_IN inmediato
-      setTimeout(() => callback('SIGNED_IN', { ...mockSession, user: mockUser }), 0);
-      
-      return {
-        data: {
-          subscription: {
-            unsubscribe: () => {},
-          },
-        },
-      };
-    }) as any;
-
-    const originalSignInWithOAuth = supabase.auth.signInWithOAuth;
-    supabase.auth.signInWithOAuth = async () => ({
-      data: { user: mockUser, session: mockSession as any },
-      error: null,
-    }) as any;
-
-    const originalSignOut = supabase.auth.signOut;
-    supabase.auth.signOut = async () => ({
-      error: null,
-    });
-
-    // Cleanup al desmontar
     return () => {
-      supabase.auth.getUser = originalGetUser;
-      supabase.auth.onAuthStateChange = originalOnAuthStateChange;
-      supabase.auth.signInWithOAuth = originalSignInWithOAuth;
-      supabase.auth.signOut = originalSignOut;
+      cancelled = true;
+      cleanupMock?.();
     };
   }, [config.enabled, config.autoLogin]);
 

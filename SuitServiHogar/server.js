@@ -430,6 +430,50 @@ if (IS_DEV) {
     res.json({ success: true, orderId });
   });
 
+  // ─── QA multi-session: credenciales reales para 3 roles (solo local) ───
+  const QA_ACCOUNTS = {
+    admin: 'admin@servihogar.mx',
+    technician: 'roberto@servihogar.mx',
+    client: 'cliente-qa@test.mx',
+  };
+
+  async function findAuthUserByEmail(email) {
+    for (let page = 1; page <= 50; page++) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+      if (error) throw error;
+      const hit = (data?.users || []).find(u => (u.email || '').toLowerCase() === email.toLowerCase());
+      if (hit) return hit;
+      if (!data?.users || data.users.length < 200) return null;
+    }
+    return null;
+  }
+
+  app.post('/api/dev/qa-login', async (req, res) => {
+    const email = QA_ACCOUNTS[req.body?.role];
+    if (!email) return res.status(400).json({ error: 'role inválido (admin|technician|client)' });
+    const password = process.env.DEV_QA_PASSWORD;
+    if (!password) return res.status(503).json({ error: 'DEV_QA_PASSWORD no configurado en .env' });
+
+    try {
+      const anon = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
+      const { error: signInErr } = await anon.auth.signInWithPassword({ email, password });
+      if (signInErr) {
+        const { error: createErr } = await supabase.auth.admin.createUser({ email, password, email_confirm: true });
+        if (createErr) {
+          if (!/already registered|email_exists|already been/i.test(createErr.message || '')) throw createErr;
+          const user = await findAuthUserByEmail(email);
+          if (!user) throw new Error('Usuario no encontrado: ' + email);
+          const { error: updErr } = await supabase.auth.admin.updateUserById(user.id, { password, email_confirm: true });
+          if (updErr) throw updErr;
+        }
+      }
+      res.json({ email, password });
+    } catch (err) {
+      console.error('[QA LOGIN]', err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Dev status endpoint
   app.get('/api/dev/status', (req, res) => {
     res.json({ 

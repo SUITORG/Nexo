@@ -13,9 +13,11 @@ const DEV_MOCK_STRIPE_KEY = 'devMockStripe';
 const DEV_MOCK_EXCHANGE_RATE_KEY = 'devMockExchangeRate';
 
 function getEnv(key: string): string | undefined {
+  // URL param primero: cada pestaña puede traer su propio rol (?devAutoLogin=admin)
+  // aunque localStorage (compartido entre pestañas) tenga otro valor.
   return import.meta.env[key] || 
-         (typeof window !== 'undefined' ? localStorage.getItem(key) : undefined) ||
-         (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(key) : undefined);
+         (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(key) : undefined) ||
+         (typeof window !== 'undefined' ? localStorage.getItem(key) : undefined);
 }
 
 export function isDevMode(): boolean {
