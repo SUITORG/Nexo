@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-09-17
+  Generado: 2026-09-26
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -12,7 +12,12 @@
 
   NOMBRE                 RUTA
   ------------------------------------------------------------------------
+  brief-engine              .suit/skills/domain/brief-engine.yaml
+  contrato-subproyecto      .suit/skills/domain/contrato-subproyecto.yaml
   cotizaciones-engine       .suit/skills/domain/cotizaciones-engine.yaml
+  data-cleanup              .suit/skills/domain/data-cleanup.yaml
+  data-sync                 .suit/skills/domain/data-sync.yaml
+  design-system             .suit/skills/domain/design-system.yaml
   geo-exif                  .suit/skills/domain/geo-exif.yaml
   hybrid-db                 .suit/skills/domain/hybrid-db.yaml
   multi-tenant              .suit/skills/domain/multi-tenant.yaml
@@ -33,10 +38,13 @@
   NOMBRE                 RUTA
   ------------------------------------------------------------------------
   code-review               .suit/skills/process/code-review.yaml
+  deployer                  .suit/skills/process/deployer.yaml
+  iteration-loop            .suit/skills/process/iteration-loop.yaml
   panel-juzgador            .suit/skills/process/panel-juzgador.yaml
   pdf-generation            .suit/skills/process/pdf-generation.yaml
   ponytail-ladder           .suit/skills/process/ponytail-ladder.yaml
   probador                  .suit/skills/process/probador.yaml
+  prompt-reviewer           .suit/skills/process/prompt-reviewer.yaml
   reportero                 .suit/skills/process/reportero.yaml
   security-audit            .suit/skills/process/security-audit.yaml
 
@@ -52,10 +60,12 @@
   NOMBRE                 RUTA
   ------------------------------------------------------------------------
   manychat                  .suit/skills/tool/manychat.yaml
+  mcp-manager               .suit/skills/tool/mcp-manager.yaml
   telegram-bot              .suit/skills/tool/telegram-bot.yaml
+  web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 22 skills
+  TOTAL SUITOS: 32 skills
 
 
 ========================================================================
@@ -72,12 +82,21 @@
 
   -- Skills enlazados (junctions)
 
+  analista-proy             .claude/skills/analista-proy
+                            -> .agents\skills\analista-proy
+                            Investigación profunda de mercado para validar si un TEMA nuevo (app, desarrollo, producto, proyecto, nicho) tiene posibilidad de éxito. Úsala SIEMPRE
+  browser-act               .claude/skills/browser-act
+                            -> .agents\skills\browser-act
+                            Browser automation CLI for AI agents. NEVER run browser-act commands directly via Bash ΓÇö always invoke this skill first. Use browser-act when a user
   captions-overlay          .claude/skills/captions-overlay
                             -> .agents\skills\captions-overlay
                             Overlay doctrine for the embedded-captions workflow — the caption MODEL (drop / rail / embed) and the rule that captions are an OVERLAY composited on 
   changelog-video           .claude/skills/changelog-video
                             -> .agents\skills\changelog-video
                             Turn a weekly changelog .md into a finished branded changelog video (square 1080, ~45-60s, Annie VO, animated brand background, mock-UI visualizations
+  ciclo                     .claude/skills/ciclo
+                            -> .agents\skills\ciclo
+                            Ciclo de mantenimiento y decisión para el proyecto multi-inquilino SUIT y cada uno de sus subproyectos: contrato por carpeta, commits por fase, valida
   cut-the-curve             .claude/skills/cut-the-curve
                             -> .agents\skills\cut-the-curve
                             The technique catalog: five velocity-matched SEAMS (zoom-through, INVERSE zoom-through, cut-the-curve, waterfall cut, rack-focus blur-cut) plus the tw
@@ -117,6 +136,9 @@
   hyperframes-registry      .claude/skills/hyperframes-registry
                             -> .agents\skills\hyperframes-registry
                             Install, discover, and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add or hyperframes catalog, ins
+  last30days                .claude/skills/last30days
+                            -> .agents\skills\last30days
+                            AI-powered cross-platform research agent. Researches any topic across Reddit, X/Twitter, YouTube, TikTok, Instagram, Hacker News, Polymarket, GitHub, 
   media-use                 .claude/skills/media-use
                             -> .agents\skills\media-use
                             Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT 
@@ -126,6 +148,9 @@
   motion-graphics           .claude/skills/motion-graphics
                             -> .agents\skills\motion-graphics
                             A short, design-led motion graphic where motion is the message — kinetic typography, stat count-up, chart/data-viz hit, logo sting / brand lockup, low
+  multi-tenant-saas         .claude/skills/multi-tenant-saas
+                            -> .opencode\skills\multi-tenant-saas
+                            Use when developing or maintaining the SuitOrg multi-tenant SaaS project. Covers full architecture (HTML/CSS/JS SPA, GAS backend + Supabase, Express s
   music-to-video            .claude/skills/music-to-video
                             -> .agents\skills\music-to-video
                             Turn a music track (an audio file, a video to pull audio from, or a track generated from a mood brief) into a beat-synced video — lyric video, slidesh
@@ -154,16 +179,51 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 31 (4 locales + 27 symlinks)
+  TOTAL CLAUDE: 36 (4 locales + 32 symlinks)
 
 
 ========================================================================
   3. SKILLS - OPENCODE (.opencode/skills/)
 ========================================================================
 
+  analista-proy             .opencode/skills/analista-proy
+  bat-launcher              .opencode/skills/bat-launcher
+  browser-act               .opencode/skills/browser-act
+  captions-overlay          .opencode/skills/captions-overlay
+  changelog-video           .opencode/skills/changelog-video
+  ciclo                     .opencode/skills/ciclo
+  cut-the-curve             .opencode/skills/cut-the-curve
+  embedded-captions         .opencode/skills/embedded-captions
+  faceless-explainer        .opencode/skills/faceless-explainer
+  figma                     .opencode/skills/figma
+  general-video             .opencode/skills/general-video
+  hyperframes               .opencode/skills/hyperframes
+  hyperframes-animation     .opencode/skills/hyperframes-animation
+  hyperframes-audio         .opencode/skills/hyperframes-audio
+  hyperframes-cli           .opencode/skills/hyperframes-cli
+  hyperframes-core          .opencode/skills/hyperframes-core
+  hyperframes-creative      .opencode/skills/hyperframes-creative
+  hyperframes-keyframes     .opencode/skills/hyperframes-keyframes
+  hyperframes-registry      .opencode/skills/hyperframes-registry
+  last30days                .opencode/skills/last30days
+  media-use                 .opencode/skills/media-use
+  mejoras-proyecto          .opencode/skills/mejoras-proyecto
+  motion-doctrine           .opencode/skills/motion-doctrine
+  motion-graphics           .opencode/skills/motion-graphics
   multi-tenant-saas         .opencode/skills/multi-tenant-saas
+  music-to-video            .opencode/skills/music-to-video
+  oversized-cursor          .opencode/skills/oversized-cursor
+  pr-to-video               .opencode/skills/pr-to-video
+  preparar-produccion       .opencode/skills/preparar-produccion
+  product-launch-video      .opencode/skills/product-launch-video
+  remotion-to-hyperframes   .opencode/skills/remotion-to-hyperframes
+  seam-craft                .opencode/skills/seam-craft
+  skill-creator             .opencode/skills/skill-creator
+  slideshow                 .opencode/skills/slideshow
+  talking-head-recut        .opencode/skills/talking-head-recut
+  video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 1
+  TOTAL OPENCODE: 36
 
 
 ========================================================================
@@ -171,7 +231,7 @@
 ========================================================================
 
   system-analysis                     Analyze system architecture, identify patterns, detect issues
-  multi-tenant                        Multi-tenant isolation rules and patterns
+  multi-tenant                        Enforces multi-tenant data isolation rules for SuitOrg. All queries mu
   javascript                          JavaScript/Node.js development
   gas                                 Google Apps Script development
   code-review                         Code review according to project standards
@@ -182,7 +242,7 @@
   cotizaciones-engine                 Motor de cálculo para cotizaciones configurables por proceso, producto
   reservations-engine                 Motor de reservaciones vía WhatsApp + Google Calendar. Detecta intenci
   remotion-video                      Generación de video profesional con Remotion. Crea composiciones anima
-  ponytail-ladder                     Forces the simplest, shortest solution that works. YAGNI ladder: skip 
+  ponytail-ladder                     Forces the simplest, shortest solution that actually works. Before wri
   comfy-ui                            Generación de imagen con ComfyUI y video profesional con FFmpeg, 100% 
   pdf-generation                      Genera PDFs de cotizaciones usando backend/DriveManager.js. Almacena e
   landing-pages                       Generación estática de landing pages de conversión multi-tenant vía sc
@@ -190,9 +250,18 @@
   marketing-psicologia-progreso       Efecto del progreso otorgado (endowed progress effect, Nunes & Drèze 2
   skill-creator                       Crea, evalúa y mejora skills de forma iterativa. Flujo: capture intent
   video-shotcraft                     Crea videos de producto cinematográficos con Remotion. 157 shot recipe
+  mcp-manager                         Gestiona qué MCPs están activos en cada proyecto. Permite listar, acti
   listado-capacidades                 Regenera SKILLS-MCP-AGENTS-LISTADO.txt con el listado consolidado de t
+  contrato-subproyecto                Crea, amplía, detalla o normaliza el CONTRATO.md de un subproyecto. El
+  data-sync                           Sincroniza esquema y registros entre GSHEETS, SUPABASE y NEON basándos
+  data-cleanup                        Limpieza destructiva de datos por motor (GSHEETS/SUPABASE/NEON). Siemp
+  iteration-loop                      Maneja iteraciones cuando la validación falla. Máximo 3 rondas. Cada r
+  design-system                       Manages visual identity for landings: colors, typography, palettes and
+  brief-engine                        Generates complete Marketing Briefs (20 fields, pipe-delimited) from a
+  prompt-reviewer                     Pre-vuelo automático y token-eficiente de TODO pedido del usuario ante
+  web-research                        Structured web research for business intelligence. Runs 3-5 parallel q
 
-  TOTAL REGISTRY: 21 skills declaradas
+  TOTAL REGISTRY: 30 skills declaradas
 
 
 ========================================================================
@@ -201,34 +270,14 @@
 
   NOMBRE               COMANDO / URL
   ------------------------------------------------------------------------
-  supabase                  node scripts/mcp-supabase.js
+  supabase                  node C:/Users/rojo-/Downloads/SuitOrg/scripts/mcp-supab
                             Conexion a base de datos Supabase (SQL, auth, storage)
-  whatsapp                  npx -y wweb-mcp
-                            Envio/recepcion de mensajes WhatsApp via wweb-mcp
-  higgsfield                https://mcp.higgsfield.ai/mcp
-                            Generacion de video/imagen AI (remoto)
   google-sheets             npx -y mcp-gsheets@latest
                             Lectura/escritura de Google Sheets (backend SuitOrg)
-  playwright                npx @playwright/mcp@latest
-                            Automatizacion de navegador (Playwright)
-  suitcvlo-filesystem       npx -y @modelcontextprotocol/server-filesystem C:\Users
-                            Acceso a filesystem del proyecto SuitCVLO
-  telegram-bot              npx -y telegram-bot-mcp-server
-                            Bot de Telegram (envio/recepcion de mensajes)
-  manychat                  npx -y github:fabienbutz/manychat-mcp
-                            Integracion con ManyChat (chatbot/marketing)
-  comfyui                   npx -y comfyui-mcp
-                            Generacion de imagen/video con ComfyUI local
-  chrome-devtools           npx -y chrome-devtools-mcp@latest --no-usage-statistics
-                            DevTools MCP para debugging e inspeccion
-  github                    npx -y @modelcontextprotocol/server-github
+  github                    node C:/Users/rojo-/Downloads/SuitOrg/scripts/mcp-githu
                             API de GitHub (repos, PRs, issues)
-  mirofish                  node C:\Users\rojo-\Downloads\SuitOrg\mirofish-mcp-serv
-                            Swarm intelligence / prediccion (MiroFish)
-  capcut                    C:\Users\rojo-\Downloads\SuitOrg\vectcutapi-mcp\.venv\S
-                            Edicion de video via CapCut API
 
-  TOTAL MCP: 13 servers
+  TOTAL MCP: 3 servers
 
 
 ========================================================================
@@ -248,8 +297,11 @@
   financiero-analyst    evaluation   low
   juez-synthesizer      evaluation   low
   probador              quality      low
+  copywriter            marketing    low
+  researcher            knowledge    low
+  deployer              operations   high
 
-  TOTAL AGENTES: 11
+  TOTAL AGENTES: 14
 
 
 ========================================================================
@@ -266,8 +318,9 @@
   suit:configformatos    TUI interactiva: Configurador de Formatos y Redes Sociales. Muestra dos columnas con filtr
   suit:configestilos     TUI interactiva: Estilos Visuales de VIDE. Navega categorías → sub-estilos leídos en vivo 
   suit:backup            Crea un respaldo ZIP con formato SuitOrgYYMMDD.zip desde WSL
+  suit:mcp               Gestiona MCPs por proyecto. Acciones: list [proyecto], enable <mcp> [proyecto], disable <m
 
-  TOTAL COMANDOS: 10
+  TOTAL COMANDOS: 11
 
 
 ========================================================================
@@ -291,14 +344,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    22      22         0
-  Skills Claude Code       31        4        27
-  Skills OpenCode            1        1         0
-  Registry YAML           21      21         0
-  MCP Servers             13       ?         ?
-  Agentes                 11      11         0
+  Skills SuitOS (.yaml)    32      32         0
+  Skills Claude Code       36        4        32
+  Skills OpenCode           36       36         0
+  Registry YAML           30      30         0
+  MCP Servers              3       ?         ?
+  Agentes                 14      14         0
   =============================================
-  TOTAL                   99
+  TOTAL                   151
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

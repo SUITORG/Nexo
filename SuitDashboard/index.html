@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuitDashboard — Herramientas activas</title>
+<style>
+:root{
+  --bg:#0b1020; --panel:#121a30; --panel2:#18213c; --line:#243052;
+  --txt:#e6ecff; --dim:#8b98c0; --ok:#2ee6a8; --warn:#ffb454; --bad:#ff6b81;
+  --info:#6ea8fe; --purple:#b48cff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+header{padding:18px 22px 10px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#101832,#0b1020)}
+h1{font-size:1.25rem;display:flex;align-items:center;gap:10px}
+h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok)}
+.sub{color:var(--dim);font-size:.8rem;margin-top:4px}
+.kpis{display:flex;flex-wrap:wrap;gap:10px;padding:14px 22px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 16px;min-width:118px}
+.kpi b{display:block;font-size:1.5rem;line-height:1.1}
+.kpi span{font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+.kpi.ok b{color:var(--ok)} .kpi.warn b{color:var(--warn)} .kpi.bad b{color:var(--bad)} .kpi.info b{color:var(--info)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 14px;align-items:center;position:sticky;top:0;background:var(--bg);z-index:20;padding-top:10px;border-bottom:1px solid var(--line)}
+input[type=search]{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:9px;width:230px;outline:none}
+input[type=search]:focus{border-color:var(--info)}
+.chipf{background:var(--panel2);border:1px solid var(--line);color:var(--dim);padding:7px 12px;border-radius:20px;cursor:pointer;font-size:.78rem;user-select:none}
+.chipf.on{background:#1c3057;border-color:var(--info);color:#cfe1ff}
+select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px;border-radius:9px}
+.count{margin-left:auto;color:var(--dim);font-size:.78rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:18px 22px 60px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-3px);border-color:#3b4c7d;box-shadow:0 8px 26px rgba(0,0,0,.45)}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.card h3{font-size:1rem;word-break:break-word;flex:1;min-width:0}
+.badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.badge{font-size:.62rem;padding:3px 7px;border-radius:6px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
+.b-INDEP{background:#123c2c;color:var(--ok)} .b-NO-CAT{background:#3d1a24;color:var(--bad)}
+.b-ROOT{background:#12304d;color:var(--info)} .b-BUILD{background:#3a2f12;color:var(--warn)}
+.b-LIB,.b-KIT{background:#242245;color:var(--purple)} .b-ASSETS{background:#222a44;color:var(--dim)}
+.b-SYNC{background:#123c2c;color:var(--ok)} .b-DESYNC{background:#3d2a12;color:var(--warn)}
+.b-CFG{background:#1a2f4d;color:var(--info)} .b-NA{background:#1c2440;color:var(--dim)}
+.b-UP{background:#123c2c;color:var(--ok)} .b-DOWN{background:#3d1a24;color:var(--bad)}
+.b-PORT{background:#4a1520;color:#ff9aa8;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.chips{display:flex;flex-wrap:wrap;gap:5px;min-height:24px;margin-bottom:9px}
+.mcp{font-size:.66rem;padding:3px 7px;border-radius:6px;background:#16324a;color:#9fd0ff;border:1px solid #23486b}
+.mcp.off{background:#1b2138;color:#616e95;text-decoration:line-through;border-color:#2a3352}
+.mcp.claude{background:#2c1c3f;color:#d3a9ff;border-color:#462d63}
+.meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--dim);font-size:.72rem;border-top:1px solid var(--line);padding-top:8px}
+.meta b{color:#c3cdf0;font-weight:600}
+.skillsline{font-size:.72rem;color:var(--dim);margin-bottom:8px}
+.skillsline em{color:var(--purple);font-style:normal}
+.empty{grid-column:1/-1;text-align:center;color:var(--dim);padding:50px}
+/* drawer */
+.drawer{position:fixed;top:0;right:-460px;width:min(440px,92vw);height:100vh;background:var(--panel);border-left:1px solid var(--line);z-index:60;transition:.25s;overflow-y:auto;padding:20px}
+.drawer.open{right:0;box-shadow:-20px 0 50px rgba(0,0,0,.6)}
+.drawer h2{font-size:1.15rem;margin-bottom:4px;word-break:break-all}
+.close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);font-size:1.4rem;cursor:pointer}
+.sec{margin-top:16px}
+.sec h4{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:7px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;padding:5px 0;border-bottom:1px dashed #1c2545}
+.row span:first-child{color:var(--dim)}
+.row span:last-child{text-align:right;word-break:break-all}
+.skill{padding:7px 0;border-bottom:1px dashed #1c2545}
+.skill b{font-size:.82rem;color:#dbe4ff}
+.skill p{font-size:.72rem;color:var(--dim);margin-top:2px}
+.skill p.orphan{color:var(--warn)}
+.foot{padding:10px 22px 30px;color:var(--dim);font-size:.72rem;text-align:center}
+code{background:#0e1428;padding:1px 5px;border-radius:4px;font-size:.75rem}
+@media(max-width:640px){.grid{padding:14px}.kpis{padding:12px 14px}.bar{padding-left:14px;padding-right:14px}}
+/* tabs */
+.tabs{display:flex;gap:6px;padding:12px 22px 0;background:#101832}
+.tab{padding:9px 18px;border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;background:#0e1428;color:var(--dim);cursor:pointer;font-size:.85rem;font-weight:600;user-select:none}
+.tab:hover{color:var(--txt)}
+.tab.on{background:var(--panel);color:var(--txt);border-color:#3b4c7d}
+/* tabla CLI */
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.cli{width:100%;border-collapse:collapse;font-size:.78rem}
+table.cli th,table.cli td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+table.cli td.wrap{white-space:normal;min-width:220px}
+table.cli th{color:var(--dim);text-transform:uppercase;font-size:.63rem;letter-spacing:.6px;background:#101832;position:sticky;top:0}
+table.cli tr:last-child td{border-bottom:none}
+table.cli tbody tr:hover td{background:#141d38}
+.pill{display:inline-block;padding:2px 7px;border-radius:6px;font-size:.66rem;font-weight:700}
+.p-on{background:#123c2c;color:var(--ok)} .p-off{background:#3a2f12;color:var(--warn)}
+.p-abs{background:#1c2440;color:var(--dim)} .p-bad{background:#3d1a24;color:var(--bad)}
+.p-info{background:#12304d;color:var(--info)} .p-pur{background:#2c1c3f;color:var(--purple)}
+.block{padding:4px 22px 30px}
+.block h3{font-size:.95rem;margin:18px 0 8px;color:#cfe1ff}
+.hint{background:#101a33;border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:.78rem;color:var(--dim);line-height:1.55}
+.hint b{color:#cfe1ff}
+.subcount{font-size:.7rem;color:var(--dim);margin-left:8px;font-weight:400}
+.p-cla{background:#2c1c3f;color:#d3a9ff} .p-oc{background:#123c2c;color:var(--ok)} .p-suit{background:#3a2f12;color:var(--warn)}
+.pgroup{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.pgroup h4{font-size:.88rem;color:#cfe1ff;margin-bottom:8px}
+.pgroup .flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.78rem}
+.pgroup .arrow{color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="dot"></span> SuitDashboard <span style="color:var(--dim);font-weight:400;font-size:.85rem">herramientas activas</span></h1>
+  <div class="sub" id="stamp">—</div>
+</header>
+
+<div class="tabs">
+  <div class="tab on" data-v="tools">Herramientas</div>
+  <div class="tab" data-v="cli">Cómo lo ven los CLIs</div>
+  <div class="tab" data-v="cap">Skills &amp; Agentes</div>
+  <div class="tab" data-v="sp">Scripts &amp; Plugins</div>
+</div>
+
+<section id="view-tools">
+<div class="kpis" id="kpis"></div>
+
+<div class="bar">
+  <input type="search" id="q" placeholder="Buscar proyecto, MCP, skill…">
+  <span class="chipf" data-f="mcp">con MCP</span>
+  <span class="chipf" data-f="skills">con Skills</span>
+  <span class="chipf" data-f="indep">independiente</span>
+  <span class="chipf" data-f="nocat">no catalogado</span>
+  <span class="chipf" data-f="desync">desincronizado</span>
+  <span class="chipf" data-f="up">servicio arriba</span>
+  <span class="chipf" data-f="conflict">puerto en conflicto</span>
+  <span class="chipf" data-f="assets">ver assets</span>
+  <select id="sort">
+    <option value="kind">Importancia</option>
+    <option value="name">A–Z</option>
+    <option value="mcp">MCPs ↓</option>
+    <option value="skills">Skills ↓</option>
+  </select>
+  <span class="count" id="count"></span>
+</div>
+
+<div class="grid" id="grid"></div>
+</section>
+
+<section id="view-cli" hidden>
+  <div class="kpis" id="kpisCli"></div>
+  <div class="block">
+    <div class="hint" id="probeHint">—</div>
+
+    <h3>MCP × CLI <span class="subcount" id="cliCount"></span></h3>
+    <div class="bar" id="cliBar" style="position:static;padding:0 0 10px;border:none">
+      <input type="search" id="cq" placeholder="Buscar MCP o proyecto…">
+      <span class="chipf" data-cf="broken">roto</span>
+      <span class="chipf" data-cf="oconly">solo OpenCode</span>
+      <span class="chipf" data-cf="claudeonly">solo Claude</span>
+      <span class="chipf" data-cf="noenv">sin env</span>
+      <span class="chipf" data-cf="nopath">ruta mala</span>
+      <span class="chipf" data-cf="disabled">deshabilitado</span>
+    </div>
+    <div class="tblwrap">
+      <table class="cli">
+        <thead><tr><th>Proyecto</th><th>MCP</th><th>OpenCode</th><th>Claude Code</th><th>Ruta</th><th>Env</th><th>Comando</th></tr></thead>
+        <tbody id="tblCli"></tbody>
+      </table>
+    </div>
+
+    <h3>Sondeo vivo <span class="subcount" id="probeAt"></span></h3>
+    <div id="probeOut"></div>
+
+    <h3>Skills × CLI <span class="subcount">qué skills carga cada CLI al abrirse ahí</span></h3>
+    <div class="tblwrap">
+      <table class="cli">
+        <thead><tr><th>Proyecto</th><th>Total</th><th>OpenCode</th><th>Claude Code</th><th>Otras fuentes (no estándar para estos CLIs)</th></tr></thead>
+        <tbody id="tblSkills"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="view-cap" hidden>
+  <div class="kpis" id="kpisCap"></div>
+  <div class="block">
+    <div class="hint"><b>3 sistemas distintos, no equivalentes:</b> <b>skills</b> (<code>.claude/skills</code>, <code>.opencode/skills</code>, <code>.agents/skills</code> — las carga el CLI directo) vs <b>skills declarativas</b> en <code>.suit/skills</code> (registro propio de SuitOS, ningún CLI las lee solas — se consultan vía <code>/suit-registry</code>) vs <b>agentes SuitOS</b> en <code>.suit/registry/agents.yaml</code> (roles con dominio/riesgo, orquestados por workflows) vs <b>agentes nativos de Claude Code</b> (<code>.claude/agents/*.md</code>). OpenCode no tiene agentes propios configurados en este repo.</div>
+
+    <h3>Skills <span class="subcount" id="capCount"></span></h3>
+    <div class="bar" style="position:static;padding:0 0 10px;border:none">
+      <input type="search" id="capq" placeholder="Buscar skill, proyecto…">
+      <span class="chipf" data-cap="claude">claude</span>
+      <span class="chipf" data-cap="opencode">opencode</span>
+      <span class="chipf" data-cap="suitos">suitos (.suit/skills)</span>
+    </div>
+    <div class="tblwrap">
+      <table class="cli">
+        <thead><tr><th>Nombre completo</th><th>Proyecto</th><th>CLI</th><th>Ubicación</th><th>Descripción</th></tr></thead>
+        <tbody id="tblCap"></tbody>
+      </table>
+    </div>
+
+    <h3>Agentes SuitOS <span class="subcount">.suit/registry/agents.yaml — rol derivado de si su workflow lo corre en paralelo o los sintetiza</span></h3>
+    <div class="tblwrap">
+      <table class="cli">
+        <thead><tr><th>Nombre completo</th><th>Dominio</th><th>Riesgo</th><th>Rol</th><th>Descripción</th></tr></thead>
+        <tbody id="tblAgents"></tbody>
+      </table>
+    </div>
+
+    <h3>Agentes Claude Code nativos <span class="subcount">.claude/agents/*.md — solo raíz</span></h3>
+    <div class="tblwrap">
+      <table class="cli">
+        <thead><tr><th>Nombre completo</th><th>Archivo</th><th>Frontmatter</th><th>Descripción</th></tr></thead>
+        <tbody id="tblClaudeAgents"></tbody>
+      </table>
+    </div>
+
+    <h3>Grupos en paralelo <span class="subcount">steps con <code>parallel: true</code> en .suit/workflows/*.yaml</span></h3>
+    <div id="parallelGroups"></div>
+  </div>
+</section>
+
+<section id="view-sp" hidden>
+  <div class="kpis" id="kpisSp"></div>
+  <div class="block">
+    <h3>Scripts <span class="subcount" id="scriptsCount"></span></h3>
+    <div class="bar" style="position:static;padding:0 0 10px;border:none">
+      <input type="search" id="spq" placeholder="Buscar script…">
+      <span class="chipf" data-ext="js">.js</span>
+      <span class="chipf" data-ext="mjs">.mjs</span>
+      <span class="chipf" data-ext="sh">.sh</span>
+      <span class="chipf" data-ext="py">.py</span>
+    </div>
+    <div class="tblwrap">
+      <table class="cli">
+        <thead><tr><th>Nombre</th><th>Tipo</th><th>Ruta</th><th>Descripción</th></tr></thead>
+        <tbody id="tblScripts"></tbody>
+      </table>
+    </div>
+
+    <h3>Plugins <span class="subcount">.claude-plugin/plugin.json (Claude Code) + opencode.json:plugin[] (OpenCode)</span></h3>
+    <div class="tblwrap">
+      <table class="cli">
+        <thead><tr><th>Nombre</th><th>Versión</th><th>Carpeta</th><th>CLI</th><th>Descripción</th></tr></thead>
+        <tbody id="tblPlugins"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="foot">Generado por <code>SuitDashboard/scan.js</code> · fuente de verdad: <code>opencode.json</code> (MCP) · carpetas <code>*/skills</code> · <code>.suit/registry/projects.yaml</code> · <code>scripts/mcp-manager.js</code></div>
+
+<div class="drawer" id="drawer">
+  <button class="close" onclick="closeDrawer()">×</button>
+  <div id="detail"></div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const D = window.SUIT || { projects: [], generatedAt: null, live: false };
+const grid = document.getElementById('grid');
+const filters = new Set();
+
+const KIND_LABEL = { ROOT:'raíz', INDEP:'INDEPENDIENTE', 'NO-CAT':'NO CATALOGADO', BUILD:'build-time', KIT:'kit/herramienta', ASSETS:'assets' };
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+function kpis(){
+  const p = D.projects.filter(x=>x.kind!=='ASSETS');
+  const k = [
+    ['proyectos', p.length, ''],
+    ['MCP activos', p.reduce((a,x)=>a+x.mcpActive.length,0), 'info'],
+    ['skills', p.reduce((a,x)=>a+x.skills.length,0), ''],
+    ['independientes', p.filter(x=>x.kind==='INDEP').length, 'ok'],
+    ['no catalogados', p.filter(x=>x.kind==='NO-CAT').length, 'bad'],
+    ['desincronizados', p.filter(x=>x.sync==='DESYNC').length, 'warn'],
+    ['puertos en conflicto', new Set(p.flatMap(x=>(x.portConflict||[]).map(c=>c.port))).size, 'bad'],
+  ];
+  if (D.live) k.push(['servicios arriba', p.filter(x=>x.live==='up').length, 'ok']);
+  document.getElementById('kpis').innerHTML = k.map(([l,v,c])=>
+    `<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`).join('');
+}
+
+function match(p){
+  if (p.kind==='ASSETS' && !filters.has('assets')) return false;
+  if (filters.has('mcp') && !p.mcpActive.length) return false;
+  if (filters.has('skills') && !p.skills.length) return false;
+  if (filters.has('indep') && p.kind!=='INDEP') return false;
+  if (filters.has('nocat') && p.kind!=='NO-CAT') return false;
+  if (filters.has('desync') && p.sync!=='DESYNC') return false;
+  if (filters.has('conflict') && !(p.portConflict&&p.portConflict.length)) return false;
+  if (filters.has('up') && p.live!=='up') return false;
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  if (!q) return true;
+  return (p.name+' '+(p.pkg?p.pkg.name:'')+' '+p.mcpActive.map(m=>m.name).join(' ')+' '+
+          p.claudeMcp.join(' ')+' '+p.skills.map(s=>s.name+' '+s.desc).join(' ')).toLowerCase().includes(q);
+}
+
+function card(p){
+  const badges = [
+    `<span class="badge b-${p.kind}">${KIND_LABEL[p.kind]||p.kind}</span>`,
+    p.sync!=='NA' ? `<span class="badge b-${p.sync}">${p.sync}${p.sync==='DESYNC'?' +'+p.missing.length+'/-'+p.extra.length:''}</span>` : '',
+    (p.portConflict&&p.portConflict.length) ? `<span class="badge b-PORT">PUERTO ${p.portConflict.map(c=>c.port).join(',')}</span>` : '',
+    D.live && p.live ? `<span class="badge b-${p.live==='up'?'UP':'DOWN'}">${p.live==='up'?'▲ arriba':'▼ abajo'}</span>` : ''
+  ].join('');
+  const mcps = [
+    ...p.mcpActive.map(m=>`<span class="mcp" title="${esc(m.cmd)}">● ${esc(m.name)}</span>`),
+    ...p.mcpOff.map(m=>`<span class="mcp off">○ ${esc(m.name)}</span>`),
+    ...p.claudeMcp.map(m=>`<span class="mcp claude">◈ ${esc(m)}</span>`)
+  ].join('');
+  const sk = p.skills.length
+    ? `<div class="skillsline"><em>${p.skills.length} skills</em>${p.orphanSkills?' · <span style="color:var(--warn)">'+p.orphanSkills+' sin descripción</span>':''}</div>`
+    : `<div class="skillsline" style="opacity:.5">sin skills locales</div>`;
+  const meta = [
+    p.ports.length ? `<span><b>:${p.ports.join(' :')}</b></span>` : '',
+    p.registry ? `<span>${esc(p.registry.key)}${p.registry.db?' · '+esc(p.registry.db):''}</span>` : '<span style="color:var(--bad)">sin registry</span>',
+    p.pkg ? `<span>${esc(p.pkg.name)}</span>` : ''
+  ].filter(Boolean).join('');
+  return `<div class="card" onclick="openDetail('${esc(p.name)}')">
+    <div class="top"><h3>${esc(p.name)}</h3><div class="badges">${badges}</div></div>
+    <div class="chips">${mcps || '<span class="mcp off">sin MCP</span>'}</div>
+    ${sk}
+    <div class="meta">${meta}</div>
+  </div>`;
+}
+
+function render(){
+  let list = D.projects.filter(match);
+  const sort = document.getElementById('sort').value;
+  const RANK = { ROOT:0, INDEP:1, 'NO-CAT':2, BUILD:3, KIT:4, ASSETS:5 };
+  list.sort((a,b)=> sort==='name' ? a.name.localeCompare(b.name)
+    : sort==='mcp' ? b.mcpActive.length-a.mcpActive.length || a.name.localeCompare(b.name)
+    : sort==='skills' ? b.skills.length-a.skills.length || a.name.localeCompare(b.name)
+    : (RANK[a.kind]??9)-(RANK[b.kind]??9) || a.name.localeCompare(b.name));
+  grid.innerHTML = list.length ? list.map(card).join('') : '<div class="empty">Sin resultados</div>';
+  const base = D.projects.filter(p=>!(p.kind==='ASSETS' && !filters.has('assets'))).length;
+  document.getElementById('count').textContent = list.length + ' / ' + base;
+}
+
+function openDetail(name){
+  const p = D.projects.find(x=>x.name===name); if(!p) return;
+  const row=(k,v)=>`<div class="row"><span>${k}</span><span>${v}</span></div>`;
+  document.getElementById('detail').innerHTML = `
+    <h2>${esc(p.name)}</h2>
+    <div class="badges" style="justify-content:flex-start;margin-top:6px">
+      <span class="badge b-${p.kind}">${KIND_LABEL[p.kind]||p.kind}</span>
+      <span class="badge b-${p.sync}">${p.sync}</span>
+      ${p.live?`<span class="badge b-${p.live==='up'?'UP':'DOWN'}">${p.live}</span>`:''}
+    </div>
+    <div class="sec"><h4>Identidad</h4>
+      ${row('Ruta','<code>'+esc(p.dir)+'</code>')}
+      ${row('package.json', p.pkg?esc(p.pkg.name)+' · '+p.pkg.deps+' deps':'no')}
+      ${row('Entry', p.entry?esc(p.entry):'no')}
+      ${row('Puertos', (p.ports.length?p.ports.join(', '):'—') + ((p.portConflict&&p.portConflict.length)? p.portConflict.map(c=>' <span style="color:var(--bad)">⚠ '+c.port+' con '+c.with.join(', ')+'</span>').join('') : ''))}
+      ${row('Registry', p.registry?esc(p.registry.key)+(p.registry.db?' · '+p.registry.db:''):'<span style="color:var(--bad)">no catalogado</span>')}
+      ${row('Docs', (p.agents?'AGENTS ':'')+(p.claudeDoc?'CLAUDE':'')||'—')}
+    </div>
+    <div class="sec"><h4>MCPs (${p.mcpActive.length} activos)</h4>
+      ${p.mcpActive.map(m=>row('● '+esc(m.name), '<code>'+esc(m.cmd||'')+'</code>')).join('')||'<div class="row"><span>ninguno</span></div>'}
+      ${p.mcpOff.map(n=>row('○ '+esc(n),'<span style="color:var(--dim)">desactivado</span>')).join('')}
+      ${p.claudeMcp.map(n=>row('◈ '+esc(n),'<span style="color:var(--purple)">.mcp.json (Claude)</span>')).join('')}
+    </div>
+    ${p.optimal.length?`<div class="sec"><h4>Config óptima (mcp-manager)</h4>
+      ${row('Óptimos', p.optimal.join(', '))}
+      ${p.missing.length?row('<span style="color:var(--warn)">Faltan</span>', p.missing.join(', ')):''}
+      ${p.extra.length?row('<span style="color:var(--bad)">Excedentes</span>', p.extra.join(', ')):''}
+    </div>`:''}
+    <div class="sec"><h4>Skills (${p.skills.length})</h4>
+      ${p.skills.map(s=>`<div class="skill"><b>${esc(s.name)}</b><p class="${s.desc?'':'orphan'}">${esc(s.desc||'sin descripción (huérfana)')}</p><p style="opacity:.6">${esc(s.src)}</p></div>`).join('')||'<div class="row"><span>ninguno</span></div>'}
+    </div>`;
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+
+document.querySelectorAll('.chipf[data-f]').forEach(c=>c.onclick=()=>{
+  const f=c.dataset.f; filters.has(f)?filters.delete(f):filters.add(f);
+  c.classList.toggle('on'); render();
+});
+document.getElementById('q').oninput=render;
+document.getElementById('sort').onchange=render;
+
+/* ================= Pestaña 2: cómo lo ven los CLIs ================= */
+const cliFilters = new Set();
+const pill = (cls,txt)=>`<span class="pill ${cls}">${esc(txt)}</span>`;
+
+function ocPill(m){
+  if(m.oc==='on') return pill('p-on','✓ activo');
+  if(m.oc==='off') return pill('p-off','○ deshabilitado');
+  return pill('p-abs','— no lo ve');
+}
+function clPill(m){
+  switch(m.claude){
+    case 'global':  return pill('p-info','✓ global (usuario)');
+    case 'mcpjson': return pill('p-on','✓ .mcp.json');
+    case 'local':   return pill('p-pur','⟳ local (pendiente de aprobar)');
+    case 'pending': return pill('p-off','⏸ sin aprobar');
+    case 'off':     return pill('p-off','○ deshabilitado');
+    default:        return pill('p-abs','— no lo ve');
+  }
+}
+function pathPill(m){
+  if(m.path.remote) return pill('p-info','remoto (URL)');
+  if(m.path.ok) return pill('p-on','ok');
+  const map={'root-only':'rota: solo existe en la raíz','missing':'rota: no existe','bin-missing':'binario ausente'};
+  return pill('p-bad', map[m.path.issue]||m.path.issue);
+}
+function envPill(m){
+  if(!m.envReq.length) return pill('p-abs','—');
+  if(m.envMissing.length) return pill('p-bad', m.envMissing.join(', '));
+  return pill('p-on','ok');
+}
+function cliRows(){
+  const out=[];
+  D.projects.forEach(p=>(p.mcps||[]).forEach(m=>out.push({p,m})));
+  return out;
+}
+function cliMatch({p,m}){
+  if(cliFilters.has('broken') && m.path.ok && !m.envMissing.length) return false;
+  if(cliFilters.has('oconly')  && !(m.oc!=='absent' && m.claude==='absent')) return false;
+  if(cliFilters.has('claudeonly') && !(m.claude!=='absent' && m.oc==='absent')) return false;
+  if(cliFilters.has('noenv') && !m.envMissing.length) return false;
+  if(cliFilters.has('nopath') && m.path.ok) return false;
+  if(cliFilters.has('disabled') && !(m.oc==='off' || m.claude==='off')) return false;
+  const q=document.getElementById('cq').value.trim().toLowerCase();
+  if(!q) return true;
+  return (p.name+' '+m.name+' '+m.cmd).toLowerCase().includes(q);
+}
+
+function renderCli(){
+  const rows = cliRows();
+  const k = [
+    ['MCP declarados', rows.length, ''],
+    ['OpenCode los ve', rows.filter(r=>r.m.oc!=='absent').length, 'info'],
+    ['Claude los ve', rows.filter(r=>r.m.claude!=='absent').length, 'info'],
+    ['rutas rotas', rows.filter(r=>!r.m.path.ok).length, 'bad'],
+    ['sin env', rows.filter(r=>r.m.envMissing.length).length, 'bad'],
+    ['solo en 1 CLI', rows.filter(r=>(r.m.oc!=='absent')!==(r.m.claude!=='absent')).length, 'warn']
+  ];
+  document.getElementById('kpisCli').innerHTML = k.map(([l,v,c])=>`<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`).join('');
+
+  const pr = D.probe;
+  document.getElementById('probeHint').innerHTML = pr
+    ? `<b>Sondeo vivo</b> del ${new Date(pr.at).toLocaleString()} — se ejecutaron <code>opencode mcp list</code> y <code>claude mcp list</code> en la raíz. Para refrescar: <code>sondear.bat</code>`
+    : `<b>Sin sondeo todavía.</b> El HTML es estático y no puede lanzar procesos: corré <code>SuitDashboard/sondear.bat</code> (ejecuta <code>opencode mcp list</code> + <code>claude mcp list</code> y reabre el dashboard). Lo de abajo ya es análisis estático de configs, rutas y entorno.`;
+
+  const shown = rows.filter(cliMatch);
+  document.getElementById('cliCount').textContent = shown.length + ' / ' + rows.length + ' filas';
+  document.getElementById('tblCli').innerHTML = shown.length ? shown.map(({p,m})=>`
+    <tr>
+      <td>${esc(p.name)}</td>
+      <td><b>${esc(m.name)}</b></td>
+      <td>${ocPill(m)}</td>
+      <td>${clPill(m)}</td>
+      <td>${pathPill(m)}</td>
+      <td>${envPill(m)}</td>
+      <td class="wrap"><code>${esc(m.cmd)}</code></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="color:var(--dim)">Sin resultados</td></tr>';
+
+  // sondeo vivo
+  const out = document.getElementById('probeOut');
+  if(!pr){ out.innerHTML = '<div class="hint">Todavía no hay sondeo.</div>'; document.getElementById('probeAt').textContent=''; }
+  else {
+    document.getElementById('probeAt').textContent = '· ' + new Date(pr.at).toLocaleString();
+    const names=[...new Set([...Object.keys(pr.opencode||{}), ...Object.keys(pr.claude||{})])].sort();
+    const st=(o,n)=>{
+      const s=o&&o[n]&&o[n].status;
+      if(s==='connected') return pill('p-on','✓ conectado');
+      if(s==='failed') return pill('p-bad','✗ falla');
+      if(s==='warning') return pill('p-off','⚠ warning');
+      if(s==='disabled') return pill('p-off','○ deshabilitado');
+      if(s==='pending') return pill('p-pur','⏸ pendiente');
+      return pill('p-abs','—');
+    };
+    out.innerHTML = `<div class="tblwrap"><table class="cli">
+      <thead><tr><th>MCP</th><th>OpenCode</th><th>Claude Code</th><th>Diagnóstico</th></tr></thead>
+      <tbody>${names.map(n=>{
+        const o=(pr.opencode||{})[n], c=(pr.claude||{})[n];
+        const diag=[ (pr.warn||{})[n], c&&c.note, o&&o.note ].filter(x=>x&& !/^connected$/i.test(x)).join(' · ');
+        return `<tr><td><b>${esc(n)}</b></td><td>${st(pr.opencode,n)}</td><td>${st(pr.claude,n)}</td><td class="wrap">${diag?esc(diag):'—'}</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+  }
+
+  // skills x CLI
+  const sk = D.projects.filter(p=>p.skillsCli && (p.skills.length || p.skillsCli.openCode || p.skillsCli.claude));
+  document.getElementById('tblSkills').innerHTML = sk.map(p=>`
+    <tr>
+      <td>${esc(p.name)}</td>
+      <td>${p.skills.length}</td>
+      <td>${p.skillsCli.openCode? pill('p-on', p.skillsCli.openCode+' skills') : pill('p-abs','0')}</td>
+      <td>${p.skillsCli.claude? pill('p-info', p.skillsCli.claude+' skills') : pill('p-abs','0')}</td>
+      <td class="wrap">${p.skillsCli.other.length? '<span class="pill p-off">'+esc(p.skillsCli.other.join(', '))+'</span>' : '—'}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="color:var(--dim)">Sin skills</td></tr>';
+}
+
+document.querySelectorAll('.chipf[data-cf]').forEach(c=>c.onclick=()=>{
+  const f=c.dataset.cf; cliFilters.has(f)?cliFilters.delete(f):cliFilters.add(f);
+  c.classList.toggle('on'); renderCli();
+});
+document.getElementById('cq').oninput=renderCli;
+
+/* ================= Pestaña 3: Skills & Agentes ================= */
+const CAP = D.capabilities || { skills:[], agents:[], claudeAgents:[], parallelGroups:[] };
+const capFilters = new Set();
+const CLI_LABEL = { claude:'claude', opencode:'opencode', suitos:'suitos' };
+const CLI_PILL = { claude:'p-cla', opencode:'p-oc', suitos:'p-suit' };
+const ROLE_PILL = { paralelo:'p-pur', orquestador:'p-info', 'estándar':'p-abs' };
+
+function capMatch(s){
+  if (capFilters.size && ![...capFilters].some(f=>s.cli.includes(f))) return false;
+  const q = document.getElementById('capq').value.trim().toLowerCase();
+  if (!q) return true;
+  return (s.name+' '+s.project+' '+s.desc).toLowerCase().includes(q);
+}
+
+function renderCap(){
+  const k = [
+    ['skills', CAP.skills.length, ''],
+    ['claude', CAP.skills.filter(s=>s.cli.includes('claude')).length, 'pur'],
+    ['opencode', CAP.skills.filter(s=>s.cli.includes('opencode')).length, 'ok'],
+    ['suitos (.suit/skills)', CAP.skills.filter(s=>s.cli.includes('suitos')).length, 'warn'],
+    ['agentes SuitOS', CAP.agents.length, 'info'],
+    ['agentes Claude nativos', CAP.claudeAgents.length, 'info'],
+    ['grupos en paralelo', CAP.parallelGroups.length, 'ok'],
+  ];
+  document.getElementById('kpisCap').innerHTML = k.map(([l,v,c])=>`<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`).join('');
+
+  const shown = CAP.skills.filter(capMatch).sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('capCount').textContent = shown.length + ' / ' + CAP.skills.length;
+  document.getElementById('tblCap').innerHTML = shown.length ? shown.map(s=>`
+    <tr>
+      <td><b>${esc(s.name)}</b></td>
+      <td>${esc(s.project)}</td>
+      <td>${s.cli.map(c=>`<span class="pill ${CLI_PILL[c]||'p-abs'}">${CLI_LABEL[c]||c}</span>`).join(' ')}</td>
+      <td class="wrap"><code>${esc(s.src)}</code></td>
+      <td class="wrap">${esc(s.desc||'—')}</td>
+    </tr>`).join('') : '<tr><td colspan="5" style="color:var(--dim)">Sin resultados</td></tr>';
+
+  document.getElementById('tblAgents').innerHTML = CAP.agents.length ? [...CAP.agents].sort((a,b)=>a.name.localeCompare(b.name)).map(a=>`
+    <tr>
+      <td><b>${esc(a.name)}</b></td>
+      <td>${esc(a.domain||'—')}</td>
+      <td>${esc(a.risk||'—')}</td>
+      <td><span class="pill ${ROLE_PILL[a.role]||'p-abs'}">${esc(a.role)}</span></td>
+      <td class="wrap">${esc(a.desc||'—')}</td>
+    </tr>`).join('') : '<tr><td colspan="5" style="color:var(--dim)">Sin agentes</td></tr>';
+
+  document.getElementById('tblClaudeAgents').innerHTML = CAP.claudeAgents.length ? CAP.claudeAgents.map(a=>`
+    <tr>
+      <td><b>${esc(a.name)}</b></td>
+      <td><code>${esc(a.file)}</code></td>
+      <td>${a.hasFrontmatter? '<span class="pill p-on">ok</span>' : '<span class="pill p-bad">sin frontmatter</span>'}</td>
+      <td class="wrap">${esc(a.desc||'—')}</td>
+    </tr>`).join('') : '<tr><td colspan="4" style="color:var(--dim)">Sin agentes nativos</td></tr>';
+
+  document.getElementById('parallelGroups').innerHTML = CAP.parallelGroups.length ? CAP.parallelGroups.map(g=>`
+    <div class="pgroup">
+      <h4>${esc(g.workflow)}</h4>
+      <div class="flow">
+        ${g.parallelSteps.map(s=>`<span class="pill p-pur">${esc(s.actor)}</span>`).join('<span class="arrow">+</span>')}
+        ${g.thenStep ? `<span class="arrow">→</span><span class="pill p-info">${esc(g.thenStep.actor)}</span>` : ''}
+      </div>
+    </div>`).join('') : '<div class="hint">Sin grupos en paralelo detectados.</div>';
+}
+
+document.querySelectorAll('.chipf[data-cap]').forEach(c=>c.onclick=()=>{
+  const f=c.dataset.cap; capFilters.has(f)?capFilters.delete(f):capFilters.add(f);
+  c.classList.toggle('on'); renderCap();
+});
+document.getElementById('capq').oninput=renderCap;
+
+/* ================= Pestaña 4: Scripts & Plugins ================= */
+const SP = { scripts: D.scripts || [], plugins: D.plugins || [] };
+const spExtFilters = new Set();
+const EXT_PILL = { js:'p-cla', mjs:'p-cla', cjs:'p-cla', sh:'p-oc', py:'p-suit' };
+
+function spMatch(s){
+  if (spExtFilters.size && !spExtFilters.has(s.ext)) return false;
+  const q = document.getElementById('spq').value.trim().toLowerCase();
+  if (!q) return true;
+  return (s.name+' '+s.path+' '+s.desc).toLowerCase().includes(q);
+}
+
+function renderSp(){
+  const k = [
+    ['scripts', SP.scripts.length, ''],
+    ['plugins', SP.plugins.length, 'info'],
+    ['plugins en ambos CLIs', SP.plugins.filter(p=>p.claude&&p.opencode).length, 'ok'],
+  ];
+  document.getElementById('kpisSp').innerHTML = k.map(([l,v,c])=>`<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`).join('');
+
+  const shown = SP.scripts.filter(spMatch);
+  document.getElementById('scriptsCount').textContent = shown.length + ' / ' + SP.scripts.length;
+  document.getElementById('tblScripts').innerHTML = shown.length ? shown.map(s=>`
+    <tr>
+      <td><b>${esc(s.name)}</b></td>
+      <td><span class="pill ${EXT_PILL[s.ext]||'p-abs'}">.${esc(s.ext)}</span></td>
+      <td class="wrap"><code>${esc(s.path)}</code></td>
+      <td class="wrap">${esc(s.desc||'—')}</td>
+    </tr>`).join('') : '<tr><td colspan="4" style="color:var(--dim)">Sin resultados</td></tr>';
+
+  document.getElementById('tblPlugins').innerHTML = SP.plugins.length ? SP.plugins.map(p=>`
+    <tr>
+      <td><b>${esc(p.name)}</b></td>
+      <td>${esc(p.version||'—')}</td>
+      <td><code>${esc(p.dir)}</code></td>
+      <td>${p.claude?'<span class="pill p-cla">claude</span>':''} ${p.opencode?'<span class="pill p-oc">opencode</span>':''}</td>
+      <td class="wrap">${esc(p.desc||'—')}</td>
+    </tr>`).join('') : '<tr><td colspan="5" style="color:var(--dim)">Sin plugins</td></tr>';
+}
+
+document.querySelectorAll('.chipf[data-ext]').forEach(c=>c.onclick=()=>{
+  const f=c.dataset.ext; spExtFilters.has(f)?spExtFilters.delete(f):spExtFilters.add(f);
+  c.classList.toggle('on'); renderSp();
+});
+document.getElementById('spq').oninput=renderSp;
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x===t));
+  const v = t.dataset.v;
+  document.getElementById('view-tools').hidden = v!=='tools';
+  document.getElementById('view-cli').hidden = v!=='cli';
+  document.getElementById('view-cap').hidden = v!=='cap';
+  document.getElementById('view-sp').hidden = v!=='sp';
+  if(v==='cli') renderCli();
+  if(v==='cap') renderCap();
+  if(v==='sp') renderSp();
+});
+
+document.getElementById('stamp').textContent = D.generatedAt
+  ? 'Generado ' + new Date(D.generatedAt).toLocaleString() + (D.live?' · estado live de puertos':' · solo configuración (sin --live)')
+  : 'data.js no generado — ejecuta: node SuitDashboard/scan.js --live';
+kpis(); render();
+</script>
+</body>
+</html>

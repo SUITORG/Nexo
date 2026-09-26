@@ -358,10 +358,12 @@ echo   [1] Diccionario         - Diccionario (MiBDdic)
 echo   [2] Iniciar SuitOrg     - Levantar servidor (3001 + submodulos)
 echo   [3] Campanas AI         - CMS campanas publicitarias IA (:8000)
 echo   [4] SuitBoard           - Dashboard Crypto + US Market
+echo   [5] SuitDashboard       - Skills, MCPs, Agentes, Scripts y Plugins
 echo   [0] Volver
 echo ============================================================
-choice /c 12340 /n /m "Selecciona: "
-if errorlevel 5 goto :menu
+choice /c 123450 /n /m "Selecciona: "
+if errorlevel 6 goto :menu
+if errorlevel 5 goto :suitdashboard
 if errorlevel 4 goto :suitboard
 if errorlevel 3 goto :campanas
 if errorlevel 2 goto :suitorg
@@ -374,6 +376,10 @@ goto :menu
 
 :suitboard
 call "%~dp0SuitBoard\abrir.bat"
+goto :menu
+
+:suitdashboard
+call "%~dp0SuitDashboard\abrir.bat"
 goto :menu
 
 :pinokio
