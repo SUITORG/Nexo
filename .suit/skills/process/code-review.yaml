@@ -5,6 +5,8 @@ skill:
   type: process
   domain: quality
 
+  description: "Code review according to project standards"
+
   dependencies:
     - javascript
 

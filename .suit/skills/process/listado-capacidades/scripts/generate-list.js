@@ -30,14 +30,22 @@ function parseSkillsYaml(content) {
     const m = line.match(/^  (\S[\w-]*):\s*$/);
     if (m) {
       if (current) skills.push(current);
-      current = { name: m[1], description: '' };
+      current = { name: m[1], description: '', path: '' };
     }
     if (current) {
       const d = line.match(/description:\s*["'](.+?)["']/);
       if (d) current.description = d[1].substring(0, 120);
+      const p = line.match(/^\s+path:\s*(\S+)/);
+      if (p) current.path = p[1];
     }
   }
   if (current) skills.push(current);
+  // Entradas recortadas a {path}: la description real vive en el .suit/skills/<cat>/<name>.yaml apuntado
+  for (const s of skills) {
+    if (s.path && !s.description) {
+      s.description = getSuitSkillDesc(path.join(ROOT, s.path));
+    }
+  }
   return skills;
 }
 
@@ -121,6 +129,26 @@ function getSkillDesc(skillPath) {
   const first = lines[idx].replace(/^description:\s*/, '').trim();
   let text;
   if (/^[>|][+-]?$/.test(first)) {
+    const block = [];
+    for (let i = idx + 1; i < lines.length && /^\s+\S/.test(lines[i]); i++) block.push(lines[i].trim());
+    text = block.join(' ');
+  } else if (first.startsWith("'") && first.endsWith("'")) {
+    text = first.slice(1, -1).replace(/''/g, "'");
+  } else {
+    text = first.replace(/^"|"$/g, '');
+  }
+  return text.substring(0, 150);
+}
+
+function getSuitSkillDesc(filePath) {
+  const c = readIfExists(filePath);
+  if (!c) return '';
+  const lines = c.split('\n');
+  const idx = lines.findIndex(l => /^ {2}description:\s*/.test(l));
+  if (idx === -1) return '';
+  const first = lines[idx].replace(/^ {2}description:\s*/, '').trim();
+  let text;
+  if (/^[>|][+-]?\d*$/.test(first)) {
     const block = [];
     for (let i = idx + 1; i < lines.length && /^\s+\S/.test(lines[i]); i++) block.push(lines[i].trim());
     text = block.join(' ');

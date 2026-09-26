@@ -5,6 +5,8 @@ skill:
   type: process
   domain: security
 
+  description: "Security audit for hardcoded keys, CSP, RBAC"
+
   dependencies: []
 
   triggers:

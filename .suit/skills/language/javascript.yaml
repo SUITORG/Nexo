@@ -5,6 +5,8 @@ skill:
   type: language
   domain: code
 
+  description: "JavaScript/Node.js development"
+
   dependencies: []
 
   triggers:

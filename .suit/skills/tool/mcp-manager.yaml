@@ -5,6 +5,8 @@ skill:
   type: tool
   domain: system
 
+  description: "Gestiona qué MCPs están activos en cada proyecto. Permite listar, activar, desactivar y configurar MCPs por proyecto."
+
   dependencies: []
 
   triggers:

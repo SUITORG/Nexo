@@ -5,6 +5,8 @@ skill:
   type: language
   domain: database
 
+  description: "SQL migrations and schema management"
+
   dependencies: []
 
   triggers:
