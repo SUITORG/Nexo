@@ -1,33 +1,35 @@
 # VALIDACION — SuitDashboard
 Fecha: 2026-09-25 · Contrato: SuitDashboard/CONTRATO.md
 
-## Ronda 2 — skills en español + evaluaciones por contrato (activa)
+## Ronda 2 — skills en español + evaluaciones por contrato (CERRADA, 2026-09-26)
 
-### Encuadre 20/80 (f1)
-1. Fixes de raíz en `scan.js`: BOM en `readText` (bug `name: X` como descripción), descripciones multilínea (`description: >`) en SKILL.md y yamls SuitOS (28 skills mostraban vacío)
-2. Dict `SKILL_DESC_ES` en `scan.js` (descripciones EN→ES, key = nombre)
-3. `contractFor(dir)` en `scan.js`: Evaluación % (tabla de cumplimiento → estados ✅/⚠️/❌) + Terminado % (checklist `- [x]`/`- [ ]`); sin contrato → `sin contrato`
-4. Dos pills en `card()` de `index.html` (`Eval NN% · Term NN%` o `sin contrato`)
-5. Actualizar `CONTRATO.md` si cambian fuentes de datos; regenerar `data.js`
-6. Validar con evidencia y commit por fase
+**Veredicto: PASA 4/4** — encuadre y evidencia:
+1. Fixes de raíz en `scan.js`: BOM en `readText`, descripciones multilínea (SKILL.md y yamls SuitOS), sin truncamiento de extractor
+2. Traducciones: dict `SKILL_DESC_ES` = `desc-skill-es.json` (55 entradas EN→ES) + overlay por nombre único
+3. `contractFor(dir)`: Evaluación % (tabla ✅/⚠️/❌ → 86% SH) + Terminado % (checklist → 0% raíz); sin contrato → `sin contrato`
+4. Pills en `card()` de `index.html` (`Eval NN% · Term NN%` o `sin contrato`)
+5. Commits: `d3aa362` (f1) · `b142f26` (f2) · f3 (validación)
 
-Descartado: crear contratos para los 22 proyectos sin contrato (acordado: badge `sin contrato`), calificación por letras (reemplazada por los dos %), badge en modal detalle, índice de búsqueda bilingüe.
+Descartado (acordado): crear contratos para proyectos sin contrato (66 — conteo corregido con evidencia, eran 22 en el encuadre inicial), calificación por letras, badge en modal detalle, índice bilingüe.
 
 | ID | Verifica | Comando o acción | Resultado observado | Veredicto |
 |----|----------|------------------|---------------------|-----------|
-| V1 | sintaxis scan.js | `node --check SuitDashboard/scan.js` | pendiente | — |
-| V2 | scan corre y escribe data.js | `node SuitDashboard/scan.js --live` | pendiente | — |
-| V3 | aserciones: descs ES, extracción de contrato, raíz Term=0, SH Eval=86, 22 sin contrato | script node sobre `data.js` | pendiente | — |
-| V4 | pestañas en navegador, pills de contrato, 0 errores consola | server temporal + Playwright | pendiente | — |
+| V1 | sintaxis scan.js | `node --check SuitDashboard/scan.js` | exit 0 | PASA |
+| V2 | scan corre y escribe data.js | `node SuitDashboard/scan.js --live` | `Sondeo: 0 fallan en OpenCode \| 0 fallan en Claude` · `74 skills (claude 41 \| opencode 36 \| suitos 33)` | PASA |
+| V3 | aserciones: descs ES, traducciones, contrato | script node sobre `data.js` | 9/9 PASS: 74 skills · 73 con desc · 0 EN residual · 55 traducciones · root Term=0% · SH Eval=86% · 2 con contrato · 66 sin · pills en card() | PASA |
+| V4 | pestañas en navegador, pills, 0 errores consola | server temporal :8137 + Playwright | Herramientas: pills `Eval — · Term 0%` (root) y `Eval 86% · Term —` (SH) + 38 `sin contrato` visibles (40/40 en vista; 66 en data.js con assets); Skills & Agentes: 0 marcadores EN, descs ES en DOM; 0 errores consola | PASA |
 
 ### Evidencia
-pendiente (se llena en f3).
+- V3: `assert-v3-r2.js` → 9/9 PASS (temp, fuera del repo).
+- V4: capturas `.playwright-mcp/r2-v4-herramientas.png` y `r2-v4-skills-final.png`; consola 0 errores/0 warnings.
+- Extracción de contrato verificada en `data.js`: `root → {file: CONTRATO.md, ev: null, term: 0}`, `SuitServiHogar → {file: Contrato.md, ev: 86, term: null}`, otros 66 → `null`.
 
 ### GAPs (no verificable ahora)
 - `abrir.bat` real (doble click) no se ejecuta: Playwright bloquea `file://`; se valida con server estático temporal (patrón ronda 1).
+- `web-search` (`.suit/skills/tool/web-search.yaml`) no tiene campo `description` en la fuente → 73/74 con desc por diseño (no se inventa contenido).
 
 ### Veredicto global
-pendiente — f3.
+**PASA 4/4** — f3.
 
 ---
 

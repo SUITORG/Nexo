@@ -21,10 +21,12 @@ Dashboard local HTML de solo lectura que escanea el monorepo SuitOrg (MCPs confi
 - Ubicación de esquema o migraciones: N/A
 - Fuente real de datos: lectura del filesystem del monorepo en cada corrida de `scan.js` (`.suit/registry/projects.yaml`, `scripts/mcp-manager.js` → `PROJECT_OPTIMAL`, `opencode.json`/`.mcp.json`/`package.json` de cada subcarpeta, `~/.claude.json`, `.claude/settings.json`); escribe el snapshot en `SuitDashboard/data.js` (`window.SUIT = {...}`), consumido únicamente por `index.html`
 - Activadores de scripts (`triggers`): `scan.js` lee una sola vez `AGENTS.md`, `CLAUDE.md`, `package.json`, `*.bat` de la raíz, `.suit/**/*.{yaml,md}`, `.github/workflows/*.yml` (incluye `schedule:` → cron) y `opencode.json`/`.mcp.json` (raíz + nivel-1) y detecta en ellos la referencia `scripts/<ruta>`; etiqueta `CLI manual` si nadie lo referencia. Descripciones de scripts: mapa local `SCRIPT_DESC_ES` en `scan.js` (las cabeceras de `scripts/*` quedan intactas — fuera del alcance)
+- Traducción de descripciones de skills (EN→ES): `SuitDashboard/desc-skill-es.json` (dict por nombre único de skill; overlay en `scan.js` — las cabeceras de skills quedan intactas)
+- Evaluaciones por contrato: `contractFor(dir)` busca `contrato.md`/`contratoprp.md`/`prm.md` (case-insensitive) en la raíz de cada proyecto; Evaluación % = primera celda de fila terminada en `% |` o `(✅ + 0.5·⚠️)/(✅+⚠️+❌)`, Terminado % = checklist `- [x]`/`- [ ]`; sin archivo → `null` → badge `sin contrato`
 - Reglas de aislamiento entre empresas: N/A — no maneja datos de negocio ni de tenants
 
 ## Límites
-- Puede modificar: `SuitDashboard/*` (`scan.js`, `index.html`, `data.js`, `*.bat`)
+- Puede modificar: `SuitDashboard/*` (`scan.js`, `index.html`, `data.js`, `desc-skill-es.json`, `*.bat`)
 - No debe tocar: código de otros subproyectos (solo los lee)
 - Se auto-excluye del escaneo (lista `EXCLUDE` en `scan.js`) para no autolistarse como proyecto
 - Dependencias con otros subproyectos: lee el formato de `.suit/registry/projects.yaml` y de `PROJECT_OPTIMAL` en `scripts/mcp-manager.js` de la raíz — si esos archivos cambian de formato, el parseo en `scan.js` puede degradar silenciosamente (fallback a objetos vacíos) sin lanzar error
@@ -50,3 +52,4 @@ Proyecto creado en otro IDE, fuera del flujo SuitOS (`/suit-plan → /suit-workf
 ## Cambios
 - 2026-09-25: Contrato inicial creado (fase 0), verificado contra `scan.js`, `index.html`, `abrir.bat` y `sondear.bat`
 - 2026-09-25: Ciclo mantenimiento — descripciones de scripts en español (`SCRIPT_DESC_ES`) + columna "Activadores" (fuentes de triggers en `scan.js`)
+- 2026-09-26: Ciclo mantenimiento — 55 descripciones de skills EN→ES (`desc-skill-es.json`) + pills `Eval/Term` o `sin contrato` por tarjeta (extracción `contractFor`)
