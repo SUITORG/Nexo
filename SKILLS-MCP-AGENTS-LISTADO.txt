@@ -86,6 +86,9 @@
   analista-proy             .claude/skills/analista-proy
                             -> .agents\skills\analista-proy
                             Investigación profunda de mercado para validar si un TEMA nuevo (app, desarrollo, producto, proyecto, nicho) tiene posibilidad de éxito. Úsala SIEMPRE
+  auditoria                 .claude/skills/auditoria
+                            -> .agents\skills\auditoria
+                            Auditoría de arquitectura + generación de documentación faltante de un sistema (inventario, C4 en Mermaid, reglas, brechas, plan). Úsala cuando el usu
   browser-act               .claude/skills/browser-act
                             -> .agents\skills\browser-act
                             Browser automation CLI for AI agents. NEVER run browser-act commands directly via Bash ΓÇö always invoke this skill first. Use browser-act when a user
@@ -183,7 +186,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 37 (4 locales + 33 symlinks)
+  TOTAL CLAUDE: 38 (4 locales + 34 symlinks)
 
 
 ========================================================================
@@ -191,6 +194,7 @@
 ========================================================================
 
   analista-proy             .opencode/skills/analista-proy
+  auditoria                 .opencode/skills/auditoria
   bat-launcher              .opencode/skills/bat-launcher
   browser-act               .opencode/skills/browser-act
   captions-overlay          .opencode/skills/captions-overlay
@@ -228,7 +232,7 @@
   talking-head-recut        .opencode/skills/talking-head-recut
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 37
+  TOTAL OPENCODE: 38
 
 
 ========================================================================
@@ -351,13 +355,13 @@
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
   Skills SuitOS (.yaml)    33      33         0
-  Skills Claude Code       37        4        33
-  Skills OpenCode           37       37         0
+  Skills Claude Code       38        4        34
+  Skills OpenCode           38       38         0
   Registry YAML           31      31         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   155
+  TOTAL                   157
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

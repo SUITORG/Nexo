@@ -156,6 +156,21 @@ routing:
       priority: 22
 
     - patterns:
+        - "auditoría"
+        - "auditoria"
+        - "audita arquitectura"
+        - "audita el sistema"
+        - "documenta el sistema"
+        - "diagrama c4"
+        - "crea el c4"
+        - "inventario del sistema"
+        - "brechas de arquitectura"
+        - "qué le falta al proyecto"
+      workflow: auditoria
+      skill: .agents/skills/auditoria/SKILL.md
+      priority: 26
+
+    - patterns:
         - "prospeccion"
         - "prospectos"
         - "oportunidades comerciales"
