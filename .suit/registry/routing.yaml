@@ -132,6 +132,30 @@ routing:
       priority: 10
 
     - patterns:
+        - "guia total"
+        - "guia-total"
+        - "tengo una idea"
+        - "proyecto nuevo"
+        - "vale la pena este proyecto"
+        - "validar idea"
+        - "crea los manuales"
+        - "manual del cliente"
+        - "manual del proveedor"
+        - "manual técnico"
+        - "manual de pruebas"
+        - "actualiza manuales"
+        - "identidad corporativa"
+        - "misión y visión"
+        - "valores e impacto"
+        - "políticas de la empresa"
+        - "taxonomía"
+        - "industrias y nichos"
+        - "prompt origen"
+      workflow: guia-total
+      skill: .agents/skills/guia-total/SKILL.md
+      priority: 22
+
+    - patterns:
         - "prospeccion"
         - "prospectos"
         - "oportunidades comerciales"

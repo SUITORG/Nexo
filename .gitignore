@@ -119,3 +119,7 @@ neo4j-community-5.26.0/
 .env.*
 !.env.example
 
+# Manuales personales de SuitOrg — solo locales, el repo (SUITORG/Nexo) es público
+# (solo raíz: / al inicio; los manuales de subproyectos como SuitServiHogar/ siguen versionados)
+/MANUAL_*.md
+

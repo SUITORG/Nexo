@@ -37,7 +37,7 @@ jobs:
         shell: bash
 
       - name: Exclude non-public projects from Pages
-        run: rm -rf AmbuRide
+        run: rm -rf AmbuRide GuiaTotal
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

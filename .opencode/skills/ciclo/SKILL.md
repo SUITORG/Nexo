@@ -29,7 +29,7 @@ bash .claude/skills/ciclo/scripts/detectar_cambios.sh [ruta-del-alcance]
 
 Lee `references/alcance.md` siempre en este paso. Resumen: el alcance es la carpeta indicada por el usuario o la actual; se sube por los padres hasta la raíz y gana el primer directorio con contrato (`CONTRATO.md`, `CONTRATOPRP.MD`, `PRM.md`). Ese contrato manda sobre esta skill; el de la raíz es marco general y el del subproyecto gana en conflicto.
 
-**Si el alcance no tiene contrato, créalo antes de la fase 1**: lee el código, `README*`, `package.json`, configuración, esquema y el uso de `Config_Empresas`, rellena `templates/CONTRATO.md`, marca lo no verificado como `POR CONFIRMAR`, muéstralo al usuario y haz commit como fase 0. No inventes reglas de negocio.
+**Si el alcance no tiene contrato, créalo antes de la fase 1**: lee el código, `README*`, `package.json`, configuración, esquema y el uso de `Config_Empresas`, rellena `templates/CONTRATO.md`, marca lo no verificado como `POR CONFIRMAR`, muéstralo al usuario y haz commit como fase 0. No inventes reglas de negocio. Si el alcance contiene un `Analista_Proy.md` reciente (veredicto de viabilidad de mercado), léelo antes de redactar el contrato: su clasificación Industria/Nicho/Especialización y su "Siguiente paso recomendado" son insumo del `CONTRATO.md`. Si no existe, omite.
 
 Declara siempre: `Alcance: <ruta> · Contrato: <archivo o NUEVO>`. No modifiques código fuera del alcance sin permiso explícito.
 
@@ -47,7 +47,7 @@ Ejecuta en orden. Cada fase: actuar → validar → `commit_fase.sh` → evaluar
 
 1. **Encuadre 20/80**: enumera los cambios pendientes y elige el 20% de acciones que resuelve el 80% del riesgo o valor. Escribe esa lista corta antes de tocar código y descarta el resto explícitamente.
 2. **Implementación**: aplica los cambios de código de esa lista, nada más.
-3. **Validación**: obligatoria, ver `references/validacion.md`. Nunca declares algo correcto sin evidencia ejecutada.
+3. **Validación**: obligatoria, ver `references/validacion.md`. Nunca declares algo correcto sin evidencia ejecutada. Si el alcance tiene `MANUAL_*.md` y esta fase tocó UI/backend, compara sus fechas contra el último commit relevante: si están desactualizados, refresca con `guia-total manuales` o sugiéreselo al usuario.
 4. **Iteración**: si la validación falla, corrige y registra el aprendizaje en `CORRECCIONES.md`. Máximo 3 vueltas; a la cuarta detente y consulta al usuario.
 5. **Plan de sincronización**: detecta deltas de esquema/registros y redacta `PLAN-SYNC.md`. No ejecutes nada aún.
 6. **Visto bueno y sync**: pide aprobación explícita mostrando el plan. Solo con un "sí" aplicas la sincronización (`references/db-sync.md`).

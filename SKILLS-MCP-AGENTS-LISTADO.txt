@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-09-26
+  Generado: 2026-09-27
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -20,6 +20,7 @@
   design-system             .suit/skills/domain/design-system.yaml
   geo-exif                  .suit/skills/domain/geo-exif.yaml
   hybrid-db                 .suit/skills/domain/hybrid-db.yaml
+  lapvtfu                   .suit/skills/domain/lapvtfu.yaml
   multi-tenant              .suit/skills/domain/multi-tenant.yaml
   panoramic-ocr             .suit/skills/domain/panoramic-ocr.yaml
   report-pdf                .suit/skills/domain/report-pdf.yaml
@@ -65,7 +66,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 32 skills
+  TOTAL SUITOS: 33 skills
 
 
 ========================================================================
@@ -112,6 +113,9 @@
   general-video             .claude/skills/general-video
                             -> .agents\skills\general-video
                             Author or edit a custom HyperFrames composition when no specialized workflow fits, or when BRIEF.md sets flow: companion. Use for longer or multi-scen
+  guia-total                .claude/skills/guia-total
+                            -> .agents\skills\guia-total
+                            Guía total de proyecto: orquesta el ciclo de vida completo de un proyecto de software — validación de idea (analista-proy + panel-juzgador), taxonomía
   hyperframes               .claude/skills/hyperframes
                             -> .agents\skills\hyperframes
                             Mandatory entry point: read this first for any request to make, create, edit, animate, or render a video, animation, or motion graphic, including a pr
@@ -179,7 +183,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 36 (4 locales + 32 symlinks)
+  TOTAL CLAUDE: 37 (4 locales + 33 symlinks)
 
 
 ========================================================================
@@ -197,6 +201,7 @@
   faceless-explainer        .opencode/skills/faceless-explainer
   figma                     .opencode/skills/figma
   general-video             .opencode/skills/general-video
+  guia-total                .opencode/skills/guia-total
   hyperframes               .opencode/skills/hyperframes
   hyperframes-animation     .opencode/skills/hyperframes-animation
   hyperframes-audio         .opencode/skills/hyperframes-audio
@@ -223,7 +228,7 @@
   talking-head-recut        .opencode/skills/talking-head-recut
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 36
+  TOTAL OPENCODE: 37
 
 
 ========================================================================
@@ -257,11 +262,12 @@
   data-cleanup                        Limpieza destructiva de datos por motor (GSHEETS/SUPABASE/NEON). Siemp
   iteration-loop                      Maneja iteraciones cuando la validación falla. Máximo 3 rondas. Cada r
   design-system                       Manages visual identity for landings: colors, typography, palettes and
-  brief-engine                        Generates complete Marketing Briefs (20 fields, pipe-delimited) from a
+  brief-engine                        Generates complete Marketing Briefs (21 segments: 20 content + LAPVTFU
+  lapvtfu                             Gestiona el segmento LAPVTFU (posición 10 del vector Brief en Config_E
   prompt-reviewer                     Pre-vuelo automático y token-eficiente de TODO pedido del usuario ante
   web-research                        Structured web research for business intelligence. Runs 3-5 parallel q
 
-  TOTAL REGISTRY: 30 skills declaradas
+  TOTAL REGISTRY: 31 skills declaradas
 
 
 ========================================================================
@@ -344,14 +350,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    32      32         0
-  Skills Claude Code       36        4        32
-  Skills OpenCode           36       36         0
-  Registry YAML           30      30         0
+  Skills SuitOS (.yaml)    33      33         0
+  Skills Claude Code       37        4        33
+  Skills OpenCode           37       37         0
+  Registry YAML           31      31         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   151
+  TOTAL                   155
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================
