@@ -17,8 +17,9 @@ GuiaTotal/registro/
 3. **Campos obligatorios**: `proyecto`, `ruta`, `etapa`, `creado`, `actualizado`, `proximo_paso`.
 4. **`etapa`** es el motor de ruteo: `idea` → flujo IDEA · `construccion` → ciclo F0-F7 · `mantenimiento` → solo ciclo.
 5. **`convive_sheets`** nace de la pregunta obligatoria en etapa idea; si es `true`, `id_empresa` y `db_engine` se completan al leer `Config_Empresas`.
-6. **`documentos.*`** son booleanos que `guia-total` pone en `true` al crear cada artefacto — sirven para saber qué falta crear sin abrir el proyecto.
-7. **Versionado**: el campo `actualizado` se toca en cada pasada; el histórico vive en git.
+6. **`documentos.*`** son booleanos que `guia-total` pone en `true` al crear cada artefacto — sirven para saber qué falta crear sin abrir el proyecto. Las rutas de instancia son `<Proyecto>/docs/`.
+7. **`taxonomia.{industria,nicho,especializacion}`** replica los 3 campos de `<Proyecto>/docs/TAXONOMIA.md` (identificados en el análisis) para que sistemas externos puedan leerlos sin abrir el proyecto.
+8. **Versionado**: el campo `actualizado` se toca en cada pasada; el histórico vive en git.
 
 ## Schema
 

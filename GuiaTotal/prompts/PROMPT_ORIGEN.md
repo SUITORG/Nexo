@@ -1,7 +1,7 @@
 # PROMPT ORIGEN (plantilla maestra)
 
 > **Para qué sirve:** prompt vivo que describe el origen y contexto de un proyecto — de dónde sale, para quién es, cómo trabaja su dueño y qué reglas de comunicación/entrega tiene. Se usa como insumo de contexto al retomar un proyecto o al pedirle a una IA que trabaje en él.
-> **Regla de vida:** la **instancia viva vive en la carpeta del proyecto** (`<Proyecto>/PROMPT_ORIGEN.md`), creada desde esta plantilla. Esta plantilla solo cambia cuando cambia la **metodología**, no cuando cambia un proyecto. Actualiza instancias con `/guia-total origen`.
+> **Regla de vida:** la **instancia viva vive en `<Proyecto>/docs/PROMPT_ORIGEN.md`**, creada desde esta plantilla. Esta plantilla solo cambia cuando cambia la **metodología**, no cuando cambia un proyecto. Actualiza instancias con `/guia-total origen`.
 > **Origen (ingeniería inversa):** `Documentacion/SuitOrg-PromptOrigen2.txt` (prompt original del usuario) + `AGENTS.md` + `contexto.md`.
 
 ---

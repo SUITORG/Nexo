@@ -5,13 +5,13 @@ El repo contiene subcarpetas que pueden ser proyectos completos o subproyectos. 
 ## Resolver el alcance (siempre primero)
 1. Si el usuario nombra una carpeta (`/ciclo apps/portal ...`), ese es el alcance.
 2. Si no, usa el directorio de trabajo actual.
-3. Sube por los directorios padres hasta la raíz del repo y toma el **primer** directorio que contenga contrato (`CONTRATO.md`, `CONTRATOPRP.MD` o `PRM.md`). Ese directorio es el alcance.
+3. Sube por los directorios padres hasta la raíz del repo y toma el **primer** directorio que contenga contrato (`CONTRATO.md`, `CONTRATOPRP.MD` o `PRM.md`) — en la raíz del directorio o en su subcarpeta `docs/` (convención Guía Total). Ese directorio es el alcance.
 4. Si ninguno tiene contrato, el alcance es el directorio actual y hay que crear su contrato (ver abajo).
 
 Declara en una línea: `Alcance: <ruta> · Contrato: <archivo o NUEVO>`.
 
 ## Archivos por alcance
-`CONTRATO.md`, `VALIDACION.md`, `CORRECCIONES.md` y `PLAN-SYNC.md` viven **dentro del alcance**, no en la raíz. Nunca escribas los de un subproyecto en la raíz ni mezcles correcciones entre subproyectos.
+`CONTRATO.md` vive en `<alcance>/docs/CONTRATO.md` (convención Guía Total; si ya existe en la raíz del alcance —legacy— se respeta donde esté). `VALIDACION.md`, `CORRECCIONES.md` y `PLAN-SYNC.md` viven en la **raíz del alcance**. Nunca escribas los de un subproyecto en la raíz del repo ni mezcles correcciones entre subproyectos.
 
 El contrato de la raíz, si existe, aplica como marco general: el del subproyecto manda en conflicto, y solo para lo que contradice explícitamente. Cítalos por ruta para no confundirlos.
 
@@ -23,7 +23,7 @@ El contrato de la raíz, si existe, aplica como marco general: el del subproyect
 ## Si no hay contrato: crearlo antes de la fase 1
 1. Lee lo necesario del alcance para describirlo con hechos, no suposiciones: `README*`, `package.json` (scripts y dependencias), estructura de carpetas, archivos de configuración y entorno (nombres de variables, nunca valores), esquema o migraciones, y cómo consume `Config_Empresas` / `db_engine`.
 2. Lee el contrato de la raíz si existe, y `CORRECCIONES.md` de alcances hermanos si aportan reglas.
-3. Escribe `CONTRATO.md` en el alcance copiando `templates/CONTRATO.md` y rellenándolo. Marca como `POR CONFIRMAR` todo lo que no pudiste verificar en el código.
+3. Escribe `docs/CONTRATO.md` en el alcance (crea `docs/` solo con este archivo con contenido — nunca vacíos) copiando `templates/CONTRATO.md` y rellenándolo. Marca como `POR CONFIRMAR` todo lo que no pudiste verificar en el código.
 4. Muestra al usuario un resumen y la lista de `POR CONFIRMAR`; pide corrección antes de seguir.
 5. Haz commit del contrato como fase 0 y continúa el ciclo.
 

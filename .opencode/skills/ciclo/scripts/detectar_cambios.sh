@@ -9,6 +9,7 @@ INICIO="$(cd "${1:-.}" 2>/dev/null && pwd || pwd)"
 buscar_contrato() {
   for f in CONTRATO.md CONTRATOPRP.MD PRM.md; do
     [ -f "$1/$f" ] && { echo "$f"; return 0; }
+    [ -f "$1/docs/$f" ] && { echo "docs/$f"; return 0; }  # convención GuiaTotal: docs/ del proyecto
   done
   return 1
 }
@@ -28,7 +29,7 @@ echo "ruta: $REL"
 if [ -n "$CONTRATO" ]; then
   echo "contrato: $REL/$CONTRATO"
 else
-  echo "contrato: NUEVO -> crear en $REL/CONTRATO.md (ver references/alcance.md)"
+  echo "contrato: NUEVO -> crear en $REL/docs/CONTRATO.md (ver references/alcance.md)"
 fi
 if [ "$REL" != "." ] && C_RAIZ="$(buscar_contrato "$RAIZ")"; then
   echo "contrato padre: ./$C_RAIZ"

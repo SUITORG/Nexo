@@ -30,13 +30,20 @@ integraciones:
   db_engine: null               # GSHEETS | SUPABASE | NEON
   brief_en_logo_url: false      # hay Brief generado?
 
+taxonomia:                       # 3 campos del análisis (match al catálogo GuiaTotal/TAXONOMIA.md)
+  industria: null
+  nicho: null
+  especializacion: null
+
 documentos:                      # guia-total marca true al crearlos
-  analista_proy: false           # Analista_Proy.md
-  contrato: false                # <Proyecto>/CONTRATO.md
-  identidad: false               # <Proyecto>/IDENTIDAD_CORPORATIVA.md
-  manuales: false                # <Proyecto>/MANUAL_*.md (4)
-  prompt_origen: false           # <Proyecto>/PROMPT_ORIGEN.md
-  checklist_lanzamiento: false   # <Proyecto>/CHECKLIST-LANZAMIENTO.md
+  analista_proy: false           # <Proyecto>/docs/Analista_Proy.md
+  taxonomia: false               # <Proyecto>/docs/TAXONOMIA.md (3 campos)
+  contrato: false                # <Proyecto>/docs/CONTRATO.md
+  identidad: false               # <Proyecto>/docs/IDENTIDAD_CORPORATIVA.md
+  manuales: false                # <Proyecto>/docs/MANUAL_*.md (4)
+  prompt_origen: false           # <Proyecto>/docs/PROMPT_ORIGEN.md
+  checklist_lanzamiento: false   # <Proyecto>/docs/CHECKLIST-LANZAMIENTO.md
+  arquitectura_docs: false       # <Proyecto>/docs/05-* y 06-* (skill auditoria)
 
 proximo_paso: "<acción concreta siguiente>"
 ```

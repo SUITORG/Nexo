@@ -22,9 +22,9 @@ Si no hay cambios reales y no se pide un modo suelto, informa "sin acciones" y t
 ## Paso 0 — Alcance
 
 - Alcance = ruta indicada o carpeta actual; sube por padres hasta la raíz buscando contrato (`CONTRATO.md`, `PRM.md`) igual que `ciclo` (ver `.agents/skills/ciclo/references/alcance.md`).
-- Declara: `Alcance: <ruta> · GuiaTotal: GuiaTotal/ · Instancia: <Proyecto>/`.
-- **Documentos de método** (uno solo, en `GuiaTotal/`): `GUIA.md`, `MAPA.md`, `TAXONOMIA.md`, `templates/`, `prompts/` (plantillas maestras), `registro/schema.md`.
-- **Instancias por proyecto** (en la carpeta del proyecto): `MANUAL_*.md`, `IDENTIDAD_CORPORATIVA.md`, `PROMPT_ORIGEN.md`, y su tarjeta `GuiaTotal/registro/<proyecto>.yaml`. Un proyecto nuevo recibe sus propias instancias; nunca copies la carpeta `GuiaTotal/` a un proyecto.
+- Declara: `Alcance: <ruta> · GuiaTotal: GuiaTotal/ · Instancia: <Proyecto>/docs/`.
+- **Documentos de método** (uno solo, en `GuiaTotal/`): `GUIA.md`, `MAPA.md`, `TAXONOMIA.md` (catálogo maestro), `templates/`, `prompts/` (plantillas maestras), `registro/schema.md`.
+- **Instancias por proyecto** (en `<Proyecto>/docs/`): `MANUAL_*.md`, `IDENTIDAD_CORPORATIVA.md`, `PROMPT_ORIGEN.md`, `TAXONOMIA.md` (3 campos), `CHECKLIST-LANZAMIENTO.md` y, si el proyecto los tiene, `CONTRATO.md`/demás docs 00-16; la tarjeta vive en `GuiaTotal/registro/<proyecto>.yaml`. Un proyecto nuevo recibe sus propias instancias; nunca copies la carpeta `GuiaTotal/` a un proyecto. **Nunca crear archivos vacíos** — solo con contenido real y solo si se requiere.
 
 ## Pregunta obligatoria en etapa IDEA
 
@@ -46,22 +46,24 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 ### Flujo IDEA
 
 1. `⚡ analista-proy` → `Analista_Proy.md` (si no existe; si existe y es reciente, reúsalo).
-2. `⚡ panel-juzgador` → veredicto + recomendaciones (insumo: propuesta + `Analista_Proy.md`). **El veredicto no bloquea**: guárdalo en la tarjeta como recomendación.
-3. `✍️ crea GuiaTotal/registro/<proyecto>.yaml` si falta (schema en `registro/schema.md`): etapa, veredicto, `convive_sheets`, próximo paso.
-4. Sugiere `identidad` y luego construcción. No construyas sin que el usuario lo pida.
+2. `✍️ crea <Proyecto>/docs/TAXONOMIA.md` (si falta) con **solo 3 campos**: Industria · Nicho · Especialización — los que clasifique el análisis, con match exacto al catálogo `GuiaTotal/TAXONOMIA.md`.
+3. `⚡ panel-juzgador` → veredicto + recomendaciones (insumo: propuesta + `Analista_Proy.md`). **El veredicto no bloquea**: guárdalo en la tarjeta como recomendación.
+4. `✍️ crea GuiaTotal/registro/<proyecto>.yaml` si falta (schema en `registro/schema.md`): etapa, veredicto, `convive_sheets`, taxonomía, próximo paso.
+5. Sugiere `identidad` y luego construcción. No construyas sin que el usuario lo pida.
 
 ### Flujo CONSTRUCCIÓN
 
 1. `⚡ ciclo` F0 → `CONTRATO.md` (usa `Analista_Proy.md` como insumo, igual que hace `ciclo`).
 2. `⚡ ciclo` F1-F7 con commits por fase.
 3. Si cambian funciones: `node scripts/generate-index.js` → `INDEX_FUNCIONES.md`.
-4. En paralelo (independientes entre sí): crea `CHECKLIST-LANZAMIENTO.md`, los 4 `MANUAL_*.md` y `<Proyecto>/PROMPT_ORIGEN.md` si faltan.
-5. `🔄 actualiza GuiaTotal/registro/<proyecto>.yaml` (etapa → construcción).
+4. En paralelo (independientes entre sí): crea `<Proyecto>/docs/CHECKLIST-LANZAMIENTO.md`, los 4 `<Proyecto>/docs/MANUAL_*.md` y `<Proyecto>/docs/PROMPT_ORIGEN.md` si faltan.
+5. Si el usuario pide documentación de arquitectura, o la guía requiere generar docs al nacer el proyecto: `⚡ auditoria` — esa skill decide qué crear según sus umbrales (≥25% → faltantes marcados `PROBABLE`; ≥84% → completar/actualizar). Nunca obligatorio.
+6. `🔄 actualiza GuiaTotal/registro/<proyecto>.yaml` (etapa → construcción).
 
 ### Flujo MANTENIMIENTO
 
 1. `⚡ ciclo` F1-F7 (no dupliques sus fases aquí).
-2. Si el alcance tiene `MANUAL_*.md` y los cambios tocaron UI/backend: verifica fechas (manual vs último commit relevante) → si desactualizados, ejecuta el modo `manuales` o sugiere `/guia-total manuales`.
+2. Si el alcance tiene `MANUAL_*.md` (en `docs/`) y los cambios tocaron UI/backend: verifica fechas (manual vs último commit relevante) → si desactualizados, ejecuta el modo `manuales` o sugiere `/guia-total manuales`.
 
 ## Modos
 
@@ -78,14 +80,14 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 1. `📁 lee GuiaTotal/prompts/IDENTIDAD_CORPORATIVA.md` — es el motor: respeta sus reglas (no inventar certificaciones/cifras/políticas, marcadores `[PENDIENTE DE VALIDAR]`, ≤1000 palabras, estructura de 8 secciones).
 2. Rellena sus `[CAMPOS]` con: tarjeta del proyecto, `Analista_Proy.md`, `Config_Empresas` si `convive_sheets=sí`, o lo que el usuario aporte.
 3. Si `convive_sheets` y hay `id_empresa`: `⚡ brief-engine` solo para taxonomía/tono (no escribas el Brief).
-4. `✍️ crea/actualiza <Proyecto>/IDENTIDAD_CORPORATIVA.md` (Misión, Visión, Valores, Impacto, Compromisos/Políticas).
+4. `✍️ crea/actualiza <Proyecto>/docs/IDENTIDAD_CORPORATIVA.md` (Misión, Visión, Valores, Impacto, Compromisos/Políticas).
 5. Sección final obligatoria `## Datos pendientes de validar` (del prompt original).
 
 ### `guia-total manuales [ruta]`
 
 - `📁 lee` código del proyecto, `CONTRATO.md`, `README*`.
 - `📄 lee GuiaTotal/templates/MANUAL_*.md`.
-- `✍️ crea` en la carpeta del proyecto los 4, si faltan (independientes → créalos en orden, sin esperas entre ellos):
+- `✍️ crea` en `<Proyecto>/docs/` los 4, si faltan (independientes → créalos en orden, sin esperas entre ellos):
   - `MANUAL_CLIENTE.md` — frontend, quien solicita el servicio.
   - `MANUAL_PROVEEDOR.md` — frontend, quien presta el servicio.
   - `MANUAL_TECNICO.md` — backend, mantenimiento y configuración.
@@ -95,7 +97,7 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 
 ### `guia-total origen [ruta]`
 
-- Instancia: `<Proyecto>/PROMPT_ORIGEN.md`. Si no existe, créala desde `GuiaTotal/prompts/PROMPT_ORIGEN.md` con cabecera `Generado desde: GuiaTotal/prompts/PROMPT_ORIGEN.md · <fecha>`.
+- Instancia: `<Proyecto>/docs/PROMPT_ORIGEN.md`. Si no existe, créala desde `GuiaTotal/prompts/PROMPT_ORIGEN.md` con cabecera `Generado desde: GuiaTotal/prompts/PROMPT_ORIGEN.md · <fecha>`.
 - `guia-total origen` rellena/actualiza la **instancia del proyecto** con: GUIA.md + tarjeta + hechos nuevos del proyecto (qué es, para quién, decisiones, etapa).
 - La **plantilla maestra** solo se modifica cuando cambia la metodología, no cuando cambia un proyecto.
 
@@ -105,12 +107,14 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 |---|---|---|
 | `GUIA.md` | `GuiaTotal/` | solo método nuevo (usuario) |
 | `MAPA.md` | `GuiaTotal/` | **esta skill, en cada pasada** |
-| `TAXONOMIA.md` | `GuiaTotal/` | modo `taxonomia` |
+| `TAXONOMIA.md` (catálogo maestro) | `GuiaTotal/` | modo `taxonomia` |
+| `TAXONOMIA.md` (3 campos del proyecto) | `<Proyecto>/docs/` | flujo IDEA (tras `analista-proy`) |
 | `templates/*` | `GuiaTotal/` | solo método nuevo |
 | `registro/schema.md` + `registro/<proyecto>.yaml` | `GuiaTotal/` | esta skill |
-| `MANUAL_*.md` | `<Proyecto>/` | modo `manuales` / construcción |
-| `IDENTIDAD_CORPORATIVA.md` | `<Proyecto>/` | modo `identidad` |
-| `PROMPT_ORIGEN.md` | `<Proyecto>/` | modo `origen` |
+| `MANUAL_*.md` | `<Proyecto>/docs/` | modo `manuales` / construcción |
+| `IDENTIDAD_CORPORATIVA.md` | `<Proyecto>/docs/` | modo `identidad` |
+| `PROMPT_ORIGEN.md` | `<Proyecto>/docs/` | modo `origen` |
+| `docs/00-16*.md` (arquitectura, C4, reglas…) | `<Proyecto>/docs/` | skill `auditoria` (bajo sus umbrales) |
 
 **Actualización del MAPA**: al terminar cada pasada, revisa si el flujo ejecutado difiere de `MAPA.md` (gatillos nuevos, skills nuevas, ramal añadido) → actualiza solo ese nodo. Nunca reescribas el MAPA completo desde cero.
 
@@ -120,7 +124,7 @@ Si el usuario pide instalar/enlazar una skill no propia, añade su nodo a `MAPA.
 
 ## Reglas
 
-- Los manuales, identidad y prompt origen viven **en la carpeta del proyecto**; `GuiaTotal/` solo guarda método y plantillas.
+- Los manuales, identidad, prompt origen, taxonomía del proyecto y docs 00-16 viven **en `<Proyecto>/docs/`**; `GuiaTotal/` solo guarda método y plantillas. **Nunca crear archivos vacíos.**
 - `id_empresa` en toda lectura/escritura multiempresa; `activo` se normaliza con `.toUpperCase().trim() === "TRUE"`.
 - Escrituras a Supabase del catálogo de taxonomía: solo INSERT de faltantes, nunca UPDATE/DELETE.
 - El veredicto de `panel-juzgador` recomienda, no decide: el usuario aprueba continuar.

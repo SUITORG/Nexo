@@ -3,6 +3,7 @@
 > **Fuente**: Supabase `Nexo` (egyxgnlnzanxpqyuvmsg) — tablas `industrias` + `nichos`
 > **Leído**: 2026-09-26 · **Industrias**: 22 activas · **Nichos**: 85 activos
 > **Regla**: match exacto a taxonomía, nunca texto libre (`KitBriefGenerador-MegaPrompt.md` §2).
+> **Regla por proyecto**: cada proyecto tiene **su propio** `<Proyecto>/docs/TAXONOMIA.md` con **solo 3 campos** — Industria · Nicho · Especialización — identificados en su análisis (`analista-proy`) y casados a este catálogo. Este archivo es solo el **catálogo maestro**.
 > **Escritura**: solo INSERT de faltantes (jamás UPDATE/DELETE). Los inserts se anotan al final con `insertado: <fecha>`.
 > **Regenerar**: `/guia-total taxonomia`
 
