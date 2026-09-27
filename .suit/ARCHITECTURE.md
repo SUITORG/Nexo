@@ -1764,9 +1764,8 @@ memory/
 ├── patterns/               ← Reusable code/architecture patterns
 │   ├── dual-write.md
 │   └── fallback-chain.md
-├── pending/                ← Pending decisions and debt tracking
-│   ├── tech-debt.yaml
-│   └── roadmap.yaml
+├── pending/                ← Planes de iniciativas (plan-*.md) — el TRACKER de
+│   └── plan-*.md              pendientes/deuda vive en GuiaTotal/PENDIENTES.md
 └── INDEX.md                ← Auto-generated index of all memory entries
 ```
 
@@ -1850,7 +1849,7 @@ Normalize with `String(p.activo).toUpperCase().trim() === "TRUE"`
 - `bugs/` — entries can be marked `resolved` but never deleted
 - `lessons/` — created when a pattern repeats across projects
 - `patterns/` — created when a solution is reusable
-- `pending/` — updated as debt is paid or roadmap progresses
+- `pending/` — holds initiative plans only; the pending/debt **tracker** is `GuiaTotal/PENDIENTES.md` (single source of truth)
 
 ---
 

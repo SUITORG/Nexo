@@ -99,7 +99,7 @@
 | `memory/bugs/` | Known bug database |
 | `memory/lessons/` | Cross-project learnings |
 | `memory/patterns/` | Reusable patterns |
-| `memory/pending/` | Tech debt and roadmap |
+| `memory/pending/` | Planes de iniciativas (`plan-*.md`) — el tracker de pendientes vive en `GuiaTotal/PENDIENTES.md` (fuente única) |
 
 ## Architecture Decision Records
 | ID | Title | Date |
