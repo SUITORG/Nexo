@@ -107,7 +107,7 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 |---|---|---|
 | `GUIA.md` | `GuiaTotal/` | solo método nuevo (usuario) |
 | `PENDIENTES.md` | `GuiaTotal/` | esta skill — anota lo no resuelto al cerrar cada pasada; nunca borrar filas |
-| `MAPA.md` | `GuiaTotal/` | **esta skill, en cada pasada** |
+| `MAPA.md` | `GuiaTotal/` | **esta skill, en el cierre de cada pasada (solo si difiere)** |
 | `TAXONOMIA.md` (catálogo maestro) | `GuiaTotal/` | modo `taxonomia` |
 | `TAXONOMIA.md` (3 campos del proyecto) | `<Proyecto>/docs/` | flujo IDEA (tras `analista-proy`) |
 | `templates/*` | `GuiaTotal/` | solo método nuevo |

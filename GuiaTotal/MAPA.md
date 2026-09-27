@@ -6,6 +6,18 @@
 
 ---
 
+## ═══ CIERRE DE TODA PASADA (nodo común — aplica a cualquier sección) ═══
+
+```text
+└── ⚡ guia-total  [al terminar CUALQUIER pasada]
+    ├── ✍️ GuiaTotal/PENDIENTES.md   [todo lo que quedó abierto; filas nunca se borran → se tachan con fecha]
+    ├── 🔄 GuiaTotal/MAPA.md         [solo si el flujo ejecutó DIFIERE del mapa (gatillo/skill/ramal nuevo)
+    │                                 → corrige solo ese nodo; jamás reescribe el mapa completo]
+    └── 📋 ≤3 líneas de cierre: qué se hizo · dónde quedó · próximo paso
+```
+
+---
+
 ## ═══ 1. IDEA / VALIDACIÓN ═══
 
 **Triggers:** "proyecto nuevo", "tengo una idea", "¿vale la pena?", "investiga este nicho", "evaluar proyecto", "validar idea", `/guia-total [ruta]`
@@ -23,7 +35,7 @@
     │   ├── ∥ agentes: mercado ∥ técnico ∥ riesgo ∥ financiero
     │   └── → ⚡ juez (serial) → ✍️ veredicto + condiciones
     ├── ✍️ crea GuiaTotal/registro/<proyecto>.yaml  (si falta)
-    └── 🔄 actualiza GuiaTotal/MAPA.md
+    └── ↪ CIERRE DE TODA PASADA (sección superior: PENDIENTES + MAPA + 3 líneas)
 ```
 
 ## ═══ 2. TAXONOMÍA ═══
@@ -167,4 +179,4 @@
 
 ---
 
-*Última actualización del mapa: 2026-09-26 (nodo auditoría ampliado con puertas de entrada, umbrales y piloto SuitServiHogar; taxonomía por proyecto; instancias en `docs/`).*
+*Última actualización del mapa: 2026-09-26 (cierre común PENDIENTES+MAPA al inicio; nodo auditoría; taxonomía por proyecto; instancias en `docs/`).*
