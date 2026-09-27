@@ -1,6 +1,9 @@
-# Manual Operativo — Cliente (Quien Solicita el Servicio)
+# MANUAL CLIENTE — SuitServiHogar (Quien Solicita el Servicio)
 
-**Versión:** 1.0 | **Última actualización:** 2026-09-15
+> **Para qué sirve este manual:** enseña al cliente final a usar el frontend del proyecto paso a paso: registro, exploración, reserva, pago y confirmación.
+> **Audiencia:** frontend — usuario cliente sin conocimientos técnicos.
+
+**Versión:** 1.0 | **Última actualización:** 2026-09-15 (migrado a estándar Guía Total 2026-09-26)
 **Plataforma:** ServiciosHogar — Reynosa, Tamaulipas
 
 ---

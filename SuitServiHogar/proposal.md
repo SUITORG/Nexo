@@ -41,7 +41,7 @@ Plataforma digital que conecta a **clientes** que necesitan servicios para el ho
 - ✅ Tests unitarios (Vitest) + E2E (Playwright) passing
 - ✅ CI/CD GitHub Actions (lint, typecheck, unit, e2e, deploy preview/prod)
 - ✅ PWA instalable (manifest + SW + splash + icons)
-- ✅ Documentación completa (MANUAL_CLIENTE.md, MANUAL_TECNICO.md, MANUAL_BACKEND.md, MANUAL_DESARROLLADOR.md)
+- ✅ Documentación completa (MANUAL_CLIENTE.md, MANUAL_PROVEEDOR.md, MANUAL_TECNICO.md, MANUAL_PRUEBAS.md)
 - ✅ 41/41 requisitos del Contrato.md cumplidos
 - ✅ Migraciones SQL 9/9 aplicadas (schema + 8 migraciones)
 - ✅ PWA + SEO + SEO técnico (manifest, SW, splash, icons, meta tags)

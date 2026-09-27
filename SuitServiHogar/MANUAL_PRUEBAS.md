@@ -1,7 +1,10 @@
-# MANUAL DESARROLLADOR — Modo Test/Dev SuitServiHogar
+# MANUAL DE PRUEBAS — SuitServiHogar (Modo Test/Dev)
+
+> **Para qué sirve este manual:** explica el modo test/dev del proyecto: cómo correr el flujo completo E2E con mocks, sin depender de servicios reales (Stripe real, Google OAuth, Supabase prod).
+> **Audiencia:** desarrollador del proyecto que valida cambios antes de subirlos.
 
 > **Versión:** 1.0  
-> **Fecha:** 2026-09-15  
+> **Fecha:** 2026-09-15 (migrado a estándar Guía Total 2026-09-26)  
 > **Propósito:** Probar flujo completo E2E sin dependencias externas (Stripe real, Google OAuth, Supabase prod)
 
 ---
@@ -389,6 +392,6 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
 
 ---
 
-**Fin del Manual Desarrollador v1.0**
+**Fin del Manual de Pruebas v1.0**
 
-> **Tip:** Guarda este archivo en `MANUAL_DESARROLLADOR.md` y compártelo con el equipo. El modo dev ahorra ~30 min por ciclo de prueba E2E.
+> **Tip:** Guarda este archivo en `MANUAL_PRUEBAS.md` y compártelo con el equipo. El modo dev ahorra ~30 min por ciclo de prueba E2E.

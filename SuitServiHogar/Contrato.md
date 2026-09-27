@@ -78,7 +78,7 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 | 24 | Penalizaciones servidores/solicitantes | ✅ | `process_client_cancellation()`, `process_specialist_cancellation()` | Reglas documentadas en AGENTS.md |
 | 25 | Porcentaje para caridad/asociación | ✅ | `calculate_charity_fee()` (1%), "Fundación Hogar Digno AC" | — |
 | 26 | Actualización del dólar (frontera) | ✅ | `src/services/exchangeRate.ts` (Fixer.io API, fallback 18.0) | — |
-| 27 | Documentación completa | ✅ | `MANUAL_CLIENTE.md`, `MANUAL_TECNICO.md` | — |
+| 27 | Documentación completa | ✅ | `MANUAL_CLIENTE.md`, `MANUAL_PROVEEDOR.md` | — |
 | 28 | Flujos completos cliente/técnico | ✅ | Documentados en manuales + diagramas | — |
 | 29 | Terminología local Reynosa | ✅ | `glossary.ts`, `GlossaryScreen.tsx` (8 términos) | — |
 | 30 | Pantallas operación backend | ✅ | `AdminScreen.tsx` (dashboard, technicians, disputes) | — |
@@ -91,7 +91,7 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 | 37 | Calificación mutua + comentarios (sin ofensas) | ✅ | `ReviewForm.tsx` (estrellas + moderación de ofensas), `sh_reviews` | — |
 | 38 | Nombre: ServiciosHogar Reynosa | ✅ | Título en `HomeScreen` | — |
 | 39 | Indicador sistema fuera de línea / sin internet | ✅ | `useOnlineStatus.ts` (heartbeat 30s), `OnlineStatusBanner.tsx`, indicador en `Header.tsx` | — |
-| 40 | Modo de prueba para desarrolladores | ✅ | `MANUAL_DESARROLLADOR.md`, `useDevAuth`, `devMode` | — |
+| 40 | Modo de prueba para desarrolladores | ✅ | `MANUAL_PRUEBAS.md`, `useDevAuth`, `devMode` | — |
 | 41 | Opción negociar precio si cliente/técnico no acuerdan | ✅ | `PriceNegotiation.tsx`, `ChatScreen.tsx`, `BookingEscrowScreen.tsx`, `sh_price_negotiations` | — |
 | 42 | Políticas de privacidad + checkbox aceptación + blindaje legal mexicano | ✅ | `PrivacyPolicyScreen.tsx`, `LoginScreen.tsx`, `src/data/legal/privacy.ts` | — |
 | 43 | Términos/condiciones + cláusula responsabilidad + soberanía de costos | ✅ | `TermsScreen.tsx`, `LoginScreen.tsx`, `src/data/legal/terms.ts` | — |
