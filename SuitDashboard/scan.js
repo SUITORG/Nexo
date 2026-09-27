@@ -372,9 +372,17 @@ function contractFor(dir) {
   let entries = [];
   try { entries = fs.readdirSync(dir); } catch { return null; }
   const pick = (re) => entries.find(f => re.test(f));
-  const file = pick(/^contrato\.md$/i) || pick(/^contratoprp\.md$/i) || pick(/^prm\.md$/i);
-  if (!file) return null;
-  const t = readText(path.join(dir, file));
+  const PAT = [/^contrato\.md$/i, /^contratoprp\.md$/i, /^prm\.md$/i];
+  let base = dir, file = null;
+  for (const re of PAT) { const f = pick(re); if (f) { file = f; break; } }
+  if (!file) {
+    // convención Guía Total: contratos en <proyecto>/docs/
+    try { entries = fs.readdirSync(path.join(dir, 'docs')); } catch { return null; }
+    for (const re of PAT) { const f = pick(re); if (f) { file = f; break; } }
+    if (!file) return null;
+    base = path.join(dir, 'docs');
+  }
+  const t = readText(path.join(base, file));
   let ev = null;
   const mEv = /^\|.*\|\s*(\d{1,3})\s*%\s*\|/m.exec(t);
   if (mEv) ev = +mEv[1];

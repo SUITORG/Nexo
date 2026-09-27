@@ -1,5 +1,5 @@
 # VALIDACION — SuitDashboard
-Fecha: 2026-09-25 · Contrato: SuitDashboard/CONTRATO.md
+Fecha: 2026-09-25 · Contrato: SuitDashboard/docs/CONTRATO.md
 
 ## Ronda 2 — skills en español + evaluaciones por contrato (CERRADA, 2026-09-26)
 

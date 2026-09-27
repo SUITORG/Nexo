@@ -1,0 +1,42 @@
+# GuiaTotal/registro/suitdashboard.yaml — tarjeta del proyecto
+proyecto: "SuitDashboard"
+ruta: "SuitDashboard/"
+etapa: "mantenimiento"          # CONTRATO + VALIDACION + CORRECCIONES recientes (ciclo f1-f3, 2026-09-25/26)
+creado: "2026-09-26"
+actualizado: "2026-09-26"
+
+validacion:
+  problema: "Desincronización invisible entre MCPs, skills, proyectos y puertos del monorepo"
+  hipotesis: "Si el operador ve el estado real del monorepo en tarjetas filtrables, detecta config rota antes de que rompa flujos"
+  metrica_exito: "Snapshot refleja contratos, MCPs y puertos con badges correctos (sin falsos 'sin contrato')"
+  evidencia: "sin Analista_Proy.md — herramienta interna, no requiere validación de mercado"
+  decision: "continuar"
+  motivo: "En operación; consumo interno del operador del monorepo"
+
+evaluacion:
+  panel_juzgador: "no evaluado"   # herramienta interna — panel-juzgador aplica a proyectos de negocio
+  veredicto_fecha: null
+  recomendaciones: null
+
+integraciones:
+  convive_sheets: false           # CONTRATO: "Consume Config_Empresas: no" — sin BD propia (fs scan)
+  id_empresa: null
+  db_engine: null
+  brief_en_logo_url: false
+
+taxonomia:                        # derivada del CONTRATO (sin analista-proy) — POR CONFIRMAR
+  industria: "Tecnología"
+  nicho: "Software"
+  especializacion: "Desarrollo Web"
+
+documentos:
+  contrato: true                  # SuitDashboard/docs/CONTRATO.md (migrado 2026-09-26)
+  taxonomia: true                 # SuitDashboard/docs/TAXONOMIA.md
+  analista_proy: false
+  identidad: false
+  manuales: false
+  prompt_origen: false
+  checklist_lanzamiento: false
+  arquitectura_docs: false        # pendiente: skill auditoria (C1/C2)
+
+proximo_paso: "Opcional: /guia-total manuales (4) y /auditoria para docs/05+06 · correr node scan.js para refrescar data.js con el fix de contractFor (docs/)"
