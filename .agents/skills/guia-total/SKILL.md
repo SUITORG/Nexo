@@ -106,6 +106,7 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 | Archivo | Ubicación | Quién lo escribe |
 |---|---|---|
 | `GUIA.md` | `GuiaTotal/` | solo método nuevo (usuario) |
+| `PENDIENTES.md` | `GuiaTotal/` | esta skill — anota lo no resuelto al cerrar cada pasada; nunca borrar filas |
 | `MAPA.md` | `GuiaTotal/` | **esta skill, en cada pasada** |
 | `TAXONOMIA.md` (catálogo maestro) | `GuiaTotal/` | modo `taxonomia` |
 | `TAXONOMIA.md` (3 campos del proyecto) | `<Proyecto>/docs/` | flujo IDEA (tras `analista-proy`) |
@@ -129,4 +130,4 @@ Si el usuario pide instalar/enlazar una skill no propia, añade su nodo a `MAPA.
 - Escrituras a Supabase del catálogo de taxonomía: solo INSERT de faltantes, nunca UPDATE/DELETE.
 - El veredicto de `panel-juzgador` recomienda, no decide: el usuario aprueba continuar.
 - Si un paso requiere otra skill que no está instalada, dilo y sugiere cómo instalarla; no improvises su contenido.
-- Al cierre de cada pasada: ≤3 líneas (qué se hizo, dónde quedó, próximo paso).
+- Al cierre de cada pasada: ≤3 líneas (qué se hizo, dónde quedó, próximo paso) **y anota en `GuiaTotal/PENDIENTES.md` todo lo que quedó abierto** (nunca borrar filas; tachar con fecha al cerrar).
