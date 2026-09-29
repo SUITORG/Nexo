@@ -441,6 +441,10 @@ function handlePostAction(data, result) {
         var slotRes = setLapvtfuSlot_(data.id_empresa, data.slot, data.url);
         for (var slrKey in slotRes) output[slrKey] = slotRes[slrKey];
         break;
+      case "migrarActivosCte":
+        var migRes = migrarActivosCte_(data.id_empresa, data.all === true, data.dryRun !== false);
+        for (var mgrKey in migRes) output[mgrKey] = migRes[mgrKey];
+        break;
       case "updateBriefVector":
         var vectorResult = updateBriefVector(data.id_empresa, data.vector);
         output.success = vectorResult.success;
@@ -1383,6 +1387,127 @@ function setLapvtfuSlot_(idEmpresa, slot, url) {
     return { success: true, slot: n, url: url, vectorUpdated: true };
   } catch (e) {
     return { success: false, error: "SLOT_ERROR: " + e.message };
+  }
+}
+
+/**
+ * Migración legacy → estándar LAPVTFU (2026-09-29).
+ *  - logo.png → logo01.png · avatar.png → avatar01.png · fotopersonal.* → fotoprs01.*
+ *  - _activos/<tipo>/* → RAÍZ con nombre estándar (V/T/F auto-incrementan), share ANYONE
+ *  - rename/move conserva el file ID → las URLs de los slots siguen válidas (cero rewrites)
+ *  - NO toca _brief/ (historial) ni _share/ · si ya existe el estándar → conflicto, se omite
+ *  - dryRun por defecto (data.dryRun === false ejecuta) · all=true migra todas las cte*
+ * @returns { object } { success, dryRun, empresas, plan, conflictos, errores, stats }
+ */
+function migrarActivosCte_(idEmpresa, all, dryRun) {
+  var plan = [], conflictos = [], errores = [], renombrados = 0, movidos = 0, carpetas = 0;
+  try {
+    var rootFolder = getRootFolder_();
+    var targets = [];
+    if (all) {
+      var fit = rootFolder.getFolders();
+      while (fit.hasNext()) {
+        var ff = fit.next();
+        if (/^cte/i.test(ff.getName())) targets.push(ff);
+      }
+    } else {
+      if (!idEmpresa) return { success: false, error: "FALTA id_empresa (o all:true)" };
+      var cte = findCteFolder_(rootFolder, idEmpresa);
+      if (!cte) return { success: false, error: "cte" + idEmpresa + " no existe" };
+      targets.push(cte);
+    }
+
+    var mapTipo = { "fotos-personales": "fotoprs", "ugc": "contenido" };
+    var multiTipos = { videos: true, testimonios: true, fotos: true };
+
+    for (var t = 0; t < targets.length; t++) {
+      var folder = targets[t];
+      var empresa = folder.getName().replace(/^cte/i, '');
+
+      // ── 1) renombres simples en raíz (solo si el estándar NO existe) ──
+      var simples = [
+        { legacy: "logo.png", base: "logo", re: null },
+        { legacy: "avatar.png", base: "avatar", re: null },
+        { legacy: null, base: "fotoprs", re: /^fotopersonal\.(png|jpe?g|webp)$/i }
+      ];
+      for (var s = 0; s < simples.length; s++) {
+        var cfg = simples[s];
+        var stdList = _listFilesInfo_(folder.getFiles(), new RegExp("^" + cfg.base + "\\d{2}\\.", "i"));
+        var legacyIt = cfg.legacy ? folder.getFilesByName(cfg.legacy) : folder.getFiles();
+        var legacyFile = null;
+        if (cfg.legacy) {
+          if (legacyIt.hasNext()) legacyFile = legacyIt.next();
+        } else {
+          while (legacyIt.hasNext()) { var lf2 = legacyIt.next(); if (cfg.re.test(lf2.getName())) { legacyFile = lf2; break; } }
+        }
+        if (!legacyFile) continue;
+        if (stdList.length) { conflictos.push(empresa + ": " + legacyFile.getName() + " y estándar coexisten — no se migra (revisar a mano)"); continue; }
+        var nuevo = (cfg.base === "fotoprs")
+          ? "fotoprs01." + (legacyFile.getName().match(/\.(png|jpe?g|webp)$/i) || [])[1]
+          : cfg.base + "01.png";
+        plan.push(empresa + ": RENOMBRAR " + legacyFile.getName() + " → " + nuevo);
+        if (!dryRun) {
+          try { legacyFile.setName(nuevo); renombrados++; } catch (eR) { errores.push(empresa + ": rename " + legacyFile.getName() + " → " + eR.message); }
+        }
+      }
+
+      // ── 2) _activos/<tipo>/* → raíz estándar ──
+      var actFolders = folder.getFoldersByName("_activos");
+      if (!actFolders.hasNext()) continue;
+      var activos = actFolders.next();
+      var subIt = activos.getFolders();
+      while (subIt.hasNext()) {
+        var sub = subIt.next();
+        var tipo = sub.getName();
+        var base = mapTipo[tipo] || tipo;
+        var multi = !!multiTipos[tipo];
+        var fileIt = sub.getFiles();
+        var pendientes = [];
+        while (fileIt.hasNext()) pendientes.push(fileIt.next());
+        for (var p = 0; p < pendientes.length; p++) {
+          var fLegacy = pendientes[p];
+          var ext = (fLegacy.getName().match(/\.([A-Za-z0-9]{1,5})$/) || [])[1] || "bin";
+          var existe = _listFilesInfo_(folder.getFiles(), new RegExp("^" + base + "\\d{2}\\." + ext + "$", "i"));
+          if (existe.length && !multi) { conflictos.push(empresa + ": " + fLegacy.getName() + " vs estándar existente — omitido"); continue; }
+          var targetName = _nextAssetName_(folder, base, ext, multi);
+          plan.push(empresa + ": MOVER " + tipo + "/" + fLegacy.getName() + " → " + targetName + " (raíz)");
+          if (!dryRun) {
+            try {
+              fLegacy.setName(targetName);
+              fLegacy.moveTo(folder);
+              fLegacy.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+              movidos++;
+            } catch (eM) { errores.push(empresa + ": move " + fLegacy.getName() + " → " + eM.message); }
+          }
+        }
+      }
+
+      // ── 3) _activos vacío → trash (soft; nunca _brief/_share) ──
+      var restantes = 0;
+      var st = activos.getFolders();
+      while (st.hasNext()) { var sf = st.next(); if (sf.getFiles().hasNext() || sf.getFolders().hasNext()) restantes++; }
+      if (activos.getFiles().hasNext()) restantes++;
+      if (restantes === 0) {
+        plan.push(empresa + ": TRASH _activos (vacia)");
+        if (!dryRun) { try { activos.setTrashed(true); carpetas++; } catch (eT) { errores.push(empresa + ": trash _activos → " + eT.message); } }
+      } else {
+        conflictos.push(empresa + ": _activos con " + restantes + " ítem(s) sin migrar — se conserva");
+      }
+    }
+
+    return {
+      success: errores.length === 0,
+      dryRun: dryRun,
+      empresas: targets.length,
+      renombrados: renombrados,
+      movidos: movidos,
+      carpetas_trash: carpetas,
+      plan: plan,
+      conflictos: conflictos,
+      errores: errores
+    };
+  } catch (e) {
+    return { success: false, error: "MIGRACION_ERROR: " + e.message, plan: plan, conflictos: conflictos, errores: errores };
   }
 }
 
