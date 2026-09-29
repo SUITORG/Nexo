@@ -30,7 +30,7 @@ mascara:
     empresa_registro: "skip"         # estructura cteHMP + foto + identidad ya hechas
     clusters: "skip"                 # 5 clústeres escritos y verificados
     paginas: "skip"                  # 5 páginas escritas y verificadas
-    brief: "preguntar"               # PENDIENTE — logo_url vacío
+    brief: "skip"                   # HECHO 2026-09-29 — vector21 escrito (seg1-3 taxonomía, be-010)
     activos: "preguntar"             # PENDIENTE — cteHMP/_activos sin generar
 
   D_toggles:                         # valores actuales en GS (difieren de semilla)

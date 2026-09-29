@@ -48,7 +48,8 @@ seo_paginas:                       # cadena completada 2026-09-28
   clusters_seo: 5                  # Config_SEO: hamburguesas-metroplex, -para-llevar, pedir-por-whatsapp, -monterrey, hechas-al-momento
   paginas: 5                       # Config_Paginas: que-hacemos, pedido-para-llevar, como-pedir-whatsapp, zonas-cobertura-amt, carne-y-frescura
   imagenes: 5                      # cteHMP/imagenurl-*.jpg (Unsplash, share ANYONE)
+  brief: "listo 2026-09-29"        # vector21 en logo_url (2331 chars) — seg1-3: Alimentos y Hospitalidad / Restaurantes y Comida Rápida / Comida Rápida (Analista_Proy, be-010) · brief.json+confianza.json en registro/hmp/ · Drive _brief PENDIENTE
   espejo: "ambas tablas con PK y sincronizadas (Config_SEO (id_empresa,id_cluster), Config_Paginas (id_empresa,id_pagina))"
   ruta_preview: "index.html?co=HMP#que-hacemos (hash)"
 
-proximo_paso: "Opcional: fase 2 brief (brief-engine) + activos (lapvtfu) · listing Google Business (PENDIENTES) · revisar copy/FAQ de las5 páginas en el sitio."
+proximo_paso: "Opcional: brief DONE 2026-09-29 → activos (lapvtfu) · listing Google Business (PENDIENTES) · subir brief.json/confianza.json a Drive _brief (sin acción GAS) · revisar copy de las5 páginas."

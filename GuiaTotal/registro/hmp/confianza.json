@@ -1,0 +1,34 @@
+{
+  "id_empresa": "HMP",
+  "fecha": "2026-09-29",
+  "fuentes": {
+    "industria": "GuiaTotal/registro/hmp/Analista_Proy.md (id 7) + GuiaTotal/TAXONOMIA.md",
+    "nicho": "GuiaTotal/registro/hmp/Analista_Proy.md + TAXONOMIA.md §7",
+    "especializacion": "TAXONOMIA.md nicho Restaurantes y Comida Rápida → Comida Rápida",
+    "audiencia": [
+      "https://www.ubereats.com/mx/city/monterrey-nl",
+      "https://www.rappi.com.mx/restaurantes/1923558028-hot-burger-suc-centro"
+    ],
+    "dolor": [
+      "https://www.rappi.com.mx/restaurantes/1923205137-hamburguesas-el-chino-jr",
+      "https://www.rappi.com.mx/restaurantes/1923221061-muncher-house"
+    ],
+    "objecion": [
+      "https://www.ubereats.com/mx/city/monterrey-nl"
+    ],
+    "vivir": [
+      "https://www.ubereats.com/mx/city/monterrey-nl"
+    ],
+    "competidores": [
+      "https://www.rappi.com.mx/restaurantes/1923558028-hot-burger-suc-centro",
+      "https://www.ubereats.com/mx/dish/monterrey-nl/roast-beef"
+    ],
+    "RLP": [
+      "https://www.dof.gob.mx/normasOficiales/8150/seeco11_C/seeco11_C.html",
+      "https://www.gob.mx/cofepris/acciones-y-programas/aviso-publicitario"
+    ],
+    "slogan": "Config_Empresas[HMP].slogan",
+    "PS": "pendiente"
+  },
+  "prev_logo_url": ""
+}

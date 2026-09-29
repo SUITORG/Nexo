@@ -1,0 +1,113 @@
+{
+  "id_empresa": "HMP",
+  "generado": "2026-09-29",
+  "motor": "brief-engine (be-010)",
+  "segmentos": [
+    {
+      "num": 1,
+      "nombre": "industria",
+      "valor": "Alimentos y Hospitalidad [A]"
+    },
+    {
+      "num": 2,
+      "nombre": "nicho",
+      "valor": "Restaurantes y Comida Rápida [A]"
+    },
+    {
+      "num": 3,
+      "nombre": "especializacion",
+      "valor": "Comida Rápida [A]"
+    },
+    {
+      "num": 4,
+      "nombre": "vendes",
+      "valor": "Hamburguesas hechas al momento (comer aquí, llevar o a domicilio) con carne jugosa y pan fresco [C]"
+    },
+    {
+      "num": 5,
+      "nombre": "audiencia",
+      "valor": "Jóvenes y familias de 18-45 años en Monterrey/AMT que piden comida para llevar o a domicilio; NSE medio, usuarios de WhatsApp y apps de delivery que buscan antojo recién hecho con precio claro [B]"
+    },
+    {
+      "num": 6,
+      "nombre": "dolor",
+      "valor": "1) El antojo llega y la comida llega fría o tarda. 2) Las hamburguesas premium de MTY rondan $200-330 y la más barata no siempre es de carne de verdad. 3) No saber si la hamburguesa es recién hecha o congelada [B]"
+    },
+    {
+      "num": 7,
+      "nombre": "PBP",
+      "valor": "Promesa: cada mordida se sienta como en casa, con la hamburguesa recién hecha y precio sin sorpresas. Beneficio: carne al momento, pan fresco y trato de compañía al pedir por WhatsApp [C]"
+    },
+    {
+      "num": 8,
+      "nombre": "lograr",
+      "valor": "Pedidos directos por WhatsApp y visitas (comer aquí, llevar o domicilio) [A]"
+    },
+    {
+      "num": 9,
+      "nombre": "vivir",
+      "valor": "WhatsApp como canal de pedido + Instagram/Facebook para demanda visual + cobertura en apps de delivery de Monterrey [B]"
+    },
+    {
+      "num": 10,
+      "nombre": "LAPVTFU",
+      "valor": "[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo]"
+    },
+    {
+      "num": 11,
+      "nombre": "PM",
+      "valor": "[PENDIENTE - costo y margen] [C]"
+    },
+    {
+      "num": 12,
+      "nombre": "objecion",
+      "valor": "1) Es solo una hamburguesa, mejor la hago en casa. 2) Pedir a domicilio sale caro por envío y tiempo. 3) ¿Está recién hecha o es de congelada? [B]"
+    },
+    {
+      "num": 13,
+      "nombre": "competidores",
+      "valor": "MTY: Hot Burger, Hamburguesas El Chino Jr, Muncher House, El Rey de la Hamburguesa, Hamburguesa Urbana (comparables $110-330) · canales: Uber Eats y Rappi [B]"
+    },
+    {
+      "num": 14,
+      "nombre": "tono",
+      "valor": "Cercano, honesto y de barrio: trato de compañía, sin tecnicismos ni promesas exageradas [C]"
+    },
+    {
+      "num": 15,
+      "nombre": "PS",
+      "valor": "[PENDIENTE - Prueba social] [B]"
+    },
+    {
+      "num": 16,
+      "nombre": "RLP",
+      "valor": "Sellos de advertencia frontales NOM-051-SCFI/SSA1-2010 en preenvasados · aviso de publicidad COFEPRIS para TV/cine (Reglamento LGS) · sin exaltar consumo excesivo en menores · vigilancia PROFECO/COFEPRIS [B]"
+    },
+    {
+      "num": 17,
+      "nombre": "slogan",
+      "valor": "El Metroplex en cada mordida [A]"
+    },
+    {
+      "num": 18,
+      "nombre": "oferta",
+      "valor": "Hamburguesa recién hecha al momento con carne jugosa y pan fresco — pídenos por WhatsApp y te la preparamos acabada de hacer, con precio claro del menú [C]"
+    },
+    {
+      "num": 19,
+      "nombre": "descripcion",
+      "valor": "[PENDIENTE - descripcion vacía en Config_Empresas] [C]"
+    },
+    {
+      "num": 20,
+      "nombre": "cta",
+      "valor": "Pídenos por WhatsApp y te la preparamos recién hecha [C]"
+    },
+    {
+      "num": 21,
+      "nombre": "tipografia",
+      "valor": "Poppins (display) + Inter (texto) [C]"
+    }
+  ],
+  "logo_url_vector": "industria: Alimentos y Hospitalidad [A] |nicho: Restaurantes y Comida Rápida [A] |especializacion: Comida Rápida [A] |vendes: Hamburguesas hechas al momento (comer aquí, llevar o a domicilio) con carne jugosa y pan fresco [C] |audiencia: Jóvenes y familias de 18-45 años en Monterrey/AMT que piden comida para llevar o a domicilio; NSE medio, usuarios de WhatsApp y apps de delivery que buscan antojo recién hecho con precio claro [B] |dolor: 1) El antojo llega y la comida llega fría o tarda. 2) Las hamburguesas premium de MTY rondan $200-330 y la más barata no siempre es de carne de verdad. 3) No saber si la hamburguesa es recién hecha o congelada [B] |PBP: Promesa: cada mordida se sienta como en casa, con la hamburguesa recién hecha y precio sin sorpresas. Beneficio: carne al momento, pan fresco y trato de compañía al pedir por WhatsApp [C] |lograr: Pedidos directos por WhatsApp y visitas (comer aquí, llevar o domicilio) [A] |vivir: WhatsApp como canal de pedido + Instagram/Facebook para demanda visual + cobertura en apps de delivery de Monterrey [B] |LAPVTFU: [PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo],[PENDIENTE - Activo] |PM: [PENDIENTE - costo y margen] [C] |objecion: 1) Es solo una hamburguesa, mejor la hago en casa. 2) Pedir a domicilio sale caro por envío y tiempo. 3) ¿Está recién hecha o es de congelada? [B] |competidores: MTY: Hot Burger, Hamburguesas El Chino Jr, Muncher House, El Rey de la Hamburguesa, Hamburguesa Urbana (comparables $110-330) · canales: Uber Eats y Rappi [B] |tono: Cercano, honesto y de barrio: trato de compañía, sin tecnicismos ni promesas exageradas [C] |PS: [PENDIENTE - Prueba social] [B] |RLP: Sellos de advertencia frontales NOM-051-SCFI/SSA1-2010 en preenvasados · aviso de publicidad COFEPRIS para TV/cine (Reglamento LGS) · sin exaltar consumo excesivo en menores · vigilancia PROFECO/COFEPRIS [B] |slogan: El Metroplex en cada mordida [A] |oferta: Hamburguesa recién hecha al momento con carne jugosa y pan fresco — pídenos por WhatsApp y te la preparamos acabada de hacer, con precio claro del menú [C] |descripcion: [PENDIENTE - descripcion vacía en Config_Empresas] [C] |cta: Pídenos por WhatsApp y te la preparamos recién hecha [C] |tipografia: Poppins (display) + Inter (texto) [C]"
+}
