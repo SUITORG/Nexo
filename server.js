@@ -482,7 +482,7 @@ app.get('/api/service-health/telegram', (req, res) => {
 //     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
 //     next();
 // });
-// app.use(express.static(__dirname, { etag: false, lastModified: false }));
+app.use(express.static(__dirname, { etag: false, lastModified: false }));
 
 // SuitOpComer — Google Places API (requiere API key del usuario, free tier $200/mes)
 app.post('/api/suitopcomer/places', async (req, res) => {
@@ -724,7 +724,7 @@ process.on('uncaughtException', (err) => {
     process.exit(1);
 });
 
-const server = app.listen(PORT, '127.0.0.1', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[SERVER] listen callback fired, server.address() =`, server.address());
     console.log(`[SERVER] server.listening =`, server.listening);
     console.log(`
