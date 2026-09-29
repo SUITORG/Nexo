@@ -22,7 +22,7 @@ Legado sin migrar (`logo.png`, `avatar.png`, `fotopersonal.*`, `_activos/`) qued
 ## Stack y ejecución
 - **Escritor único del segmento**: `_setLapvtfuSlot_` (`backend/core.js`) — lee-modifica-escribe solo la posición indicada, preserva los 20 segmentos de contenido
 - Flujos: `ensureLogoUrl` / `ensureAvatarUrl` (GAS), despachados por `case` en `backend/core.js`, vía `POST /api/brief/ensure-logo|ensure-avatar` (`scripts/brief-generate.js`) o botones del sidebar (`backend/brief-sidebar.js`)
-- **Acciones nuevas (2026-09-29)**: `shareCteFile {id_empresa, fileName}` → share ANYONE de un archivo de la raíz (V/T/F subidos a mano por el usuario) · `setLapvtfuSlot {id_empresa, slot(1-7), url}` → wrapper del escritor único para slots 3-7
+- **Acciones (2026-09-29)**: `shareCteFile {id_empresa, fileName}` → share ANYONE de un archivo de la raíz (V/T/F subidos a mano por el usuario) · `setLapvtfuSlot {id_empresa, slot(1-7), url}` → wrapper del escritor único para slots 3-7 · `migrarActivosCte {id_empresa|all, dryRun}` → legacy→estándar (rename conserva IDs; dryRun por defecto; ejecutado @28: 3 renombres + 23 `_activos` trash, 0 errores)
 - Estados de respuesta: `existing` · `needs_generate` · `generated` · `no_foto`
 - Drive: **raíz de `cte<id>/` con nombres estándar** (extensión natural) · `_activos/` y `_brief/` solo fallback de lectura (ya no se crean; sin migrar) · historial legacy en `_brief/historial/`
 - Skill: `.suit/skills/domain/lapvtfu.yaml`

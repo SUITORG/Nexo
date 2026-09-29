@@ -89,3 +89,22 @@
 
 **Commits:** `701558e` f1 vivos · `f6219cc` f2 implementación · `4f49cd0` f4 fix idempotencia · (evidencia en este commit).
 **Push a origin:** pendiente decisión del usuario.
+
+---
+
+## 2026-09-29 — Migración legacy → estándar (ciclo continuación F2-F3)
+
+**Scope:** `backend/core.js` acción `migrarActivosCte` (dryRun por defecto, `all:true`) · Deploy **@28** (misma URL)
+
+| # | Check | Comando/acción | Resultado |
+|---|-------|----------------|-----------|
+| 1 | Sintaxis | `node --check backend/core.js` | PASS |
+| 2 | DryRun global | `migrarActivosCte {all:true, dryRun:true}` | PASS — 28 cte*, plan=25, conflictos=0, errores=0 (23× TRASH _activos vacías · renombres TOPLUXF avatar/fotoprs + -Suit.Org avatar) |
+| 3 | Ejecución | `migrarActivosCte {all:true, dryRun:false}` | PASS — renombrados=3 · trash=23 · conflictos=0 · errores=0 |
+| 4 | Estándar visible | `getBriefAssets` TOPLUXF / -Suit.Org | PASS — `avatar01.png`, `fotoprs01.png` en raíz |
+| 5 | Post-trash sin romper | `getBriefAssets` HMP (ya sin _activos) | PASS — success, listas vacías, sin error |
+| 6 | IDs estables (slots válidos) | GET TOPLUXF vector | PASS — 21/21 segs, slot2 = `uc?id=1bbLUHbz8…` (mismo ID pre-rename) |
+
+**Verdict:** PASS (6/6).
+**Nota:** TOPLUXF tiene además un archivo preexistente llamado `logo01` (sin extensión) listado por el path legado `/logo/i` — observación, no migrado (no tocó la regla).
+**Commits:** `682a64a` f2 migración + (evidencia en este commit).
