@@ -18,13 +18,19 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 
 ## A. Abiertos — Guía Total y proyectos estandarizados
 
+- [ ] **Higiene de Config_Paginas (hoja)**: 13 huérfanas (pág sin clúster) · 4 dups (`PAPER/home` ×2) · 1 JSON roto · 24 filas `bloques[]` sin renderizar · `id_pagina` con espacios/mayúsculas. *Lado espejo ya saneado 2026-09-28: 4 filas vacías borradas + PK `(id_empresa,id_pagina)`.* Pendiente de instrucción de limpieza de la hoja. *2026-09-28*
+- [ ] **Migración futura (opcional)**: ruta `/servicios/{id_pagina}` (hoy no existe; real = hash `#{id}`) y soporte de `bloques[]` en el renderer — solo si el usuario lo pide como proyecto. *2026-09-28*
+- [ ] **`updateRowExt` en GAS**: acción de match compuesto (id_empresa+id_pagina) para el modo "actualiza" de paginas-seo — hoy no existe y `updateRow` simple cruzaría empresas (`home` ×4). *2026-09-28*
+- [ ] **Config_SEO — columnas extra**: decisión 2026-09-28 = escribir solo las10 del prompt; evaluar `description`/`slug`/`og_image` **después de ver resultados** de la primera generación (ssg-engine hoy cae a fallback, cero impacto). *2026-09-28*
+- [ ] **Sync catch-up de 11 empresas**: el espejo tiene 12 empresas, la hoja 23 — `syncToSupabase` es **por empresa** (filtra `id_empresa` + GLOBAL). Falta correr el loop por cada id faltante para poner el espejo al día. *2026-09-28*
+- [ ] **empresa-registro — fase 2**: BRIEF (`brief-engine`) + Activos (`lapvtfu`) para HMP cuando el usuario dé instrucciones. *2026-09-28*
+- [ ] **HMP — listing Google Business**: 0 huella web; canal real = WhatsApp. *2026-09-27 · de Analista_Proy*
 - [ ] **SuitServiHogar — drift SQL**: definir fuente canónica (`supabase/migrations/` recomendado) y copiar las 3 migraciones que solo existen en `migrations/` (`price_negotiation`, `antifuga_config`, `decisions_config`). *2026-09-26 · decisión de esquema, requiere visto bueno*
 - [ ] **SuitServiHogar — docs de auditoría faltantes**: `09-reglas`, `11-integraciones`, `13-despliegue`, `15-riesgos` (evidencia ≥84%, pendiente aprobación). *2026-09-26*
 - [ ] **SuitServiHogar — `AGENTS.md` desactualizado**: dice `screens/ (7)`, hay 13. *2026-09-26*
 - [ ] **SuitDashboard — instancias faltantes**: 4 manuales, identidad, prompt origen, checklist, `docs/05+06` (tarjeta `documentos: false`). *2026-09-26*
 - [ ] **Integración profunda `auditoria` ↔ `guia-total`** (hoy solo gancho en MAPA §4/§9). *2026-09-26*
 - [ ] **Skills externas**: guion `MAPA.md §10` vacío — rellenar al primer pedido de instalación. *2026-09-26*
-- [ ] **Registro SuitOS**: `guia-total` y `auditoria` no están en `.suit/registry/skills.yaml` (¿gobierno SuitOS? decisión del install). *2026-09-26*
 - [ ] **Push a GitHub**: rama `evasol-supabase-migration` ahead 45 — pendiente de decisión. *2026-09-26*
 
 ## B. Deuda técnica SuitOS *(absorbida de `tech-debt.yaml`)*
@@ -99,6 +105,13 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 ## F. Cerrados (historial — no borrar)
 
 - [x] TD-002 · API keys en `SuitCampanas/script.js` → movidas a `/api/config/client` (2026-07-10)
+- [x] **TD-004 parcial**: `syncToSupabase` ahora diagnostica (key ausente/HTTP≠2xx) en vez de tragarse errores (2026-09-28 → backend/utils.js + core.js)
+- [x] **Sync GAS reparado end-to-end**: `SUPABASE_KEY` fijada por el usuario + PK `(id_empresa)` + 15 columnas faltantes agregadas + filtro de headers vacíos + minúsculas/@24 — HMP sincronizado 2 veces sin duplicados (2026-09-28)
+- [x] **Registro SuitOS canónico**: las4 skills (`guia-total`, `auditoria`, `empresa-registro`, `clusters-seo`) en `.suit/registry/skills.yaml` con definiciones en `.suit/skills/` (2026-09-28)
+- [x] **Piloto cadena HMP COMPLETO** (2026-09-28): `empresa-registro` (5/5 gates aprobados) → `clusters-seo` (5 filas `Config_SEO` +5 fotos Drive) → `paginas-seo` (5 páginas, validación5/0/0, `Config_Paginas` hoja+espejo). PKs creados: `Config_SEO(id_empresa,id_cluster)` y `Config_Paginas(id_empresa,id_pagina)`; espejo saneado (dedupe +4 vacías)
+- [x] **Instalada skill `clusters-seo`** + hooks de `empresa-registro` (alta/modificación) + GAS `appendRows`/`subirImagenCte` @25 (2026-09-28)
+- [x] **Dedupe del espejo**: 4 filas parciales (nomempresa=null) respaldadas en `temp/backup-config-empresas-dupes-20260928.json`, rrss fusionado, filas eliminadas — 12/12 empresas únicas (2026-09-28)
+- [x] **Piloto empresa-registro HMP**: estructura `cteHMP/` + `fotoagente.jpg` + slogan/mensajes/identidad + 10 campos en GS + espejo Supabase verificado (2026-09-28)
 - [x] Instalar skill `auditoria` + routing + MAPA (2026-09-26 → `2d08a58`, `bc2790d`)
 - [x] Estandar `docs/` en SuitServiHogar y SuitDashboard + fix `contractFor` (2026-09-26 → `e721f1e`)
 - [x] Taxonomías por proyecto creadas (2026-09-26)

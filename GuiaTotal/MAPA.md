@@ -38,6 +38,84 @@
     └── ↪ CIERRE DE TODA PASADA (sección superior: PENDIENTES + MAPA + 3 líneas)
 ```
 
+## ═══ 1.5. ALTA DE EMPRESA (empresa-registro) ═══
+
+**Skill canónica** · **Inicio de la cadena**: → `clusters-seo` → `paginas-seo`
+**Triggers:** "empresa-registro", "alta de empresa", "modifica empresa", "actualiza empresa", "edita empresa", "registro id_empresa", "crea estructura drive", "llena config empresas", "registro semiautomatico", "nueva empresa en sheets", "onboardear empresa"
+
+```text
+└── ⚡ empresa-registro <ID>
+    ├── 📁 GAS getAll → fila en Config_Empresas (si no existe → pedir alta, no inventar)
+    ├── 📄 lee GuiaTotal/TAXONOMIA.md → clasifica giro (∥ ⚡ analista-proy si pide análisis)
+    ├── ⚡ GAS ensureCteFolders → ✍️ Drive cte<id>/ (ídem, reutiliza si existe)
+    ├── 📁 foto libre del giro → ⚡ GAS generateAsset fotoagente
+    │   → ✍️ cte<id>/fotoagente.jpg en RAÍZ + share ANYONE
+    ├── ⚡ landing-page-copywriter → slogan (sobreescribe) + mensaje1 + mensaje2
+    ├── ⚡ guia-total identidad → ✍️ GuiaTotal/registro/<id>/IDENTIDAD_CORPORATIVA.md
+    ├── ✍️ GAS updateRow → campos en Sheets (10 columnas)
+    ├── ⚡ GAS syncToSupabase → espejo (fallback MCP si SUPABASE_KEY ausente → PENDIENTES)
+    ├── ✍️ tarjeta GuiaTotal/registro/<id>.yaml
+    ├── ⛓️ CADENA (tras alta confirmada): ⚡ clusters-seo <ID>  [vista previa → tu aprobación]
+    │                                     → ⚡ paginas-seo <ID>  [mapa → tu aprobación]
+    └── ↪ CIERRE DE TODA PASADA
+
+[ MODO MODIFICACIÓN: datos clave (giro/servicios/cobertura) → updateRow + sync →
+  ofrece regenerar ⚡ clusters-seo (→ paginas-seo) · datos no clave (tel/color/correo) →
+  updateRow + sync → refresca wa/hex/mail en Config_SEO vía updateRow×id_cluster ]
+[ Fase 2 opcional: brief-engine + lapvtfu — solo con instrucciones del usuario ]
+```
+
+## ═══ 1.6. CLÚSTERES SEO (clusters-seo) ═══
+
+**Skill canónica** · **Depende de** `empresa-registro` (dispara tras ALTA o modificación de datos clave)
+**Triggers:** "clústeres seo", "clusters seo", "genera clústeres", "9 clústeres", "seo geo", "aeo", "páginas temáticas seo"
+
+```text
+└── ⚡ clusters-seo <ID>
+    ├── F1 📁 lee Config_Empresas[<ID>] ∥ Config_SEO existentes (dedupe por INTENCIÓN,
+    │        legacy SEO-001/C1 intocado) ∥ Config_Paginas.id_cluster (54 ligas)
+    ├── F2 ✍️ propuesta ≤9 clústeres → vista previa Markdown
+    │        (intenciones: principal, segmento×2, problema, complementaria,
+    │         comparación, post-venta, geo×2 — fusiona duplicados)
+    ├── F3 ❓ preguntas solo si <95% certeza
+    └── F4 [SOLO con aprobación]
+        ├── 📁 foto libre → ⚡ GAS subirImagenCte → ✍️ cte<id>/imagenurl-{id_cluster}.jpg
+        │        (share ANYONE; si falla → PENDIENTE_IMAGEN)
+        ├── ✍️ GAS appendRows → Config_SEO (10 columnas, Sheets maestro)
+        ├── ⚡ GAS syncToSupabase → espejo  [PK (id_empresa,id_cluster) = upsert idempotente]
+        ├── 📋 checklist 10 puntos
+        ├── ⛓️ CADENA: tras escritura confirmada → ofrécele ⚡ paginas-seo <ID>
+        └── ↪ CIERRE DE TODA PASADA
+
+[modificación no clave de empresa → refresca wa/hex/mail en filas existentes vía updateRow×id_cluster]
+[solo EvaSol indexa — demos se generan igual con noindex (plan-seo)]
+```
+
+## ═══ 1.7. PÁGINAS SEO (paginas-seo) ═══
+
+**Skill canónica** · **Cadena**: `empresa-registro` → `clusters-seo` → **`paginas-seo`** (o por separado)
+**Triggers:** "páginas seo", "genera las páginas", "config paginas", "contenido de páginas", "páginas del clúster", "alimenta las páginas"
+
+```text
+└── ⚡ paginas-seo <ID>
+    ├── F1 📁 Config_Empresas ∥ Config_SEO (clústeres=hub) ∥ Config_Paginas existentes
+    │        reporta basura sin tocarla (huérfanas, dups, JSON roto, bloques[] legacy)
+    ├── F2 ✍️ mapa editorial por clúster → ❓ gate 1 (aprobación humana)
+    ├── F3 ✍️ redacción por página →3 campos JSON (patrón real):
+    │        meta_json {title, description, keywords[ARRAY]} ·
+    │        schema_json Service (columna + anidado en contenido_json) ·
+    │        contenido_json PLANO {titulo, subtitulo, p_intro, texto,
+    │        preguntas_frecuentes[], imagen_url heredado del clúster}
+    │        ruta = #{id_pagina} (hash) · 300-500 palabras · copy conservador
+    ├── F4 ✍️ validación (3 JSON parsean, dups, claims) → ❓ gate 2 (aprobación final)
+    └── F5 [aprobado]
+        ├── ✍️ GAS appendRows → Config_Paginas (6 columnas, GS maestro)
+        ├── ⚡ syncToSupabase → espejo  [actualizaciones: solo modo "actualiza"]
+        └── ↪ CIERRE DE TODA PASADA
+```
+
+**Ejemplo real (piloto):** `HMP` — 2026-09-28:5 clústeres +5 fotos Drive +5 páginas (validación F4 = 5/0/0,310-325 palabras, FAQ×4) · PKs creados en `Config_SEO` y `Config_Paginas` = sync idempotente · ruta preview `index.html?co=HMP#que-hacemos`.
+
 ## ═══ 2. TAXONOMÍA ═══
 
 **Triggers:** "taxonomía", "industrias y nichos", "actualiza taxonomía", `/guia-total taxonomia`
@@ -168,15 +246,18 @@
 
 | Skill | Llama a | Alimenta a | Paralelo interno |
 |---|---|---|---|
-| `guia-total` | `analista-proy`, `panel-juzgador`, `ciclo`, `brief-engine` | registro, MAPA, manuales, identidad, origen | ver nodos `∥` |
+| `guia-total` | `analista-proy`, `panel-juzgador`, `ciclo`, `brief-engine`, `auditoria`, `empresa-registro` | registro, MAPA, manuales, identidad, origen | ver nodos `∥` |
+| `empresa-registro` | `guia-total identidad`, `clusters-seo` → `paginas-seo` (cadena), GAS (`ensureCteFolders`/`updateRow`/`syncToSupabase`), `landing-page-copywriter` | tarjeta, `Config_Empresas` (GS), Drive `cte<id>`, espejo Supabase | identidad y copy secuenciales |
+| `clusters-seo` | GAS (`appendRows`/`subirImagenCte`), `syncToSupabase` | ≤9 filas en `Config_SEO` + `imagenurl-*.jpg` en Drive → **alimenta a `paginas-seo`** | fotos ∥ por clúster |
+| `paginas-seo` | GAS (`appendRows`), `syncToSupabase` | filas en `Config_Paginas` (3 JSON) — encadenada a clusters-seo | redacción serial por página |
 | `analista-proy` | — | `panel-juzgador`, `CONTRATO` (F0), tarjeta | 4 pilares ∥ |
 | `panel-juzgador` | — | tarjeta (veredicto) | 4 agentes ∥ → juez serial |
 | `ciclo` | — | `CONTRATO`, `VALIDACION`, `CORRECCIONES` | fases seriales F0→F7 |
 | `brief-engine` | catálogos Supabase | Brief en `logo_url` | sub-agentes A-D ∥ |
 | `auditoria` | `/suit-memory` (ADRs) | `<Proyecto>/docs/00-16` + tarjeta | reuso Fase 0.5 antes de inspeccionar |
 
-**Orden obligatorio:** `analista-proy` → `panel-juzgador` (este consume el primero). `auditoria` es independiente: la llama `guia-total` o el usuario. El resto es independiente.
+**Orden obligatorio:** `analista-proy` → `panel-juzgador` (este consume el primero). **Cadena secuencial con gates**: `empresa-registro` → `clusters-seo` → `paginas-seo` (cada eslabón espera aprobación). `auditoria` es independiente: la llama `guia-total` o el usuario. El resto es independiente.
 
 ---
 
-*Última actualización del mapa: 2026-09-26 (cierre común PENDIENTES+MAPA al inicio; nodo auditoría; taxonomía por proyecto; instancias en `docs/`).*
+*Última actualización del mapa: 2026-09-28 (cadena empresa-registro → clusters-seo → paginas-seo con encadenamiento y modificación en §1.5-1.7; piloto HMP completo; PKs de espejo; triggers de modificación; cierre común; auditoría; taxonomía; instancias en `docs/`).*

@@ -1,0 +1,54 @@
+# GuiaTotal/registro/hmp.yaml — tarjeta del proyecto (tenant HMP)
+proyecto: "HMP — Hamburguesas Metroplex"
+ruta: "(tenant de Config_Empresas — sin carpeta de código)"
+etapa: "registro"                   # alta semiautomatica via empresa-registro
+creado: "2026-09-27"
+actualizado: "2026-09-28"
+
+validacion:
+  problema: "Negocio local (hamburguesas, AMT Monterrey) sin huella web; canal real = WhatsApp"
+  hipotesis: "Si recibe estructura Drive + copy + identidad + presencia en la plataforma, su canal digital queda operativo sin sitio propio"
+  metrica_exito: "Registro completo en Config_Empresas (10 campos llenados) + espejo Supabase reflejado"
+  evidencia: "hmp/Analista_Proy.md (corrida enfocada — 0 huella web verificada)"
+  decision: "continuar"
+  motivo: "habilitado=true, registro semiautomatico es la vía de alta"
+
+evaluacion:
+  panel_juzgador: "no evaluado"     # tenant cliente, no proyecto de código
+  veredicto_fecha: null
+  recomendaciones: null
+
+integraciones:
+  convive_sheets: true              # Config_Empresas es maestra en GS (db_engine GSHEETS)
+  id_empresa: "HMP"
+  db_engine: "GSHEETS"
+  brief_en_logo_url: false          # fase 2 (brief-engine) pendiente de instrucciones
+
+taxonomia:                          # match catálogo GuiaTotal/TAXONOMIA.md
+  industria: "Alimentos y Hospitalidad"
+  nicho: "Restaurantes y Comida Rápida"
+  especializacion: "Comida Rápida"
+
+documentos:
+  analista_proy: true               # hmp/Analista_Proy.md (corrida enfocada)
+  identidad: true                   # hmp/IDENTIDAD_CORPORATIVA.md
+  taxonomia: false                  # en tarjeta; archivo dedicado pendiente si se pide
+  contrato: false                   # tenant sin carpeta de código
+  manuales: false
+  prompt_origen: false
+  checklist_lanzamiento: false
+  arquitectura_docs: false
+
+activos_drive:
+  cteFolderId: "1fWA3MuEMQSYUFmT6gsa7dVY-pyQ3wnp6"
+  estructura: "ensureCteFolders (@20) — _brief, _activos(+6), _share"
+  fotoagente: "https://drive.google.com/file/d/19UxpM3SNNzO9oOdo0-nFBf3iTIm6_S5W/view?usp=drivesdk"
+
+seo_paginas:                       # cadena completada 2026-09-28
+  clusters_seo: 5                  # Config_SEO: hamburguesas-metroplex, -para-llevar, pedir-por-whatsapp, -monterrey, hechas-al-momento
+  paginas: 5                       # Config_Paginas: que-hacemos, pedido-para-llevar, como-pedir-whatsapp, zonas-cobertura-amt, carne-y-frescura
+  imagenes: 5                      # cteHMP/imagenurl-*.jpg (Unsplash, share ANYONE)
+  espejo: "ambas tablas con PK y sincronizadas (Config_SEO (id_empresa,id_cluster), Config_Paginas (id_empresa,id_pagina))"
+  ruta_preview: "index.html?co=HMP#que-hacemos (hash)"
+
+proximo_paso: "Opcional: fase 2 brief (brief-engine) + activos (lapvtfu) · listing Google Business (PENDIENTES) · revisar copy/FAQ de las5 páginas en el sitio."
