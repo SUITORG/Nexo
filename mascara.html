@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🎛️ Máscara — Config_Empresas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  header {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-bottom: 2px solid #334155; padding: 14px 18px;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { font-size: 17px; color: #fff; margin-right: auto; }
+  select, input[type=text], input[type=number], textarea {
+    background: #1e293b; color: #e2e8f0; border: 1.5px solid #475569;
+    border-radius: 10px; padding: 9px 11px; font-size: 14px; width: 100%;
+  }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: #38bdf8; }
+  header select { width: auto; min-width: 200px; }
+  button {
+    background: #2563eb; color: #fff; border: 0; border-radius: 10px;
+    padding: 10px 15px; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  button:hover { background: #1d4ed8; }
+  button.ghost { background: #334155; }
+  button.ghost:hover { background: #475569; }
+  button.green { background: #16a34a; } button.green:hover { background: #15803d; }
+  button.amber { background: #d97706; } button.amber:hover { background: #b45309; }
+  button:disabled { opacity: .5; cursor: wait; }
+  main { max-width: 980px; margin: 0 auto; padding: 16px 14px 90px; }
+  .card {
+    background: #1e293b; border: 1.5px solid #334155; border-radius: 16px;
+    margin-bottom: 14px; overflow: hidden;
+  }
+  .card h2 {
+    font-size: 14.5px; padding: 12px 16px; cursor: pointer; user-select: none;
+    display: flex; align-items: center; gap: 8px; background: #233045;
+  }
+  .card h2 .tag { font-size: 10.5px; background: #0f172a; border: 1px solid #475569;
+    padding: 2px 8px; border-radius: 999px; color: #94a3b8; font-weight: 600; }
+  .card .body { padding: 14px 16px 18px; display: none; }
+  .card.open .body { display: block; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid .full { grid-column: 1 / -1; }
+  label { display: block; font-size: 11.5px; color: #94a3b8; margin-bottom: 4px; font-weight: 700; letter-spacing: .3px; }
+  .ro { opacity: .75; }
+  .hint { font-size: 11px; color: #64748b; margin-top: 3px; }
+  .sw { display: flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 7px 0; }
+  .sw input { width: 18px; height: 18px; accent-color: #38bdf8; }
+  .actions { position: fixed; bottom: 0; left: 0; right: 0; background: #0f172aee;
+    backdrop-filter: blur(6px); border-top: 1.5px solid #334155;
+    padding: 10px 14px; display: flex; gap: 9px; justify-content: center; z-index: 20; flex-wrap: wrap; }
+  #toast {
+    position: fixed; top: 64px; left: 50%; transform: translateX(-50%);
+    background: #16a34a; color: #fff; padding: 11px 20px; border-radius: 12px;
+    font-weight: 700; font-size: 14px; z-index: 99; display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4); max-width: 92vw; text-align: center;
+  }
+  #toast.err { background: #dc2626; }
+  .chip { font-size: 10.5px; background: #0f172a; border: 1px solid #475569;
+    border-radius: 999px; padding: 2px 8px; color: #7dd3fc; font-weight: 700; }
+  .cmd {
+    background: #0f172a; border: 1.5px dashed #f59e0b; border-radius: 12px;
+    padding: 11px 13px; font-family: Consolas, monospace; font-size: 13px;
+    color: #fde68a; word-break: break-all; margin-top: 8px; display: none;
+  }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } header h1 { width: 100%; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎛️ Máscara — Config_Empresas</h1>
+  <select id="coSelect" onchange="loadCompany()"><option>— cargando —</option></select>
+  <button class="ghost" onclick="toggleAlta()" title="Alta de empresa nueva">➕ Nueva</button>
+  <button class="ghost" onclick="loadAll()">🔄</button>
+</header>
+
+<div id="toast"></div>
+
+<main>
+  <div class="card open" id="card-a">
+    <h2 onclick="this.parentElement.classList.toggle('open')">🔤 A · Obligatorios <span class="tag">tú los llenas · se escriben en la hoja</span></h2>
+    <div class="body">
+      <div class="grid">
+        <div><label>id_empresa * (PK)</label><input type="text" id="f_id" placeholder="HMP, PFM…"></div>
+        <div><label>nomempresa *</label><input type="text" id="f_nomempresa"></div>
+        <div><label>tipo_negocio</label><input type="text" id="f_tipo_negocio" placeholder="Alimentos / Consultoría…"></div>
+        <div><label>giro_especifico</label><input type="text" id="f_giro_especifico" placeholder="hamburguesas a la parrilla"></div>
+        <div><label>color_tema</label>
+          <div style="display:flex;gap:8px"><input type="color" id="f_color_pick" value="#2563eb" style="width:52px;padding:2px;height:40px;background:#1e293b;border:1.5px solid #475569;border-radius:10px" oninput="document.getElementById('f_color_tema').value=this.value"><input type="text" id="f_color_tema" placeholder="#hex" oninput="document.getElementById('f_color_pick').value=(/^#[0-9a-f]{6}$/i.test(this.value)?this.value:'#2563eb')"></div>
+        </div>
+        <div><label>whatsapp_negocio</label><input type="text" id="f_whatsapp_negocio" placeholder="5281…"></div>
+        <div class="full"><label>direccion (cobertura geo — la piden los clústeres)</label><input type="text" id="f_direccion" placeholder="Monterrey, N.L."></div>
+        <div class="full"><label>correoempresarial</label><input type="text" id="f_correoempresarial"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="card-b">
+    <h2 onclick="this.parentElement.classList.toggle('open')">✨ B · Generados por la cadena <span class="tag">solo lectura aquí</span></h2>
+    <div class="body">
+      <div class="grid">
+        <div class="full"><label>slogan</label><input type="text" class="ro" id="f_slogan" readonly></div>
+        <div class="full"><label>mensaje1</label><textarea rows="2" class="ro" id="f_mensaje1" readonly></textarea></div>
+        <div class="full"><label>mensaje2</label><textarea rows="2" class="ro" id="f_mensaje2" readonly></textarea></div>
+        <div class="full"><label>descripcion</label><textarea rows="2" class="ro" id="f_descripcion" readonly></textarea></div>
+        <div><label>logo_url</label><input type="text" class="ro" id="f_logo_url" readonly></div>
+        <div><label>foto_agente</label><input type="text" class="ro" id="f_foto_agente" readonly></div>
+        <div class="full"><label>mision</label><textarea rows="2" class="ro" id="f_mision" readonly></textarea></div>
+        <div class="full"><label>vision</label><textarea rows="2" class="ro" id="f_vision" readonly></textarea></div>
+        <div class="full"><label>valores</label><textarea rows="2" class="ro" id="f_valores" readonly></textarea></div>
+      </div>
+      <p class="hint">Estos los crea la cadena (empresa-registro → brief → activos). Editarlos a mano solo si lo pides explícitamente en el chat.</p>
+    </div>
+  </div>
+
+  <div class="card" id="card-c">
+    <h2 onclick="this.parentElement.classList.toggle('open')">⛓️ C · Cadena (switches) <span class="tag">auto = sola · preguntar = te pregunta · skip = no toca</span></h2>
+    <div class="body">
+      <div class="grid">
+        <div><label>alta (fila nueva)</label><select id="c_alta"><option>preguntar</option><option>auto</option><option>skip</option></select></div>
+        <div><label>empresa_registro (Drive+foto+copy+identidad)</label><select id="c_empresa_registro"><option>preguntar</option><option>auto</option><option>skip</option></select></div>
+        <div><label>clusters</label><select id="c_clusters"><option>preguntar</option><option>auto</option><option>skip</option></select></div>
+        <div><label>paginas</label><select id="c_paginas"><option>preguntar</option><option>auto</option><option>skip</option></select></div>
+        <div><label>brief</label><select id="c_brief"><option>preguntar</option><option>auto</option><option>skip</option></select></div>
+        <div><label>activos</label><select id="c_activos"><option>preguntar</option><option>auto</option><option>skip</option></select></div>
+      </div>
+      <p class="hint">Los switches viven en <code>GuiaTotal/registro/&lt;id&gt;/MASCARA.yaml</code> (los lee la skill). El botón de abajo arma la orden con tus switches para pegarla en el chat.</p>
+      <div style="margin-top:10px;display:flex;gap:9px;flex-wrap:wrap">
+        <button class="amber" onclick="copyOrder(false)">📋 Copiar orden de cadena</button>
+        <button class="amber" onclick="copyOrder(true)">⚡ Copiar orden AUTO TOTAL</button>
+      </div>
+      <div class="cmd" id="cmdBox"></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-d">
+    <h2 onclick="this.parentElement.classList.toggle('open')">🎛️ D · Toggles de módulos <span class="tag">solo los que cambies</span></h2>
+    <div class="body">
+      <div class="grid">
+        <div class="sw"><input type="checkbox" id="t_habilitado"><span>habilitado</span></div>
+        <div class="sw"><input type="checkbox" id="t_usa_qr_sitio"><span>usa_qr_sitio</span></div>
+        <div class="sw"><input type="checkbox" id="t_usa_otp_entrega"><span>usa_otp_entrega</span></div>
+        <div class="sw"><input type="checkbox" id="t_usa_features_estandar"><span>usa_features_estandar</span></div>
+        <div class="sw"><input type="checkbox" id="t_formulario"><span>formulario</span></div>
+        <div class="sw"><input type="checkbox" id="t_factura"><span>factura</span></div>
+        <div class="sw"><input type="checkbox" id="t_is_isolated"><span>is_isolated</span></div>
+        <div><label>modo</label><select id="t_modo"><option>PROD</option><option>TEST</option></select></div>
+        <div><label>db_engine</label><select id="t_db_engine"><option>GSHEETS</option><option>SUPABASE</option><option>NEON</option></select></div>
+        <div><label>modo_creditos</label><select id="t_modo_creditos"><option>DIARIO</option><option>MENSUAL</option></select></div>
+        <div><label>modo_sitio</label><input type="text" id="t_modo_sitio" placeholder="NOHYBRID / vacío"></div>
+        <div><label>usa_reservaciones (1 / vacío)</label><input type="text" id="t_usa_reservaciones"></div>
+        <div><label>usa_soporte_ia (modelos, coma)</label><input type="text" id="t_usa_soporte_ia"></div>
+        <div><label>stripe_activo</label><input type="text" id="t_stripe_activo"></div>
+        <div><label>autodepuracion (días)</label><input type="number" id="t_autodepuracion"></div>
+        <div><label>creditos_totales</label><input type="number" id="t_creditos_totales"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="actions">
+  <button class="green" onclick="save()">💾 Guardar (A + D)</button>
+  <button onclick="syncMirror()">☁️ Sync espejo</button>
+  <button class="ghost" onclick="loadCompany()">↩ Recargar fila</button>
+</div>
+
+<script>
+const GAS = 'https://script.google.com/macros/s/AKfycbzlkAI09chbtmf3VX5jKA9N4-6Ka2pcc6P65YqCXHn9amzACDCjuJBpFm2A8tPFyDwrsA/exec';
+const A_FIELDS = ['id_empresa','nomempresa','tipo_negocio','giro_especifico','color_tema','direccion','whatsapp_negocio','correoempresarial'];
+const B_FIELDS = ['slogan','mensaje1','mensaje2','descripcion','logo_url','foto_agente','mision','vision','valores'];
+const C_KEYS = ['alta','empresa_registro','clusters','paginas','brief','activos'];
+const BOOLS = ['habilitado','usa_qr_sitio','usa_otp_entrega','usa_features_estandar','formulario','factura','is_isolated'];
+const T_KEYS = [...BOOLS,'modo','db_engine','modo_creditos','modo_sitio','usa_reservaciones','usa_soporte_ia','stripe_activo','autodepuracion','creditos_totales'];
+let ROWS = [], cur = null;
+
+const $ = id => document.getElementById(id);
+const toast = (m, err) => { const t = $('toast'); t.textContent = m; t.className = err ? 'err' : ''; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', err ? 5200 : 3200); };
+const isTrue = v => v === true || String(v || '').toUpperCase() === 'TRUE';
+
+async function loadAll() {
+  try {
+    toast('Cargando Config_Empresas…');
+    const r = await fetch(`${GAS}?action=getAll`);
+    const j = await r.json();
+    ROWS = (j.Config_Empresas || []).filter(x => x && x.id_empresa);
+    const sel = $('coSelect');
+    sel.innerHTML = ROWS.map(x => `<option value="${x.id_empresa}">${x.id_empresa} — ${x.nomempresa || ''}</option>`).join('');
+    const last = localStorage.getItem('mascara_co');
+    if (last && ROWS.some(x => x.id_empresa === last)) sel.value = last;
+    await loadCompany();
+  } catch (e) { toast('No pude leer la hoja: ' + e.message, true); }
+}
+
+async function loadCompany() {
+  const id = $('coSelect').value;
+  if (!id) return;
+  localStorage.setItem('mascara_co', id);
+  cur = ROWS.find(x => x.id_empresa === id);
+  if (!cur) return;
+  A_FIELDS.forEach(f => { const el = $(f === 'id_empresa' ? 'f_id' : 'f_' + f); if (el) el.value = cur[f] == null ? '' : String(cur[f]); });
+  $('f_id').disabled = true;
+  $('f_color_pick').value = /^#[0-9a-f]{6}$/i.test(cur.color_tema || '') ? cur.color_tema : '#2563eb';
+  B_FIELDS.forEach(f => { const el = $('f_' + f); if (el) el.value = cur[f] == null ? '' : String(cur[f]); });
+  T_KEYS.forEach(k => { const el = $('t_' + k); if (!el) return;
+    el.type === 'checkbox' ? el.checked = isTrue(cur[k]) : el.value = cur[k] == null ? '' : String(cur[k]); });
+  await loadSwitches(id);
+}
+
+async function loadSwitches(id) {
+  const def = 'preguntar';
+  try {
+    const r = await fetch(`GuiaTotal/registro/${id}/MASCARA.yaml`);
+    if (!r.ok) throw 0;
+    const y = await r.text();
+    const m = y.match(/C_cadena:\s*([\s\S]*?)(?:\n\s{0,2}[A-Za-z_]|\n\S|$)/);
+    C_KEYS.forEach(k => {
+      const km = m && m[1].match(new RegExp(k + ':\\s*"?([a-z]+)'));
+      $('c_' + k).value = km && ['auto','preguntar','skip'].includes(km[1]) ? km[1] : def;
+    });
+  } catch (e) { C_KEYS.forEach(k => $('c_' + k).value = def); }
+}
+
+function updatesFromForm() {
+  const u = {};
+  A_FIELDS.filter(f => f !== 'id_empresa').forEach(f => { const el = $('f_' + f); if (el) u[f] = (el.value || '').trim(); });
+  T_KEYS.forEach(k => { const el = $('t_' + k); if (!el) return;
+    u[k] = el.type === 'checkbox' ? (el.checked ? 'TRUE' : 'FALSE') : el.value; });
+  return u;
+}
+
+async function save() {
+  const id = ($('f_id').value || '').trim().toUpperCase();
+  if (!id) { toast('Falta id_empresa', true); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = 'GUARDANDO…';
+  try {
+    const updates = updatesFromForm();
+    let res;
+    if (cur) {
+      const r = await fetch(GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'updateRow', table: 'Config_Empresas',
+          matchField: 'id_empresa', matchValue: cur.id_empresa, updates }) });
+      res = await r.json();
+    } else {
+      const r = await fetch(GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'appendRows', table: 'Config_Empresas',
+          rows: [Object.assign({ id_empresa: id }, updates, { habilitado: 'TRUE', modo: 'PROD', db_engine: 'GSHEETS' })] }) });
+      res = await r.json();
+    }
+    if (res && (res.success || res.ok)) {
+      toast(`✅ Guardado ${id} en la hoja maestra — recargando…`);
+      await sleep(1500); await loadAll();
+      $('coSelect').value = id; await loadCompany();
+    } else throw new Error((res && (res.error || res.msg)) || 'respuesta vacía');
+  } catch (e) { toast('Error al guardar: ' + e.message, true); }
+  btn.disabled = false; btn.textContent = '💾 Guardar (A + D)';
+}
+
+async function syncMirror() {
+  const id = cur ? cur.id_empresa : ($('f_id').value || '').trim().toUpperCase();
+  if (!id) { toast('Elige una empresa', true); return; }
+  toast('Sincronizando espejo Supabase…');
+  try {
+    const r = await fetch(GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'syncToSupabase', id_empresa: id }) });
+    const j = await r.json();
+    (j.success || j.ok) ? toast(`☁️ ${id} sincronizado con el espejo`) : toast('Espejo: ' + (j.error || j.msg || 'revisa'), true);
+  } catch (e) { toast('Sync falló (404-transitorio es posible — recarga y verifica): ' + e.message, true); }
+}
+
+function copyOrder(autoTotal) {
+  const id = (cur && cur.id_empresa) || ($('f_id').value || '').trim().toUpperCase();
+  if (!id) { toast('Elige una empresa', true); return; }
+  let cmd;
+  if (autoTotal) cmd = `máscara auto total ${id}`;
+  else {
+    const sw = C_KEYS.map(k => `${k}: ${$('c_' + k).value}`).join(', ');
+    cmd = `máscara ${id} — switches: ${sw}`;
+  }
+  const box = $('cmdBox'); box.style.display = 'block'; box.textContent = cmd;
+  (navigator.clipboard ? navigator.clipboard.writeText(cmd) : Promise.reject())
+    .then(() => toast('📋 Copiado — pégalo en el chat'))
+    .catch(() => { const ta = document.createElement('textarea'); ta.value = cmd;
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      toast('📋 Copiado — pégalo en el chat'); });
+}
+
+function toggleAlta() {
+  cur = null; $('coSelect').value = ''; $('f_id').disabled = false; $('f_id').value = '';
+  A_FIELDS.filter(f => f !== 'id_empresa').forEach(f => { const el = $('f_' + f); if (el) el.value = ''; });
+  B_FIELDS.forEach(f => { const el = $('f_' + f); if (el) el.value = ''; });
+  T_KEYS.forEach(k => { const el = $('t_' + k); if (!el) return;
+    el.type === 'checkbox' ? el.checked = false : el.value = ''; });
+  C_KEYS.forEach(k => $('c_' + k).value = 'preguntar');
+  $('f_id').focus();
+  toast('Modo ALTA: llena A, revisa D y Guardar crea la fila');
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+loadAll();
+</script>
+</body>
+</html>
