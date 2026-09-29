@@ -121,6 +121,7 @@ Antes de responder o actuar sobre cualquier pedido, correr el pre-vuelo (skill `
 1. Revisar contexto, supuestos y 5 sesgos (ambigüedad, supuestos, acción prematura, confirmación, scope creep).
 2. **Q&A / lectura / contexto** → responder directo, 0 preguntas, salida mínima.
 3. **Modificación** → optimizar el pedido; si certeza <95% → ≤3 preguntas y esperar; si ≥95% → ejecutar. Tras ejecutar, dí-gigo extras en 1 línea.
+4. **Léxico (automático)** → interpretar gíros/erratas del usuario vía `.suit/memory/patterns/lexico-usuario.md` antes de clasificar intención; no preguntar por erratas obvias; ampliar el glosario con cada giro nuevo.
 
 ## Confirmación antes de ejecutar — siempre activa
 
