@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>MAPA VISUAL — Guía Total</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: #eef2f9;
+    background-image: radial-gradient(#c9d4e8 1px, transparent 1px);
+    background-size: 22px 22px;
+    color: #1f2937;
+    min-width: 1360px;
+  }
+  header {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #fff; padding: 16px 28px;
+    display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 20px; }
+  .legend { display: flex; gap: 18px; font-size: 12.5px; align-items: center; flex-wrap: wrap; }
+  .legend .li { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 34px; height: 0; border-top: 3px solid #2563eb; }
+  .swatch.dash { border-top: 3px dashed #f59e0b; }
+  .balloon-mini {
+    background: #fde68a; color: #78350f; border: 2px solid #f59e0b;
+    border-radius: 14px; padding: 1px 8px; font-size: 11px;
+  }
+  .syncnote { margin-left: auto; font-size: 11.5px; color: #cbd5e1; max-width: 460px; text-align: right; }
+
+  #canvas {
+    position: relative; width: 1360px; height: 2230px; margin: 0 auto;
+  }
+  #edges { position: absolute; inset: 0; width: 1360px; height: 2230px; pointer-events: none; }
+
+  .node {
+    position: absolute; width: 210px; padding: 10px 12px;
+    border-radius: 22px; border: 2.5px solid rgba(0,0,0,.14);
+    background: linear-gradient(135deg, var(--a), var(--b));
+    box-shadow: 0 6px 16px rgba(15,23,42,.18), inset 0 1px 0 rgba(255,255,255,.6);
+    text-align: center; z-index: 2; user-select: none;
+  }
+  .node .ico { font-size: 26px; display: block; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+  .node .ttl { font-size: 13px; font-weight: 800; margin-top: 3px; line-height: 1.15; }
+  .node .sub { font-size: 10.5px; opacity: .85; margin-top: 2px; line-height: 1.2; }
+  .chip {
+    position: absolute; top: -11px; left: -9px; background: #0f172a; color: #fff;
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    border: 1.5px solid #fff; letter-spacing: .4px;
+  }
+
+  .gate {
+    position: absolute; width: 150px; height: 150px;
+    background: radial-gradient(circle at 30% 25%, #fef3c7, #fde68a);
+    border: 3px solid #f59e0b; border-radius: 20px;
+    transform: rotate(45deg);
+    box-shadow: 0 8px 18px rgba(245,158,11,.35);
+    display: flex; align-items: center; justify-content: center; z-index: 3;
+  }
+  .gate .gtxt {
+    transform: rotate(-45deg); text-align: center;
+    font-weight: 800; font-size: 12.5px; color: #78350f;
+    max-width: 118px; line-height: 1.15;
+  }
+  .gate .gi { font-size: 20px; display: block; margin: 0 auto 2px; }
+
+  .acts {
+    display: flex; gap: 3px; justify-content: center;
+    flex-wrap: wrap; margin-top: 6px;
+  }
+  .acts span {
+    background: rgba(15,23,42,.78); color: #fff;
+    font-size: 8.5px; font-weight: 700; padding: 1px 5px;
+    border-radius: 999px; white-space: nowrap; letter-spacing: .2px;
+  }
+
+  .elab {
+    position: absolute; z-index: 4; background: #fff; color: #334155;
+    border: 1.5px solid #94a3b8; font-size: 10.5px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(15,23,42,.15); transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  path.e-solid { stroke: #2563eb; stroke-width: 3; fill: none; }
+  path.e-dec { stroke: #4f46e5; stroke-width: 2.8; fill: none; }
+  path.e-switch { stroke: #f59e0b; stroke-width: 2.5; fill: none; stroke-dasharray: 9 7; }
+  path.e-soft   { stroke: #64748b; stroke-width: 2.2; fill: none; stroke-dasharray: 4 6; }
+  path.e-sync   { stroke: #7c3aed; stroke-width: 2.4; fill: none; stroke-dasharray: 8 6; }
+  path.flow { animation: march 1.1s linear infinite; }
+  @keyframes march { to { stroke-dashoffset: -16; } }
+
+  /* colores de burbujas */
+  .t-idea    { --a:#c4b5fd; --b:#7c3aed; }
+  .t-reg     { --a:#bbf7d0; --b:#22c55e; }
+  .t-masc    { --a:#bae6fd; --b:#0ea5e9; }
+  .t-seo     { --a:#fed7aa; --b:#f97316; }
+  .t-brief   { --a:#fbcfe8; --b:#ec4899; }
+  .t-act     { --a:#fecaca; --b:#ef4444; }
+  .t-sync    { --a:#ddd6fe; --b:#8b5cf6; }
+  .t-tax     { --a:#99f6e4; --b:#14b8a6; }
+  .t-id      { --a:#c7d2fe; --b:#6366f1; }
+  .t-con     { --a:#bfdbfe; --b:#3b82f6; }
+  .t-man     { --a:#fde68a; --b:#f59e0b; }
+  .t-mnt     { --a:#cbd5e1; --b:#64748b; }
+  .t-prompt  { --a:#f5d0fe; --b:#d946ef; }
+  .t-idx     { --a:#a5f3fc; --b:#06b6d4; }
+  .t-aud     { --a:#fecdd3; --b:#f43f5e; }
+  .t-ext     { --a:#e2e8f0; --b:#94a3b8; }
+  .t-fic     { --a:#d9f99d; --b:#84cc16; }
+  .t-cierre  { --a:#475569; --b:#1e293b; color: #f8fafc; }
+  .t-cierre .sub { color: #e2e8f0; }
+  .t-dec     { --a:#c7d2fe; --b:#6366f1; border-color: #4f46e5; }
+  .decbanner {
+    position: absolute; left: 15px; top: 4px; z-index: 5;
+    background: #312e81; color: #e0e7ff; font-size: 11.5px; font-weight: 800;
+    letter-spacing: .5px; padding: 5px 12px; border-radius: 999px;
+    border: 2px dashed #818cf8;
+  }
+
+  .node[data-sec] { cursor: pointer; }
+  .node[data-sec]:hover { box-shadow: 0 6px 20px rgba(56,189,248,.45), inset 0 1px 0 rgba(255,255,255,.6); }
+  .hintclick {
+    background: #0f172a; color: #7dd3fc; border: 1.5px dashed #38bdf8;
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  }
+
+  #drawer {
+    position: fixed; top: 0; right: -460px; width: 440px; max-width: 94vw; height: 100vh;
+    background: #111a2e; border-left: 3px solid #38bdf8; z-index: 50;
+    transition: right .25s ease; box-shadow: -12px 0 32px rgba(0,0,0,.5);
+    display: flex; flex-direction: column;
+  }
+  #drawer.open { right: 0; }
+  #drawer .dhead {
+    background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff;
+    padding: 14px 16px; display: flex; align-items: center; gap: 10px;
+  }
+  #drawer .dhead .chip2 { background: #0f172a; border: 1.5px solid #fff; font-size: 11px;
+    font-weight: 800; padding: 2px 9px; border-radius: 999px; }
+  #drawer .dhead h3 { font-size: 15px; flex: 1; }
+  #drawer .dclose { background: rgba(0,0,0,.25); border: 0; color: #fff; font-size: 18px;
+    width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
+  #drawer .dbody { padding: 14px 16px 24px; overflow-y: auto; font-size: 13.5px; color: #cbd5e1; }
+  #drawer .dsec { font-size: 11px; font-weight: 800; letter-spacing: .6px; color: #38bdf8;
+    text-transform: uppercase; margin: 14px 0 6px; }
+  #drawer ol { margin: 0 0 4px 18px; line-height: 1.55; }
+  #drawer ol li { margin-bottom: 4px; }
+  #drawer .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  #drawer .kchip { background: #1e293b; border: 1px solid #475569; border-radius: 999px;
+    padding: 3px 9px; font-size: 11.5px; color: #fde68a; font-family: Consolas, monospace; }
+  #drawer .kchip.f { color: #86efac; }
+  #backdrop { position: fixed; inset: 0; background: rgba(2,6,23,.55); z-index: 49; display: none; }
+  #backdrop.open { display: block; }
+
+  footer { padding: 14px 28px 30px; font-size: 12px; color: #475569; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗺️ MAPA VISUAL — Guía Total</h1>
+  <div class="legend">
+    <span class="li"><span class="swatch"></span> flujo principal</span>
+    <span class="li"><span class="swatch dash"></span> switch / condicional</span>
+    <span class="li"><span class="balloon-mini">◇ rombo</span> decisión</span>
+    <span class="li"><span class="balloon-mini">▬ pastilla</span> inicio / fin</span>
+    <span class="li">📁 lee · ✍️ crea · 🔄 actualiza · ⚡ skill · ❓ pregunta · ∥ paralelo</span>
+  </div>
+  <div class="syncnote">Sync con MAPA.md: cada burbuja lleva chip §X · cambiar §X = editar esa burbuja · validar con <b>node scripts/check-map-visual.js</b></div>
+  <span class="hintclick">👆 click en una burbuja § → pasos internos</span>
+</header>
+
+<div id="backdrop" onclick="closeDrawer()"></div>
+<div id="drawer">
+  <div class="dhead">
+    <span class="chip2" id="d-chip">§?</span>
+    <h3 id="d-title">—</h3>
+    <button class="dclose" onclick="closeDrawer()" title="Cerrar">✕</button>
+  </div>
+  <div class="dbody" id="d-body"></div>
+</div>
+
+<div id="canvas">
+  <svg id="edges">
+    <defs>
+      <marker id="ar-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/>
+      </marker>
+      <marker id="ar-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
+      </marker>
+      <marker id="ar-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+      </marker>
+      <marker id="ar-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/>
+      </marker>
+      <marker id="ar-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/>
+      </marker>
+    </defs>
+  </svg>
+
+  <!-- ═══ CAPA DE DECISIÓN — AGENTS.md (fuera de MAPA.md) ═══ -->
+  <div class="decbanner">🧭 CAPA DE DECISIÓN — cómo AGENTS.md orquesta todo (fuera de MAPA.md)</div>
+
+  <div class="node t-dec" id="ag1" style="left:15px; top:42px; width:250px;">
+    <span class="ico">🧠</span>
+    <div class="ttl">1 · AGENTS.md (jerarquía)</div>
+    <div class="sub">ARCHITECTURE → AGENTS → workflows → skills → código · activación al iniciar sesión</div>
+  </div>
+
+  <div class="node t-dec" id="ag2" style="left:305px; top:42px; width:250px;">
+    <span class="ico">🛡️</span>
+    <div class="ttl">2 · Pre-flight + léxico</div>
+    <div class="sub">prompt-reviewer · lexico-usuario (gíros) · 5 sesgos · ≥95% o ≤3 preguntas</div>
+  </div>
+
+  <div class="node t-dec" id="ag3" style="left:305px; top:195px; width:250px;">
+    <span class="ico">🧭</span>
+    <div class="ttl">3 · routing.yaml (decide)</div>
+    <div class="sub">intents → workflow + skill + prioridad · permissions.yaml · models.yaml</div>
+  </div>
+
+  <div class="node t-dec" id="ag4" style="left:15px; top:195px; width:250px;">
+    <span class="ico">📦</span>
+    <div class="ttl">4 · loader strategy (contexto)</div>
+    <div class="sub">context-loader · index-navigator · minimal 2K / standard 8K / deep 20K</div>
+  </div>
+
+  <!-- ═══ idea / gates / altas ═══ -->
+  <div class="node t-idea" id="n1" data-sec="1" style="left:575px; top:30px; border-radius:999px;">
+    <span class="chip">§1</span>
+    <span class="ico">💡</span>
+    <div class="ttl">Idea / Validación</div>
+    <div class="sub">analista-proy → panel-juzgador</div>
+  </div>
+
+  <div class="gate" id="g-alta" style="left:624px; top:160px;">
+    <div class="gtxt"><span class="gi">❓</span>¿Alta de empresa?</div>
+  </div>
+
+  <div class="gate" id="g-auto" style="left:1139px; top:292px;">
+    <div class="gtxt"><span class="gi">🎚</span>auto / preguntar</div>
+  </div>
+
+  <!-- ═══ cadena §1.5–§1.8 + brief/activos ═══ -->
+  <div class="node t-fic" id="n24" data-sec="11" style="left:80px; top:330px;">
+    <span class="chip">§11</span>
+    <span class="ico">📇</span>
+    <div class="ttl">Fichas operativas</div>
+    <div class="sub">nivel 4 · refs file:line</div>
+  </div>
+
+  <div class="node t-reg" id="n15" data-sec="1.5" style="left:80px; top:560px;">
+    <span class="chip">§1.5</span>
+    <span class="ico">🏢</span>
+    <div class="ttl">empresa-registro</div>
+    <div class="sub">Drive · foto · copy · identidad</div>
+  </div>
+
+  <div class="node t-masc" id="n18" data-sec="1.8" style="left:860px; top:330px;">
+    <span class="chip">§1.8</span>
+    <span class="ico">📋</span>
+    <div class="ttl">empresa-mascara</div>
+    <div class="sub">obligatorios · switches · barra</div>
+  </div>
+
+  <div class="node t-seo" id="n16" data-sec="1.6" style="left:345px; top:560px;">
+    <span class="chip">§1.6</span>
+    <span class="ico">🔎</span>
+    <div class="ttl">clusters-seo</div>
+    <div class="sub">≤9 → Config_SEO + fotos</div>
+  </div>
+
+  <div class="node t-seo" id="n17" data-sec="1.7" style="left:610px; top:560px;">
+    <span class="chip">§1.7</span>
+    <span class="ico">📄</span>
+    <div class="ttl">paginas-seo</div>
+    <div class="sub">→ Config_Paginas (3 JSON)</div>
+  </div>
+
+  <div class="node t-brief" id="n19" style="left:875px; top:560px;">
+    <span class="ico">🎯</span>
+    <div class="ttl">brief-engine</div>
+    <div class="sub">→ Config_Empresas.logo_url</div>
+  </div>
+
+  <div class="node t-act" id="n20" style="left:1130px; top:560px;">
+    <span class="ico">🎬</span>
+    <div class="ttl">lapvtfu (activos)</div>
+    <div class="sub">→ cte&lt;id&gt;/_activos</div>
+  </div>
+
+  <div class="node t-sync" id="n22" style="left:345px; top:775px;">
+    <span class="ico">☁️</span>
+    <div class="ttl">syncToSupabase</div>
+    <div class="sub">espejo con PK idempotente</div>
+  </div>
+
+  <div class="node t-man" id="n27" data-sec="1.9" style="left:860px; top:775px;">
+    <span class="chip">§1.9</span>
+    <span class="ico">📖</span>
+    <div class="ttl">Manual de operación</div>
+    <div class="sub">Config_Empresas · taxonomía → brief seg1-2</div>
+  </div>
+
+  <!-- ═══ ciclo de vida §2–§9 ═══ -->
+  <div class="node t-tax" id="n2" data-sec="2" style="left:575px; top:920px;">
+    <span class="chip">§2</span><span class="ico">🧭</span>
+    <div class="ttl">Taxonomía</div><div class="sub">industrias · nichos</div>
+  </div>
+  <div class="node t-id" id="n3" data-sec="3" style="left:575px; top:1060px;">
+    <span class="chip">§3</span><span class="ico">🪞</span>
+    <div class="ttl">Identidad Corporativa</div><div class="sub">misión · visión · valores</div>
+  </div>
+  <div class="node t-con" id="n4" data-sec="4" style="left:575px; top:1200px;">
+    <span class="chip">§4</span><span class="ico">🧬</span>
+    <div class="ttl">Construcción</div><div class="sub">ciclo F0→F7</div>
+  </div>
+  <div class="node t-man" id="n5" data-sec="5" style="left:575px; top:1340px;">
+    <span class="chip">§5</span><span class="ico">📘</span>
+    <div class="ttl">Manuales</div><div class="sub">GuiaTotal/manuales/&lt;id&gt;/</div>
+  </div>
+  <div class="node t-mnt" id="n6" data-sec="6" style="left:575px; top:1480px;">
+    <span class="chip">§6</span><span class="ico">🔧</span>
+    <div class="ttl">Mantenimiento</div><div class="sub">PENDIENTES + MAPA</div>
+  </div>
+  <div class="node t-prompt" id="n7" data-sec="7" style="left:575px; top:1620px;">
+    <span class="chip">§7</span><span class="ico">✨</span>
+    <div class="ttl">Prompt Origen</div><div class="sub">origen vivo del proyecto</div>
+  </div>
+  <div class="node t-idx" id="n8" data-sec="8" style="left:575px; top:1760px;">
+    <span class="chip">§8</span><span class="ico">🔢</span>
+    <div class="ttl">Índice de Funciones</div><div class="sub">generate-index.js</div>
+  </div>
+  <div class="node t-aud" id="n9" data-sec="9" style="left:575px; top:1900px;">
+    <span class="chip">§9</span><span class="ico">🔍</span>
+    <div class="ttl">Auditoría</div><div class="sub">→ docs/00-16 + C4</div>
+  </div>
+  <div class="node t-ext" id="n10" data-sec="10" style="left:1130px; top:1900px;">
+    <span class="chip">§10</span><span class="ico">📦</span>
+    <div class="ttl">Skills externas</div><div class="sub">por instalar / enlazar</div>
+  </div>
+  <div class="node t-cierre" id="n25" style="left:575px; top:2055px; border-radius:999px;">
+    <span class="ico">🎉</span>
+    <div class="ttl">↪ Cierre de pasada</div>
+    <div class="sub">PENDIENTES · MAPA · ≤3 líneas</div>
+  </div>
+</div>
+
+<footer>
+  Vista derivada de <b>GuiaTotal/MAPA.md</b> (el textual manda) · cada burbuja lleva chip §X = su sección del mapa ·
+  cambiar §X en MAPA → editar su burbuja aquí → <b>node scripts/check-map-visual.js</b> debe dar OK
+</footer>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const svg = document.getElementById('edges');
+
+  // ruta: 'auto' (ancla por eje dominante) | 'v' (salida abajo, entrada arriba)
+  //        | 'via' con puntos intermedios
+  const EDGES = [
+    { from: 'ag1',   to: 'ag2',    cls: 'e-dec', mk: 'ar-d' },
+    { from: 'ag2',   to: 'ag3',    cls: 'e-dec', mk: 'ar-d' },
+    { from: 'ag3',   to: 'ag4',    cls: 'e-dec', mk: 'ar-d' },
+    { from: 'ag4',   to: 'n1',     cls: 'e-dec', mk: 'ar-d', label: 'elige § del mapa', t: 0.3 },
+    { from: 'n1',    to: 'g-alta', cls: 'e-solid', mk: 'ar-s' },
+    { from: 'g-alta',to: 'n15',    cls: 'e-solid', mk: 'ar-s', label: 'a mano', route: 'v' },
+    { from: 'g-alta',to: 'n18',    cls: 'e-solid', mk: 'ar-s', label: 'formulario', route: 'v', t: 0.35 },
+    { from: 'n18',   to: 'g-auto', cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n18',   to: 'n27',    cls: 'e-soft', mk: 'ar-g', label: 'guía operación' },
+    { from: 'n18',   to: 'n15',    cls: 'e-switch', mk: 'ar-w', label: 'switch: registro',  route: 'v' },
+    { from: 'n18',   to: 'n16',    cls: 'e-switch', mk: 'ar-w', label: 'switch: clusters',  route: 'v' },
+    { from: 'n18',   to: 'n17',    cls: 'e-switch', mk: 'ar-w', label: 'switch: paginas',   route: 'v' },
+    { from: 'n18',   to: 'n19',    cls: 'e-switch', mk: 'ar-w', label: 'switch: brief',     route: 'v' },
+    { from: 'n18',   to: 'n20',    cls: 'e-switch', mk: 'ar-w', label: 'switch: activos',   route: 'v' },
+    { from: 'n15',   to: 'n16',    cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n16',   to: 'n17',    cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n17',   to: 'n19',    cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n19',   to: 'n20',    cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n20',   to: 'n2',     cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n2',    to: 'n3',     cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n3',    to: 'n4',     cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n4',    to: 'n5',     cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n5',    to: 'n6',     cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n6',    to: 'n7',     cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n7',    to: 'n8',     cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n8',    to: 'n9',     cls: 'e-solid', mk: 'ar-s' },
+    { from: 'n15',   to: 'n22',    cls: 'e-sync',  mk: 'ar-v', label: 'sync' },
+    { from: 'n16',   to: 'n22',    cls: 'e-sync',  mk: 'ar-v' },
+    { from: 'n17',   to: 'n22',    cls: 'e-sync',  mk: 'ar-v' },
+    { from: 'n24',   to: 'n16',    cls: 'e-soft',  mk: 'ar-g', label: 'referencia' },
+    { from: 'n10',   to: 'n9',     cls: 'e-soft',  mk: 'ar-g', label: 'catálogo' },
+    { from: 'n9',    to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'mejoras',
+      via: [[950, 1945], [950, 1525]] },
+    { from: 'n25',   to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'siguiente pasada',
+      via: [[430, 2100], [430, 1525]] },
+    { from: 'n1',    to: 'n2',     cls: 'e-soft',  mk: 'ar-g', label: 'sin empresa',
+      via: [[1352, 75], [1352, 960]] },
+  ];
+
+  // iconos de acción por burbuja (misma leyenda que MAPA.md: 📁 lee · ⚡ skill ·
+  // ✍️ crea · 🔄 actualiza · ❓ pregunta · ∥ paralelo)
+  const ACTS = {
+    ag1: ['📁 lee jerarquía'],
+    ag2: ['❓ 5 sesgos', '📁 léxico'],
+    ag3: ['📁 consulta registry', '⚡ elige workflow'],
+    ag4: ['📁 carga selectiva'],
+    n1:  ['📁 lee GUIA', '⚡ skill', '✍️ crea', '∥ paralelo'],
+    n24: ['📁 referencia'],
+    n15: ['📁 lee registro', '⚡ skill', '✍️ crea', '∥ foto∥copy'],
+    n18: ['📁 lee plantilla', '✍️ escribe fila', '⚡ cadena', '❓ gates'],
+    n16: ['📁 lee', '⚡ skill', '✍️ crea', '∥ fotos'],
+    n17: ['📁 lee', '⚡ skill', '✍️ crea'],
+    n19: ['⚡ skill', '✍️ crea'],
+    n20: ['⚡ skill', '✍️ crea'],
+    n22: ['⚡ sync', '🔄 espejo'],
+    n2:  ['📁 lee catálogo', '✍️ crea', '∥ queries'],
+    n3:  ['📁 lee', '⚡ skill', '✍️ crea'],
+    n4:  ['⚡ ciclo', '✍️ crea', '🔄 valida'],
+    n5:  ['📁 lee fuente', '✍️ crea'],
+    n6:  ['⚡ guia-total', '✍️ PENDIENTES', '🔄 MAPA'],
+    n7:  ['📁 lee', '✍️ crea'],
+    n8:  ['⚡ script', '✍️ crea'],
+    n9:  ['📁 audita', '⚡ skill', '✍️ docs', '∥ pilares'],
+    n10: ['📁 lista', '✍️ instala'],
+    n27: ['📖 lee', '🔄 actualiza'],
+    n25: ['✍️ PENDIENTES', '🔄 MAPA', '📋 ≤3 líneas'],
+  };
+
+  function rect(el) {
+    const r = el.getBoundingClientRect(), c = canvas.getBoundingClientRect();
+    return { l: r.left - c.left, t: r.top - c.top, w: r.width, h: r.height,
+             cx: r.left - c.left + r.width / 2, cy: r.top - c.top + r.height / 2 };
+  }
+
+  function pathFor(a, b, e) {
+    if (e.via) {
+      const pts = [[a.cx, a.cy], ...e.via, [b.cx, b.cy]];
+      let d = `M ${pts[0][0]} ${pts[0][1]}`;
+      for (let i = 1; i < pts.length - 1; i++) {
+        const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+        d += ` Q ${pts[i][0]} ${pts[i][1]} ${mx} ${my}`;
+      }
+      const last = pts[pts.length - 1];
+      d += ` L ${last[0]} ${last[1]}`;
+      return { d, mid: pts[Math.floor(pts.length / 2)] };
+    }
+    let x1, y1, x2, y2, c1x, c1y, c2x, c2y;
+    const dx = b.cx - a.cx, dy = b.cy - a.cy;
+    if (e.route === 'v') {
+      x1 = a.cx; y1 = a.t + a.h; x2 = b.cx; y2 = b.t;
+      c1x = x1; c1y = y1 + dy * 0.35; c2x = x2; c2y = y2 - dy * 0.35;
+    } else if (Math.abs(dx) > Math.abs(dy)) {
+      x1 = dx > 0 ? a.l + a.w : a.l; y1 = a.cy;
+      x2 = dx > 0 ? b.l : b.l + b.w; y2 = b.cy;
+      const k = Math.max(50, Math.abs(dx) * 0.4) * Math.sign(dx || 1);
+      c1x = x1 + k; c1y = y1; c2x = x2 + k; c2y = y2;
+    } else {
+      x1 = a.cx; y1 = dy > 0 ? a.t + a.h : a.t; x2 = b.cx; y2 = dy > 0 ? b.t : b.t + b.h;
+      const k = Math.max(50, Math.abs(dy) * 0.35) * Math.sign(dy || 1);
+      c1x = x1; c1y = y1 + k; c2x = x2; c2y = y2 + k;
+    }
+    // punto medio de la cúbica en t (e.t por defecto 0.5)
+    const t = e.t != null ? e.t : 0.5, u = 1 - t;
+    const mid = [
+      u * u * u * x1 + 3 * u * u * t * c1x + 3 * u * t * t * c2x + t * t * t * x2,
+      u * u * u * y1 + 3 * u * u * t * c1y + 3 * u * t * t * c2y + t * t * t * y2,
+    ];
+    return { d: `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`, mid };
+  }
+
+  function build() {
+    // badges de acción (se inyectan una sola vez antes de medir)
+    for (const [id, list] of Object.entries(ACTS)) {
+      const el = document.getElementById(id);
+      if (!el || el.querySelector('.acts')) continue;
+      const a = document.createElement('div');
+      a.className = 'acts';
+      a.innerHTML = list.map(t => `<span>${t}</span>`).join('');
+      el.appendChild(a);
+    }
+    svg.querySelectorAll('path.el, g.lbl').forEach(n => n.remove());
+    canvas.querySelectorAll('.elab').forEach(n => n.remove());
+    for (const e of EDGES) {
+      const A = document.getElementById(e.from), B = document.getElementById(e.to);
+      if (!A || !B) continue;
+      const a = rect(A), b = rect(B);
+      const { d, mid } = pathFor(a, b, e);
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('class', 'el ' + e.cls + (e.cls === 'e-solid' ? ' flow' : ''));
+      p.setAttribute('marker-end', `url(#${e.mk})`);
+      svg.appendChild(p);
+      if (e.label) {
+        const lab = document.createElement('div');
+        lab.className = 'elab';
+        lab.textContent = e.label;
+        lab.style.left = mid[0] + 'px';
+        lab.style.top = mid[1] + 'px';
+        canvas.appendChild(lab);
+      }
+    }
+  }
+
+  // pasos internos por sección (§X) — sincronizado con MAPA.md · check: check-map-visual.js
+  const INFO = {
+    '1': { t: 'Idea / Validación', steps: [
+        '📁 lee GuiaTotal/GUIA.md · ❓ ¿convive con Config_Empresas?',
+        '⚡ analista-proy → ✍️ Analista_Proy.md (4 pilares ∥ en paralelo)',
+        '✍️ <Proyecto>/docs/TAXONOMIA.md (Industria·Nicho·Espec. match al catálogo)',
+        '⚡ panel-juzgador → veredicto de4 agentes + juez (recomienda, no decide)',
+        '✍️ tarjeta registro/<proyecto>.yaml → ↪ CIERRE'],
+      skills: ['guia-total', 'analista-proy', 'panel-juzgador'] },
+    '1.5': { t: 'empresa-registro (alta/operativa)', steps: [
+        '📁 GET getAll?id_empresa → fila existe? (si no → pedir alta, nunca inventar)',
+        '📁 TAXONOMIA.md → clasifica giro',
+        '⚡ ensureCteFolders → ✍️ Drive cte<id>/ idempotente (_brief, _activos, _share)',
+        '⚡ generateAsset fotoagente → ✍️ cte<id>/fotoagente.jpg share ANYONE',
+        '⚡ landing-page-copywriter → slogan/mensaje1/mensaje2',
+        '⚡ guia-total identidad → ✍️ IDENTIDAD_CORPORATIVA.md',
+        '✍️ updateRow (10 campos) → ⚡ syncToSupabase → 📁 verifica espejo',
+        '✍️ tarjeta → ⛓️ ofrece clusters-seo'],
+      gas: ['ensureCteFolders (core.js:377, fn :756)', 'generateAsset', 'updateRow (utils.js:36)', 'syncToSupabase (utils.js:346)'],
+      files: ['GuiaTotal/registro/<id>.yaml', 'GuiaTotal/registro/<id>/'] },
+    '1.6': { t: 'clusters-seo (≤9 → Config_SEO)', steps: [
+        '📁 Config_Empresas ∥ Config_SEO existentes (dedupe) ∥ Config_Paginas.id_cluster',
+        '✍️ propuesta ≤9 clústeres (intenciones + geo×2) → vista previa Markdown',
+        '❓ solo si <95% certeza',
+        '[SOLO con aprobación] 📁 foto libre → ⚡ subirImagenCte → cte<id>/imagenurl-{id}.jpg',
+        '✍️ GAS appendRows → Config_SEO (10 columnas) → ⚡ sync (PK idempotente)',
+        '📋 checklist10 puntos → ⛓️ ofrece paginas-seo'],
+      gas: ['appendRows (core.js:388)', 'subirImagenCte (core.js:401, fn :810)', 'syncToSupabase'],
+      files: ['Config_SEO (GS maestro)', 'espejo PK (id_empresa,id_cluster)'] },
+    '1.7': { t: 'paginas-seo (→ Config_Paginas)', steps: [
+        '📁 Config_Empresas ∥ Config_SEO (hub) ∥ Config_Paginas (reporta basura sin tocarla)',
+        '✍️ mapa editorial por clúster → ❓ gate 1 (aprobación)',
+        '✍️ redacción por página:3 JSON (meta + schema Service + contenido PLANO)',
+        '   ruta #{id_pagina} ·300-500 palabras · sin claims · imagen heredada del clúster',
+        '✍️ validación (3 JSON parsean, dups, claims) → ❓ gate 2',
+        '[aprobado] ✍️ appendRows → Config_Paginas → sync → 📋 cierre'],
+      gas: ['appendRows (core.js:388)', 'syncToSupabase'],
+      files: ['Config_Paginas (6 cols)', 'espejo PK (id_empresa,id_pagina)'] },
+    '1.8': { t: 'empresa-mascara (formulario + switches)', steps: [
+        '🌐 UI local mascara.html (:3001) o chat "máscara <ID>"',
+        '📄 plantilla → crea/lee registro/<id>/MASCARA.yaml (A/B/C/D)',
+        '[1/N] ✅ valida A (faltantes → ≤3 preguntas) · "auto total" → todos auto',
+        '[2/N] ✍️ updateRow/appendRows (SOLO A+D) → [3/N] sync + espejo',
+        '[4..N] ▶ cadena por switches (auto sin preguntar · preguntar con [s/n] · skip)',
+        '✔ barra [▓▓▓] → ✍️ tarjeta → ↪ CIERRE'],
+      gas: ['updateRow', 'appendRows', 'syncToSupabase'],
+      files: ['GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml', 'mascara.html'] },
+    '1.9': { t: 'Manual de operación (Config_Empresas)', steps: [
+        '📖 lee/actualiza GuiaTotal/MANUAL_OPERACION.md (11 secciones)',
+        '⚖️ regla §5: brief seg1/seg2 con valor real → jamás borrar · vacío/PENDIENTE → taxonomía',
+        '🔄 refresco con toda pasada de guia-total/ciclo que toque configuración'],
+      files: ['GuiaTotal/MANUAL_OPERACION.md'] },
+    '2': { t: 'Taxonomía (catálogo maestro)', steps: [
+        '📁 lee Supabase: industrias (22) ∥ nichos (85)',
+        '✍️ crea/actualiza GuiaTotal/TAXONOMIA.md',
+        '✍️ INSERT de faltantes + anota "insertado: fecha" (jamás UPDATE/DELETE)'],
+      files: ['GuiaTotal/TAXONOMIA.md'] },
+    '3': { t: 'Identidad Corporativa', steps: [
+        '📄 prompts/IDENTIDAD_CORPORATIVA.md (motor8 secciones, nada inventado)',
+        '📁 lee Analista_Proy.md + tarjeta ∥ Config_Empresas si convive_sheets',
+        '⚡ brief-engine solo lectura (taxonomía/tono) si hay id_empresa',
+        '✍️ <Proyecto>/docs/IDENTIDAD_CORPORATIVA.md + "Datos pendientes de validar"'],
+      skills: ['brief-engine'] },
+    '4': { t: 'Construcción (ciclo F0→F7)', steps: [
+        '⚡ ciclo con fases F0→F7',
+        '✍️ CONTRATO.md (F0) · VALIDACION.md · CORRECCIONES.md',
+        '↻ índice si cambian funciones: node scripts/generate-index.js'],
+      skills: ['ciclo'] },
+    '5': { t: 'Manuales (4 por proyecto)', steps: [
+        '📁 lee proyecto (código, README, docs) + 📄 templates/MANUAL_*.md',
+        '∥ crea los4 en paralelo: CLIENTE · PROVEEDOR · TECNICO · PRUEBAS',
+        '🔄 actualización serial por fechas (solo reescribe los viejos)'],
+      files: ['<Proyecto>/docs/MANUAL_*.md'] },
+    '6': { t: 'Mantenimiento', steps: [
+        '⚡ ciclo F1-F7 → CONTRATO/VALIDACION/CORRECCIONES',
+        '⚖️ brief×taxonomía: seg1/seg2 vacíos→llenar · real→no tocar (be-010)',
+        '📖 refresca MANUAL_OPERACION.md si cambió configuración',
+        '🔄 refresco de manuales si cambios tocaron UI/backend'],
+      skills: ['ciclo', 'guia-total'] },
+    '7': { t: 'Prompt Origen (vivo)', steps: [
+        '📄 plantilla prompts/PROMPT_ORIGEN.md → instancia del proyecto',
+        '✍️ rellena con GUIA.md + tarjeta + hechos nuevos (la plantilla solo cambia con el método)'],
+      files: ['<Proyecto>/docs/PROMPT_ORIGEN.md'] },
+    '8': { t: 'Índice de Funciones', steps: [
+        '⚡ node scripts/generate-index.js',
+        '✍️ INDEX_FUNCIONES.md (función → file:line para lectura selectiva)'],
+      files: ['INDEX_FUNCIONES.md', 'scripts/generate-index.js'] },
+    '9': { t: 'Auditoría de arquitectura', steps: [
+        '📁 lee sistema + memoria (ADRs, bugs, lessons)',
+        '✂️ umbrales: ≥25% → faltantes PROBABLE · ≥84% → completar/actualizar',
+        '✍️ <Proyecto>/docs/00-16 (inventario, C4 Mermaid, reglas, brechas, plan)'],
+      skills: ['auditoria'] },
+    '10': { t: 'Skills externas (por instalar)', steps: [
+        '📦 lista de skills ajenas pendientes de enlazar',
+        '✍️ si se instala → su nodo en MAPA §10 con trigger y acciones (nunca a ciegas)'] },
+    '11': { t: 'Fichas operativas (nivel 4)', steps: [
+        '📇4 fichas de la cadena (máscara, registro, clusters, páginas):',
+        '   acciones GAS con payload · tablas maestro/espejo + PK · query de verificación · quirks',
+        '   refs file:line (core.js:388 appendRows, :323 sync, :377/756 folders, :401/810 imagen)',
+        '🔗 sync: cambiar §X en MAPA → actualizar ficha + burbuja + check'] },
+  };
+
+  function openDrawer(sec) {
+    const info = INFO[sec];
+    if (!info) return;
+    document.getElementById('d-chip').textContent = '§' + sec;
+    document.getElementById('d-title').textContent = info.t;
+    let h = '<div class="dsec">⚡ pasos internos</div><ol>' +
+      info.steps.map(s => `<li>${s}</li>`).join('') + '</ol>';
+    if (info.gas) h += '<div class="dsec">🔧 acciones GAS</div><div class="chips">' +
+      info.gas.map(g => `<span class="kchip">${g}</span>`).join('') + '</div>';
+    if (info.skills) h += '<div class="dsec">⚡ skills que llama</div><div class="chips">' +
+      info.skills.map(s => `<span class="kchip">${s}</span>`).join('') + '</div>';
+    if (info.files) h += '<div class="dsec">📁 archivos / tablas</div><div class="chips">' +
+      info.files.map(f => `<span class="kchip f">${f}</span>`).join('') + '</div>';
+    document.getElementById('d-body').innerHTML = h;
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('backdrop').classList.add('open');
+  }
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('backdrop').classList.remove('open');
+  }
+  document.addEventListener('click', e => {
+    const n = e.target.closest && e.target.closest('.node[data-sec]');
+    if (n) openDrawer(n.getAttribute('data-sec'));
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+  window.addEventListener('load', build);
+  window.addEventListener('resize', build);
+  build();
+</script>
+</body>
+</html>

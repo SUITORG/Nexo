@@ -3,7 +3,7 @@
 > **Para qué sirve:** mapa visual de cómo se invoca cada cosa de esta guía, qué lee, qué crea/actualiza, qué skills llama y qué corre en paralelo. **Se actualiza en cada pasada de `guia-total`** — no se reescribe desde cero.
 > **Leyenda:** `📁 lee archivo` · `⚡ llama skill` · `✍️ crea archivo` · `🔄 actualiza archivo` · `❓ pregunta` · `∥ paralelo`
 > **Regenerar/actualizar:** cualquier pasada de `/guia-total`; si el flujo ejecutado difiere de este mapa, corrige solo ese nodo.
-> **Versión visual:** [`MAPA_VISUAL.md`](MAPA_VISUAL.md) — 3 diagramas Mermaid (ciclo de vida · secuencia de la cadena · dependencias). Se regenera entero cuando cambia la estructura de un nodo.
+> **Versión visual:** [`MAPA_VISUAL.html`](MAPA_VISUAL.html) — **diagrama de flujo HTML autocontenido**: burbujas con iconos y colores, globos (gates), líneas sólidas/curvas/punteadas animadas, chips §X. Abrir en navegador · validar sync con `node scripts/check-map-visual.js`.
 
 ---
 
@@ -14,7 +14,8 @@
     ├── ✍️ GuiaTotal/PENDIENTES.md   [todo lo que quedó abierto; filas nunca se borran → se tachan con fecha]
     ├── 🔄 GuiaTotal/MAPA.md         [solo si el flujo ejecutó DIFIERE del mapa (gatillo/skill/ramal nuevo)
     │                                 → corrige solo ese nodo; jamás reescribe el mapa completo]
-    ├── 📊 GuiaTotal/MAPA_VISUAL.md  [solo si cambió estructura/flujo de un nodo → actualiza su caja o secuencia]
+    ├── 📊 GuiaTotal/MAPA_VISUAL.html  [si cambió la sección §X → actualiza su burbuja (chip §X / data-sec)
+    │                                    → corre node scripts/check-map-visual.js — debe dar OK]
     └── 📋 ≤3 líneas de cierre: qué se hizo · dónde quedó · próximo paso
 ```
 
@@ -125,6 +126,9 @@
 
 ```text
 └── ⚡ empresa-mascara <ID>
+    ├── 🌐 UI local: mascara.html → http://localhost:3001/mascara.html (server estático)
+    │        form A+B(lectura)+C(switches)+D · Guardar=updateRow · Sync=espejo ·
+    │        "Copiar orden" → pega la orden en el chat (incluye tus switches)
     ├── F0 📄 GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
     │        → crea/lee GuiaTotal/registro/<id>/MASCARA.yaml
     │        bloques: A obligatorios · B generados · C switches · D toggles
@@ -144,6 +148,23 @@
 ```
 
 **Ejemplo vivo:** `GuiaTotal/registro/hmp/MASCARA.yaml` — bloques A/B/D con datos reales; C: `clusters`/`paginas` = skip (hechos), `brief`/`activos` = preguntar (pendientes).
+
+## ═══ 1.9. MANUAL DE OPERACIÓN (suitorg-operacion) ═══
+
+**Triggers:** "manual de operación", "manual operacion suitorg", "cómo configuro empresas", "como se configuran las empresas", "operar empresas"
+**Archivo:** `GuiaTotal/MANUAL_OPERACION.md` (solo Config_Empresas — sin subproyectos)
+
+```text
+└── 📖 lee/actualiza GuiaTotal/MANUAL_OPERACION.md
+    ├── 10 secciones: datos (maestro/espejo) · ciclo de vida · 3 formas de editar ·
+    │   campos 57 por bloques (tipo_negocio = "giro,flag" → parte1 = taxonomía) ·
+    │   Taxonomía y Brief · cadena con switches · modificación clave/no clave ·
+    │   accesos RBAC · problemas conocidos · checklist alta
+    ├── ⚖️ regla clave (§5 del manual): brief → segmentos 1 `industria` y 2 `nicho`
+    │   con VALOR REAL → jamás se borran · vacíos/[PENDIENTE] → rellena con taxonomía
+    │   detectada (Analista/docs-TAXONOMIA → fallback tipo_negocio.split(',')[0] al catálogo)
+    └── 🔄 refresco: con cada pasada de guia-total/ciclo que toque configuración (§6)
+```
 
 ## ═══ 2. TAXONOMÍA ═══
 
@@ -189,6 +210,7 @@
 ## ═══ 5. MANUALES ═══
 
 **Triggers:** "crea los manuales", "manual del cliente", "manual del proveedor", "manual técnico", "manual de pruebas", "actualiza manuales", `/guia-total manuales [ruta]`
+**Nota:** el **manual de operación de SuitOrg** (solo Config_Empresas) no es de proyecto — vive en §1.9 → `GuiaTotal/MANUAL_OPERACION.md`.
 
 ```text
 └── ⚡ guia-total manuales [ruta]
@@ -205,11 +227,15 @@
 
 ## ═══ 6. MANTENIMIENTO ═══
 
-**Triggers:** "mejoras", "mantenimiento", "arregla", "refactorizar", "optimizar", "limpiar código" (→ ciclo directo, ya mapeado en routing.yaml)
+**Triggers:** "mejoras", "mantenimiento", "arregla", "refactorizar", "optimizar", "limpiar código", "brief incompleto", "taxonomía del brief" (→ ciclo directo, ya mapeado en routing.yaml)
 
 ```text
 └── ⚡ ciclo (F1-F7)
     ├── 🔄 CONTRATO.md / VALIDACION.md / CORRECCIONES.md
+    ├── ⚖️ brief de empresas: si seg1 `industria` / seg2 `nicho` están vacíos o [PENDIENTE]
+    │      → poblar desde taxonomía (Analista/docs-TAXONOMIA → fallback tipo_negocio.split(',')[0]
+    │        al catálogo) · con VALOR REAL → jamás sobreescribir  [MANUAL_OPERACION §5]
+    ├── 📖 si cambió configuración de empresas → refrescar GuiaTotal/MANUAL_OPERACION.md
     └── si hay MANUAL_*.md + cambios UI/backend → ⚡ guia-total manuales  [refresco sugerido]
 ```
 
@@ -340,4 +366,4 @@
 
 ---
 
-*Última actualización del mapa: 2026-09-29 (§11 Fichas operativas = nivel 4 de la cadena §1.5-1.8 + versión visual `MAPA_VISUAL.md` con3 diagramas Mermaid; §1.8 empresa-mascara; léxico-usuario automático; piloto HMP; PKs de espejo; instancias en `docs/`).*
+*Última actualización del mapa: 2026-09-29 (§1.9 Manual de operación `MANUAL_OPERACION.md` — Config_Empresas + regla taxonomía→brief seg1-2 + check en §6; §11 fichas; `MAPA_VISUAL.html` + `check-map-visual.js`; §1.8 empresa-mascara; léxico-usuario; piloto HMP; PKs de espejo).*
