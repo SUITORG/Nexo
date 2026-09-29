@@ -1,15 +1,18 @@
 skill:
   name: lapvtfu
   display_name: "LAPVTFU - Manifiesto de Activos (7 slots)"
-  version: 1.0.0
+  version: 1.1.0
   type: domain
   domain: marketing
   description: >
     Gestiona el segmento LAPVTFU (posición 10 del vector Brief en Config_Empresas.logo_url):
-    manifiesto POSICIONAL de 7 slots de assets en Drive. Verifica/asegura/escribe slots de
-    forma idempotente vía GAS (ensureLogoUrl, ensureAvatarUrl, _setLapvtfuSlot_), sin
-    compactar jamás posiciones vacías. Frontera de escritura: escribe SOLO el segmento
-    LAPVTFU preservando los 20 segmentos de contenido byte a byte (SUBCONTRATO-ACTIVOS.md).
+    manifiesto POSICIONAL de 7 slots de assets en Drive. Estándar 2026-09-29: archivos
+    PLANOS en la raíz de cte<id>/ con nombre <base>NN.<ext> (logo01, avatar01, fotoprs01,
+    videos01, testimonios01, fotos01, contenido01; NN=01 y 02+ solo V·T·F; multi con
+    separador ';') y share ANYONE. Verifica/asegura/escribe slots de forma idempotente
+    vía GAS (ensureLogoUrl, ensureAvatarUrl, shareCteFile, setLapvtfuSlot) sin compactar
+    jamás posiciones vacías. Frontera de escritura: preserva los 20 segmentos de contenido
+    byte a byte (SUBCONTRATO-ACTIVOS.md). Legado (logo.png, _activos/) = solo lectura.
   dependencies:
     - javascript
     - gas
@@ -21,7 +24,12 @@ skill:
     - "ensure logo"
     - "ensure avatar"
     - "fotopersonal"
+    - "fotoprs01"
     - "avatar.png"
+    - "logo01"
+    - "contenido01"
+    - "shareCteFile"
+    - "setLapvtfuSlot"
     - "7 slots"
     - file_pattern: "backend/core.js"
     - file_pattern: "backend/brief-sidebar.js"
@@ -50,7 +58,7 @@ skill:
       description: "Share ANYONE en Drive antes de publicar URL (patrón _finalizeAvatar_) — antes del 180000 ms del flujo completo"
       severity: error
     - id: lf-006
-      description: "Raíz de escritura: raíz dinámica DRIVE_ROOT_ID (ADR-028) o My Drive — _activos/ solo fallback de LECTURA"
+      description: "Raíz de escritura: RAÍZ de cte<id>/ con nombre estándar <base>NN.<ext> (ADR-028 + estándar 2026-09-29) — _activos/ y _brief/ solo fallback de LECTURA (sin migrar)"
       severity: error
     - id: lf-007
       description: "[PENDIENTE - Activo] es convención de DISPLAY (parseBriefLocal) — en storage las posiciones vacías son ''"
@@ -58,17 +66,23 @@ skill:
     - id: lf-008
       description: "Timeouts GAS de 180 s en los 5 calls del flujo avatar (gotcha verificado en vivo)"
       severity: warning
+    - id: lf-009
+      description: "Estándar de nombres (2026-09-29): <base>NN.<ext> plano en cte<id>/ (logo01, avatar01, fotoprs01, videos01, testimonios01, fotos01, contenido01) — extensión natural; NN=01 y 02+ SOLO V·T·F; multi con separador ';' dentro del slot; nunca crear _brief/_activos nuevos"
+      severity: error
+    - id: lf-010
+      description: "V·T·F y contenido: subida MANUAL del usuario a la raíz → agente comparte con shareCteFile (ANYONE antes de publicar) y escribe slot con setLapvtfuSlot (wrapper del escritor único) — jamás inventar URLs"
+      severity: error
   slots:
     - { num: 1, name: "logo",        flow: "ensureLogoUrl",  estado: "operativo" }
     - { num: 2, name: "avatar",      flow: "ensureAvatarUrl", estado: "operativo" }
-    - { num: 3, name: "fotopersonal", flow: "lectura/validacion", estado: "parcial" }
-    - { num: 4, name: "videos",      flow: "ninguno",         estado: "[PENDIENTE - sin flujo]" }
-    - { num: 5, name: "testimonios", flow: "ninguno",         estado: "[PENDIENTE - sin flujo]" }
-    - { num: 6, name: "fotos",       flow: "ninguno",         estado: "[PENDIENTE - sin flujo] (hasta 5 sub-fotos, separador sin decidir)" }
-    - { num: 7, name: "ugc",         flow: "ninguno",         estado: "[PENDIENTE - sin flujo]" }
+    - { num: 3, name: "fotoprs",     flow: "subida manual + lectura gate avatar", estado: "parcial" }
+    - { num: 4, name: "videos",      flow: "manual + shareCteFile/setLapvtfuSlot", estado: "manual (multi: videos01, videos02…)" }
+    - { num: 5, name: "testimonios", flow: "manual + shareCteFile/setLapvtfuSlot", estado: "manual (multi: testimonios01, testimonios02…)" }
+    - { num: 6, name: "fotos",       flow: "manual + shareCteFile/setLapvtfuSlot", estado: "manual (multi: fotos01, fotos02…; separador interno ';')" }
+    - { num: 7, name: "contenido",   flow: "manual + shareCteFile/setLapvtfuSlot", estado: "manual (contenido01 — antes ugc)" }
   process:
     - "1. Leer el vector y localizar el segmento LAPVTFU (posición 10) — parseBrief"
-    - "2. Por cada slot con flujo: invocar ensure vía POST /api/brief/ensure-* (Node) o botón sidebar"
+    - "2. Slots 1-2: invocar ensure vía POST /api/brief/ensure-* (Node) o botón sidebar"
     - "3. Resolver estados: existing → fin | no_foto → skip | needs_generate → generar + _finalize"
     - "4. Escribir resultado con _setLapvtfuSlot_ (solo esa posición, preserva el resto)"
-    - "5. Slots sin flujo (4-7): dejar '' y reportar [PENDIENTE - sin flujo] — no inventar"
+    - "5. Slots 3-7 (subida manual del usuario): verificar archivo <base>NN.* en raíz cte<id> → shareCteFile → setLapvtfuSlot con la URL · multi V·T·F une links con ';' · si falta archivo → reportar [PENDIENTE], no inventar"

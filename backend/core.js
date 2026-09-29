@@ -433,6 +433,14 @@ function handlePostAction(data, result) {
         var ensureAvatarResult = ensureAvatarUrl(data.id_empresa, data.opts || {});
         for (var eavrKey in ensureAvatarResult) output[eavrKey] = ensureAvatarResult[eavrKey];
         break;
+      case "shareCteFile":
+        var shareRes = shareCteFile_(data.id_empresa, data.fileName);
+        for (var shrKey in shareRes) output[shrKey] = shareRes[shrKey];
+        break;
+      case "setLapvtfuSlot":
+        var slotRes = setLapvtfuSlot_(data.id_empresa, data.slot, data.url);
+        for (var slrKey in slotRes) output[slrKey] = slotRes[slrKey];
+        break;
       case "updateBriefVector":
         var vectorResult = updateBriefVector(data.id_empresa, data.vector);
         output.success = vectorResult.success;
@@ -729,27 +737,23 @@ function saveBriefMetadata(idEmpresa, vector, confianza) {
 }
 
 // ── FOLDER CREATOR — Crear estructura cte<id>/ si no existe ──────────────
-// Crea la estructura completa de carpetas para un cliente:
+// Estándar LAPVTFU (2026-09-29): activos PLANOS en la raíz de cte<id>/ con
+// nombre <base>NN.<ext> (NN = 01; V/T/F admiten 02,03,…) y share ANYONE.
 //   cte<id>/
-//   ├── _brief/
-//   │   ├── historial/     ← respaldos de vectors
-//   │   ├── brief.json
-//   │   └── confianza.json
-//   ├── logo.png         ← slot 1 LAPVTFU (directo en cte<id>, ADR-028)
-//   ├── favicon.png      ← espejo de logo.png (se crea/sincroniza en ensureLogoUrl)
-//   ├── _activos/
-//   │   ├── avatar/
-//   │   ├── fotos-personales/
-//   │   ├── videos/
-//   │   ├── testimonios/
-//   │   ├── fotos/
-//   │   └── ugc/
+//   ├── logo01.png        ← slot 1 (legado: logo.png — lectura dual, sin migrar)
+//   ├── favicon.png       ← espejo del logo (se crea si falta)
+//   ├── avatar01.png      ← slot 2 (legado: avatar.png)
+//   ├── fotoprs01.*       ← slot 3 (legado: fotopersonal.*)
+//   ├── videos01/02… · testimonios01/… · fotos01/…   ← slots 4-6 (V/T/F multi)
+//   ├── contenido01.*     ← slot 7 (antes ugc)
+//   ├── fotoagente.jpg · imagenurl-*.jpg  ← no-LAPVTFU, ya en raíz
 //   └── _share/
+//   legacy SIN migrar (solo fallback de lectura): _brief/, _activos/
 //
 // Idempotente: si ya existe, no duplica.
 
 /**
- * Crea la estructura de carpetas cte<id>/ en Drive.
+ * Crea la estructura base cte<id>/ en Drive (raíz + _share).
  * @param {string} idEmpresa - ID de la empresa
  * @returns {object} { success, folders: string[] }
  */
@@ -763,30 +767,6 @@ function ensureCteFolders(idEmpresa) {
     if (!cteFolder) cteFolder = rootFolder.createFolder(cteFolderName);
 
     var created = [];
-
-    // _brief/
-    var briefFolders = cteFolder.getFoldersByName("_brief");
-    var briefFolder = briefFolders.hasNext() ? briefFolders.next() : cteFolder.createFolder("_brief");
-    if (!briefFolders.hasNext()) created.push("_brief");
-
-    // _brief/historial/
-    var histFolders = briefFolder.getFoldersByName("historial");
-    if (!histFolders.hasNext()) { briefFolder.createFolder("historial"); created.push("_brief/historial"); }
-
-    // _activos/ + subcarpetas LAPVTFU
-    var activosFolders = cteFolder.getFoldersByName("_activos");
-    var activosFolder = activosFolders.hasNext() ? activosFolders.next() : cteFolder.createFolder("_activos");
-    if (!activosFolders.hasNext()) created.push("_activos");
-
-    var lapvtfuSubfolders = ["avatar", "fotos-personales", "videos", "testimonios", "fotos", "ugc"];
-    for (var i = 0; i < lapvtfuSubfolders.length; i++) {
-      var subName = lapvtfuSubfolders[i];
-      var subFolders = activosFolder.getFoldersByName(subName);
-      if (!subFolders.hasNext()) {
-        activosFolder.createFolder(subName);
-        created.push("_activos/" + subName);
-      }
-    }
 
     // _share/
     var shareFolders = cteFolder.getFoldersByName("_share");
@@ -803,6 +783,47 @@ function ensureCteFolders(idEmpresa) {
   } catch (e) {
     return { success: false, error: e.message };
   }
+}
+
+// ── ESTÁNDAR LAPVTFU (2026-09-29) — nombres y resolución dual ───────────
+// <base>NN.<ext> en RAÍZ de cte<id>/ · NN=01 (V/T/F admiten 02,03,…)
+// Lectura dual: si el estándar no existe, se lee el nombre legado (sin migrar).
+var LAPVTFU_BASE = ['logo', 'avatar', 'fotoprs', 'videos', 'testimonios', 'fotos', 'contenido'];
+
+/**
+ * Busca un activo en la RAÍZ de la carpeta: primero estándar <base>NN.<ext>,
+ * después legado <base>.(png|jpg|jpeg|webp). Devuelve File o null.
+ */
+function _findAssetFile_(folder, base) {
+  var it = folder.getFiles();
+  var stdRe = new RegExp('^' + base + '\\d{2}\\.', 'i');
+  var legRe = new RegExp('^' + base + '\\.(png|jpe?g|webp)$', 'i');
+  var std = null, leg = null;
+  while (it.hasNext()) {
+    var f = it.next(), n = f.getName();
+    if (!std && stdRe.test(n)) std = f;
+    else if (!leg && legRe.test(n)) leg = f;
+    if (std && leg) break;
+  }
+  return std || leg || null;
+}
+
+/**
+ * Siguiente nombre estándar: base01.<ext> si no existe (overwrite del 01);
+ * si existe y multi=true → base02, base03…; si existe y multi=false → base01
+ * (el llamador sobreescribe). V/T/F = multi (videos, testimonios, fotos).
+ */
+function _nextAssetName_(folder, base, ext, multi) {
+  if (!multi) return base + '01.' + ext;
+  var it = folder.getFiles();
+  var re = new RegExp('^' + base + '(\\d{2})\\.', 'i');
+  var maxN = 0;
+  while (it.hasNext()) {
+    var m = it.getName().match(re);
+    if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
+  }
+  var next = (maxN || 0) + 1;
+  return base + (next < 10 ? '0' + next : next) + '.' + ext;
 }
 
 // Sube una imagen a cte<id>[/subcarpeta] con nombre fijo (overwrite) y share ANYONE.
@@ -896,55 +917,36 @@ function generateAsset(idEmpresa, tipo, opts) {
       return ensureAvatarUrl(idEmpresa, {});
     }
 
-    var activosFolders = cteFolder.getFoldersByName("_activos");
-    if (!activosFolders.hasNext()) {
-      return { success: false, error: "Carpeta _activos no existe" };
+    // Estándar LAPVTFU (2026-09-29): subir a RAÍZ de cte<id>/ como <base>NN.<ext>
+    // con share ANYONE (lf-005). NN=01 (overwrite) · V/T/F admiten 02,03,…
+    // _activos/ ya no se usa para escritura (solo fallback de lectura).
+    if (tipo === "ugc") {
+      return { success: false, error: "contenido (ugc): súbelo a mano en la raíz de cte<id> como contenido01.<ext>; luego el agente lo comparte con shareCteFile y escribe el slot con setLapvtfuSlot" };
     }
-    var activosFolder = activosFolders.next();
-    var tipoFolders = activosFolder.getFoldersByName(tipo);
-    if (!tipoFolders.hasNext()) {
-      return { success: false, error: "Carpeta " + tipo + " no existe" };
-    }
-    var tipoFolder = tipoFolders.next();
+    var base = (tipo === "fotos-personales") ? "fotoprs" : tipo;
+    var multi = (tipo === "videos" || tipo === "testimonios" || tipo === "fotos");
+    var fileName, file;
 
-    // Nombre del archivo
-    var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-    var fileName = tipo + "_" + idEmpresa + "_" + timestamp;
-
-    // ── Generar según tipo ───────────────────────────────────────────────
     if (tipo === "fotos-personales" || tipo === "fotos") {
-      // Fotos: descargar de URL (Pexels/Unsplash)
-      if (opts.imageUrl) {
-        var blob = UrlFetchApp.fetch(opts.imageUrl).getBlob();
-        fileName += '.jpg';
-        tipoFolder.createFile(blob.setName(fileName));
-        return { success: true, fileName: fileName, fileUrl: tipoFolder.getUrl(), tipo: tipo };
-      }
-      return { success: false, error: "Se requiere imageUrl para fotos" };
-
+      if (!opts.imageUrl) return { success: false, error: "Se requiere imageUrl para fotos" };
+      var fBlob = UrlFetchApp.fetch(opts.imageUrl).getBlob();
+      var fExt = ((fBlob.getContentType() || "").indexOf("png") > -1) ? "png" : "jpg";
+      fileName = _nextAssetName_(cteFolder, base, fExt, multi);
+      file = cteFolder.createFile(fBlob.setName(fileName));
     } else if (tipo === "videos") {
-      // Videos: descargar de URL (Pexels video)
-      if (opts.videoUrl) {
-        var blob = UrlFetchApp.fetch(opts.videoUrl).getBlob();
-        fileName += '.mp4';
-        tipoFolder.createFile(blob.setName(fileName));
-        return { success: true, fileName: fileName, fileUrl: tipoFolder.getUrl(), tipo: tipo };
-      }
-      return { success: false, error: "Se requiere videoUrl para videos" };
-
+      if (!opts.videoUrl) return { success: false, error: "Se requiere videoUrl para videos" };
+      var vBlob = UrlFetchApp.fetch(opts.videoUrl).getBlob();
+      fileName = _nextAssetName_(cteFolder, base, "mp4", true);
+      file = cteFolder.createFile(vBlob.setName(fileName));
     } else if (tipo === "testimonios") {
-      // Testimonios: guardar como archivo de texto
       var texto = opts.texto || "Testimonio pendiente de agregar";
-      fileName += '.txt';
-      tipoFolder.createFile(fileName, texto, MimeType.PLAIN_TEXT);
-      return { success: true, fileName: fileName, fileUrl: tipoFolder.getUrl(), tipo: tipo, texto: texto };
-
-    } else if (tipo === "ugc") {
-      // UGC: placeholder — requiere contenido real del usuario
-      return { success: false, error: "UGC requiere contenido real del usuario. Sube el archivo manualmente a la carpeta." };
+      fileName = _nextAssetName_(cteFolder, base, "txt", true);
+      file = cteFolder.createFile(fileName, texto, MimeType.PLAIN_TEXT);
+    } else {
+      return { success: false, error: "Tipo no implementado: " + tipo };
     }
-
-    return { success: false, error: "Tipo no implementado: " + tipo };
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return { success: true, fileName: fileName, fileUrl: "https://drive.google.com/uc?export=view&id=" + file.getId(), tipo: tipo };
   } catch (e) {
     return { success: false, error: "ASSET_ERROR: " + e.message };
   }
@@ -978,9 +980,8 @@ function ensureLogoUrl(idEmpresa, opts) {
       return _finalizeLogo_(cteFolder, idEmpresa, 'processed');
     }
 
-    // 2) logo.png ya existe → compartir + write-back
-    var existingPng = cteFolder.getFilesByName('logo.png');
-    if (existingPng.hasNext()) {
+    // 2) logo01.* (estándar) o logo.png (legado) ya existe → compartir + write-back
+    if (_findAssetFile_(cteFolder, 'logo')) {
       return _finalizeLogo_(cteFolder, idEmpresa, 'existing');
     }
 
@@ -1019,9 +1020,8 @@ function ensureLogoUrl(idEmpresa, opts) {
 }
 
 function _finalizeLogo_(cteFolder, idEmpresa, source) {
-  var files = cteFolder.getFilesByName('logo.png');
-  if (!files.hasNext()) return { success: false, error: 'logo.png no encontrado tras crear' };
-  var logoFile = files.next();
+  var logoFile = _findAssetFile_(cteFolder, 'logo');
+  if (!logoFile) return { success: false, error: 'logo01.* (o logo.png legado) no encontrado tras crear' };
   logoFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   var url = 'https://drive.google.com/uc?export=view&id=' + logoFile.getId();
 
@@ -1042,7 +1042,7 @@ function _finalizeLogo_(cteFolder, idEmpresa, source) {
     status: 'ready',
     url: url,
     fileId: logoFile.getId(),
-    fileName: 'logo.png',
+    fileName: logoFile.getName(),
     source: source,
     vectorUpdated: vectorUpdated,
     faviconUrl: fav ? fav.url : '',
@@ -1099,42 +1099,40 @@ function ensureAvatarUrl(idEmpresa, opts) {
     var cteFolder = findCteFolder_(rootFolder, idEmpresa);
     if (!cteFolder) return { success: false, error: "cte" + idEmpresa + " no existe" };
 
-    // 1) opts.base64 → escribir avatar.png (caricatura desde Gemini)
+    // 1) opts.base64 → escribir avatar01.png (caricatura desde Gemini)
     if (opts.base64) {
       var bytes = Utilities.base64Decode(opts.base64);
-      _writeAvatarPng_(cteFolder, Utilities.newBlob(bytes, 'image/png', 'avatar.png'));
+      _writeAvatarPng_(cteFolder, Utilities.newBlob(bytes, 'image/png', 'avatar01.png'));
       return _finalizeAvatar_(cteFolder, idEmpresa, 'generated');
     }
 
-    // 2) avatar.png ya existe → compartir + write-back (idempotente)
-    var existingPng = cteFolder.getFilesByName('avatar.png');
-    if (existingPng.hasNext()) {
+    // 2) avatar01.* (estándar) o avatar.png (legado) ya existe → compartir + write-back (idempotente)
+    if (_findAssetFile_(cteFolder, 'avatar')) {
       return _finalizeAvatar_(cteFolder, idEmpresa, 'existing');
     }
 
-    // 3) fotopersonal.png en raíz de cte<id> → pedir generación (Node+Gemini)
-    var fotos = _listFilesInfo_(cteFolder.getFiles(), /^fotopersonal\.(png|jpe?g|webp)$/i);
-    if (!fotos.length) {
+    // 3) fotoprs01.* (estándar) o fotopersonal.* (legado) en raíz → pedir generación (Node+Gemini)
+    var fotoStd = _findAssetFile_(cteFolder, 'fotoprs');
+    if (!fotoStd) {
       return {
         success: true,
         status: 'no_foto',
-        reason: 'fotopersonal.png no existe en cte' + idEmpresa + ' — súbela a la raíz de la carpeta (la sube el usuario, nunca se genera)'
+        reason: 'fotoprs01.* (o fotopersonal.* legado) no existe en cte' + idEmpresa + ' — súbelo a la raíz de la carpeta (la sube el usuario, nunca se genera)'
       };
     }
-    var foto = fotos[0];
-    var ext = (foto.name.match(/\.(png|jpe?g|webp)$/i) || [])[1] || 'png';
+    var fname = fotoStd.getName();
+    var ext = (fname.match(/\.(png|jpe?g|webp)$/i) || [])[1] || 'png';
     var mime = /jpe?g/i.test(ext) ? 'image/jpeg' : (/webp/i.test(ext) ? 'image/webp' : 'image/png');
-    var fotoBase64 = Utilities.base64Encode(DriveApp.getFileById(foto.id).getBlob().getBytes());
-    return { success: true, status: 'needs_generate', foto: foto, base64: fotoBase64, mime: mime };
+    var fotoBase64 = Utilities.base64Encode(fotoStd.getBlob().getBytes());
+    return { success: true, status: 'needs_generate', foto: { id: fotoStd.getId(), name: fname }, base64: fotoBase64, mime: mime };
   } catch (e) {
     return { success: false, error: 'ENSURE_AVATAR_ERROR: ' + e.message };
   }
 }
 
 function _finalizeAvatar_(cteFolder, idEmpresa, source) {
-  var files = cteFolder.getFilesByName('avatar.png');
-  if (!files.hasNext()) return { success: false, error: 'avatar.png no encontrado tras crear' };
-  var avatarFile = files.next();
+  var avatarFile = _findAssetFile_(cteFolder, 'avatar');
+  if (!avatarFile) return { success: false, error: 'avatar01.* (o avatar.png legado) no encontrado tras crear' };
   avatarFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   var url = 'https://drive.google.com/uc?export=view&id=' + avatarFile.getId();
 
@@ -1151,17 +1149,18 @@ function _finalizeAvatar_(cteFolder, idEmpresa, source) {
     status: 'ready',
     url: url,
     fileId: avatarFile.getId(),
-    fileName: 'avatar.png',
+    fileName: avatarFile.getName(),
     source: source,
     vectorUpdated: vectorUpdated
   };
 }
 
-/** Sobrescribe SOLO avatar.png en la raíz de cte<id>. */
+/** Sobrescribe SOLO avatar01.png en la raíz de cte<id> (legado avatar.png intacto). */
 function _writeAvatarPng_(folder, blob) {
-  var existing = folder.getFilesByName('avatar.png');
-  while (existing.hasNext()) existing.next().setTrashed(true); // solo avatar.png
-  return folder.createFile(blob.setName('avatar.png'));
+  var it = folder.getFiles();
+  var re = /^avatar\d{2}\./i;
+  while (it.hasNext()) { var f = it.next(); if (re.test(f.getName())) f.setTrashed(true); }
+  return folder.createFile(blob.setName('avatar01.png'));
 }
 
 /**
@@ -1214,9 +1213,11 @@ function _setLapvtfuSlot_(vector, idx, url) {
 }
 
 function _writeLogoPng_(folder, blob) {
-  var existing = folder.getFilesByName('logo.png');
-  while (existing.hasNext()) existing.next().setTrashed(true); // solo logo.png; basura vieja se queda
-  return folder.createFile(blob.setName('logo.png'));
+  // estándar: escribe logo01.png (solo pisa logoNN.*; el legado logo.png queda intacto)
+  var it = folder.getFiles();
+  var re = /^logo\d{2}\./i;
+  while (it.hasNext()) { var f = it.next(); if (re.test(f.getName())) f.setTrashed(true); }
+  return folder.createFile(blob.setName('logo01.png'));
 }
 
 function _inicialesDe_(nombre) {
@@ -1327,6 +1328,60 @@ function generateAllAssets(idEmpresa, activos) {
  * @param {string} idEmpresa - ID de la empresa
  * @returns {object} { success, assets: { logo: url, avatar: url, ... } }
  */
+/**
+ * Comparte un archivo de la RAÍZ de cte<id>/ como anyone-with-link (lf-005).
+ * Uso: el usuario sube V/T/F a mano; el agente llama shareCteFile para publicar
+ * el enlace antes de meterlo en el manifiesto.
+ * @param {string} idEmpresa
+ * @param {string} fileName - nombre EXACTO del archivo en la raíz (p.ej. videos01.mp4)
+ * @returns { object } { success, fileName?, fileId?, fileUrl?, error? }
+ */
+function shareCteFile_(idEmpresa, fileName) {
+  try {
+    if (!idEmpresa || !fileName) return { success: false, error: "FALTAN id_empresa|fileName" };
+    var rootFolder = getRootFolder_();
+    var cteFolder = findCteFolder_(rootFolder, idEmpresa);
+    if (!cteFolder) return { success: false, error: "cte" + idEmpresa + " no existe — ejecuta ensureCteFolders" };
+    var it = cteFolder.getFilesByName(String(fileName));
+    if (!it.hasNext()) return { success: false, error: "No existe '" + fileName + "' en la raíz de cte" + idEmpresa };
+    var f = it.next();
+    f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return {
+      success: true,
+      fileName: f.getName(),
+      fileId: f.getId(),
+      fileUrl: "https://drive.google.com/uc?export=view&id=" + f.getId(),
+      shared: true
+    };
+  } catch (e) {
+    return { success: false, error: "SHARE_ERROR: " + e.message };
+  }
+}
+
+/**
+ * Escribe UN slot (1-7) del manifiesto LAPVTFU del vector Brief.
+ * Reutiliza el escritor único _setLapvtfuSlot_ (lf-002): preserva los 20
+ * segmentos de contenido byte a byte y las otras 6 posiciones.
+ * Slots 1-2 prefieren ensureLogoUrl/ensureAvatarUrl; esta acción es para 3-7
+ * y para links manuales (V/T/F).
+ * @returns { object } { success, slot?, url?, vectorUpdated?, unchanged?, error? }
+ */
+function setLapvtfuSlot_(idEmpresa, slot, url) {
+  try {
+    var n = parseInt(slot, 10);
+    if (!(n >= 1 && n <= 7)) return { success: false, error: "slot debe ser 1..7" };
+    if (!url) return { success: false, error: "FALTA url" };
+    var current = _getLogoUrlVector_(idEmpresa);
+    var next = _setLapvtfuSlot_(current, n - 1, String(url));
+    if (next === current) return { success: true, slot: n, url: url, unchanged: true };
+    var wr = updateBriefVector(idEmpresa, next);
+    if (!wr || !wr.success) return { success: false, error: (wr && wr.error) || "updateBriefVector falló" };
+    return { success: true, slot: n, url: url, vectorUpdated: true };
+  } catch (e) {
+    return { success: false, error: "SLOT_ERROR: " + e.message };
+  }
+}
+
 function getBriefAssets(idEmpresa) {
   try {
     var rootFolder = getRootFolder_();
@@ -1336,11 +1391,15 @@ function getBriefAssets(idEmpresa) {
     var assets = {};
     var tipos = ["logo", "avatar", "fotos-personales", "videos", "testimonios", "fotos", "ugc"];
 
-    // ADR-028: logo desde raíz de cte<id> — preferir match exacto logo.png (G4);
-    // si no, cualquier archivo con "logo" en el nombre; fallback _activos/logo/
-    var logoFiles = _listFilesInfo_(cteFolder.getFiles(), /logo/i);
-    var exactPng = logoFiles.filter(function(f) { return f.name === 'logo.png'; });
-    assets["logo"] = exactPng.length ? exactPng : logoFiles;
+    // ADR-028 → estándar 2026-09-29: logo01.* primero · legado logo.png ·
+    // candidatos con "logo" · fallback _activos/logo/
+    var logoFiles = _listFilesInfo_(cteFolder.getFiles(), /^logo\d{2}\./i);
+    if (!logoFiles.length) {
+      var logoAll = _listFilesInfo_(cteFolder.getFiles(), /logo/i);
+      var exactPng = logoAll.filter(function(f) { return f.name === 'logo.png'; });
+      logoFiles = exactPng.length ? exactPng : logoAll;
+    }
+    assets["logo"] = logoFiles;
     if (!assets["logo"].length) {
       var actFolders = cteFolder.getFoldersByName("_activos");
       if (actFolders.hasNext()) {
@@ -1349,8 +1408,9 @@ function getBriefAssets(idEmpresa) {
       }
     }
 
-    // ADR-028: avatar.png también vive en raíz de cte<id>; fallback _activos/avatar/
-    var avatarFiles = _listFilesInfo_(cteFolder.getFiles(), /^avatar\.png$/i);
+    // estándar avatar01.* · legado avatar.png · fallback _activos/avatar/
+    var avatarFiles = _listFilesInfo_(cteFolder.getFiles(), /^avatar\d{2}\./i);
+    if (!avatarFiles.length) avatarFiles = _listFilesInfo_(cteFolder.getFiles(), /^avatar\.png$/i);
     assets["avatar"] = avatarFiles;
 
     var activosFolders = cteFolder.getFoldersByName("_activos");
@@ -1369,6 +1429,13 @@ function getBriefAssets(idEmpresa) {
         if (!assets["avatar"].length) assets["avatar"] = [];
         continue;
       }
+      // estándar 2026-09-29: buscar <base>NN.* en RAÍZ primero (contenido01, videos01…)
+      var base = (tipo === "fotos-personales") ? "fotoprs" : (tipo === "ugc" ? "contenido" : tipo);
+      var rootStd = _listFilesInfo_(cteFolder.getFiles(), new RegExp("^" + base + "\\d{2}\\.", "i"));
+      if (!rootStd.length && tipo === "fotos-personales") {
+        rootStd = _listFilesInfo_(cteFolder.getFiles(), /^fotopersonal\.(png|jpe?g|webp)$/i);
+      }
+      if (rootStd.length) { assets[tipo] = rootStd; continue; }
       if (!activosFolder) { assets[tipo] = []; continue; }
       var tipoFolders = activosFolder.getFoldersByName(tipo);
       if (!tipoFolders.hasNext()) { assets[tipo] = []; continue; }
