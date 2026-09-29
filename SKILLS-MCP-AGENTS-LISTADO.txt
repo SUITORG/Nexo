@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-09-28
+  Generado: 2026-09-29
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -19,11 +19,13 @@
   data-cleanup              .suit/skills/domain/data-cleanup.yaml
   data-sync                 .suit/skills/domain/data-sync.yaml
   design-system             .suit/skills/domain/design-system.yaml
+  empresa-mascara           .suit/skills/domain/empresa-mascara.yaml
   empresa-registro          .suit/skills/domain/empresa-registro.yaml
   geo-exif                  .suit/skills/domain/geo-exif.yaml
   hybrid-db                 .suit/skills/domain/hybrid-db.yaml
   lapvtfu                   .suit/skills/domain/lapvtfu.yaml
   multi-tenant              .suit/skills/domain/multi-tenant.yaml
+  paginas-seo               .suit/skills/domain/paginas-seo.yaml
   panoramic-ocr             .suit/skills/domain/panoramic-ocr.yaml
   report-pdf                .suit/skills/domain/report-pdf.yaml
   vision-yolo               .suit/skills/domain/vision-yolo.yaml
@@ -70,7 +72,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 37 skills
+  TOTAL SUITOS: 39 skills
 
 
 ========================================================================
@@ -114,6 +116,9 @@
   embedded-captions         .claude/skills/embedded-captions
                             -> .agents\skills\embedded-captions
                             Add captions or subtitles to an existing single-subject talking-head video without editing the footage. Use for plain verbatim captions, cinematic cap
+  empresa-mascara           .claude/skills/empresa-mascara
+                            -> .agents\skills\empresa-mascara
+                            Máscara de Config_Empresas: formulario de SOLO campos obligatorios (identidad, giro, cobertura, contacto) que escribe la fila en Google Sheets, sincro
   empresa-registro          .claude/skills/empresa-registro
                             -> .agents\skills\empresa-registro
                             Registro semiautomatico de empresas (tenants) en Config_Empresas: dada una fila con id_empresa en Google Sheets, investiga el giro, crea la estructura
@@ -199,7 +204,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 41 (4 locales + 37 symlinks)
+  TOTAL CLAUDE: 42 (4 locales + 38 symlinks)
 
 
 ========================================================================
@@ -216,6 +221,7 @@
   clusters-seo              .opencode/skills/clusters-seo
   cut-the-curve             .opencode/skills/cut-the-curve
   embedded-captions         .opencode/skills/embedded-captions
+  empresa-mascara           .opencode/skills/empresa-mascara
   empresa-registro          .opencode/skills/empresa-registro
   faceless-explainer        .opencode/skills/faceless-explainer
   figma                     .opencode/skills/figma
@@ -248,7 +254,7 @@
   talking-head-recut        .opencode/skills/talking-head-recut
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 41
+  TOTAL OPENCODE: 42
 
 
 ========================================================================
@@ -290,8 +296,10 @@
   auditoria                           Auditoría read-first de un sistema: inventario, C4 en Mermaid, reglas 
   empresa-registro                    Alta semiautomatica de empresas en Config_Empresas (maestro Google She
   clusters-seo                        Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO (
+  paginas-seo                         Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir
+  empresa-mascara                     Formulario de SOLO campos obligatorios de Config_Empresas (identidad, 
 
-  TOTAL REGISTRY: 35 skills declaradas
+  TOTAL REGISTRY: 37 skills declaradas
 
 
 ========================================================================
@@ -374,14 +382,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    37      37         0
-  Skills Claude Code       41        4        37
-  Skills OpenCode           41       41         0
-  Registry YAML           35      35         0
+  Skills SuitOS (.yaml)    39      39         0
+  Skills Claude Code       42        4        38
+  Skills OpenCode           42       42         0
+  Registry YAML           37      37         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   171
+  TOTAL                   177
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

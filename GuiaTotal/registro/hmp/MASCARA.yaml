@@ -1,0 +1,49 @@
+# Máscara HMP — Hamburguesas Metroplex (ejemplo vivo, datos reales de Config_Empresas 2026-09-29)
+# Generada desde GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
+mascara:
+  version: 1
+  plantilla_de: GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
+  id_empresa: "HMP"
+
+  A_datos_tuyos:                     # estado real: 3 pendientes de confirmar (ver flags)
+    nomempresa: "Hamburguesas Metroplex"
+    tipo_negocio: "Alimentos,no_galeria"
+    giro_especifico: ""              # [PENDIENTE] — clusters ya hechos con "hamburguesas"
+    color_tema: ""                   # [PENDIENTE] — sin color en GS
+    direccion: ""                    # [PENDIENTE] — cobertura usada: Monterrey/AMT
+    whatsapp_negocio: ""             # [PENDIENTE] — en GS está telefonowhatsapp=528110463721
+    correoempresarial: "rbtpdrn@gmail.com"
+
+  B_generados:                       # snapshot — ya escrito por la cadena (no reescribir)
+    slogan: "El Metroplex en cada mordida"
+    mensaje1: "Bienvenido a Hamburguesas Metroplex 🍔 Hamburguesas hechas al momento, con carne jugosa y pan fresco. Pídenos por WhatsApp y te la preparamos recién hecha."
+    mensaje2: "Existimos para que cada mordida se sienta como en casa: comida honesta, buen sabor y trato de compañía. Tu antojo es la razón de todo lo que hacemos."
+    descripcion: ""                  # vacío en GS
+    logo_url: ""                     # pendiente (brief la llena)
+    foto_agente: "https://drive.google.com/file/d/19UxpM3SNNzO9oOdo0-nFBf3iTIm6_S5W/view?usp=drivesdk"
+    mision: "En Hamburguesas Metroplex preparamos hamburguesas hechas al momento con ingredientes frescos y sazón de Monterrey, para que cada visita —comer aquí, llevar o pedir a domicilio— sea un antojo resuelto con trato de compañía y sin sorpresas en el precio."
+    vision: "Ser la hamburguesería de barrio de la que más se habla en el Metroplex: la primera opción cuando apetece una buena hamburguesa, reconocida por su sabor constante y por tratar a cada cliente como a un amigo."
+    valores: "1) Sabor constante: la misma calidad el primer y el último día — se demuestra en cada orden. 2) Trato de compañía: te atendemos como a un amigo — se demuestra en la atención cercana. 3) Frescura: carne al momento, ingredientes del día — se cocina bajo pedido. 4) Claridad: precios y porciones sin sorpresas — menú y comprobante dicen lo mismo."
+
+  C_cadena:                          # alto real 2026-09-29:
+    alta: "skip"                     # fila existe
+    empresa_registro: "skip"         # estructura cteHMP + foto + identidad ya hechas
+    clusters: "skip"                 # 5 clústeres escritos y verificados
+    paginas: "skip"                  # 5 páginas escritas y verificadas
+    brief: "preguntar"               # PENDIENTE — logo_url vacío
+    activos: "preguntar"             # PENDIENTE — cteHMP/_activos sin generar
+
+  D_toggles:                         # valores actuales en GS (difieren de semilla)
+    habilitado: true
+    modo: "PROD"
+    db_engine: "GSHEETS"
+    modo_sitio: "NOHYBRID"
+    usa_otp_entrega: true
+    usa_qr_sitio: false
+    usa_features_estandar: false
+    autodepuracion: 30
+    modo_creditos: "DIARIO"
+    creditos_totales: 100
+    is_isolated: false
+    factura: false
+    formulario: false

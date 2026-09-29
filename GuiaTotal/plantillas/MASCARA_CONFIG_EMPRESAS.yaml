@@ -1,0 +1,69 @@
+# Máscara Config_Empresas — plantilla maestra (guia-total / empresa-mascara)
+# -----------------------------------------------------------------------------
+# Cada empresa copia esto a GuiaTotal/registro/<id>/MASCARA.yaml y llena A, C y D.
+# El bloque B NO se llena a mano: lo genera la cadena (empresa-registro → copy →
+# identidad → brief). La skill empresa-mascara escribe en GS SOLO lo de A + D
+# (y B solo si el usuario lo pide explícitamente).
+# Flags de cadena solo viven aquí (0 cambios de columnas en la hoja).
+mascara:
+  version: 1
+  plantilla_de: GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
+  id_empresa: ""                 # OBLIGATORIO — PK de Config_Empresas (mayúsculas)
+
+  # ── A. DATOS TUYOS — obligatorios, imposibles de inventar ──────────────────
+  # El agente los pregunta si faltan (≤3 por turno) antes de escribir.
+  A_datos_tuyos:
+    nomempresa: ""               # nombre comercial
+    tipo_negocio: ""             # p.ej. "Alimentos" / "Alimentos,no_galeria" / "Consultoría"
+    giro_especifico: ""          # p.ej. "hamburguesas a la parrilla" (alimenta clusters geo)
+    color_tema: ""               # "#hex" o vacío = default según giro
+    direccion: ""                # cobertura geográfica (ciudad/zona — la piden los clústeres)
+    whatsapp_negocio: ""         # wa_directo en clústeres (E.164: 5281...)
+    correoempresarial: ""
+
+  # ── B. GENERADOS POR LA CADENA — no escribir a mano ────────────────────────
+  # (snapshot informativo de lo que la cadena escribirá en Config_Empresas)
+  B_generados:
+    slogan: ""
+    mensaje1: ""
+    mensaje2: ""
+    descripcion: ""
+    logo_url: ""
+    foto_agente: ""
+    mision: ""
+    vision: ""
+    valores: ""
+
+  # ── C. SWITCHES DE CADENA — auto | preguntar (default) | skip ──────────────
+  # auto     = lo crea sin preguntar
+  # preguntar= preview de 2-3 líneas + espera [s/n] (default seguro)
+  # skip     = no tocar ese eslabón (ya hecho o no aplica)
+  # Atajo: "máscara auto total <ID>" → todos a "auto".
+  C_cadena:
+    alta: "preguntar"            # appendRows de fila nueva si id_empresa no existe
+    empresa_registro: "preguntar" # estructura Drive + fotoagente + copy + identidad
+    clusters: "preguntar"        # clusters-seo → Config_SEO
+    paginas: "preguntar"         # paginas-seo → Config_Paginas
+    brief: "preguntar"           # brief-engine → logo_url
+    activos: "preguntar"         # lapvtfu → cte<id>/_activos
+
+  # ── D. TOGGLES MÓDULOS — solo descomentar lo que DIFIERA de la semilla ─────
+  # (lo que no se comenta aquí NO se escribe; los vacíos de GS quedan como están)
+  D_toggles:
+    # habilitado: true
+    # modo: "PROD"                  # PROD | TEST (pipe: "PROD,1")
+    # db_engine: "GSHEETS"          # GSHEETS | SUPABASE | NEON
+    # modo_sitio: "NOHYBRID"        # híbrido/estático del sitio
+    # usa_reservaciones: 1
+    # usa_soporte_ia: ""
+    # usa_qr_sitio: false
+    # usa_otp_entrega: false
+    # usa_features_estandar: false
+    # agent_enabled: true
+    # formulario: false
+    # factura: false
+    # stripe_activo: ""
+    # autodepuracion: 60            # días
+    # modo_creditos: "DIARIO"
+    # creditos_totales: 100
+    # is_isolated: false

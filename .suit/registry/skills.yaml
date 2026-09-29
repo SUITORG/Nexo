@@ -396,3 +396,6 @@ skills:
     path: .suit/skills/domain/clusters-seo.yaml
   paginas-seo:
     path: .suit/skills/domain/paginas-seo.yaml
+
+  empresa-mascara:
+    path: .suit/skills/domain/empresa-mascara.yaml

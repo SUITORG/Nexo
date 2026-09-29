@@ -1,0 +1,53 @@
+skill:
+  name: empresa-mascara
+  display_name: "Máscara Config_Empresas"
+  version: 1.0.0
+  type: domain
+  domain: operations
+
+  description: >
+    Formulario de SOLO campos obligatorios de Config_Empresas (identidad, giro,
+    cobertura, contacto) que escribe la fila en Sheets, verifica el espejo y lanza
+    la cadena por switches auto|preguntar|skip (alta → empresa-registro →
+    clusters-seo → paginas-seo → brief → activos) con barra de avance. Flags solo
+    en YAML (sin columnas nuevas). Especificación completa en su SKILL.md.
+
+  source: .agents/skills/empresa-mascara/SKILL.md
+
+  dependencies:
+    - empresa-registro
+    - clusters-seo
+    - paginas-seo
+
+  triggers:
+    - keyword: "máscara"
+    - keyword: "mascara empresa"
+    - keyword: "llenar máscara"
+    - keyword: "form empresa"
+    - keyword: "máscara auto total"
+
+  inputs:
+    - "GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml + registro/<id>/MASCARA.yaml"
+    - "fila actual de Config_Empresas (getAll)"
+
+  outputs:
+    - "fila Config_Empresas actualizada (bloque A + D) en Sheets y espejo"
+    - "cadena ejecutada según switches con barra de avance"
+    - "GuiaTotal/registro/<id>/MASCARA.yaml (creada si no existía)"
+
+  rules:
+    - id: em-001
+      description: "Nunca inventar campos A — faltantes se preguntan (≤3 por turno)"
+      severity: error
+    - id: em-002
+      description: "Sin columnas nuevas en Config_Empresas — switches solo en el YAML"
+      severity: error
+    - id: em-003
+      description: "Nunca DELETE — solo updateRow/appendRows; alta en skip + fila ausente = solo avisar"
+      severity: error
+    - id: em-004
+      description: "Verificar estado tras cualquier 404 del GAS antes de reintentar"
+      severity: warning
+    - id: em-005
+      description: "Espejo verificado tras cada sync"
+      severity: warning

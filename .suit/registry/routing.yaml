@@ -211,6 +211,21 @@ routing:
       priority: 25
 
     - patterns:
+        - "máscara"
+        - "mascara"
+        - "máscara empresa"
+        - "mascara empresa"
+        - "llenar máscara"
+        - "llenar mascara"
+        - "form empresa"
+        - "nueva máscara"
+        - "máscara auto"
+        - "auto total"
+      workflow: empresa-mascara
+      skill: .agents/skills/empresa-mascara/SKILL.md
+      priority: 26
+
+    - patterns:
         - "prospeccion"
         - "prospectos"
         - "oportunidades comerciales"
