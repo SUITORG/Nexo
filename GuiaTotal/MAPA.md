@@ -3,6 +3,7 @@
 > **Para qué sirve:** mapa visual de cómo se invoca cada cosa de esta guía, qué lee, qué crea/actualiza, qué skills llama y qué corre en paralelo. **Se actualiza en cada pasada de `guia-total`** — no se reescribe desde cero.
 > **Leyenda:** `📁 lee archivo` · `⚡ llama skill` · `✍️ crea archivo` · `🔄 actualiza archivo` · `❓ pregunta` · `∥ paralelo`
 > **Regenerar/actualizar:** cualquier pasada de `/guia-total`; si el flujo ejecutado difiere de este mapa, corrige solo ese nodo.
+> **Versión visual:** [`MAPA_VISUAL.md`](MAPA_VISUAL.md) — 3 diagramas Mermaid (ciclo de vida · secuencia de la cadena · dependencias). Se regenera entero cuando cambia la estructura de un nodo.
 
 ---
 
@@ -13,6 +14,7 @@
     ├── ✍️ GuiaTotal/PENDIENTES.md   [todo lo que quedó abierto; filas nunca se borran → se tachan con fecha]
     ├── 🔄 GuiaTotal/MAPA.md         [solo si el flujo ejecutó DIFIERE del mapa (gatillo/skill/ramal nuevo)
     │                                 → corrige solo ese nodo; jamás reescribe el mapa completo]
+    ├── 📊 GuiaTotal/MAPA_VISUAL.md  [solo si cambió estructura/flujo de un nodo → actualiza su caja o secuencia]
     └── 📋 ≤3 líneas de cierre: qué se hizo · dónde quedó · próximo paso
 ```
 
@@ -115,6 +117,33 @@
 ```
 
 **Ejemplo real (piloto):** `HMP` — 2026-09-28:5 clústeres +5 fotos Drive +5 páginas (validación F4 = 5/0/0,310-325 palabras, FAQ×4) · PKs creados en `Config_SEO` y `Config_Paginas` = sync idempotente · ruta preview `index.html?co=HMP#que-hacemos`.
+
+## ═══ 1.8. MÁSCARA EMPRESA (empresa-mascara) ═══
+
+**Skill canónica** · **Entrada de la cadena**: rellena SOLO los campos obligatorios de `Config_Empresas` (sin editar GS a mano) y desde ahí ordena la cadena por switches
+**Triggers:** "máscara", "mascara empresa", "llenar máscara", "form empresa", "nueva máscara", "máscara auto total"
+
+```text
+└── ⚡ empresa-mascara <ID>
+    ├── F0 📄 GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
+    │        → crea/lee GuiaTotal/registro/<id>/MASCARA.yaml
+    │        bloques: A obligatorios · B generados · C switches · D toggles
+    ├── [1/N] ✅ valida A + C — faltantes de A → pregunta (≤3, nunca inventar)
+    │        "auto total <ID>" → todos los switches a auto
+    ├── [2/N] ✍️ escribe Config_Empresas (SOLO A + D) → updateRow | appendRows (alta)
+    ├── [3/N] ⚡ syncToSupabase → 📁 verifica espejo
+    ├── [4..N] ▶ CADENA por switches (cada eslabón con su barra de avance):
+    │        empresa_registro → ⚡ empresa-registro (drive+foto+copy+identidad)
+    │        clusters → ⚡ clusters-seo · paginas → ⚡ paginas-seo
+    │        brief → ⚡ brief-engine · activos → ⚡ lapvtfu
+    │        auto = sin preguntar · preguntar (default) = preview + [s/n] · skip = no toca
+    └── ✔ 100% ▓▓▓▓ → ✍️ tarjeta → ↪ CIERRE DE TODA PASADA
+
+[switches solo en YAML — sin columnas nuevas · nunca DELETE ·
+ alta=skip + fila ausente → solo avisar · barra: [▓▓░░] 30% · paso 2/7 — texto]
+```
+
+**Ejemplo vivo:** `GuiaTotal/registro/hmp/MASCARA.yaml` — bloques A/B/D con datos reales; C: `clusters`/`paginas` = skip (hechos), `brief`/`activos` = preguntar (pendientes).
 
 ## ═══ 2. TAXONOMÍA ═══
 
@@ -242,6 +271,56 @@
 
 ---
 
+## ═══ 11. FICHAS OPERATIVAS (nivel 4 — solo cadena §1.5-1.8) ═══
+
+> Detalle ejecutable por skill: acciones GAS con payload, tablas maestro/espejo + PK, verificación y quirks. Append-only: solo se añade ficha si nace un eslabón.
+
+### Ficha · `empresa-mascara` (§1.8)
+
+| Campo | Valor |
+|---|---|
+| Lee | `plantillas/MASCARA_CONFIG_EMPRESAS.yaml` + `registro/<id>/MASCARA.yaml` + `GET getAll?id_empresa=X` |
+| Acciones GAS | `updateRow {table:"Config_Empresas", matchField:"id_empresa", updates:{A+D}}` · `appendRows {table, rows}` (alta) · `syncToSupabase {id_empresa}` |
+| Despachos | `backend/core.js:388` (appendRows) · `:323` (sync) · `backend/utils.js:346` |
+| Tablas | maestro GS `Config_Empresas` (57 cols) · espejo Supabase `Config_Empresas` (proj. `egyxgnlnzanxpqyuvmsg`) |
+| Verifica | `select count(*) from "Config_Empresas" where id_empresa='X'` = 1 · re-GET getAll |
+| Quirks | 404-transitorio del GAS → verificar antes de reintentar · sin columnas nuevas · nunca DELETE · `SUPABASE_KEY` ausente → fallback MCP + PENDIENTES |
+| Cascada | switches C: `alta → empresa_registro → clusters → paginas → brief → activos` (`auto\|preguntar\|skip`) |
+
+### Ficha · `empresa-registro` (§1.5)
+
+| Campo | Valor |
+|---|---|
+| Acciones GAS | `ensureCteFolders {id_empresa}` idempotente · `generateAsset {tipo:"fotoagente", opts:{imageUrl}}` · `updateRow` (10 campos: foto/slogan/mensajes/misión…drive_folder_id) · `syncToSupabase` |
+| Despachos | `backend/core.js:377` (ensureCteFolders, fn `:756`) · `:401`/fn `:810` (subirImagenCte_) |
+| Drive | `cte<id>/` → `_brief`, `_activos+6`, `_share`; foto en RAÍZ con share ANYONE |
+| Verifica | re-GET getAll + MCP `Config_Empresas` + tarjeta `registro/<id>.yaml` |
+| Cascada | datos clave modificados → ofrece `clusters-seo`; no clave → refresca `wa/hex/mail` por `id_cluster` |
+
+### Ficha · `clusters-seo` (§1.6)
+
+| Campo | Valor |
+|---|---|
+| Acciones GAS | `appendRows {table:"Config_SEO", rows}` · `subirImagenCte {id_empresa, fileName, imageUrl, folder}` · `syncToSupabase` |
+| Despachos | `backend/core.js:388` · `:401` (fn `:810`) |
+| Tablas | maestro GS `Config_SEO` (10 cols) · espejo **PK `(id_empresa, id_cluster)`** = upsert idempotente |
+| Drive | `cte<id>/imagenurl-{id_cluster}.jpg` share ANYONE (fallo → PENDIENTE_IMAGEN) |
+| Verifica | `select count(*) from "Config_SEO" where id_empresa='X'` (≤9) · GET getAll Config_SEO |
+| Reglas | id_cluster kebab descriptivo (nunca SEO-001) · legacy intocado · solo tras aprobación |
+
+### Ficha · `paginas-seo` (§1.7)
+
+| Campo | Valor |
+|---|---|
+| Acciones GAS | `appendRows {table:"Config_Paginas", rows}` · `syncToSupabase` |
+| Despachos | `backend/core.js:388` · `:323` |
+| Tablas | maestro GS `Config_Paginas` (6 cols) · espejo **PK `(id_empresa, id_pagina)`** (creada 2026-09-28, dedupe +4 vacías hecho) |
+| Validación | 3 JSON parsean (`meta_json`, `schema_json`, `contenido_json` plano) · claims regex · 300-500 pal. |
+| Verifica | `select count(*) from "Config_Paginas" where id_empresa='X'` · render `#{id_pagina}` en sitio |
+| Reglas | schema Service en columna Y anidado · keywords como ARRAY · `bloques[]` jamás · sin Markdown en contenido |
+
+---
+
 ## Mapa de dependencias entre skills
 
 | Skill | Llama a | Alimenta a | Paralelo interno |
@@ -250,14 +329,15 @@
 | `empresa-registro` | `guia-total identidad`, `clusters-seo` → `paginas-seo` (cadena), GAS (`ensureCteFolders`/`updateRow`/`syncToSupabase`), `landing-page-copywriter` | tarjeta, `Config_Empresas` (GS), Drive `cte<id>`, espejo Supabase | identidad y copy secuenciales |
 | `clusters-seo` | GAS (`appendRows`/`subirImagenCte`), `syncToSupabase` | ≤9 filas en `Config_SEO` + `imagenurl-*.jpg` en Drive → **alimenta a `paginas-seo`** | fotos ∥ por clúster |
 | `paginas-seo` | GAS (`appendRows`), `syncToSupabase` | filas en `Config_Paginas` (3 JSON) — encadenada a clusters-seo | redacción serial por página |
+| `empresa-mascara` | plantilla YAML + GAS (`updateRow`/`appendRows`/`syncToSupabase`) → cadena | fila `Config_Empresas` (solo A+D) + `registro/<id>/MASCARA.yaml` → **dispara la cadena** | barra de avance por paso |
 | `analista-proy` | — | `panel-juzgador`, `CONTRATO` (F0), tarjeta | 4 pilares ∥ |
 | `panel-juzgador` | — | tarjeta (veredicto) | 4 agentes ∥ → juez serial |
 | `ciclo` | — | `CONTRATO`, `VALIDACION`, `CORRECCIONES` | fases seriales F0→F7 |
 | `brief-engine` | catálogos Supabase | Brief en `logo_url` | sub-agentes A-D ∥ |
 | `auditoria` | `/suit-memory` (ADRs) | `<Proyecto>/docs/00-16` + tarjeta | reuso Fase 0.5 antes de inspeccionar |
 
-**Orden obligatorio:** `analista-proy` → `panel-juzgador` (este consume el primero). **Cadena secuencial con gates**: `empresa-registro` → `clusters-seo` → `paginas-seo` (cada eslabón espera aprobación). `auditoria` es independiente: la llama `guia-total` o el usuario. El resto es independiente.
+**Orden obligatorio:** `analista-proy` → `panel-juzgador` (este consume el primero). **Cadena secuencial con gates**: `empresa-mascara` (entrada por formulario) → `empresa-registro` → `clusters-seo` → `paginas-seo` (cada eslabón espera aprobación salvo switch `auto`). `auditoria` es independiente: la llama `guia-total` o el usuario. El resto es independiente.
 
 ---
 
-*Última actualización del mapa: 2026-09-28 (cadena empresa-registro → clusters-seo → paginas-seo con encadenamiento y modificación en §1.5-1.7; piloto HMP completo; PKs de espejo; triggers de modificación; cierre común; auditoría; taxonomía; instancias en `docs/`).*
+*Última actualización del mapa: 2026-09-29 (§11 Fichas operativas = nivel 4 de la cadena §1.5-1.8 + versión visual `MAPA_VISUAL.md` con3 diagramas Mermaid; §1.8 empresa-mascara; léxico-usuario automático; piloto HMP; PKs de espejo; instancias en `docs/`).*
