@@ -322,9 +322,12 @@ function handlePostAction(data, result) {
         break;
       case "syncToSupabase":
         if (typeof syncToSupabase === 'function') {
-          syncToSupabase(ss, data.id_empresa);
-          output.success = true;
-          output.msg = "SYNC_COMPLETE for " + data.id_empresa;
+          var syncRes = syncToSupabase(ss, data.id_empresa) || { ok: true };
+          output.success = syncRes.ok !== false;
+          output.msg = syncRes.ok !== false
+            ? "SYNC_COMPLETE for " + data.id_empresa
+            : "SYNC_FAILED for " + data.id_empresa;
+          if (syncRes.error) output.error = syncRes.error;
         } else {
           output.error = "syncToSupabase not found";
         }
@@ -381,6 +384,24 @@ function handlePostAction(data, result) {
         } else {
           output.error = folderResult.error;
         }
+        break;
+      case "appendRows":
+        // clusters-seo: alta de filas mapeadas por header (appendRowMapped)
+        if (data.table && Array.isArray(data.rows) && data.rows.length) {
+          try {
+            data.rows.forEach(function(r) { appendRowMapped(ss, data.table, r); });
+            output.success = true;
+            output.msg = "APPENDED " + data.rows.length + " rows to " + data.table;
+          } catch (eApp) { output.success = false; output.error = "APPEND_ERROR: " + eApp.message; }
+        } else {
+          output.success = false;
+          output.error = "MISSING_PARAMS: table, rows[]";
+        }
+        break;
+      case "subirImagenCte":
+        // clusters-seo: imagenurl-{id_cluster}.jpg en cte<id>/[/subcarpeta] con share ANYONE
+        var upRes = subirImagenCte_(data.id_empresa, data.fileName, data.imageUrl, data.folder || "");
+        for (var upKey in upRes) output[upKey] = upRes[upKey];
         break;
       case "generateAsset":
         var assetResult = generateAsset(data.id_empresa, data.tipo, data.opts || {});
@@ -784,6 +805,36 @@ function ensureCteFolders(idEmpresa) {
   }
 }
 
+// Sube una imagen a cte<id>[/subcarpeta] con nombre fijo (overwrite) y share ANYONE.
+// Usado por clusters-seo: imagenurl-{id_cluster}.jpg
+function subirImagenCte_(idEmpresa, fileName, imageUrl, folder) {
+  try {
+    if (!idEmpresa || !fileName || !imageUrl) {
+      return { success: false, error: "Se requieren id_empresa, fileName e imageUrl" };
+    }
+    var root = getRootFolder_();
+    var cte = findCteFolder_(root, idEmpresa);
+    if (!cte) {
+      var ens = ensureCteFolders(idEmpresa);
+      if (!ens.success) return ens;
+      cte = findCteFolder_(root, idEmpresa);
+    }
+    var target = cte;
+    if (folder) {
+      var fIt = cte.getFoldersByName(folder);
+      target = fIt.hasNext() ? fIt.next() : cte.createFolder(folder);
+    }
+    var blob = UrlFetchApp.fetch(imageUrl).getBlob().setName(fileName);
+    var old = target.getFilesByName(fileName);
+    while (old.hasNext()) { old.next().setTrashed(true); }
+    var file = target.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return { success: true, fileName: fileName, fileUrl: file.getUrl(), folder: folder || "(raiz cte)" };
+  } catch (e) {
+    return { success: false, error: "UPLOAD_ERROR: " + e.message };
+  }
+}
+
 // ── ASSET GENERATOR — Pipeline LAPVTFU ──────────────────────────────────
 // Genera los 7 tipos de activos del Brief. Cada tipo tiene su fuente:
 //   1. logo        → ComfyUI / placeholder
@@ -802,7 +853,7 @@ function ensureCteFolders(idEmpresa) {
  * @returns {object} { success, fileUrl, fileName }
  */
 function generateAsset(idEmpresa, tipo, opts) {
-  var VALID_TYPES = ["logo", "avatar", "fotos-personales", "videos", "testimonios", "fotos", "ugc"];
+  var VALID_TYPES = ["logo", "avatar", "fotoagente", "fotos-personales", "videos", "testimonios", "fotos", "ugc"];
   if (VALID_TYPES.indexOf(tipo) === -1) {
     return { success: false, error: "Tipo inválido: " + tipo + ". Válidos: " + VALID_TYPES.join(", ") };
   }
@@ -824,6 +875,18 @@ function generateAsset(idEmpresa, tipo, opts) {
       }
       // No destruir logo.png existente ni basura vieja — reutilizar ensureLogoUrl
       return ensureLogoUrl(idEmpresa, {});
+    }
+
+    // fotoagente: foto de marca/agente en la RAÍZ de cte<id>/ (nombre fijo, overwrite)
+    // empresa-registro: sube imagen desde imageUrl con share ANYONE (patrón lf-005).
+    if (tipo === "fotoagente") {
+      if (!opts.imageUrl) return { success: false, error: "Se requiere imageUrl para fotoagente" };
+      var faBlob = UrlFetchApp.fetch(opts.imageUrl).getBlob().setName("fotoagente.jpg");
+      var faOld = cteFolder.getFilesByName("fotoagente.jpg");
+      while (faOld.hasNext()) { var faDel = faOld.next(); faDel.setTrashed(true); }
+      var faFile = cteFolder.createFile(faBlob);
+      faFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      return { success: true, fileName: "fotoagente.jpg", fileUrl: faFile.getUrl(), tipo: "fotoagente" };
     }
 
     // ADR-028: avatar.png vive directo en cte<id>/ — gate = fotopersonal.png.

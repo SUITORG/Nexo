@@ -345,7 +345,7 @@ function processTransactionGSheets(ss, data, output, isBackup) {
 
 function syncToSupabase(ss, coId) {
   const SB_KEY = PropertiesService.getScriptProperties().getProperty('SUPABASE_KEY');
-  if (!SB_KEY) return;
+  if (!SB_KEY) return { ok: false, error: 'SUPABASE_KEY ausente en ScriptProperties' };
   const SB_URL = PropertiesService.getScriptProperties().getProperty('SUPABASE_URL') || 'https://egyxgnlnzanxpqyuvmsg.supabase.co';
   const TABLES = [
     'Prompts_IA', 'Config_Empresas', 'Config_SEO', 'Config_Paginas',
@@ -355,19 +355,43 @@ function syncToSupabase(ss, coId) {
     'Config_Galeria', 'Empresa_Galeria', 'Empresa_Documentos', 'Reservaciones',
     'Logs', 'Cuotas_Pagos'
   ];
+  var errors = [];
   TABLES.forEach(function(t) {
     try {
       var d = getSheetData(ss, t, coId);
       if (d.length) {
+        // Headers vacíos en la hoja → claves '' que PostgREST rechaza (PGRST204)
+        // y normalización a minúsculas (las columnas del espejo se crearon sin comillas)
+        d = d.map(function(row) {
+          var clean = {};
+          Object.keys(row).forEach(function(k) {
+            var lk = String(k).toLowerCase().trim();
+            if (lk !== '' && !(lk in clean)) clean[lk] = row[k];
+          });
+          return clean;
+        });
         var res = UrlFetchApp.fetch(SB_URL + '/rest/v1/' + t, {
           method: 'post', contentType: 'application/json',
           headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'resolution=merge-duplicates' },
           payload: JSON.stringify(d), muteHttpExceptions: true
         });
-        Logger.log('[SYNC] ' + t + ': ' + d.length + ' rows → ' + res.getResponseCode());
+        var code = res.getResponseCode();
+        Logger.log('[SYNC] ' + t + ': ' + d.length + ' rows → ' + code);
+        if (code < 200 || code >= 300) {
+          errors.push(t + ': HTTP ' + code + ' ' + String(res.getContentText()).substring(0, 180));
+        }
       }
     } catch (e) {
       Logger.log('[SYNC_ERROR] ' + t + ': ' + e.message);
+      errors.push(t + ': ' + e.message);
     }
   });
+  return errors.length ? { ok: false, error: errors.join(' | ') } : { ok: true };
+}
+
+// Propiedades de script vía clasp run (Execution API con OAuth del dueño).
+// NO es alcanzable desde doPost/handlePostAction — no hay case que lo llame.
+function suit_setProp(name, value) {
+  PropertiesService.getScriptProperties().setProperty(name, value);
+  return 'SET:' + name;
 }
