@@ -171,6 +171,46 @@ routing:
       priority: 26
 
     - patterns:
+        - "empresa-registro"
+        - "alta de empresa"
+        - "modifica empresa"
+        - "actualiza empresa"
+        - "edita empresa"
+        - "registro id_empresa"
+        - "crea estructura drive"
+        - "llena config empresas"
+        - "registro semiautomatico"
+        - "nueva empresa en sheets"
+        - "onboardear empresa"
+      workflow: empresa-registro
+      skill: .agents/skills/empresa-registro/SKILL.md
+      priority: 24
+
+    - patterns:
+        - "clústeres seo"
+        - "clusters seo"
+        - "genera clústeres"
+        - "9 clústeres"
+        - "seo geo"
+        - "aeo"
+        - "páginas temáticas seo"
+      workflow: clusters-seo
+      skill: .agents/skills/clusters-seo/SKILL.md
+      priority: 25
+
+    - patterns:
+        - "páginas seo"
+        - "paginas seo"
+        - "genera las páginas"
+        - "config paginas"
+        - "contenido de páginas"
+        - "páginas del clúster"
+        - "alimenta las páginas"
+      workflow: paginas-seo
+      skill: .agents/skills/paginas-seo/SKILL.md
+      priority: 25
+
+    - patterns:
         - "prospeccion"
         - "prospectos"
         - "oportunidades comerciales"

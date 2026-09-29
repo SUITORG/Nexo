@@ -1,0 +1,78 @@
+skill:
+  name: prompt-reviewer
+  display_name: "Prompt Pre-Flight Review"
+  version: 1.0.0
+  type: process
+  domain: quality
+
+  description: >
+    Pre-vuelo automático y token-eficiente de TODO pedido del usuario antes de actuar.
+    Revisa contexto, supuestos y 5 sesgos; optimiza el pedido; si es MODIFICACIÓN,
+    cierra con ≤3 preguntas hasta 95% de certeza y recién entonces ejecuta.
+    Si no es modificación (Q&A, lectura, contexto): responde directo, sin preguntas.
+
+  dependencies:
+    - javascript
+
+  # Siempre activo por overlay en AGENTS.md; gatillo explícito opcional.
+  triggers:
+    - "revisa mi prompt"
+    - "optimiza este pedido"
+    - "revisa mi contexto"
+    - "sesgos"
+    - "ingeniero de prompts"
+    - "antes de ejecutar"
+
+  token_budget: 800
+
+  # Checklist de revisión (los 5 sesgos + contexto)
+  review:
+    checks:
+      - id: pr-001
+        name: ambiguedad
+        question: "¿El objetivo y criterio de éxito son inequívocos?"
+        action: "Si no: 1 pregunta corta. No adivinar."
+      - id: pr-002
+        name: supuestos
+        question: "¿Qué asumo sin que lo pidiera (archivos, puerto, tenant, alcance)?"
+        action: " listar ≤3 supuestos en 1 línea; si alguno cambia el resultado, va en la pregunta."
+      - id: pr-003
+        name: sesgo-accion-prematura
+        question: "¿Edito/ejecuto antes de entender el flujo real (callers, raíz del bug)?"
+        action: "Si toca código: trazar callers antes de editar (raíz, no síntoma)."
+      - id: pr-004
+        name: sesgo-confirmacion
+        question: "¿Solo busco datos/evidencia que validan mi primer plan?"
+        action: "Buscar activamente 1 señal que lo refute (error conocido, regla inmutable, contraejemplo)."
+      - id: pr-005
+        name: scope-creep
+        question: "¿El pedido pide X y yo estoy agregando Y (refactors, docs, features)?"
+        action: "Hacer solo lo pedido; extras → 1 línea 'digo-digo' al final, sin ejecutar."
+
+  # Salida mínima garantizada (optimización de tokens salida/proceso/resultado)
+  output:
+    q_and_a:
+      format: "respuesta directa + evidencia (file:line)"
+      ask_questions: false
+    modification:
+      format: |
+        REVISIÓN: <1 línea — listo o n supuestos/ambigüedades>
+        PREGUNTAS: ≤3 (solo si <95%; si ≥95%: 'certeza ≥95%, ejecuto')
+        [ejecutar tras respuesta del usuario]
+      max_questions: 3
+      threshold: 0.95
+    forbidden:
+      - "repetir el pedido del usuario"
+      - "listar el checklist completo (es interno)"
+      - "prosa entre la revisión y la acción"
+
+  # No confiar: si AGENTS.md o reglas inmutables chocan con el pedido, preguntar primero
+  hard_gates:
+    - "reglas inmutables del proyecto (id_empresa, soft-delete, no frameworks…)"
+    - "cambio destructivo (DELETE/DROP/overwrite)"
+    - "alcance ambiguo en modificación"
+
+  validation:
+    - "En Q&A: 0 preguntas, respuesta ≤4 líneas salvo pedido explícito de detalle"
+    - "En modificación: ¿≤3 preguntas y solo tras umbral 95%?"
+    - "Ningún check interno filtrado a la salida"

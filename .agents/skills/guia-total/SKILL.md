@@ -45,6 +45,8 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 
 ### Flujo IDEA
 
+> **Si la empresa todavía no existe en `Config_Empresas` o hay que darla de alta/onboardear** → `⚡ empresa-registro` primero (estructura Drive `cte<id>`, fotoagente, copy, identidad, sync Supabase) y luego continúa este flujo.
+
 1. `⚡ analista-proy` → `Analista_Proy.md` (si no existe; si existe y es reciente, reúsalo).
 2. `✍️ crea <Proyecto>/docs/TAXONOMIA.md` (si falta) con **solo 3 campos**: Industria · Nicho · Especialización — los que clasifique el análisis, con match exacto al catálogo `GuiaTotal/TAXONOMIA.md`.
 3. `⚡ panel-juzgador` → veredicto + recomendaciones (insumo: propuesta + `Analista_Proy.md`). **El veredicto no bloquea**: guárdalo en la tarjeta como recomendación.

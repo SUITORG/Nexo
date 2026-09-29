@@ -111,6 +111,8 @@ Escribe `Analista_Proy.md` en el directorio de trabajo (o donde el usuario indiq
 
 Al entregar, responde en ≤3 líneas: veredicto, dónde está el archivo, y si la clasificación sugerida cambió respecto a la hipótesis inicial. No repitas el contenido del MD en el chat.
 
+**Handoff a construcción**: si el veredicto es **alta** o **media**, añade a esas 3 líneas la sugerencia `/ciclo [ruta]` — `Analista_Proy.md` es insumo directo de la fase 0 del ciclo (creación de `CONTRATO.md`): su clasificación Industria/Nicho/Especialización y el "Siguiente paso recomendado" alimentan las reglas del contrato. Solo sugiere el ciclo; no lo ejecutes tú. Si el veredicto es **baja**, no lo sugieras.
+
 ## Reglas
 
 - Todo hallazgo lleva fuente enlazada — sin fuente, no es hallazgo, es opinión.

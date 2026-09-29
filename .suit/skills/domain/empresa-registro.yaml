@@ -1,0 +1,41 @@
+skill:
+  name: empresa-registro
+  display_name: "Empresa Registro — alta/modificación semiautomatica de tenants"
+  version: 1.0.0
+  type: domain
+  domain: business-ops
+
+  description: >
+    Alta semiautomatica de empresas en Config_Empresas (maestro Google Sheets):
+    estructura Drive cte<id>, fotoagente, copy, identidad y espejo Supabase.
+    Tras el alta o modificación de datos clave dispara clusters-seo.
+    Solo update/insert — nunca borra empresas.
+
+  source: .agents/skills/empresa-registro/SKILL.md
+
+  dependencies:
+    - guia-total
+
+  triggers:
+    - keyword: "alta de empresa"
+    - keyword: "empresa-registro"
+    - keyword: "modifica empresa"
+    - keyword: "registro id_empresa"
+    - keyword: "crea estructura drive"
+
+  inputs:
+    - "id_empresa con fila existente en Config_Empresas"
+
+  outputs:
+    - "Drive cte<id>/ (estructura + fotoagente)"
+    - "campos llenados en Config_Empresas"
+    - "espejo Supabase actualizado"
+    - "GuiaTotal/registro/<id>.yaml"
+
+  rules:
+    - id: er-001
+      description: "Nunca DELETE de empresas o filas — solo update/insert"
+      severity: error
+    - id: er-002
+      description: "Idempotente: re-ejecutar no duplica carpetas ni archivos"
+      severity: error

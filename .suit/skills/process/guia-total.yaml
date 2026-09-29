@@ -1,0 +1,37 @@
+skill:
+  name: guia-total
+  display_name: "Guía Total — orquestador del ciclo de vida"
+  version: 1.0.0
+  type: process
+  domain: project
+
+  description: >
+    Orquestador canónico: lleva un proyecto por idea → validación → construcción
+    → mantenimiento delegando en sus skills (analista-proy, panel-juzgador, ciclo,
+    brief-engine, auditoria, empresa-registro). Dueña de GuiaTotal/ (GUIA, MAPA,
+    PENDIENTES, TAXONOMIA, templates, registro).
+
+  source: .agents/skills/guia-total/SKILL.md
+
+  dependencies:
+    - analista-proy
+    - ciclo
+    - brief-engine
+
+  triggers:
+    - keyword: "guia total"
+    - keyword: "proyecto nuevo"
+    - keyword: "tengo una idea"
+    - keyword: "crea los manuales"
+    - keyword: "identidad corporativa"
+    - keyword: "prompt origen"
+
+  context_hint:
+    - "GuiaTotal/GUIA.md"
+    - "GuiaTotal/MAPA.md"
+    - "GuiaTotal/PENDIENTES.md"
+    - ".suit/registry/routing.yaml"
+
+  outputs:
+    - "GuiaTotal/registro/<proyecto>.yaml"
+    - "instancias del proyecto en <Proyecto>/docs/"

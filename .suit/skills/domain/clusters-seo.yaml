@@ -1,0 +1,42 @@
+skill:
+  name: clusters-seo
+  display_name: "Clusters SEO + GEO/AEO"
+  version: 1.0.0
+  type: domain
+  domain: marketing
+
+  description: >
+    Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO
+    (10 columnas, id_cluster kebab descriptivo), con vista previa → aprobación
+    → appendRows + sync. Depende de empresa-registro; especificación completa
+    en su references/prompt_clusters_seo_geo.md.
+
+  source: .agents/skills/clusters-seo/SKILL.md
+
+  dependencies:
+    - empresa-registro
+
+  triggers:
+    - keyword: "clústeres seo"
+    - keyword: "clusters seo"
+    - keyword: "genera clústeres"
+    - keyword: "9 clústeres"
+    - keyword: "seo geo"
+
+  inputs:
+    - "registro de Config_Empresas + Config_SEO existentes de la empresa"
+
+  outputs:
+    - "hasta 9 filas nuevas en Config_SEO (Sheets maestro + espejo)"
+    - "imagenurl-{id_cluster}.jpg en Drive cte<id>/"
+
+  rules:
+    - id: cs-001
+      description: "Escritura solo tras aprobación explícita de la vista previa"
+      severity: error
+    - id: cs-002
+      description: "No modificar ni borrar filas legacy ni de otros id_empresa"
+      severity: error
+    - id: cs-003
+      description: "id_cluster descriptivo kebab único por empresa — nunca SEO-001/números"
+      severity: error

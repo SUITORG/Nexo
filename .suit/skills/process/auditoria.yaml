@@ -1,0 +1,32 @@
+skill:
+  name: auditoria
+  display_name: "Auditoría de arquitectura + documentación"
+  version: 2.0.0
+  type: process
+  domain: system
+
+  description: >
+    Auditoría read-first de un sistema: inventario, C4 en Mermaid, reglas y
+    brechas con umbrales de escritura (≥25% faltantes PROBABLE, ≥84% completar).
+    Genera <Proyecto>/docs/05-16. No arranca de cero (Fase 0.5 de reuso).
+
+  source: .agents/skills/auditoria/SKILL.md
+
+  dependencies:
+    - system-analysis
+
+  triggers:
+    - keyword: "auditoría"
+    - keyword: "audita arquitectura"
+    - keyword: "documenta el sistema"
+    - keyword: "diagrama c4"
+    - keyword: "qué le falta al proyecto"
+
+  context_hint:
+    - "GuiaTotal/PENDIENTES.md"
+    - ".suit/memory/decisions/"
+    - "REVISION_ARQUITECTURA.md"
+
+  outputs:
+    - "<Proyecto>/docs/05-arquitectura-del-sistema.md"
+    - "<Proyecto>/docs/06-diagramas-c4.md"

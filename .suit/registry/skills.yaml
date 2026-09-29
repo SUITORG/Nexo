@@ -381,3 +381,18 @@ skills:
 
   web-research:
     path: .suit/skills/tool/web-research.yaml
+  # --- Guía Total (skills canónicas del ciclo de vida) ---
+
+  guia-total:
+    path: .suit/skills/process/guia-total.yaml
+
+  auditoria:
+    path: .suit/skills/process/auditoria.yaml
+
+  empresa-registro:
+    path: .suit/skills/domain/empresa-registro.yaml
+
+  clusters-seo:
+    path: .suit/skills/domain/clusters-seo.yaml
+  paginas-seo:
+    path: .suit/skills/domain/paginas-seo.yaml

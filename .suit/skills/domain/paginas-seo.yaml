@@ -1,0 +1,46 @@
+skill:
+  name: paginas-seo
+  display_name: "Paginas SEO — páginas que alimentan el sitio desde GS"
+  version: 1.0.0
+  type: domain
+  domain: marketing
+
+  description: >
+    Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir de
+    Config_SEO: copywriter experto que redacta los3 campos JSON reales
+    (meta_json array-keywords, schema_json Service columna+anidado, contenido_json
+    plano con FAQ) que el renderer consume en vivo. Cadena:
+    empresa-registro → clusters-seo → paginas-seo con gates de aprobación.
+
+  source: .agents/skills/paginas-seo/SKILL.md
+
+  dependencies:
+    - clusters-seo
+
+  triggers:
+    - keyword: "páginas seo"
+    - keyword: "genera las páginas"
+    - keyword: "config paginas"
+    - keyword: "contenido de páginas"
+    - keyword: "alimenta las páginas"
+
+  inputs:
+    - "Config_Empresas[<ID>] + Config_SEO[<ID>] (clústeres) + Config_Paginas[<ID>]"
+
+  outputs:
+    - "filas nuevas en Config_Paginas (6 columnas, JSON estricto)"
+    - "espejo Supabase actualizado"
+
+  rules:
+    - id: ps-001
+      description: "Escritura solo tras doble aprobación (mapa editorial + final)"
+      severity: error
+    - id: ps-002
+      description: "contenido_json SIEMPRE plano — jamás bloques[] (no se renderiza)"
+      severity: error
+    - id: ps-003
+      description: "id_cluster debe existir en Config_SEO de la misma empresa"
+      severity: error
+    - id: ps-004
+      description: "No borrar ni sobrescribir filas sin modo 'actualiza' explícito"
+      severity: error

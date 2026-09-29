@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-09-27
+  Generado: 2026-09-28
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -13,11 +13,13 @@
   NOMBRE                 RUTA
   ------------------------------------------------------------------------
   brief-engine              .suit/skills/domain/brief-engine.yaml
+  clusters-seo              .suit/skills/domain/clusters-seo.yaml
   contrato-subproyecto      .suit/skills/domain/contrato-subproyecto.yaml
   cotizaciones-engine       .suit/skills/domain/cotizaciones-engine.yaml
   data-cleanup              .suit/skills/domain/data-cleanup.yaml
   data-sync                 .suit/skills/domain/data-sync.yaml
   design-system             .suit/skills/domain/design-system.yaml
+  empresa-registro          .suit/skills/domain/empresa-registro.yaml
   geo-exif                  .suit/skills/domain/geo-exif.yaml
   hybrid-db                 .suit/skills/domain/hybrid-db.yaml
   lapvtfu                   .suit/skills/domain/lapvtfu.yaml
@@ -38,8 +40,10 @@
 
   NOMBRE                 RUTA
   ------------------------------------------------------------------------
+  auditoria                 .suit/skills/process/auditoria.yaml
   code-review               .suit/skills/process/code-review.yaml
   deployer                  .suit/skills/process/deployer.yaml
+  guia-total                .suit/skills/process/guia-total.yaml
   iteration-loop            .suit/skills/process/iteration-loop.yaml
   panel-juzgador            .suit/skills/process/panel-juzgador.yaml
   pdf-generation            .suit/skills/process/pdf-generation.yaml
@@ -66,7 +70,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 33 skills
+  TOTAL SUITOS: 37 skills
 
 
 ========================================================================
@@ -101,12 +105,18 @@
   ciclo                     .claude/skills/ciclo
                             -> .agents\skills\ciclo
                             Ciclo de mantenimiento y decisión para el proyecto multi-inquilino SUIT y cada uno de sus subproyectos: contrato por carpeta, commits por fase, valida
+  clusters-seo              .claude/skills/clusters-seo
+                            -> .agents\skills\clusters-seo
+                            Generador de clústeres SEO + GEO/AEO para landings multi-inquilino: a partir de un registro de Config_Empresas diseña hasta 9 clústeres diferenciados 
   cut-the-curve             .claude/skills/cut-the-curve
                             -> .agents\skills\cut-the-curve
                             The technique catalog: five velocity-matched SEAMS (zoom-through, INVERSE zoom-through, cut-the-curve, waterfall cut, rack-focus blur-cut) plus the tw
   embedded-captions         .claude/skills/embedded-captions
                             -> .agents\skills\embedded-captions
                             Add captions or subtitles to an existing single-subject talking-head video without editing the footage. Use for plain verbatim captions, cinematic cap
+  empresa-registro          .claude/skills/empresa-registro
+                            -> .agents\skills\empresa-registro
+                            Registro semiautomatico de empresas (tenants) en Config_Empresas: dada una fila con id_empresa en Google Sheets, investiga el giro, crea la estructura
   faceless-explainer        .claude/skills/faceless-explainer
                             -> .agents\skills\faceless-explainer
                             Turn arbitrary text — an article, notes, a topic, a brief — into a faceless explainer video: there is no site or footage to capture, so the visuals ar
@@ -164,6 +174,9 @@
   oversized-cursor          .claude/skills/oversized-cursor
                             -> .agents\skills\oversized-cursor
                             House-style oversized macOS cursor technique for HyperFrames launch videos. Load whenever a scene involves cursors or a pointer-led action, when kicki
+  paginas-seo               .claude/skills/paginas-seo
+                            -> .agents\skills\paginas-seo
+                            Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir de Config_SEO: experto copywriter + arquitecto de contenido que redacta los 3 c
   pr-to-video               .claude/skills/pr-to-video
                             -> .agents\skills\pr-to-video
                             Turn a GitHub pull request (a PR URL, owner/repo#N, or 'this PR' in a checked-out repo) into a code-change explainer video — changelog, feature reveal
@@ -186,7 +199,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 38 (4 locales + 34 symlinks)
+  TOTAL CLAUDE: 41 (4 locales + 37 symlinks)
 
 
 ========================================================================
@@ -200,8 +213,10 @@
   captions-overlay          .opencode/skills/captions-overlay
   changelog-video           .opencode/skills/changelog-video
   ciclo                     .opencode/skills/ciclo
+  clusters-seo              .opencode/skills/clusters-seo
   cut-the-curve             .opencode/skills/cut-the-curve
   embedded-captions         .opencode/skills/embedded-captions
+  empresa-registro          .opencode/skills/empresa-registro
   faceless-explainer        .opencode/skills/faceless-explainer
   figma                     .opencode/skills/figma
   general-video             .opencode/skills/general-video
@@ -222,6 +237,7 @@
   multi-tenant-saas         .opencode/skills/multi-tenant-saas
   music-to-video            .opencode/skills/music-to-video
   oversized-cursor          .opencode/skills/oversized-cursor
+  paginas-seo               .opencode/skills/paginas-seo
   pr-to-video               .opencode/skills/pr-to-video
   preparar-produccion       .opencode/skills/preparar-produccion
   product-launch-video      .opencode/skills/product-launch-video
@@ -232,7 +248,7 @@
   talking-head-recut        .opencode/skills/talking-head-recut
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 38
+  TOTAL OPENCODE: 41
 
 
 ========================================================================
@@ -270,8 +286,12 @@
   lapvtfu                             Gestiona el segmento LAPVTFU (posición 10 del vector Brief en Config_E
   prompt-reviewer                     Pre-vuelo automático y token-eficiente de TODO pedido del usuario ante
   web-research                        Structured web research for business intelligence. Runs 3-5 parallel q
+  guia-total                          Orquestador canónico: lleva un proyecto por idea → validación → constr
+  auditoria                           Auditoría read-first de un sistema: inventario, C4 en Mermaid, reglas 
+  empresa-registro                    Alta semiautomatica de empresas en Config_Empresas (maestro Google She
+  clusters-seo                        Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO (
 
-  TOTAL REGISTRY: 31 skills declaradas
+  TOTAL REGISTRY: 35 skills declaradas
 
 
 ========================================================================
@@ -354,14 +374,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    33      33         0
-  Skills Claude Code       38        4        34
-  Skills OpenCode           38       38         0
-  Registry YAML           31      31         0
+  Skills SuitOS (.yaml)    37      37         0
+  Skills Claude Code       41        4        37
+  Skills OpenCode           41       41         0
+  Registry YAML           35      35         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   157
+  TOTAL                   171
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================
