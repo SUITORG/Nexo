@@ -1200,7 +1200,11 @@ function _setLapvtfuSlot_(vector, idx, url) {
   for (var i = 0; i < segs.length; i++) {
     if (/^\s*LAPVTFU\s*:/i.test(segs[i])) {
       var colon = segs[i].indexOf(':');
-      var parts = segs[i].slice(colon + 1).split(',');
+      var parts = segs[i].slice(colon + 1).split(',').map(function(p, ix) {
+        // trim del primer valor: el rebuild 'LAPVTFU: ' + parts conservaba el
+        // espacio previo y AÑADÍA uno por escritura → nunca coincidía (idempotencia)
+        return ix === 0 ? p.replace(/^\s+/, '') : p;
+      });
       while (parts.length < 7) parts.push('');
       parts[idx] = url;
       segs[i] = 'LAPVTFU: ' + parts.join(',');
