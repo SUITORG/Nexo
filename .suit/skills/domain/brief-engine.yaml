@@ -66,6 +66,9 @@ skill:
     - id: be-009
       description: "Cell boundary: writing the 20 content segments preserves LAPVTFU byte-a-byte; assets are written only by the lapvtfu skill (SUBCONTRATO-ACTIVOS.md)"
       severity: error
+    - id: be-010
+      description: "Segments 1 (industria) y 2 (nicho): con valor real → jamás se sobreescriben; vacíos o [PENDIENTE] → rellenar con taxonomía detectada (Analista_Proy / docs TAXONOMIA de la empresa, si no tipo_negocio.split(',')[0] con match EXACTO al catálogo). Ref: MANUAL_OPERACION §5 / MAPA §6"
+      severity: error
   fields:
     - { num: 1, name: "industria", source: "Supabase catalog", confidence: "A/B" }
     - { num: 2, name: "nicho", source: "Supabase catalog", confidence: "A/B" }
@@ -133,7 +136,7 @@ skill:
     - "4. Run F in parallel (asset generation/verification)"
     - "5. Run E after A-D complete (consolidate offer/copy)"
     - "6. Run G at end (generate scripts)"
-    - "7. Assemble 21-segment vector in fixed order (LAPVTFU preservada byte a byte)"
+    - "7. Assemble 21-segment vector in fixed order (LAPVTFU preservada byte a byte; seg1/seg2 según be-010: valor real intacto · vacío o [PENDIENTE] → taxonomía)"
     - "8. Validate: no pipes in values, all 21 segments present"
     - "9. Backup previous logo_url to cte<id>/_brief/historial/"
     - "10. Write Brief vector to Config_Empresas.logo_url via GAS"

@@ -399,3 +399,13 @@ skills:
 
   empresa-mascara:
     path: .suit/skills/domain/empresa-mascara.yaml
+
+  # --- System (skills canónicas de contexto/decisión) ---
+  context-loader:
+    path: .suit/skills/system/context-loader.yaml
+
+  index-navigator:
+    path: .suit/skills/system/index-navigator.yaml
+
+  registry-query:
+    path: .suit/skills/system/registry-query.yaml

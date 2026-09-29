@@ -1,0 +1,22 @@
+skill:
+  name: registry-query
+  display_name: "Registry Query"
+  version: 1.0.0
+  type: system
+  domain: system
+
+  description: >
+    Consulta el registry declarativo (.suit/registry/*.yaml: agents, skills,
+    workflows, projects, models, permissions, routing) para decidir workflow,
+    agente, modelo y permisos sin hardcodear. Entrada del dispatcher.
+
+  triggers:
+    - keyword: "consulta registry"
+    - keyword: "registry"
+    - keyword: "routing"
+    - file_pattern: ".suit/registry/*"
+
+  context_hint:
+    - ".suit/registry/routing.yaml"
+    - ".suit/registry/skills.yaml"
+    - ".suit/registry/workflows.yaml"

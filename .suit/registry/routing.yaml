@@ -151,6 +151,13 @@ routing:
         - "taxonomía"
         - "industrias y nichos"
         - "prompt origen"
+        - "manual de operación"
+        - "manual operacion"
+        - "cómo configuro empresas"
+        - "como configuro empresas"
+        - "operar empresas"
+        - "brief incompleto"
+        - "taxonomía del brief"
       workflow: guia-total
       skill: .agents/skills/guia-total/SKILL.md
       priority: 22

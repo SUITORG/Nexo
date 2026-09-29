@@ -68,7 +68,10 @@ distinto de `skip`. Ejemplos:
 1. 📄 lee plantilla → si GuiaTotal/registro/<id>/MASCARA.yaml no existe, la crea (copia
    con id_empresa) · si existe, úsela tal cual
 2. [1/N] ✅ valida bloque A + C: faltantes de A → pregunta (≤3 por turno, nunca inventar);
-   C sin definir → asume "preguntar" · "auto total <ID>" → todos a "auto"
+   C sin definir → asume "preguntar" · "auto total <ID>" → todos a "auto" ·
+   el pedido puede traer los switches en una línea
+   (`máscara HMP — switches: alta: skip, clusters: auto, …`) → aplícalos a C_cadena
+   antes de F1 (la UI local `mascara.html` arma esa orden con "Copiar orden")
 3. [2/N] ✍️ escribe Config_Empresas: SOLO A (+ D descomentado)
    · fila existe → GAS updateRow {table:"Config_Empresas", matchField:"id_empresa"}
    · no existe y C.alta=auto/preguntar aprobado → GAS appendRows (fila nueva mínima)

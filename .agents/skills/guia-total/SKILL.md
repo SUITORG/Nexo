@@ -1,6 +1,6 @@
 ---
 name: guia-total
-description: "Guía total de proyecto: orquesta el ciclo de vida completo de un proyecto de software — validación de idea (analista-proy + panel-juzgador), taxonomía de mercado, identidad corporativa, construcción (ciclo), manuales del proyecto y prompt origen vivo. Úsala SIEMPRE que el usuario diga 'guia total', 'guia-total', 'proyecto nuevo', 'tengo una idea', '¿vale la pena este proyecto?', 'validar idea', 'crea los manuales', 'manual del cliente', 'manual del proveedor', 'manual técnico', 'manual de pruebas', 'identidad corporativa', 'misión y visión', 'valores e impacto', 'políticas de la empresa', 'taxonomía', 'industrias y nichos', 'prompt origen', o pida llevar un proyecto por su etapa (idea → construcción → mantenimiento)."
+description: "Guía total de proyecto: orquesta el ciclo de vida completo de un proyecto de software — validación de idea (analista-proy + panel-juzgador), taxonomía de mercado, identidad corporativa, construcción (ciclo), manuales del proyecto, prompt origen vivo y manual de operación de SuitOrg (Config_Empresas + regla taxonomía→brief). Úsala SIEMPRE que el usuario diga 'guia total', 'guia-total', 'proyecto nuevo', 'tengo una idea', '¿vale la pena este proyecto?', 'validar idea', 'crea los manuales', 'manual del cliente', 'manual del proveedor', 'manual técnico', 'manual de pruebas', 'manual de operación', 'cómo configuro empresas', 'operar empresas', 'brief incompleto', 'taxonomía del brief', 'identidad corporativa', 'misión y visión', 'valores e impacto', 'políticas de la empresa', 'taxonomía', 'industrias y nichos', 'prompt origen', o pida llevar un proyecto por su etapa (idea → construcción → mantenimiento)."
 license: MIT
 compatibility: "Claude Code y opencode. Requiere git. Opcional: MCP de Supabase (taxonomía/brief) y acceso a Google Sheets/GAS (Config_Empresas)."
 metadata:
@@ -14,7 +14,7 @@ Guía operativa viva. La referencia de método está en `GuiaTotal/GUIA.md`; el 
 
 ## Entradas
 
-1. **Manual**: `/guia-total [ruta] [objetivo]` o uno de los modos: `taxonomia`, `identidad`, `manuales`, `origen`.
+1. **Manual**: `/guia-total [ruta] [objetivo]` o uno de los modos: `taxonomia`, `identidad`, `manuales`, `origen`, `operacion`.
 2. **Automática**: el usuario menciona un gatillo de la descripción (idea nueva, manuales, identidad, etapa de proyecto).
 
 Si no hay cambios reales y no se pide un modo suelto, informa "sin acciones" y termina. No inventes trabajo.
@@ -66,6 +66,8 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 
 1. `⚡ ciclo` F1-F7 (no dupliques sus fases aquí).
 2. Si el alcance tiene `MANUAL_*.md` (en `docs/`) y los cambios tocaron UI/backend: verifica fechas (manual vs último commit relevante) → si desactualizados, ejecuta el modo `manuales` o sugiere `/guia-total manuales`.
+3. **⚖️ Brief × taxonomía**: si alguna empresa tiene el brief con `industria`/`nicho` vacíos o `[PENDIENTE]` → rellénalos desde la taxonomía (Analista/docs-TAXONOMIA → fallback `tipo_negocio.split(',')[0]` con match exacto al catálogo); **con valor real jamás se sobreescriben** (be-010, `MANUAL_OPERACION.md` §5).
+4. Si cambió configuración de empresas/flags/campos → refresca `GuiaTotal/MANUAL_OPERACION.md` (MAPA §1.9).
 
 ## Modos
 
@@ -103,6 +105,13 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 - `guia-total origen` rellena/actualiza la **instancia del proyecto** con: GUIA.md + tarjeta + hechos nuevos del proyecto (qué es, para quién, decisiones, etapa).
 - La **plantilla maestra** solo se modifica cuando cambia la metodología, no cuando cambia un proyecto.
 
+### `guia-total operacion`
+
+- Modo del **manual de operación de SuitOrg** (solo `Config_Empresas`, sin subproyectos): `GuiaTotal/MANUAL_OPERACION.md`.
+- Gatillos: "manual de operación", "cómo configuro empresas", "operar empresas".
+- `📁 lee` el manual + `Config_Empresas` (getAll) + MAPA §1.5-1.9; `✍️ actualiza` el manual con lo que difiera (campos nuevos, flags, flujos, quirks). Nunca lo reescribe completo si solo cambió una sección.
+- Recuerda la regla §5: taxonomía → segmentos 1/2 del brief (valor real intacto).
+
 ## Archivos vivos
 
 | Archivo | Ubicación | Quién lo escribe |
@@ -117,6 +126,7 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 | `MANUAL_*.md` | `<Proyecto>/docs/` | modo `manuales` / construcción |
 | `IDENTIDAD_CORPORATIVA.md` | `<Proyecto>/docs/` | modo `identidad` |
 | `PROMPT_ORIGEN.md` | `<Proyecto>/docs/` | modo `origen` |
+| `MANUAL_OPERACION.md` | `GuiaTotal/` | modo `operacion` / mantenimiento (config empresas) |
 | `docs/00-16*.md` (arquitectura, C4, reglas…) | `<Proyecto>/docs/` | skill `auditoria` (bajo sus umbrales) |
 
 **Actualización del MAPA**: al terminar cada pasada, revisa si el flujo ejecutado difiere de `MAPA.md` (gatillos nuevos, skills nuevas, ramal añadido) → actualiza solo ese nodo. Nunca reescribas el MAPA completo desde cero.
