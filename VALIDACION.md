@@ -108,3 +108,20 @@
 **Verdict:** PASS (6/6).
 **Nota:** TOPLUXF tiene además un archivo preexistente llamado `logo01` (sin extensión) listado por el path legado `/logo/i` — observación, no migrado (no tocó la regla).
 **Commits:** `682a64a` f2 migración + (evidencia en este commit).
+
+---
+
+## 2026-09-29 — Fotos TOPLUXF → slot6 (fotos, multi `;`) — lapvtfu
+
+**Scope:** sin código · acciones existentes `shareCteFile` + `setLapvtfuSlot` · espejo · Ciclo F1-F6
+
+| # | Check | Acción | Resultado |
+|---|-------|--------|-----------|
+| 1 | Revisión lapvtfu | `getBriefAssets TOPLUXF` | PASS — fotos01/02/03.jpeg en raíz (81/127/79 KB), nombres estándar, multi F ✓ |
+| 2 | Share lf-005 | `shareCteFile` ×3 | PASS — URLs `uc?id=1EFTtdJf9…`, `1CHryp0e…`, `1lLZgXo9…` ANYONE |
+| 3 | Colocación slot6 | `setLapvtfuSlot6 ← url1;url2;url3` | PASS — separador `;`, orden 01→03 |
+| 4 | Integridad | GET getAll | PASS — **21/21** · otros 20 segmentos byte-a-byte idénticos · slot6 exacto |
+| 5 | Idempotencia share | re-`shareCteFile fotos02` | PASS |
+| 6 | Espejo | `syncToSupabase TOPLUXF` + MCP | PASS — `SYNC_COMPLETE` · len=3057 · **slot6_triple_ok=true** (triple con `;` verificado en Supabase) |
+
+**Verdict:** PASS (6/6) — única escritura: slot6 de TOPLUXF (aprobada).
