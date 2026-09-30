@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SuitPoke — Duelo de Cartas</title>
+<meta name="description" content="Juego de cartas PvP online: 2-4 jugadores, salas por código, partidas de 2-5 min.">
+<meta name="theme-color" content="#12102a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+<!-- ============ MENÚ ============ -->
+<section id="pantalla-menu" class="pantalla activa">
+  <div class="menu-caja">
+    <h1 class="logo">Suit<span>Poke</span></h1>
+    <p class="tagline">Duelo de cartas · 2-4 jugadores · 5 minutos</p>
+    <button class="btn primario" data-ir="pantalla-ia">🤖 Jugar vs IA</button>
+    <button class="btn" id="btn-crear">🌐 Crear sala online</button>
+    <button class="btn" data-ir="pantalla-unirse">🔑 Unirse con código</button>
+    <button class="btn fantasma" data-ir="pantalla-reglas">📖 Reglas del juego</button>
+    <div class="menu-pie">
+      <button class="btn-icono" id="btn-sonido" title="Sonido">🔊</button>
+      <button class="btn-icono oculto" id="btn-instalar" title="Instalar app">📥</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONFIG vs IA ============ -->
+<section id="pantalla-ia" class="pantalla">
+  <div class="caja">
+    <h2>Jugar vs IA</h2>
+    <p class="sutil">Tú eres el jugador 1. Elige cuántos rivales bot:</p>
+    <div class="segmentado" id="sel-bots">
+      <button class="seg activo" data-bots="1">1 bot</button>
+      <button class="seg" data-bots="2">2 bots</button>
+      <button class="seg" data-bots="3">3 bots</button>
+    </div>
+    <button class="btn primario" id="btn-jugar-ia">⚔️ ¡Combatir!</button>
+    <button class="btn fantasma" data-ir="pantalla-menu">← Volver</button>
+  </div>
+</section>
+
+<!-- ============ CREAR SALA (espera) ============ -->
+<section id="pantalla-sala" class="pantalla">
+  <div class="caja">
+    <h2>Sala de espera</h2>
+    <div class="codigo" id="codigo-sala">----</div>
+    <button class="btn" id="btn-copiar">📋 Copiar enlace de invitación</button>
+    <ul class="lista-jugadores" id="lista-lobby"></ul>
+    <div class="fila">
+      <button class="btn" id="btn-bot">🤖 Añadir bot</button>
+      <button class="btn primario" id="btn-iniciar">▶ Iniciar partida</button>
+    </div>
+    <p class="sutil" id="sala-aviso">Comparte el código con tus amigos (máx. 4).</p>
+    <button class="btn fantasma" data-ir="pantalla-menu">← Salir de la sala</button>
+  </div>
+</section>
+
+<!-- ============ UNirse ============ -->
+<section id="pantalla-unirse" class="pantalla">
+  <div class="caja">
+    <h2>Unirse a una sala</h2>
+    <input class="entrada" id="inp-codigo" maxlength="4" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters">
+    <input class="entrada" id="inp-nombre-u" maxlength="16" placeholder="Tu nombre" autocomplete="nickname">
+    <button class="btn primario" id="btn-unirse">🔗 Entrar</button>
+    <p class="sutil" id="unirse-error"></p>
+    <button class="btn fantasma" data-ir="pantalla-menu">← Volver</button>
+  </div>
+</section>
+
+<!-- ============ PARTIDA ============ -->
+<section id="pantalla-juego" class="pantalla">
+  <header class="partida-top">
+    <span class="sutil" id="partida-codigo"></span>
+    <span class="turno-chip" id="chip-turno">—</span>
+    <button class="btn-icono" id="btn-salir">✕</button>
+  </header>
+
+  <div id="zona-rivales"></div>
+
+  <div class="centro">
+    <div id="evento" class="evento oculto"></div>
+    <div id="log" class="log"></div>
+  </div>
+
+  <div class="zona-propia">
+    <div class="ficha-propia">
+      <div class="hp-env"><div class="hp" id="mi-hp"></div><span id="mi-hp-txt"></span></div>
+      <div id="mi-guardia"></div>
+      <div class="stats" id="mi-stats"></div>
+    </div>
+    <div id="mano" class="mano"></div>
+    <div class="acciones">
+      <button class="btn" id="btn-pasar">⏭ Pasar</button>
+      <span class="sutil" id="aviso-turno"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FIN ============ -->
+<section id="pantalla-fin" class="pantalla">
+  <div class="caja centrada">
+    <div class="emoji-fin" id="emoji-fin">🏆</div>
+    <h2 id="fin-titulo">¡Victoria!</h2>
+    <p class="sutil" id="fin-sub"></p>
+    <button class="btn primario" id="btn-revancha">🔄 Revancha</button>
+    <button class="btn fantasma" data-ir="pantalla-menu">← Menú principal</button>
+  </div>
+</section>
+
+<!-- ============ REGLAS ============ -->
+<section id="pantalla-reglas" class="pantalla scrollable">
+  <div class="caja ancho">
+    <h2>📖 Reglas del duelo</h2>
+    <ol class="reglas">
+      <li><b>2 a 4 jugadores.</b> Cada uno empieza con <b>15 de vida</b> y 5 cartas.</li>
+      <li>En tu turno <b>robas 1 carta</b> (máx. 7 en mano) y <b>arrojas 1 carta</b> contra un rival.</li>
+      <li><b>Elementos en anillo:</b> 🔥→🌱→💧→⚡→🪨→👻→🔥. Si tu elemento vence al de la guardia rival: <b>+3 de ataque</b>; si pierde: −2.</li>
+      <li>Comparación: <b>poder + bonus</b> contra la <b>defensa de la guardia</b> del rival. Si la superas: daño = diferencia (máx. 6) y su guardia se destruye.</li>
+      <li>Si no tiene guardia: daño directo (máx. 7). Si no logras romperla: sufres <b>1 de retroceso</b>.</li>
+      <li>Tras atacar, <b>tu carta pasa a ser tu nueva guardia</b> (la anterior va al descarte).</li>
+      <li><b>Habilidades:</b> 🛡 Escudo (+4 defensa como guardia) · 💥 Crítico (daño x2 al romper) · 🤲 Robo (al romper, robas 1 carta al rival).</li>
+      <li>Gana quien queda <b>en pie con vida</b>. Sin mazo, se recicla el descarte.</li>
+    </ol>
+    <p class="sutil">Modos: vs IA en el celular (sin internet) o salas online con enlace de invitación.</p>
+    <button class="btn fantasma" data-ir="pantalla-menu">← Volver</button>
+  </div>
+</section>
+
+<div id="toast" class="toast oculto"></div>
+
+<script src="js/motor.js"></script>
+<script src="js/sonido.js"></script>
+<script src="js/red.js"></script>
+<script src="js/juego.js"></script>
+</body>
+</html>

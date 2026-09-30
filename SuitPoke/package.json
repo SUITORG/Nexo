@@ -1,0 +1,13 @@
+{
+  "name": "suitpoke",
+  "version": "1.0.0",
+  "description": "SuitPoke — juego de cartas PvP online (PWA, cero dependencias)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/motor.test.js",
+    "iconos": "node scripts/gen-iconos.js"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

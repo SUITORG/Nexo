@@ -1,0 +1,17 @@
+{
+  "name": "SuitPoke — Duelo de Cartas",
+  "short_name": "SuitPoke",
+  "description": "Juego de cartas PvP online: 2-4 jugadores, salas por código, partidas de 2-5 min.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12102a",
+  "theme_color": "#12102a",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
