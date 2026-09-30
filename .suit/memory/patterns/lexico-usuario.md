@@ -42,6 +42,44 @@ aquí en la misma sesión (solo append — no reescribir entradas existentes).
 | las 9 / los 9 | clústeres SEO (máx. 9 por empresa) |
 | piloto | empresa en pruebas de una cadena (ej. HMP) |
 | los manuales | `GuiaTotal/manuales/<id>/` (no `docs/` — renombrado MANUAL_PRUEBAS) |
+| el visual / mapa visual | `GuiaTotal/MAPA_VISUAL.html` (burbujas + drawer de pasos) |
+| la máscara (sitio) | `mascara.html` en server :3001 |
+
+## Cómo pide (patrones de petición — leer antes de responder)
+
+> Capa de ESTILO: cómo formula sus pedidos, aprueba y pausa. Complementa el glosario
+> de arriba; misma activación (pre-flight #4).
+
+### Formas típicas de pedir → interpretación
+
+| Él escribe | Interpretar como |
+|---|---|
+| "dame solo X" / "sin el brief completo, solo los activos" | salida **acotada a X** — cero extras, cero ampliaciones |
+| "dame el plan para aprobación" / "hazme un plan" | **primero plan** (fases, archivos, riesgo) → esperar su "aprobado/ejecuta" antes de tocar nada |
+| "qué abarcaria" / "dame la estructura/árbol" | preguntar-respuesta: explicar alcance o mostrar estructura, **no construir** |
+| "indaga …" / "cruza la información con lo que está ahora" | research de solo lectura **antes** de responder; comparar estado nuevo vs actual |
+| "me preguntas" / "dime si tenemos…" | quiere preguntas cortas (≤3) antes de ejecutar, o datos concretos |
+| "mantén el código simple" | ponytail: lo mínimo que funcione, sin abstracciones |
+| "explicame brevemente" | respuesta corta, sin ensayo |
+| "abrilo/abrela por mi" | abrirlo en el navegador/archivo y mostrar (él no lo abre) |
+| "¿qué opinas de X?" / "me gustaría X" | **opinar primero**; construir solo tras su "si/ejecuta" |
+| "dame la temperatura…" / "cómo funciona / cómo se activa" | explicar mecanismo actual, no inventar ni construir |
+
+### Formas de decidir → acción
+
+| Él escribe | Acción |
+|---|---|
+| "si" / "aprobado" / "ejecuta" | ejecutar todo lo aprobado sin volver a preguntar |
+| respuestas numeradas ("1 si,2 si,3 si") | aprueba **todas** las preguntas en orden → ejecutar las3 sin repetir |
+| "haz el commit" | commit **por partes** con el formato del repo; push solo si lo pide |
+| "me quedo aquí" / "dejalo así por el momento" / "en unos minutos continuamos" | **PAUSA**: guardar estado en ≤5 líneas, no continuar nada |
+| "sigue/continua" | retomar lo pausado (no empezar frentes nuevos) |
+
+### Señales de estilo (siempre asumir)
+
+- Minúsculas, sin acentos, puntuación suelta → normal, no preguntar.
+- Respuestas cortas tipo "si", "aprobado" = aprobación plena de lo propuesto.
+- Si un "si" es ambiguo entre2 interpretaciones → una sola pregunta corta.
 
 ## Erratas vistas (acumular)
 
