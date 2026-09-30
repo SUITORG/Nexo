@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-09-26 | **Total archivos:** 1566 JS/GS
+**Generado:** 2026-09-29 | **Total archivos:** 1589 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -9937,6 +9937,25 @@
 | 262 | `main` |
 | 382 | `tipoNegocio` |
 
+## `qwen-imagen-studio/app/app.js`
+
+| Línea | Función |
+|-------|---------|
+| 4 | `api` |
+| 8 | `notice` |
+| 9 | `settings` |
+| 12 | `warmEngine` |
+| 23 | `persist` |
+| 24 | `refreshForm` |
+| 37 | `renderRefs` |
+| 48 | `addFiles` |
+| 77 | `selectImage` |
+| 85 | `loadGallery` |
+| 107 | `deleteImages` |
+| 120 | `syncSelection` |
+| 129 | `followJob` |
+| 138 | `status` |
+
 ## `server.js`
 
 | Línea | Función |
@@ -10311,32 +10330,34 @@
 | 78 | `parseAgentsRegistry` |
 | 98 | `scanClaudeAgents` |
 | 119 | `scanParallelGroups` |
-| 201 | `buildTriggerSources` |
-| 203 | `add` |
-| 213 | `walk` |
-| 235 | `triggersFor` |
-| 236 | `esc` |
-| 260 | `scanScripts` |
-| 286 | `desc` |
-| 295 | `scanPlugins` |
-| 316 | `readSkillDesc` |
-| 329 | `yamlDesc` |
-| 334 | `collectSkills` |
-| 365 | `findPort` |
-| 372 | `checkPort` |
-| 375 | `done` |
-| 384 | `loadEnvKeys` |
-| 395 | `claudeCmdArr` |
-| 402 | `countSkillDirs` |
-| 410 | `claudeContext` |
-| 434 | `pathCheck` |
-| 441 | `test` |
-| 462 | `envRequired` |
-| 464 | `scan` |
-| 473 | `stripAnsi` |
-| 476 | `probeOpenCode` |
-| 494 | `probeClaude` |
-| 508 | `scanProject` |
+| 204 | `buildTriggerSources` |
+| 206 | `add` |
+| 216 | `walk` |
+| 238 | `triggersFor` |
+| 239 | `esc` |
+| 263 | `scanScripts` |
+| 289 | `desc` |
+| 298 | `scanPlugins` |
+| 319 | `readSkillDesc` |
+| 354 | `yamlDesc` |
+| 371 | `contractFor` |
+| 374 | `pick` |
+| 399 | `collectSkills` |
+| 430 | `findPort` |
+| 437 | `checkPort` |
+| 440 | `done` |
+| 449 | `loadEnvKeys` |
+| 460 | `claudeCmdArr` |
+| 467 | `countSkillDirs` |
+| 475 | `claudeContext` |
+| 499 | `pathCheck` |
+| 506 | `test` |
+| 527 | `envRequired` |
+| 529 | `scan` |
+| 538 | `stripAnsi` |
+| 541 | `probeOpenCode` |
+| 559 | `probeClaude` |
+| 573 | `scanProject` |
 
 ## `SuitOSCore/ai-router/circuitBreaker.js`
 
@@ -10518,6 +10539,89 @@
 | 39 | `extractFunctions` |
 | 77 | `buildIndex` |
 
+## `SuitPoke/js/juego.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `pedirNombre` |
+| 21 | `ir` |
+| 27 | `toast` |
+| 33 | `vista` |
+| 39 | `cartaEl` |
+| 52 | `hpBar` |
+| 58 | `render` |
+| 117 | `evento` |
+| 123 | `sfxEfectos` |
+| 134 | `onCarta` |
+| 146 | `onRival` |
+| 153 | `lanzar` |
+| 169 | `pasar` |
+| 183 | `iniciarIA` |
+| 198 | `pasoBots` |
+| 213 | `abrirStream` |
+| 235 | `renderLobby` |
+| 247 | `crearSala` |
+| 259 | `unirse` |
+| 276 | `accionOnline` |
+| 280 | `mostrarFin` |
+| 329 | `salir` |
+
+## `SuitPoke/js/motor.js`
+
+| Línea | Función |
+|-------|---------|
+| 34 | `barajar` |
+| 41 | `crearPartida` |
+| 54 | `vivos` |
+| 56 | `robarCartas` |
+| 67 | `ventaja` |
+| 69 | `calcDano` |
+| 86 | `jugarCarta` |
+| 135 | `pasar` |
+| 143 | `avanzarTurno` |
+| 165 | `iaJugada` |
+| 184 | `ver` |
+| 192 | `mano` |
+
+## `SuitPoke/js/red.js`
+
+| Línea | Función |
+|-------|---------|
+| 5 | `post` |
+| 14 | `unirse` |
+
+## `SuitPoke/js/sonido.js`
+
+| Línea | Función |
+|-------|---------|
+| 6 | `ac` |
+| 12 | `tono` |
+| 24 | `ruido` |
+
+## `SuitPoke/scripts/gen-iconos.js`
+
+| Línea | Función |
+|-------|---------|
+| 7 | `crc32` |
+| 17 | `chunk` |
+| 24 | `png` |
+| 49 | `pintar` |
+
+## `SuitPoke/server.js`
+
+| Línea | Función |
+|-------|---------|
+| 24 | `token` |
+| 25 | `codigo` |
+| 26 | `soloNombre` |
+| 28 | `salaPublica` |
+| 39 | `emitir` |
+| 48 | `moverBots` |
+| 62 | `leerBody` |
+| 71 | `json` |
+| 77 | `api` |
+| 148 | `streamSSE` |
+
 ## `SuitReservaciones/handlers/actions.js`
 
 | Línea | Función |
@@ -10591,11 +10695,12 @@
 |-------|---------|
 | 35 | `loadConfig` |
 | 86 | `requireAuth` |
-| 580 | `totalImpuestosTrasladados` |
-| 610 | `valorUnitario` |
-| 611 | `importe` |
-| 615 | `base` |
-| 619 | `importe` |
+| 440 | `findAuthUserByEmail` |
+| 624 | `totalImpuestosTrasladados` |
+| 654 | `valorUnitario` |
+| 655 | `importe` |
+| 659 | `base` |
+| 663 | `importe` |
 
 ## `SuitStableDiffusion/scripts/colab-sd.js`
 
@@ -10793,6 +10898,53 @@
 | 25 | `update` |
 | 33 | `remove` |
 
+## `temp/append-hmp-seo.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `wa` |
+
+## `temp/diff-schema.js`
+
+| Línea | Función |
+|-------|---------|
+| 33 | `inferType` |
+| 55 | `samples` |
+
+## `temp/dryrun-brief-tax.js`
+
+| Línea | Función |
+|-------|---------|
+| 6 | `PEND` |
+| 8 | `analista` |
+| 17 | `catalogo` |
+
+## `temp/dryrun-hmp-mascara.js`
+
+| Línea | Función |
+|-------|---------|
+| 6 | `norm` |
+
+## `temp/ejecuta-brief-hmp.js`
+
+| Línea | Función |
+|-------|---------|
+| 4 | `sleep` |
+| 64 | `post` |
+| 70 | `get` |
+
+## `temp/genera-paginas-hmp.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `schema` |
+
+## `temp/lint-mermaid.js`
+
+| Línea | Función |
+|-------|---------|
+| 7 | `err` |
+
 ## `vectcutapi-mcp/.venv/Lib/site-packages/werkzeug/debug/shared/debugger.js`
 
 | Línea | Función |
@@ -10896,28 +11048,29 @@
 | 86 | `doGet` |
 | 135 | `doPost` |
 | 146 | `handlePostAction` |
-| 445 | `updateBriefVector` |
-| 479 | `backupBriefVector` |
-| 547 | `generateAndWriteBrief` |
-| 607 | `saveBriefMetadata` |
-| 735 | `ensureCteFolders` |
-| 804 | `generateAsset` |
-| 901 | `ensureLogoUrl` |
-| 958 | `_finalizeLogo_` |
-| 996 | `_ensureFavicon_` |
-| 1031 | `ensureAvatarUrl` |
-| 1071 | `_finalizeAvatar_` |
-| 1098 | `_writeAvatarPng_` |
-| 1108 | `_getLogoUrlVector_` |
-| 1129 | `_setLapvtfuSlot_` |
-| 1130 | `blankVector` |
-| 1153 | `_writeLogoPng_` |
-| 1159 | `_inicialesDe_` |
-| 1166 | `_getEmpresaRow_` |
-| 1187 | `_pickBestLogoCandidate_` |
-| 1208 | `generateAllAssets` |
-| 1267 | `getBriefAssets` |
-| 1341 | `_listFilesInfo_` |
+| 466 | `updateBriefVector` |
+| 500 | `backupBriefVector` |
+| 568 | `generateAndWriteBrief` |
+| 628 | `saveBriefMetadata` |
+| 756 | `ensureCteFolders` |
+| 810 | `subirImagenCte_` |
+| 855 | `generateAsset` |
+| 964 | `ensureLogoUrl` |
+| 1021 | `_finalizeLogo_` |
+| 1059 | `_ensureFavicon_` |
+| 1094 | `ensureAvatarUrl` |
+| 1134 | `_finalizeAvatar_` |
+| 1161 | `_writeAvatarPng_` |
+| 1171 | `_getLogoUrlVector_` |
+| 1192 | `_setLapvtfuSlot_` |
+| 1193 | `blankVector` |
+| 1216 | `_writeLogoPng_` |
+| 1222 | `_inicialesDe_` |
+| 1229 | `_getEmpresaRow_` |
+| 1250 | `_pickBestLogoCandidate_` |
+| 1271 | `generateAllAssets` |
+| 1330 | `getBriefAssets` |
+| 1404 | `_listFilesInfo_` |
 
 ### `backend/database.js`
 
@@ -10986,6 +11139,7 @@
 | 123 | `processTransactionSupabase` |
 | 269 | `processTransactionGSheets` |
 | 346 | `syncToSupabase` |
+| 394 | `suit_setProp` |
 
 
 ## `Documentacion/`
@@ -11149,32 +11303,32 @@
 | 16 | `segments` |
 | 28 | `parseOrigenPoliticas` |
 | 29 | `segments` |
-| 102 | `hexColor` |
-| 111 | `fixDriveUrl` |
-| 132 | `getEffectivePrice` |
-| 138 | `playNotification` |
-| 154 | `playBuzz` |
-| 172 | `playClick` |
-| 188 | `getCoId` |
-| 191 | `sanitizeString` |
-| 203 | `getTimestamp` |
-| 207 | `getDate` |
-| 214 | `parseModo` |
-| 219 | `hub` |
-| 232 | `parseAiConfig` |
-| 257 | `parseSocialLinks` |
-| 288 | `getSocialLinks` |
-| 309 | `loadEnvConfig` |
-| 334 | `init` |
-| 419 | `mainBiz` |
-| 515 | `checkBackendVersion` |
-| 533 | `loadData` |
-| 550 | `currentBiz` |
-| 608 | `loadFromSupabase` |
-| 655 | `loadGalleryFromStorage` |
-| 717 | `switchCompany` |
-| 775 | `createAgentTask` |
-| 805 | `saveRecord` |
+| 109 | `hexColor` |
+| 118 | `fixDriveUrl` |
+| 139 | `getEffectivePrice` |
+| 145 | `playNotification` |
+| 161 | `playBuzz` |
+| 179 | `playClick` |
+| 195 | `getCoId` |
+| 198 | `sanitizeString` |
+| 210 | `getTimestamp` |
+| 214 | `getDate` |
+| 221 | `parseModo` |
+| 226 | `hub` |
+| 239 | `parseAiConfig` |
+| 264 | `parseSocialLinks` |
+| 295 | `getSocialLinks` |
+| 316 | `loadEnvConfig` |
+| 341 | `init` |
+| 426 | `mainBiz` |
+| 522 | `checkBackendVersion` |
+| 540 | `loadData` |
+| 557 | `currentBiz` |
+| 615 | `loadFromSupabase` |
+| 662 | `loadGalleryFromStorage` |
+| 724 | `switchCompany` |
+| 782 | `createAgentTask` |
+| 812 | `saveRecord` |
 
 ### `js/modules/events.js`
 
@@ -11484,6 +11638,12 @@
 | 969 | `removeBgBase64` |
 | 1054 | `generateAvatarImage` |
 
+### `scripts/check-map-visual.js`
+
+| Línea | Función |
+|-------|---------|
+| 15 | `err` |
+
 ### `scripts/configurador-estilos.js`
 
 | Línea | Función |
@@ -11594,8 +11754,9 @@
 | 38 | `log` |
 | 40 | `registerUrl` |
 | 62 | `killExistingTunnels` |
-| 73 | `main` |
-| 89 | `onChunk` |
+| 73 | `spawnTunnel` |
+| 81 | `onChunk` |
+| 113 | `main` |
 
 ### `scripts/whatsapp-test.js`
 

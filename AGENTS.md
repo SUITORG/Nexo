@@ -286,8 +286,9 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
     | 3010 | SuitAI |
     | 3010 | SuitServiHogar (micro-frontend aislado, ADR-029) |
     | 3011 | SuitChatTG |
-    | 3013 | SuitDiccionario |
-    | 8000 | CampanasAi |
+ | 3013 | SuitDiccionario |
+ | 3014 | SuitPoke (juego cartas PvP, stdlib, sin DB — ADR-036) |
+ | 8000 | CampanasAi |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas
 6. Si el módulo tiene gate de UI (como `modo` flags o `usa_reservaciones`), documentarlo en `projects.yaml` bajo `frontend:`
 7. Escribir ADR en `.suit/memory/decisions/` explicando la decisión arquitectónica

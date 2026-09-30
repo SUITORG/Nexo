@@ -1,0 +1,42 @@
+# GuiaTotal/registro/suitpoke.yaml
+proyecto: "SuitPoke"
+ruta: "SuitPoke/"
+etapa: "construccion"
+creado: "2026-09-29"
+actualizado: "2026-09-29"
+
+validacion:
+  problema: "Jugar cartas PvP con amigos sin instalar nada: las apps TCG exigen descargas pesadas y no permiten partida relámpago por enlace."
+  hipotesis: "Si damos una PWA de cartas PvP con sala por código y partida de 2-5 min, los jugadores casuales repetirán partida (rematch) sin instalar."
+  metrica_exito: "MVP: ≥2 partidas por jugador, % rematch, D1 ≥25%, onboarding <60 s con 100-300 jugadores reales"
+  evidencia: "SuitPoke/Analista_Proy.md — viabilidad MEDIA, 100 fuentes; mercado TCG digital ~$3-3.7 mil M × juegos de navegador $11.8 B"
+  decision: "continuar"
+  motivo: "Veredicto media + petición explícita del usuario de construirlo"
+
+evaluacion:
+  panel_juzgador: "APROBADO CONDICIONAL"
+  veredicto_fecha: "2026-09-29"
+  recomendaciones: "6.4/10 (tec 7.5, riesgo 6.5, mercado 5.5, fin 5.5). Condiciones: MVP ~80h (1 mazo ~20-30 cartas, sin monetización en v1), IA aceptable definida, estado autoritativo en servidor + keep-alive SSE, registrar puerto 3014 + ADR antes de codificar, arte/nombres 100% originales, gate de medición antes de fases 2. Riesgo #1: retención sin masa crítica. Ver .suit/logs/panel-juzgador/"
+
+integraciones:
+  convive_sheets: false
+  id_empresa: null
+  db_engine: null
+  brief_en_logo_url: false
+
+taxonomia:
+  industria: "Otros"
+  nicho: "Otro"
+  especializacion: "(sin especializaciones)"
+
+documentos:
+  analista_proy: true            # SuitPoke/Analista_Proy.md
+  taxonomia: true                # SuitPoke/docs/TAXONOMIA.md
+  contrato: true                 # SuitPoke/docs/CONTRATO.md
+  identidad: false
+  manuales: true                 # SuitPoke/docs/MANUAL_*.md (4)
+  prompt_origen: true            # SuitPoke/docs/PROMPT_ORIGEN.md
+  checklist_lanzamiento: true    # SuitPoke/docs/CHECKLIST-LANZAMIENTO.md
+  arquitectura_docs: false
+
+proximo_paso: "Commit por fases del ciclo → publicar con HTTPS (gate panel: 100-300 jugadores) antes de fases 2"

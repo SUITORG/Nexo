@@ -428,6 +428,41 @@ projects:
       - Prompts_IA
       - Config_Empresas
 
+  suitpoke:
+    name: "SuitPoke — Duelo de Cartas (PvP online PWA)"
+    path: SuitPoke/
+    description: "Juego de cartas estilo battler (emula mecánicas TCG, no copia Pokémon): 2-4 jugadores, salas online por código con SSE, oponentes IA, sonido WebAudio, PWA instalable. Cero dependencias npm; motor compartido servidor/cliente."
+    type: game
+    skills:
+      - javascript
+    context:
+      - SuitPoke/docs/CONTRATO.md
+      - SuitPoke/README.md
+      - SuitPoke/docs/GUIA_JUEGO.md
+      - SuitPoke/js/motor.js
+      - SuitPoke/server.js
+    frontend:
+      public: true
+      public_route: "http://localhost:3014 (servidor propio, fuera del SPA raíz)"
+      public_gate: "sin gate — no usa Config_Empresas (exención multi-tenant, ADR-036)"
+      staff: false
+      api_endpoints:
+        - POST /api/crear
+        - POST /api/unirse
+        - POST /api/accion
+        - GET /api/stream (SSE)
+        - GET /health
+    environment:
+      PORT: 3014
+      TYPE: game
+      DEPENDENCIES: "ninguna (Node stdlib)"
+    servers:
+      - name: suitpoke
+        path: SuitPoke/server.js
+        port: 3014
+        type: http-stdlib
+    notes: "Estado de partida en memoria (sin DB). Exención multi-tenant y sin persistencia: ADR-036. Reglas de negocio del juego: SuitPoke/docs/GUIA_JUEGO.md"
+
   suit-diccionario:
     name: "SuitDiccionario — Diccionario EN-ES Interactivo"
     path: SuitMiDBdic/
