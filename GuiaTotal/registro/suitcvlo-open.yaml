@@ -1,0 +1,37 @@
+# GuiaTotal/registro/suitcvlo-open.yaml
+proyecto: "SuitCVLO-open"
+ruta: "SuitCVLO-open/"
+etapa: "construccion"
+creado: "2026-10-01"
+actualizado: "2026-10-01"
+
+validacion:
+  problema: "Auditar publicidad exterior exige abrir AutoClaw y confiar en un servicio externo con clave hardcodeada; sin ese servicio la herramienta no lee ninguna foto."
+  hipotesis: "Si el motor de lectura acepta una cadena de proveedores que empieza en Ollama local (VLM), la auditoría sigue funcionando sin AutoClaw y sin costos por foto."
+  metrica_exito: "Corrida MOCK en verde + corrida real con 10 fotos leyendo con al menos 2 proveedores distintos de la cadena"
+  evidencia: "\\cvlo-auditor (pipeline probado, tests mock) + inventario Ollama local (17 modelos, 0 con visión)"
+  decision: "continuar"
+  motivo: "Petición explícita del usuario: construir SuitCVLO-open tomando lo mejor de cvlo-auditor y SuitOrg"
+
+integraciones:
+  convive_sheets: false
+  id_empresa: null
+  db_engine: null
+  brief_en_logo_url: false
+
+taxonomia:
+  industria: "Otros"
+  nicho: "Otro"
+  especializacion: "(sin especializaciones)"
+
+documentos:
+  analista_proy: false           # no aplica: adición a un pipeline existente y validado
+  taxonomia: false
+  contrato: true                 # SuitCVLO-open/docs/CONTRATO.md
+  identidad: false
+  manuales: false
+  prompt_origen: false
+  checklist_lanzamiento: false
+  arquitectura_docs: false
+
+proximo_paso: "Ciclo F1-F7: copia de base con puerto 3015 → switch IA → alta en projects.yaml (3015) + ADR → tabla PROS_CONTRAS"
