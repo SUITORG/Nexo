@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CVLO Auditor</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
+</head>
+<body>
+<div class="contenedor">
+  <header class="encabezado">
+    <div>
+      <h1>CVLO Auditor</h1>
+      <p class="subtitulo">Procesa lotes de fotos (Drive, local, ZIP o carpeta): lee cada foto, la cruza con los PINs,
+        arma la estructura <code>&lt;AAMMPQ&gt;\auditoria\&lt;Marca&gt;&lt;Tipo&gt;&lt;Ciudad&gt;\&lt;PIN&gt;</code>
+        con sus <code>info.txt</code> y actualiza <code>idxfotos.xlsx</code>.</p>
+    </div>
+    <div class="insignias">
+      <span id="badge-mock" class="insignia oculto">Modo prueba</span>
+      <span id="badge-token" class="insignia alerta oculto">Token local no disponible — abre AutoClaw</span>
+    </div>
+  </header>
+
+  <section class="tarjeta">
+    <h2>Parámetros</h2>
+    <div class="modos">
+      <label class="modo"><input type="radio" name="modo" value="web" checked> Web / Drive</label>
+      <label class="modo"><input type="radio" name="modo" value="local"> Local (ruta)</label>
+      <label class="modo"><input type="radio" name="modo" value="zip"> Subir ZIP</label>
+      <label class="modo"><input type="radio" name="modo" value="carpeta"> Subir carpeta</label>
+    </div>
+
+    <div id="panel-web" class="panel">
+      <label>Ruta o URL de Google Drive Pics (o el archivo GooDrPics.txt)
+        <input type="text" id="drive_pics">
+      </label>
+    </div>
+    <div id="panel-local" class="panel oculto">
+      <label>Ruta local de fotos (carpeta)
+        <input type="text" id="ruta_local" placeholder="C:\ruta\a\fotos">
+      </label>
+    </div>
+    <div id="panel-zip" class="panel oculto">
+      <label>Archivo ZIP con fotos
+        <input type="file" id="input-zip" accept=".zip">
+      </label>
+    </div>
+    <div id="panel-carpeta" class="panel oculto">
+      <label>Carpeta con fotos (sube sus archivos)
+        <input type="file" id="input-carpeta" webkitdirectory multiple>
+      </label>
+    </div>
+
+    <div class="campos">
+      <label>Ruta de Salida <input type="text" id="salida"></label>
+      <label>Ruta de GoogleMapsPines (.txt / .kml / .xlsx) <input type="text" id="pines"></label>
+      <label>Ruta de KML (RutaKML.kml) <input type="text" id="kml"></label>
+      <label>Ruta de idxfotos.xlsx (si no existe se crea) <input type="text" id="idx"></label>
+      <label>N Fotos (máx. a leer) <input type="number" id="n_fotos" value="50" min="1"></label>
+    </div>
+
+    <details class="avanzado">
+      <summary>Opciones avanzadas</summary>
+      <div class="campos">
+        <label>Radio de match (m) <input type="number" id="radio" value="250" min="10"></label>
+        <label>Tope de fotos por PIN <input type="number" id="cap" value="10" min="1"></label>
+        <label>Pausa de descarga (s) <input type="number" id="pausa" value="1" step="0.5" min="0.5"></label>
+      </div>
+    </details>
+
+    <div class="acciones">
+      <button type="button" class="boton primario" id="btn-iniciar">Iniciar corrida</button>
+      <span class="nota">Requiere internet y AutoClaw abierto (token local). Nada se elimina: los temporales quedan en `trabajo\`.</span>
+    </div>
+    <div id="aviso" class="aviso oculto"></div>
+  </section>
+
+  <section class="tarjeta oculto" id="seccion-progreso">
+    <h2>Progreso</h2>
+    <div class="barra"><div class="barra-relleno" id="barra"></div></div>
+    <p class="progreso-texto" id="progreso-texto">—</p>
+    <ul class="lista-fotos" id="lista-fotos"></ul>
+  </section>
+
+  <section class="tarjeta oculto" id="seccion-resultados">
+    <h2>Resultados</h2>
+    <div class="stats" id="stats"></div>
+    <p class="salida-info" id="resumen-info"></p>
+    <div class="descargas">
+      <button type="button" class="boton" id="btn-copiar">Copiar ruta de salida</button>
+    </div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Corridas recientes</h2>
+    <div id="historial" class="tabla-wrap"><table id="tabla-historial"><tbody><tr><td class="suave">Sin corridas aún.</td></tr></tbody></table></div>
+  </section>
+
+  <details class="como">
+    <summary>¿Cómo funciona?</summary>
+    <ol>
+      <li>Eliges la fuente: <b>Web/Drive</b> (descarga con pausa de 1 s), <b>Local</b> (ruta), <b>ZIP</b> o <b>carpeta</b> subida.</li>
+      <li>La app lee el GPS EXIF de cada foto y la cruza con el PIN más cercano (radio configurable).</li>
+      <li>Lee la foto con IA (ANUNCIO, MARCA/CAMPAÑA, QUÉ ANUNCIA, TEXTO, REFERENCIAS, TIPO, CARA).</li>
+      <li>Copia la foto a <code>&lt;Salida&gt;\&lt;AAMMPQ&gt;\auditoria\&lt;Marca&gt;&lt;Tipo&gt;&lt;Ciudad&gt;\&lt;PIN&gt;\</code> (fecha de la foto define la quincena) y genera/actualiza <code>info.txt</code>.</li>
+      <li>Actualiza <code>idxfotos.xlsx</code>: crea el archivo si no existe; marca <b>Verificado ✓</b> cuando la foto quedó cruzada; no repite lo ya verificado.</li>
+    </ol>
+  </details>
+
+  <footer class="pie"><p>CVLO Auditor · servidor local <code>http://127.0.0.1:8019</code></p></footer>
+</div>
+<script>
+window.CVLO_DEFAULTS = {{ defaults_json | safe }};
+</script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
