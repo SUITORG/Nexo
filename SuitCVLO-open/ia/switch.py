@@ -141,7 +141,7 @@ def _ollama_modelos():
         tam = (m.get('details') or {}).get('parameter_size') or ''
         salida.append({'id': m.get('name'), 'nombre': '{} (local)'.format(m.get('name')),
                        'proveedor': 'ollama', 'local': True, 'vision': 'vision' in caps,
-                       'detalle': tam})
+                       'detalle': tam, 'bytes': m.get('size') or 0})
     return salida
 
 
@@ -189,9 +189,10 @@ def _elegir(proveedor, modelo):
         vlm = _env('CVLO_VLM')
         if vlm:
             return vlm
-        for m in _ollama_modelos():
-            if m['vision']:
-                return m['id']
+        # sin CVLO_VLM: el modelo con visión más liviano (arranca más rápido)
+        candidatos = [m for m in _ollama_modelos() if m['vision']]
+        if candidatos:
+            return min(candidatos, key=lambda m: m.get('bytes') or 1 << 62)['id']
         raise RuntimeError('Ollama sin modelos con visión (instala: ollama pull qwen3.5)')
     if proveedor == 'openrouter':
         if modelo:

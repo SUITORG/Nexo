@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Proceso completo del CVLO Auditor: corre una tanda sobre N fotos.
+r"""Proceso completo del SuitCVLO-open: corre una tanda sobre N fotos.
 
 Fuentes soportadas: web (Drive URL) | local (ruta) | zip (subido) | carpeta (subida).
 Salidas: estructura <SALIDA>\<AAMMPQ>\auditoria\<Marca><Tipo><Ciudad>\<PIN>\ (fotos + info.txt)
@@ -63,19 +63,15 @@ def _elegir_pin(lat, lon, pines, radio):
     return mejor, dm
 
 
-def _leer_foto_ia(ruta_jpg, trabajo):
-    """Copia 1600px, sube y reconoce. Devuelve texto crudo."""
+def _leer_foto_ia(ruta_jpg, trabajo, proveedor='auto', modelo=None, log=None):
+    """Lee la foto con el switch de IA: Ollama -> OpenRouter -> Gemini -> AutoClaw."""
     if motor.en_mock():
         return ('ANUNCIO: SI\nMARCA CAMPAÑA: DiDi\nQUE ANUNCIA: promoción simulada\n'
                 'TEXTO VISIBLE: TEXTO SIMULADO\nREFERENCIAS UBICACION: no visible\n'
                 'TIPO SOPORTE: parabús\nCARA: frente')
-    from PIL import Image
-    chico = os.path.join(trabajo, 'tmp_' + os.path.basename(ruta_jpg) + '.jpg')
-    im = Image.open(ruta_jpg).convert('RGB')
-    im.thumbnail((1600, 1600))
-    im.save(chico, quality=85)
-    url = motor.subir_imagen(chico)
-    return motor.reconocer(url, motor.PROMPT_LECTURA)
+    from ia import switch
+    return switch.leer(ruta_jpg, motor.PROMPT_LECTURA, proveedor=proveedor,
+                       modelo=modelo, log=log)
 
 
 def _fila_idx(foto_jpg, texto, pin, d, kml_d, lat, lon, marcada, excede=False):
@@ -253,7 +249,8 @@ def ejecutar_corrida(params, progreso, log):
         try:
             from PIL import Image
             im = Image.open(c['foto']).convert('RGB')
-            texto = _leer_foto_ia(c['foto'], trabajo)
+            texto = _leer_foto_ia(c['foto'], trabajo, params.get('ia_proveedor', 'auto'),
+                                  params.get('ia_modelo'), log)
             # destino
             pq = motor.quincena_de(c['fecha']) or datetime_quincena()
             grupo = motor.grupo_de(c['pin'], d)

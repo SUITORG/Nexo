@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Motor del CVLO Auditor.
+r"""Motor del SuitCVLO-open.
 
 Pipeline (portado del proceso validado):
   fotos (web/local/zip/carpeta) -> GPS EXIF -> match a PIN (radio) -> lectura IA
@@ -37,18 +37,27 @@ def en_mock():
     return os.environ.get('CVLO_MOCK') == '1'
 
 
-# ---------------------------------------------------------------- API AutoGLM
+# ------------------------------------------- API AutoGLM (último eslabón de la cadena)
+# Sin claves en el código: APP_ID/APP_KEY por .env (AUTOCALW_*) o desde la skill instalada.
 DIR_SKILL = os.environ.get('CVLO_SKILL_DIR', r'C:\Users\rojo-\.openclaw-autoclaw\skills\autoglm-image-recognition')
 CONFIG_DEFECTO = {
-    'APP_ID': '100003',
-    'APP_KEY': '38d2391985e2369a5fb8227d8e6cd5e5',
+    'APP_ID': '',
+    'APP_KEY': '',
     'TOKEN_URL': 'http://127.0.0.1:18432/get_token',
     'URL_UPLOAD': 'https://autoglm-api.autoglm.ai/agentdr/v1/assistant/upload-mix',
     'URL_RECONOCER': 'https://autoglm-api.autoglm.ai/agentdr/v1/assistant/skills/image-recognition',
 }
+ENTORNO_CFG = {'APP_ID': 'AUTOCALW_APP_ID', 'APP_KEY': 'AUTOCALW_APP_KEY',
+               'TOKEN_URL': 'AUTOCALW_TOKEN_URL', 'URL_UPLOAD': 'AUTOCALW_URL_UPLOAD',
+               'URL_RECONOCER': 'AUTOCALW_URL_RECONOCER'}
 
 
 def leer_config():
+    try:
+        from ia import switch
+        switch._env('AUTOCALW_APP_KEY')   # efecto secundario: carga el .env del proyecto
+    except Exception:
+        pass
     cfg = dict(CONFIG_DEFECTO)
     try:
         texto = open(os.path.join(DIR_SKILL, 'upload-mix.py'), encoding='utf-8').read()
@@ -73,6 +82,13 @@ def leer_config():
             cfg['URL_RECONOCER'] = m.group(1)
     except Exception:
         pass
+    # el entorno (.env) manda sobre cualquier valor leído
+    for clave, var in ENTORNO_CFG.items():
+        v = os.environ.get(var)
+        if v:
+            cfg[clave] = v
+    if not cfg.get('APP_KEY'):
+        raise RuntimeError('Falta AUTOCALW_APP_KEY (AutoClaw es el último eslabón; ver .env.example)')
     return cfg
 
 

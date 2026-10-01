@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import motor
 import proceso
 import utilidades as U
+from ia import switch
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 TRABAJO = os.environ.get('CVLO_TRABAJO') or os.path.join(BASE, 'trabajo')
@@ -64,7 +65,18 @@ def inicio():
 
 @app.get('/api/estado')
 def api_estado():
-    return jsonify({'mock': motor.en_mock(), 'token': motor.token_disponible(), 'defaults': defaults()})
+    return jsonify({'mock': motor.en_mock(), 'token': motor.token_disponible(),
+                    'defaults': defaults(), 'ia': switch.estado()})
+
+
+@app.get('/api/ia/modelos')
+def api_modelos_ia():
+    return jsonify({'modelos': switch.modelos(), 'cadena': list(switch.ORDEN)})
+
+
+@app.get('/api/ia/estado')
+def api_estado_ia():
+    return jsonify({'proveedores': switch.estado()})
 
 
 @app.errorhandler(RequestEntityTooLarge)
@@ -86,6 +98,8 @@ def api_crear():
     idx = (form.get('idx') or '').strip()
     drive = (form.get('drive_pics') or '').strip()
     ruta_local = (form.get('ruta_local') or '').strip()
+    ia_proveedor = (form.get('ia_proveedor') or 'auto').strip().lower()
+    ia_modelo = (form.get('ia_modelo') or '').strip()
 
     if not salida:
         return jsonify({'error': 'Falta la Ruta de Salida.'}), 400
@@ -93,6 +107,8 @@ def api_crear():
         return jsonify({'error': 'Falta la Ruta de GoogleMapsPines.'}), 400
     if not idx:
         return jsonify({'error': 'Falta la Ruta de idxfotos.xlsx.'}), 400
+    if ia_proveedor not in ('auto',) + tuple(switch.ORDEN):
+        return jsonify({'error': 'Motor IA desconocido: {}'.format(ia_proveedor)}), 400
 
     jid = uuid.uuid4().hex[:12]
     entrada = os.path.join(TRABAJO, 'corridas', jid)
@@ -152,6 +168,7 @@ def api_crear():
         'modo': modo, 'ruta_local': ruta_local, 'salida': salida, 'pines': pines,
         'drive_pics': drive, 'kml': kml, 'idx': idx, 'n_fotos': n_fotos,
         'radio': radio, 'cap': cap, 'pausa': pausa,
+        'ia_proveedor': ia_proveedor, 'ia_modelo': ia_modelo,
         'trabajo': TRABAJO,
         '_mock_gps': mock_gps,
     }

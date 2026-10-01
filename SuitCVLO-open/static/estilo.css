@@ -27,9 +27,9 @@ h1 { font-size: clamp(30px, 4vw, 40px); font-weight: 600; letter-spacing: -.02em
 .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
 .campos label { display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; font-weight: 600;
   letter-spacing: .07em; text-transform: uppercase; color: var(--tenue); }
-.campos input, .panel input[type=text] { border: 1px solid var(--linea); border-radius: 9px; padding: 10px 12px;
+.campos input, .campos select, .panel input[type=text] { border: 1px solid var(--linea); border-radius: 9px; padding: 10px 12px;
   font-size: 13.5px; font-family: inherit; color: var(--texto); background: #FCFCFB; width: 100%; }
-.campos input:focus, .panel input:focus { outline: none; border-color: var(--texto); background: var(--blanco); }
+.campos input:focus, .campos select:focus, .panel input:focus { outline: none; border-color: var(--texto); background: var(--blanco); }
 .avanzado { margin-top: 14px; color: var(--suave); }
 .avanzado summary { cursor: pointer; font-weight: 500; color: var(--texto); margin-bottom: 8px; }
 .boton { appearance: none; border: 1px solid var(--linea); background: var(--blanco); color: var(--texto);

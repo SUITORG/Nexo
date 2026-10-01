@@ -1,5 +1,5 @@
 "use strict";
-/* CVLO Auditor — lógica de interfaz */
+/* SuitCVLO-open — lógica de interfaz */
 
 const $ = (s) => document.querySelector(s);
 const D = window.CVLO_DEFAULTS || {};
@@ -18,6 +18,10 @@ const el = {
   historial: $('#tabla-historial'),
   badgeMock: $('#badge-mock'),
   badgeToken: $('#badge-token'),
+  badgeIa: $('#badge-ia'),
+  iaProveedor: $('#ia_proveedor'),
+  iaModelo: $('#ia_modelo'),
+  iaEstado: $('#ia-estado'),
 };
 
 // precargar defaults
@@ -64,6 +68,8 @@ el.btnIniciar.addEventListener('click', async () => {
   fd.append('radio', $('#radio').value || '250');
   fd.append('cap', $('#cap').value || '10');
   fd.append('pausa', $('#pausa').value || '1');
+  fd.append('ia_proveedor', el.iaProveedor.value || 'auto');
+  fd.append('ia_modelo', el.iaModelo.value || '');
   if (m === 'web') fd.append('drive_pics', $('#drive_pics').value.trim());
   if (m === 'local') fd.append('ruta_local', $('#ruta_local').value.trim());
   if (m === 'zip') {
@@ -184,7 +190,7 @@ async function estado() {
     const r = await fetch('/api/estado');
     const d = await r.json();
     el.badgeMock.classList.toggle('oculto', !d.mock);
-    el.badgeToken.classList.toggle('oculto', !!d.token);
+    pintarEstadoIa(d.ia);
   } catch (e) { /* sin conexión */ }
 }
 
@@ -219,5 +225,67 @@ async function cargarHistorial() {
   } catch (e) { /* sin conexión */ }
 }
 
+let IA_MODELOS = {};   // id -> proveedor
+const IA_LS = 'cvlo-open-ia';
+
+function guardarIa() {
+  try {
+    localStorage.setItem(IA_LS, JSON.stringify({ p: el.iaProveedor.value, m: el.iaModelo.value }));
+  } catch (e) { /* modo privado */ }
+}
+
+async function cargarModelosIa() {
+  try {
+    const r = await fetch('/api/ia/modelos');
+    const d = await r.json();
+    const guardado = JSON.parse(localStorage.getItem(IA_LS) || '{}');
+    const grupos = {};
+    (d.modelos || []).forEach((m) => {
+      IA_MODELOS[m.id] = m.proveedor;
+      (grupos[m.proveedor] = grupos[m.proveedor] || []).push(m);
+    });
+    el.iaModelo.innerHTML = '';
+    const auto = document.createElement('option');
+    auto.value = ''; auto.textContent = 'auto (el primero disponible)';
+    el.iaModelo.appendChild(auto);
+    Object.keys(grupos).forEach((p) => {
+      const og = document.createElement('optgroup');
+      og.label = p + (p === 'ollama' ? ' — local' : ' — nube');
+      grupos[p].forEach((m) => {
+        const o = document.createElement('option');
+        o.value = m.id;
+        o.textContent = (m.vision ? '' : '[sin visión] ') + m.nombre;
+        og.appendChild(o);
+      });
+      el.iaModelo.appendChild(og);
+    });
+    if (guardado.p) el.iaProveedor.value = guardado.p;
+    if (guardado.m && Array.from(el.iaModelo.options).some((o) => o.value === guardado.m)) {
+      el.iaModelo.value = guardado.m;
+    }
+  } catch (e) { /* sin conexión */ }
+}
+
+el.iaModelo.addEventListener('change', () => {
+  const p = IA_MODELOS[el.iaModelo.value];
+  if (p) el.iaProveedor.value = 'auto';
+  guardarIa();
+});
+el.iaProveedor.addEventListener('change', guardarIa);
+
+let IA_ESTADO = [];
+function pintarEstadoIa(ia) {
+  if (!ia || !ia.length) return;
+  IA_ESTADO = ia;
+  el.iaEstado.textContent = 'Cadena: ' + ia.map((x) =>
+    x.proveedor + (x.disponible ? ' ●' : ' ○ (' + x.motivo + ')')).join('  →  ');
+  const listos = ia.filter((x) => x.disponible).map((x) => x.proveedor);
+  el.badgeIa.textContent = listos.length ? 'IA · ' + listos.join(', ') : 'IA · sin proveedores';
+  el.badgeIa.className = 'insignia' + (listos.length ? '' : ' alerta');
+  const ac = ia.find((x) => x.proveedor === 'autoclaw');
+  el.badgeToken.classList.toggle('oculto', !!(ac && ac.disponible));
+}
+
 estado();
+cargarModelosIa();
 cargarHistorial();

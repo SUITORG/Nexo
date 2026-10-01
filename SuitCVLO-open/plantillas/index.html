@@ -3,21 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CVLO Auditor</title>
+<title>SuitCVLO-open</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
 </head>
 <body>
 <div class="contenedor">
   <header class="encabezado">
     <div>
-      <h1>CVLO Auditor</h1>
-      <p class="subtitulo">Procesa lotes de fotos (Drive, local, ZIP o carpeta): lee cada foto, la cruza con los PINs,
-        arma la estructura <code>&lt;AAMMPQ&gt;\auditoria\&lt;Marca&gt;&lt;Tipo&gt;&lt;Ciudad&gt;\&lt;PIN&gt;</code>
+      <h1>SuitCVLO-open</h1>
+      <p class="subtitulo">Procesa lotes de fotos (Drive, local, ZIP o carpeta): lee cada foto con el motor de IA que
+        elijas, la cruza con los PINs, arma la estructura <code>&lt;AAMMPQ&gt;\auditoria\&lt;Marca&gt;&lt;Tipo&gt;&lt;Ciudad&gt;\&lt;PIN&gt;</code>
         con sus <code>info.txt</code> y actualiza <code>idxfotos.xlsx</code>.</p>
     </div>
     <div class="insignias">
       <span id="badge-mock" class="insignia oculto">Modo prueba</span>
-      <span id="badge-token" class="insignia alerta oculto">Token local no disponible — abre AutoClaw</span>
+      <span id="badge-ia" class="insignia oculto"></span>
+      <span id="badge-token" class="insignia alerta oculto">AutoClaw sin token (último eslabón)</span>
     </div>
   </header>
 
@@ -59,6 +60,22 @@
       <label>N Fotos (máx. a leer) <input type="number" id="n_fotos" value="50" min="1"></label>
     </div>
 
+    <div class="campos">
+      <label>Motor IA
+        <select id="ia_proveedor">
+          <option value="auto">auto — Ollama → OpenRouter → Gemini → AutoClaw</option>
+          <option value="ollama">Ollama (local)</option>
+          <option value="openrouter">OpenRouter (nube, gratis)</option>
+          <option value="gemini">Gemini (nube)</option>
+          <option value="autoclaw">AutoClaw / AutoGLM</option>
+        </select>
+      </label>
+      <label>Modelo
+        <select id="ia_modelo"><option value="">auto (el primero disponible)</option></select>
+      </label>
+    </div>
+    <p class="nota" id="ia-estado">Estado de la cadena: cargando…</p>
+
     <details class="avanzado">
       <summary>Opciones avanzadas</summary>
       <div class="campos">
@@ -70,7 +87,7 @@
 
     <div class="acciones">
       <button type="button" class="boton primario" id="btn-iniciar">Iniciar corrida</button>
-      <span class="nota">Requiere internet y AutoClaw abierto (token local). Nada se elimina: los temporales quedan en `trabajo\`.</span>
+      <span class="nota">La lectura baja por la cadena hasta que un proveedor responde. Nada se elimina: los temporales quedan en `trabajo\`.</span>
     </div>
     <div id="aviso" class="aviso oculto"></div>
   </section>
@@ -108,7 +125,7 @@
     </ol>
   </details>
 
-  <footer class="pie"><p>CVLO Auditor · servidor local <code>http://127.0.0.1:8019</code></p></footer>
+  <footer class="pie"><p>SuitCVLO-open · servidor local <code>http://127.0.0.1:3015</code></p></footer>
 </div>
 <script>
 window.CVLO_DEFAULTS = {{ defaults_json | safe }};
