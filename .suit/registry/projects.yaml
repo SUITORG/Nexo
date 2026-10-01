@@ -567,3 +567,42 @@ projects:
         port: 3010
         type: express
     notes: "Proyecto aislado con React 19. No se integra al SPA principal SuitOrg. Comunicación vía URLs externas o APIs compartidas (Supabase, Stripe). Mantenido independientemente."
+
+  suitcvlo-open:
+    name: "SuitCVLO-open — Auditoría OOH con switch de IA multi-proveedor"
+    path: SuitCVLO-open/
+    description: "Fork open de \\cvlo-auditor (fuente de solo lectura): procesa lotes de fotos de publicidad exterior, las cruza con PINs por GPS y genera <AAMMPQ>\\auditoria\\<Grupo>\\<PIN>\\ + info.txt + idxfotos.xlsx. Motor de lectura desacoplado en ia/switch.py: Ollama local (VLM) -> OpenRouter -> Gemini -> AutoClaw, con circuit breaker. Sin base de datos, sin borrados, sin secretos en el código. Ver ADR-037."
+    type: standalone
+    skills:
+      - javascript
+    context:
+      - SuitCVLO-open/docs/CONTRATO.md
+      - SuitCVLO-open/readme.md
+      - SuitCVLO-open/ia/switch.py
+      - SuitCVLO-open/motor.py
+      - SuitCVLO-open/proceso.py
+    frontend:
+      public: true
+      public_route: "http://127.0.0.1:3015/ (herramienta local, usuario único)"
+      public_gate: "none (sin multi-inquilino)"
+      staff: false
+      staff_route: "none"
+      staff_gate: "none"
+      api_endpoints:
+        - GET /
+        - GET /api/estado
+        - GET /api/ia/modelos
+        - GET /api/ia/estado
+        - POST /api/corridas
+        - GET /api/corridas
+        - GET /api/corridas/<id>
+    environment:
+      PORT: 3015
+      TYPE: auditoria-ooh
+      DB: archivos-locales
+    servers:
+      - name: cvlo-open
+        path: SuitCVLO-open/app.py
+        port: 3015
+        type: flask
+    notes: "Python/Flask a propósito: openpyxl + Pillow + EXIF/HEIC ya son Python (escalera ponytail). No consume Config_Empresas ni Supabase. \\cvlo-auditor es SOLO LECTURA."

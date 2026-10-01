@@ -91,6 +91,8 @@
 | `suit-chat-tg` | `SuitChatTG/` | GSHEETS | 3011 |
 | `suit-comfy` | `SuitComfy/` | - (ComfyUI + FFmpeg, local) | 3012 |
 | `suit-diccionario` | `SuitMiDBdic/` | - | 3013 |
+| `suitpoke` | `SuitPoke/` | - (memoria) | 3014 |
+| `suitcvlo-open` | `SuitCVLO-open/` | archivos locales | 3015 |
 
 ## Memory
 | Directory | Purpose |

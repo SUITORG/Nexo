@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-09-29 | **Total archivos:** 1589 JS/GS
+**Generado:** 2026-10-01 | **Total archivos:** 1594 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10318,6 +10318,25 @@
 | 439 | `imageThumb` |
 | 444 | `escapeHtml` |
 
+## `SuitCVLO-open/static/app.js`
+
+| Línea | Función |
+|-------|---------|
+| 37 | `modo` |
+| 42 | `pintarPaneles` |
+| 52 | `aviso` |
+| 56 | `ocultarAviso` |
+| 105 | `sondeo` |
+| 111 | `consultar` |
+| 129 | `pintarProgreso` |
+| 156 | `stat` |
+| 165 | `pintarResultados` |
+| 188 | `estado` |
+| 197 | `cargarHistorial` |
+| 231 | `guardarIa` |
+| 237 | `cargarModelosIa` |
+| 277 | `pintarEstadoIa` |
+
 ## `SuitDashboard/scan.js`
 
 | Línea | Función |
@@ -10904,6 +10923,13 @@
 |-------|---------|
 | 3 | `wa` |
 
+## `temp/diag-v5b.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `sleep` |
+| 6 | `hmp` |
+
 ## `temp/diff-schema.js`
 
 | Línea | Función |
@@ -10933,6 +10959,17 @@
 | 64 | `post` |
 | 70 | `get` |
 
+## `temp/fotos-topluxf.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `sleep` |
+| 4 | `post` |
+| 14 | `get` |
+| 30 | `fotos` |
+| 48 | `t1` |
+| 59 | `t2` |
+
 ## `temp/genera-paginas-hmp.js`
 
 | Línea | Función |
@@ -10944,6 +10981,20 @@
 | Línea | Función |
 |-------|---------|
 | 7 | `err` |
+
+## `temp/migra-legacy.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `sleep` |
+| 4 | `post` |
+
+## `temp/smoke-activos.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `sleep` |
+| 55 | `hmp` |
 
 ## `vectcutapi-mcp/.venv/Lib/site-packages/werkzeug/debug/shared/debugger.js`
 
@@ -11048,29 +11099,34 @@
 | 86 | `doGet` |
 | 135 | `doPost` |
 | 146 | `handlePostAction` |
-| 466 | `updateBriefVector` |
-| 500 | `backupBriefVector` |
-| 568 | `generateAndWriteBrief` |
-| 628 | `saveBriefMetadata` |
-| 756 | `ensureCteFolders` |
-| 810 | `subirImagenCte_` |
-| 855 | `generateAsset` |
-| 964 | `ensureLogoUrl` |
-| 1021 | `_finalizeLogo_` |
-| 1059 | `_ensureFavicon_` |
-| 1094 | `ensureAvatarUrl` |
-| 1134 | `_finalizeAvatar_` |
-| 1161 | `_writeAvatarPng_` |
-| 1171 | `_getLogoUrlVector_` |
-| 1192 | `_setLapvtfuSlot_` |
-| 1193 | `blankVector` |
-| 1216 | `_writeLogoPng_` |
-| 1222 | `_inicialesDe_` |
-| 1229 | `_getEmpresaRow_` |
-| 1250 | `_pickBestLogoCandidate_` |
-| 1271 | `generateAllAssets` |
-| 1330 | `getBriefAssets` |
-| 1404 | `_listFilesInfo_` |
+| 478 | `updateBriefVector` |
+| 512 | `backupBriefVector` |
+| 580 | `generateAndWriteBrief` |
+| 640 | `saveBriefMetadata` |
+| 764 | `ensureCteFolders` |
+| 801 | `_findAssetFile_` |
+| 820 | `_nextAssetName_` |
+| 835 | `subirImagenCte_` |
+| 880 | `generateAsset` |
+| 970 | `ensureLogoUrl` |
+| 1026 | `_finalizeLogo_` |
+| 1063 | `_ensureFavicon_` |
+| 1098 | `ensureAvatarUrl` |
+| 1137 | `_finalizeAvatar_` |
+| 1163 | `_writeAvatarPng_` |
+| 1174 | `_getLogoUrlVector_` |
+| 1195 | `_setLapvtfuSlot_` |
+| 1196 | `blankVector` |
+| 1223 | `_writeLogoPng_` |
+| 1231 | `_inicialesDe_` |
+| 1238 | `_getEmpresaRow_` |
+| 1259 | `_pickBestLogoCandidate_` |
+| 1280 | `generateAllAssets` |
+| 1347 | `shareCteFile_` |
+| 1377 | `setLapvtfuSlot_` |
+| 1402 | `migrarActivosCte_` |
+| 1514 | `getBriefAssets` |
+| 1600 | `_listFilesInfo_` |
 
 ### `backend/database.js`
 

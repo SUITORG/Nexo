@@ -9,7 +9,7 @@ validacion:
   problema: "Auditar publicidad exterior exige abrir AutoClaw y confiar en un servicio externo con clave hardcodeada; sin ese servicio la herramienta no lee ninguna foto."
   hipotesis: "Si el motor de lectura acepta una cadena de proveedores que empieza en Ollama local (VLM), la auditoría sigue funcionando sin AutoClaw y sin costos por foto."
   metrica_exito: "Corrida MOCK en verde + corrida real con 10 fotos leyendo con al menos 2 proveedores distintos de la cadena"
-  evidencia: "\\cvlo-auditor (pipeline probado, tests mock) + inventario Ollama local (17 modelos, 0 con visión)"
+  evidencia: "\\cvlo-auditor (pipeline probado, tests mock) + inventario Ollama local (17 modelos, 8 con capability vision) + lectura real de imagen por Ollama (319 caracteres, ver VALIDACION.md #10)"
   decision: "continuar"
   motivo: "Petición explícita del usuario: construir SuitCVLO-open tomando lo mejor de cvlo-auditor y SuitOrg"
 
@@ -34,4 +34,4 @@ documentos:
   checklist_lanzamiento: false
   arquitectura_docs: false
 
-proximo_paso: "Ciclo F1-F7: copia de base con puerto 3015 → switch IA → alta en projects.yaml (3015) + ADR → tabla PROS_CONTRAS"
+proximo_paso: "Ciclo F0-F7 completado (23 tests OK, ADR-037, 3015). PENDIENTE: corrida real con un lote de cteCVLO1 para fijar CVLO_VLM por defecto"

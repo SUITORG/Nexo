@@ -129,3 +129,4 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 - [x] Taxonomías por proyecto creadas (2026-09-26)
 - [x] Limpieza SuitServiHogar (ruido borrado, evaluaciones a `docs/`) (2026-09-26)
 - [x] Consolidación de pendientes a 4 fuentes (2026-09-26 → este archivo)
+- [ ] **SuitCVLO-open** (2026-10-01, ciclo F0->F7): fork open de cvlo-auditor + switch IA ollama -> openrouter -> gemini -> autoclaw (3015, ADR-037, 23 tests OK). PENDIENTE: **corrida real con un lote de cteCVLO1** para contrastar calidad de lectura Ollama local (qwen3.5 vision) vs Gemini/OpenRouter y fijar CVLO_VLM por defecto.
