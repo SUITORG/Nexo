@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 38 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 10 de la cadena) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 40 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -25,6 +25,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 17 | Eslabón `huggingface` (ADR-039) | `ORDEN` de 5, 11 modelos de visión descubiertos del router, `_pertece`/`_elegir` con default `Qwen/Qwen2.5-VL-72B-Instruct` → 3 tests nuevos | ✅ |
 | 18 | Corrida real con HuggingFace | job `70325a1f3468`: **5 fotos en 20 s** (`leidas=5, copiadas=5`), `idxfotos.xlsx` 183→**188 filas** (142 ✓), ~4 s/foto vs 456 s de Ollama | ✅ |
 | 19 | Proveedor forzado no corta la corrida | si el eslabón elegido falla o está en cooldown, `leer()` sigue con el resto de la cadena (invariante 4 del contrato) → 2 tests nuevos | ✅ |
+| 20 | `.env` en caliente | `_env()` recarga el archivo cuando cambia su mtime → **pegar una key no exige reiniciar**; y sin key no se cachea la lista de modelos → `test_env_se_recarga_si_cambia_el_archivo` | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
@@ -78,6 +79,6 @@ Todas corren **sin red** (dependencias parchadas).
 
 ```bash
 cd SuitCVLO-open
-python -m unittest discover -s tests -t . -v      # 38 tests
+python -m unittest discover -s tests -t . -v      # 40 tests
 python app.py                                     # abre http://127.0.0.1:3015
 ```

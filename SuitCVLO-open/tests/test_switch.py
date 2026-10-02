@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Pruebas del switch de IA — sin red, todo parchado."""
+import os
 import time
 import unittest
 from unittest import mock
@@ -185,6 +186,32 @@ class SwitchHttpYModelos(unittest.TestCase):
                 self.assertEqual(switch.leer('f.jpg', 'p', proveedor='huggingface'), 'TEXTO OK')
         finally:
             switch._CB.clear()
+
+    def test_env_se_recarga_si_cambia_el_archivo(self):
+        import shutil
+        import tempfile
+        tmp = tempfile.mkdtemp(prefix='cvlo_env_')
+        ruta = os.path.join(tmp, '.env')
+        with open(ruta, 'w', encoding='utf-8') as f:
+            f.write('CLAVE_DE_PRUEBA=uno\n')
+        try:
+            with mock.patch.object(switch, '_BASE', tmp), \
+                 mock.patch.object(switch, '_ENV_MTIME', -1):
+                self.assertEqual(switch._env('CLAVE_DE_PRUEBA'), 'uno')
+                with open(ruta, 'w', encoding='utf-8') as f:
+                    f.write('CLAVE_DE_PRUEBA=dos\n')
+                os.utime(ruta, (time.time() + 10, time.time() + 10))
+                # sin reiniciar ni limpiar caché: el cambio de mtime recarga
+                self.assertEqual(switch._env('CLAVE_DE_PRUEBA'), 'dos')
+        finally:
+            os.environ.pop('CLAVE_DE_PRUEBA', None)
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    @mock.patch.object(switch, '_env', lambda n, d='': d)
+    def test_openrouter_prefiere_modelo_gratis(self):
+        fijo = [{'id': 'stealth/space-bunny-alpha'}, {'id': 'deepseek/deepseek-v4-flash:free'}]
+        with mock.patch.object(switch, '_openrouter_modelos', lambda: fijo):
+            self.assertEqual(switch._elegir('openrouter', None), 'deepseek/deepseek-v4-flash:free')
 
 
 if __name__ == '__main__':

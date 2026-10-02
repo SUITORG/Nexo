@@ -25,23 +25,31 @@ TTL_MODELOS_S = 3600
 
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ENV_CARGADO = False
+_ENV_MTIME = -1
 _CB = {}          # proveedor -> {'fallos': int, 'hasta': float}
 _CACHE = {'t': 0.0, 't_hf': 0.0, 'openrouter': None, 'huggingface': None}
 
 
 # ---------------------------------------------------------------- entorno
 def _env(nombre, defecto=''):
-    global _ENV_CARGADO
-    if not _ENV_CARGADO:
-        ruta = os.path.join(_BASE, '.env')
-        if os.path.exists(ruta):
+    """Lee el .env del proyecto (manda sobre el entorno). Se recarga solo si cambia el archivo:
+    puedes pegar una key y el siguiente request la usa, sin reiniciar."""
+    global _ENV_CARGADO, _ENV_MTIME
+    ruta = os.path.join(_BASE, '.env')
+    try:
+        mtime = os.path.getmtime(ruta) if os.path.exists(ruta) else 0
+    except OSError:
+        mtime = 0
+    if (not _ENV_CARGADO) or mtime != _ENV_MTIME:
+        _ENV_MTIME = mtime
+        _ENV_CARGADO = True
+        if mtime:
             for linea in open(ruta, encoding='utf-8', errors='replace'):
                 linea = linea.strip()
                 if not linea or linea.startswith('#') or '=' not in linea:
                     continue
                 k, v = linea.split('=', 1)
                 os.environ[k.strip()] = v.strip()      # el .env del proyecto manda sobre el entorno
-        _ENV_CARGADO = True
     return os.environ.get(nombre) or defecto
 
 
@@ -155,20 +163,22 @@ def _openrouter_modelos():
         return _CACHE['openrouter']
     items = []
     clave = _env('OPENROUTER_API_KEY')
-    if clave:
-        try:
-            j = _http('https://openrouter.ai/api/v1/models',
-                      headers={'Authorization': 'Bearer ' + clave}, timeout=25)
-            for m in j.get('data') or []:
-                ar = m.get('architecture') or {}
-                modal = ar.get('input_modalities') or []
-                precio = (m.get('pricing') or {}).get('prompt')
-                if 'image' in modal and str(precio) in ('0', '0.0'):
-                    items.append({'id': m.get('id'), 'nombre': m.get('name') or m.get('id'),
-                                  'proveedor': 'openrouter', 'local': False, 'vision': True,
-                                  'detalle': 'gratis'})
-        except Exception:
-            items = []
+    if not clave:
+        _CACHE['openrouter'] = None    # sin key: no cachear, para que al pegarla se consulte ya
+        return items
+    try:
+        j = _http('https://openrouter.ai/api/v1/models',
+                  headers={'Authorization': 'Bearer ' + clave}, timeout=25)
+        for m in j.get('data') or []:
+            ar = m.get('architecture') or {}
+            modal = ar.get('input_modalities') or []
+            precio = (m.get('pricing') or {}).get('prompt')
+            if 'image' in modal and str(precio) in ('0', '0.0'):
+                items.append({'id': m.get('id'), 'nombre': m.get('name') or m.get('id'),
+                              'proveedor': 'openrouter', 'local': False, 'vision': True,
+                              'detalle': 'gratis'})
+    except Exception:
+        items = []
     _CACHE['openrouter'] = items
     _CACHE['t'] = time.time()
     return items
@@ -251,8 +261,14 @@ def _elegir(proveedor, modelo):
         libre = _env('OPENROUTER_VISION_MODEL')
         if libre:
             return libre
-        for m in _openrouter_modelos():
-            return m['id']
+        ids = [m['id'] for m in _openrouter_modelos()]
+        # preferencia: mejor OCR en español, si está en el tier gratis
+        for pref in ('deepseek/deepseek-v4-flash:free', 'google/gemma-4-26b-a4b-it:free',
+                     'nvidia/nemotron-nano-12b-v2-vl:free', 'openrouter/free'):
+            if pref in ids:
+                return pref
+        if ids:
+            return ids[0]
         raise RuntimeError('OpenRouter sin modelos gratis con visión')
     if proveedor == 'gemini':
         return modelo or _env('GEMINI_VISION_MODEL', 'gemini-2.5-flash')
