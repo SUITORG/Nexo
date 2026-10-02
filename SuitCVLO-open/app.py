@@ -55,6 +55,7 @@ def _job_publico(job):
         'fotos': job['fotos'][-400:], 'log': job['log'][-120:],
         'resumen': job.get('resumen'), 'error': job.get('error_global'),
         'inicio': job['inicio'], 'fin': job.get('fin'),
+        'deteniendo': bool(job.get('detener')),
     }
 
 
@@ -84,14 +85,27 @@ def _grande(_e):
     return jsonify({'error': 'La carga excede el tamaño máximo (1 GB).'}), 413
 
 
+@app.errorhandler(Exception)
+def _error_global(e):
+    """Cualquier error inesperado responde JSON en vez de un 500 sin detalle."""
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return e
+    app.logger.exception('Error en %s %s', request.method, request.path)
+    return jsonify({'error': 'Error interno: {}'.format(str(e)[:300])}), 500
+
+
 @app.post('/api/corridas')
 def api_crear():
     form = request.form
     modo = (form.get('modo') or 'local').strip().lower()
-    n_fotos = int(form.get('n_fotos') or 50)
-    radio = float(form.get('radio') or 250)
-    cap = int(form.get('cap') or 10)
-    pausa = float(form.get('pausa') or 1.0)
+    try:
+        n_fotos = int(form.get('n_fotos') or 50)
+        radio = float(form.get('radio') or 250)
+        cap = int(form.get('cap') or 10)
+        pausa = float(form.get('pausa') or 1.0)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Parámetros numéricos inválidos (N fotos, radio, tope o pausa).'}), 400
     salida = (form.get('salida') or '').strip()
     pines = (form.get('pines') or '').strip()
     kml = (form.get('kml') or '').strip()
@@ -137,17 +151,28 @@ def api_crear():
     elif modo == 'web':
         # aceptar URL directa o un .txt que la contenga (GooDrPics.txt)
         u = drive
-        if u and os.path.exists(u):
-            texto = U.leer_texto_auto(u)
+        if u and os.path.isdir(u):
+            return jsonify({'error': 'Modo Web: "{}" es una CARPETA. Indica la ruta del archivo '
+                                     'GooDrPics.txt (o pega la URL de Drive).'.format(u)}), 400
+        if u and os.path.isfile(u):
+            try:
+                texto = U.leer_texto_auto(u)
+            except Exception as e:
+                return jsonify({'error': 'No pude leer "{}": {}'.format(u, str(e)[:150])}), 400
             import re
             m = re.search(r'https?://\S+', texto)
             u = m.group(0) if m else ''
         if not u or 'http' not in u:
-            return jsonify({'error': 'Modo Web: indica una URL de Drive válida (o la ruta de GooDrPics.txt).'}), 400
+            return jsonify({'error': 'Modo Web: indica una URL de Drive válida (o la ruta del archivo GooDrPics.txt).'}), 400
         drive = u
     else:
-        if not ruta_local or not os.path.isdir(ruta_local):
-            return jsonify({'error': 'Modo Local: la ruta de fotos no existe.'}), 400
+        if not ruta_local:
+            return jsonify({'error': 'Modo Local: falta la ruta de fotos.'}), 400
+        if os.path.isfile(ruta_local):
+            return jsonify({'error': 'Modo Local: "{}" es un archivo. Indica la CARPETA que contiene las fotos.'
+                           .format(ruta_local)}), 400
+        if not os.path.isdir(ruta_local):
+            return jsonify({'error': 'Modo Local: la ruta de fotos no existe: {}'.format(ruta_local)}), 400
         modo = 'local'
 
     mock_gps = None
@@ -158,7 +183,7 @@ def api_crear():
 
     job = {
         'id': jid, 'modo': modo, 'estado': 'en cola', 'total': 0, 'completadas': 0, 'actual': '',
-        'fotos': [], 'log': [], 'resumen': None, 'error_global': None,
+        'fotos': [], 'log': [], 'resumen': None, 'error_global': None, 'detener': False,
         'inicio': datetime.now().isoformat(timespec='seconds'), 'fin': None,
     }
     with JOBS_LOCK:
@@ -171,6 +196,7 @@ def api_crear():
         'ia_proveedor': ia_proveedor, 'ia_modelo': ia_modelo,
         'trabajo': TRABAJO,
         '_mock_gps': mock_gps,
+        '_detener': lambda: bool(job.get('detener')),
     }
 
     def progreso(cambios):
@@ -207,6 +233,20 @@ def api_job(jid):
     return jsonify(_job_publico(job))
 
 
+@app.post('/api/corridas/<jid>/detener')
+def api_detener(jid):
+    with JOBS_LOCK:
+        job = JOBS.get(jid)
+        if not job:
+            return jsonify({'error': 'no existe'}), 404
+        if job['estado'] in ('listo', 'error'):
+            return jsonify({'estado': job['estado'], 'aviso': 'La corrida ya terminó.'})
+        job['detener'] = True
+        job['log'].append('{}  Detener solicitado: se corta al terminar la foto en curso.'
+                          .format(datetime.now().strftime('%H:%M:%S')))
+    return jsonify({'estado': 'deteniendo'})
+
+
 @app.get('/api/corridas')
 def api_lista():
     with JOBS_LOCK:
@@ -217,7 +257,7 @@ def api_lista():
 
 
 if __name__ == '__main__':
-    print('CVLO Auditor')
+    print('SuitCVLO-open')
     print('  URL: http://127.0.0.1:{}'.format(PUERTO))
     print('  MODO_MOCK: {}'.format('ACTIVADO' if motor.en_mock() else 'desactivado'))
     if not os.environ.get('CVLO_NO_ABRIR'):

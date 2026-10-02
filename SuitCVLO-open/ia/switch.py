@@ -214,7 +214,8 @@ def _ollama(ruta, prompt, modelo):
     payload = {'model': _elegir('ollama', modelo), 'stream': False,
                'messages': [{'role': 'user', 'content': prompt, 'images': [_b64(ruta)]}],
                'options': {'temperature': 0.1}}
-    j = _http(url, payload, timeout=600)
+    # CPU solo: una inferencia a la vez tarda ~6-7 min; en paralelo se pasa del tiempo.
+    j = _http(url, payload, timeout=float(_env('OLLAMA_TIMEOUT_S', '900')))
     return ((j.get('message') or {}).get('content') or '').strip()
 
 

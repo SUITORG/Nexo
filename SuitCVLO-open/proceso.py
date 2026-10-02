@@ -149,6 +149,13 @@ def ejecutar_corrida(params, progreso, log):
     pausa = float(params.get('pausa') or 1.0)
     n_fotos = int(params.get('n_fotos') or 50)
 
+    def detenido():
+        f = params.get('_detener')
+        try:
+            return bool(f and f())
+        except Exception:
+            return False
+
     # datos base
     pines = motor.cargar_pines(params['pines'])
     log('Pines cargados: {}'.format(len(pines)))
@@ -190,6 +197,9 @@ def ejecutar_corrida(params, progreso, log):
                                          if U.es_imagen(f)])
         log('Fotos en la fuente local: {}'.format(len(archivos)))
         for p in archivos:
+            if detenido():
+                log('Detener: se corta el armado de candidatas.')
+                break
             if _stem(p) in excluidos:
                 continue
             c = evaluar(p, os.path.basename(p))
@@ -214,6 +224,9 @@ def ejecutar_corrida(params, progreso, log):
         descargas = 0
         for fid, nombre in items:
             if len(candidatas) >= n_fotos:
+                break
+            if detenido():
+                log('Detener: se corta la descarga de Drive.')
                 break
             if _stem(nombre) in excluidos:
                 continue
@@ -243,6 +256,8 @@ def ejecutar_corrida(params, progreso, log):
     def procesar(idx_, c):
         nombre = c['nombre']
         stem = _stem(nombre)
+        if detenido():
+            return stem, 'detenido', None, None
         d = dict(pines[c['pin']])
         d['PIN'] = c['pin']
         kml_d = kml_datos.get(c['pin'], {})
@@ -291,7 +306,10 @@ def ejecutar_corrida(params, progreso, log):
 
     resultados = []
     carpetas = set()
-    with ThreadPoolExecutor(max_workers=3) as ex:
+    # Ollama local corre en CPU: serializar para que cada foto tenga todo el equipo.
+    max_workers = 1 if params.get('ia_proveedor', 'auto') in ('auto', 'ollama') else 3
+    log('Paralelismo de lectura: {} foto(s) a la vez'.format(max_workers))
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
         futuros = {ex.submit(procesar, i, c): i for i, c in enumerate(candidatas)}
         hechas = 0
         for fu in as_completed(futuros):
@@ -319,4 +337,5 @@ def ejecutar_corrida(params, progreso, log):
 
     resumen['grupos'] = sorted(resumen['grupos'])
     resumen['pines'] = sorted(resumen['pines'])
+    resumen['detenida'] = detenido()
     return resumen

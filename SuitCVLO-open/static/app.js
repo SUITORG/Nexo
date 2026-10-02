@@ -7,6 +7,7 @@ const D = window.CVLO_DEFAULTS || {};
 const el = {
   aviso: $('#aviso'),
   btnIniciar: $('#btn-iniciar'),
+  btnDetener: $('#btn-detener'),
   seccionProgreso: $('#seccion-progreso'),
   barra: $('#barra'),
   progresoTexto: $('#progreso-texto'),
@@ -84,6 +85,8 @@ el.btnIniciar.addEventListener('click', async () => {
   }
 
   el.btnIniciar.disabled = true;
+  el.btnDetener.disabled = false;
+  el.btnDetener.textContent = 'Detener';
   el.seccionProgreso.classList.remove('oculto');
   el.seccionResultados.classList.add('oculto');
   $('#lista-fotos').innerHTML = '';
@@ -93,12 +96,12 @@ el.btnIniciar.addEventListener('click', async () => {
   try {
     const r = await fetch('/api/corridas', { method: 'POST', body: fd });
     const j = await r.json();
-    if (!r.ok) { aviso(j.error || 'No se pudo iniciar.'); el.btnIniciar.disabled = false; return; }
+    if (!r.ok) { aviso(j.error || 'No se pudo iniciar.'); terminar(); return; }
     jobActual = j.id;
     sondeo();
   } catch (e) {
     aviso('Error de conexión: ' + e.message);
-    el.btnIniciar.disabled = false;
+    terminar();
   }
 });
 
@@ -106,6 +109,23 @@ function sondeo() {
   if (timer) clearInterval(timer);
   timer = setInterval(consultar, 2000);
   consultar();
+}
+
+el.btnDetener.addEventListener('click', async () => {
+  if (!jobActual) return;
+  el.btnDetener.disabled = true;
+  el.btnDetener.textContent = 'Deteniendo…';
+  try {
+    const r = await fetch('/api/corridas/' + jobActual + '/detener', { method: 'POST' });
+    if (!r.ok) aviso('No se pudo detener la corrida.');
+  } catch (e) { aviso('Error de conexión: ' + e.message); }
+});
+
+function terminar() {
+  if (timer) { clearInterval(timer); timer = null; }
+  el.btnIniciar.disabled = false;
+  el.btnDetener.disabled = true;
+  el.btnDetener.textContent = 'Detener';
 }
 
 async function consultar() {
@@ -116,15 +136,14 @@ async function consultar() {
     const j = await r.json();
     pintarProgreso(j);
     if (j.estado === 'listo' || j.estado === 'error') {
-      clearInterval(timer); timer = null;
       pintarResultados(j);
-      el.btnIniciar.disabled = false;
+      terminar();
       cargarHistorial();
     }
   } catch (e) { /* reintenta */ }
 }
 
-const EST = { pendiente: 'En espera', listo: 'Listo', error: 'Error' };
+const EST = { pendiente: 'En espera', listo: 'Listo', error: 'Error', detenido: 'Detenida' };
 
 function pintarProgreso(j) {
   const total = j.total || 0, hechas = j.completadas || 0;
@@ -151,6 +170,10 @@ function pintarProgreso(j) {
     el.listaFotos.appendChild(li);
   });
   if (j.log && j.log.length) el.log.textContent = j.log.join('\n');
+  if (j.deteniendo && !el.btnDetener.disabled) {
+    el.btnDetener.disabled = true;
+    el.btnDetener.textContent = 'Deteniendo…';
+  }
 }
 
 function stat(valor, etiqueta) {
@@ -172,6 +195,8 @@ function pintarResultados(j) {
   stat(String(r.excedidas || 0), 'Excedidas tope');
   stat(String((r.pines || []).length), 'PINs');
   stat(String((r.grupos || []).length), 'Grupos');
+  if (r.detenida) stat('Sí', 'Corrida detenida');
+  if (r.detenida) aviso('Corrida detenida a mano. Lo ya leído quedó guardado.', 'ok');
   el.resumenInfo.textContent = 'Salida: ' + ($('#salida').value.trim()) + ' · idxfotos: ' + (r.idx || '—') +
     (r.grupos && r.grupos.length ? ' · grupos: ' + r.grupos.join(' | ') : '');
   if (j.log && j.log.length) el.log.textContent = j.log.join('\n');
