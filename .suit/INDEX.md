@@ -93,6 +93,7 @@
 | `suit-diccionario` | `SuitMiDBdic/` | - | 3013 |
 | `suitpoke` | `SuitPoke/` | - (memoria) | 3014 |
 | `suitcvlo-open` | `SuitCVLO-open/` | archivos locales | 3015 |
+| `suitcvlo-gcpy` | `SuitCVLOGCPy/` | archivos en Drive (Colab) | n/a (notebook) |
 
 ## Memory
 | Directory | Purpose |

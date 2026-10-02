@@ -606,3 +606,30 @@ projects:
         port: 3015
         type: flask
     notes: "Python/Flask a propósito: openpyxl + Pillow + EXIF/HEIC ya son Python (escalera ponytail). No consume Config_Empresas ni Supabase. \\cvlo-auditor es SOLO LECTURA."
+
+  suitcvlo-gcpy:
+    name: "SuitCVLOGCPy — Auditoría OOH en Google Colab (GPU gratis)"
+    path: SuitCVLOGCPy/
+    description: "Copia autocontenida del pipeline de SuitCVLO-open pensada para Google Colab: fotos, pines, salida e idxfotos.xlsx viven en Google Drive; procesa lotes de 40 fotos pendientes con la misma secuencia (GPS EXIF -> cruce por PIN -> estructura + info.txt + xlsx con columna FechaCarga). El modelo de visión (Qwen2.5-VL) corre DENTRO del notebook en la GPU gratis como primer eslabon de la cadena. Sin servidor, sin puerto. Ver ADR-040."
+    type: standalone
+    context:
+      - SuitCVLOGCPy/docs/CONTRATO.md
+      - SuitCVLOGCPy/INSTRUCCIONES.md
+      - SuitCVLOGCPy/CVLO_Colab.ipynb
+      - SuitCVLOGCPy/ia/switch.py
+      - SuitCVLOGCPy/proceso.py
+    frontend:
+      public: false
+      public_route: "none (notebook en Google Colab, no hay web)"
+      public_gate: "none"
+      staff: true
+      staff_route: "Google Colab → SuitCVLOGCPy/CVLO_Colab.ipynb (celdas 1-7)"
+      staff_gate: "cuenta Google con acceso a Drive + runtime con GPU"
+      api_endpoints:
+        - none (sin servidor; se ejecuta celda por celda)
+    environment:
+      TYPE: auditoria-ooh-colab
+      RUNTIME: google-colab-gpu
+      DB: archivos-en-drive
+    servers: []
+    notes: "Copia del pipeline desde SuitCVLO-open@7c612d3. NO se toca SuitCVLO-open (limite explicito del usuario 2026-10-02). Si la app local y Colab escriben el mismo idxfotos.xlsx a la vez, riesgo de pisarse: elegir uno por tanda."
