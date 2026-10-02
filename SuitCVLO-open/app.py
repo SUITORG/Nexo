@@ -4,7 +4,7 @@
 Uso: python app.py  ->  http://127.0.0.1:3015
 Parámetros: rutas de fotos (local o Drive), salida, pines, KML, idxfotos, N fotos.
 Sin base de datos: todo se guarda en archivos locales. Sin borrar archivos.
-Lectura IA: ver ia/switch.py (Ollama local -> OpenRouter -> Gemini -> AutoClaw).
+Lectura IA: ver ia/switch.py (Ollama local -> DeepSeek -> OpenRouter -> Gemini).
 """
 import json
 import os
@@ -66,8 +66,7 @@ def inicio():
 
 @app.get('/api/estado')
 def api_estado():
-    return jsonify({'mock': motor.en_mock(), 'token': motor.token_disponible(),
-                    'defaults': defaults(), 'ia': switch.estado()})
+    return jsonify({'mock': motor.en_mock(), 'defaults': defaults(), 'ia': switch.estado()})
 
 
 @app.get('/api/ia/modelos')

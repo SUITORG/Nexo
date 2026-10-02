@@ -18,7 +18,6 @@
     <div class="insignias">
       <span id="badge-mock" class="insignia oculto">Modo prueba</span>
       <span id="badge-ia" class="insignia oculto"></span>
-      <span id="badge-token" class="insignia alerta oculto">AutoClaw sin token (último eslabón)</span>
     </div>
   </header>
 
@@ -63,11 +62,11 @@
     <div class="campos">
       <label>Motor IA
         <select id="ia_proveedor">
-          <option value="auto">auto — Ollama → OpenRouter → Gemini → AutoClaw</option>
+          <option value="auto">auto — Ollama → DeepSeek → OpenRouter → Gemini</option>
           <option value="ollama">Ollama (local)</option>
+          <option value="deepseek">DeepSeek (nube, 5M tokens gratis)</option>
           <option value="openrouter">OpenRouter (nube, gratis)</option>
           <option value="gemini">Gemini (nube)</option>
-          <option value="autoclaw">AutoClaw / AutoGLM</option>
         </select>
       </label>
       <label>Modelo

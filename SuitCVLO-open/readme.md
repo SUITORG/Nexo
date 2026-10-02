@@ -25,7 +25,7 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 | Ruta de idxfotos.xlsx | índice (se crea si no existe) |
 | N Fotos | máximo de fotos a leer en la corrida |
 | Avanzado | radio de match (250 m), tope por PIN (10), pausa de descarga (1 s) |
-| **Motor IA** | **Ollama local (VLM) → OpenRouter → Gemini → AutoClaw** — elige proveedor o "auto (cadena)" |
+| **Motor IA** | **Ollama local (VLM) → DeepSeek → OpenRouter → Gemini** — elige proveedor o "auto (cadena)" |
 
 ## Motor IA (switch)
 
@@ -33,13 +33,16 @@ La lectura de cada foto pasa por `ia/switch.py`, que baja por la cadena hasta qu
 
 | # | Proveedor | Origen | Requiere |
 |---|---|---|---|
-| 1 | `ollama` | **local** (sin costo, offline) | Ollama corriendo + un VLM (`ollama pull qwen2.5vl:7b`) |
-| 2 | `openrouter` | nube (modelos gratis) | `OPENROUTER_API_KEY` en `.env` |
-| 3 | `gemini` | nube | `GEMINI_API_KEY` en `.env` |
-| 4 | `autoclaw` | servicio local `:18432` → nube | AutoClaw abierto (`AUTOCALW_APP_ID`/`AUTOCALW_APP_KEY` en `.env`) |
+| 1 | `ollama` | **local** (sin costo, offline) | Ollama corriendo + un modelo con `vision` |
+| 2 | `deepseek` | nube (5M tokens gratis al registrarte, sin tarjeta) | `DEEPSEEK_API_KEY` en `.env` → [platform.deepseek.com](https://platform.deepseek.com) |
+| 3 | `openrouter` | nube (modelos gratis) | `OPENROUTER_API_KEY` en `.env` |
+| 4 | `gemini` | nube | `GEMINI_API_KEY` en `.env` |
 
 Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en el log de la corrida.
 `GET /api/ia/modelos` lista los modelos disponibles de Ollama (los locales se marcan **`(local)`**).
+
+> **AutoClaw/AutoGLM se eliminó** de la cadena (2026-10-01, ADR-038): el proyecto ya no depende de
+> ese servicio local ni de su clave.
 
 ## Uso
 
@@ -51,7 +54,7 @@ Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en
 ## Requisitos
 
 - Windows con Python 3 (el iniciador resuelve el intérprete y las dependencias: flask, openpyxl, pillow, pillow-heif, gdown).
-- **Ollama con un modelo de visión** para el modo local (recomendado: `ollama pull qwen2.5vl:7b`). Sin él, la cadena sigue con OpenRouter/Gemini/AutoClaw.
+- **Ollama con un modelo de visión** para el modo local (ya tienes `qwen3.5`, `gemma4`, `qwen3.6`…). Sin él, la cadena sigue con DeepSeek/OpenRouter/Gemini.
 - Descargas de Drive con **pausa ≥ 1 s** y reintentos (para evitar bloqueos de Google).
 
 ## Cómo quedó

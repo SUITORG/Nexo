@@ -11,15 +11,11 @@ nunca se elimina ningún archivo (los temporales se quedan en trabajo\\cache).
 
 MODO_MOCK (env CVLO_MOCK=1): sin red; para pruebas.
 """
-import hashlib
-import json
 import math
-import mimetypes
 import os
 import re
 import time
 import urllib.request
-import uuid
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
@@ -35,129 +31,6 @@ pillow_heif.register_heif_opener()
 
 def en_mock():
     return os.environ.get('CVLO_MOCK') == '1'
-
-
-# ------------------------------------------- API AutoGLM (último eslabón de la cadena)
-# Sin claves en el código: APP_ID/APP_KEY por .env (AUTOCALW_*) o desde la skill instalada.
-DIR_SKILL = os.environ.get('CVLO_SKILL_DIR', r'C:\Users\rojo-\.openclaw-autoclaw\skills\autoglm-image-recognition')
-CONFIG_DEFECTO = {
-    'APP_ID': '',
-    'APP_KEY': '',
-    'TOKEN_URL': 'http://127.0.0.1:18432/get_token',
-    'URL_UPLOAD': 'https://autoglm-api.autoglm.ai/agentdr/v1/assistant/upload-mix',
-    'URL_RECONOCER': 'https://autoglm-api.autoglm.ai/agentdr/v1/assistant/skills/image-recognition',
-}
-ENTORNO_CFG = {'APP_ID': 'AUTOCALW_APP_ID', 'APP_KEY': 'AUTOCALW_APP_KEY',
-               'TOKEN_URL': 'AUTOCALW_TOKEN_URL', 'URL_UPLOAD': 'AUTOCALW_URL_UPLOAD',
-               'URL_RECONOCER': 'AUTOCALW_URL_RECONOCER'}
-
-
-def leer_config():
-    try:
-        from ia import switch
-        switch._env('AUTOCALW_APP_KEY')   # efecto secundario: carga el .env del proyecto
-    except Exception:
-        pass
-    cfg = dict(CONFIG_DEFECTO)
-    try:
-        texto = open(os.path.join(DIR_SKILL, 'upload-mix.py'), encoding='utf-8').read()
-
-        def valor(clave):
-            m = re.search(r'^\s*{}\s*=\s*"([^"]+)"'.format(clave), texto, re.M)
-            return m.group(1) if m else None
-
-        for clave in ('APP_ID', 'APP_KEY', 'TOKEN_URL'):
-            v = valor(clave)
-            if v:
-                cfg[clave] = v
-        v = valor('URL')
-        if v:
-            cfg['URL_UPLOAD'] = v
-    except Exception:
-        pass
-    try:
-        texto = open(os.path.join(DIR_SKILL, 'image-recognition.py'), encoding='utf-8').read()
-        m = re.search(r'^\s*URL\s*=\s*"([^"]+)"', texto, re.M)
-        if m:
-            cfg['URL_RECONOCER'] = m.group(1)
-    except Exception:
-        pass
-    # el entorno (.env) manda sobre cualquier valor leído
-    for clave, var in ENTORNO_CFG.items():
-        v = os.environ.get(var)
-        if v:
-            cfg[clave] = v
-    if not cfg.get('APP_KEY'):
-        raise RuntimeError('Falta AUTOCALW_APP_KEY (AutoClaw es el último eslabón; ver .env.example)')
-    return cfg
-
-
-def token_local(timeout=6):
-    cfg = leer_config()
-    with urllib.request.urlopen(cfg['TOKEN_URL'], timeout=timeout) as r:
-        token = r.read().decode('utf-8').strip()
-    if not token.lower().startswith('bearer '):
-        token = 'Bearer ' + token
-    return token, cfg
-
-
-def token_disponible():
-    if en_mock():
-        return True
-    try:
-        token_local(timeout=3)
-        return True
-    except Exception:
-        return False
-
-
-def subir_imagen(ruta, reintentos=2):
-    ultimo = None
-    for intento in range(reintentos + 1):
-        try:
-            token, cfg = token_local()
-            ts = str(int(time.time()))
-            firma = hashlib.md5('{}&{}&{}'.format(cfg['APP_ID'], ts, cfg['APP_KEY']).encode('utf-8')).hexdigest()
-            nombre = os.path.basename(ruta)
-            mime = mimetypes.guess_type(ruta)[0] or 'application/octet-stream'
-            datos = open(ruta, 'rb').read()
-            boundary = '----CVLOBoundary' + uuid.uuid4().hex[:16]
-            parte = ('--{b}\r\nContent-Disposition: form-data; name="files"; filename="{n}"\r\nContent-Type: {m}\r\n\r\n'
-                     .format(b=boundary, n=nombre, m=mime)).encode('utf-8')
-            cuerpo = parte + datos + ('\r\n--{}--\r\n'.format(boundary)).encode('utf-8')
-            headers = {'Authorization': token, 'Content-Type': 'multipart/form-data; boundary=' + boundary,
-                       'X-Auth-Appid': cfg['APP_ID'], 'X-Auth-TimeStamp': ts, 'X-Auth-Sign': firma}
-            req = urllib.request.Request(cfg['URL_UPLOAD'], data=cuerpo, headers=headers, method='POST')
-            with urllib.request.urlopen(req, timeout=180) as resp:
-                j = json.loads(resp.read().decode('utf-8'))
-            return j['data']['oss_info'][0]['oss_url']
-        except Exception as e:
-            ultimo = e
-            time.sleep(2 + intento * 3)
-    raise RuntimeError('No se pudo subir la imagen ({}). Verifica AutoClaw abierto e internet.'.format(ultimo))
-
-
-def reconocer(url_imagen, prompt, reintentos=2, timeout=300):
-    ultimo = None
-    for intento in range(reintentos + 1):
-        try:
-            token, cfg = token_local()
-            ts = str(int(time.time()))
-            firma = hashlib.md5('{}&{}&{}'.format(cfg['APP_ID'], ts, cfg['APP_KEY']).encode('utf-8')).hexdigest()
-            headers = {'Authorization': token, 'Content-Type': 'application/json',
-                       'X-Auth-Appid': cfg['APP_ID'], 'X-Auth-TimeStamp': ts, 'X-Auth-Sign': firma}
-            payload = json.dumps({'prompt': prompt, 'image_url': url_imagen}).encode('utf-8')
-            req = urllib.request.Request(cfg['URL_RECONOCER'], data=payload, headers=headers, method='POST')
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                j = json.loads(resp.read().decode('utf-8'))
-            texto = (j.get('data') or {}).get('text')
-            if texto:
-                return texto
-            raise RuntimeError('Respuesta sin texto')
-        except Exception as e:
-            ultimo = e
-            time.sleep(3 + intento * 3)
-    raise RuntimeError('No se pudo leer la imagen: {}'.format(ultimo))
 
 
 PROMPT_LECTURA = ('Responde únicamente en ESPAÑOL, con este formato exacto de 7 líneas:\n'

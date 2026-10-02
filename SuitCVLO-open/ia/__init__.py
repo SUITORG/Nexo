@@ -1,1 +1,1 @@
-# ia/ — switch de proveedores de IA (Ollama local -> OpenRouter -> Gemini -> AutoClaw)
+# ia/ — switch de proveedores de IA (Ollama local -> DeepSeek -> OpenRouter -> Gemini)

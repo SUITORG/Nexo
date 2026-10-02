@@ -2,7 +2,7 @@
 """Switch de IA de SuitCVLO-open.
 
 Cadena (inmutable, ver docs/CONTRATO.md):
-    ollama (local, VLM) -> openrouter (nube, gratis) -> gemini (nube) -> autoclaw (servicio local -> nube)
+    ollama (local, VLM) -> deepseek (nube, 5M tokens gratis al registrar) -> openrouter (nube, gratis) -> gemini (nube)
 
 - `modelos()` lista los modelos disponibles; los de Ollama salen con sufijo `(local)`.
 - `leer(ruta, prompt)` baja por la cadena hasta que un proveedor responde.
@@ -17,7 +17,7 @@ import time
 import urllib.error
 import urllib.request
 
-ORDEN = ('ollama', 'openrouter', 'gemini', 'autoclaw')
+ORDEN = ('ollama', 'deepseek', 'openrouter', 'gemini')
 FALLOS_PARA_BLOQUEO = 3
 COOLDOWN_S = 300
 TTL_MODELOS_S = 3600
@@ -101,16 +101,12 @@ def _disponible(p):
             return True, 'ok'
         except Exception as e:
             return False, 'ollama caído ({})'.format(str(e)[:60])
+    if p == 'deepseek':
+        return (True, 'ok') if _env('DEEPSEEK_API_KEY') else (False, 'sin DEEPSEEK_API_KEY')
     if p == 'openrouter':
         return (True, 'ok') if _env('OPENROUTER_API_KEY') else (False, 'sin OPENROUTER_API_KEY')
     if p == 'gemini':
         return (True, 'ok') if _env('GEMINI_API_KEY') else (False, 'sin GEMINI_API_KEY')
-    if p == 'autoclaw':
-        try:
-            import motor
-            return (True, 'ok') if motor.token_disponible() else (False, 'AutoClaw sin token')
-        except Exception as e:
-            return False, 'AutoClaw caído ({})'.format(str(e)[:60])
     return False, 'proveedor desconocido'
 
 
@@ -171,14 +167,16 @@ def _openrouter_modelos():
 
 def modelos():
     """Todos los modelos conocidos. Los locales llevan '(local)' en el nombre."""
-    items = _ollama_modelos() + _openrouter_modelos()
+    items = _ollama_modelos()
+    if _env('DEEPSEEK_API_KEY'):
+        m = _env('DEEPSEEK_VISION_MODEL', 'deepseek-flash')
+        items.append({'id': m, 'nombre': '{} (nube)'.format(m), 'proveedor': 'deepseek',
+                      'local': False, 'vision': True, 'detalle': '5M tokens gratis'})
+    items += _openrouter_modelos()
     if _env('GEMINI_API_KEY'):
         items.append({'id': _env('GEMINI_VISION_MODEL', 'gemini-2.5-flash'),
                       'nombre': '{} (nube)'.format(_env('GEMINI_VISION_MODEL', 'gemini-2.5-flash')),
                       'proveedor': 'gemini', 'local': False, 'vision': True, 'detalle': 'Google'})
-    disp, motivo = _disponible('autoclaw')
-    items.append({'id': 'autoglm', 'nombre': 'AutoGLM (AutoClaw)', 'proveedor': 'autoclaw',
-                  'local': False, 'vision': True, 'detalle': motivo if not disp else 'ok'})
     return items
 
 
@@ -194,6 +192,8 @@ def _elegir(proveedor, modelo):
         if candidatos:
             return min(candidatos, key=lambda m: m.get('bytes') or 1 << 62)['id']
         raise RuntimeError('Ollama sin modelos con visión (instala: ollama pull qwen3.5)')
+    if proveedor == 'deepseek':
+        return modelo or _env('DEEPSEEK_VISION_MODEL', 'deepseek-flash')
     if proveedor == 'openrouter':
         if modelo:
             return modelo
@@ -217,6 +217,18 @@ def _ollama(ruta, prompt, modelo):
     # CPU solo: una inferencia a la vez tarda ~6-7 min; en paralelo se pasa del tiempo.
     j = _http(url, payload, timeout=float(_env('OLLAMA_TIMEOUT_S', '900')))
     return ((j.get('message') or {}).get('content') or '').strip()
+
+
+def _deepseek(ruta, prompt, modelo):
+    clave = _env('DEEPSEEK_API_KEY')
+    payload = {'model': _elegir('deepseek', modelo),
+               'messages': [{'role': 'user', 'content': [
+                   {'type': 'text', 'text': prompt},
+                   {'type': 'image_url',
+                    'image_url': {'url': 'data:image/jpeg;base64,' + _b64(ruta)}}]}]}
+    j = _http('https://api.deepseek.com/chat/completions', payload,
+              headers={'Authorization': 'Bearer ' + clave}, timeout=240)
+    return ((j.get('choices') or [{}])[0].get('message') or {}).get('content') or ''
 
 
 def _openrouter(ruta, prompt, modelo):
@@ -245,19 +257,7 @@ def _gemini(ruta, prompt, modelo):
     return ''.join(p.get('text', '') for p in partes).strip()
 
 
-def _autoclaw(ruta, prompt, modelo):
-    import motor
-    chico = os.path.join(_env('CVLO_TRABAJO') or os.path.join(_BASE, 'trabajo'),
-                         'tmp_ia_' + os.path.basename(ruta) + '.jpg')
-    os.makedirs(os.path.dirname(chico), exist_ok=True)
-    from PIL import Image
-    im = Image.open(ruta).convert('RGB')
-    im.thumbnail((1600, 1600))
-    im.save(chico, quality=85)
-    return motor.reconocer(motor.subir_imagen(chico), prompt)
-
-
-_LEEME = {'ollama': _ollama, 'openrouter': _openrouter, 'gemini': _gemini, 'autoclaw': _autoclaw}
+_LEEME = {'ollama': _ollama, 'deepseek': _deepseek, 'openrouter': _openrouter, 'gemini': _gemini}
 
 
 # ---------------------------------------------------------------- cascade

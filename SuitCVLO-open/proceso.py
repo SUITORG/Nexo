@@ -64,7 +64,7 @@ def _elegir_pin(lat, lon, pines, radio):
 
 
 def _leer_foto_ia(ruta_jpg, trabajo, proveedor='auto', modelo=None, log=None):
-    """Lee la foto con el switch de IA: Ollama -> OpenRouter -> Gemini -> AutoClaw."""
+    """Lee la foto con el switch de IA: Ollama -> DeepSeek -> OpenRouter -> Gemini."""
     if motor.en_mock():
         return ('ANUNCIO: SI\nMARCA CAMPAÑA: DiDi\nQUE ANUNCIA: promoción simulada\n'
                 'TEXTO VISIBLE: TEXTO SIMULADO\nREFERENCIAS UBICACION: no visible\n'

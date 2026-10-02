@@ -18,7 +18,6 @@ const el = {
   log: $('#log'),
   historial: $('#tabla-historial'),
   badgeMock: $('#badge-mock'),
-  badgeToken: $('#badge-token'),
   badgeIa: $('#badge-ia'),
   iaProveedor: $('#ia_proveedor'),
   iaModelo: $('#ia_modelo'),
@@ -307,8 +306,6 @@ function pintarEstadoIa(ia) {
   const listos = ia.filter((x) => x.disponible).map((x) => x.proveedor);
   el.badgeIa.textContent = listos.length ? 'IA · ' + listos.join(', ') : 'IA · sin proveedores';
   el.badgeIa.className = 'insignia' + (listos.length ? '' : ' alerta');
-  const ac = ia.find((x) => x.proveedor === 'autoclaw');
-  el.badgeToken.classList.toggle('oculto', !!(ac && ac.disponible));
 }
 
 estado();

@@ -5,18 +5,19 @@ Alcance: `SuitCVLO-open/` · Contrato padre: `CONTRATO.md` (raíz) + `AGENTS.md`
 Aplicación web local que procesa lotes de fotos de publicidad exterior (OOH) y genera la
 estructura de auditoría (`<AAMMPQ>\auditoria\<Grupo>\<PIN>\` + `info.txt` + `idxfotos.xlsx`),
 **con el motor de lectura IA desacoplado**: un switch de proveedores que intenta primero
-Ollama local (modelo VLM), luego OpenRouter, luego Gemini y por último AutoClaw/AutoGLM.
-Versiona en "open" el proyecto `\cvlo-auditor` (fuente de solo lectura) sin su dependencia
-hardcodeada de AutoClaw.
+Ollama local (modelo con visión), luego DeepSeek, luego OpenRouter y por último Gemini.
+Versiona en "open" el proyecto `\cvlo-auditor` (fuente de solo lectura) **sin depender de
+AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 
 ## Stack y ejecución
 - Lenguaje / runtime: Python 3 + Flask (reuso del proyecto origen, sin reescritura)
 - Comandos: instalar `pip install flask openpyxl pillow pillow-heif gdown` ·
   desarrollo `python app.py` (puerto **3015**) · pruebas `python -m unittest discover -s tests -t . -v` ·
   build `no aplica (sin build)`
-- Variables de entorno requeridas: `OPENROUTER_API_KEY` (opcional), `GEMINI_API_KEY` (opcional),
-  `AUTOCALW_APP_KEY` + `AUTOCALW_APP_ID` (opcional), `CVLO_VLM` (opcional, default `qwen2.5vl:7b`),
-  `OLLAMA_URL` (opcional, default `http://127.0.0.1:11434`), `CVLO_MOCK` (pruebas)
+- Variables de entorno requeridas: `DEEPSEEK_API_KEY` (opcional), `OPENROUTER_API_KEY` (opcional),
+  `GEMINI_API_KEY` (opcional), `CVLO_VLM` (opcional, default = modelo local con visión más liviano),
+  `OLLAMA_URL` (opcional, default `http://127.0.0.1:11434`), `OLLAMA_TIMEOUT_S` (opcional, 900),
+  `CVLO_MOCK` (pruebas)
 - Nada de secretos en el repositorio: `.env` (gitignored) o `.env.example` como guía
 
 ## Datos y multi-inquilino
@@ -44,9 +45,11 @@ hardcodeada de AutoClaw.
 
 ## Orden del switch (inmutable sin decisión del usuario)
 1. `ollama` — local, `CVLO_VLM`, sin costo, offline
-2. `openrouter` — nube gratis (`OPENROUTER_API_KEY`), modelos con visión
-3. `gemini` — nube (`GEMINI_API_KEY`), mejor calidad de OCR en español
-4. `autoclaw` — servicio local `:18432` → AutoGLM (último recurso, el comportamiento del origen)
+2. `deepseek` — nube, 5M tokens gratis al registrar (`DEEPSEEK_API_KEY`), modelo con visión
+3. `openrouter` — nube gratis (`OPENROUTER_API_KEY`), modelos con visión
+4. `gemini` — nube (`GEMINI_API_KEY`), mejor calidad de OCR en español
+
+> AutoClaw/AutoGLM se **eliminó** de la cadena el 2026-10-01 → ver ADR-038.
 
 ## Definición de terminado
 - Validación en PASA con evidencia en `docs/VALIDACION.md`
@@ -55,7 +58,8 @@ hardcodeada de AutoClaw.
 
 ## POR CONFIRMAR
 - Ninguno — todo derivado de decisiones explícitas del usuario (2026-10-01): alcance = copia de
-  `cvlo-auditor` + switch IA, cadena `Ollama(VLM) → OpenRouter/Gemini → AutoClaw`, sin Sheets.
+  `cvlo-auditor` + switch IA, cadena `Ollama(VLM) → DeepSeek → OpenRouter → Gemini`, sin Sheets.
 
 ## Cambios
 - 2026-10-01: creación (fase 0) a partir de las decisiones del usuario en la sesión de diseño
+- 2026-10-01: **AutoClaw/AutoGLM eliminado de la cadena** y añadido DeepSeek (5M tokens gratis) → ADR-038

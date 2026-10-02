@@ -20,29 +20,32 @@ posible y ~80% del valor (la herramienta funciona sin AutoClaw y sin secretos).
 
 ## 2. Motor de IA — el switch
 
-Cadena: `ollama → openrouter → gemini → autoclaw` · circuit breaker 3 fallos → 5 min.
+Cadena: `ollama → deepseek → openrouter → gemini` · circuit breaker 3 fallos → 5 min.
 
 | Eslabón | Pros | Contras |
 |---|---|---|
-| **1. Ollama (local)** | Sin costo por foto, sin límite de rate, offline, privado (las fotos no salen de la máquina), ya tienes 17 modelos (8 con visión) | Calidad de lectura menor que un modelo frontier; consume RAM/CPU local; el modelo más liviano con visión (`qwen3.5`, 6.6 GB) tarda más que la nube |
-| **2. OpenRouter** | 12 modelos gratis con visión auto-descubritos (no hardcodeados), buena calidad, una sola key | Requiere subir la foto a la nube, red limitada, modelos gratis pueden rotar |
-| **3. Gemini** | Mejor OCR en español de la cadena, estructura de respuesta predecible | Costo si excede la cuota, sube la foto a la nube, dependencia de Google |
-| **4. AutoClaw** | Es lo que ya funcionaba; comportamiento idéntico al original | Requiere AutoClaw abierto, servicio externo, era el único eslabón antes (punto único de falla) |
+| **1. Ollama (local)** | Sin costo por foto, sin límite de rate, offline, privado (las fotos no salen de la máquina), ya tienes 17 modelos (8 con visión) | Calidad de lectura menor que un modelo frontier; consume RAM/CPU local; medido: **392 s/foto** con `qwen3.5` (serial) |
+| **2. DeepSeek** | **5M tokens gratis al registrarte, sin tarjeta** (~3000 fotos); OpenAI-compatible; `deepseek-flash` con visión; después del grant es de los más baratos ($0.15/M in) | El grant caduca a los 30 días; requiere cuenta nueva en `platform.deepseek.com`; sube la foto a la nube |
+| **3. OpenRouter** | Modelos gratis con visión auto-descubiertos (no hardcodeados), buena calidad, una sola key | Límite ~50 req/día en gratis; **tu key actual da 401** (ver `PENDIENTES.md`); sube la foto a la nube |
+| **4. Gemini** | Mejor OCR en español de la cadena, estructura de respuesta predecible | Costo si excede la cuota, sube la foto a la nube, dependencia de Google |
 | **Cascada general** | Nunca corta la corrida; el error lista el motivo de cada eslabón; puedes forzar un proveedor desde la UI | Un fallo transitorio consume el intento de ese eslabón en esa foto (se reintenta en la siguiente) |
 | **Circuito breaker** | Evita reintentar un eslabón caído 5 min | Puede dejar fuera un eslabón que se recuperó a los 6 min |
+
+**AutoClaw se eliminó** (ADR-038): dependía de un servicio local abierto + clave; DeepSeek lo reemplaza
+como segundo eslabón con clave propia y sin instalar nada.
 
 ## 3. Seguridad
 
 | Antes (`\cvlo-auditor`) | Ahora (`SuitCVLO-open`) |
 |---|---|
-| `APP_KEY` y `APP_ID` de AutoGLM escritos en `motor.py` | En `.env` (gitignore) o leídos de la skill instalada de AutoClaw |
+| `APP_KEY` y `APP_ID` de AutoGLM escritos en `motor.py` | **Código eliminado** — solo `.env` (gitignore) para los proveedores que actives |
 | Único proveedor, obligatorio | 4 eslabones, ninguno obligatorio |
 | Puerto fijo 8019 | 3015 (registry) + `CVLO_PUERTO` override |
 
 ## 4. Limitaciones conocidas (para ampliar cuando duela)
 
 1. Un VLM local liviano transcribe peor texto pequeño lejano que Gemini — si la lectura de letreros
-   falla, fija proveedor `gemini`/`openrouter` en la UI.
+   falla, fija proveedor `deepseek`/`gemini` en la UI.
 2. La lista de OpenRouter se auto-descubre pero **no se prueba** cada modelo antes de usarlo:
    si falla, el circuit breaker lo descarta y baja al siguiente eslabón.
 3. Sin base de datos: no hay histórico de corridas más allá de `idxfotos.xlsx` y los JSON de `trabajo\reads`.
