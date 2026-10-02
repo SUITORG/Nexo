@@ -39,9 +39,12 @@ def _env(nombre, defecto=''):
                 if not linea or linea.startswith('#') or '=' not in linea:
                     continue
                 k, v = linea.split('=', 1)
-                os.environ.setdefault(k.strip(), v.strip())
+                os.environ[k.strip()] = v.strip()      # el .env del proyecto manda sobre el entorno
         _ENV_CARGADO = True
     return os.environ.get(nombre) or defecto
+
+
+_env('OLLAMA_URL')   # carga el .env del proyecto al importar (antes de cualquier petición)
 
 
 def en_mock():
@@ -51,7 +54,9 @@ def en_mock():
 # ---------------------------------------------------------------- http
 def _http(url, payload=None, headers=None, timeout=120):
     datos = json.dumps(payload).encode('utf-8') if payload is not None else None
-    req = urllib.request.Request(url, data=datos, headers=headers or {},
+    h = {'Content-Type': 'application/json'} if datos else {}
+    h.update(headers or {})
+    req = urllib.request.Request(url, data=datos, headers=h,
                                  method='POST' if datos else 'GET')
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -181,6 +186,8 @@ def modelos():
 
 
 def _elegir(proveedor, modelo):
+    if not _pertece(proveedor, modelo):
+        modelo = None            # modelo ajeno al proveedor -> usa el default del proveedor
     if proveedor == 'ollama':
         if modelo:
             return modelo
@@ -206,6 +213,26 @@ def _elegir(proveedor, modelo):
     if proveedor == 'gemini':
         return modelo or _env('GEMINI_VISION_MODEL', 'gemini-2.5-flash')
     return ''
+
+
+def _pertece(proveedor, modelo):
+    """¿El modelo pedido pertenece a este proveedor? Evita mandar 'deepseek-flash' a Ollama."""
+    if not modelo:
+        return False
+    if proveedor == 'ollama':
+        return any(m['id'] == modelo for m in _ollama_modelos())
+    if proveedor == 'deepseek':
+        return modelo == _env('DEEPSEEK_VISION_MODEL', 'deepseek-flash')
+    if proveedor == 'openrouter':
+        return any(m['id'] == modelo for m in _openrouter_modelos())
+    if proveedor == 'gemini':
+        return str(modelo).startswith('gemini')
+    return False
+
+
+def reset():
+    """Nueva corrida: borra los cooldowns heredados de la corrida anterior."""
+    _CB.clear()
 
 
 # ---------------------------------------------------------------- lectores

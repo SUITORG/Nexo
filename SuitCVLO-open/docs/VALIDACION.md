@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 28 tests … OK** (13 heredados de `cvlo-auditor` + 10 de `ia/switch` + 5 de detener/validación de rutas) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 33 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 5 de la cadena) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -16,8 +16,12 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 8 | YAML parsea | `yaml.safe_load(projects.yaml)` → 21 proyectos, entrada nueva leída | ✅ |
 | 9 | Fuente intacta | `\cvlo-auditor\` nunca fue escrita (todo el trabajo es en `SuitCVLO-open/`) | ✅ |
 | 10 | Cadena real end-to-end | `switch.leer(..., proveedor='ollama')` sobre `SuitCVLO/e1.png` → respondió **319 caracteres** con la descripción correcta de la imagen (modelo local con visión) | ✅ |
-| 11 | Inventario real | `GET /api/ia/modelos` → **29 modelos**: 17 locales marcados `(local)` (8 con `vision`) + 12 en nube (OpenRouter gratis con visión); `deepseek` aparece en cuanto haya `DEEPSEEK_API_KEY` | ✅ |
+| 11 | Inventario real | `GET /api/ia/modelos` → **18 modelos**: 17 locales marcados `(local)` (8 con `vision`) + `deepseek-flash (nube)`; OpenRouter/Gemini salen en 0 porque `.env` los deja vacíos (prioridad `.env` > entorno) | ✅ |
 | 12 | Cadena sin AutoClaw | scan de `autoclaw`/`AutoGLM`/`AUTOCALW`/`badge-token`/`token_disponible` en `*.py`, `*.js`, `*.html`, `.env.example` → **0 coincidencias** (ADR-038) | ✅ |
+| 13 | `Content-Type` (fix del 415) | `_http` manda `application/json` en POST y **no** lo manda en GET → `tests/test_switch.py::SwitchHttpYModelos` | ✅ |
+| 14 | Modelo ajeno al proveedor (fix del 404) | `_elegir('ollama','deepseek-flash')` ignora el modelo y usa el local → `test_modelo_ajeno_al_proveedor_se_ignora` | ✅ |
+| 15 | Cooldowns no se heredan | `switch.reset()` al crear corrida → `test_reset_borra_cooldowns` | ✅ |
+| 16 | Corrida real end-to-end | job `304fee522f6f` (22:54): **`leidas=1`, `copiadas=1`**, `idxfotos.xlsx` 182→**183 filas** (137 ✓), foto en `DIDI PARABUSES MTY\DF_09_ELITE_275\` — Ollama respondió en 456 s | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
@@ -63,6 +67,6 @@ Todas corren **sin red** (dependencias parchadas).
 
 ```bash
 cd SuitCVLO-open
-python -m unittest discover -s tests -t . -v      # 28 tests
+python -m unittest discover -s tests -t . -v      # 33 tests
 python app.py                                     # abre http://127.0.0.1:3015
 ```

@@ -287,15 +287,25 @@ async function cargarModelosIa() {
     if (guardado.m && Array.from(el.iaModelo.options).some((o) => o.value === guardado.m)) {
       el.iaModelo.value = guardado.m;
     }
+    // corrige combinaciones guardadas inválidas (p.ej. auto + un modelo concreto)
+    const pm = IA_MODELOS[el.iaModelo.value];
+    if (el.iaModelo.value && pm) {
+      if (el.iaProveedor.value === 'auto') el.iaProveedor.value = pm;
+      else if (el.iaProveedor.value !== pm) el.iaModelo.value = '';
+    }
   } catch (e) { /* sin conexión */ }
 }
 
 el.iaModelo.addEventListener('change', () => {
   const p = IA_MODELOS[el.iaModelo.value];
-  if (p) el.iaProveedor.value = 'auto';
+  if (p) el.iaProveedor.value = p;   // un modelo concreto usa su propio proveedor
   guardarIa();
 });
-el.iaProveedor.addEventListener('change', guardarIa);
+el.iaProveedor.addEventListener('change', () => {
+  const p = IA_MODELOS[el.iaModelo.value];
+  if (el.iaProveedor.value !== 'auto' && p && p !== el.iaProveedor.value) el.iaModelo.value = '';
+  guardarIa();
+});
 
 let IA_ESTADO = [];
 function pintarEstadoIa(ia) {

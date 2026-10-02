@@ -124,6 +124,7 @@ def api_crear():
         return jsonify({'error': 'Motor IA desconocido: {}'.format(ia_proveedor)}), 400
 
     jid = uuid.uuid4().hex[:12]
+    switch.reset()   # nueva corrida: no arrastrar los cooldowns de la anterior
     entrada = os.path.join(TRABAJO, 'corridas', jid)
     os.makedirs(entrada, exist_ok=True)
 

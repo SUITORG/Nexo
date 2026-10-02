@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Pruebas del switch de IA — sin red, todo parchado."""
+import time
 import unittest
 from unittest import mock
 
@@ -98,6 +99,54 @@ class SwitchModelos(unittest.TestCase):
         fijo = [{'id': 'a:latest', 'vision': False}, {'id': 'b:latest', 'vision': True}]
         with mock.patch.object(switch, '_ollama_modelos', lambda: fijo):
             self.assertEqual(switch._elegir('ollama', None), 'b:latest')
+
+
+class SwitchHttpYModelos(unittest.TestCase):
+    """Regresión del 415 de DeepSeek y del 404 de Ollama con modelo ajeno."""
+
+    @mock.patch('urllib.request.urlopen')
+    def test_post_manda_content_type_json(self, urlopen):
+        resp = mock.MagicMock()
+        resp.__enter__.return_value.read.return_value = b'{"ok":1}'
+        urlopen.return_value = resp
+        self.assertEqual(switch._http('https://x/api', {'a': 1},
+                                      headers={'Authorization': 'Bearer k'}), {'ok': 1})
+        req = urlopen.call_args[0][0]
+        self.assertEqual(req.get_header('Content-type'), 'application/json')
+        self.assertEqual(req.get_header('Authorization'), 'Bearer k')
+
+    @mock.patch('urllib.request.urlopen')
+    def test_get_sin_content_type(self, urlopen):
+        resp = mock.MagicMock()
+        resp.__enter__.return_value.read.return_value = b'{"models":[]}'
+        urlopen.return_value = resp
+        switch._http('https://x/api')
+        req = urlopen.call_args[0][0]
+        self.assertIsNone(req.get_header('Content-type'))
+
+    def test_modelo_ajeno_al_proveedor_se_ignora(self):
+        loc = [{'id': 'qwen3.5:latest', 'vision': True}]
+        with mock.patch.object(switch, '_ollama_modelos', lambda: loc):
+            # bug del 404: 'deepseek-flash' no existe en Ollama
+            self.assertNotEqual(switch._elegir('ollama', 'deepseek-flash'), 'deepseek-flash')
+            self.assertEqual(switch._elegir('ollama', 'qwen3.5:latest'), 'qwen3.5:latest')
+            self.assertTrue(switch._pertece('ollama', 'qwen3.5:latest'))
+            self.assertFalse(switch._pertece('ollama', 'deepseek-flash'))
+
+    def test_pertece_deepseek_y_gemini(self):
+        with mock.patch.object(switch, '_env', lambda n, d='': d):
+            self.assertTrue(switch._pertece('deepseek', 'deepseek-flash'))
+            self.assertFalse(switch._pertece('deepseek', 'qwen3.5'))
+            self.assertTrue(switch._pertece('gemini', 'gemini-2.5-flash'))
+            self.assertFalse(switch._pertece('gemini', 'deepseek-flash'))
+            self.assertFalse(switch._pertece('deepseek', None))
+
+    def test_reset_borra_cooldowns(self):
+        switch._CB['deepseek'] = {'fallos': 3, 'hasta': time.time() + 300}
+        self.assertTrue(switch._bloqueado('deepseek'))
+        switch.reset()
+        self.assertFalse(switch._bloqueado('deepseek'))
+        self.assertEqual(switch._CB, {})
 
 
 if __name__ == '__main__':
