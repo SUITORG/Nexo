@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 36 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 8 de la cadena) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 38 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 10 de la cadena) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -24,6 +24,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 16 | Corrida real end-to-end | job `304fee522f6f` (22:54): **`leidas=1`, `copiadas=1`**, `idxfotos.xlsx` 182→**183 filas** (137 ✓), foto en `DIDI PARABUSES MTY\DF_09_ELITE_275\` — Ollama respondió en 456 s | ✅ |
 | 17 | Eslabón `huggingface` (ADR-039) | `ORDEN` de 5, 11 modelos de visión descubiertos del router, `_pertece`/`_elegir` con default `Qwen/Qwen2.5-VL-72B-Instruct` → 3 tests nuevos | ✅ |
 | 18 | Corrida real con HuggingFace | job `70325a1f3468`: **5 fotos en 20 s** (`leidas=5, copiadas=5`), `idxfotos.xlsx` 183→**188 filas** (142 ✓), ~4 s/foto vs 456 s de Ollama | ✅ |
+| 19 | Proveedor forzado no corta la corrida | si el eslabón elegido falla o está en cooldown, `leer()` sigue con el resto de la cadena (invariante 4 del contrato) → 2 tests nuevos | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
@@ -59,6 +60,7 @@ Todas corren **sin red** (dependencias parchadas).
 | 2026-10-01 | `3163050a0e39` / `74b7b1e22058` | deepseek | ❌ `415` (faltaba `Content-Type`) → corregido; luego `402` sin saldo |
 | 2026-10-01 | `304fee522f6f` | ollama (auto) | ✅ 1 foto en **456 s** → `leidas=1`, xlsx 182→183 |
 | 2026-10-02 | `70325a1f3468` | **huggingface** | ✅ **5 fotos en 20 s** (~4 s/foto) → `leidas=5, copiadas=5`, xlsx 183→**188** |
+| 2026-10-02 | `03f017a2d245` | huggingface | ⚠️ 7 fotos OK y luego **`402` (créditos mensuales de HF agotados)** → circuit breaker → `leidas=7, copiadas=7`, xlsx →196 |
 
 - Lote: `cteCVLO1\Recorrido` (modo Local), PIN `DF_09_ELITE_275`, grupo `DIDI PARABUSES MTY`.
 - Lectura de Ollama medida en serial: **392-456 s/foto** (`qwen3.5`, imagen 1600 px) → por eso la
@@ -76,6 +78,6 @@ Todas corren **sin red** (dependencias parchadas).
 
 ```bash
 cd SuitCVLO-open
-python -m unittest discover -s tests -t . -v      # 36 tests
+python -m unittest discover -s tests -t . -v      # 38 tests
 python app.py                                     # abre http://127.0.0.1:3015
 ```

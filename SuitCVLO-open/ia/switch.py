@@ -352,7 +352,11 @@ def leer(ruta, prompt, proveedor='auto', modelo=None, log=None):
     def nota(msg):
         (log or (lambda _m: None))(msg)
 
-    orden = ORDEN if proveedor in (None, '', 'auto') else (proveedor,)
+    # proveedor forzado: si falla, sigo con el resto (invariante: no cortar la corrida)
+    if proveedor in (None, '', 'auto'):
+        orden = ORDEN
+    else:
+        orden = (proveedor,) + tuple(p for p in ORDEN if p != proveedor)
     errores = []
     for p in orden:
         if p not in _LEEME:
@@ -377,4 +381,6 @@ def leer(ruta, prompt, proveedor='auto', modelo=None, log=None):
             _fallo(p)
             errores.append('{}: {}'.format(p, str(e)[:160]))
             nota('[ia] {} falló: {}'.format(p, str(e)[:160]))
+            if proveedor not in (None, '', 'auto') and p == proveedor and len(orden) > 1:
+                nota('[ia] {} agotado → sigo con el resto de la cadena'.format(p))
     raise RuntimeError('Sin proveedor IA disponible -> ' + ' | '.join(errores))

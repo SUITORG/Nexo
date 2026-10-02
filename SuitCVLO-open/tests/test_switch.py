@@ -169,6 +169,23 @@ class SwitchHttpYModelos(unittest.TestCase):
             self.assertEqual(switch._elegir('huggingface', None), 'Qwen/Qwen2.5-VL-72B-Instruct')
             self.assertFalse(switch._pertece('huggingface', 'nada'))
 
+    @mock.patch.object(switch, '_disponible', _todo_disponible)
+    def test_proveedor_forzado_falla_y_sigue_la_cadena(self):
+        log = []
+        with mock.patch.dict(switch._LEEME, {'huggingface': _falla, 'ollama': _ok}):
+            texto = switch.leer('f.jpg', 'p', proveedor='huggingface', log=log.append)
+        self.assertEqual(texto, 'TEXTO OK')
+        self.assertTrue(any('sigo con el resto' in m for m in log))
+
+    @mock.patch.object(switch, '_disponible', _todo_disponible)
+    def test_proveedor_forzado_en_cooldown_sigue_la_cadena(self):
+        switch._CB['huggingface'] = {'fallos': 3, 'hasta': time.time() + 300}
+        try:
+            with mock.patch.dict(switch._LEEME, {'ollama': _ok}):
+                self.assertEqual(switch.leer('f.jpg', 'p', proveedor='huggingface'), 'TEXTO OK')
+        finally:
+            switch._CB.clear()
+
 
 if __name__ == '__main__':
     unittest.main()
