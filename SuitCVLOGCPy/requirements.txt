@@ -1,0 +1,14 @@
+# SuitCVLO en Colab — dependencias
+# La celda 1 del notebook las instala; este archivo es la lista exacta por si quieres
+# instalarlas a mano o en un entorno distinto a Colab.
+
+pillow-heif>=1.8.0     # leer fotos .HEIC del iPhone (GPS EXIF)
+openpyxl>=3.1.5        # idxfotos.xlsx
+pillow>=10.0.0         # redimensionar y leer EXIF
+gdown>=5.0.0           # solo si usas el modo Web/Drive de la app local
+accelerate>=0.30.0     # device_map='auto' al cargar el modelo
+transformers>=4.51.0   # modelos Qwen2.5-VL (se añadieron en 4.51)
+qwen-vl-utils          # chat template + preprocesado de imagen de Qwen2.5-VL
+
+# NO hace falta: bitsandbytes (cargamos en float16, no en 4-bit)
+# NO hace falta: torch (ya viene en Colab)
