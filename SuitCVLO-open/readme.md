@@ -25,18 +25,19 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 | Ruta de idxfotos.xlsx | índice (se crea si no existe) |
 | N Fotos | máximo de fotos a leer en la corrida |
 | Avanzado | radio de match (250 m), tope por PIN (10), pausa de descarga (1 s) |
-| **Motor IA** | **Ollama local (VLM) → DeepSeek → OpenRouter → Gemini** — elige proveedor o "auto (cadena)" |
+| **Motor IA** | **Ollama local (VLM) → HuggingFace → DeepSeek → OpenRouter → Gemini** — elige proveedor o "auto (cadena)" |
 
 ## Motor IA (switch)
 
 La lectura de cada foto pasa por `ia/switch.py`, que baja por la cadena hasta que un proveedor responde:
 
-| # | Proveedor | Origen | Requiere |
-|---|---|---|---|
-| 1 | `ollama` | **local** (sin costo, offline) | Ollama corriendo + un modelo con `vision` |
-| 2 | `deepseek` | nube (5M tokens gratis al registrarte, sin tarjeta) | `DEEPSEEK_API_KEY` en `.env` → [platform.deepseek.com](https://platform.deepseek.com) |
-| 3 | `openrouter` | nube (modelos gratis) | `OPENROUTER_API_KEY` en `.env` |
-| 4 | `gemini` | nube | `GEMINI_API_KEY` en `.env` |
+| # | Proveedor | Origen | Requiere | Medido |
+|---|---|---|---|---|
+| 1 | `ollama` | **local** (sin costo, offline) | Ollama + un modelo con `vision` | **~456 s/foto** (CPU) |
+| 2 | `huggingface` | nube (router gratis) | `HF_TOKEN` en el sistema o en `.env` | **~4 s/foto** ✅ |
+| 3 | `deepseek` | nube (5M tokens gratis al registrarte) | `DEEPSEEK_API_KEY` en `.env` | ⚠️ `402` sin saldo |
+| 4 | `openrouter` | nube (modelos gratis) | `OPENROUTER_API_KEY` en `.env` | ⚠️ tu key da `401` |
+| 5 | `gemini` | nube | `GEMINI_API_KEY` en `.env` | sin key |
 
 Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en el log de la corrida.
 `GET /api/ia/modelos` lista los modelos disponibles de Ollama (los locales se marcan **`(local)`**).

@@ -20,12 +20,13 @@ posible y ~80% del valor (la herramienta funciona sin AutoClaw y sin secretos).
 
 ## 2. Motor de IA — el switch
 
-Cadena: `ollama → deepseek → openrouter → gemini` · circuit breaker 3 fallos → 5 min.
+Cadena: `ollama → huggingface → deepseek → openrouter → gemini` · circuit breaker 3 fallos → 5 min.
 
 | Eslabón | Pros | Contras |
 |---|---|---|
-| **1. Ollama (local)** | Sin costo por foto, sin límite de rate, offline, privado (las fotos no salen de la máquina), ya tienes 17 modelos (8 con visión) | Calidad de lectura menor que un modelo frontier; consume RAM/CPU local; medido: **392 s/foto** con `qwen3.5` (serial) |
-| **2. DeepSeek** | **5M tokens gratis al registrarte, sin tarjeta** (~3000 fotos); OpenAI-compatible; `deepseek-flash` con visión; después del grant es de los más baratos ($0.15/M in) | El grant caduca a los 30 días; requiere cuenta nueva en `platform.deepseek.com`; sube la foto a la nube |
+| **1. Ollama (local)** | Sin costo por foto, sin límite de rate, offline, privado (las fotos no salen de la máquina), ya tienes 17 modelos (8 con visión) | Calidad de lectura menor que un modelo frontier; consume RAM/CPU local; medido: **~456 s/foto** con `qwen3.5` (serial) |
+| **2. HuggingFace** | **~4 s/foto** (86× más rápido que Ollama), router **gratis** con 11 modelos de visión descubiertos, sin desplegar nada, OpenAI-compatible | Requiere `HF_TOKEN`; sube la foto a la nube; rate limits del tier gratuito; el descubrimiento filtra por nombre de modelo |
+| **3. DeepSeek** | **5M tokens gratis al registrarte, sin tarjeta** (~3000 fotos); OpenAI-compatible; `deepseek-flash` con visión; después del grant es de los más baratos ($0.15/M in) | Tu cuenta responde **`402 Insufficient Balance`** (sin grant); sube la foto a la nube |
 | **3. OpenRouter** | Modelos gratis con visión auto-descubiertos (no hardcodeados), buena calidad, una sola key | Límite ~50 req/día en gratis; **tu key actual da 401** (ver `PENDIENTES.md`); sube la foto a la nube |
 | **4. Gemini** | Mejor OCR en español de la cadena, estructura de respuesta predecible | Costo si excede la cuota, sube la foto a la nube, dependencia de Google |
 | **Cascada general** | Nunca corta la corrida; el error lista el motivo de cada eslabón; puedes forzar un proveedor desde la UI | Un fallo transitorio consume el intento de ese eslabón en esa foto (se reintenta en la siguiente) |

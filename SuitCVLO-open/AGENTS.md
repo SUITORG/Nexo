@@ -1,7 +1,7 @@
 # AGENTS.md — SuitCVLO-open
 
 Auditoría de publicidad exterior (OOH) con motor de lectura IA intercambiable.
-Contrato: `docs/CONTRATO.md` · ADR: `.suit/memory/decisions/ADR-037-suitcvlo-open.md` + `ADR-038-cadena-sin-autoclaw.md`
+Contrato: `docs/CONTRATO.md` · ADR: `.suit/memory/decisions/ADR-037-suitcvlo-open.md` + `ADR-038-cadena-sin-autoclaw.md` + `ADR-039-eslabon-huggingface.md`
 
 ## Alcance
 - Origen: fork de `\cvlo-auditor\` — **carpeta de SOLO LECTURA, jamás escribir ahí**.
@@ -21,7 +21,7 @@ No hay lint ni typecheck: validar con `python -m py_compile <archivo>` tras cada
 2. Sin base de datos: todo en archivos locales (`idxfotos.xlsx`, `info.txt`, JSON de reads).
 3. **Sin secretos en el código** — todo por `.env` (ver `.env.example`).
 4. El switch **nunca corta la corrida**: baja por la cadena y anota el motivo en el log.
-5. Cadena inmutable: `ollama → deepseek → openrouter → gemini` (cambiarla = nuevo ADR).
+5. Cadena inmutable: `ollama → huggingface → deepseek → openrouter → gemini` (cambiarla = nuevo ADR).
 
 ## El switch (`ia/switch.py`)
 | Función | Qué hace |

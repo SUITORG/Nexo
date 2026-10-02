@@ -2,7 +2,8 @@
 """Switch de IA de SuitCVLO-open.
 
 Cadena (inmutable, ver docs/CONTRATO.md):
-    ollama (local, VLM) -> deepseek (nube, 5M tokens gratis al registrar) -> openrouter (nube, gratis) -> gemini (nube)
+    ollama (local, VLM) -> huggingface (nube, gratis) -> deepseek (nube, 5M tokens gratis al registrar)
+    -> openrouter (nube, gratis) -> gemini (nube)
 
 - `modelos()` lista los modelos disponibles; los de Ollama salen con sufijo `(local)`.
 - `leer(ruta, prompt)` baja por la cadena hasta que un proveedor responde.
@@ -17,7 +18,7 @@ import time
 import urllib.error
 import urllib.request
 
-ORDEN = ('ollama', 'deepseek', 'openrouter', 'gemini')
+ORDEN = ('ollama', 'huggingface', 'deepseek', 'openrouter', 'gemini')
 FALLOS_PARA_BLOQUEO = 3
 COOLDOWN_S = 300
 TTL_MODELOS_S = 3600
@@ -25,7 +26,7 @@ TTL_MODELOS_S = 3600
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ENV_CARGADO = False
 _CB = {}          # proveedor -> {'fallos': int, 'hasta': float}
-_CACHE = {'t': 0.0, 'openrouter': None}
+_CACHE = {'t': 0.0, 't_hf': 0.0, 'openrouter': None, 'huggingface': None}
 
 
 # ---------------------------------------------------------------- entorno
@@ -106,6 +107,9 @@ def _disponible(p):
             return True, 'ok'
         except Exception as e:
             return False, 'ollama caído ({})'.format(str(e)[:60])
+    if p == 'huggingface':
+        return (True, 'ok') if (_env('HF_TOKEN') or _env('HUGGINGFACE_API_KEY')) \
+            else (False, 'sin HF_TOKEN')
     if p == 'deepseek':
         return (True, 'ok') if _env('DEEPSEEK_API_KEY') else (False, 'sin DEEPSEEK_API_KEY')
     if p == 'openrouter':
@@ -170,9 +174,36 @@ def _openrouter_modelos():
     return items
 
 
+_CLAVES_VISION = ('vl', 'vision', 'llava', 'gemma-3', 'pixtral', 'internvl', 'ernie-4.5')
+
+
+def _huggingface_modelos():
+    """Modelos con visión del router de HuggingFace (TTL 1 h)."""
+    if _CACHE['huggingface'] is not None and time.time() - _CACHE['t_hf'] < TTL_MODELOS_S:
+        return _CACHE['huggingface']
+    items = []
+    clave = _env('HF_TOKEN') or _env('HUGGINGFACE_API_KEY')
+    if clave:
+        try:
+            j = _http('https://router.huggingface.co/v1/models',
+                      headers={'Authorization': 'Bearer ' + clave}, timeout=25)
+            for m in j.get('data') or []:
+                mid = m.get('id') or ''
+                if any(k in mid.lower() for k in _CLAVES_VISION):
+                    items.append({'id': mid, 'nombre': '{} (nube)'.format(mid),
+                                  'proveedor': 'huggingface', 'local': False,
+                                  'vision': True, 'detalle': 'HF'})
+        except Exception:
+            items = []
+    _CACHE['huggingface'] = items[:20]
+    _CACHE['t_hf'] = time.time()
+    return _CACHE['huggingface']
+
+
 def modelos():
     """Todos los modelos conocidos. Los locales llevan '(local)' en el nombre."""
     items = _ollama_modelos()
+    items += _huggingface_modelos()
     if _env('DEEPSEEK_API_KEY'):
         m = _env('DEEPSEEK_VISION_MODEL', 'deepseek-flash')
         items.append({'id': m, 'nombre': '{} (nube)'.format(m), 'proveedor': 'deepseek',
@@ -199,6 +230,19 @@ def _elegir(proveedor, modelo):
         if candidatos:
             return min(candidatos, key=lambda m: m.get('bytes') or 1 << 62)['id']
         raise RuntimeError('Ollama sin modelos con visión (instala: ollama pull qwen3.5)')
+    if proveedor == 'huggingface':
+        if modelo:
+            return modelo
+        por_defecto = _env('HF_VISION_MODEL')
+        if por_defecto:
+            return por_defecto
+        # preferencia: mejor OCR para letreros, si está disponible en el router
+        ids = [m['id'] for m in _huggingface_modelos()]
+        for pref in ('Qwen/Qwen2.5-VL-72B-Instruct', 'Qwen/Qwen3-VL-30B-A3B-Instruct',
+                     'google/gemma-3-12b-it'):
+            if pref in ids:
+                return pref
+        return ids[0] if ids else 'Qwen/Qwen2.5-VL-72B-Instruct'
     if proveedor == 'deepseek':
         return modelo or _env('DEEPSEEK_VISION_MODEL', 'deepseek-flash')
     if proveedor == 'openrouter':
@@ -221,6 +265,8 @@ def _pertece(proveedor, modelo):
         return False
     if proveedor == 'ollama':
         return any(m['id'] == modelo for m in _ollama_modelos())
+    if proveedor == 'huggingface':
+        return any(m['id'] == modelo for m in _huggingface_modelos())
     if proveedor == 'deepseek':
         return modelo == _env('DEEPSEEK_VISION_MODEL', 'deepseek-flash')
     if proveedor == 'openrouter':
@@ -244,6 +290,18 @@ def _ollama(ruta, prompt, modelo):
     # CPU solo: una inferencia a la vez tarda ~6-7 min; en paralelo se pasa del tiempo.
     j = _http(url, payload, timeout=float(_env('OLLAMA_TIMEOUT_S', '900')))
     return ((j.get('message') or {}).get('content') or '').strip()
+
+
+def _huggingface(ruta, prompt, modelo):
+    clave = _env('HF_TOKEN') or _env('HUGGINGFACE_API_KEY')
+    payload = {'model': _elegir('huggingface', modelo),
+               'messages': [{'role': 'user', 'content': [
+                   {'type': 'text', 'text': prompt},
+                   {'type': 'image_url',
+                    'image_url': {'url': 'data:image/jpeg;base64,' + _b64(ruta)}}]}]}
+    j = _http('https://router.huggingface.co/v1/chat/completions', payload,
+              headers={'Authorization': 'Bearer ' + clave}, timeout=300)
+    return ((j.get('choices') or [{}])[0].get('message') or {}).get('content') or ''
 
 
 def _deepseek(ruta, prompt, modelo):
@@ -284,7 +342,8 @@ def _gemini(ruta, prompt, modelo):
     return ''.join(p.get('text', '') for p in partes).strip()
 
 
-_LEEME = {'ollama': _ollama, 'deepseek': _deepseek, 'openrouter': _openrouter, 'gemini': _gemini}
+_LEEME = {'ollama': _ollama, 'huggingface': _huggingface, 'deepseek': _deepseek,
+          'openrouter': _openrouter, 'gemini': _gemini}
 
 
 # ---------------------------------------------------------------- cascade

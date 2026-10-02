@@ -148,6 +148,27 @@ class SwitchHttpYModelos(unittest.TestCase):
         self.assertFalse(switch._bloqueado('deepseek'))
         self.assertEqual(switch._CB, {})
 
+    def test_cadena_incluye_huggingface(self):
+        self.assertEqual(switch.ORDEN, ('ollama', 'huggingface', 'deepseek', 'openrouter', 'gemini'))
+        self.assertIn('huggingface', switch._LEEME)
+
+    @mock.patch.object(switch, '_env', lambda n, d='': d)
+    def test_huggingface_prefiere_modelo_con_ocr(self):
+        fijo = [{'id': 'google/gemma-3-4b-it'}, {'id': 'google/gemma-3-12b-it'},
+                {'id': 'Qwen/Qwen2.5-VL-72B-Instruct'}]
+        with mock.patch.object(switch, '_huggingface_modelos', lambda: fijo):
+            self.assertEqual(switch._elegir('huggingface', None), 'Qwen/Qwen2.5-VL-72B-Instruct')
+            self.assertEqual(switch._elegir('huggingface', 'google/gemma-3-12b-it'),
+                             'google/gemma-3-12b-it')
+            self.assertTrue(switch._pertece('huggingface', 'Qwen/Qwen2.5-VL-72B-Instruct'))
+            self.assertFalse(switch._pertece('huggingface', 'deepseek-flash'))
+
+    @mock.patch.object(switch, '_env', lambda n, d='': d)
+    def test_huggingface_sin_modelos_usa_default(self):
+        with mock.patch.object(switch, '_huggingface_modelos', lambda: []):
+            self.assertEqual(switch._elegir('huggingface', None), 'Qwen/Qwen2.5-VL-72B-Instruct')
+            self.assertFalse(switch._pertece('huggingface', 'nada'))
+
 
 if __name__ == '__main__':
     unittest.main()

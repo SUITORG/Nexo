@@ -14,10 +14,12 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 - Comandos: instalar `pip install flask openpyxl pillow pillow-heif gdown` ·
   desarrollo `python app.py` (puerto **3015**) · pruebas `python -m unittest discover -s tests -t . -v` ·
   build `no aplica (sin build)`
-- Variables de entorno requeridas: `DEEPSEEK_API_KEY` (opcional), `OPENROUTER_API_KEY` (opcional),
-  `GEMINI_API_KEY` (opcional), `CVLO_VLM` (opcional, default = modelo local con visión más liviano),
+- Variables de entorno requeridas: `HF_TOKEN` (opcional, el del sistema ya sirve), `DEEPSEEK_API_KEY` (opcional),
+  `OPENROUTER_API_KEY` (opcional), `GEMINI_API_KEY` (opcional),
+  `CVLO_VLM` (opcional, default = modelo local con visión más liviano),
+  `HF_VISION_MODEL` (opcional, default `Qwen/Qwen2.5-VL-72B-Instruct`),
   `OLLAMA_URL` (opcional, default `http://127.0.0.1:11434`), `OLLAMA_TIMEOUT_S` (opcional, 900),
-  `CVLO_MOCK` (pruebas)
+  `CVLO_MOCK` (pruebas). **Prioridad: el `.env` del proyecto manda sobre el entorno; vacío = desactivar.**
 - Nada de secretos en el repositorio: `.env` (gitignored) o `.env.example` como guía
 
 ## Datos y multi-inquilino
@@ -44,12 +46,14 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 7. Multi-proveedor por `.env`, no por columnas nuevas ni schema externo
 
 ## Orden del switch (inmutable sin decisión del usuario)
-1. `ollama` — local, `CVLO_VLM`, sin costo, offline
-2. `deepseek` — nube, 5M tokens gratis al registrar (`DEEPSEEK_API_KEY`), modelo con visión
-3. `openrouter` — nube gratis (`OPENROUTER_API_KEY`), modelos con visión
-4. `gemini` — nube (`GEMINI_API_KEY`), mejor calidad de OCR en español
+1. `ollama` — local, `CVLO_VLM`, sin costo, offline (lento: ~456 s/foto en CPU)
+2. `huggingface` — nube, router gratis con visión (`HF_TOKEN`), ~4 s/foto
+3. `deepseek` — nube, 5M tokens gratis al registrar (`DEEPSEEK_API_KEY`), modelo con visión
+4. `openrouter` — nube gratis (`OPENROUTER_API_KEY`), modelos con visión
+5. `gemini` — nube (`GEMINI_API_KEY`), mejor calidad de OCR en español
 
 > AutoClaw/AutoGLM se **eliminó** de la cadena el 2026-10-01 → ver ADR-038.
+> HuggingFace se **añadió** el 2026-10-02 → ver ADR-039.
 
 ## Definición de terminado
 - Validación en PASA con evidencia en `docs/VALIDACION.md`
@@ -63,3 +67,4 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 ## Cambios
 - 2026-10-01: creación (fase 0) a partir de las decisiones del usuario en la sesión de diseño
 - 2026-10-01: **AutoClaw/AutoGLM eliminado de la cadena** y añadido DeepSeek (5M tokens gratis) → ADR-038
+- 2026-10-02: **añadido `huggingface`** como eslabón 2 (router gratis, ~4 s/foto) → ADR-039

@@ -289,7 +289,7 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
     | 3011 | SuitChatTG |
  | 3013 | SuitDiccionario |
  | 3014 | SuitPoke (juego cartas PvP, stdlib, sin DB — ADR-036) |
- | 3015 | SuitCVLO-open (auditoría OOH + switch IA Ollama/DeepSeek/OpenRouter/Gemini — ADR-037/038) |
+ | 3015 | SuitCVLO-open (auditoría OOH + switch IA Ollama/HuggingFace/DeepSeek/OpenRouter/Gemini — ADR-037/038/039) |
  | 8000 | CampanasAi |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas
 6. Si el módulo tiene gate de UI (como `modo` flags o `usa_reservaciones`), documentarlo en `projects.yaml` bajo `frontend:`
