@@ -35,6 +35,7 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
   `.suit/INDEX.md`, `.suit/memory/decisions/` (ADR), `AGENTS.md` (tabla de puertos),
   `GuiaTotal/registro/suitcvlo-open.yaml`
 - No debe tocar: `\cvlo-auditor\` (SOLO LECTURA, fuente), `SuitCVLO/` (proyecto YOLO independiente),
+  `SuitCVLOGCPy/` (proyecto Colab — **ni leer ni modificar** desde 2026-10-03, decisión del usuario),
   `server.js` raíz, `backend/`, otros subproyectos, `.github/workflows/`
 - Dependencias con otros subproyectos: ninguna — servidor y frontend propios
 
@@ -75,3 +76,4 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 - 2026-10-02: **añadido `huggingface`** como eslabón 2 (router gratis, ~4 s/foto) → ADR-039
 - 2026-10-02: **`opencode` entra el primero** (tu suscripción, `deepseek-v4-flash-vision-exp`,
   3.2 s/foto) y **se desactivan `huggingface` y `openrouter`** (líneas comentadas en `.env`) → ADR-041
+- 2026-10-03: **`SuitCVLOGCPy` sale del alcance** — no se lee ni se modifica (decisión del usuario)
