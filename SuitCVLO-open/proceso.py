@@ -11,9 +11,8 @@ import shutil
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from datetime import datetime
 import gdown
-
 import motor
 import utilidades as U
 
@@ -93,8 +92,15 @@ def _bloque_info(texto, d, kml_d, lat, lon):
     if marca_foto.strip().lower() in ('', 'no visible', 'no se distingue', 'sin marca', 'no legible'):
         marca_foto = motor.marca_de(d.get('PIN', ''), d)
     tipo_foto = motor.campo(texto, 'TIPO SOPORTE')
+    # el mensaje del anuncio: qué promociona (y si hace falta, el texto literal que se ve)
+    comentario = motor.campo(texto, 'QUE ANUNCIA').strip()
+    if comentario.lower() in ('', 'no visible', 'no se distingue', 'no aplica'):
+        comentario = motor.campo(texto, 'TEXTO VISIBLE').strip()
+    if not comentario:
+        comentario = 'no disponible'
     return '\n'.join([
         'CAMPAÑA: %s' % marca_foto,
+        'COMENTARIO: %s' % comentario,
         'PLAZA: MTY',
         'PROVEEDOR: ',
         'RAZÓN SOCIAL: ',
@@ -162,8 +168,10 @@ def ejecutar_corrida(params, progreso, log):
     kml_datos = motor.cargar_kml_datos(params.get('kml', ''))
 
     wb, ws = motor.idx_abrir_o_crear(params.get('idx', ''))
+    col_fecha = motor.idx_col_fecha(ws)     # FechaHoraSubida (respeta una cabecera ya existente)
     pos, verif = motor.idx_filas(ws)
-    log('idxfotos: {} filas ({} verificadas)'.format(len(pos), len(verif)))
+    log('idxfotos: {} filas ({} verificadas) · FechaHoraSubida en columna {}'
+        .format(len(pos), len(verif), col_fecha))
 
     excluidos = _excluidos(salida, verif, reads_dir)
     log('Excluidas (cargadas/verificadas/leídas): {}'.format(len(excluidos)))
@@ -317,6 +325,8 @@ def ejecutar_corrida(params, progreso, log):
             fila = _fila_idx(foto_jpg, texto, c['pin'], d, kml_d, c['lat'], c['lon'], marcada, excede=(marcada == ''))
             with IDX_LOCK:
                 motor.idx_upsert(ws, pos, fila)
+                # hora de subida en SU columna: nunca escribe sobre una columna ajena
+                ws.cell(pos[foto_jpg], col_fecha).value = datetime.now().strftime('%Y-%m-%d %H:%M')
             return stem, 'listo', None, carpeta
         except Exception as e:
             return stem, 'error', str(e)[:200], None

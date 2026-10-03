@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 53 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena + 7 de OpenCode + 6 de descargas Web) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 55 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena + 7 de OpenCode + 6 de descargas Web + 2 de COMENTARIO/subida) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -33,6 +33,8 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 25 | Fallos de permiso sin espera | `Cannot retrieve the public link` **no duerme 5 s** (fallo permanente) y no inunda el log; los de red sí esperan → 2 tests | ✅ |
 | 26 | Progreso de descargas | log `descargando 10/30 · candidatas 4/10 · sin permiso 0` cada 10 → 1 test · excluye las ya verificadas → 1 test | ✅ |
 | 27 | Corrida real Modo Web con tope | job `de702879cfe1` (22:32): listó 3653 en **4 min**, bajó **5** y **cortó** con el mensaje del tope; **0 candidatas de 5** → confirma que en Web hay que bajar para leer el GPS | ✅ |
+| 28 | `COMENTARIO` en `info.txt` | cada bloque de foto lleva el mensaje del anuncio (`QUE ANUNCIA` → si falta, `TEXTO VISIBLE` → si falta, `no disponible`) y va **antes** de la sección `COMENTARIOS:` → 1 test + corrida real | ✅ |
+| 29 | `FechaHoraSubida` en el xlsx real | `idx_col_fecha()` reconoce `FechaHoraSubida`/`FechaCarga`, **no crea columnas nuevas** y no toca `FechaHoraFoto` → 1 test + corrida real: `max_column` sigue en **11** y la fila 230 quedó con `2026-10-03 10:30` | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
@@ -100,6 +102,6 @@ Corren **sin red**: `gdown` y `time.sleep` están parchados.
 
 ```bash
 cd SuitCVLO-open
-python -m unittest discover -s tests -t . -v      # 53 tests
+python -m unittest discover -s tests -t . -v      # 55 tests
 python app.py                                     # abre http://127.0.0.1:3015
 ```

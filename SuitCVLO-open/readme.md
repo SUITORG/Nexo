@@ -5,12 +5,18 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 - **Estructura de carpetas**: `<Ruta de Salida>\<AAMMPQ>\auditoria\<Marca><TipoAnuncio><Ciudad>\<PIN>\`
   (la quincena `AAMMPQ` se calcula con la **fecha de la foto**: días 1–15 → `01`; 16–31 → `02`).
 - **`info.txt`** por PIN: encabezado (`GRUPO`, `PIN`, `COORDENADAS`) + un bloque por foto
-  (`CAMPAÑA, PLAZA, PROVEEDOR, RAZÓN SOCIAL, MEDIO, FORMATO, ID, UBICACIÓN, LATITUD, LONGITUD`)
+  (`CAMPAÑA`, **`COMENTARIO`** (el mensaje del anuncio: qué promociona / el texto que se ve),
+  `PLAZA, PROVEEDOR, RAZÓN SOCIAL, MEDIO, FORMATO, ID, UBICACIÓN, LATITUD, LONGITUD`)
   con llenado **foto → si falta, del archivo de pines → si falta, del KML**.
+  *Se reescribe entero cada vez que entra una foto nueva al PIN; las fotos sin lectura guardada
+  quedan con `COMENTARIO: no disponible`.*
 - **`idxfotos.xlsx`**: se **crea si no existe** y se va actualizando (no repite lo ya *Verificado ✓*).
   Campos: NombreFoto, Descripción de lo que anuncia, Dirección, Tipo de Anuncio, Latitud, Longitud,
   Referencias visuales o notas, Verificado, PIN. Si una foto excede el tope por PIN → fila con
   *Verificado en blanco* y nota ("excede el tope").
+  **Fecha hora de subida**: si el archivo ya tiene una columna `FechaHoraSubida` (o `FechaCarga`),
+  se rellena con `AAAA-MM-DD HH:MM` en cada foto nueva; si no, se crea a partir de la columna 10.
+  **Nunca toca otras columnas** (p. ej. `FechaHoraFoto`) ni inventa valores en filas antiguas.
 
 ## Parámetros (en la página)
 
