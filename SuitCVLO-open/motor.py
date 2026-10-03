@@ -155,6 +155,7 @@ def _pines_desde_kml(ruta_kml):
                     'UBICACIÓN': datos.get('UBICACIÓN', ''), 'CIUDAD': datos.get('CIUDAD', ''),
                     'DIRECCIÓN': datos.get('DIRECCIÓN', ''), 'MARCA': datos.get('MARCA', ''),
                     'CLIENTE': datos.get('CLIENTE', ''), 'CODIGO MUPI': datos.get('CODIGO MUPI', ''),
+                    'CARA': datos.get('CARA', ''),
                     'descripcion': datos.get('descripción', ''),
                 }
                 pines[pin] = d

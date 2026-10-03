@@ -12,6 +12,7 @@ const el = {
   barra: $('#barra'),
   progresoTexto: $('#progreso-texto'),
   statsRuta: $('#stats-ruta'),
+  statsCapas: $('#stats-capas'),
   listaFotos: $('#lista-fotos'),
   seccionResultados: $('#seccion-resultados'),
   stats: $('#stats'),
@@ -163,6 +164,12 @@ function pintarProgreso(j) {
       (s.pines || 0) + ' PINs'
     ].join(' · ');
     el.statsRuta.classList.remove('oculto');
+    if (s.capas) {
+      const porCapa = Object.keys(s.capas).map((c) => c + ' ' + s.capas[c]).join(' · ');
+      el.statsCapas.textContent = 'KML ' + (s.kml || 0) + ' PINs: ' + porCapa +
+        ' · con CARA ' + (s.cara || 0);
+      el.statsCapas.classList.remove('oculto');
+    }
   }
   el.listaFotos.innerHTML = '';
   (j.fotos || []).forEach((f) => {

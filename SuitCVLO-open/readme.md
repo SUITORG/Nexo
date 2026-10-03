@@ -80,8 +80,11 @@ Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en
 1. Doble clic en **`INICIAR.bat`** → se abre `http://127.0.0.1:3015`.
 2. Llena los parámetros (vienen precargados con las rutas de `cteCVLO1`).
 3. Elige la fuente y pulsa **Iniciar corrida**.
-4. Sigue el progreso: bajo la barra verás la línea
-   `1696 en la ruta · 1202 con GPS · 7 sin GPS · 1201 fuera de radio · 286 PINs`;
+4. Sigue el progreso: bajo la barra verás dos líneas
+   `1696 en la ruta · 1202 con GPS · 0 sin GPS · 1201 fuera de radio · 286 PINs`
+   `KML 300 PINs: COMPETENCIA 14 · COPPEL PARABUSES MTY (1) 12 · DIDI SEPTIEMBRE (1) 274 · con CARA 12`
+   (la diferencia **286 vs 300** es intencionada: 14 PINs de COMPETENCIA no tienen `LATITUD` —
+   ver `docs/DECISIONES-TECNOLOGICAS-OOH.md` §7);
    al terminar verás el resumen (leídas / copiadas / excedidas / PINs / grupos) y el log.
 
 ## Requisitos

@@ -270,6 +270,25 @@ class TestMarcaYCampana(unittest.TestCase):
         self.assertIn('CAMPAÑA: no visible', bloque)
 
 
+KML_DE_PRUEBA = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>\n'
+    '  <Folder><name>PRUEBA (1).xlsx</name>\n'
+    '    <Placemark><name>DF_KML_A</name><ExtendedData>\n'
+    '      <Data name="LATITUD"><value>25.7000</value></Data>\n'
+    '      <Data name="LONGITUD"><value>-100.3500</value></Data>\n'
+    '      <Data name="CARA"><value>Cara A</value></Data>\n'
+    '      <Data name="MEDIO"><value>PARABUS</value></Data>\n'
+    '    </ExtendedData></Placemark>\n'
+    '    <Placemark><name>DF_KML_B</name><ExtendedData>\n'
+    '      <Data name="LATITUD"><value>25.7100</value></Data>\n'
+    '      <Data name="LONGITUD"><value>-100.3600</value></Data>\n'
+    '      <Data name="MEDIO"><value>MUPI</value></Data>\n'
+    '    </ExtendedData></Placemark>\n'
+    '  </Folder>\n'
+    '</Document></kml>\n')
+
+
 class TestStatsYNoGps(unittest.TestCase):
     """Pantalla: nº de fotos en la ruta / con GPS / sin GPS / fuera de radio / PINs.
     Índice: las fotos sin GPS se registran con 'No GPS' en la columna Verificado."""
@@ -330,6 +349,18 @@ class TestStatsYNoGps(unittest.TestCase):
         s = self._stats(eventos)
         self.assertEqual(s['sin_gps'], 0)      # ya está en el índice -> excluida
         self.assertEqual(res['leidas'], 0)     # las otras dos también
+
+    def test_stats_incluye_capas_del_kml_y_cara(self):
+        """PINs por capa (limpiando .xlsx y espacios) + cuántos traen CARA."""
+        _base, params = self._montar()
+        with open(params['kml'], 'w', encoding='utf-8') as f:
+            f.write(KML_DE_PRUEBA)
+        eventos = []
+        proceso.ejecutar_corrida(params, eventos.append, lambda m: None)
+        s = self._stats(eventos)
+        self.assertEqual(s['capas'], {'PRUEBA (1)': 2})   # sin '.xlsx'
+        self.assertEqual(s['kml'], 2)
+        self.assertEqual(s['cara'], 1)                    # solo DF_KML_A tiene CARA
 
 
 if __name__ == '__main__':

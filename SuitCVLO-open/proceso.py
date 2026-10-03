@@ -11,6 +11,7 @@ import shutil
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import Counter
 from datetime import datetime
 import gdown
 import motor
@@ -176,6 +177,12 @@ def ejecutar_corrida(params, progreso, log):
     log('Pines cargados: {}'.format(len(pines)))
     kml_datos = motor.cargar_kml_datos(params.get('kml', ''))
 
+    # conteo por capa del KML (TODOS los placemarks, incluidos los que cargar_pines descarta)
+    def _capa(d):
+        return ' '.join(str(d.get('CAPA') or '(sin capa)').split()).replace('.xlsx', '').strip()
+    capas = Counter(_capa(d) for d in kml_datos.values())
+    con_cara = sum(1 for d in kml_datos.values() if str(d.get('CARA') or '').strip())
+
     wb, ws = motor.idx_abrir_o_crear(params.get('idx', ''))
     col_fecha = motor.idx_col_fecha(ws)     # FechaHoraSubida (respeta una cabecera ya existente)
     pos, verif = motor.idx_filas(ws)
@@ -305,7 +312,9 @@ def ejecutar_corrida(params, progreso, log):
 
     progreso({'stats': {'fuente': fuente, 'pines': len(pines),
                         'con_gps': cont['con_gps'], 'sin_gps': cont['sin_gps'],
-                        'fuera_radio': cont['fuera_radio']}})
+                        'fuera_radio': cont['fuera_radio'],
+                        'capas': dict(capas), 'kml': sum(capas.values()),
+                        'cara': con_cara}})
     log('Candidatas a leer: {}'.format(len(candidatas)))
     progreso({'total': len(candidatas), 'fotos_estado': [{'nombre': c['nombre'], 'estado': 'pendiente'} for c in candidatas]})
 
