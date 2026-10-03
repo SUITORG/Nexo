@@ -195,14 +195,22 @@ def ejecutar_corrida(params, progreso, log):
 
     # ---------- armar candidatas ----------
     candidatas = []  # dicts: foto(ruta local), nombre, lat, lon, fecha, pin, dist
+    cont = {'con_gps': 0, 'sin_gps': 0, 'fuera_radio': 0}
+    nombres_sin_gps = []          # se registran en el índice con 'No GPS'
+    fuente = 0                    # fotos en la ruta/carpetra de origen
 
     def evaluar(ruta_local, nombre_orig):
         g = motor.gps_y_fecha(ruta_local, mock_gps=params.get('_mock_gps'))
         lat, lon, fecha = g
         if lat is None or lon is None:
+            cont['sin_gps'] += 1
+            if nombre_orig not in nombres_sin_gps:
+                nombres_sin_gps.append(nombre_orig)
             return None
+        cont['con_gps'] += 1
         pin, dm = _elegir_pin(lat, lon, pines, radio)
         if pin is None:
+            cont['fuera_radio'] += 1
             return None
         return {'foto': ruta_local, 'nombre': nombre_orig, 'lat': lat, 'lon': lon,
                 'fecha': fecha, 'pin': pin, 'dist': round(dm)}
@@ -212,6 +220,7 @@ def ejecutar_corrida(params, progreso, log):
         carpeta_src = params['ruta_local']
         archivos = U.ordenar_por_nombre([os.path.join(carpeta_src, f) for f in os.listdir(carpeta_src)
                                          if U.es_imagen(f)])
+        fuente = len(archivos)
         log('Fotos en la fuente local: {}'.format(len(archivos)))
         for p in archivos:
             if detenido():
@@ -235,6 +244,7 @@ def ejecutar_corrida(params, progreso, log):
             if ruta and fid and ruta.lower().endswith(('.heic', '.jpg', '.jpeg')):
                 items.append((fid, U.nombre_limpio(ruta)))
         items.sort(key=lambda t: t[1].lower())
+        fuente = len(items)
         log('Fotos en Drive: {}'.format(len(items)))
 
         tope = int(params.get('max_descargas') or 300)
@@ -285,6 +295,17 @@ def ejecutar_corrida(params, progreso, log):
         log('Descargas nuevas: {} · sin permiso: {} · errores de red: {}'.format(
             descargas, sin_permiso, errores_red))
 
+    # fotos sin GPS: quedan registradas en el índice con 'No GPS' en la columna Verificado
+    if nombres_sin_gps:
+        with IDX_LOCK:
+            for nombre in nombres_sin_gps:
+                motor.idx_upsert(ws, pos,
+                                 [nombre, '', '', '', '', '', 'sin GPS en EXIF', 'No GPS', ''])
+        log('Sin GPS: {} fotos marcadas como No GPS en el índice'.format(len(nombres_sin_gps)))
+
+    progreso({'stats': {'fuente': fuente, 'pines': len(pines),
+                        'con_gps': cont['con_gps'], 'sin_gps': cont['sin_gps'],
+                        'fuera_radio': cont['fuera_radio']}})
     log('Candidatas a leer: {}'.format(len(candidatas)))
     progreso({'total': len(candidatas), 'fotos_estado': [{'nombre': c['nombre'], 'estado': 'pendiente'} for c in candidatas]})
 

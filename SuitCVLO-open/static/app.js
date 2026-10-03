@@ -11,6 +11,7 @@ const el = {
   seccionProgreso: $('#seccion-progreso'),
   barra: $('#barra'),
   progresoTexto: $('#progreso-texto'),
+  statsRuta: $('#stats-ruta'),
   listaFotos: $('#lista-fotos'),
   seccionResultados: $('#seccion-resultados'),
   stats: $('#stats'),
@@ -152,6 +153,17 @@ function pintarProgreso(j) {
   el.barra.style.width = (j.estado === 'listo' ? 100 : Math.max(3, pct)) + '%';
   el.progresoTexto.textContent = 'Corrida ' + j.id + ' · ' + hechas + ' de ' + total +
     (j.actual ? ' · ' + j.actual : '') + ' · ' + j.estado;
+  if (j.stats) {
+    const s = j.stats;
+    el.statsRuta.textContent = [
+      (s.fuente || 0) + ' en la ruta',
+      (s.con_gps || 0) + ' con GPS',
+      (s.sin_gps || 0) + ' sin GPS',
+      (s.fuera_radio || 0) + ' fuera de radio',
+      (s.pines || 0) + ' PINs'
+    ].join(' · ');
+    el.statsRuta.classList.remove('oculto');
+  }
   el.listaFotos.innerHTML = '';
   (j.fotos || []).forEach((f) => {
     const li = document.createElement('li');

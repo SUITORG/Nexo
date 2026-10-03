@@ -20,7 +20,8 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 - **`idxfotos.xlsx`**: se **crea si no existe** y se va actualizando (no repite lo ya *Verificado ✓*).
   Campos: NombreFoto, Descripción de lo que anuncia, Dirección, Tipo de Anuncio, Latitud, Longitud,
   Referencias visuales o notas, Verificado, PIN. Si una foto excede el tope por PIN → fila con
-  *Verificado en blanco* y nota ("excede el tope").
+  *Verificado en blanco* y nota ("excede el tope"); si **no tiene GPS** → fila con
+  **`Verificado = No GPS`**, nota `sin GPS en EXIF` y PIN vacío (queda registrada y no se re-evalúa).
   **Fecha hora de subida**: si el archivo ya tiene una columna `FechaHoraSubida` (o `FechaCarga`),
   se rellena con `AAAA-MM-DD HH:MM` en cada foto nueva; si no, se crea a partir de la columna 10.
   **Nunca toca otras columnas** (p. ej. `FechaHoraFoto`) ni inventa valores en filas antiguas.
@@ -79,7 +80,9 @@ Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en
 1. Doble clic en **`INICIAR.bat`** → se abre `http://127.0.0.1:3015`.
 2. Llena los parámetros (vienen precargados con las rutas de `cteCVLO1`).
 3. Elige la fuente y pulsa **Iniciar corrida**.
-4. Sigue el progreso; al terminar verás el resumen (leídas / copiadas / excedidas / PINs / grupos) y el log.
+4. Sigue el progreso: bajo la barra verás la línea
+   `1696 en la ruta · 1202 con GPS · 7 sin GPS · 1201 fuera de radio · 286 PINs`;
+   al terminar verás el resumen (leídas / copiadas / excedidas / PINs / grupos) y el log.
 
 ## Requisitos
 

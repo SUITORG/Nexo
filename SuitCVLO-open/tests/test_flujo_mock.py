@@ -270,5 +270,67 @@ class TestMarcaYCampana(unittest.TestCase):
         self.assertIn('CAMPAÑA: no visible', bloque)
 
 
+class TestStatsYNoGps(unittest.TestCase):
+    """Pantalla: nº de fotos en la ruta / con GPS / sin GPS / fuera de radio / PINs.
+    Índice: las fotos sin GPS se registran con 'No GPS' en la columna Verificado."""
+
+    def _montar(self):
+        base = tempfile.mkdtemp(prefix='cvlo_stats_')
+        fotos, pines, kml = crear_fuente(base, [
+            ('IMG_7101.jpg', '2026-09-14', 25.70002, -100.3500),
+            ('IMG_7102.jpg', '2026-09-14', 25.70006, -100.3500)])
+        # tercera foto SIN gps: no está en mock_gps.json
+        Image.new('RGB', (320, 240), (240, 240, 240)).save(os.path.join(fotos, 'IMG_7103.jpg'))
+        params = {'modo': 'local', 'ruta_local': fotos, 'salida': os.path.join(base, 'salida'),
+                  'pines': pines, 'drive_pics': '', 'kml': kml,
+                  'idx': os.path.join(base, 'idxfotos.xlsx'), 'n_fotos': 10, 'radio': 250,
+                  'cap': 10, 'pausa': 0, 'trabajo': os.path.join(base, 'trabajo'),
+                  '_mock_gps': json.load(open(os.path.join(fotos, 'mock_gps.json'), encoding='utf-8'))}
+        return base, params
+
+    @staticmethod
+    def _stats(eventos):
+        s = [e['stats'] for e in eventos if isinstance(e, dict) and 'stats' in e]
+        return s[-1] if s else None
+
+    def test_stats_se_reportan(self):
+        _base, params = self._montar()
+        eventos = []
+        proceso.ejecutar_corrida(params, eventos.append, lambda m: None)
+        s = self._stats(eventos)
+        self.assertIsNotNone(s, 'no se emitió progreso stats')
+        self.assertEqual(s['fuente'], 3)
+        self.assertEqual(s['con_gps'], 2)
+        self.assertEqual(s['sin_gps'], 1)
+        self.assertEqual(s['fuera_radio'], 0)
+        self.assertEqual(s['pines'], 2)
+
+    def test_fotos_sin_gps_se_marcan_como_no_gps(self):
+        _base, params = self._montar()
+        proceso.ejecutar_corrida(params, lambda c: None, lambda m: None)
+        wb = load_workbook(params['idx'])
+        ws = wb['idxfotos'] if 'idxfotos' in wb.sheetnames else wb[wb.sheetnames[0]]
+        # las filas van con el stem en minúsculas (img_7101.jpg) — se compara sin importar mayúsculas
+        filas = {str(ws.cell(r, 1).value).lower(): r for r in range(2, ws.max_row + 1)}
+        self.assertIn('img_7103.jpg', filas, 'la foto sin GPS no se registró')
+        r = filas['img_7103.jpg']
+        self.assertEqual(ws.cell(r, 8).value, 'No GPS')          # columna Verificado
+        self.assertIn('sin GPS', str(ws.cell(r, 7).value))        # nota en Referencias
+        self.assertTrue(ws.cell(r, 9).value in (None, ''))        # sin PIN (no se inventa)
+        # las que sí tienen GPS quedan con visto bueno
+        r2 = filas['img_7101.jpg']
+        self.assertEqual(ws.cell(r2, 8).value, '✓')
+        wb.close()
+
+    def test_sin_gps_no_vuelve_a_evaluarse(self):
+        _base, params = self._montar()
+        proceso.ejecutar_corrida(params, lambda c: None, lambda m: None)
+        eventos = []
+        res = proceso.ejecutar_corrida(dict(params), eventos.append, lambda m: None)
+        s = self._stats(eventos)
+        self.assertEqual(s['sin_gps'], 0)      # ya está en el índice -> excluida
+        self.assertEqual(res['leidas'], 0)     # las otras dos también
+
+
 if __name__ == '__main__':
     unittest.main()

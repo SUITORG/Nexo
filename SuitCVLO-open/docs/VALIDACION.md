@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 60 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena + 7 de OpenCode + 6 de descargas Web + 7 de COMENTARIO/FOTO/marca) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 63 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena + 7 de OpenCode + 6 de descargas Web + 7 de COMENTARIO/FOTO/marca + 3 de stats/No GPS) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -39,6 +39,8 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 31 | Switch de `COMENTARIO` | checkbox en *Opciones avanzadas* (default ON) → `app.js` → `app.py` → `_bloque_info(con_comentario=…)` → 1 test (OFF no escribe `COMENTARIO:` pero sí `FOTO:`) + corrida real con ON | ✅ |
 | 32 | `PROVEEDOR` = marca / `CAMPAÑA` = eslogan | prompt de **7 → 8 líneas** (`MARCA:` + `CAMPAÑA:` separados), cadena IA → pines → `marca_de()`; las lecturas viejas (`MARCA CAMPAÑA`) siguen funcionando por *startswith* → 3 tests + corrida real: `CAMPAÑA: Mientras Vivimos…` / `PROVEEDOR: Banamex / La Gran Caravana` | ✅ |
 | 33 | Reparación de codificación (bug propio) | mi `Set-Content` de PowerShell había doble-codificado `motor.py` (26 mojibake, prompt y cabeceras rotos) → reparado con la inversa `bytes latin-1/cp1252 → UTF-8`; **0 mojibake** en todo el proyecto y `UBICACIÓN` del KML volvió a llenarse | ✅ |
+| 34 | Línea de estadísticas en pantalla | `progreso({'stats'})` → `_job_publico` → `.nota` bajo la barra: `fuente · con GPS · sin GPS · fuera de radio · PINs` → 1 test | ✅ |
+| 35 | `No GPS` en el chequequeo | las fotos sin GPS se registran en el xlsx con `Verificado='No GPS'`, `Referencias='sin GPS en EXIF'` y PIN vacío; quedan excluidas de corridas futuras → 2 tests + corrida real: **7 filas** (IMG_8823–8829), columnas intactas | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
@@ -106,6 +108,6 @@ Corren **sin red**: `gdown` y `time.sleep` están parchados.
 
 ```bash
 cd SuitCVLO-open
-python -m unittest discover -s tests -t . -v      # 60 tests
+python -m unittest discover -s tests -t . -v      # 63 tests
 python app.py                                     # abre http://127.0.0.1:3015
 ```

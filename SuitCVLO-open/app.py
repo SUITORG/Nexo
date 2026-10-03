@@ -56,6 +56,7 @@ def _job_publico(job):
         'resumen': job.get('resumen'), 'error': job.get('error_global'),
         'inicio': job['inicio'], 'fin': job.get('fin'),
         'deteniendo': bool(job.get('detener')),
+        'stats': job.get('stats'),
     }
 
 
