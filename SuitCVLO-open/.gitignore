@@ -1,4 +1,5 @@
 .env
+CVLOCFG.txt
 trabajo/
 __pycache__/
 *.pyc

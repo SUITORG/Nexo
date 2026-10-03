@@ -1,0 +1,19 @@
+# SuitCVLO-open — plantilla de configuración de rutas
+# Cópiala como CVLOCFG.txt en esta misma carpeta y cambia las rutas.
+# Formato: clave: valor      ·  # = comentario      ·  claves: fotos, salida, pines, kml, idx
+# Ojo: solo se parte por el PRIMER ':' porque las rutas llevan C:\
+#
+# fotos  = carpeta con las fotos (modo Local)
+# salida = donde se construye <AAMMPQ>\auditoria\...
+# pines  = GoogleMapsPines (.txt con URL, .kml o .xlsx)
+# kml    = RutaKML.kml (respaldo de datos por PIN)
+# idx    = idxfotos.xlsx (se crea si no existe)
+#
+# La ruta de este archivo se puede cambiar con la variable de entorno CVLO_CFG.
+# Este archivo está en .gitignore: cada equipo tiene las suyas.
+
+fotos : C:\ruta\a\las\fotos
+salida: C:\ruta\de\salida
+pines : C:\ruta\GooMapsPines.txt
+KML   : C:\ruta\RutaKML.kml
+idx   : C:\ruta\idxfotos.xlsx

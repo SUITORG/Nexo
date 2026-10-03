@@ -103,6 +103,29 @@ GPS       1273 con · 0 sin · 1251 fuera de radio        ← 2º tiempo, 10-40 
   ruta/pines/KML/índice/fuente** (se oculta solo: los datos quedan obsoletos).
 - Si `GoogleMapsPines` es un `.txt`, la primera lectura descarga el KML de Google (~0,5 s).
 
+## Rutas precargadas — `CVLOCFG.txt`
+
+Al abrir la página, si el switch **`☐ Cargar rutas de CVLOCFG.txt`** está activado (por defecto),
+se leen las rutas de `CVLOCFG.txt` (en esta misma carpeta) y se rellenan los 5 campos **y el modo
+pasa a `Local (ruta)`**:
+
+```
+fotos : C:\Users\rojo-\Downloads\cteCVLO1\Recorrido
+salida: C:\Users\rojo-\Downloads\cteCVLO1
+Pines : C:\Users\rojo-\Downloads\cteCVLO1\GooMapsPines.txt
+KML   : C:\Users\rojo-\Downloads\cteCVLO1\RutaKML.kml
+idx   : C:\Users\rojo-\Downloads\cteCVLO1\idxfotos.xlsx
+```
+
+- Formato `clave: valor` (mayúsculas indiferentes), `#` = comentario. Se parte **solo por el
+  primer `:`** → las rutas `C:\...` quedan intactas.
+- Claves: `fotos · salida · pines · kml · idx`.
+- **Switch apagado** → no se lee nada (se recuerda en el navegador).
+- Sin archivo → la página funciona igual (silencioso).
+- La ruta del archivo se puede cambiar con la env `CVLO_CFG`.
+- **`CVLOCFG.txt` está en `.gitignore`** (rutas propias de cada equipo); plantilla en
+  `CVLOCFG.example.txt`.
+
 ## Favicon
 
 `static/favicon.svg` (mupi + check verde sobre `#161616`) + `favicon-32.png` como respaldo;

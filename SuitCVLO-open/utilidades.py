@@ -87,6 +87,35 @@ def leer_texto_auto(ruta):
         return datos.decode('latin-1', errors='replace')
 
 
+CLAVES_CONFIG = ('fotos', 'salida', 'pines', 'kml', 'idx')
+
+
+def leer_config_rutas(ruta):
+    """CVLOCFG.txt -> {'fotos': ..., 'salida': ..., 'pines': ..., 'kml': ..., 'idx': ...}
+
+    Formato: `clave: valor` por línea (mayúsculas indiferentes), `#` y líneas vacías se ignoran.
+    Se parte SOLO por el primer ':' porque las rutas llevan 'C:\\'.
+    Si el archivo no existe -> {} (sin error).
+    """
+    if not ruta or not os.path.exists(ruta):
+        return {}
+    rutas = {}
+    try:
+        texto = leer_texto_auto(ruta)
+    except Exception:
+        return {}
+    for linea in texto.splitlines():
+        linea = linea.strip()
+        if not linea or linea.startswith('#') or ':' not in linea:
+            continue
+        clave, valor = linea.split(':', 1)
+        clave = clave.strip().lower()
+        valor = valor.strip().strip('"').strip("'")
+        if clave in CLAVES_CONFIG and valor:
+            rutas[clave] = valor
+    return rutas
+
+
 def leer_tsv(ruta):
     filas = []
     if os.path.exists(ruta):

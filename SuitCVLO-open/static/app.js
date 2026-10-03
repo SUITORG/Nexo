@@ -440,6 +440,43 @@ el.btnInfo.addEventListener('click', async () => {
 document.querySelectorAll('input[name=modo]').forEach((r) =>
   r.addEventListener('change', () => el.infoFuentes.classList.add('oculto')));
 
+// ---------- CVLOCFG.txt (rutas precargadas, opcional) ----------
+const CFG_LS = 'cvlo-open-cfg';
+
+function cfgActiva() {
+  try { return localStorage.getItem(CFG_LS) !== '0'; } catch (e) { return true; }
+}
+
+async function cargarCfg() {
+  if (!cfgActiva()) return;
+  try {
+    const r = await fetch('/api/config');
+    const d = await r.json();
+    if (!r.ok || !d.existe || !d.rutas) return;   // sin archivo: la página funciona igual
+    const mapa = { fotos: '#ruta_local', salida: '#salida', pines: '#pines',
+                   kml: '#kml', idx: '#idx' };
+    Object.keys(mapa).forEach((k) => {
+      const e = $(mapa[k]);
+      if (e && d.rutas[k]) e.value = d.rutas[k];
+    });
+    if (d.rutas.fotos) {   // la config describe el flujo local
+      const rLocal = document.querySelector('input[name=modo][value=local]');
+      if (rLocal && !rLocal.checked) {
+        rLocal.checked = true;
+        rLocal.dispatchEvent(new Event('change'));
+      }
+    }
+  } catch (e) { /* sin config: nada que hacer */ }
+}
+
+const cfgSwitch = $('#cfg_auto');
+cfgSwitch.checked = cfgActiva();
+cfgSwitch.addEventListener('change', (ev) => {
+  try { localStorage.setItem(CFG_LS, ev.target.checked ? '1' : '0'); } catch (e) {}
+  if (ev.target.checked) cargarCfg();
+});
+
 estado();
 cargarModelosIa();
 cargarHistorial();
+cargarCfg();

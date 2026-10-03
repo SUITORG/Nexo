@@ -80,6 +80,14 @@ def api_estado_ia():
     return jsonify({'proveedores': switch.estado()})
 
 
+@app.get('/api/config')
+def api_config():
+    """Rutas precargadas desde CVLOCFG.txt (opcional; la ruta se puede cambiar con la env CVLO_CFG)."""
+    ruta_cfg = switch._env('CVLO_CFG') or os.path.join(BASE, 'CVLOCFG.txt')
+    rutas = U.leer_config_rutas(ruta_cfg)
+    return jsonify({'existe': bool(rutas), 'archivo': ruta_cfg, 'rutas': rutas})
+
+
 def _leer_idx(ruta_idx):
     """(filas, verificadas, no_gps, stems verificados) del idxfotos.xlsx — solo lectura."""
     if not ruta_idx or not os.path.exists(ruta_idx):
