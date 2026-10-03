@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 47 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena + 7 de OpenCode) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 53 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena + 7 de OpenCode + 6 de descargas Web) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -29,6 +29,10 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 21 | Eslabón `opencode` (ADR-041) | key leída de `~/.local/share/opencode/auth.json`, `User-Agent` (sin él Cloudflare da **403/1010**), `x-opencode-session` (sin él **400**), `thinking` desactivado → 7 tests nuevos | ✅ |
 | 22 | Corrida real con OpenCode | job `a04e35917445`: **2 fotos leídas en 4 s**, `leidas=2`, `copiadas=1` (la otra por tope del PIN), `idxfotos.xlsx` 215→**217 filas**; coste medido **USD 0.000277/foto** (1201 in / 162 out) | ✅ |
 | 23 | Producción intacta | el `idxfotos.xlsx` real del usuario (hoja `Sheet1`, columna 10 = `FechaHoraFoto`) **no se modificó**: `SuitCVLO-open` solo escribe columnas 1-9 | ✅ |
+| 24 | Tope de descargas | `max_descargas` en *Opciones avanzadas* → el bucle corta y lo explica (`Tope de 5 descargas alcanzado… usa Modo Local`) → 2 tests | ✅ |
+| 25 | Fallos de permiso sin espera | `Cannot retrieve the public link` **no duerme 5 s** (fallo permanente) y no inunda el log; los de red sí esperan → 2 tests | ✅ |
+| 26 | Progreso de descargas | log `descargando 10/30 · candidatas 4/10 · sin permiso 0` cada 10 → 1 test · excluye las ya verificadas → 1 test | ✅ |
+| 27 | Corrida real Modo Web con tope | job `de702879cfe1` (22:32): listó 3653 en **4 min**, bajó **5** y **cortó** con el mensaje del tope; **0 candidatas de 5** → confirma que en Web hay que bajar para leer el GPS | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
@@ -57,6 +61,19 @@ Todas corren **sin red** (dependencias parchadas).
 | `test_numero_invalido_devuelve_400` | `n_fotos=cinco` → 400 en vez de 500 |
 | `test_detener_inexistente_404` | endpoint de detener con id desconocido |
 
+## Pruebas de descargas Web (`tests/test_web.py`, 6)
+
+| Test | Qué cubre |
+|---|---|
+| `test_el_tope_corta_y_lo_explica` | `max_descargas=3` → exactamente 3 descargas y el mensaje del tope |
+| `test_sin_tope_sigue_hasta_las_candidatas` | sin tope → baja hasta juntar `n_fotos` candidatas |
+| `test_no_duerme_en_fallos_permanentes` | `public link` → **cero** `sleep(5)` y log acotado (≤6 líneas) |
+| `test_en_fallo_de_red_si_espera` | error de red → **sí** `sleep(5)` |
+| `test_log_cada_10_descargas` | aparece `descargando 10/30 · candidatas … · sin permiso 0` |
+| `test_excluye_las_que_ya_estan_procesadas` | las ya *Verificado* no se descargan |
+
+Corren **sin red**: `gdown` y `time.sleep` están parchados.
+
 ## Corridas reales (fuera de unittest)
 
 | Fecha | Job | Motor | Resultado |
@@ -83,6 +100,6 @@ Todas corren **sin red** (dependencias parchadas).
 
 ```bash
 cd SuitCVLO-open
-python -m unittest discover -s tests -t . -v      # 47 tests
+python -m unittest discover -s tests -t . -v      # 53 tests
 python app.py                                     # abre http://127.0.0.1:3015
 ```

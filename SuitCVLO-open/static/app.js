@@ -68,6 +68,7 @@ el.btnIniciar.addEventListener('click', async () => {
   fd.append('radio', $('#radio').value || '250');
   fd.append('cap', $('#cap').value || '10');
   fd.append('pausa', $('#pausa').value || '1');
+  fd.append('max_descargas', $('#max_descargas').value || '300');
   fd.append('ia_proveedor', el.iaProveedor.value || 'auto');
   fd.append('ia_modelo', el.iaModelo.value || '');
   if (m === 'web') fd.append('drive_pics', $('#drive_pics').value.trim());

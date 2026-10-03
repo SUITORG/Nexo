@@ -210,8 +210,6 @@ def ejecutar_corrida(params, progreso, log):
     else:
         # web: Drive
         url = params.get('drive_pics', '')
-        if motor.en_mock():
-            raise RuntimeError('MODO_MOCK: la fuente web no está disponible en pruebas.')
         res = gdown.download_folder(url, skip_download=True, quiet=True)
         items = []
         for x in res or []:
@@ -221,12 +219,23 @@ def ejecutar_corrida(params, progreso, log):
                 items.append((fid, U.nombre_limpio(ruta)))
         items.sort(key=lambda t: t[1].lower())
         log('Fotos en Drive: {}'.format(len(items)))
+
+        tope = int(params.get('max_descargas') or 300)
         descargas = 0
+        sin_permiso = 0
+        errores_red = 0
+        FALLAS_PERMANENTES = ('public link', 'not publicly accessible', 'permission', '403')
+
         for fid, nombre in items:
             if len(candidatas) >= n_fotos:
                 break
             if detenido():
                 log('Detener: se corta la descarga de Drive.')
+                break
+            if descargas >= tope:
+                log('Tope de {} descargas alcanzado (candidatas {}/{}): sube el límite en '
+                    'Opciones avanzadas o usa Modo Local con Google Drive.'.format(
+                        tope, len(candidatas), n_fotos))
                 break
             if _stem(nombre) in excluidos:
                 continue
@@ -235,17 +244,29 @@ def ejecutar_corrida(params, progreso, log):
                 try:
                     gdown.download(id=fid, output=local, quiet=True)
                 except Exception as e:
-                    log('descarga falló {}: {}'.format(nombre, str(e)[:80]))
-                    time.sleep(5)
+                    msg = str(e).replace('\n', ' ')
+                    # un fallo de permisos no se arregla esperando: no se duerme
+                    if any(m in msg.lower() for m in FALLAS_PERMANENTES):
+                        sin_permiso += 1
+                        if sin_permiso <= 3 or sin_permiso % 25 == 0:
+                            log('descarga sin permiso {}: {}'.format(nombre, msg[:70]))
+                    else:
+                        errores_red += 1
+                        log('descarga falló {}: {}'.format(nombre, msg[:70]))
+                        time.sleep(5)
                     continue
                 descargas += 1
                 time.sleep(max(0.5, pausa))
+                if descargas % 10 == 0:
+                    log('descargando {}/{} · candidatas {}/{} · sin permiso {}'.format(
+                        descargas, len(items), len(candidatas), n_fotos, sin_permiso))
             if not os.path.exists(local) or os.path.getsize(local) == 0:
                 continue
             c = evaluar(local, nombre)
             if c:
                 candidatas.append(c)
-        log('Descargas nuevas: {}'.format(descargas))
+        log('Descargas nuevas: {} · sin permiso: {} · errores de red: {}'.format(
+            descargas, sin_permiso, errores_red))
 
     log('Candidatas a leer: {}'.format(len(candidatas)))
     progreso({'total': len(candidatas), 'fotos_estado': [{'nombre': c['nombre'], 'estado': 'pendiente'} for c in candidatas]})

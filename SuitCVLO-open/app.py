@@ -103,6 +103,7 @@ def api_crear():
         radio = float(form.get('radio') or 250)
         cap = int(form.get('cap') or 10)
         pausa = float(form.get('pausa') or 1.0)
+        max_descargas = int(form.get('max_descargas') or 300)
     except (TypeError, ValueError):
         return jsonify({'error': 'Parámetros numéricos inválidos (N fotos, radio, tope o pausa).'}), 400
     salida = (form.get('salida') or '').strip()
@@ -165,6 +166,8 @@ def api_crear():
         if not u or 'http' not in u:
             return jsonify({'error': 'Modo Web: indica una URL de Drive válida (o la ruta del archivo GooDrPics.txt).'}), 400
         drive = u
+        if motor.en_mock():
+            return jsonify({'error': 'MODO_MOCK: la fuente web no está disponible en pruebas.'}), 400
     else:
         if not ruta_local:
             return jsonify({'error': 'Modo Local: falta la ruta de fotos.'}), 400
@@ -192,7 +195,7 @@ def api_crear():
     params = {
         'modo': modo, 'ruta_local': ruta_local, 'salida': salida, 'pines': pines,
         'drive_pics': drive, 'kml': kml, 'idx': idx, 'n_fotos': n_fotos,
-        'radio': radio, 'cap': cap, 'pausa': pausa,
+        'radio': radio, 'cap': cap, 'pausa': pausa, 'max_descargas': max_descargas,
         'ia_proveedor': ia_proveedor, 'ia_modelo': ia_modelo,
         'trabajo': TRABAJO,
         '_mock_gps': mock_gps,

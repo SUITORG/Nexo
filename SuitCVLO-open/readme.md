@@ -23,8 +23,8 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 | Ruta de GoogleMapsPines | `.txt` con la URL del mapa, `.kml` exportado o `.xlsx` (tipo depurado) |
 | Ruta de KML | `RutaKML.kml` (respaldo de datos por PIN) |
 | Ruta de idxfotos.xlsx | índice (se crea si no existe) |
-| N Fotos | máximo de fotos a leer en la corrida |
-| Avanzado | radio de match (250 m), tope por PIN (10), pausa de descarga (1 s) |
+| N Fotos | máximo de **candidatas** a leer (foto con GPS dentro del radio de un PIN) |
+| Avanzado | radio de match (250 m), tope por PIN (10), pausa de descarga (1 s), **descargas máximas (300)** |
 | **Motor IA** | **OpenCode (tu suscripción) → Ollama local → HuggingFace → DeepSeek → OpenRouter → Gemini** — elige proveedor o "auto (cadena)" |
 
 ## Motor IA (switch)
@@ -48,6 +48,18 @@ Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en
 > **AutoClaw/AutoGLM se eliminó** de la cadena (2026-10-01, ADR-038) y **OpenCode entró primero**
 > (2026-10-02, ADR-041); HuggingFace y OpenRouter quedaron **desactivados** en `.env` (sus líneas
 > siguen ahí, comentadas).
+
+## Modo Local vs Modo Web/Drive (medido)
+
+| | **Local (ruta)** | **Web (URL de Drive)** |
+|---|---|---|
+| Coste | **ninguno** | baja cada foto para poder leer su GPS |
+| 10 fotos | **segundos** | ~4 min de listado (3.653 archivos) + descargas |
+| "N fotos" | = N fotos analizadas | = N **candidatas**; puede bajar muchas más |
+| Tope | no aplica | **Descargas máximas** (300 por defecto) en *Opciones avanzadas* |
+
+> Con **Google Drive para Windows** (Drive File Stream) usa **Modo Local** apuntando a la carpeta
+> sincronizada (Explorador → Ctrl+Shift+C). Cero descargas, GPS al instante.
 
 ## Uso
 
