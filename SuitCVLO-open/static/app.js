@@ -350,26 +350,43 @@ function _paramsFuentes() {
   q.set('pines', $('#pines').value.trim());
   q.set('kml', $('#kml').value.trim());
   q.set('idx', $('#idx').value.trim());
+  q.set('salida', $('#salida').value.trim());   // sin esto excluye menos que la corrida
   q.set('radio', $('#radio').value || '250');
   return q;
 }
 
+// campos del KML que interesan mostrar como "aporte de la fuente"
+const CAMPOS_KML = ['UBICACIÓN', 'MEDIO', 'COMENTARIOS', 'DIRECCIÓN', 'CIUDAD', 'CARA',
+                    'CLIENTE', 'CODIGO MUPI', 'MARCA', 'descripcion'];
+
 function pintarInfo(d) {
   const k = d.kml, i = d.indice, g = d.gps;
+  const conGps = (g && !g.error) ? ' · ' + g.con_gps + ' con GPS · ' + g.sin_gps + ' sin GPS' : '';
   const capas = k ? Object.keys(k.capas).map((c) => c + ' ' + k.capas[c]).join(' · ') : 'n/d';
+  const aporta = (k && k.campos)
+    ? CAMPOS_KML.filter((c) => k.campos[c]).slice(0, 7)
+        .map((c) => c + ' ' + k.campos[c]).join(' · ')
+    : 'n/d';
+  const avance = (d.fotos && i && i.verificadas != null)
+    ? Math.round((i.verificadas / d.fotos) * 100) + '% · ' + i.verificadas + ' de ' + d.fotos + ' fotos'
+    : 'n/d';
   el.infoFuentes.textContent = [
     'RUTA      ' + (d.ruta || '(sin ruta)'),
-    'FOTOS     ' + (d.fotos == null ? 'n/d (modo Web: se lista al correr)' : d.fotos + ' imágenes'),
-    'PINES     ' + (d.pines == null ? 'n/d' : d.pines + ' cargados' +
-      (k ? ' · ' + k.total + ' en el KML · ' + k.sin_lat + ' sin LATITUD (no cruzan)' : '')),
-    'CAPAS     ' + capas,
-    'CARA      ' + (k ? k.cara + ' PINs con cara (A/B)' : 'n/d'),
-    'ÍNDICE    ' + (i && i.filas ? i.filas + ' filas · ' + i.verificadas +
-      ' verificadas · ' + i.no_gps + ' No GPS' : 'sin archivo'),
-    'OPCIONES  radio ' + ($('#radio').value || '250') + ' m · N fotos ' + ($('#n_fotos').value || '-') +
-      ' · tope ' + ($('#cap').value || '-') + ' · motor ' + ($('#ia_proveedor').value || '-') +
-      ' · descargas máx ' + ($('#max_descargas').value || '-'),
-    'GPS       ' + (g ? (g.error ? 'error: ' + g.error
+    'AVANCE    ' + avance,
+    '',
+    'FUENTES',
+    '  FOTOS    ' + (d.fotos == null ? 'n/d (modo Web: se lista al correr)'
+                     : d.fotos + ' en la ruta' + conGps),
+    '  PINES    ' + (d.pines == null ? 'n/d' : d.pines + ' con coordenadas (cruzables)'),
+    '  KML      ' + (k ? k.total + ' placemarks · ' + k.sin_lat + ' sin LATITUD · ' +
+                     k.cara + ' con CARA' : 'n/d'),
+    '           capas: ' + capas,
+    '           aporta: ' + aporta,
+    '  ÍNDICE   ' + (i && i.filas ? i.filas + ' filas · ' + i.verificadas +
+                     ' verificadas · ' + i.no_gps + ' No GPS' : 'sin archivo'),
+    '',
+    'GPS       ' + (g ? (g.sin_ruta ? 'n/d (sin ruta local)'
+      : g.error ? 'error: ' + g.error
       : g.con_gps + ' con · ' + g.sin_gps + ' sin · ' + g.fuera_radio + ' fuera de radio')
       : 'analizando…')
   ].join('\n');
@@ -388,6 +405,12 @@ async function infoFuentes() {
     pintarInfo(INFO);
   } catch (e) {
     aviso('Error de conexión: ' + e.message);
+    return;
+  }
+  // sin ruta local (modo Web) no hay EXIF que escanear -> no se pide el desglose
+  if (!q.get('ruta')) {
+    INFO.gps = { sin_ruta: true };
+    pintarInfo(INFO);
     return;
   }
   // segundo tiempo: desglose de GPS (lee el EXIF, 10-40 s)

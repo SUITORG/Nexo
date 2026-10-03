@@ -25,10 +25,15 @@ class TestKmlResumen(unittest.TestCase):
         self.assertEqual(r['capas'], {'PRUEBA (1)': 2})   # sin '.xlsx'
         self.assertEqual(r['cara'], 1)
         self.assertEqual(r['sin_lat'], 0)
+        # lo que aporta el KML (identidad/geometría fuera)
+        self.assertEqual(r['campos'].get('CARA'), 1)
+        self.assertEqual(r['campos'].get('MEDIO'), 2)
+        self.assertNotIn('PIN', r['campos'])
+        self.assertNotIn('LATITUD', r['campos'])
 
     def test_resumen_kml_vacio(self):
         r = motor.kml_resumen({})
-        self.assertEqual(r, {'total': 0, 'capas': {}, 'cara': 0, 'sin_lat': 0})
+        self.assertEqual(r, {'total': 0, 'capas': {}, 'cara': 0, 'sin_lat': 0, 'campos': {}})
 
 
 class TestApiFuentes(unittest.TestCase):

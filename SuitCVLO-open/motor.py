@@ -157,6 +157,7 @@ def _pines_desde_kml(ruta_kml):
                     'DIRECCIÓN': datos.get('DIRECCIÓN', ''), 'MARCA': datos.get('MARCA', ''),
                     'CLIENTE': datos.get('CLIENTE', ''), 'CODIGO MUPI': datos.get('CODIGO MUPI', ''),
                     'CARA': datos.get('CARA', ''),
+                    'COMENTARIOS': datos.get('COMENTARIOS', ''),
                     'descripcion': datos.get('descripción', ''),
                 }
                 pines[pin] = d
@@ -242,14 +243,26 @@ def cargar_kml_datos(ruta_kml):
 
 
 def kml_resumen(kml_datos):
-    """Resumen del KML para la pantalla: total, capas (limpias), con CARA y sin LATITUD."""
+    """Resumen del KML para la pantalla: total, capas (limpias), con CARA, sin LATITUD
+    y cuántos placemarks aportan cada campo (lo que aporta cada fuente)."""
     def capa(d):
         return ' '.join(str(d.get('CAPA') or '(sin capa)').split()).replace('.xlsx', '').strip()
+
+    # identidad y geometría no cuentan como "aporte" (ya están en total/capas/coords)
+    ruido = ('PIN', 'CAPA', 'LATITUD', 'LONGITUD')
+    campos = Counter()
+    for d in kml_datos.values():
+        for k, v in d.items():
+            if k in ruido:
+                continue
+            if str(v or '').strip():
+                campos[k] += 1
     return {'total': len(kml_datos),
             'capas': dict(Counter(capa(d) for d in kml_datos.values())),
             'cara': sum(1 for d in kml_datos.values() if str(d.get('CARA') or '').strip()),
             'sin_lat': sum(1 for d in kml_datos.values()
-                           if not str(d.get('LATITUD') or '').strip())}
+                           if not str(d.get('LATITUD') or '').strip()),
+            'campos': dict(campos.most_common())}
 
 
 MAPA_TIPO = {'PARABUS': 'PARABUSES', 'BILLBOARD': 'PANORAMICOS', 'ISA MUPI': 'MUPIS', 'MUPI': 'MUPIS',

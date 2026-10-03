@@ -80,14 +80,33 @@ Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en
 El botón **`Ver info de las fuentes`** (junto a *Iniciar corrida*) despliega un panel:
 
 ```
-RUTA / FOTOS / PINES (cargados · en el KML · sin LATITUD) / CAPAS / CARA / ÍNDICE / OPCIONES
-GPS: 1273 con · 0 sin · 1251 fuera de radio        ← 2º tiempo, 10-40 s (lee el EXIF)
+RUTA      C:\Users\rojo-\Downloads\cteCVLO1\Recorrido
+AVANCE    12% · 210 de 1696 fotos
+
+FUENTES
+  FOTOS    1696 en la ruta · 1273 con GPS · 0 sin GPS
+  PINES    286 con coordenadas (cruzables)
+  KML      300 placemarks · 14 sin LATITUD · 12 con CARA
+           capas: COMPETENCIA 14 · COPPEL PARABUSES MTY (1) 12 · DIDI SEPTIEMBRE (1) 274
+           aporta: UBICACIÓN 286 · MEDIO 287 · COMENTARIOS 222 · DIRECCIÓN 11 · CIUDAD 23
+  ÍNDICE   294 filas · 210 verificadas · 7 No GPS
+
+GPS       1273 con · 0 sin · 1251 fuera de radio        ← 2º tiempo, 10-40 s (lee el EXIF)
 ```
 
-- Los datos básicos salen **en ~0,5 s**; el desglose de GPS llega después y rellena su línea.
+- **`AVANCE`** = verificadas ÷ total de fotos de la ruta.
+- **`FUENTES`** deja ver qué aporta cada origen: la *ruta* da foto+GPS, los *pines* los
+  286 cruzables, el *KML* el inventario completo (300) con sus campos, el *índice* lo ya procesado.
+- Los datos básicos salen **en ~0,5 s**; el desglose de GPS llega después y rellena su línea
+  (`n/d (sin ruta local)` si estás en Modo Web, donde no hay EXIF que leer).
 - **El panel se queda abierto** hasta que vuelves a pulsar el botón (lo cierras) **o cambias de
-  ruta/fuente** (se oculta solo: los datos quedan obsoletos).
+  ruta/pines/KML/índice/fuente** (se oculta solo: los datos quedan obsoletos).
 - Si `GoogleMapsPines` es un `.txt`, la primera lectura descarga el KML de Google (~0,5 s).
+
+## Favicon
+
+`static/favicon.svg` (mupi + check verde sobre `#161616`) + `favicon-32.png` como respaldo;
+ambos enlazados en el `<head>`.
 
 ## Uso
 

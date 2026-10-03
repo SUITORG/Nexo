@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 69 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena + 7 de OpenCode + 6 de descargas Web + 7 de COMENTARIO/FOTO/marca + 4 de stats/No GPS/capas + 5 de fuentes) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 71 tests … OK** (13 heredados + 10 de `ia/switch` + 5 de detener/validación de rutas + 12 de la cadena + 7 de OpenCode + 6 de descargas Web + 7 de COMENTARIO/FOTO/marca + 4 de stats/No GPS/capas + 5 de fuentes + 2 de favicon) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -46,6 +46,9 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 38 | Botón "Ver info de las fuentes" | `GET /api/fuentes` (**0,5 s** con tus datos reales: 1696 fotos · 286 pines · KML 300/3 capas/12 CARA · índice 294/210/7) + `GET /api/fuentes/gps` (**21 s**, `con 1273 · sin 0 · fuera 1251`) + panel `.log` a 2 tiempos → 5 tests | ✅ |
 | 39 | Rendimiento del índice | `_leer_idx` pasaba de `ws.cell()` (O(n²) en `read_only`, **6,5 s**) a `iter_rows` → **0,1 s**; endpoint total de **17 s a 0,5 s** | ✅ |
 | 40 | Errores del endpoint | ruta inexistente → `400 "La ruta de fotos no existe…"` · pines ilegibles → `400 "No pude leer los pines…"` (verificado con curl) | ✅ |
+| 41 | Panel reescrito | sin `OPCIONES` · nueva línea **`AVANCE 12% · 210 de 1696 fotos`** · bloque **`FUENTES`** con el aporte de cada origen (`aporta: UBICACIÓN 286 · MEDIO 287 · COMENTARIOS 222 · …`) · `kml_resumen` gana `campos` y extrae `COMENTARIOS` | ✅ |
+| 42 | Favicon | `static/favicon.svg` (mupi + check verde) + `favicon-32.png` (Pillow) enlazados en el `<head>` → 2 tests | ✅ |
+| 43 | Consistencia y modo Web | **bug propio**: no se enviaba `salida` → el panel daba 1407 con GPS frente a los 1273 reales (ahora **1273** = mismo criterio que la corrida); y sin ruta local no se pide el GPS → `n/d (sin ruta local)` en vez de un 400 · **verificado en navegador: 0 errores en consola** | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
@@ -113,6 +116,6 @@ Corren **sin red**: `gdown` y `time.sleep` están parchados.
 
 ```bash
 cd SuitCVLO-open
-python -m unittest discover -s tests -t . -v      # 69 tests
+python -m unittest discover -s tests -t . -v      # 71 tests
 python app.py                                     # abre http://127.0.0.1:3015
 ```
