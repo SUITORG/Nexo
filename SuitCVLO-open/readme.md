@@ -5,11 +5,14 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 - **Estructura de carpetas**: `<Ruta de Salida>\<AAMMPQ>\auditoria\<Marca><TipoAnuncio><Ciudad>\<PIN>\`
   (la quincena `AAMMPQ` se calcula con la **fecha de la foto**: días 1–15 → `01`; 16–31 → `02`).
 - **`info.txt`** por PIN: encabezado (`GRUPO`, `PIN`, `COORDENADAS`) + un bloque por foto
-  (`CAMPAÑA`, **`COMENTARIO`** (el mensaje del anuncio: qué promociona / el texto que se ve),
-  `PLAZA, PROVEEDOR, RAZÓN SOCIAL, MEDIO, FORMATO, ID, UBICACIÓN, LATITUD, LONGITUD`)
+  (**`FOTO`** (nombre del archivo), `CAMPAÑA`, **`COMENTARIO`** (el mensaje del anuncio: qué
+  promociona / el texto que se ve), `PLAZA, PROVEEDOR, RAZÓN SOCIAL, MEDIO, FORMATO, ID,
+  UBICACIÓN, LATITUD, LONGITUD`)
   con llenado **foto → si falta, del archivo de pines → si falta, del KML**.
+  **`COMENTARIO` depende del switch de *Opciones avanzadas*** (activado por defecto).
   *Se reescribe entero cada vez que entra una foto nueva al PIN; las fotos sin lectura guardada
-  quedan con `COMENTARIO: no disponible`.*
+  quedan con `COMENTARIO: no disponible` (la lectura se conserva en `trabajo\reads`, así que
+  volver a activar el switch la recupera en la siguiente corrida).*
 - **`idxfotos.xlsx`**: se **crea si no existe** y se va actualizando (no repite lo ya *Verificado ✓*).
   Campos: NombreFoto, Descripción de lo que anuncia, Dirección, Tipo de Anuncio, Latitud, Longitud,
   Referencias visuales o notas, Verificado, PIN. Si una foto excede el tope por PIN → fila con
@@ -30,7 +33,7 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 | Ruta de KML | `RutaKML.kml` (respaldo de datos por PIN) |
 | Ruta de idxfotos.xlsx | índice (se crea si no existe) |
 | N Fotos | máximo de **candidatas** a leer (foto con GPS dentro del radio de un PIN) |
-| Avanzado | radio de match (250 m), tope por PIN (10), pausa de descarga (1 s), **descargas máximas (300)** |
+| Avanzado | radio de match (250 m), tope por PIN (10), pausa de descarga (1 s), **descargas máximas (300)**, **switch COMENTARIO** |
 | **Motor IA** | **OpenCode (tu suscripción) → Ollama local → HuggingFace → DeepSeek → OpenRouter → Gemini** — elige proveedor o "auto (cadena)" |
 
 ## Motor IA (switch)

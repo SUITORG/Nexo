@@ -173,6 +173,34 @@ class TestComentarioYFechaSubida(unittest.TestCase):
         # y va DENTRO del bloque de la foto, antes de la sección final COMENTARIOS:
         self.assertLess(texto.index('COMENTARIO:'), texto.index('COMENTARIOS:'))
 
+    def test_info_txt_lleva_foto(self):
+        """Cada bloque empieza con FOTO: <nombre> — tantas como fotos en la carpeta."""
+        base = tempfile.mkdtemp(prefix='cvlo_foto_')
+        idx = os.path.join(base, 'idxfotos.xlsx')
+        proceso.ejecutar_corrida(self._params(base, idx), lambda c: None, lambda m: None)
+        carpeta = os.path.join(base, 'salida', '260901', 'auditoria',
+                               'DIDI PARABUSES MTY', 'DF_09_TEST_1')
+        texto = open(os.path.join(carpeta, 'info.txt'), encoding='utf-8').read()
+        fotos = [f for f in os.listdir(carpeta) if f.lower().endswith('.jpg')]
+        self.assertEqual(len(fotos), 1)
+        self.assertIn('FOTO: %s' % fotos[0], texto)
+        # el bloque arranca con FOTO, antes que CAMPAÑA
+        bloque = texto.split('-' * 40)[1]
+        self.assertTrue(bloque.strip().startswith('FOTO:'), bloque[:80])
+
+    def test_info_txt_sin_comentario_si_switch_desactivado(self):
+        """Switch de Opciones avanzadas en OFF: no sale COMENTARIO pero sí FOTO."""
+        base = tempfile.mkdtemp(prefix='cvlo_swtch_')
+        params = self._params(base, os.path.join(base, 'idxfotos.xlsx'))
+        params['comentario'] = False
+        proceso.ejecutar_corrida(params, lambda c: None, lambda m: None)
+        carpeta = os.path.join(base, 'salida', '260901', 'auditoria',
+                               'DIDI PARABUSES MTY', 'DF_09_TEST_1')
+        texto = open(os.path.join(carpeta, 'info.txt'), encoding='utf-8').read()
+        self.assertIn('FOTO:', texto)
+        self.assertNotIn('COMENTARIO:', texto)
+        self.assertIn('CAMPAÑA:', texto)
+
     def test_rellena_fecha_hora_subida_sin_crear_columna_nueva(self):
         from openpyxl import Workbook
         base = tempfile.mkdtemp(prefix='cvlo_subida_')

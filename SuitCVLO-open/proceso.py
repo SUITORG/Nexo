@@ -87,33 +87,32 @@ def _fila_idx(foto_jpg, texto, pin, d, kml_d, lat, lon, marcada, excede=False):
     return [foto_jpg, que, direccion, tipo, lat, lon, notas, marcada, pin]
 
 
-def _bloque_info(texto, d, kml_d, lat, lon):
+def _bloque_info(texto, d, kml_d, lat, lon, foto='', con_comentario=True):
     marca_foto = motor.campo(texto, 'MARCA') or motor.marca_de(d.get('PIN', ''), d)
     if marca_foto.strip().lower() in ('', 'no visible', 'no se distingue', 'sin marca', 'no legible'):
         marca_foto = motor.marca_de(d.get('PIN', ''), d)
     tipo_foto = motor.campo(texto, 'TIPO SOPORTE')
-    # el mensaje del anuncio: qué promociona (y si hace falta, el texto literal que se ve)
-    comentario = motor.campo(texto, 'QUE ANUNCIA').strip()
-    if comentario.lower() in ('', 'no visible', 'no se distingue', 'no aplica'):
-        comentario = motor.campo(texto, 'TEXTO VISIBLE').strip()
-    if not comentario:
-        comentario = 'no disponible'
-    return '\n'.join([
-        'CAMPAÑA: %s' % marca_foto,
-        'COMENTARIO: %s' % comentario,
-        'PLAZA: MTY',
-        'PROVEEDOR: ',
-        'RAZÓN SOCIAL: ',
-        'MEDIO: %s' % (d.get('MEDIO') or kml_d.get('MEDIO', '') or tipo_foto),
-        'FORMATO: %s' % (d.get('FORMATO') or kml_d.get('FORMATO', '')),
-        'ID: %s' % (d.get('ID') or d.get('CODIGO MUPI') or kml_d.get('ID', '')),
-        'UBICACIÓN: %s' % (d.get('UBICACIÓN') or d.get('DIRECCIÓN') or kml_d.get('UBICACIÓN', '')),
-        'LATITUD: %s' % (lat if lat is not None else ''),
-        'LONGITUD: %s' % (lon if lon is not None else ''),
-    ])
+    partes = ['FOTO: %s' % (foto or 'no disponible'),
+              'CAMPAÑA: %s' % marca_foto]
+    if con_comentario:
+        # el mensaje del anuncio: qué promociona (y si hace falta, el texto literal que se ve)
+        mensaje = motor.campo(texto, 'QUE ANUNCIA').strip()
+        if mensaje.lower() in ('', 'no visible', 'no se distingue', 'no aplica'):
+            mensaje = motor.campo(texto, 'TEXTO VISIBLE').strip()
+        partes.append('COMENTARIO: %s' % (mensaje or 'no disponible'))
+    partes += ['PLAZA: MTY',
+               'PROVEEDOR: ',
+               'RAZÓN SOCIAL: ',
+               'MEDIO: %s' % (d.get('MEDIO') or kml_d.get('MEDIO', '') or tipo_foto),
+               'FORMATO: %s' % (d.get('FORMATO') or kml_d.get('FORMATO', '')),
+               'ID: %s' % (d.get('ID') or d.get('CODIGO MUPI') or kml_d.get('ID', '')),
+               'UBICACIÓN: %s' % (d.get('UBICACIÓN') or d.get('DIRECCIÓN') or kml_d.get('UBICACIÓN', '')),
+               'LATITUD: %s' % (lat if lat is not None else ''),
+               'LONGITUD: %s' % (lon if lon is not None else '')]
+    return '\n'.join(partes)
 
 
-def _reescribir_info(pin, d, kml_d, carpeta, reads):
+def _reescribir_info(pin, d, kml_d, carpeta, reads, comentario=True):
     fotos = sorted(f for f in os.listdir(carpeta)
                    if f.lower().endswith(('.jpg', '.jpeg', '.png')))
     bloques = []
@@ -126,7 +125,8 @@ def _reescribir_info(pin, d, kml_d, carpeta, reads):
             lat = d.get('LATITUD', '')
         if lon is None:
             lon = d.get('LONGITUD', '')
-        bloques.append(_bloque_info(texto, d, kml_d, lat, lon))
+        bloques.append(_bloque_info(texto, d, kml_d, lat, lon,
+                                    foto=f, con_comentario=comentario))
     encab = ['GRUPO: %s' % (d.get('CAPA', '') or ''),
              'PIN: ' + pin,
              'COORDENADAS: %s, %s' % (d.get('LATITUD', ''), d.get('LONGITUD', ''))]
@@ -357,7 +357,8 @@ def ejecutar_corrida(params, progreso, log):
         pin = os.path.basename(carpeta)
         d = dict(pines.get(pin, {}))
         d['PIN'] = pin
-        _reescribir_info(pin, d, kml_datos.get(pin, {}), carpeta, reads)
+        _reescribir_info(pin, d, kml_datos.get(pin, {}), carpeta, reads,
+                     comentario=params.get('comentario', True))
 
     # guardar idxfotos
     try:

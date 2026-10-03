@@ -114,6 +114,7 @@ def api_crear():
     ruta_local = (form.get('ruta_local') or '').strip()
     ia_proveedor = (form.get('ia_proveedor') or 'auto').strip().lower()
     ia_modelo = (form.get('ia_modelo') or '').strip()
+    comentario = (form.get('comentario') or '1').strip().lower() not in ('0', 'false', 'no')
 
     if not salida:
         return jsonify({'error': 'Falta la Ruta de Salida.'}), 400
@@ -196,6 +197,7 @@ def api_crear():
         'modo': modo, 'ruta_local': ruta_local, 'salida': salida, 'pines': pines,
         'drive_pics': drive, 'kml': kml, 'idx': idx, 'n_fotos': n_fotos,
         'radio': radio, 'cap': cap, 'pausa': pausa, 'max_descargas': max_descargas,
+        'comentario': comentario,
         'ia_proveedor': ia_proveedor, 'ia_modelo': ia_modelo,
         'trabajo': TRABAJO,
         '_mock_gps': mock_gps,
