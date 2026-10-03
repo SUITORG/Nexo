@@ -80,6 +80,104 @@ def api_estado_ia():
     return jsonify({'proveedores': switch.estado()})
 
 
+def _leer_idx(ruta_idx):
+    """(filas, verificadas, no_gps, stems verificados) del idxfotos.xlsx — solo lectura."""
+    if not ruta_idx or not os.path.exists(ruta_idx):
+        return 0, 0, 0, set()
+    try:
+        from openpyxl import load_workbook
+        wb = load_workbook(ruta_idx, read_only=True, data_only=True)
+        ws = wb['idxfotos'] if 'idxfotos' in wb.sheetnames else wb[wb.sheetnames[0]]
+        filas = verif = no_gps = 0
+        stems = set()
+        # iter_rows: acceso secuencial (con ws.cell en read_only tardaba 6,5 s)
+        for fila in ws.iter_rows(min_row=2, max_col=8, values_only=True):
+            nombre = str(fila[0] or '').strip()
+            if not nombre:
+                continue
+            filas += 1
+            v = str(fila[7] or '').strip()
+            if v:
+                verif += 1
+                stems.add(os.path.splitext(nombre)[0].lower())
+                if v == 'No GPS':
+                    no_gps += 1
+        wb.close()
+        return filas, verif, no_gps, stems
+    except Exception:
+        return 0, 0, 0, set()
+
+
+@app.get('/api/fuentes')
+def api_fuentes():
+    """Info rápida de las fuentes (sin leer EXIF): fotos, pines, KML e índice."""
+    ruta = (request.args.get('ruta') or '').strip()
+    ruta_pines = (request.args.get('pines') or '').strip()
+    ruta_kml = (request.args.get('kml') or '').strip()
+    ruta_idx = (request.args.get('idx') or '').strip()
+    out = {'ruta': ruta, 'fotos': None, 'pines': None, 'kml': None, 'indice': None}
+    if ruta:
+        if not os.path.isdir(ruta):
+            return jsonify({'error': 'La ruta de fotos no existe: {}'.format(ruta)}), 400
+        out['fotos'] = sum(1 for f in os.listdir(ruta) if U.es_imagen(f))
+    if ruta_pines:
+        try:
+            out['pines'] = len(motor.cargar_pines(ruta_pines))
+        except Exception as e:
+            return jsonify({'error': 'No pude leer los pines: {}'.format(str(e)[:160])}), 400
+    if ruta_kml:
+        out['kml'] = motor.kml_resumen(motor.cargar_kml_datos(ruta_kml))
+    filas, verif, no_gps, _stems = _leer_idx(ruta_idx)
+    out['indice'] = {'filas': filas, 'verificadas': verif, 'no_gps': no_gps}
+    return jsonify(out)
+
+
+@app.get('/api/fuentes/gps')
+def api_fuentes_gps():
+    """Segundo tiempo: desglose de GPS sobre las fotos NO excluidas (mismos números que la corrida)."""
+    ruta = (request.args.get('ruta') or '').strip()
+    ruta_pines = (request.args.get('pines') or '').strip()
+    salida = (request.args.get('salida') or '').strip()
+    ruta_idx = (request.args.get('idx') or '').strip()
+    try:
+        radio = float(request.args.get('radio') or 250)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Radio inválido.'}), 400
+    if not ruta or not os.path.isdir(ruta):
+        return jsonify({'error': 'La ruta de fotos no existe: {}'.format(ruta)}), 400
+    if not ruta_pines:
+        return jsonify({'error': 'Falta la ruta de GoogleMapsPines.'}), 400
+    try:
+        pines = motor.cargar_pines(ruta_pines)
+    except Exception as e:
+        return jsonify({'error': 'No pude leer los pines: {}'.format(str(e)[:160])}), 400
+
+    _f, _v, _n, verif = _leer_idx(ruta_idx)
+    excl = proceso._excluidos(salida, verif, os.path.join(TRABAJO, 'reads'))
+    mock_gps = None
+    if motor.en_mock():
+        mgp = os.path.join(ruta, 'mock_gps.json')
+        if os.path.exists(mgp):
+            mock_gps = U.cargar_json(mgp, {})
+
+    con = sin = fuera = 0
+    for f in os.listdir(ruta):
+        if not U.es_imagen(f) or proceso._stem(f) in excl:
+            continue
+        lat, lon, _fecha = motor.gps_y_fecha(os.path.join(ruta, f), mock_gps=mock_gps)
+        if lat is None:
+            sin += 1
+            continue
+        con += 1
+        if not pines:
+            fuera += 1
+            continue
+        dm = min(motor.dist_m(lat, lon, d['lat'], d['lon']) for d in pines.values())
+        if dm > radio:
+            fuera += 1
+    return jsonify({'con_gps': con, 'sin_gps': sin, 'fuera_radio': fuera, 'radio': radio})
+
+
 @app.errorhandler(RequestEntityTooLarge)
 def _grande(_e):
     return jsonify({'error': 'La carga excede el tamaño máximo (1 GB).'}), 413

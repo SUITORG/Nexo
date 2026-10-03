@@ -24,6 +24,8 @@ const el = {
   iaProveedor: $('#ia_proveedor'),
   iaModelo: $('#ia_modelo'),
   iaEstado: $('#ia-estado'),
+  btnInfo: $('#btn-info'),
+  infoFuentes: $('#info-fuentes'),
 };
 
 // precargar defaults
@@ -338,6 +340,82 @@ function pintarEstadoIa(ia) {
   el.badgeIa.textContent = listos.length ? 'IA · ' + listos.join(', ') : 'IA · sin proveedores';
   el.badgeIa.className = 'insignia' + (listos.length ? '' : ' alerta');
 }
+
+// ---------- info de las fuentes (botón) ----------
+let INFO = null;
+
+function _paramsFuentes() {
+  const q = new URLSearchParams();
+  q.set('ruta', ($('#ruta_local') && $('#ruta_local').value || '').trim());
+  q.set('pines', $('#pines').value.trim());
+  q.set('kml', $('#kml').value.trim());
+  q.set('idx', $('#idx').value.trim());
+  q.set('radio', $('#radio').value || '250');
+  return q;
+}
+
+function pintarInfo(d) {
+  const k = d.kml, i = d.indice, g = d.gps;
+  const capas = k ? Object.keys(k.capas).map((c) => c + ' ' + k.capas[c]).join(' · ') : 'n/d';
+  el.infoFuentes.textContent = [
+    'RUTA      ' + (d.ruta || '(sin ruta)'),
+    'FOTOS     ' + (d.fotos == null ? 'n/d (modo Web: se lista al correr)' : d.fotos + ' imágenes'),
+    'PINES     ' + (d.pines == null ? 'n/d' : d.pines + ' cargados' +
+      (k ? ' · ' + k.total + ' en el KML · ' + k.sin_lat + ' sin LATITUD (no cruzan)' : '')),
+    'CAPAS     ' + capas,
+    'CARA      ' + (k ? k.cara + ' PINs con cara (A/B)' : 'n/d'),
+    'ÍNDICE    ' + (i && i.filas ? i.filas + ' filas · ' + i.verificadas +
+      ' verificadas · ' + i.no_gps + ' No GPS' : 'sin archivo'),
+    'OPCIONES  radio ' + ($('#radio').value || '250') + ' m · N fotos ' + ($('#n_fotos').value || '-') +
+      ' · tope ' + ($('#cap').value || '-') + ' · motor ' + ($('#ia_proveedor').value || '-') +
+      ' · descargas máx ' + ($('#max_descargas').value || '-'),
+    'GPS       ' + (g ? (g.error ? 'error: ' + g.error
+      : g.con_gps + ' con · ' + g.sin_gps + ' sin · ' + g.fuera_radio + ' fuera de radio')
+      : 'analizando…')
+  ].join('\n');
+  el.infoFuentes.classList.remove('oculto');
+}
+
+async function infoFuentes() {
+  ocultarAviso();
+  const q = _paramsFuentes();
+  try {
+    const r = await fetch('/api/fuentes?' + q.toString());
+    const d = await r.json();
+    if (!r.ok) { aviso(d.error || 'No pude leer las fuentes.'); return; }
+    INFO = d;
+    INFO.gps = null;
+    pintarInfo(INFO);
+  } catch (e) {
+    aviso('Error de conexión: ' + e.message);
+    return;
+  }
+  // segundo tiempo: desglose de GPS (lee el EXIF, 10-40 s)
+  try {
+    const r = await fetch('/api/fuentes/gps?' + q.toString());
+    INFO.gps = await r.json();
+    if (!r.ok) INFO.gps = { error: (INFO.gps && INFO.gps.error) || ('HTTP ' + r.status) };
+  } catch (e) {
+    INFO.gps = { error: e.message };
+  }
+  pintarInfo(INFO);
+}
+
+el.btnInfo.addEventListener('click', async () => {
+  if (!el.infoFuentes.classList.contains('oculto')) {   // segundo clic = cerrar
+    el.infoFuentes.classList.add('oculto');
+    return;
+  }
+  await infoFuentes();
+});
+
+// cambiar la ruta/fuente invalida la info mostrada -> se oculta
+['#ruta_local', '#pines', '#kml', '#idx'].forEach((sel) => {
+  const e = $(sel);
+  if (e) e.addEventListener('change', () => el.infoFuentes.classList.add('oculto'));
+});
+document.querySelectorAll('input[name=modo]').forEach((r) =>
+  r.addEventListener('change', () => el.infoFuentes.classList.add('oculto')));
 
 estado();
 cargarModelosIa();

@@ -75,6 +75,20 @@ Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en
 > Con **Google Drive para Windows** (Drive File Stream) usa **Modo Local** apuntando a la carpeta
 > sincronizada (Explorador → Ctrl+Shift+C). Cero descargas, GPS al instante.
 
+## Ver la info de las fuentes sin correr
+
+El botón **`Ver info de las fuentes`** (junto a *Iniciar corrida*) despliega un panel:
+
+```
+RUTA / FOTOS / PINES (cargados · en el KML · sin LATITUD) / CAPAS / CARA / ÍNDICE / OPCIONES
+GPS: 1273 con · 0 sin · 1251 fuera de radio        ← 2º tiempo, 10-40 s (lee el EXIF)
+```
+
+- Los datos básicos salen **en ~0,5 s**; el desglose de GPS llega después y rellena su línea.
+- **El panel se queda abierto** hasta que vuelves a pulsar el botón (lo cierras) **o cambias de
+  ruta/fuente** (se oculta solo: los datos quedan obsoletos).
+- Si `GoogleMapsPines` es un `.txt`, la primera lectura descarga el KML de Google (~0,5 s).
+
 ## Uso
 
 1. Doble clic en **`INICIAR.bat`** → se abre `http://127.0.0.1:3015`.

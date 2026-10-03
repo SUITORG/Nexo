@@ -178,10 +178,9 @@ def ejecutar_corrida(params, progreso, log):
     kml_datos = motor.cargar_kml_datos(params.get('kml', ''))
 
     # conteo por capa del KML (TODOS los placemarks, incluidos los que cargar_pines descarta)
-    def _capa(d):
-        return ' '.join(str(d.get('CAPA') or '(sin capa)').split()).replace('.xlsx', '').strip()
-    capas = Counter(_capa(d) for d in kml_datos.values())
-    con_cara = sum(1 for d in kml_datos.values() if str(d.get('CARA') or '').strip())
+    resumen_kml = motor.kml_resumen(kml_datos)
+    capas = Counter(resumen_kml['capas'])
+    con_cara = resumen_kml['cara']
 
     wb, ws = motor.idx_abrir_o_crear(params.get('idx', ''))
     col_fecha = motor.idx_col_fecha(ws)     # FechaHoraSubida (respeta una cabecera ya existente)

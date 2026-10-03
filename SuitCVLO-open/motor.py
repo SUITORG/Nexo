@@ -16,6 +16,7 @@ import os
 import re
 import time
 import urllib.request
+from collections import Counter
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
@@ -238,6 +239,17 @@ def cargar_kml_datos(ruta_kml):
         return _pines_desde_kml(ruta_kml)
     except Exception:
         return {}
+
+
+def kml_resumen(kml_datos):
+    """Resumen del KML para la pantalla: total, capas (limpias), con CARA y sin LATITUD."""
+    def capa(d):
+        return ' '.join(str(d.get('CAPA') or '(sin capa)').split()).replace('.xlsx', '').strip()
+    return {'total': len(kml_datos),
+            'capas': dict(Counter(capa(d) for d in kml_datos.values())),
+            'cara': sum(1 for d in kml_datos.values() if str(d.get('CARA') or '').strip()),
+            'sin_lat': sum(1 for d in kml_datos.values()
+                           if not str(d.get('LATITUD') or '').strip())}
 
 
 MAPA_TIPO = {'PARABUS': 'PARABUSES', 'BILLBOARD': 'PANORAMICOS', 'ISA MUPI': 'MUPIS', 'MUPI': 'MUPIS',
