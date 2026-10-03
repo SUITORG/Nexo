@@ -25,7 +25,7 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 | Ruta de idxfotos.xlsx | índice (se crea si no existe) |
 | N Fotos | máximo de fotos a leer en la corrida |
 | Avanzado | radio de match (250 m), tope por PIN (10), pausa de descarga (1 s) |
-| **Motor IA** | **Ollama local (VLM) → HuggingFace → DeepSeek → OpenRouter → Gemini** — elige proveedor o "auto (cadena)" |
+| **Motor IA** | **OpenCode (tu suscripción) → Ollama local → HuggingFace → DeepSeek → OpenRouter → Gemini** — elige proveedor o "auto (cadena)" |
 
 ## Motor IA (switch)
 
@@ -33,17 +33,21 @@ La lectura de cada foto pasa por `ia/switch.py`, que baja por la cadena hasta qu
 
 | # | Proveedor | Origen | Requiere | Medido |
 |---|---|---|---|---|
-| 1 | `ollama` | **local** (sin costo, offline) | Ollama + un modelo con `vision` | **~456 s/foto** (CPU) |
-| 2 | `huggingface` | nube (router gratis) | `HF_TOKEN` en el sistema o en `.env` | **~4 s/foto** ✅ |
-| 3 | `deepseek` | nube (5M tokens gratis al registrarte) | `DEEPSEEK_API_KEY` en `.env` | ⚠️ `402` sin saldo |
-| 4 | `openrouter` | nube (modelos gratis) | `OPENROUTER_API_KEY` en `.env` | ⚠️ tu key da `401` |
-| 5 | `gemini` | nube | `GEMINI_API_KEY` en `.env` | sin key |
+| 1 | **`opencode`** | nube (**tu suscripción**) | key de `opencode auth login` — se lee sola de `~/.local/share/opencode/auth.json` | ✅ **3.2 s/foto · ~USD 0.00028** (≈54,000 fotos/mes con tu límite de $15) |
+| 2 | `ollama` | **local** (sin costo, offline) | Ollama + un modelo con `vision` | ~456 s/foto (CPU) |
+| 3 | `huggingface` | nube | ~~`HF_TOKEN`~~ **DESACTIVADO** (créditos agotados) | ❌ |
+| 4 | `deepseek` | nube (5M tokens gratis al registrarte) | `DEEPSEEK_API_KEY` en `.env` | ⚠️ `402` sin saldo |
+| 5 | `openrouter` | nube | ~~`OPENROUTER_API_KEY`~~ **DESACTIVADO** (key daba `401`) | ❌ |
+| 6 | `gemini` | nube | `GEMINI_API_KEY` en `.env` | sin key |
+
+**Modelo de OpenCode**: `deepseek-v4-flash-vision-exp` — el **único con visión** de sus 86 modelos.
 
 Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en el log de la corrida.
-`GET /api/ia/modelos` lista los modelos disponibles de Ollama (los locales se marcan **`(local)`**).
+`GET /api/ia/modelos` lista los disponibles (los locales salen marcados **`(local)`**).
 
-> **AutoClaw/AutoGLM se eliminó** de la cadena (2026-10-01, ADR-038): el proyecto ya no depende de
-> ese servicio local ni de su clave.
+> **AutoClaw/AutoGLM se eliminó** de la cadena (2026-10-01, ADR-038) y **OpenCode entró primero**
+> (2026-10-02, ADR-041); HuggingFace y OpenRouter quedaron **desactivados** en `.env` (sus líneas
+> siguen ahí, comentadas).
 
 ## Uso
 
@@ -55,7 +59,8 @@ Circuito breaker: 3 fallos seguidos → 5 min de cooldown; el motivo se anota en
 ## Requisitos
 
 - Windows con Python 3 (el iniciador resuelve el intérprete y las dependencias: flask, openpyxl, pillow, pillow-heif, gdown).
-- **Ollama con un modelo de visión** para el modo local (ya tienes `qwen3.5`, `gemma4`, `qwen3.6`…). Sin él, la cadena sigue con DeepSeek/OpenRouter/Gemini.
+- **Una key de OpenCode** (ya la crea `opencode auth login`) — es el primer eslabón y el más barato.
+- **Ollama con un modelo de visión** como respaldo local (ya tienes `qwen3.5`, `gemma4`, `qwen3.6`…).
 - Descargas de Drive con **pausa ≥ 1 s** y reintentos (para evitar bloqueos de Google).
 
 ## Cómo quedó

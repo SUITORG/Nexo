@@ -14,10 +14,12 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 - Comandos: instalar `pip install flask openpyxl pillow pillow-heif gdown` ·
   desarrollo `python app.py` (puerto **3015**) · pruebas `python -m unittest discover -s tests -t . -v` ·
   build `no aplica (sin build)`
-- Variables de entorno requeridas: `HF_TOKEN` (opcional, el del sistema ya sirve), `DEEPSEEK_API_KEY` (opcional),
-  `OPENROUTER_API_KEY` (opcional), `GEMINI_API_KEY` (opcional),
+- Variables de entorno requeridas: `OPENCODE_API_KEY` (opcional — si falta, se lee de
+  `~/.local/share/opencode/auth.json`), `OPENCODE_BASE_URL` (opcional, default Go),
+  `OPENCODE_VISION_MODEL` (opcional, default `deepseek-v4-flash-vision-exp`),
+  `DEEPSEEK_API_KEY` (opcional), `GEMINI_API_KEY` (opcional),
+  `HF_TOKEN` y `OPENROUTER_API_KEY` (**desactivados** desde 2026-10-02: vacíos en `.env`),
   `CVLO_VLM` (opcional, default = modelo local con visión más liviano),
-  `HF_VISION_MODEL` (opcional, default `Qwen/Qwen2.5-VL-72B-Instruct`),
   `OLLAMA_URL` (opcional, default `http://127.0.0.1:11434`), `OLLAMA_TIMEOUT_S` (opcional, 900),
   `CVLO_MOCK` (pruebas). **Prioridad: el `.env` del proyecto manda sobre el entorno; vacío = desactivar.**
 - Nada de secretos en el repositorio: `.env` (gitignored) o `.env.example` como guía
@@ -46,14 +48,17 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 7. Multi-proveedor por `.env`, no por columnas nuevas ni schema externo
 
 ## Orden del switch (inmutable sin decisión del usuario)
-1. `ollama` — local, `CVLO_VLM`, sin costo, offline (lento: ~456 s/foto en CPU)
-2. `huggingface` — nube, router gratis con visión (`HF_TOKEN`), ~4 s/foto
-3. `deepseek` — nube, 5M tokens gratis al registrar (`DEEPSEEK_API_KEY`), modelo con visión
-4. `openrouter` — nube gratis (`OPENROUTER_API_KEY`), modelos con visión
-5. `gemini` — nube (`GEMINI_API_KEY`), mejor calidad de OCR en español
+1. `opencode` — **tu suscripción**; key leída de `~/.local/share/opencode/auth.json` (o `OPENCODE_API_KEY`);
+   modelo `deepseek-v4-flash-vision-exp` (único de sus 86 con visión). Medido: **3.2 s/foto, ~USD 0.00028**
+2. `ollama` — local, `CVLO_VLM`, sin costo, offline (lento: ~456 s/foto en CPU)
+3. `huggingface` — nube, **DESACTIVADO 2026-10-02** (créditos agotados) → línea comentada en `.env`
+4. `deepseek` — nube, 5M tokens gratis al registrar (`DEEPSEEK_API_KEY`), modelo con visión
+5. `openrouter` — nube, **DESACTIVADO 2026-10-02** (key daba `401`) → línea comentada en `.env`
+6. `gemini` — nube (`GEMINI_API_KEY`), mejor calidad de OCR en español
 
 > AutoClaw/AutoGLM se **eliminó** de la cadena el 2026-10-01 → ver ADR-038.
 > HuggingFace se **añadió** el 2026-10-02 → ver ADR-039.
+> OpenCode entró **el primero** y HuggingFace/OpenRouter se **desactivaron** el 2026-10-02 → ver ADR-041.
 
 ## Definición de terminado
 - Validación en PASA con evidencia en `docs/VALIDACION.md`
@@ -68,3 +73,5 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 - 2026-10-01: creación (fase 0) a partir de las decisiones del usuario en la sesión de diseño
 - 2026-10-01: **AutoClaw/AutoGLM eliminado de la cadena** y añadido DeepSeek (5M tokens gratis) → ADR-038
 - 2026-10-02: **añadido `huggingface`** como eslabón 2 (router gratis, ~4 s/foto) → ADR-039
+- 2026-10-02: **`opencode` entra el primero** (tu suscripción, `deepseek-v4-flash-vision-exp`,
+  3.2 s/foto) y **se desactivan `huggingface` y `openrouter`** (líneas comentadas en `.env`) → ADR-041

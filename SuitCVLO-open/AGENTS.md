@@ -21,7 +21,7 @@ No hay lint ni typecheck: validar con `python -m py_compile <archivo>` tras cada
 2. Sin base de datos: todo en archivos locales (`idxfotos.xlsx`, `info.txt`, JSON de reads).
 3. **Sin secretos en el código** — todo por `.env` (ver `.env.example`).
 4. El switch **nunca corta la corrida**: baja por la cadena y anota el motivo en el log.
-5. Cadena inmutable: `ollama → huggingface → deepseek → openrouter → gemini` (cambiarla = nuevo ADR).
+5. Cadena inmutable: `opencode → ollama → huggingface → deepseek → openrouter → gemini` (cambiarla = nuevo ADR).
 
 ## El switch (`ia/switch.py`)
 | Función | Qué hace |

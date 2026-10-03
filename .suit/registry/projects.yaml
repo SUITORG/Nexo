@@ -571,7 +571,7 @@ projects:
   suitcvlo-open:
     name: "SuitCVLO-open — Auditoría OOH con switch de IA multi-proveedor"
     path: SuitCVLO-open/
-    description: "Fork open de \\cvlo-auditor (fuente de solo lectura): procesa lotes de fotos de publicidad exterior, las cruza con PINs por GPS y genera <AAMMPQ>\\auditoria\\<Grupo>\\<PIN>\\ + info.txt + idxfotos.xlsx. Motor de lectura desacoplado en ia/switch.py: Ollama local (VLM) -> HuggingFace -> DeepSeek -> OpenRouter -> Gemini, con circuit breaker. Sin base de datos, sin borrados, sin secretos en el código. Ver ADR-037, ADR-038 y ADR-039."
+    description: "Fork open de \\cvlo-auditor (fuente de solo lectura): procesa lotes de fotos de publicidad exterior, las cruza con PINs por GPS y genera <AAMMPQ>\\auditoria\\<Grupo>\\<PIN>\\ + info.txt + idxfotos.xlsx. Motor de lectura desacoplado en ia/switch.py: OpenCode (suscripcion, unico con vision de sus 86 modelos) -> Ollama local -> HuggingFace (desactivado) -> DeepSeek -> OpenRouter (desactivado) -> Gemini, con circuit breaker. Sin base de datos, sin borrados, sin secretos en el codigo. Ver ADR-037, ADR-038, ADR-039 y ADR-041."
     type: standalone
     skills:
       - javascript

@@ -20,10 +20,11 @@ posible y ~80% del valor (la herramienta funciona sin AutoClaw y sin secretos).
 
 ## 2. Motor de IA — el switch
 
-Cadena: `ollama → huggingface → deepseek → openrouter → gemini` · circuit breaker 3 fallos → 5 min.
+Cadena: `opencode → ollama → huggingface → deepseek → openrouter → gemini` · circuit breaker 3 fallos → 5 min.
 
 | Eslabón | Pros | Contras |
 |---|---|---|
+| **0. OpenCode (tu suscripción)** | **3.2 s/foto y ~USD 0.00028/foto** — ya lo pagas, sin setup (la key se lee de `~/.local/share/opencode/auth.json`), único de sus 86 modelos con visión | Dependes de su catálogo (un solo modelo con imagen); las imágenes se suben a su nube |
 | **1. Ollama (local)** | Sin costo por foto, sin límite de rate, offline, privado (las fotos no salen de la máquina), ya tienes 17 modelos (8 con visión) | Calidad de lectura menor que un modelo frontier; consume RAM/CPU local; medido: **~456 s/foto** con `qwen3.5` (serial) |
 | **2. HuggingFace** | **~4 s/foto** (86× más rápido que Ollama), router **gratis** con 11 modelos de visión descubiertos, sin desplegar nada, OpenAI-compatible | Requiere `HF_TOKEN`; sube la foto a la nube; rate limits del tier gratuito; el descubrimiento filtra por nombre de modelo |
 | **3. DeepSeek** | **5M tokens gratis al registrarte, sin tarjeta** (~3000 fotos); OpenAI-compatible; `deepseek-flash` con visión; después del grant es de los más baratos ($0.15/M in) | Tu cuenta responde **`402 Insufficient Balance`** (sin grant); sube la foto a la nube |

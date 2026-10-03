@@ -150,8 +150,10 @@ class SwitchHttpYModelos(unittest.TestCase):
         self.assertEqual(switch._CB, {})
 
     def test_cadena_incluye_huggingface(self):
-        self.assertEqual(switch.ORDEN, ('ollama', 'huggingface', 'deepseek', 'openrouter', 'gemini'))
+        self.assertEqual(switch.ORDEN,
+                         ('opencode', 'ollama', 'huggingface', 'deepseek', 'openrouter', 'gemini'))
         self.assertIn('huggingface', switch._LEEME)
+        self.assertIn('opencode', switch._LEEME)
 
     @mock.patch.object(switch, '_env', lambda n, d='': d)
     def test_huggingface_prefiere_modelo_con_ocr(self):
@@ -212,6 +214,88 @@ class SwitchHttpYModelos(unittest.TestCase):
         fijo = [{'id': 'stealth/space-bunny-alpha'}, {'id': 'deepseek/deepseek-v4-flash:free'}]
         with mock.patch.object(switch, '_openrouter_modelos', lambda: fijo):
             self.assertEqual(switch._elegir('openrouter', None), 'deepseek/deepseek-v4-flash:free')
+
+
+class SwitchOpencode(unittest.TestCase):
+    """Eslabón OpenCode (la suscripción que ya paga el usuario).
+
+    Es el único de su catálogo (86 modelos) con capacidad de imagen.
+    """
+
+    def test_ordencadena_empieza_por_opencode(self):
+        self.assertEqual(switch.ORDEN[0], 'opencode')
+
+    @mock.patch.object(switch, '_clave_opencode', lambda: 'sk-opencode-1234567890')
+    @mock.patch.object(switch, '_env', lambda n, d='': d)
+    def test_disponible_y_modelo_por_defecto(self):
+        self.assertEqual(switch._disponible('opencode'), (True, 'ok'))
+        self.assertEqual(switch._elegir('opencode', None), 'deepseek-v4-flash-vision-exp')
+        self.assertTrue(switch._pertece('opencode', 'deepseek-v4-flash-vision-exp'))
+        self.assertFalse(switch._pertece('opencode', 'qwen3.5:latest'))
+
+    @mock.patch.object(switch, '_clave_opencode', lambda: '')
+    def test_sin_key_no_esta_disponible(self):
+        disp, motivo = switch._disponible('opencode')
+        self.assertFalse(disp)
+        self.assertIn('OPENCODE_API_KEY', motivo)
+
+    @mock.patch.object(switch, '_env', lambda n, d='': d)
+    def test_lee_la_key_del_auth_de_opencode(self):
+        import json
+        import shutil
+        import tempfile
+        tmp = tempfile.mkdtemp(prefix='cvlo_auth_')
+        ruta = os.path.join(tmp, 'auth.json')
+        with open(ruta, 'w', encoding='utf-8') as f:
+            json.dump({'opencode-go': {'type': 'api', 'key': 'go-key-de-prueba'}}, f)
+        try:
+            with mock.patch.object(switch.os.path, 'expanduser', lambda _p: ruta):
+                self.assertEqual(switch._clave_opencode(), 'go-key-de-prueba')
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    @mock.patch.object(switch, '_clave_opencode', lambda: 'k')
+    @mock.patch.object(switch, '_env', lambda n, d='': d)
+    def test_modelos_incluye_el_de_vision(self):
+        with mock.patch.object(switch, '_ollama_modelos', lambda: []), \
+             mock.patch.object(switch, '_huggingface_modelos', lambda: []), \
+             mock.patch.object(switch, '_openrouter_modelos', lambda: []):
+            op = [m for m in switch.modelos() if m['proveedor'] == 'opencode']
+        self.assertEqual(len(op), 1)
+        self.assertEqual(op[0]['id'], 'deepseek-v4-flash-vision-exp')
+        self.assertTrue(op[0]['vision'])
+
+    def test_opencode_manda_user_agent_session_y_sin_razonamiento(self):
+        """Sin User-Agent Cloudflare devuelve 403 (1010); sin x-opencode-session, 400."""
+        import json
+        resp = mock.MagicMock()
+        resp.__enter__.return_value.read.return_value = \
+            b'{"choices":[{"message":{"content":"ok"}}]}'
+        with mock.patch('urllib.request.urlopen', return_value=resp) as urlopen, \
+             mock.patch.object(switch, '_clave_opencode', lambda: 'k'), \
+             mock.patch.object(switch, '_env', lambda n, d='': d), \
+             mock.patch.object(switch, '_b64', lambda _r: 'AAA'):
+            self.assertEqual(switch._opencode('f.jpg', 'p', None), 'ok')
+            req = urlopen.call_args[0][0]
+        self.assertEqual(req.get_header('User-agent'), 'SuitCVLO-open/1.0')
+        self.assertTrue(req.get_header('X-opencode-session'))
+        cuerpo = json.loads(req.data.decode())
+        self.assertEqual(cuerpo['thinking'], {'type': 'disabled'})
+        self.assertEqual(cuerpo['model'], 'deepseek-v4-flash-vision-exp')
+
+    @mock.patch.object(switch, '_clave_opencode', lambda: 'k')
+    def test_opencode_puede_reactivar_el_razonamiento(self):
+        import json
+        resp = mock.MagicMock()
+        resp.__enter__.return_value.read.return_value = b'{"choices":[{"message":{"content":"ok"}}]}'
+        fake_env = lambda n, d='': os.environ.get(n) or d
+        with mock.patch('urllib.request.urlopen', return_value=resp) as urlopen, \
+             mock.patch.object(switch, '_env', fake_env), \
+             mock.patch.object(switch, '_b64', lambda _r: 'AAA'), \
+             mock.patch.dict(os.environ, {'OPENCODE_THINKING': 'enabled'}):
+            switch._opencode('f.jpg', 'p', None)
+            cuerpo = json.loads(urlopen.call_args[0][0].data.decode())
+        self.assertNotIn('thinking', cuerpo)
 
 
 if __name__ == '__main__':

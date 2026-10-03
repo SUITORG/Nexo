@@ -289,7 +289,7 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
     | 3011 | SuitChatTG |
  | 3013 | SuitDiccionario |
  | 3014 | SuitPoke (juego cartas PvP, stdlib, sin DB — ADR-036) |
- | 3015 | SuitCVLO-open (auditoría OOH + switch IA Ollama/HuggingFace/DeepSeek/OpenRouter/Gemini — ADR-037/038/039) |
+ | 3015 | SuitCVLO-open (auditoría OOH + switch IA OpenCode/Ollama/HuggingFace/DeepSeek/OpenRouter/Gemini — ADR-037/038/039/041) |
  | n/a | SuitCVLOGCPy (mismo pipeline en Google Colab con VLM en GPU, sin servidor — ADR-040) |
  | 8000 | CampanasAi |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas

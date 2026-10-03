@@ -2,8 +2,8 @@
 """Switch de IA de SuitCVLO-open.
 
 Cadena (inmutable, ver docs/CONTRATO.md):
-    ollama (local, VLM) -> huggingface (nube, gratis) -> deepseek (nube, 5M tokens gratis al registrar)
-    -> openrouter (nube, gratis) -> gemini (nube)
+    opencode (tu suscripción, único con visión) -> ollama (local, VLM) -> huggingface (nube)
+    -> deepseek (nube) -> openrouter (nube) -> gemini (nube)
 
 - `modelos()` lista los modelos disponibles; los de Ollama salen con sufijo `(local)`.
 - `leer(ruta, prompt)` baja por la cadena hasta que un proveedor responde.
@@ -17,8 +17,9 @@ import os
 import time
 import urllib.error
 import urllib.request
+import uuid
 
-ORDEN = ('ollama', 'huggingface', 'deepseek', 'openrouter', 'gemini')
+ORDEN = ('opencode', 'ollama', 'huggingface', 'deepseek', 'openrouter', 'gemini')
 FALLOS_PARA_BLOQUEO = 3
 COOLDOWN_S = 300
 TTL_MODELOS_S = 3600
@@ -63,7 +64,10 @@ def en_mock():
 # ---------------------------------------------------------------- http
 def _http(url, payload=None, headers=None, timeout=120):
     datos = json.dumps(payload).encode('utf-8') if payload is not None else None
-    h = {'Content-Type': 'application/json'} if datos else {}
+    # User-Agent propio: sin él, Cloudflare de OpenCode devuelve 403 (error 1010)
+    h = {'User-Agent': 'SuitCVLO-open/1.0'}
+    if datos:
+        h['Content-Type'] = 'application/json'
     h.update(headers or {})
     req = urllib.request.Request(url, data=datos, headers=h,
                                  method='POST' if datos else 'GET')
@@ -108,7 +112,28 @@ def estado():
     return salida
 
 
+def _clave_opencode():
+    """Key de OpenCode: .env primero; si no, la que dejó `opencode auth login` (no se copia a ningún sitio)."""
+    k = _env('OPENCODE_API_KEY')
+    if k:
+        return k
+    try:
+        ruta = os.path.expanduser('~/.local/share/opencode/auth.json')
+        if not os.path.exists(ruta):
+            return ''
+        d = json.load(open(ruta, encoding='utf-8'))
+        for nombre in ('opencode-go', 'opencode', 'zen'):
+            k = (d.get(nombre) or {}).get('key') or ''
+            if k:
+                return k
+    except Exception:
+        return ''
+    return ''
+
+
 def _disponible(p):
+    if p == 'opencode':
+        return (True, 'ok') if _clave_opencode() else (False, 'sin OPENCODE_API_KEY')
     if p == 'ollama':
         try:
             _http(_env('OLLAMA_URL', 'http://127.0.0.1:11434') + '/api/tags', timeout=3)
@@ -212,7 +237,12 @@ def _huggingface_modelos():
 
 def modelos():
     """Todos los modelos conocidos. Los locales llevan '(local)' en el nombre."""
-    items = _ollama_modelos()
+    items = []
+    if _clave_opencode():
+        m = _env('OPENCODE_VISION_MODEL', 'deepseek-v4-flash-vision-exp')
+        items.append({'id': m, 'nombre': '{} (tu suscripción)'.format(m), 'proveedor': 'opencode',
+                      'local': False, 'vision': True, 'detalle': 'OpenCode Go'})
+    items += _ollama_modelos()
     items += _huggingface_modelos()
     if _env('DEEPSEEK_API_KEY'):
         m = _env('DEEPSEEK_VISION_MODEL', 'deepseek-flash')
@@ -229,6 +259,8 @@ def modelos():
 def _elegir(proveedor, modelo):
     if not _pertece(proveedor, modelo):
         modelo = None            # modelo ajeno al proveedor -> usa el default del proveedor
+    if proveedor == 'opencode':
+        return modelo or _env('OPENCODE_VISION_MODEL', 'deepseek-v4-flash-vision-exp')
     if proveedor == 'ollama':
         if modelo:
             return modelo
@@ -279,6 +311,8 @@ def _pertece(proveedor, modelo):
     """¿El modelo pedido pertenece a este proveedor? Evita mandar 'deepseek-flash' a Ollama."""
     if not modelo:
         return False
+    if proveedor == 'opencode':
+        return modelo == _env('OPENCODE_VISION_MODEL', 'deepseek-v4-flash-vision-exp')
     if proveedor == 'ollama':
         return any(m['id'] == modelo for m in _ollama_modelos())
     if proveedor == 'huggingface':
@@ -298,6 +332,28 @@ def reset():
 
 
 # ---------------------------------------------------------------- lectores
+def _opencode(ruta, prompt, modelo):
+    """OpenCode Go/Zen — el único modelo de su catálogo (86) con capacidad de imagen.
+
+    Medido con el prompt real: 3.2 s y ~1200 tokens de entrada por foto (~USD 0.0003).
+    """
+    clave = _clave_opencode()
+    base = _env('OPENCODE_BASE_URL', 'https://opencode.ai/zen/go/v1').rstrip('/')
+    mensaje = {'role': 'user', 'content': [
+        {'type': 'text', 'text': prompt},
+        {'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + _b64(ruta)}}]}
+    payload = {'model': _elegir('opencode', modelo), 'messages': [mensaje]}
+    # sin razonamiento: ahorra ~60% de tokens de salida (769 -> 162) y va 2x más rápido.
+    # OPENCODE_THINKING=enabled lo devuelve si alguna foto necesita pensar.
+    if _env('OPENCODE_THINKING').lower() not in ('enabled', '1', 'si', 'sí'):
+        payload['thinking'] = {'type': 'disabled'}
+    j = _http(base + '/chat/completions', payload,
+              headers={'Authorization': 'Bearer ' + clave,
+                       'x-opencode-session': str(uuid.uuid4())},
+              timeout=240)
+    return ((j.get('choices') or [{}])[0].get('message') or {}).get('content') or ''
+
+
 def _ollama(ruta, prompt, modelo):
     url = _env('OLLAMA_URL', 'http://127.0.0.1:11434') + '/api/chat'
     payload = {'model': _elegir('ollama', modelo), 'stream': False,
@@ -358,8 +414,8 @@ def _gemini(ruta, prompt, modelo):
     return ''.join(p.get('text', '') for p in partes).strip()
 
 
-_LEEME = {'ollama': _ollama, 'huggingface': _huggingface, 'deepseek': _deepseek,
-          'openrouter': _openrouter, 'gemini': _gemini}
+_LEEME = {'opencode': _opencode, 'ollama': _ollama, 'huggingface': _huggingface,
+          'deepseek': _deepseek, 'openrouter': _openrouter, 'gemini': _gemini}
 
 
 # ---------------------------------------------------------------- cascade

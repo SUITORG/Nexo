@@ -1,10 +1,11 @@
 # MODELOS â€” inventario real del switch
 
 > Generado desde `GET /api/ia/modelos`. El sufijo **(local)** marca lo que corre en tu mÃ¡quina (Ollama).
-> Estado de la cadena al generar: ollama: OK Â· deepseek: sin DEEPSEEK_API_KEY Â· openrouter: OK Â· gemini: sin GEMINI_API_KEY
+> Estado de la cadena al generar: opencode: OK Â· ollama: OK Â· huggingface: sin HF_TOKEN Â· deepseek: OK Â· openrouter: sin OPENROUTER_API_KEY Â· gemini: sin GEMINI_API_KEY
 
 | Modelo | Proveedor | Origen | VisiÃ³n | Detalle |
 |---|---|---|---|---|
+| deepseek-v4-flash-vision-exp | opencode | nube | sÃ­ | OpenCode Go |
 | qwen36-uncensored-32k:latest | ollama | **(local)** | sÃ­ | 35.1B |
 | qwen3-coder:latest | ollama | **(local)** | no | 30.5B |
 | hf.co/ornith-ai/Ornith-1.0-9B-GGUF:Q4_K_M | ollama | **(local)** | no | 8.95B |
@@ -22,20 +23,9 @@
 | qwen:latest | ollama | **(local)** | no | 4B |
 | qwen3.5:latest | ollama | **(local)** | sÃ­ | 9.7B |
 | llama3.2:latest | ollama | **(local)** | no | 3.2B |
-| stealth/space-bunny-alpha | openrouter | nube | sÃ­ | gratis |
-| qwen/qwen3.8-27b:free | openrouter | nube | sÃ­ | gratis |
-| dots-studio/dots-3-note-preview:free | openrouter | nube | sÃ­ | gratis |
-| thinkingmachines/inkling-small:free | openrouter | nube | sÃ­ | gratis |
-| thinkingmachines/inkling:free | openrouter | nube | sÃ­ | gratis |
-| nvidia/nemotron-3.5-content-safety:free | openrouter | nube | sÃ­ | gratis |
-| nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free | openrouter | nube | sÃ­ | gratis |
-| google/gemma-4-26b-a4b-it:free | openrouter | nube | sÃ­ | gratis |
-| google/gemma-4-31b-it:free | openrouter | nube | sÃ­ | gratis |
-| google/lyria-3-pro-preview | openrouter | nube | sÃ­ | gratis |
-| google/lyria-3-clip-preview | openrouter | nube | sÃ­ | gratis |
-| openrouter/free | openrouter | nube | sÃ­ | gratis |
+| deepseek-flash | deepseek | nube | sÃ­ | 5M tokens gratis |
 
-Totales: **29 modelos** (17 locales en Ollama, 12 en nube).
+Totales: **19 modelos** (17 locales en Ollama, 2 en nube).
 
 ## Notas
 
@@ -48,7 +38,7 @@ Totales: **29 modelos** (17 locales en Ollama, 12 en nube).
 
 ## Cadena de fallback
 
-`ollama -> deepseek -> openrouter -> gemini` â€” 3 fallos seguidos = 5 min de cooldown por eslabÃ³n.
+`opencode -> ollama -> huggingface -> deepseek -> openrouter -> gemini` â€” 3 fallos seguidos = 5 min de cooldown por eslabÃ³n.
 
 Si un eslabÃ³n falla, el error de la corrida lista el motivo de cada uno:
 `Sin proveedor IA disponible -> ollama: ... | deepseek: ... | openrouter: ... | gemini: ...`
