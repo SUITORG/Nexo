@@ -65,7 +65,7 @@ def _elegir_pin(lat, lon, pines, radio):
 def _leer_foto_ia(ruta_jpg, trabajo, proveedor='auto', modelo=None, log=None):
     """Lee la foto con el switch de IA: Ollama -> DeepSeek -> OpenRouter -> Gemini."""
     if motor.en_mock():
-        return ('ANUNCIO: SI\nMARCA CAMPAÑA: DiDi\nQUE ANUNCIA: promoción simulada\n'
+        return ('ANUNCIO: SI\nMARCA: DiDi\nCAMPAÑA: Promo verano\nQUE ANUNCIA: promoción simulada\n'
                 'TEXTO VISIBLE: TEXTO SIMULADO\nREFERENCIAS UBICACION: no visible\n'
                 'TIPO SOPORTE: parabús\nCARA: frente')
     from ia import switch
@@ -88,12 +88,21 @@ def _fila_idx(foto_jpg, texto, pin, d, kml_d, lat, lon, marcada, excede=False):
 
 
 def _bloque_info(texto, d, kml_d, lat, lon, foto='', con_comentario=True):
-    marca_foto = motor.campo(texto, 'MARCA') or motor.marca_de(d.get('PIN', ''), d)
-    if marca_foto.strip().lower() in ('', 'no visible', 'no se distingue', 'sin marca', 'no legible'):
-        marca_foto = motor.marca_de(d.get('PIN', ''), d)
+    # PROVEEDOR = el anunciante/marca: la IA -> columna MARCA del pines -> reglas por PIN
+    proveedor = motor.campo(texto, 'MARCA').strip()
+    if proveedor.lower() in ('', 'no visible', 'no se distingue', 'sin marca', 'no legible'):
+        proveedor = str(d.get('MARCA') or '').strip()
+    if not proveedor:
+        proveedor = motor.marca_de(d.get('PIN', ''), d)
+    proveedor = proveedor or 'no disponible'
+
+    # CAMPAÑA = el eslogan; las lecturas viejas no traen el campo -> se queda con la marca
+    campana = motor.campo(texto, 'CAMPAÑA').strip()
+    if not campana:
+        campana = proveedor
     tipo_foto = motor.campo(texto, 'TIPO SOPORTE')
     partes = ['FOTO: %s' % (foto or 'no disponible'),
-              'CAMPAÑA: %s' % marca_foto]
+              'CAMPAÑA: %s' % campana]
     if con_comentario:
         # el mensaje del anuncio: qué promociona (y si hace falta, el texto literal que se ve)
         mensaje = motor.campo(texto, 'QUE ANUNCIA').strip()
@@ -101,7 +110,7 @@ def _bloque_info(texto, d, kml_d, lat, lon, foto='', con_comentario=True):
             mensaje = motor.campo(texto, 'TEXTO VISIBLE').strip()
         partes.append('COMENTARIO: %s' % (mensaje or 'no disponible'))
     partes += ['PLAZA: MTY',
-               'PROVEEDOR: ',
+               'PROVEEDOR: %s' % proveedor,
                'RAZÓN SOCIAL: ',
                'MEDIO: %s' % (d.get('MEDIO') or kml_d.get('MEDIO', '') or tipo_foto),
                'FORMATO: %s' % (d.get('FORMATO') or kml_d.get('FORMATO', '')),

@@ -7,7 +7,7 @@ Pipeline (portado del proceso validado):
   -> info.txt por PIN (foto -> pines -> KML) -> idxfotos.xlsx (crear/actualizar, Verificado).
 
 Sin base de datos: todo vive en archivos locales. Sin operaciones destructivas:
-nunca se elimina ningÃºn archivo (los temporales se quedan en trabajo\\cache).
+nunca se elimina ningún archivo (los temporales se quedan en trabajo\\cache).
 
 MODO_MOCK (env CVLO_MOCK=1): sin red; para pruebas.
 """
@@ -33,15 +33,16 @@ def en_mock():
     return os.environ.get('CVLO_MOCK') == '1'
 
 
-PROMPT_LECTURA = ('Responde Ãºnicamente en ESPAÃ‘OL, con este formato exacto de 7 lÃ­neas:\n'
-                  'ANUNCIO: SI o NO (Â¿se ve algÃºn anuncio publicitario o propaganda en la foto?)\n'
-                  'MARCA CAMPAÃ‘A: ... (marca, partido, evento o campaÃ±a visible; si no, \'no visible\')\n'
-                  'QUE ANUNCIA: ... (1-2 frases de quÃ© promociona)\n'
-                  'TEXTO VISIBLE: ... (transcripciÃ³n literal de lo principal)\n'
-                  'REFERENCIAS UBICACION: ... (calles, negocios, cÃ³digos visibles o \'no visible\')\n'
-                  'TIPO SOPORTE: ... (panorÃ¡mico, muro, parabÃºs, mupi, espectacular, cartelera, valla u otro)\n'
+PROMPT_LECTURA = ('Responde únicamente en ESPAÑOL, con este formato exacto de 8 líneas:\n'
+                  'ANUNCIO: SI o NO (¿se ve algún anuncio publicitario o propaganda en la foto?)\n'
+                  'MARCA: ... (el anunciante o la marca, ej. Farmacias del Ahorro; si no se ve, \'no visible\')\n'
+                  'CAMPAÑA: ... (el eslogan o nombre de la campaña, ej. Siempre cerca de ti; si no hay, \'no visible\')\n'
+                  'QUE ANUNCIA: ... (1-2 frases de qué promociona)\n'
+                  'TEXTO VISIBLE: ... (transcripción literal de lo principal)\n'
+                  'REFERENCIAS UBICACION: ... (calles, negocios, códigos visibles o \'no visible\')\n'
+                  'TIPO SOPORTE: ... (panorámico, muro, parabús, mupi, espectacular, cartelera, valla u otro)\n'
                   'CARA: frente/reverso/ambos/no se distingue\n'
-                  'SÃ© breve.')
+                  'Sé breve.')
 
 
 def campo(texto, nombre):
@@ -107,7 +108,7 @@ def dist_m(lat1, lon1, lat2, lon2):
 
 
 def quincena_de(fecha_iso):
-    """'2026-09-14' -> '260901' (dÃ­a<=15 -> 01; >=16 -> 02). Sin fecha -> None."""
+    """'2026-09-14' -> '260901' (día<=15 -> 01; >=16 -> 02). Sin fecha -> None."""
     if not fecha_iso:
         return None
     try:
@@ -119,8 +120,8 @@ def quincena_de(fecha_iso):
 
 
 # ---------------------------------------------------------------- pines
-PRIM_HEADERS = ['PIN', 'LATITUD', 'LONGITUD', 'MEDIO', 'FORMATO', 'ID', 'UBICACIÃ“N', 'CIUDAD',
-                'DIRECCIÃ“N', 'MARCA', 'CLIENTE', 'CODIGO MUPI', 'CAPA', 'FAMILIA']
+PRIM_HEADERS = ['PIN', 'LATITUD', 'LONGITUD', 'MEDIO', 'FORMATO', 'ID', 'UBICACIÓN', 'CIUDAD',
+                'DIRECCIÓN', 'MARCA', 'CLIENTE', 'CODIGO MUPI', 'CAPA', 'FAMILIA']
 
 
 def _pines_desde_kml(ruta_kml):
@@ -151,10 +152,10 @@ def _pines_desde_kml(ruta_kml):
                     'LATITUD': datos.get('LATITUD', ''), 'LONGITUD': datos.get('LONGITUD', ''),
                     'MEDIO': datos.get('MEDIO', '') or datos.get('TIPO DE MEDIO', ''),
                     'FORMATO': datos.get('FORMATO', ''), 'ID': datos.get('ID', ''),
-                    'UBICACIÃ“N': datos.get('UBICACIÃ“N', ''), 'CIUDAD': datos.get('CIUDAD', ''),
-                    'DIRECCIÃ“N': datos.get('DIRECCIÃ“N', ''), 'MARCA': datos.get('MARCA', ''),
+                    'UBICACIÓN': datos.get('UBICACIÓN', ''), 'CIUDAD': datos.get('CIUDAD', ''),
+                    'DIRECCIÓN': datos.get('DIRECCIÓN', ''), 'MARCA': datos.get('MARCA', ''),
                     'CLIENTE': datos.get('CLIENTE', ''), 'CODIGO MUPI': datos.get('CODIGO MUPI', ''),
-                    'descripcion': datos.get('descripciÃ³n', ''),
+                    'descripcion': datos.get('descripción', ''),
                 }
                 pines[pin] = d
             else:
@@ -225,7 +226,7 @@ def cargar_pines(ruta_pines):
             continue
         limpios[pin] = d
     if not limpios:
-        raise RuntimeError('No se cargaron pines con coordenadas vÃ¡lidas.')
+        raise RuntimeError('No se cargaron pines con coordenadas válidas.')
     return limpios
 
 
@@ -241,7 +242,7 @@ def cargar_kml_datos(ruta_kml):
 MAPA_TIPO = {'PARABUS': 'PARABUSES', 'BILLBOARD': 'PANORAMICOS', 'ISA MUPI': 'MUPIS', 'MUPI': 'MUPIS',
              'CARTELERA': 'CARTELERAS', 'PANTALLA DIGITAL': 'PANTALLAS', 'KIOSKO': 'KIOSKOS', 'PUENTE': 'PUENTES',
              'VALLA': 'PANORAMICOS', 'ESPECTACULAR': 'PANORAMICOS', 'PANORAMICO': 'PANORAMICOS',
-             'PANORÃMICO': 'PANORAMICOS', 'MURO': 'MUROS', 'PARABÃšS': 'PARABUSES', 'PARABUSES': 'PARABUSES'}
+             'PANORÁMICO': 'PANORAMICOS', 'MURO': 'MUROS', 'PARABÚS': 'PARABUSES', 'PARABUSES': 'PARABUSES'}
 
 
 def marca_de(pin, d):
@@ -268,7 +269,7 @@ def grupo_de(pin, d):
 
 
 # ---------------------------------------------------------------- idxfotos
-IDX_HEADERS = ['NombreFoto', 'DescripciÃ³n de lo que anuncia', 'DirecciÃ³n', 'Tipo de Anuncio', 'Latitud',
+IDX_HEADERS = ['NombreFoto', 'Descripción de lo que anuncia', 'Dirección', 'Tipo de Anuncio', 'Latitud',
                'Longitud', 'Referencias visuales o notas', 'Verificado', 'PIN']
 
 

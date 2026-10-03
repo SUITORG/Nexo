@@ -230,5 +230,45 @@ class TestComentarioYFechaSubida(unittest.TestCase):
         wb2.close()
 
 
+class TestMarcaYCampana(unittest.TestCase):
+    """PROVEEDOR = el anunciante/marca; CAMPAÑA = el eslogan (prompt de 8 líneas)."""
+
+    def test_formato_nuevo_separa_marca_y_campana(self):
+        texto = ('ANUNCIO: SI\n'
+                 'MARCA: Farmacias del Ahorro\n'
+                 'CAMPAÑA: Siempre cerca de ti\n'
+                 'QUE ANUNCIA: promociona servicios\n'
+                 'TEXTO VISIBLE: Siempre cerca de ti\n'
+                 'REFERENCIAS UBICACION: esquina\n'
+                 'TIPO SOPORTE: parabús\nCARA: frente')
+        bloque = proceso._bloque_info(texto, {'PIN': 'DF_09_TEST_1'}, {}, 25.7, -100.35,
+                                      foto='IMG_1.jpg')
+        self.assertTrue(bloque.startswith('FOTO: IMG_1.jpg'))
+        self.assertIn('CAMPAÑA: Siempre cerca de ti', bloque)
+        self.assertIn('PROVEEDOR: Farmacias del Ahorro', bloque)
+
+    def test_lectura_legada_usa_la_marca_para_los_dos(self):
+        """Las lecturas viejas traen 'MARCA CAMPAÑA:' fusionado (una sola etiqueta)."""
+        texto = ('ANUNCIO: SI\nMARCA CAMPAÑA: Coppel\nQUE ANUNCIA: promo\n'
+                 'TEXTO VISIBLE: Lee\nREFERENCIAS UBICACION: n/a\n'
+                 'TIPO SOPORTE: mupi\nCARA: frente')
+        bloque = proceso._bloque_info(texto, {'PIN': 'PF_COP_1', 'CLIENTE': ''}, {},
+                                      19.4, -99.1, foto='a.jpg')
+        # 'MARCA' casa por prefijo con 'MARCA CAMPAÑA' -> PROVEEDOR se llena igual
+        self.assertIn('PROVEEDOR: Coppel', bloque)
+        # sin campo CAMPAÑA explicito -> fallback a la marca (como hasta ahora)
+        self.assertIn('CAMPAÑA: Coppel', bloque)
+
+    def test_proveedor_sin_ia_cae_en_la_regla_del_pin(self):
+        texto = ('ANUNCIO: SI\nMARCA: no visible\nCAMPAÑA: no visible\n'
+                 'QUE ANUNCIA: n/a\nTEXTO VISIBLE: n/a\nREFERENCIAS UBICACION: n/a\n'
+                 'TIPO SOPORTE: otro\nCARA: frente')
+        bloque = proceso._bloque_info(texto, {'PIN': 'DF_09_TEST_1'}, {}, 25.7, -100.35)
+        # DF_* -> DIDI por la regla de motor.marca_de
+        self.assertIn('PROVEEDOR: DIDI', bloque)
+        # con CAMPAÑA explicita pero 'no visible', se respeta el valor de la IA
+        self.assertIn('CAMPAÑA: no visible', bloque)
+
+
 if __name__ == '__main__':
     unittest.main()

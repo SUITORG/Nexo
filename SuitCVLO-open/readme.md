@@ -5,10 +5,14 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 - **Estructura de carpetas**: `<Ruta de Salida>\<AAMMPQ>\auditoria\<Marca><TipoAnuncio><Ciudad>\<PIN>\`
   (la quincena `AAMMPQ` se calcula con la **fecha de la foto**: días 1–15 → `01`; 16–31 → `02`).
 - **`info.txt`** por PIN: encabezado (`GRUPO`, `PIN`, `COORDENADAS`) + un bloque por foto
-  (**`FOTO`** (nombre del archivo), `CAMPAÑA`, **`COMENTARIO`** (el mensaje del anuncio: qué
-  promociona / el texto que se ve), `PLAZA, PROVEEDOR, RAZÓN SOCIAL, MEDIO, FORMATO, ID,
-  UBICACIÓN, LATITUD, LONGITUD`)
+  (**`FOTO`** (nombre del archivo), **`CAMPAÑA`** = el eslogan de la campaña,
+  **`COMENTARIO`** = qué promociona / el texto que se ve, `PLAZA`,
+  **`PROVEEDOR`** = el anunciante o marca (IA → columna `MARCA` del pines → reglas por PIN),
+  `RAZÓN SOCIAL, MEDIO, FORMATO, ID, UBICACIÓN, LATITUD, LONGITUD`)
   con llenado **foto → si falta, del archivo de pines → si falta, del KML**.
+  La IA responde **8 líneas** (`ANUNCIO, MARCA, CAMPAÑA, QUE ANUNCIA, TEXTO VISIBLE,
+  REFERENCIAS UBICACION, TIPO SOPORTE, CARA`); las lecturas viejas que traían
+  `MARCA CAMPAÑA` fusionado siguen sirviendo (la marca cae en `PROVEEDOR` y en `CAMPAÑA`).
   **`COMENTARIO` depende del switch de *Opciones avanzadas*** (activado por defecto).
   *Se reescribe entero cada vez que entra una foto nueva al PIN; las fotos sin lectura guardada
   quedan con `COMENTARIO: no disponible` (la lectura se conserva en `trabajo\reads`, así que
