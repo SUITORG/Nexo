@@ -183,5 +183,57 @@ class TestFechaCarga(unittest.TestCase):
         self.assertRegex(str(ws3.cell(3, 11).value or ''), r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')
 
 
+    def test_info_txt_lleva_comentario(self):
+        """Cada bloque del info.txt lleva COMENTARIO con el mensaje del anuncio."""
+        base = tempfile.mkdtemp(prefix='cvlo_coment_')
+        fotos, pines, kml = crear_fuente(base, [('IMG_6201.jpg', '2026-09-14', 25.70002, -100.3500)])
+        params = {'modo': 'local', 'ruta_local': fotos, 'salida': os.path.join(base, 'salida'),
+                  'pines': pines, 'drive_pics': '', 'kml': kml,
+                  'idx': os.path.join(base, 'idxfotos.xlsx'), 'n_fotos': 10, 'radio': 250,
+                  'cap': 10, 'pausa': 0, 'trabajo': os.path.join(base, 'trabajo'),
+                  '_mock_gps': json.load(open(os.path.join(fotos, 'mock_gps.json'), encoding='utf-8'))}
+        proceso.ejecutar_corrida(params, lambda c: None, lambda m: None)
+        ruta = os.path.join(base, 'salida', '260901', 'auditoria',
+                            'DIDI PARABUSES MTY', 'DF_09_TEST_1', 'info.txt')
+        self.assertTrue(os.path.exists(ruta), ruta)
+        texto = open(ruta, encoding='utf-8').read()
+        self.assertIn('COMENTARIO:', texto)
+        self.assertIn('promoción simulada', texto)
+        self.assertLess(texto.index('COMENTARIO:'), texto.index('COMENTARIOS:'))
+
+    def test_rellena_fecha_hora_subida_sin_crear_columna_nueva(self):
+        """Su xlsx real: col10 FechaHoraFoto, col11 FechaHoraSubida → se rellena la 11."""
+        from openpyxl import Workbook
+        base = tempfile.mkdtemp(prefix='cvlo_subida_')
+        ruta = os.path.join(base, 'idxfotos.xlsx')
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Sheet1'
+        ws.append(['NombreFoto', 'Descripción de lo que anuncia', 'Dirección', 'Tipo de Anuncio',
+                   'Latitud', 'Longitud', 'Referencias visuales o notas', 'Verificado', 'PIN',
+                   'FechaHoraFoto', 'FechaHoraSubida'])
+        ws.append(['vieja.jpg', 'que anuncia', 'calle', 'mupi', 1, 2, 'refs', 'ok',
+                   'DF_09_TEST_1', '2026-09-01 08:00', '2026-09-01 09:00'])
+        wb.save(ruta)
+
+        fotos, pines, kml = crear_fuente(base, [('IMG_6301.jpg', '2026-09-14', 25.70002, -100.3500)])
+        params = {'modo': 'local', 'ruta_local': fotos, 'salida': os.path.join(base, 'salida'),
+                  'pines': pines, 'drive_pics': '', 'kml': kml, 'idx': ruta,
+                  'n_fotos': 10, 'radio': 250, 'cap': 10, 'pausa': 0,
+                  'trabajo': os.path.join(base, 'trabajo'),
+                  '_mock_gps': json.load(open(os.path.join(fotos, 'mock_gps.json'), encoding='utf-8'))}
+        proceso.ejecutar_corrida(params, lambda c: None, lambda m: None)
+
+        wb2 = load_workbook(ruta)
+        ws2 = wb2[wb2.sheetnames[0]]
+        self.assertEqual(ws2.max_column, 11)                     # no inventó columnas
+        self.assertEqual(ws2.cell(1, 11).value, 'FechaHoraSubida')
+        self.assertEqual(ws2.cell(2, 11).value, '2026-09-01 09:00')
+        nueva = ws2.max_row
+        self.assertRegex(str(ws2.cell(nueva, 11).value or ''),
+                         r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')
+        wb2.close()
+
+
 if __name__ == '__main__':
     unittest.main()

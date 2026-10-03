@@ -46,9 +46,13 @@
 ## 3. Qué se genera
 
 - `cvlo/salida/<AAMMPQ>/auditoria/<Grupo>/<PIN>/` → fotos convertidas a `.jpg` + `info.txt`
-- `cvlo/idxfotos.xlsx` → misma estructura de siempre **+ columna `FechaCarga`**.
-  **No pisa columnas que ya tengas**: si la columna 10 ya se llama `FechaHoraFoto` (u otra cosa),
-  `FechaCarga` se escribe en la **primera columna libre** (la 11) y tu columna queda intacta.
+- `cvlo/idxfotos.xlsx` → misma estructura de siempre **+ hora de subida**.
+  Si tu archivo ya tiene la columna **`FechaHoraSubida`** (o `FechaCarga`), ahí se escribe
+  `AAAA-MM-DD HH:MM` por cada foto nueva; si no, se crea la columna a partir de la 10.
+  **No pisa columnas que ya tengas**: si la columna 10 es `FechaHoraFoto`, la de subida va a la 11
+  y tu columna y tus datos quedan intactos. En las filas antiguas no se inventa nada.
+- `cvlo/.../info.txt` → cada bloque lleva **`COMENTARIO:`** con el mensaje del anuncio
+  (qué promociona, o el texto literal que se ve).
 - `cvlo/trabajo_colab/reads/*.json` → registro de cada foto leída (por eso no repite)
 
 ## 4. Reglas que se mantienen

@@ -7,7 +7,7 @@ Fecha: 2026-10-02 · Workflow: `ciclo` F0-F5
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `py_compile` sin warnings | `motor.py proceso.py utilidades.py ia/*.py tests/*.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 40 tests … OK** (sin red) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 43 tests … OK** (sin red) | ✅ |
 | 3 | Notebook válido | `CVLO_Colab.ipynb` → JSON parsea, **9 celdas**, **7 code compilan** con `compile()` | ✅ |
 | 4 | Eslabón `colab` | `registrar_vlm()` → `_disponible` True, `_elegir` devuelve el modelo, `leer()` lo usa como **primer eslabón** y si responde vacío baja al resto → 4 tests | ✅ |
 | 5 | `FechaCarga` | xlsx nuevo → 10 columnas con `FechaCarga` en la 10 y `Verificado`=8 / `PIN`=9 intactos; xlsx viejo de 9 columnas → gana la cabecera sin mover nada → 2 tests | ✅ |
@@ -38,7 +38,7 @@ Se **eliminó** `TestApiMock` (dependía de `app.py`/Flask, que no existe aquí:
 
 ```bash
 cd SuitCVLOGCPy
-python -m unittest discover -s tests -t . -v     # 40 tests
+python -m unittest discover -s tests -t . -v     # 43 tests
 python -c "import json,io; nb=json.load(io.open('CVLO_Colab.ipynb',encoding='utf-8')); \
            [compile(''.join(c['source']),'c','exec') for c in nb['cells'] if c['cell_type']=='code']; \
            print('notebook OK')"

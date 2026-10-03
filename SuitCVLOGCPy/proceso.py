@@ -94,8 +94,15 @@ def _bloque_info(texto, d, kml_d, lat, lon):
     if marca_foto.strip().lower() in ('', 'no visible', 'no se distingue', 'sin marca', 'no legible'):
         marca_foto = motor.marca_de(d.get('PIN', ''), d)
     tipo_foto = motor.campo(texto, 'TIPO SOPORTE')
+    # el mensaje del anuncio: qué promociona (y si hace falta, el texto literal que se ve)
+    comentario = motor.campo(texto, 'QUE ANUNCIA').strip()
+    if comentario.lower() in ('', 'no visible', 'no se distingue', 'no aplica'):
+        comentario = motor.campo(texto, 'TEXTO VISIBLE').strip()
+    if not comentario:
+        comentario = 'no disponible'
     return '\n'.join([
         'CAMPAÑA: %s' % marca_foto,
+        'COMENTARIO: %s' % comentario,
         'PLAZA: MTY',
         'PROVEEDOR: ',
         'RAZÓN SOCIAL: ',
