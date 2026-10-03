@@ -11,6 +11,7 @@ import shutil
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 
 import gdown
 
@@ -85,9 +86,7 @@ def _fila_idx(foto_jpg, texto, pin, d, kml_d, lat, lon, marcada, excede=False):
         notas = (notas + ' | texto: ' + texto_vis[:120]).strip(' |')
     if excede:
         notas = notas + ' | excede el tope por PIN'
-    from datetime import datetime as _dt
-    fecha_carga = _dt.now().strftime('%Y-%m-%d %H:%M')
-    return [foto_jpg, que, direccion, tipo, lat, lon, notas, marcada, pin, fecha_carga]
+    return [foto_jpg, que, direccion, tipo, lat, lon, notas, marcada, pin]
 
 
 def _bloque_info(texto, d, kml_d, lat, lon):
@@ -164,8 +163,10 @@ def ejecutar_corrida(params, progreso, log):
     kml_datos = motor.cargar_kml_datos(params.get('kml', ''))
 
     wb, ws = motor.idx_abrir_o_crear(params.get('idx', ''))
+    col_fecha = motor.idx_col_fecha(ws)     # columna de FechaCarga (respeta una ya existente)
     pos, verif = motor.idx_filas(ws)
-    log('idxfotos: {} filas ({} verificadas)'.format(len(pos), len(verif)))
+    log('idxfotos: {} filas ({} verificadas) · FechaCarga en columna {}'
+        .format(len(pos), len(verif), col_fecha))
 
     excluidos = _excluidos(salida, verif, reads_dir)
     log('Excluidas (cargadas/verificadas/leídas): {}'.format(len(excluidos)))
@@ -298,6 +299,8 @@ def ejecutar_corrida(params, progreso, log):
             fila = _fila_idx(foto_jpg, texto, c['pin'], d, kml_d, c['lat'], c['lon'], marcada, excede=(marcada == ''))
             with IDX_LOCK:
                 motor.idx_upsert(ws, pos, fila)
+                # fecha de carga en SU columna: nunca escribe sobre una columna ajena
+                ws.cell(pos[foto_jpg], col_fecha).value = datetime.now().strftime('%Y-%m-%d %H:%M')
             return stem, 'listo', None, carpeta
         except Exception as e:
             return stem, 'error', str(e)[:200], None

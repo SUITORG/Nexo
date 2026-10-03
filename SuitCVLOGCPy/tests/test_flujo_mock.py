@@ -147,6 +147,41 @@ class TestFechaCarga(unittest.TestCase):
         self.assertEqual(ws2.cell(2, 1).value, 'vieja.jpg')
         wb2.save(ruta)
 
+    def test_no_pisa_una_columna_de_fecha_ajena(self):
+        """El usuario ya tiene 'FechaHoraFoto' en la columna 10: FechaCarga va a la 11."""
+        from openpyxl import Workbook
+        base = tempfile.mkdtemp(prefix='cvlo_ajena_')
+        ruta = os.path.join(base, 'idxfotos.xlsx')
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Sheet1'                      # ni siquiera se llama idxfotos
+        ws.append(['NombreFoto', 'Descripción de lo que anuncia', 'Dirección', 'Tipo de Anuncio',
+                   'Latitud', 'Longitud', 'Referencias visuales o notas', 'Verificado', 'PIN',
+                   'FechaHoraFoto'])
+        ws.append(['mia.jpg', 'que', 'calle', 'mupi', 1, 2, 'refs', 'ok', 'DF_2', '2026-10-01 08:00'])
+        wb.save(ruta)
+
+        wb2, ws2 = motor.idx_abrir_o_crear(ruta)
+        col = motor.idx_col_fecha(ws2)
+        self.assertEqual(col, 11)
+        self.assertEqual(ws2.cell(1, 10).value, 'FechaHoraFoto')      # intacta
+        self.assertEqual(ws2.cell(2, 10).value, '2026-10-01 08:00')   # sus datos, intactos
+        self.assertEqual(ws2.cell(1, 11).value, 'FechaCarga')
+        wb2.save(ruta)
+
+        # y la corrida escribe la fecha en la 11, sin tocar la 10
+        fotos, pines, kml = crear_fuente(base, [('IMG_4001.jpg', '2026-09-14', 25.70002, -100.3500)])
+        params = {'modo': 'local', 'ruta_local': fotos, 'salida': os.path.join(base, 'salida'),
+                  'pines': pines, 'drive_pics': '', 'kml': kml, 'idx': ruta,
+                  'n_fotos': 10, 'radio': 250, 'cap': 10, 'pausa': 0,
+                  'trabajo': os.path.join(base, 'trabajo'),
+                  '_mock_gps': json.load(open(os.path.join(fotos, 'mock_gps.json'), encoding='utf-8'))}
+        proceso.ejecutar_corrida(params, lambda c: None, lambda m: None)
+        wb3 = load_workbook(ruta)
+        ws3 = wb3[wb3.sheetnames[0]]
+        self.assertEqual(ws3.cell(2, 10).value, '2026-10-01 08:00')
+        self.assertRegex(str(ws3.cell(3, 11).value or ''), r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')
+
 
 if __name__ == '__main__':
     unittest.main()

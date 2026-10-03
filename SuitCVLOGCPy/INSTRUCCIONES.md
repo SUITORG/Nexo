@@ -46,7 +46,9 @@
 ## 3. Qué se genera
 
 - `cvlo/salida/<AAMMPQ>/auditoria/<Grupo>/<PIN>/` → fotos convertidas a `.jpg` + `info.txt`
-- `cvlo/idxfotos.xlsx` → misma estructura de siempre **+ columna `FechaCarga`** (columna 10)
+- `cvlo/idxfotos.xlsx` → misma estructura de siempre **+ columna `FechaCarga`**.
+  **No pisa columnas que ya tengas**: si la columna 10 ya se llama `FechaHoraFoto` (u otra cosa),
+  `FechaCarga` se escribe en la **primera columna libre** (la 11) y tu columna queda intacta.
 - `cvlo/trabajo_colab/reads/*.json` → registro de cada foto leída (por eso no repite)
 
 ## 4. Reglas que se mantienen

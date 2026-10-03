@@ -272,13 +272,27 @@ IDX_HEADERS = ['NombreFoto', 'Descripción de lo que anuncia', 'Dirección', 'Ti
                'Longitud', 'Referencias visuales o notas', 'Verificado', 'PIN', 'FechaCarga']
 
 
+def idx_col_fecha(ws):
+    """Columna donde va FechaCarga.
+
+    Usa la que ya exista (p. ej. 'FechaCarga') o la primera libre a partir de la 10.
+    **Nunca pisa una cabecera ajena** — si la columna 10 ya es 'FechaHoraFoto', FechaCarga va a la 11.
+    """
+    for c in range(10, 20):
+        v = str(ws.cell(1, c).value or '').strip()
+        if not v:
+            ws.cell(1, c).value = 'FechaCarga'
+            return c
+        if v.lower().replace(' ', '').replace('_', '') == 'fechacarga':
+            return c
+    return 10
+
+
 def idx_abrir_o_crear(ruta):
     if ruta and os.path.exists(ruta):
         wb = load_workbook(ruta)
         ws = wb['idxfotos'] if 'idxfotos' in wb.sheetnames else wb[wb.sheetnames[0]]
-        # un xlsx viejo (9 columnas) recibe la columna FechaCarga sin tocar las demás
-        if str(ws.cell(1, 10).value or '').strip() != 'FechaCarga':
-            ws.cell(1, 10).value = 'FechaCarga'
+        idx_col_fecha(ws)          # solo rellena cabeceras vacías
         return wb, ws
     wb = Workbook()
     ws = wb.active
