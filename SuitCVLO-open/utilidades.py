@@ -107,8 +107,21 @@ def normaliza_marca(m):
     return re.sub(r'\s+', ' ', s).strip().lower()
 
 
+def _marcas_de_texto(texto):
+    """Lista de marcas (una por línea, `#` = comentario) -> set normalizado."""
+    out = set()
+    for linea in (texto or '').splitlines():
+        linea = linea.strip()
+        if not linea or linea.startswith('#'):
+            continue
+        n = normaliza_marca(linea)
+        if n:
+            out.add(n)
+    return out
+
+
 def leer_marcas(ruta):
-    """Archivo de marcas conocidas (una por línea, `#` = comentario) -> set normalizado.
+    """Archivo de marcas conocidas -> set normalizado.
 
     Sin archivo o sin marcas -> set() vacío = **sin validación** (la marca de la foto se
     acepta tal cual). Sirve para validar `PROVEEDOR` cuando el KML no trae `MARCA`.
@@ -119,40 +132,49 @@ def leer_marcas(ruta):
         texto = leer_texto_auto(ruta)
     except Exception:
         return set()
-    out = set()
-    for linea in texto.splitlines():
-        linea = linea.strip()
-        if not linea or linea.startswith('#'):
-            continue
-        n = normaliza_marca(linea)
-        if n:
-            out.add(n)
-    return out
+    return _marcas_de_texto(texto)
+
+
+def leer_marcas_texto(texto):
+    """Lista de marcas escrita **dentro** del CVLOCFG (bajo `marcas:`) -> set normalizado."""
+    return _marcas_de_texto(texto)
 
 
 def leer_config_rutas(ruta):
-    """CVLOCFG.txt -> {'fotos': ..., 'salida': ..., 'pines': ..., 'kml': ..., 'idx': ...}
+    """CVLOCFG.txt -> {'fotos': ..., 'salida': ..., 'pines': ..., 'kml': ..., 'idx': ...,
+    'prioridad': ..., 'marcas': ...}
 
     Formato: `clave: valor` por línea (mayúsculas indiferentes), `#` y líneas vacías se ignoran.
     Se parte SOLO por el primer ':' porque las rutas llevan 'C:\\'.
+    `marcas:` **sin valor** abre una lista inline: las líneas siguientes (hasta una en blanco)
+    se toman como marcas conocidas, una por línea.
     Si el archivo no existe -> {} (sin error).
     """
     if not ruta or not os.path.exists(ruta):
         return {}
     rutas = {}
+    en_marcas = False
     try:
         texto = leer_texto_auto(ruta)
     except Exception:
         return {}
     for linea in texto.splitlines():
         linea = linea.strip()
-        if not linea or linea.startswith('#') or ':' not in linea:
+        if not linea:
+            en_marcas = False          # la lista inline termina en una línea en blanco
             continue
-        clave, valor = linea.split(':', 1)
-        clave = clave.strip().lower()
-        valor = valor.strip().strip('"').strip("'")
-        if clave in CLAVES_CONFIG and valor:
-            rutas[clave] = valor
+        if linea.startswith('#'):
+            continue
+        clave, sep, valor = linea.partition(':')
+        if sep and clave.strip().lower() in CLAVES_CONFIG:
+            clave = clave.strip().lower()
+            valor = valor.strip().strip('"').strip("'")
+            en_marcas = (clave == 'marcas' and not valor)   # 'marcas:' -> lista inline
+            if valor:
+                rutas[clave] = valor
+            continue
+        if en_marcas:                  # línea de la lista de marcas (sin 'clave:')
+            rutas['marcas'] = (rutas['marcas'] + '\n' + linea) if 'marcas' in rutas else linea
     return rutas
 
 

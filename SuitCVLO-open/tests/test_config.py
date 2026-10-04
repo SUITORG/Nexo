@@ -51,6 +51,50 @@ class TestLeerConfigRutas(unittest.TestCase):
         self.assertEqual(U.leer_config_rutas(r'C:\no\existe\CVLOCFG.txt'), {})
 
 
+class TestMarcasEnElCfg(unittest.TestCase):
+    """`marcas:` sin valor abre una lista inline en el propio CVLOCFG.txt (una por línea)."""
+
+    CFG_INLINE = (
+        'fotos : D:\\fotos\n'
+        'salida: D:\\salida\n'
+        'marcas: \n'
+        'coppel\n'
+        'coca cola\n'
+        'Farmacias del Ahorro\n'
+        '\n'
+        'idx   : D:\\idx.xlsx\n')
+
+    def test_lista_inline_se_lee_como_marcas(self):
+        r = U.leer_config_rutas(escribir(self.CFG_INLINE))
+        self.assertIn('marcas', r)
+        self.assertEqual(r['salida'], 'D:\\salida')
+        self.assertEqual(r['idx'], 'D:\\idx.xlsx')          # después de la lista sigue leyendo
+        marcas = U.leer_marcas_texto(r['marcas'])
+        self.assertEqual(marcas, {'coppel', 'coca cola', 'farmacias del ahorro'})
+
+    def test_marcas_como_ruta_sigue_siendo_ruta(self):
+        r = U.leer_config_rutas(escribir('marcas: mis-marcas.txt\nidx : D:\\i.xlsx\n'))
+        self.assertEqual(r['marcas'], 'mis-marcas.txt')      # una sola línea = ruta
+        self.assertNotIn('\n', r['marcas'])
+
+    def test_app_elige_inline_ruta_o_semilla(self):
+        os.environ.setdefault('CVLO_TRABAJO', tempfile.mkdtemp(prefix='cvlo_app_trabajo_'))
+        import app as appmod
+        # inline (lo que trae el CVLOCFG del proyecto)
+        self.assertEqual(appmod._marcas_cfg({'marcas': 'Coppel\ncoca cola'}),
+                         {'coppel', 'coca cola'})
+        # ruta de archivo
+        d = tempfile.mkdtemp(prefix='cvlo_mfile_')
+        p = os.path.join(d, 'marcas.txt')
+        with open(p, 'w', encoding='utf-8') as f:
+            f.write('Yoplait\nPEPSI\n')
+        self.assertEqual(appmod._marcas_cfg({'marcas': p}), {'yoplait', 'pepsi'})
+        # sin nada -> la semilla del proyecto
+        semilla = appmod._marcas_cfg({})
+        self.assertIn('didi', semilla)
+        self.assertGreater(len(semilla), 30)
+
+
 class TestApiConfig(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

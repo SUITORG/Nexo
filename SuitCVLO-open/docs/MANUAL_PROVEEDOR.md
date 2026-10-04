@@ -98,13 +98,18 @@ ni borra archivos. Te devuelve `N info.txt` y `N marcas` reescritos.
 - **`CVLOCFG.txt`** (misma carpeta del proyecto): rutas `fotos / salida / pines / kml / idx`,
   formato `clave: valor`, `#` = comentario. Está en `.gitignore` (es de cada equipo);
   plantilla en `CVLOCFG.example.txt`.
-- **Otro archivo de configuración**: en el campo **`Archivo de configuración (CVLOCFG.txt)`**
-  pegas la ruta y pulsas **`Usar esta ruta`**. Se recuerda en el navegador y la usan la corrida y
-  el botón de reescritura (vacío = el `CVLOCFG.txt` de la carpeta del proyecto).
+- **Otro archivo de configuración**: en el campo **`Ruta de entrada del CFG (CVLOCFG.txt)`**
+  escribes la ruta y pulsas **`Usar esta ruta`**. Se recuerda en el navegador y la usan la corrida
+  y el botón de reescritura (vacío = el `CVLOCFG.txt` de la carpeta del proyecto).
   - **Rellena las 5 rutas + la prioridad + el modo `Local (ruta)`** con lo que diga ese archivo,
-    **aunque el switch automático esté apagado**.
+    **aunque el checkbox esté apagado** (y entonces lo enciende).
+  - El checkbox **`Tomar rutas del CVLOCFG.txt…`** = **si lo tomamos de ahí o no**: encendido →
+    se precarga y se envía con la corrida; **apagado → no se envía** (manda el CFG por defecto).
   - Archivo inexistente o sin rutas → aviso en pantalla y **no cambia nada**.
   - Si el archivo no trae `prioridad`, el select vuelve a **`kml`** (no arrastra la anterior).
+- **Marcas conocidas en el propio CFG**: `marcas:` **sin valor** y las marcas **debajo, una por
+  línea** (la lista termina en una línea en blanco); o `marcas: <ruta>` para apuntar a un archivo.
+  Sin ninguna de las dos → `marcas-conocidas.txt` del proyecto.
 - La **env `CVLO_CFG`** cambia la ubicación de ese archivo.
 - Cambios de IA (`CVLO_VLM`, keys) → ver `MANUAL_TECNICO.md`; **no exigen reiniciar**
   (el `.env` se relee al cambiar).

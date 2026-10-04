@@ -31,13 +31,15 @@
       <label class="modo"><input type="radio" name="modo" value="zip"> Subir ZIP</label>
       <label class="modo"><input type="radio" name="modo" value="carpeta"> Subir carpeta</label>
     </div>
-    <label class="modo"><input type="checkbox" id="cfg_auto" checked> Cargar rutas de CVLOCFG.txt</label>
+    <label class="modo"><input type="checkbox" id="cfg_auto" checked> Tomar rutas del CVLOCFG.txt de la ruta de abajo</label>
     <div class="panel">
-      <label>Archivo de configuración (CVLOCFG.txt)
+      <label>Ruta de entrada del CFG (CVLOCFG.txt)
         <input type="text" id="cfg_ruta" placeholder="C:\ruta\CVLOCFG.txt  (vacío = el de esta carpeta)">
       </label>
       <button type="button" class="boton" id="btn-cfg">Usar esta ruta</button>
-      <span class="nota">Pega la ruta del archivo y pulsa el botón: rellena las rutas, la prioridad y las marcas de ese archivo.</span>
+      <span class="nota">Encendido: ese archivo se precarga al abrir y se envía con la corrida
+        (rutas + prioridad + marcas). Apagado: se ignora. El botón carga la ruta aunque esté
+        apagado y lo enciende.</span>
     </div>
 
     <div id="panel-web" class="panel">

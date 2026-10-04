@@ -80,7 +80,8 @@ async function iniciarCorrida(reproceso = false) {
   fd.append('ia_proveedor', el.iaProveedor.value || 'auto');
   fd.append('ia_modelo', el.iaModelo.value || '');
   fd.append('reproceso', reproceso ? '1' : '0');
-  fd.append('cfg_ruta', cfgRuta());
+  // solo se envía la ruta del CFG si el checkbox dice que la tomamos de ahí
+  fd.append('cfg_ruta', cfgEnUso() ? cfgRuta() : '');
   if (m === 'web') fd.append('drive_pics', $('#drive_pics').value.trim());
   if (m === 'local') fd.append('ruta_local', $('#ruta_local').value.trim());
   if (m === 'zip') {
@@ -169,7 +170,7 @@ async function reescribirInfo() {
   fd.append('pines', $('#pines').value.trim());
   fd.append('kml', $('#kml').value.trim());
   fd.append('idx', $('#idx').value.trim());
-  fd.append('cfg_ruta', cfgRuta());
+  fd.append('cfg_ruta', cfgEnUso() ? cfgRuta() : '');
   fd.append('prioridad', prioridad);
   fd.append('comentario', $('#comentario').checked ? '1' : '0');
   try {
@@ -525,6 +526,12 @@ function cfgRuta() {
   try { return localStorage.getItem(CFG_RUTA_LS) || ''; } catch (e) { return ''; }
 }
 
+// ¿Tomamos la config de la ruta del CFG? El checkbox manda (es el estado real en pantalla)
+function cfgEnUso() {
+  const sw = $('#cfg_auto');
+  return sw ? sw.checked : cfgActiva();
+}
+
 // fuerza=true: carga aunque el switch esté apagado (el usuario pidió ese archivo a mano)
 async function cargarCfg(fuerza) {
   if (!fuerza && !cfgActiva()) return;
@@ -575,8 +582,14 @@ if (cfgInput) cfgInput.value = cfgRuta();
 
 function aplicarCfgRuta() {
   try { localStorage.setItem(CFG_RUTA_LS, (cfgInput && cfgInput.value.trim()) || ''); } catch (e) {}
+  // pedido explícito = "lo tomamos de ahí": encendemos el checkbox si estaba apagado
+  const sw = $('#cfg_auto');
+  if (sw && !sw.checked) {
+    sw.checked = true;
+    try { localStorage.setItem(CFG_LS, '1'); } catch (e) {}
+  }
   ocultarAviso();
-  cargarCfg(true);   // pedido explícito: carga aunque el switch automático esté apagado
+  cargarCfg(true);
 }
 $('#btn-cfg').addEventListener('click', aplicarCfgRuta);
 if (cfgInput) cfgInput.addEventListener('keydown', (ev) => {

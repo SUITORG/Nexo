@@ -85,13 +85,21 @@ def _ruta_cfg(ruta=None):
     return (ruta or '').strip() or switch._env('CVLO_CFG') or os.path.join(BASE, 'CVLOCFG.txt')
 
 
-def _ruta_marcas(cfg):
-    """Archivo de marcas conocidas (clave `marcas` del CVLOCFG; por defecto el del proyecto).
-    Ruta relativa -> relativa a esta carpeta. Ausente -> sin validación."""
-    ruta = ((cfg or {}).get('marcas') or 'marcas-conocidas.txt').strip()
-    if not os.path.isabs(ruta):
-        ruta = os.path.join(BASE, ruta)
-    return ruta
+def _marcas_cfg(cfg):
+    """Marcas conocidas del CVLOCFG. Tres formas:
+
+    - `marcas:` **sin valor** + líneas debajo -> lista inline en el propio archivo;
+    - `marcas: <ruta>` -> archivo (relativa a esta carpeta);
+    - sin nada -> la semilla `marcas-conocidas.txt` del proyecto.
+    """
+    v = ((cfg or {}).get('marcas') or '').strip()
+    if not v:
+        v = 'marcas-conocidas.txt'
+    if '\n' in v:
+        return U.leer_marcas_texto(v)
+    if not os.path.isabs(v):
+        v = os.path.join(BASE, v)
+    return U.leer_marcas(v)
 
 
 @app.get('/api/config')
@@ -365,7 +373,7 @@ def api_crear():
         'drive_pics': drive, 'kml': kml, 'idx': idx, 'n_fotos': n_fotos,
         'radio': radio, 'cap': cap, 'pausa': pausa, 'max_descargas': max_descargas,
         'comentario': comentario, '_reproceso': (form.get('reproceso') == '1'),
-        'prioridad': prioridad, '_marcas': U.leer_marcas(_ruta_marcas(cfg)),
+        'prioridad': prioridad, '_marcas': _marcas_cfg(cfg),
         'ia_proveedor': ia_proveedor, 'ia_modelo': ia_modelo,
         'trabajo': TRABAJO,
         '_mock_gps': mock_gps,
@@ -454,7 +462,7 @@ def api_reescribir_info():
     else:
         pdatos = {}
     kdatos = motor.cargar_kml_datos((form.get('kml') or '').strip())
-    marcas = U.leer_marcas(_ruta_marcas(cfg))
+    marcas = _marcas_cfg(cfg)
     res = proceso.reescribir_todo(salida, pdatos, kdatos, os.path.join(TRABAJO, 'reads'),
                                   prioridad=prioridad, marcas=marcas, comentario=comentario,
                                   idx=(form.get('idx') or '').strip())

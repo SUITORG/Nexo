@@ -26,4 +26,10 @@ pines : C:\ruta\GooMapsPines.txt
 KML   : C:\ruta\RutaKML.kml
 idx   : C:\ruta\idxfotos.xlsx
 prioridad: kml
-# marcas: C:\ruta\marcas-conocidas.txt
+# marcas de dos formas (gana la del archivo; si no hay, marcas-conocidas.txt del proyecto):
+#   marcas: C:\ruta\marcas-conocidas.txt      <- archivo, una marca por línea
+# o lista inline: `marcas:` sin valor y las marcas debajo, una por línea (hasta una línea en blanco)
+# marcas:
+# coppel
+# coca cola
+# farmacias del ahorro

@@ -184,16 +184,33 @@ prioridad: kml
 - **`CVLOCFG.txt` está en `.gitignore`** (rutas propias de cada equipo); plantilla en
   `CVLOCFG.example.txt`.
 
-**Para usar otro archivo de configuración**: pega su ruta en el campo
-**`Archivo de configuración (CVLOCFG.txt)`** y pulsa **`Usar esta ruta`** (o Enter). Se recuerda
-en el navegador y también la usan la corrida y el botón de reescritura
-(`GET /api/config?ruta=…`, `cfg_ruta` en el formulario).
+**Para usar otro archivo de configuración**: escribe su ruta en **`Ruta de entrada del CFG
+(CVLOCFG.txt)`** y pulsa **`Usar esta ruta`** (o Enter). Se recuerda en el navegador y también la
+usan la corrida y el botón de reescritura (`GET /api/config?ruta=…`, `cfg_ruta` en el formulario).
 
+- El checkbox **`Tomar rutas del CVLOCFG.txt de la ruta de abajo`** decide si ese archivo manda:
+  **encendido** (defecto) → se precarga al abrir **y se envía con la corrida**; **apagado** →
+  `cfg_ruta` se manda vacío y el servidor usa la env `CVLO_CFG` o el `CVLOCFG.txt` de la carpeta.
 - El botón **rellena las 5 rutas + la prioridad + el modo `Local (ruta)`** con lo que diga ese
-  archivo — y **funciona aunque el switch automático esté apagado** (es una carga explícita).
+  archivo — y **funciona aunque el checkbox esté apagado** (además lo enciende: es una carga
+  explícita).
 - Archivo inexistente o sin rutas → **aviso en pantalla**, sin cambiar nada.
 - Si el archivo **no trae `prioridad`**, el select vuelve a su defecto **`kml`** (no se queda con
   el valor de otra configuración). Lo que el archivo no menciona en las rutas **se queda como está**.
+
+**Marcas conocidas dentro del propio CFG** (dos formas, gana la del archivo):
+
+```
+marcas: C:\ruta\marcas-conocidas.txt   ← ruta de un archivo (una marca por línea)
+```
+```
+marcas:                                 ← sin valor: lista INLINE en el CFG
+coppel
+coca cola
+farmacias del ahorro
+                                        ← la lista termina en una línea en blanco
+```
+Si el CFG no trae `marcas` → se usa `marcas-conocidas.txt` del proyecto.
 
 ## Favicon
 

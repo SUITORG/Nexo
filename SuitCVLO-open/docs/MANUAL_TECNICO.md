@@ -91,10 +91,13 @@ desactivado. El `.env` se **relee al cambiar su mtime** (pegar una key no exige 
 - **`CVLOCFG.txt`** (5 rutas, `clave: valor`, separa por el **primer** `:` → `C:\...` intacto);
   parser en `utilidades.leer_config_rutas()`; endpoint `GET /api/config`.
   Claves adicionales: **`prioridad: kml|pines`** (qué fuente manda en el cruce y en el `info.txt`;
-  defecto `kml`) y **`marcas: <ruta>`** (archivo de marcas conocidas; defecto
-  `marcas-conocidas.txt` en esta carpeta). Una marca por línea, `#` = comentario; comparación
-  normalizada (sin acentos ni mayúsculas). **Sin archivo → sin validación.**
-  **`marcas-conocidas.txt` no está en `.gitignore`** (es compartido); `CVLOCFG.txt` sí.
+  defecto `kml`) y **`marcas`** — de dos formas: `marcas: <ruta>` (archivo) o **`marcas:` sin
+  valor + las marcas debajo, una por línea** (lista **inline** en el propio CFG; la lista termina
+  en una línea en blanco). Sin ninguna → `marcas-conocidas.txt` de esta carpeta.
+  Una marca por línea, `#` = comentario; comparación normalizada (sin acentos ni mayúsculas).
+  **Sin marcas → sin validación.**
+  **`CVLOCFG.txt` no está en el repo** (rutas propias de cada equipo) — plantilla en
+  `CVLOCFG.example.txt`.
 - **Select `Prioridad de la fuente`** en *Opciones avanzadas*: siembra desde `CVLOCFG.txt` y
   manda por corrida (`params['prioridad']`). Validación: `utilidades.prioridad_valida()`
   (`kml`/`pines`; cualquier otra cosa → `kml`).
