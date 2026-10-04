@@ -39,7 +39,8 @@ entregable (va en `MANUAL_CLIENTE.md`) ni variables de entorno, respaldos o cade
 | **Opciones avanzadas** | radio (250 m), tope por PIN (10), pausa (1 s), **Descargas máximas (300)**, switch **COMENTARIO**, **Prioridad de la fuente** (`KML primero` / `Mapa de pines`) |
 | **`Ver info de las fuentes`** | panel de avance y aportes **sin correr nada** |
 | **`Reprocesar incompletas`** | respaldo + releer solo lo incompleto (§5) |
-| **`Reescribir info.txt`** | regenera **todos** los `info.txt` con las lecturas guardadas y la prioridad elegida, **sin IA y sin borrar nada** (§5.1) |
+| **`Reescribir info.txt y Marca`** | regenera **todos** los `info.txt` **y rellena la columna `Marca`** del índice con las lecturas guardadas y la prioridad elegida, **sin IA y sin borrar nada** (§5.1) |
+| **Archivo de configuración (CVLOCFG.txt)** | pega la ruta de otro `CVLOCFG.txt` y pulsa **`Usar esta ruta`** (o Enter): rellena las rutas, la prioridad y las marcas de ese archivo (§7) |
 | **`Iniciar corrida` / `Detener`** | arrancar / parar |
 | **Barra + 2 líneas + log** | progreso, estadísticas y detalle |
 
@@ -70,12 +71,13 @@ Botón **`Reprocesar incompletas`** (cuando cambiaste el prompt/switch, o hay `n
 **No mueve ni borra nada**, y las filas se actualizan **en sitio** → **nunca se duplican**.
 Necesita **Modo Local (ruta)**.
 
-### 5.1 Reescribir `info.txt` (sin IA)
+### 5.1 Reescribir `info.txt` y `Marca` (sin IA)
 
-Botón **`Reescribir info.txt`**: regenera el `info.txt` de **todas** las carpetas de salida con
-las lecturas que ya existen en `trabajo\reads` y con la **Prioridad de la fuente** elegida.
-Úsalo cuando cambies la prioridad (o el switch de COMENTARIO) y quieras actualizar el entregable
-**sin gastar tokens**: no lee fotos, no copia ni borra archivos.
+Botón **`Reescribir info.txt y Marca`**: regenera el `info.txt` de **todas** las carpetas de salida
+y rellena la columna **`Marca`** del `idxfotos.xlsx` con las lecturas que ya existen en
+`trabajo\reads` y con la **Prioridad de la fuente** elegida. Úsalo cuando cambies la prioridad
+(o quieras rellenar la `Marca` de las filas viejas) **sin gastar tokens**: no lee fotos, no copia
+ni borra archivos. Te devuelve `N info.txt` y `N marcas` reescritos.
 
 - **Antes** (prioridad pines): `PROVEEDOR: Little Caesars` y `LATITUD: 25.659644…` (EXIF de la foto)
 - **Después** (prioridad kml): `PROVEEDOR: Little Caesars *` y `LATITUD: 25.660370` (del KML)
@@ -96,6 +98,9 @@ las lecturas que ya existen en `trabajo\reads` y con la **Prioridad de la fuente
 - **`CVLOCFG.txt`** (misma carpeta del proyecto): rutas `fotos / salida / pines / kml / idx`,
   formato `clave: valor`, `#` = comentario. Está en `.gitignore` (es de cada equipo);
   plantilla en `CVLOCFG.example.txt`.
+- **Otro archivo de configuración**: en el campo **`Archivo de configuración (CVLOCFG.txt)`**
+  pegas la ruta y pulsas **`Usar esta ruta`**. Se recuerda en el navegador y la usan la corrida y
+  el botón de reescritura (vacío = el `CVLOCFG.txt` de la carpeta del proyecto).
 - La **env `CVLO_CFG`** cambia la ubicación de ese archivo.
 - Cambios de IA (`CVLO_VLM`, keys) → ver `MANUAL_TECNICO.md`; **no exigen reiniciar**
   (el `.env` se relee al cambiar).

@@ -374,9 +374,10 @@ def ejecutar_corrida(params, progreso, log):
 
     wb, ws = motor.idx_abrir_o_crear(params.get('idx', ''))
     col_fecha = motor.idx_col_fecha(ws)     # FechaHoraSubida (respeta una cabecera ya existente)
+    col_marca = motor.idx_col_marca(ws)     # Marca (al final): la que encontró el sistema
     pos, verif = motor.idx_filas(ws)
-    log('idxfotos: {} filas ({} verificadas) · FechaHoraSubida en columna {}'
-        .format(len(pos), len(verif), col_fecha))
+    log('idxfotos: {} filas ({} verificadas) · FechaHoraSubida en columna {} · Marca en columna {}'
+        .format(len(pos), len(verif), col_fecha, col_marca))
 
     excluidos = _excluidos(salida, verif, reads_dir,
                            reproceso=bool(params.get('_reproceso')))
@@ -556,6 +557,9 @@ def ejecutar_corrida(params, progreso, log):
                 motor.idx_upsert(ws, pos, fila)
                 # hora de subida en SU columna: nunca escribe sobre una columna ajena
                 ws.cell(pos[foto_jpg], col_fecha).value = datetime.now().strftime('%Y-%m-%d %H:%M')
+                # marca encontrada (misma regla que PROVEEDOR del info.txt, sin el ' *')
+                marca, _est = _proveedor_de(texto, d, kml_d, prioridad, marcas)
+                ws.cell(pos[foto_jpg], col_marca).value = marca
             return stem, 'listo', None, carpeta
         except Exception as e:
             return stem, 'error', str(e)[:200], None
@@ -604,12 +608,14 @@ def ejecutar_corrida(params, progreso, log):
 
 
 def reescribir_todo(salida, pines, kml_datos, reads_dir, prioridad='kml',
-                    marcas=None, comentario=True, log=None):
-    """Reescribe TODOS los info.txt de la salida con las lecturas ya guardadas.
+                    marcas=None, comentario=True, log=None, idx=''):
+    """Reescribe TODOS los info.txt de la salida con las lecturas ya guardadas
+    y rellena la columna `Marca` del idxfotos.xlsx.
 
-    No llama a la IA, no copia ni borra nada: solo regenera el texto de cada carpeta de
-    PIN (servicio del botón "Reescribir info.txt" y para aplicar un cambio de prioridad
-    al entregable existente). Devuelve {'reescritas', 'reads', 'prioridad'}.
+    No llama a la IA, no copia ni borra nada: solo regenera el texto de cada carpeta de PIN
+    y la marca de cada fila que tenga lectura (servicio del botón "Reescribir info.txt y Marca"
+    y para aplicar un cambio de prioridad al entregable existente).
+    Devuelve {'reescritas', 'reads', 'marcas', 'prioridad'}.
     """
     log = log or (lambda m: None)
     reads = _cargar_reads(reads_dir)
@@ -625,5 +631,32 @@ def reescribir_todo(salida, pines, kml_datos, reads_dir, prioridad='kml',
         _reescribir_info(pin, d, kml_datos.get(pin, {}), carpeta, reads,
                          comentario=comentario, prioridad=prioridad, marcas=marcas)
         reescritas += 1
-    log('info.txt reescritos: {} ({} lecturas guardadas)'.format(reescritas, len(reads)))
-    return {'reescritas': reescritas, 'reads': len(reads), 'prioridad': prioridad}
+
+    marcas_escritas = 0
+    if idx and reads and os.path.exists(idx):
+        try:
+            wb, ws = motor.idx_abrir_o_crear(idx)
+            col = motor.idx_col_marca(ws)
+            pos, _verif = motor.idx_filas(ws)
+            for nombre, r in pos.items():
+                rd = reads.get(os.path.splitext(str(nombre))[0].lower())
+                if not rd:
+                    continue
+                pin = str(rd.get('pin') or '')
+                d = dict(pines.get(pin) or kml_datos.get(pin) or {})
+                d['PIN'] = pin
+                marca, _est = _proveedor_de(rd.get('texto') or '', d,
+                                            kml_datos.get(pin, {}), prioridad, marcas)
+                if not marca:
+                    continue
+                ws.cell(r, col).value = marca
+                marcas_escritas += 1
+            motor.idx_guardar(wb, idx)
+            wb.close()
+        except Exception as e:
+            log('ERROR rellenando la columna Marca: {}'.format(str(e)[:150]))
+
+    log('info.txt reescritos: {} · marcas escritas: {} ({} lecturas guardadas)'
+        .format(reescritas, marcas_escritas, len(reads)))
+    return {'reescritas': reescritas, 'reads': len(reads),
+            'marcas': marcas_escritas, 'prioridad': prioridad}

@@ -80,8 +80,9 @@ def api_estado_ia():
     return jsonify({'proveedores': switch.estado()})
 
 
-def _ruta_cfg():
-    return switch._env('CVLO_CFG') or os.path.join(BASE, 'CVLOCFG.txt')
+def _ruta_cfg(ruta=None):
+    """Archivo de configuración: el elegido en la página > la env CVLO_CFG > CVLOCFG.txt."""
+    return (ruta or '').strip() or switch._env('CVLO_CFG') or os.path.join(BASE, 'CVLOCFG.txt')
 
 
 def _ruta_marcas(cfg):
@@ -95,8 +96,12 @@ def _ruta_marcas(cfg):
 
 @app.get('/api/config')
 def api_config():
-    """Rutas precargadas desde CVLOCFG.txt (opcional; la ruta se puede cambiar con la env CVLO_CFG)."""
-    ruta_cfg = _ruta_cfg()
+    """Rutas precargadas desde el CVLOCFG.txt (opcional).
+
+    `?ruta=` apunta a otro archivo (lo eliges en la página); sin parámetro usa la env
+    CVLO_CFG o el CVLOCFG.txt de esta carpeta. Archivo inexistente -> rutas vacías (sin error).
+    """
+    ruta_cfg = _ruta_cfg(request.args.get('ruta'))
     rutas = U.leer_config_rutas(ruta_cfg)
     return jsonify({'existe': bool(rutas), 'archivo': ruta_cfg, 'rutas': rutas})
 
@@ -275,7 +280,7 @@ def api_crear():
     ia_modelo = (form.get('ia_modelo') or '').strip()
     comentario = (form.get('comentario') or '1').strip().lower() not in ('0', 'false', 'no')
     # prioridad de la fuente: la página (select) manda; si no viene, la del CVLOCFG; si no, kml
-    cfg = U.leer_config_rutas(_ruta_cfg())
+    cfg = U.leer_config_rutas(_ruta_cfg(form.get('cfg_ruta')))
     prioridad = U.prioridad_valida(form.get('prioridad') or cfg.get('prioridad'))
 
     if not salida:
@@ -437,7 +442,7 @@ def api_reescribir_info():
         return jsonify({'error': 'Falta la Ruta de Salida.'}), 400
     if not os.path.isdir(salida):
         return jsonify({'error': 'La Ruta de Salida no existe: {}'.format(salida)}), 400
-    cfg = U.leer_config_rutas(_ruta_cfg())
+    cfg = U.leer_config_rutas(_ruta_cfg(form.get('cfg_ruta')))
     prioridad = U.prioridad_valida(form.get('prioridad') or cfg.get('prioridad'))
     comentario = (form.get('comentario') or '1').strip().lower() not in ('0', 'false', 'no')
     ruta_pines = (form.get('pines') or '').strip()
@@ -451,7 +456,8 @@ def api_reescribir_info():
     kdatos = motor.cargar_kml_datos((form.get('kml') or '').strip())
     marcas = U.leer_marcas(_ruta_marcas(cfg))
     res = proceso.reescribir_todo(salida, pdatos, kdatos, os.path.join(TRABAJO, 'reads'),
-                                  prioridad=prioridad, marcas=marcas, comentario=comentario)
+                                  prioridad=prioridad, marcas=marcas, comentario=comentario,
+                                  idx=(form.get('idx') or '').strip())
     return jsonify(res)
 
 

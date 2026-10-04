@@ -87,3 +87,7 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
   *Opciones avanzadas*): el KML manda en el cruce y en el `info.txt`, con ` *` para lo que no viene
   del KML + validación de `MARCA` con `marcas-conocidas.txt`; se arregla `COORDENADAS` (300 PINs
   cruzables, antes 286) y se añade **`Reescribir info.txt`** (regenera sin IA, `POST /api/reescribir-info`)
+- 2026-10-04: **columna `Marca` al final del `idxfotos.xlsx`** (misma regla que `PROVEEDOR` del
+  `info.txt`, sin el ` *`; se rellena en corrida y en masa con *Reescribir info.txt y Marca*) y
+  **selector de `CVLOCFG.txt`** en la página (`?ruta=` / `cfg_ruta`) para elegir otro archivo de
+  configuración sin tocar la env

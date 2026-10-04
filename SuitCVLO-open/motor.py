@@ -325,7 +325,7 @@ IDX_HEADERS = ['NombreFoto', 'Descripción de lo que anuncia', 'Dirección', 'Ti
 
 def idx_col_fecha(ws):
     """Columna de hora de subida: usa la que ya exista (FechaHoraSubida / FechaCarga)
-    o la primera libre a partir de la 10. Nunca pisa una cabecera ajena (p. ej. FechaHoraFoto)."""
+    o la primera libre a partir de la 10. Nunca pisa una cabecera ajena. (p. ej. FechaHoraFoto)."""
     for c in range(10, 20):
         v = str(ws.cell(1, c).value or '').strip()
         if not v:
@@ -335,6 +335,20 @@ def idx_col_fecha(ws):
             return c
     ws.cell(1, 20).value = 'FechaCarga'
     return 20
+
+
+def idx_col_marca(ws):
+    """Columna `Marca` **al final** del índice: la marca que encontró el sistema.
+
+    Reutiliza una cabecera `Marca` que ya exista; si no, agrega la siguiente columna libre
+    después de la última (nunca pisa columnas ajenas ni cambia el orden de las existentes).
+    """
+    for c in range(1, ws.max_column + 1):
+        if str(ws.cell(1, c).value or '').strip().lower().replace(' ', '') == 'marca':
+            return c
+    c = ws.max_column + 1
+    ws.cell(1, c).value = 'Marca'
+    return c
 
 
 def idx_abrir_o_crear(ruta):

@@ -219,10 +219,13 @@ class TestComentarioYFechaSubida(unittest.TestCase):
 
         wb2 = load_workbook(idx)
         ws2 = wb2[wb2.sheetnames[0]]
-        self.assertEqual(ws2.max_column, 11)                     # no inventó columnas
+        # única columna nueva = Marca (al final); la fecha de subida NO creó la suya
+        self.assertEqual(ws2.max_column, 12)
         self.assertEqual(ws2.cell(1, 10).value, 'FechaHoraFoto')
         self.assertEqual(ws2.cell(1, 11).value, 'FechaHoraSubida')
+        self.assertEqual(ws2.cell(1, 12).value, 'Marca')
         self.assertEqual(ws2.cell(2, 11).value, '2026-09-01 09:00')   # su dato, intacto
+        self.assertTrue(str(ws2.cell(2, 12).value or '') != '2026-09-01 09:00')  # no es una fecha
         nueva = ws2.max_row
         self.assertRegex(str(ws2.cell(nueva, 11).value or ''),
                          r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')          # hora de subida puesta

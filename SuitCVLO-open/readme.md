@@ -7,9 +7,11 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
 - **`info.txt`** por PIN: encabezado (`GRUPO`, `PIN`, `COORDENADAS`) + un bloque por foto
   (**`FOTO`** (nombre del archivo), **`CAMPAÑA`** = el eslogan de la campaña,
   **`COMENTARIO`** = qué promociona / el texto que se ve, `PLAZA`,
-  **`PROVEEDOR`** = el anunciante o marca (IA → columna `MARCA` del pines → reglas por PIN),
-  `RAZÓN SOCIAL, MEDIO, FORMATO, ID, UBICACIÓN, LATITUD, LONGITUD`)
-  con llenado **foto → si falta, del archivo de pines → si falta, del KML**.
+   **`PROVEEDOR`** = el anunciante o marca (**KML `MARCA` → si no, la de la IA validada en
+   `marcas-conocidas.txt` → si no, la regla por PIN**; lo que no viene del KML se marca con ` *`),
+   `RAZÓN SOCIAL, MEDIO, FORMATO, ID, UBICACIÓN, LATITUD, LONGITUD`)
+   con llenado **KML → si el PIN no está en el KML, del archivo de pines**
+   (ver *Prioridad de la fuente* más abajo).
   La IA responde **8 líneas** (`ANUNCIO, MARCA, CAMPAÑA, QUE ANUNCIA, TEXTO VISIBLE,
   REFERENCIAS UBICACION, TIPO SOPORTE, CARA`); las lecturas viejas que traían
   `MARCA CAMPAÑA` fusionado siguen sirviendo (la marca cae en `PROVEEDOR` y en `CAMPAÑA`).
@@ -25,6 +27,10 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
   **Fecha hora de subida**: si el archivo ya tiene una columna `FechaHoraSubida` (o `FechaCarga`),
   se rellena con `AAAA-MM-DD HH:MM` en cada foto nueva; si no, se crea a partir de la columna 10.
   **Nunca toca otras columnas** (p. ej. `FechaHoraFoto`) ni inventa valores en filas antiguas.
+- **Columna `Marca` (la última)**: la marca que encontró el sistema para esa foto — la misma regla
+  que `PROVEEDOR` del `info.txt` pero **sin el ` *`** (para poder filtrarla en Excel). Se agrega
+  **al final** (nunca pisa columnas existentes), se rellena en **cada corrida** y en masa con
+  **`Reescribir info.txt y Marca`**; las filas sin lectura guardada quedan vacías.
 
 ## Parámetros (en la página)
 
@@ -144,12 +150,14 @@ se toma del **mapa de pines**; si la foto y el KML difieren en metros, **gana el
   **`Prioridad de la fuente`** de *Opciones avanzadas* (manda por corrida y se siembra con la config).
 - `COORDENADAS: lat,lon` del KML (capa COMPETENCIA) ya se parsea → **300 de 300 PINs cruzan**.
 
-## Reescribir info.txt (sin IA)
+## Reescribir info.txt y Marca (sin IA)
 
-Botón **`Reescribir info.txt`**: regenera **todos** los `info.txt` de la salida con las lecturas
-ya guardadas (`trabajo\reads`) y la prioridad elegida. **No lee ninguna foto con IA, no copia
-ni borra nada** — sirve para aplicar un cambio de prioridad al entregable existente.
-`POST /api/reescribir-info` · respuesta `{"reescritas": N, "reads": N, "prioridad": "kml"}`.
+Botón **`Reescribir info.txt y Marca`**: regenera **todos** los `info.txt` de la salida y rellena
+la columna **`Marca`** del `idxfotos.xlsx` con las lecturas ya guardadas (`trabajo\reads`) y la
+prioridad elegida. **No lee ninguna foto con IA, no copia ni borra nada** — sirve para aplicar un
+cambio de prioridad (o rellenar la Marca de las filas viejas) al entregable existente.
+`POST /api/reescribir-info` (lleva `idx`) · respuesta
+`{"reescritas": N, "reads": N, "marcas": N, "prioridad": "kml"}`.
 
 ## Rutas precargadas — `CVLOCFG.txt`
 
@@ -163,16 +171,23 @@ salida: C:\Users\rojo-\Downloads\cteCVLO1
 Pines : C:\Users\rojo-\Downloads\cteCVLO1\GooMapsPines.txt
 KML   : C:\Users\rojo-\Downloads\cteCVLO1\RutaKML.kml
 idx   : C:\Users\rojo-\Downloads\cteCVLO1\idxfotos.xlsx
+prioridad: kml
+# marcas: C:\ruta\marcas-conocidas.txt
 ```
 
 - Formato `clave: valor` (mayúsculas indiferentes), `#` = comentario. Se parte **solo por el
   primer `:`** → las rutas `C:\...` quedan intactas.
-- Claves: `fotos · salida · pines · kml · idx`.
+- Claves: `fotos · salida · pines · kml · idx · prioridad · marcas`.
 - **Switch apagado** → no se lee nada (se recuerda en el navegador).
 - Sin archivo → la página funciona igual (silencioso).
 - La ruta del archivo se puede cambiar con la env `CVLO_CFG`.
 - **`CVLOCFG.txt` está en `.gitignore`** (rutas propias de cada equipo); plantilla en
   `CVLOCFG.example.txt`.
+
+**Para usar otro archivo de configuración**: pega su ruta en el campo
+**`Archivo de configuración (CVLOCFG.txt)`** y pulsa **`Usar esta ruta`** (o Enter). Se recuerda
+en el navegador y también la usan la corrida y el botón de reescritura
+(`GET /api/config?ruta=…`, `cfg_ruta` en el formulario).
 
 ## Favicon
 

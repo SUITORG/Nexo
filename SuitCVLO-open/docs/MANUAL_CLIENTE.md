@@ -97,7 +97,11 @@ LATITUD: 25.7173 · LONGITUD: -100.3461
 ## 6. Usar el índice `idxfotos.xlsx`
 
 Columnas: `NombreFoto · Descripción de lo que anuncia · Dirección · Tipo de Anuncio ·
-Latitud · Longitud · Referencias visuales o notas · Verificado · PIN · … · FechaHoraSubida`.
+Latitud · Longitud · Referencias visuales o notas · Verificado · PIN · … · FechaHoraSubida ·
+Marca`.
+
+- **`Marca`** (la última columna): la marca que encontró el sistema para esa foto — sirve para
+  filtrar sin tener que leer el texto. Un valor **vacío** = esa fila no tiene lectura guardada.
 
 - **Filtra por `PIN`** para ver todo lo de un soporte.
 - **Filtra por `Verificado` = `✓`** para el avance real.

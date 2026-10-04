@@ -80,6 +80,7 @@ async function iniciarCorrida(reproceso = false) {
   fd.append('ia_proveedor', el.iaProveedor.value || 'auto');
   fd.append('ia_modelo', el.iaModelo.value || '');
   fd.append('reproceso', reproceso ? '1' : '0');
+  fd.append('cfg_ruta', cfgRuta());
   if (m === 'web') fd.append('drive_pics', $('#drive_pics').value.trim());
   if (m === 'local') fd.append('ruta_local', $('#ruta_local').value.trim());
   if (m === 'zip') {
@@ -158,23 +159,25 @@ async function reescribirInfo() {
   const salida = $('#salida').value.trim();
   if (!salida) { aviso('Falta la Ruta de Salida.'); return; }
   const prioridad = $('#prioridad').value || 'kml';
-  const mensaje = 'Se reescribirán TODOS los info.txt de la salida con las lecturas ya\n' +
-    'guardadas (prioridad: ' + prioridad + '). No se lee ninguna foto con IA ni se\n' +
-    'borra ni se mueve ningún archivo. ¿Continuar?';
+  const mensaje = 'Se reescribirán TODOS los info.txt de la salida y la columna\n' +
+    'Marca del idxfotos.xlsx con las lecturas ya guardadas (prioridad: ' + prioridad + ').\n' +
+    'No se lee ninguna foto con IA ni se borra ni se mueve ningún archivo. ¿Continuar?';
   if (!confirm(mensaje)) return;
   ocultarAviso();
   const fd = new FormData();
   fd.append('salida', salida);
   fd.append('pines', $('#pines').value.trim());
   fd.append('kml', $('#kml').value.trim());
+  fd.append('idx', $('#idx').value.trim());
+  fd.append('cfg_ruta', cfgRuta());
   fd.append('prioridad', prioridad);
   fd.append('comentario', $('#comentario').checked ? '1' : '0');
   try {
     const r = await fetch('/api/reescribir-info', { method: 'POST', body: fd });
     const d = await r.json();
     if (!r.ok) { aviso(d.error || 'No pude reescribir los info.txt.'); return; }
-    aviso(d.reescritas + ' info.txt reescritos (prioridad ' + d.prioridad +
-          ', ' + d.reads + ' lecturas guardadas).', 'ok');
+    aviso(d.reescritas + ' info.txt y ' + (d.marcas || 0) + ' marcas reescritas (prioridad ' +
+          d.prioridad + ', ' + d.reads + ' lecturas guardadas).', 'ok');
   } catch (e) { aviso('Error de conexión: ' + e.message); }
 }
 
@@ -512,16 +515,24 @@ document.querySelectorAll('input[name=modo]').forEach((r) =>
 
 // ---------- CVLOCFG.txt (rutas precargadas, opcional) ----------
 const CFG_LS = 'cvlo-open-cfg';
+const CFG_RUTA_LS = 'cvlo-open-cfg-ruta';
 
 function cfgActiva() {
   try { return localStorage.getItem(CFG_LS) !== '0'; } catch (e) { return true; }
 }
 
+function cfgRuta() {
+  try { return localStorage.getItem(CFG_RUTA_LS) || ''; } catch (e) { return ''; }
+}
+
 async function cargarCfg() {
   if (!cfgActiva()) return;
   try {
-    const r = await fetch('/api/config');
+    const ruta = cfgRuta();
+    const r = await fetch('/api/config' + (ruta ? '?ruta=' + encodeURIComponent(ruta) : ''));
     const d = await r.json();
+    const inp = $('#cfg_ruta');
+    if (inp && !inp.value) inp.value = d.archivo || ruta;   // deja ver qué archivo se está usando
     if (!r.ok || !d.existe || !d.rutas) return;   // sin archivo: la página funciona igual
     const mapa = { fotos: '#ruta_local', salida: '#salida', pines: '#pines',
                    kml: '#kml', idx: '#idx', prioridad: '#prioridad' };
@@ -544,6 +555,20 @@ cfgSwitch.checked = cfgActiva();
 cfgSwitch.addEventListener('change', (ev) => {
   try { localStorage.setItem(CFG_LS, ev.target.checked ? '1' : '0'); } catch (e) {}
   if (ev.target.checked) cargarCfg();
+});
+
+// elegir el archivo de configuración a mano (se recuerda en el navegador)
+const cfgInput = $('#cfg_ruta');
+if (cfgInput) cfgInput.value = cfgRuta();
+
+function aplicarCfgRuta() {
+  try { localStorage.setItem(CFG_RUTA_LS, (cfgInput && cfgInput.value.trim()) || ''); } catch (e) {}
+  ocultarAviso();
+  cargarCfg();
+}
+$('#btn-cfg').addEventListener('click', aplicarCfgRuta);
+if (cfgInput) cfgInput.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter') { ev.preventDefault(); aplicarCfgRuta(); }
 });
 
 estado();

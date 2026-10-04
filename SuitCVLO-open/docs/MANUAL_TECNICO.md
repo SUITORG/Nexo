@@ -76,8 +76,9 @@ desactivado. El `.env` se **relee al cambiar su mtime** (pegar una key no exige 
 ## 4. Base de datos y esquema
 
 - **Motor:** ninguno. Archivos locales:
-  - `idxfotos.xlsx` — índice (columnas 1-9 fijas + `FechaHoraFoto`, `FechaHoraSubida`; **no se
-    crean columnas nuevas** ni se tocan las existentes).
+  - `idxfotos.xlsx` — índice (columnas 1-9 fijas + `FechaHoraFoto`, `FechaHoraSubida` y
+    **`Marca` al final**; **no se crean columnas nuevas** ni se tocan las existentes:
+    `idx_col_fecha()` y `idx_col_marca()` reutilizan la cabecera que ya exista).
   - `Salida\<AAMMPQ>\auditoria\<Grupo>\<PIN>\*.jpg` + `info.txt` — entregable.
   - `trabajo\` — cache de fotos y `reads\*.json` (lecturas por foto, formato 8 líneas).
   - `GooMapsPines.txt` / `.kml` — pines (286 cruzables de 300 placemarks del KML).
@@ -103,10 +104,12 @@ desactivado. El `.env` se **relee al cambiar su mtime** (pegar una key no exige 
   `switch.reset()` al crear una corrida.
 - **Prompt de lectura:** 8 líneas (`ANUNCIO, MARCA, CAMPAÑA, QUE ANUNCIA, TEXTO VISIBLE,
   REFERENCIAS UBICACION, TIPO SOPORTE, CARA`) + `FOTO:` de primera línea.
-- **Endpoints:** `GET /` · `GET /api/estado` · `GET /api/config` · `GET /api/ia/modelos` ·
-  `GET /api/ia/estado` · `POST /api/corridas` · `GET /api/corridas/<id>` · `POST /api/corridas/<id>/detener` ·
+- **Endpoints:** `GET /` · `GET /api/estado` · `GET /api/config` (`?ruta=` = usar otro
+  `CVLOCFG.txt`) · `GET /api/ia/modelos` · `GET /api/ia/estado` · `POST /api/corridas` ·
+  `GET /api/corridas/<id>` · `POST /api/corridas/<id>/detener` ·
   `GET /api/fuentes` · `GET /api/fuentes/gps` · `GET /api/reprocesar/preview` · `POST /api/reprocesar` ·
-  `POST /api/reescribir-info` (regenera todos los `info.txt` con las lecturas guardadas, sin IA).
+  `POST /api/reescribir-info` (regenera todos los `info.txt` **y la columna `Marca`** con las
+  lecturas guardadas, sin IA; lleva `idx`).
 - Validación de entrada: 400 `"Falta la Ruta de Salida."`, 400 `"Motor IA desconocido: <prov>"`.
 
 ## 6. Despliegue
@@ -114,7 +117,7 @@ desactivado. El `.env` se **relee al cambiar su mtime** (pegar una key no exige 
 1. No hay CI/CD ni build: corre en la máquina del operador (`iniciar.bat` o `python app.py`).
 2. **Validación previa** obligatoria tras cualquier edición:
    `python -W error::SyntaxWarning -m py_compile *.py` + `node --check static/app.js` +
-   `python -m unittest discover -s tests -t .` → debe dar **98 tests OK**.
+   `python -m unittest discover -s tests -t .` → debe dar **106 tests OK**.
 3. Commit formato SuitOS: `ciclo(<tipo>)[SuitCVLO-open]: <desc>` (fases F0-F7).
 4. **Prohibido** escribir en `\cvlo-auditor\` (fuente de solo lectura), `SuitCVLO/`,
    `SuitCVLOGCPy/` (ni leer), `server.js` raíz, `backend/`.

@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 98 tests … OK** (… + 5 de reproceso + 17 de prioridad KML) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 106 tests … OK** (… + 5 de reproceso + 17 de prioridad KML + 8 de la columna Marca) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -63,6 +63,10 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 54 | Corrida real con prioridad | job `b2348c5704fe` (3 fotos, OpenCode, 25 s): log `Prioridad de fuente: kml · PINs cruzables: 300 (KML 300)` + `Cruce: 3 candidatas con PIN del KML` · `leidas=3, copiadas=2, excedidas=1` · `info.txt` de los PINs nuevos con `PROVEEDOR: DIDI *`, `Takis *`, `Saba *` y `LAT/LON` del KML |
 | 55 | **Reescribir info.txt** (F5) | `POST /api/reescribir-info` sobre tu salida: **`{"reescritas": 57, "reads": 211, "prioridad": "kml"}`** · diff de un `info.txt` real: **135 líneas antes y después (0 perdidas)**, 62 cambiadas → `PROVEEDOR: Little Caesars` → **`Little Caesars *`** y `LATITUD 25.659644…` (EXIF) → **`25.660370` (KML)** |
 | 56 | Config + UI | `CLAVES_CONFIG` con `prioridad`/`marcas` · `GET /api/config` devuelve la config nueva · select **`Prioridad de la fuente`** en *Opciones avanzadas* sembrado desde `CVLOCFG.txt` y enviado con la corrida · `marcas-conocidas.txt` con 59 marcas reales (seed) |
+
+| 57 | Elegir el `CVLOCFG.txt` | campo **`Archivo de configuración`** + botón **`Usar esta ruta`** en la página (se recuerda en `localStorage`) → `GET /api/config?ruta=…` devuelve las rutas/prioridad/marcas de **ese** archivo · la corrida y la reescritura lo reciben como `cfg_ruta` · sin parámetro sigue usando la env `CVLO_CFG` o el `CVLOCFG.txt` del proyecto (verificado con un archivo en `%TEMP%`: devolvió `prioridad: pines` y su `marcas`) | ✅ |
+| 58 | Columna `Marca` (F1) | `motor.idx_col_marca()` la agrega **al final** reutilizando una cabecera `Marca` existente; sobre tu índice real (11 columnas) fue a la **12** y dejó `FechaHoraFoto`/`FechaHoraSubida` intactas · hoja nueva → `Marca` en la 11 (después de la fecha) · idempotente | ✅ |
+| 59 | Relleno de `Marca` | en corrida (`prioridad=kml` → `AT&T` del KML; `pines` → `DiDi` de la IA, **sin ` *`**) y en masa con `POST /api/reescribir-info` (lleva `idx`) → sobre tu índice real: **`{"marcas": 240, "reads": 221, "reescritas": 57}`** → **240 de 349 filas con Marca** (109 vacías = sin lectura), top `DIDI 129 · Yoplait 9 · DiDi 8 · Pepsi 6` · filas sin lectura no se inventan | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
