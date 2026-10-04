@@ -189,6 +189,12 @@ prioridad: kml
 en el navegador y también la usan la corrida y el botón de reescritura
 (`GET /api/config?ruta=…`, `cfg_ruta` en el formulario).
 
+- El botón **rellena las 5 rutas + la prioridad + el modo `Local (ruta)`** con lo que diga ese
+  archivo — y **funciona aunque el switch automático esté apagado** (es una carga explícita).
+- Archivo inexistente o sin rutas → **aviso en pantalla**, sin cambiar nada.
+- Si el archivo **no trae `prioridad`**, el select vuelve a su defecto **`kml`** (no se queda con
+  el valor de otra configuración). Lo que el archivo no menciona en las rutas **se queda como está**.
+
 ## Favicon
 
 `static/favicon.svg` (mupi + check verde sobre `#161616`) + `favicon-32.png` como respaldo;

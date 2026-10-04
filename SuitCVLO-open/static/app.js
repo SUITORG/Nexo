@@ -525,21 +525,33 @@ function cfgRuta() {
   try { return localStorage.getItem(CFG_RUTA_LS) || ''; } catch (e) { return ''; }
 }
 
-async function cargarCfg() {
-  if (!cfgActiva()) return;
+// fuerza=true: carga aunque el switch esté apagado (el usuario pidió ese archivo a mano)
+async function cargarCfg(fuerza) {
+  if (!fuerza && !cfgActiva()) return;
   try {
     const ruta = cfgRuta();
     const r = await fetch('/api/config' + (ruta ? '?ruta=' + encodeURIComponent(ruta) : ''));
     const d = await r.json();
+    const origen = ruta || d.archivo || 'CVLOCFG.txt';
     const inp = $('#cfg_ruta');
     if (inp && !inp.value) inp.value = d.archivo || ruta;   // deja ver qué archivo se está usando
-    if (!r.ok || !d.existe || !d.rutas) return;   // sin archivo: la página funciona igual
+    if (!r.ok || !d.existe) {
+      if (fuerza) aviso('No encontré el archivo de configuración: ' + origen);
+      return;
+    }
+    if (!d.rutas || !Object.keys(d.rutas).length) {
+      if (fuerza) aviso('El archivo no tiene rutas: ' + origen);
+      return;
+    }
     const mapa = { fotos: '#ruta_local', salida: '#salida', pines: '#pines',
                    kml: '#kml', idx: '#idx', prioridad: '#prioridad' };
     Object.keys(mapa).forEach((k) => {
       const e = $(mapa[k]);
       if (e && d.rutas[k]) e.value = d.rutas[k];
     });
+    // si el archivo no trae prioridad, el select vuelve a su defecto (KML) y no arrastra la anterior
+    const selPrioridad = $('#prioridad');
+    if (selPrioridad && !d.rutas.prioridad) selPrioridad.value = 'kml';
     if (d.rutas.fotos) {   // la config describe el flujo local
       const rLocal = document.querySelector('input[name=modo][value=local]');
       if (rLocal && !rLocal.checked) {
@@ -564,7 +576,7 @@ if (cfgInput) cfgInput.value = cfgRuta();
 function aplicarCfgRuta() {
   try { localStorage.setItem(CFG_RUTA_LS, (cfgInput && cfgInput.value.trim()) || ''); } catch (e) {}
   ocultarAviso();
-  cargarCfg();
+  cargarCfg(true);   // pedido explícito: carga aunque el switch automático esté apagado
 }
 $('#btn-cfg').addEventListener('click', aplicarCfgRuta);
 if (cfgInput) cfgInput.addEventListener('keydown', (ev) => {

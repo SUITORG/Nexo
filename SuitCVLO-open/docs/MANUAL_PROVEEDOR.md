@@ -101,6 +101,10 @@ ni borra archivos. Te devuelve `N info.txt` y `N marcas` reescritos.
 - **Otro archivo de configuración**: en el campo **`Archivo de configuración (CVLOCFG.txt)`**
   pegas la ruta y pulsas **`Usar esta ruta`**. Se recuerda en el navegador y la usan la corrida y
   el botón de reescritura (vacío = el `CVLOCFG.txt` de la carpeta del proyecto).
+  - **Rellena las 5 rutas + la prioridad + el modo `Local (ruta)`** con lo que diga ese archivo,
+    **aunque el switch automático esté apagado**.
+  - Archivo inexistente o sin rutas → aviso en pantalla y **no cambia nada**.
+  - Si el archivo no trae `prioridad`, el select vuelve a **`kml`** (no arrastra la anterior).
 - La **env `CVLO_CFG`** cambia la ubicación de ese archivo.
 - Cambios de IA (`CVLO_VLM`, keys) → ver `MANUAL_TECNICO.md`; **no exigen reiniciar**
   (el `.env` se relee al cambiar).
