@@ -186,6 +186,45 @@ def api_fuentes_gps():
     return jsonify({'con_gps': con, 'sin_gps': sin, 'fuera_radio': fuera, 'radio': radio})
 
 
+def _params_repro():
+    """query string -> params para proceso. Devuelve (params, None) o (None, (respuesta, 400))."""
+    ruta = (request.args.get('ruta') or '').strip()
+    salida = (request.args.get('salida') or '').strip()
+    if not ruta or not os.path.isdir(ruta):
+        return None, (jsonify({'error': 'La ruta de fotos no existe: {}'.format(ruta)}), 400)
+    if not salida:
+        return None, (jsonify({'error': 'Falta la Ruta de Salida.'}), 400)
+    return {'ruta_local': ruta, 'salida': salida,
+            'idx': (request.args.get('idx') or '').strip(),
+            'trabajo': TRABAJO}, None
+
+
+@app.get('/api/reprocesar/preview')
+def api_repro_preview():
+    """Conteo de fotos incompletas — sin leer EXIF, <1 s."""
+    params, err = _params_repro()
+    if err:
+        return err
+    obj, sin_origen, sin_lectura, viejo = proceso._objetivos_reproceso(params)
+    return jsonify({'objetivas': len(obj), 'sin_lectura': len(sin_lectura),
+                    'formato_viejo': len(viejo), 'sin_origen': len(sin_origen)})
+
+
+@app.post('/api/reprocesar')
+def api_repro():
+    """Respalda el idxfotos.xlsx y limpia 'Verificado' de las fotos incompletas."""
+    params, err = _params_repro()
+    if err:
+        return err
+    try:
+        res = proceso.preparar_reproceso(params, lambda m: app.logger.info('[reproceso] %s', m))
+    except Exception as e:
+        return jsonify({'error': str(e)[:300]}), 400
+    if not res['objetivas']:
+        return jsonify({'error': 'Nada que reprocesar: todo ya está al día.'}), 400
+    return jsonify(res)
+
+
 @app.errorhandler(RequestEntityTooLarge)
 def _grande(_e):
     return jsonify({'error': 'La carga excede el tamaño máximo (1 GB).'}), 413
@@ -304,7 +343,7 @@ def api_crear():
         'modo': modo, 'ruta_local': ruta_local, 'salida': salida, 'pines': pines,
         'drive_pics': drive, 'kml': kml, 'idx': idx, 'n_fotos': n_fotos,
         'radio': radio, 'cap': cap, 'pausa': pausa, 'max_descargas': max_descargas,
-        'comentario': comentario,
+        'comentario': comentario, '_reproceso': (form.get('reproceso') == '1'),
         'ia_proveedor': ia_proveedor, 'ia_modelo': ia_modelo,
         'trabajo': TRABAJO,
         '_mock_gps': mock_gps,

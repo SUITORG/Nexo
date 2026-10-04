@@ -25,6 +25,7 @@ const el = {
   iaModelo: $('#ia_modelo'),
   iaEstado: $('#ia-estado'),
   btnInfo: $('#btn-info'),
+  btnReprocesar: $('#btn-reprocesar'),
   infoFuentes: $('#info-fuentes'),
 };
 
@@ -59,7 +60,7 @@ function aviso(msg, tipo) {
 }
 function ocultarAviso() { el.aviso.className = 'aviso oculto'; el.aviso.textContent = ''; }
 
-el.btnIniciar.addEventListener('click', async () => {
+async function iniciarCorrida(reproceso = false) {
   ocultarAviso();
   const fd = new FormData();
   const m = modo();
@@ -76,6 +77,7 @@ el.btnIniciar.addEventListener('click', async () => {
   fd.append('comentario', $('#comentario').checked ? '1' : '0');
   fd.append('ia_proveedor', el.iaProveedor.value || 'auto');
   fd.append('ia_modelo', el.iaModelo.value || '');
+  fd.append('reproceso', reproceso ? '1' : '0');
   if (m === 'web') fd.append('drive_pics', $('#drive_pics').value.trim());
   if (m === 'local') fd.append('ruta_local', $('#ruta_local').value.trim());
   if (m === 'zip') {
@@ -108,7 +110,45 @@ el.btnIniciar.addEventListener('click', async () => {
     aviso('Error de conexión: ' + e.message);
     terminar();
   }
-});
+}
+
+el.btnIniciar.addEventListener('click', () => iniciarCorrida(false));
+
+// Reprocesar: prepara (respaldo + limpia Verificado de las incompletas) y arranca sola
+async function reprocesarIncompletas() {
+  if (modo() !== 'local') { aviso('El reproceso necesita Modo Local (ruta) para saber qué se puede releer.'); return; }
+  ocultarAviso();
+  const q = new URLSearchParams({
+    ruta: $('#ruta_local').value.trim(),
+    salida: $('#salida').value.trim(),
+    idx: $('#idx').value.trim()
+  });
+  let prev;
+  try {
+    const r = await fetch('/api/reprocesar/preview?' + q.toString());
+    prev = await r.json();
+    if (!r.ok) { aviso(prev.error || 'No pude analizar las fotos.'); return; }
+  } catch (e) { aviso('Error de conexión: ' + e.message); return; }
+
+  if (!prev.objetivas) { aviso('Nada que reprocesar: todo está al día.', 'ok'); return; }
+  const mensaje = 'Se releerán ' + prev.objetivas + ' fotos:\n' +
+    ' · ' + prev.sin_lectura + ' sin lectura\n' +
+    ' · ' + prev.formato_viejo + ' con formato antiguo (sin CAMPAÑA separada)\n' +
+    (prev.sin_origen ? ' · ' + prev.sin_origen + ' sin origen en la ruta → NO se tocan\n' : '') +
+    '\nSe hará respaldo de idxfotos.xlsx. ¿Continuar?';
+  if (!confirm(mensaje)) return;
+
+  try {
+    const r = await fetch('/api/reprocesar?' + q.toString(), { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) { aviso(d.error || 'No pude preparar el reproceso.'); return; }
+    aviso('Respaldo ' + (d.respaldo ? 'creado' : 'no necesario') + ' · ' + d.limpiadas +
+          ' filas marcadas para releer. Iniciando corrida…', 'ok');
+    await iniciarCorrida(true);
+  } catch (e) { aviso('Error de conexión: ' + e.message); }
+}
+
+el.btnReprocesar.addEventListener('click', reprocesarIncompletas);
 
 function sondeo() {
   if (timer) clearInterval(timer);

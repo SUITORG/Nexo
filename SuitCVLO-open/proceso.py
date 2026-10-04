@@ -33,10 +33,15 @@ def _stem(nombre):
     return os.path.splitext(os.path.basename(nombre))[0].lower()
 
 
-def _excluidos(salida, idx_verif, reads_dir):
-    """Stems ya cargados en cualquier estructura de salida + verificados en idxfotos + leídos."""
+def _excluidos(salida, idx_verif, reads_dir, reproceso=False):
+    """Stems ya cargados en la salida + verificados en idxfotos + leídos.
+
+    En `reproceso` solo excluye lo que YA está completo: los verificados que no se limpiaron
+    y las lecturas ya en el formato nuevo. Así las incompletas (sin lectura o con lectura
+    antigua) vuelven a ser candidatas **sin mover ni borrar ningún archivo**.
+    """
     excl = set()
-    if salida and os.path.isdir(salida):
+    if not reproceso and salida and os.path.isdir(salida):
         for raiz, _, archivos in os.walk(salida):
             for a in archivos:
                 if a.lower().endswith(('.jpg', '.jpeg', '.png')):
@@ -45,9 +50,95 @@ def _excluidos(salida, idx_verif, reads_dir):
         excl.add(_stem(nom))
     if os.path.isdir(reads_dir):
         for f in os.listdir(reads_dir):
-            if f.endswith('.json'):
+            if not f.endswith('.json'):
+                continue
+            if reproceso:
+                rd = U.cargar_json(os.path.join(reads_dir, f)) or {}
+                if '\nMARCA:' in (rd.get('texto') or ''):
+                    excl.add(_stem(f))          # ya en formato nuevo -> no gastar tokens
+            else:
                 excl.add(_stem(f))
     return excl
+
+
+def _objetivos_reproceso(params):
+    """(objetivos, sin_origen, sin_lectura, formato_viejo) por stem — solo lectura, sin escribir.
+
+    Objetivo = foto copiada sin lectura NUEVA o con lectura de formato antiguo (MARCA CAMPAÑA),
+    y con origen en la ruta activa (si no, no se podría releer).
+    """
+    ruta_local = params.get('ruta_local') or ''
+    salida = params.get('salida') or ''
+    reads_dir = os.path.join(params['trabajo'], 'reads')
+
+    con_origen = set()
+    if ruta_local and os.path.isdir(ruta_local):
+        con_origen = {_stem(f) for f in os.listdir(ruta_local) if U.es_imagen(f)}
+
+    viejo, nuevo = set(), set()
+    if os.path.isdir(reads_dir):
+        for f in os.listdir(reads_dir):
+            if not f.endswith('.json'):
+                continue
+            texto = (U.cargar_json(os.path.join(reads_dir, f)) or {}).get('texto') or ''
+            if '\nMARCA:' in texto:
+                nuevo.add(_stem(f))
+            elif texto.strip():
+                viejo.add(_stem(f))
+    copiadas = set()
+    if salida and os.path.isdir(salida):
+        for _raiz, _sub, archivos in os.walk(salida):
+            for a in archivos:
+                if a.lower().endswith(('.jpg', '.jpeg', '.png')):
+                    copiadas.add(_stem(a))
+
+    incompletas = (copiadas - nuevo) | viejo
+    objetivos = sorted(incompletas & con_origen)
+    sin_origen = sorted(incompletas - con_origen)
+    sin_lectura = sorted((copiadas - nuevo) - viejo)
+    return objetivos, sin_origen, sin_lectura, sorted(viejo)
+
+
+def preparar_reproceso(params, log):
+    """Respalda el idxfotos.xlsx y limpia 'Verificado' de las fotos incompletas.
+
+    No mueve ni borra ningún archivo: la copia se queda en la salida (no se sobrescribe) y el
+    reads/*.json se reemplaza solo cuando se relee la foto.
+    """
+    objetivos, sin_origen, sin_lectura, viejo = _objetivos_reproceso(params)
+    ruta_idx = params.get('idx') or ''
+
+    respaldo = ''
+    if objetivos and ruta_idx and os.path.exists(ruta_idx):
+        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        respaldo = ruta_idx[:-5] + '_backup_{}.xlsx'.format(ts) if ruta_idx.lower().endswith('.xlsx') \
+            else ruta_idx + '_backup_{}.xlsx'.format(ts)
+        shutil.copy2(ruta_idx, respaldo)
+
+    limpiadas = 0
+    if objetivos and ruta_idx and os.path.exists(ruta_idx):
+        wb, ws = motor.idx_abrir_o_crear(ruta_idx)
+        pos, _v = motor.idx_filas(ws)
+        fila_de = {_stem(n): r for n, r in pos.items()}
+        with IDX_LOCK:
+            for s in objetivos:
+                r = fila_de.get(s)
+                if not r:
+                    continue
+                celda = ws.cell(r, 8)          # columna Verificado
+                if str(celda.value or '').strip():
+                    celda.value = ''
+                    limpiadas += 1
+        if limpiadas:
+            motor.idx_guardar(wb, ruta_idx)
+
+    log('Reproceso preparado: {} objetivas ({} sin lectura · {} formato antiguo) · '
+        '{} sin origen (no se tocan) · {} marcas limpiadas{}'.format(
+            len(objetivos), len(sin_lectura), len(viejo), len(sin_origen), limpiadas,
+            ' · respaldo ' + os.path.basename(respaldo) if respaldo else ''))
+    return {'objetivas': len(objetivos), 'sin_lectura': len(sin_lectura),
+            'formato_viejo': len(viejo), 'sin_origen': len(sin_origen),
+            'limpiadas': limpiadas, 'respaldo': respaldo}
 
 
 def _elegir_pin(lat, lon, pines, radio):
@@ -188,7 +279,8 @@ def ejecutar_corrida(params, progreso, log):
     log('idxfotos: {} filas ({} verificadas) · FechaHoraSubida en columna {}'
         .format(len(pos), len(verif), col_fecha))
 
-    excluidos = _excluidos(salida, verif, reads_dir)
+    excluidos = _excluidos(salida, verif, reads_dir,
+                           reproceso=bool(params.get('_reproceso')))
     log('Excluidas (cargadas/verificadas/leídas): {}'.format(len(excluidos)))
 
     reads = {}

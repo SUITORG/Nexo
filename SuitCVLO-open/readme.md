@@ -103,6 +103,25 @@ GPS       1273 con · 0 sin · 1251 fuera de radio        ← 2º tiempo, 10-40 
   ruta/pines/KML/índice/fuente** (se oculta solo: los datos quedan obsoletos).
 - Si `GoogleMapsPines` es un `.txt`, la primera lectura descarga el KML de Google (~0,5 s).
 
+## Reprocesar fotos incompletas
+
+Botón **`Reprocesar incompletas`** (junto a *Ver info*):
+
+1. Mira cuántas fotos **no tienen lectura** o la tienen en **formato antiguo** (sin `CAMPAÑA`
+   separada) y te lo muestra antes de tocar nada.
+2. **Crea respaldo** `idxfotos_backup_<fecha>.xlsx` y limpia solo la columna `Verificado` de
+   **esas** filas.
+3. Arranca sola la corrida con `reproceso=1`: se releen con el prompt actual y el `info.txt`
+   queda completo (`FOTO`, `CAMPAÑA`, `COMENTARIO`, `PROVEEDOR`).
+
+**No mueve ni borra ningún archivo**: la copia se queda en la salida (no se sobrescribe) y el
+`trabajo\reads\*.json` se reemplaza solo al releer. Las filas **se actualizan en sitio**
+(`idx_upsert` por nombre) → **nunca se duplican**.
+
+> Solo se reprocesan las fotos que **tienen origen en la ruta activa**; las que no (p. ej. copias
+> de otra carpeta) se reportan como *sin origen* y **no se tocan**.
+> Necesita **Modo Local (ruta)**: así sabe qué se puede releer.
+
 ## Rutas precargadas — `CVLOCFG.txt`
 
 Al abrir la página, si el switch **`☐ Cargar rutas de CVLOCFG.txt`** está activado (por defecto),

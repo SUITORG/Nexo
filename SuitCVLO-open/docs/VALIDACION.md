@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 76 tests … OK** (… + 5 de CVLOCFG) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 81 tests … OK** (… + 5 de reproceso) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -52,6 +52,9 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 44 | Parser de `CVLOCFG.txt` | `utilidades.leer_config_rutas()` → 5 claves con `C:\` intacto (parte solo por el 1er `:`), mayúsculas indiferentes, `#`/vacíos ignorados, desconocidas fuera, archivo ausente → `{}` → 3 tests | ✅ |
 | 45 | `GET /api/config` | devuelve `existe/archivo/rutas` con tu archivo real; la env `CVLO_CFG` redirige la lectura → 2 tests | ✅ |
 | 46 | Switch en la UI | **verificado en navegador**: ON → las 5 rutas precargadas + modo `Local (ruta)` + panel local visible · OFF (persistido en `localStorage`) → **0 llamadas a `/api/config`**, campos del formulario y modo `Web` · **0 errores de consola** | ✅ |
+| 47 | Reproceso — preview | `GET /api/reprocesar/preview` sobre tus datos reales: **377 objetivas** (271 sin lectura · 116 formato antiguo) · **10 sin origen** (no se tocan) | ✅ |
+| 48 | Reproceso — respaldo + limpieza | `POST /api/reprocesar` → `idxfotos_backup_20261003_174938.xlsx` creado · **183 marcas limpiadas** · **294 filas intactas**, verificadas 210→27 → 5 tests (conteo, respaldo, solo las objetivas, sin origen, regresión) | ✅ |
+| 49 | Reproceso — corrida real | job `b6aed9d44496`: **2 fotos releídas en 4 s** (OpenCode) · xlsx 294→**296 filas sin duplicados** · `Verificado` rehecho ✓ · `subida=2026-10-03 17:50` · `info.txt` con `FOTO` + `CAMPAÑA: Aquí sí encuentras todo…` + `COMENTARIO` + `PROVEEDOR: Del Sol` | ✅ |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 
@@ -119,6 +122,6 @@ Corren **sin red**: `gdown` y `time.sleep` están parchados.
 
 ```bash
 cd SuitCVLO-open
-python -m unittest discover -s tests -t . -v      # 76 tests
+python -m unittest discover -s tests -t . -v      # 81 tests
 python app.py                                     # abre http://127.0.0.1:3015
 ```
