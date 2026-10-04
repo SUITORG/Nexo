@@ -112,7 +112,8 @@ desactivado. El `.env` se **relee al cambiar su mtime** (pegar una key no exige 
   `GET /api/corridas/<id>` · `POST /api/corridas/<id>/detener` ·
   `GET /api/fuentes` · `GET /api/fuentes/gps` · `GET /api/reprocesar/preview` · `POST /api/reprocesar` ·
   `POST /api/reescribir-info` (regenera todos los `info.txt` **y la columna `Marca`** con las
-  lecturas guardadas, sin IA; lleva `idx`).
+  lecturas guardadas, sin IA; lleva `idx`) · `POST /api/marcas/actualizar` (alimenta la lista de
+  marcas con las vistas en `trabajo\reads`; respuesta `{agregadas, total, vistas, archivo, tipo}`).
 - Validación de entrada: 400 `"Falta la Ruta de Salida."`, 400 `"Motor IA desconocido: <prov>"`.
 
 ## 6. Despliegue

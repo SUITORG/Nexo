@@ -596,6 +596,27 @@ if (cfgInput) cfgInput.addEventListener('keydown', (ev) => {
   if (ev.key === 'Enter') { ev.preventDefault(); aplicarCfgRuta(); }
 });
 
+// Alimenta la lista de marcas con lo que la IA ya vio en las lecturas guardadas (sin IA nueva)
+$('#btn-marcas').addEventListener('click', async () => {
+  ocultarAviso();
+  const fd = new FormData();
+  fd.append('cfg_ruta', cfgEnUso() ? cfgRuta() : '');
+  try {
+    const r = await fetch('/api/marcas/actualizar', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok) { aviso((d && d.error) || 'No pude actualizar las marcas.'); return; }
+    const archivo = String(d.archivo || '').split(/[\\/]/).pop();
+    if (!d.agregadas || !d.agregadas.length) {
+      aviso('Nada nuevo: la lista de ' + archivo + ' ya tiene las ' + d.total +
+            ' marcas vistas.', 'ok');
+      return;
+    }
+    aviso('+' + d.agregadas.length + ' marcas en ' + archivo + ' (total ' + d.total + '): ' +
+          d.agregadas.slice(0, 6).join(', ') + (d.agregadas.length > 6 ? '…' : '') +
+          '. Se aplica en la próxima corrida o con "Reescribir info.txt y Marca".', 'ok');
+  } catch (e) { aviso('Error de conexión: ' + e.message); }
+});
+
 estado();
 cargarModelosIa();
 cargarHistorial();

@@ -6,6 +6,7 @@ import re
 import zipfile
 
 EXTENSIONES_IMAGEN = {'.jpg', '.jpeg', '.png', '.webp', '.heic'}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))   # carpeta del proyecto
 
 
 def es_imagen(nombre):
@@ -140,6 +141,68 @@ def leer_marcas_texto(texto):
     return _marcas_de_texto(texto)
 
 
+def marcas_destino(ruta_cfg, cfg):
+    """(tipo, ruta) de la lista que hay que alimentar: ('inline', cfg) | ('archivo', ruta).
+
+    Ojo: una lista inline de UNA sola marca no se distingue de una ruta por el contenido,
+    por eso `leer_config_rutas` marca el caso con `_marcas_inline`.
+    """
+    cfg = cfg or {}
+    valor = (cfg.get('marcas') or '').strip()
+    if valor and (cfg.get('_marcas_inline') or '\n' in valor):
+        return ('inline', ruta_cfg)
+    if valor:
+        return ('archivo', valor if os.path.isabs(valor) else os.path.join(BASE_DIR, valor))
+    return ('archivo', os.path.join(BASE_DIR, 'marcas-conocidas.txt'))
+
+
+def marcas_agregar(tipo, ruta, nuevas):
+    """Agrega marcas nuevas a la lista en uso. No duplica (compara normalizado).
+
+    tipo='archivo' -> se apendan (se crea si no existe); tipo='inline' -> se insertan dentro
+    del bloque `marcas:` del CFG, respetando el resto del archivo y el fin de línea original.
+    Devuelve {'agregadas': [...], 'total': n, 'archivo': ruta}.
+    """
+    faltantes = [str(m).strip() for m in (nuevas or []) if str(m or '').strip()]
+    if tipo == 'inline':
+        texto = leer_texto_auto(ruta) if os.path.exists(ruta) else ''
+        existentes = _marcas_de_texto(texto)
+        faltantes = [m for m in faltantes if normaliza_marca(m) not in existentes]
+        if not faltantes:
+            return {'agregadas': [], 'total': len(existentes), 'archivo': ruta}
+        salto = '\r\n' if '\r\n' in texto else '\n'
+        lineas = texto.splitlines()
+        ini = fin = None
+        for i, l in enumerate(lineas):
+            s = l.strip()
+            if s.partition(':')[0].strip().lower() == 'marcas':
+                ini = i
+                fin = i + 1
+                break
+        if ini is None:
+            return {'agregadas': [], 'total': len(existentes), 'archivo': ruta}
+        while fin < len(lineas):
+            s = lineas[fin].strip()
+            if not s:
+                break                           # la lista termina en línea en blanco
+            if s.partition(':')[0].strip().lower() in CLAVES_CONFIG:
+                break                           # llegó otra clave
+            fin += 1
+        lineas[fin:fin] = faltantes
+        with open(ruta, 'w', encoding='utf-8', newline='') as f:
+            f.write(salto.join(lineas) + salto)
+        return {'agregadas': faltantes, 'total': len(existentes) + len(faltantes), 'archivo': ruta}
+
+    existentes = leer_marcas(ruta)
+    faltantes = [m for m in faltantes if normaliza_marca(m) not in existentes]
+    if faltantes:
+        os.makedirs(os.path.dirname(ruta) or '.', exist_ok=True)
+        with open(ruta, 'a', encoding='utf-8', newline='') as f:
+            for m in faltantes:
+                f.write(m + '\n')
+    return {'agregadas': faltantes, 'total': len(existentes) + len(faltantes), 'archivo': ruta}
+
+
 def leer_config_rutas(ruta):
     """CVLOCFG.txt -> {'fotos': ..., 'salida': ..., 'pines': ..., 'kml': ..., 'idx': ...,
     'prioridad': ..., 'marcas': ...}
@@ -170,6 +233,8 @@ def leer_config_rutas(ruta):
             clave = clave.strip().lower()
             valor = valor.strip().strip('"').strip("'")
             en_marcas = (clave == 'marcas' and not valor)   # 'marcas:' -> lista inline
+            if en_marcas:
+                rutas['_marcas_inline'] = '1'   # marca que la lista está en este archivo
             if valor:
                 rutas[clave] = valor
             continue

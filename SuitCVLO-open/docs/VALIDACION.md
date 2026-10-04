@@ -70,6 +70,8 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 
 | 60 | **Marca = lo que se ve** (fix) | el usuario detectó que `img_0139.jpg` (descripcion "Bonafont") tenía `Marca = DIDI`: la columna usaba la cadena de `PROVEEDOR` y "Bonafont" no estaba en la lista inline → regla `DF_` → DIDI. Ahora `_marca_vista()` = **IA → KML → vacía** (sin regla, sin lista). Reaplicado a tus 2 índices: **`img_0139 → Bonafont`**, **0 filas con DIDI** · 2609coppel 18/20 con marca · cteCVLO1 215/349 (31 vacías = foto sin marca visible) · +4 tests (113 OK) | ✅ |
 
+| 61 | Alimentado automático de marcas | botón **`Agregar marcas vistas`** + `POST /api/marcas/actualizar`: `marcas_vistas()` lee `trabajo\reads` (231 lecturas → 133 marcas tras el filtro: sin `no visible`, sin `marca no legible`, **sin comillas** — la IA mete eslóganes en MARCA — y ≤45 caracteres) · `marcas_destino()` elige **inline > `marcas:` ruta > semilla** · `marcas_agregar()` no duplica, crea el archivo y en inline respeta el resto del CFG y el fin de línea · real: **86 → 156 → podadas 7 → 149**; 2.ª corrida del botón → `agregadas: []` (idempotente) · aviso en navegador `Nada nuevo: … 149 marcas vistas` · +5 tests (118 OK) | ✅ |
+
 ## Pruebas nuevas (`tests/test_switch.py`)
 
 | Test | Qué cubre |

@@ -40,7 +40,8 @@ entregable (va en `MANUAL_CLIENTE.md`) ni variables de entorno, respaldos o cade
 | **`Ver info de las fuentes`** | panel de avance y aportes **sin correr nada** |
 | **`Reprocesar incompletas`** | respaldo + releer solo lo incompleto (§5) |
 | **`Reescribir info.txt y Marca`** | regenera **todos** los `info.txt` **y rellena la columna `Marca`** del índice con las lecturas guardadas y la prioridad elegida, **sin IA y sin borrar nada** (§5.1) |
-| **Archivo de configuración (CVLOCFG.txt)** | pega la ruta de otro `CVLOCFG.txt` y pulsa **`Usar esta ruta`** (o Enter): rellena las rutas, la prioridad y las marcas de ese archivo (§7) |
+| **Ruta de entrada del CFG (CVLOCFG.txt)** | escribes la ruta de otro `CVLOCFG.txt` y pulsas **`Usar esta ruta`** (o Enter): rellena las 5 rutas + la prioridad + el modo Local (§7) |
+| **`Agregar marcas vistas`** | alimenta la lista en uso con las marcas que la IA ya vio en las lecturas (`trabajo\reads`) y falten: **0 IA**, 0 duplicados, descarta esloganes y frases (§7) |
 | **`Iniciar corrida` / `Detener`** | arrancar / parar |
 | **Barra + 2 líneas + log** | progreso, estadísticas y detalle |
 
@@ -110,6 +111,10 @@ ni borra archivos. Te devuelve `N info.txt` y `N marcas` reescritos.
 - **Marcas conocidas en el propio CFG**: `marcas:` **sin valor** y las marcas **debajo, una por
   línea** (la lista termina en una línea en blanco); o `marcas: <ruta>` para apuntar a un archivo.
   Sin ninguna de las dos → `marcas-conocidas.txt` del proyecto.
+- **Alimentar la lista**: botón **`Agregar marcas vistas`** → escanea las lecturas guardadas y
+  añade solo las marcas nuevas a **la lista que esté en uso** (inline, la ruta del CFG o la del
+  proyecto). No llama a la IA y no duplica. El aviso te dice cuántas entraron; se aplica en la
+  próxima corrida o con **`Reescribir info.txt y Marca`**.
 - La **env `CVLO_CFG`** cambia la ubicación de ese archivo.
 - Cambios de IA (`CVLO_VLM`, keys) → ver `MANUAL_TECNICO.md`; **no exigen reiniciar**
   (el `.env` se relee al cambiar).

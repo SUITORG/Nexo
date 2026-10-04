@@ -621,6 +621,28 @@ def ejecutar_corrida(params, progreso, log):
     return resumen
 
 
+def marcas_vistas(reads_dir):
+    """Marcas detectadas en las lecturas guardadas -> lista (sin duplicados ni basura).
+
+    Es lo que alimenta `marcas-conocidas.txt`: lo que la IA ya vio en tus fotos.
+    Descarta lo que no es una marca: 'no visible', 'marca no legible', comillas
+    (la IA mete eslóganes en MARCA) y cadenas largas (frases, no marcas).
+    """
+    vistas, vistas_set = [], set()
+    for rd in _cargar_reads(reads_dir).values():
+        m = motor.campo(rd.get('texto') or '', 'MARCA').strip().strip('.').strip()
+        if not m or len(m) > 45 or _es_sin_marca(m):
+            continue
+        if '"' in m or any(b in m.lower()
+                           for b in ('no legible', 'no se distingue', 'sin marca')):
+            continue
+        k = U.normaliza_marca(m)
+        if k and k not in vistas_set:
+            vistas_set.add(k)
+            vistas.append(m)
+    return vistas
+
+
 def reescribir_todo(salida, pines, kml_datos, reads_dir, prioridad='kml',
                     marcas=None, comentario=True, log=None, idx=''):
     """Reescribe TODOS los info.txt de la salida con las lecturas ya guardadas

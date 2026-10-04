@@ -95,6 +95,92 @@ class TestMarcasEnElCfg(unittest.TestCase):
         self.assertGreater(len(semilla), 30)
 
 
+class TestAlimentarMarcas(unittest.TestCase):
+    """Botón "Agregar marcas vistas": alimenta la lista en uso desde las lecturas guardadas."""
+
+    def _reads(self):
+        d = tempfile.mkdtemp(prefix='cvlo_reads_m_')
+        datos = {
+            'a': 'ANUNCIO: SI\nMARCA: Bonafont\nQUE ANUNCIA: agua\n',
+            'b': 'ANUNCIO: SI\nMARCA: pepsi\nQUE ANUNCIA: refresco\n',       # igual que Pepsi
+            'c': 'ANUNCIO: SI\nMARCA: Bebida (marca no legible)\n',           # basura
+            'd': 'ANUNCIO: SI\nMARCA: no visible\n',                          # basura
+            'e': 'ANUNCIO: SI\nMARCA: Bonafont\n',                            # duplicada
+            'f': 'ANUNCIO: SI\nQUE ANUNCIA: sin campo marca\n',               # sin marca
+            'g': 'MARCA: Yoplait - "Esto es Vida"\n',                         # eslogan (comillas)
+            'h': 'MARCA: Nueva Carretera La Gloria-Colombia / Nuevo León / más\n',  # frase larga
+        }
+        import json
+        for k, t in datos.items():
+            with open(os.path.join(d, k + '.json'), 'w', encoding='utf-8') as f:
+                json.dump({'texto': t, 'pin': 'DF_09_TEST_1'}, f)
+        return d
+
+    def test_marcas_vistas_lee_reads_y_descarta_basura(self):
+        import proceso
+        vistas = proceso.marcas_vistas(self._reads())
+        self.assertEqual(sorted(vistas, key=str.lower), ['Bonafont', 'pepsi'])
+
+    def test_destino_inline_archivo_o_semilla(self):
+        cfg_path = os.path.join(tempfile.mkdtemp(prefix='cvlo_dst_'), 'CVLOCFG.txt')
+        self.assertEqual(U.marcas_destino(cfg_path, {}),
+                         ('archivo', os.path.join(U.BASE_DIR, 'marcas-conocidas.txt')))
+        self.assertEqual(U.marcas_destino(cfg_path, {'marcas': r'D:\m.txt'}),
+                         ('archivo', r'D:\m.txt'))
+        self.assertEqual(U.marcas_destino(cfg_path, {'marcas': 'coppel\ncoca cola'}),
+                         ('inline', cfg_path))
+
+    def test_agregar_a_archivo_no_duplica_y_crea_el_archivo(self):
+        ruta = os.path.join(tempfile.mkdtemp(prefix='cvlo_agr_'), 'marcas.txt')
+        r1 = U.marcas_agregar('archivo', ruta, ['Pepsi', 'Bonafont'])
+        self.assertEqual(r1['agregadas'], ['Pepsi', 'Bonafont'])
+        r2 = U.marcas_agregar('archivo', ruta, ['pepsi', 'Nu'])   # pepsi ya está
+        self.assertEqual(r2['agregadas'], ['Nu'])
+        self.assertEqual(U.leer_marcas(ruta), {'pepsi', 'bonafont', 'nu'})
+        self.assertEqual(r2['total'], 3)
+
+    def test_agregar_al_inline_respeta_el_resto_del_cfg(self):
+        texto = ('fotos : D:\\fotos\n'
+                 'prioridad: kml\n'
+                 'marcas: \n'
+                 'coppel\n'
+                 '\n'
+                 'idx   : D:\\i.xlsx\n')
+        p = os.path.join(tempfile.mkdtemp(prefix='cvlo_inl_'), 'CVLOCFG.txt')
+        with open(p, 'w', encoding='utf-8', newline='') as f:
+            f.write(texto)
+        r = U.marcas_agregar('inline', p, ['COPPEL', 'Bonafont', 'Nu'])
+        self.assertEqual(r['agregadas'], ['Bonafont', 'Nu'])       # COPPEL ya estaba
+        despues = open(p, encoding='utf-8').read()
+        self.assertIn('coppel\nBonafont\nNu\n', despues)           # dentro del bloque
+        self.assertIn('fotos : D:\\fotos', despues)                # el resto intacto
+        self.assertIn('prioridad: kml', despues)
+        self.assertIn('idx   : D:\\i.xlsx', despues)               # después del bloque
+        self.assertEqual(U.leer_config_rutas(p)['idx'], r'D:\i.xlsx')
+
+    def test_api_marcas_actualizar(self):
+        os.environ.setdefault('CVLO_TRABAJO', tempfile.mkdtemp(prefix='cvlo_app_trabajo_'))
+        import json
+        import app as appmod
+        appmod.app.config['TESTING'] = True
+        cliente = appmod.app.test_client()
+        base = tempfile.mkdtemp(prefix='cvlo_api_m_')
+        reads = os.path.join(base, 'reads')
+        os.makedirs(reads)
+        with open(os.path.join(reads, 'x.json'), 'w', encoding='utf-8') as f:
+            json.dump({'texto': 'MARCA: Bonafont', 'pin': 'DF_1'}, f)
+        cfg = os.path.join(base, 'CVLOCFG.txt')
+        with open(cfg, 'w', encoding='utf-8') as f:
+            f.write('salida: D:\\s\nmarcas: \nBonafont\n\nidx: D:\\i.xlsx\n')
+        with mock.patch.object(appmod, 'TRABAJO', base):
+            r = cliente.post('/api/marcas/actualizar', data={'cfg_ruta': cfg})
+        self.assertEqual(r.status_code, 200, r.get_data(as_text=True))
+        d = r.get_json()
+        self.assertEqual(d['vistas'], 1)
+        self.assertEqual(d['agregadas'], [])          # Bonafont ya estaba en el CFG
+        self.assertEqual(d['tipo'], 'inline')
+
+
 class TestApiConfig(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

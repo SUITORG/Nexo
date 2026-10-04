@@ -94,8 +94,8 @@ def _marcas_cfg(cfg):
     """
     v = ((cfg or {}).get('marcas') or '').strip()
     if not v:
-        v = 'marcas-conocidas.txt'
-    if '\n' in v:
+        v = 'marcas-conocidas.txt'              # semilla (o lista inline vacía: mismas sin marcas)
+    if cfg.get('_marcas_inline') or '\n' in v:
         return U.leer_marcas_texto(v)
     if not os.path.isabs(v):
         v = os.path.join(BASE, v)
@@ -435,6 +435,24 @@ def api_lista():
                   'completadas': j['completadas'], 'total': j['total']} for j in JOBS.values()]
     items.sort(key=lambda x: x['inicio'], reverse=True)
     return jsonify({'corridas': items[:20]})
+
+
+@app.post('/api/marcas/actualizar')
+def api_marcas_actualizar():
+    """Alimenta la lista de marcas: agrega a la fuente en uso las vistas en las lecturas.
+
+    Fuente en uso = lista inline del CFG > `marcas: <ruta>` > `marcas-conocidas.txt`.
+    No llama a la IA: lee `trabajo/reads/*.json` (mismo criterio que la columna `Marca`).
+    """
+    form = request.form
+    ruta_cfg = _ruta_cfg(form.get('cfg_ruta'))
+    cfg = U.leer_config_rutas(ruta_cfg)
+    vistas = proceso.marcas_vistas(os.path.join(TRABAJO, 'reads'))
+    tipo, ruta = U.marcas_destino(ruta_cfg, cfg)
+    res = U.marcas_agregar(tipo, ruta, vistas)
+    res['vistas'] = len(vistas)
+    res['tipo'] = tipo
+    return jsonify(res)
 
 
 @app.post('/api/reescribir-info')

@@ -149,10 +149,14 @@ se toma del **mapa de pines**; si la foto y el KML difieren en metros, **gana el
 - **`marcas-conocidas.txt`** (una marca por línea, `#` = comentario): valida la marca que detecta
   la IA cuando el KML no la trae; la que no está en la lista se descarta y manda la regla.
   Sin archivo → sin validación.
-- **Cómo se alimenta**: a mano (una marca por línea) y **se relee en cada corrida y en cada
-  *Reescribir info.txt y Marca*** — guardar el file basta, no hay que reiniciar.
-  Hoy trae **86**: las 59 originales + las vistas en tus 231 lecturas + las 19 que estaban en el
-  CFG de `2609coppel` (cuando la lista vive en el CFG, **esa manda** y esta queda fuera).
+- **Cómo se alimenta**: a mano (una marca por línea) o con el botón **`Agregar marcas vistas`**
+  (junto a *Usar esta ruta*): escanea `trabajo\reads\*.json` y añade a **la lista en uso** las
+  marcas que la IA ya vio y falten — **sin llamar a la IA**, sin duplicar (compara normalizado) y
+  descartando lo que no es marca (`no visible`, `marca no legible`, eslogan entre comillas y
+  frases de más de 45 caracteres). `POST /api/marcas/actualizar`.
+  **Se relee en cada corrida y en cada *Reescribir info.txt y Marca*** — guardar basta, sin
+  reiniciar. Hoy trae **149** (semilla + tus lecturas + las del CFG de `2609coppel`).
+  *Si la lista vive en el CFG (inline o como ruta), **esa manda** y la del proyecto queda fuera.*
 - **Config**: `prioridad: kml|pines` y `marcas: <ruta|lista>` en `CVLOCFG.txt`; en la página, el
   select **`Prioridad de la fuente`** de *Opciones avanzadas* (manda por corrida y se siembra con
   la config).
