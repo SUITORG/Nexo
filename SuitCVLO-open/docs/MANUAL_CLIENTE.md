@@ -100,8 +100,10 @@ Columnas: `NombreFoto · Descripción de lo que anuncia · Dirección · Tipo de
 Latitud · Longitud · Referencias visuales o notas · Verificado · PIN · … · FechaHoraSubida ·
 Marca`.
 
-- **`Marca`** (la última columna): la marca que encontró el sistema para esa foto — sirve para
-  filtrar sin tener que leer el texto. Un valor **vacío** = esa fila no tiene lectura guardada.
+- **`Marca`** (la última columna): **la marca que se ve en la foto** (o la del KML si la foto no la
+  trae). Sirve para filtrar sin tener que leer el texto. **Vacío** = la foto no muestra marca
+  visible **o** la fila no tiene lectura guardada. (No es lo mismo que `PROVEEDOR`: ese sí puede
+  ser la regla del PIN, porque nombra al dueño del soporte.)
 
 - **Filtra por `PIN`** para ver todo lo de un soporte.
 - **Filtra por `Verificado` = `✓`** para el avance real.

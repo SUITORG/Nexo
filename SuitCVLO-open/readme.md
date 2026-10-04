@@ -27,10 +27,13 @@ Aplicación web **local** (puerto **3015**) que procesa lotes de fotos de public
   **Fecha hora de subida**: si el archivo ya tiene una columna `FechaHoraSubida` (o `FechaCarga`),
   se rellena con `AAAA-MM-DD HH:MM` en cada foto nueva; si no, se crea a partir de la columna 10.
   **Nunca toca otras columnas** (p. ej. `FechaHoraFoto`) ni inventa valores en filas antiguas.
-- **Columna `Marca` (la última)**: la marca que encontró el sistema para esa foto — la misma regla
-  que `PROVEEDOR` del `info.txt` pero **sin el ` *`** (para poder filtrarla en Excel). Se agrega
-  **al final** (nunca pisa columnas existentes), se rellena en **cada corrida** y en masa con
-  **`Reescribir info.txt y Marca`**; las filas sin lectura guardada quedan vacías.
+- **Columna `Marca` (la última)**: **la marca que se ve en la foto** (la que detectó la IA) → si la
+  foto no la trae, la del **KML** del PIN → si ninguna, **vacía**. Aquí **no** se aplica la regla
+  por prefijo (`DF_`→DIDI): eso es el dueño del soporte y va en `PROVEEDOR` del `info.txt`, no es
+  una marca vista. La lista `marcas-conocidas.txt` **tampoco valida** esta columna: si la foto
+  dice "Bonafont", pone **Bonafont** aunque no esté en la lista. Se agrega **al final** (nunca pisa
+  columnas existentes), se rellena en **cada corrida** y en masa con **`Reescribir info.txt y
+  Marca`**; las filas sin lectura guardada quedan vacías.
 
 ## Parámetros (en la página)
 

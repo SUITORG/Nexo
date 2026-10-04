@@ -215,6 +215,21 @@ def _pri(*vals):
     return ''
 
 
+def _marca_vista(texto, kml_d):
+    """Marca para la columna `Marca` del índice = **lo que se ve en la foto**.
+
+    1) la marca que detectó la IA en la foto (sin validar contra la lista: es lo que se ve);
+    2) si la foto no la trae, la del KML del PIN;
+    3) si ninguna -> vacío. **No** se pone la regla por prefijo de PIN (DIDI/COPPEL no es una
+       marca vista, es el dueño del soporte — para eso está `PROVEEDOR` en el info.txt).
+    """
+    m = motor.campo(texto, 'MARCA').strip()
+    if not _es_sin_marca(m):
+        return m
+    m = str((kml_d or {}).get('MARCA') or '').strip()
+    return '' if _es_sin_marca(m) else m
+
+
 def _proveedor_de(texto, d, kml_d, prioridad, marcas):
     """PROVEEDOR del bloque. Devuelve (valor, estrella).
 
@@ -557,9 +572,8 @@ def ejecutar_corrida(params, progreso, log):
                 motor.idx_upsert(ws, pos, fila)
                 # hora de subida en SU columna: nunca escribe sobre una columna ajena
                 ws.cell(pos[foto_jpg], col_fecha).value = datetime.now().strftime('%Y-%m-%d %H:%M')
-                # marca encontrada (misma regla que PROVEEDOR del info.txt, sin el ' *')
-                marca, _est = _proveedor_de(texto, d, kml_d, prioridad, marcas)
-                ws.cell(pos[foto_jpg], col_marca).value = marca
+                # marca VISTA en la foto (si no, la del KML; si ninguna, vacía)
+                ws.cell(pos[foto_jpg], col_marca).value = _marca_vista(texto, kml_d)
             return stem, 'listo', None, carpeta
         except Exception as e:
             return stem, 'error', str(e)[:200], None
@@ -641,15 +655,10 @@ def reescribir_todo(salida, pines, kml_datos, reads_dir, prioridad='kml',
             for nombre, r in pos.items():
                 rd = reads.get(os.path.splitext(str(nombre))[0].lower())
                 if not rd:
-                    continue
+                    continue                       # sin lectura: no se inventa marca
                 pin = str(rd.get('pin') or '')
-                d = dict(pines.get(pin) or kml_datos.get(pin) or {})
-                d['PIN'] = pin
-                marca, _est = _proveedor_de(rd.get('texto') or '', d,
-                                            kml_datos.get(pin, {}), prioridad, marcas)
-                if not marca:
-                    continue
-                ws.cell(r, col).value = marca
+                marca = _marca_vista(rd.get('texto') or '', kml_datos.get(pin, {}))
+                ws.cell(r, col).value = marca      # '' limpia una marca vieja (p. ej. DIDI)
                 marcas_escritas += 1
             motor.idx_guardar(wb, idx)
             wb.close()

@@ -66,7 +66,9 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 
 | 57 | Elegir el `CVLOCFG.txt` | campo **`Archivo de configuración`** + botón **`Usar esta ruta`** en la página (se recuerda en `localStorage`) → `GET /api/config?ruta=…` devuelve las rutas/prioridad/marcas de **ese** archivo · la corrida y la reescritura lo reciben como `cfg_ruta` · sin parámetro sigue usando la env `CVLO_CFG` o el `CVLOCFG.txt` del proyecto (verificado con un archivo en `%TEMP%`: devolvió `prioridad: pines` y su `marcas`) | ✅ |
 | 58 | Columna `Marca` (F1) | `motor.idx_col_marca()` la agrega **al final** reutilizando una cabecera `Marca` existente; sobre tu índice real (11 columnas) fue a la **12** y dejó `FechaHoraFoto`/`FechaHoraSubida` intactas · hoja nueva → `Marca` en la 11 (después de la fecha) · idempotente | ✅ |
-| 59 | Relleno de `Marca` | en corrida (`prioridad=kml` → `AT&T` del KML; `pines` → `DiDi` de la IA, **sin ` *`**) y en masa con `POST /api/reescribir-info` (lleva `idx`) → sobre tu índice real: **`{"marcas": 240, "reads": 221, "reescritas": 57}`** → **240 de 349 filas con Marca** (109 vacías = sin lectura), top `DIDI 129 · Yoplait 9 · DiDi 8 · Pepsi 6` · filas sin lectura no se inventan | ✅ |
+| 59 | Relleno de `Marca` | en corrida y en masa con `POST /api/reescribir-info` (lleva `idx`) → **`{"marcas": 246, "reads": 231, "reescritas": 57}`** sobre tu índice de cteCVLO1: **215 de 349 filas con Marca** (31 escritas vacías = foto sin marca visible, 134 sin lectura) · top `Yoplait 9 · DiDi 8 · Pepsi 6 · Pacto Comida / Red BAMX 5` · filas sin lectura no se inventan | ✅ |
+
+| 60 | **Marca = lo que se ve** (fix) | el usuario detectó que `img_0139.jpg` (descripcion "Bonafont") tenía `Marca = DIDI`: la columna usaba la cadena de `PROVEEDOR` y "Bonafont" no estaba en la lista inline → regla `DF_` → DIDI. Ahora `_marca_vista()` = **IA → KML → vacía** (sin regla, sin lista). Reaplicado a tus 2 índices: **`img_0139 → Bonafont`**, **0 filas con DIDI** · 2609coppel 18/20 con marca · cteCVLO1 215/349 (31 vacías = foto sin marca visible) · +4 tests (113 OK) |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 

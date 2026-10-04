@@ -72,6 +72,33 @@ class TestIdxColMarca(unittest.TestCase):
         wb.close()
 
 
+class TestMarcaVista(unittest.TestCase):
+    """La columna Marca = lo que se ve en la foto (IA); si no, la del KML; si ninguna, vacía.
+
+    NO usa la cadena de PROVEEDOR: la regla por prefijo (DF_ -> DIDI) no es una marca vista.
+    """
+
+    KML_FILA = {'PIN': 'DF_09_TEST_1', 'MARCA': 'AT&T'}   # la fila del PIN dentro del KML
+
+    def test_gana_lo_que_dice_la_foto(self):
+        texto = 'ANUNCIO: SI\nMARCA: Bonafont\nCAMPAÑA: Las Favoritas\nQUE ANUNCIA: agua\n'
+        self.assertEqual(proceso._marca_vista(texto, self.KML_FILA), 'Bonafont')
+
+    def test_si_la_foto_no_la_trae_usa_la_del_kml(self):
+        texto = 'ANUNCIO: SI\nMARCA: no visible\nQUE ANUNCIA: algo\n'
+        self.assertEqual(proceso._marca_vista(texto, self.KML_FILA), 'AT&T')
+
+    def test_ni_foto_ni_kml_queda_vacia_sin_inventar_didi(self):
+        texto = 'ANUNCIO: SI\nMARCA: no visible\nQUE ANUNCIA: algo\n'
+        self.assertEqual(proceso._marca_vista(texto, {'PIN': 'DF_09_TEST_1'}), '')
+        self.assertEqual(proceso._marca_vista(texto, {}), '')
+
+    def test_acepta_marca_fuera_de_la_lista_de_conocidas(self):
+        """La lista de marcas valida PROVEEDOR, no esta columna: Bonafon vale aunque no esté."""
+        texto = 'MARCA: Bonafont\n'
+        self.assertEqual(proceso._marca_vista(texto, {}), 'Bonafont')
+
+
 class TestCorridaEscribeMarca(unittest.TestCase):
 
     def _montar(self, prioridad='kml'):
@@ -100,18 +127,19 @@ class TestCorridaEscribeMarca(unittest.TestCase):
         wb.close()
         return col, val
 
-    def test_corrida_con_prioridad_kml_escribe_la_marca_del_kml(self):
+    def test_corrida_escribe_la_marca_que_se_ve(self):
+        """La IA (mock) dice DiDi y el KML trae AT&T -> gana la foto, no el KML."""
         _base, params = self._montar('kml')
         proceso.ejecutar_corrida(params, lambda c: None, lambda m: None)
         col, marca = self._marca_de_fila(params)
         self.assertEqual(col, 12)
-        self.assertEqual(marca, 'AT&T')            # la del KML (sin ' *')
+        self.assertEqual(marca, 'DiDi')
 
     def test_corrida_con_prioridad_pines_escribe_la_marca_de_la_ia(self):
         _base, params = self._montar('pines')
         proceso.ejecutar_corrida(params, lambda c: None, lambda m: None)
         _col, marca = self._marca_de_fila(params)
-        self.assertEqual(marca, 'DiDi')            # IA -> sin estrella en el xlsx
+        self.assertEqual(marca, 'DiDi')            # la prioridad no cambia esta columna
 
     def test_las_columnas_existentes_quedan_intactas(self):
         _base, params = self._montar('kml')
@@ -144,7 +172,7 @@ class TestReescribirRellenaMarca(unittest.TestCase):
         wb = load_workbook(idx)
         ws = wb[wb.sheetnames[0]]
         col = motor.idx_col_marca(ws)
-        self.assertEqual(ws.cell(2, col).value, 'AT&T')   # ahora manda el KML
+        self.assertEqual(ws.cell(2, col).value, 'DiDi')   # la marca de la foto, no la del KML
         self.assertEqual(col, 11)                         # hoja nueva: 9 + fecha(10) + Marca(11)
         wb.close()
 
