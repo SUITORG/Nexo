@@ -97,6 +97,7 @@ async function iniciarCorrida(reproceso = false) {
 
   el.btnIniciar.disabled = true;
   el.btnDetener.disabled = false;
+  sonidoPendiente = true;                      // al terminar la barra suena el aviso
   el.btnDetener.textContent = 'Detener';
   el.seccionProgreso.classList.remove('oculto');
   el.seccionResultados.classList.add('oculto');
@@ -207,6 +208,38 @@ function terminar() {
   el.btnDetener.textContent = 'Detener';
 }
 
+// ---------- aviso sonoro al terminar la barra ----------
+// Dos notas suaves (C5 -> E5) generadas con Web Audio: sin archivos ni dependencias.
+// Se arma al iniciar la corrida y suena solo cuando la barra llega al 100% (estado 'listo').
+let sonidoPendiente = false;
+
+function sonarFin() {
+  if (!sonidoPendiente) return;               // una sola vez por corrida
+  sonidoPendiente = false;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = new AC();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+    [[523.25, 0], [659.25, 0.18]].forEach(function (par) {
+      const freq = par[0], ret = par[1];
+      const osc = ctx.createOscillator();
+      const gan = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gan.gain.setValueAtTime(0.0001, t0 + ret);
+      gan.gain.exponentialRampToValueAtTime(0.15, t0 + ret + 0.04);   // entra suave
+      gan.gain.exponentialRampToValueAtTime(0.0001, t0 + ret + 0.55); // sale suave
+      osc.connect(gan).connect(ctx.destination);
+      osc.start(t0 + ret);
+      osc.stop(t0 + ret + 0.6);
+    });
+    setTimeout(function () { try { ctx.close(); } catch (e) {} }, 1500);
+  } catch (e) { /* sin audio disponible: no rompe nada */ }
+}
+
+
 async function consultar() {
   if (!jobActual) return;
   try {
@@ -216,6 +249,7 @@ async function consultar() {
     pintarProgreso(j);
     if (j.estado === 'listo' || j.estado === 'error') {
       pintarResultados(j);
+      if (j.estado === 'listo') sonarFin();
       terminar();
       cargarHistorial();
     }
