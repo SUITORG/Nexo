@@ -127,6 +127,7 @@ PRIM_HEADERS = ['PIN', 'LATITUD', 'LONGITUD', 'MEDIO', 'FORMATO', 'ID', 'UBICACI
 
 def _pines_desde_kml(ruta_kml):
     import xml.etree.ElementTree as ET
+    import html as _html
     NS = '{http://www.opengis.net/kml/2.2}'
     data = open(ruta_kml, 'rb').read()
     raiz = ET.fromstring(data)
@@ -144,13 +145,22 @@ def _pines_desde_kml(ruta_kml):
                 datos = {}
                 for d in hijo.findall('.//' + NS + 'Data'):
                     v = d.find(NS + 'value')
-                    datos[d.get('name', '')] = (v.text or '').strip() if v is not None else ''
+                    # el KML trae HTML crudo en varios campos (p. ej. MARCA: AT&amp;T)
+                    datos[d.get('name', '')] = _html.unescape(v.text or '').strip() if v is not None else ''
                 pin = nombre_de(hijo)
                 if not pin:
                     continue
+                lat_k = str(datos.get('LATITUD', '') or '').strip()
+                lon_k = str(datos.get('LONGITUD', '') or '').strip()
+                if not lat_k:
+                    # capa COMPETENCIA: trae "COORDENADAS: lat,lon" en vez de LATITUD/LONGITUD
+                    coo = str(datos.get('COORDENADAS', '') or '').replace(';', ',')
+                    partes = [p.strip() for p in coo.split(',')]
+                    if len(partes) == 2:
+                        lat_k, lon_k = partes
                 d = {
                     'PIN': pin, 'CAPA': capa,
-                    'LATITUD': datos.get('LATITUD', ''), 'LONGITUD': datos.get('LONGITUD', ''),
+                    'LATITUD': lat_k, 'LONGITUD': lon_k,
                     'MEDIO': datos.get('MEDIO', '') or datos.get('TIPO DE MEDIO', ''),
                     'FORMATO': datos.get('FORMATO', ''), 'ID': datos.get('ID', ''),
                     'UBICACIÓN': datos.get('UBICACIÓN', ''), 'CIUDAD': datos.get('CIUDAD', ''),
@@ -234,12 +244,26 @@ def cargar_pines(ruta_pines):
 
 
 def cargar_kml_datos(ruta_kml):
+    """KML de respaldo -> dict PIN->datos **con `lat`/`lon`** (listo para cruzar).
+
+    A diferencia de `cargar_pines`, aquí NO se descarta ningún placemark: el que no tenga
+    coordenadas queda igual en el diccionario (sirve como respaldo de campos) pero se salta
+    al cruzar.
+    """
     if not ruta_kml or not os.path.exists(ruta_kml):
         return {}
     try:
-        return _pines_desde_kml(ruta_kml)
+        datos = _pines_desde_kml(ruta_kml)
     except Exception:
         return {}
+    for d in datos.values():
+        try:
+            d['lat'] = float(str(d.get('LATITUD', '')).replace(',', '.'))
+            d['lon'] = float(str(d.get('LONGITUD', '')).replace(',', '.'))
+        except Exception:
+            d.pop('lat', None)
+            d.pop('lon', None)
+    return datos
 
 
 def kml_resumen(kml_datos):
@@ -248,8 +272,8 @@ def kml_resumen(kml_datos):
     def capa(d):
         return ' '.join(str(d.get('CAPA') or '(sin capa)').split()).replace('.xlsx', '').strip()
 
-    # identidad y geometría no cuentan como "aporte" (ya están en total/capas/coords)
-    ruido = ('PIN', 'CAPA', 'LATITUD', 'LONGITUD')
+    # identidad, geometría y coordenadas calculadas no cuentan como "aporte"
+    ruido = ('PIN', 'CAPA', 'LATITUD', 'LONGITUD', 'lat', 'lon')
     campos = Counter()
     for d in kml_datos.values():
         for k, v in d.items():

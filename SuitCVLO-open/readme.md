@@ -120,7 +120,36 @@ Botón **`Reprocesar incompletas`** (junto a *Ver info*):
 
 > Solo se reprocesan las fotos que **tienen origen en la ruta activa**; las que no (p. ej. copias
 > de otra carpeta) se reportan como *sin origen* y **no se tocan**.
-> Necesita **Modo Local (ruta)**: así sabe qué se puede releer.
+> Necesita **Modo Local (ruta)**.
+
+## Prioridad de la fuente — KML manda
+
+El **KML** (`RutaKML.kml`) es la fuente del soporte: de ahí salen el `PIN`, la `LATITUD/LONGITUD`,
+la `UBICACIÓN`, `MEDIO`, `FORMATO`, `ID` y el `GRUPO` del `info.txt`. Si el KML no trae el PIN,
+se toma del **mapa de pines**; si la foto y el KML difieren en metros, **gana el KML**.
+
+| Campo | Con `prioridad: kml` (defecto) | Con `prioridad: pines` (como siempre) |
+|---|---|---|
+| cruce foto↔PIN | foto → punto **KML**; PIN ausente → pines | foto → pines |
+| `PIN` / coordenadas / dirección / `MEDIO` / `FORMATO` / `ID` / `GRUPO` | **KML** → pines | pines → KML |
+| **`PROVEEDOR`** | **KML `MARCA`** (sin `*`) → foto validada **` *`** → regla por prefijo **` *`** | IA → pines → regla (sin `*`) |
+| `FOTO` / `CAMPAÑA` / `COMENTARIO` | foto + IA | igual |
+| **`idxfotos.xlsx`** | **sin cambios** (manda la foto) | igual |
+
+- **`*`** = "este valor no viene del KML" (marca detectada por la IA o regla del PIN).
+- **`marcas-conocidas.txt`** (una marca por línea, `#` = comentario): valida la marca que detecta
+  la IA cuando el KML no la trae; la que no está en la lista se descarta y manda la regla.
+  Sin archivo → sin validación. Se relee en cada corrida.
+- **Config**: `prioridad: kml|pines` y `marcas: <ruta>` en `CVLOCFG.txt`; en la página, el select
+  **`Prioridad de la fuente`** de *Opciones avanzadas* (manda por corrida y se siembra con la config).
+- `COORDENADAS: lat,lon` del KML (capa COMPETENCIA) ya se parsea → **300 de 300 PINs cruzan**.
+
+## Reescribir info.txt (sin IA)
+
+Botón **`Reescribir info.txt`**: regenera **todos** los `info.txt` de la salida con las lecturas
+ya guardadas (`trabajo\reads`) y la prioridad elegida. **No lee ninguna foto con IA, no copia
+ni borra nada** — sirve para aplicar un cambio de prioridad al entregable existente.
+`POST /api/reescribir-info` · respuesta `{"reescritas": N, "reads": N, "prioridad": "kml"}`.
 
 ## Rutas precargadas — `CVLOCFG.txt`
 

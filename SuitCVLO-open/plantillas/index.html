@@ -87,6 +87,10 @@
         <label>Tope de fotos por PIN <input type="number" id="cap" value="10" min="1"></label>
         <label>Pausa de descarga (s) <input type="number" id="pausa" value="1" step="0.5" min="0.5"></label>
         <label>Descargas máximas (solo Modo Web/Drive) <input type="number" id="max_descargas" value="300" min="10" step="10"></label>
+        <label>Prioridad de la fuente <select id="prioridad">
+          <option value="kml" selected>KML primero (coordenadas, dirección, marca)</option>
+          <option value="pines">Mapa de pines (como siempre)</option>
+        </select></label>
       </div>
       <label class="modo"><input type="checkbox" id="comentario" checked> Incluir COMENTARIO en info.txt</label>
     </details>
@@ -96,6 +100,7 @@
       <button type="button" class="boton" id="btn-detener" disabled>Detener</button>
       <button type="button" class="boton" id="btn-info">Ver info de las fuentes</button>
       <button type="button" class="boton" id="btn-reprocesar">Reprocesar incompletas</button>
+      <button type="button" class="boton" id="btn-reescribir">Reescribir info.txt</button>
       <span class="nota">La lectura baja por la cadena hasta que un proveedor responde. Nada se elimina: los temporales quedan en `trabajo\`.</span>
     </div>
     <div class="log oculto" id="info-fuentes"></div>

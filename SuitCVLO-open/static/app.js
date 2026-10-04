@@ -26,6 +26,7 @@ const el = {
   iaEstado: $('#ia-estado'),
   btnInfo: $('#btn-info'),
   btnReprocesar: $('#btn-reprocesar'),
+  btnReescribir: $('#btn-reescribir'),
   infoFuentes: $('#info-fuentes'),
 };
 
@@ -75,6 +76,7 @@ async function iniciarCorrida(reproceso = false) {
   fd.append('pausa', $('#pausa').value || '1');
   fd.append('max_descargas', $('#max_descargas').value || '300');
   fd.append('comentario', $('#comentario').checked ? '1' : '0');
+  fd.append('prioridad', $('#prioridad').value || 'kml');
   fd.append('ia_proveedor', el.iaProveedor.value || 'auto');
   fd.append('ia_modelo', el.iaModelo.value || '');
   fd.append('reproceso', reproceso ? '1' : '0');
@@ -149,6 +151,34 @@ async function reprocesarIncompletas() {
 }
 
 el.btnReprocesar.addEventListener('click', reprocesarIncompletas);
+
+// Reescribir info.txt: regenera TODOS los info.txt con las lecturas ya guardadas.
+// No lee fotos con IA, no copia ni borra nada: solo rehace el texto.
+async function reescribirInfo() {
+  const salida = $('#salida').value.trim();
+  if (!salida) { aviso('Falta la Ruta de Salida.'); return; }
+  const prioridad = $('#prioridad').value || 'kml';
+  const mensaje = 'Se reescribirán TODOS los info.txt de la salida con las lecturas ya\n' +
+    'guardadas (prioridad: ' + prioridad + '). No se lee ninguna foto con IA ni se\n' +
+    'borra ni se mueve ningún archivo. ¿Continuar?';
+  if (!confirm(mensaje)) return;
+  ocultarAviso();
+  const fd = new FormData();
+  fd.append('salida', salida);
+  fd.append('pines', $('#pines').value.trim());
+  fd.append('kml', $('#kml').value.trim());
+  fd.append('prioridad', prioridad);
+  fd.append('comentario', $('#comentario').checked ? '1' : '0');
+  try {
+    const r = await fetch('/api/reescribir-info', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok) { aviso(d.error || 'No pude reescribir los info.txt.'); return; }
+    aviso(d.reescritas + ' info.txt reescritos (prioridad ' + d.prioridad +
+          ', ' + d.reads + ' lecturas guardadas).', 'ok');
+  } catch (e) { aviso('Error de conexión: ' + e.message); }
+}
+
+el.btnReescribir.addEventListener('click', reescribirInfo);
 
 function sondeo() {
   if (timer) clearInterval(timer);
@@ -494,7 +524,7 @@ async function cargarCfg() {
     const d = await r.json();
     if (!r.ok || !d.existe || !d.rutas) return;   // sin archivo: la página funciona igual
     const mapa = { fotos: '#ruta_local', salida: '#salida', pines: '#pines',
-                   kml: '#kml', idx: '#idx' };
+                   kml: '#kml', idx: '#idx', prioridad: '#prioridad' };
     Object.keys(mapa).forEach((k) => {
       const e = $(mapa[k]);
       if (e && d.rutas[k]) e.value = d.rutas[k];

@@ -87,7 +87,47 @@ def leer_texto_auto(ruta):
         return datos.decode('latin-1', errors='replace')
 
 
-CLAVES_CONFIG = ('fotos', 'salida', 'pines', 'kml', 'idx')
+CLAVES_CONFIG = ('fotos', 'salida', 'pines', 'kml', 'idx', 'prioridad', 'marcas')
+
+
+def prioridad_valida(valor):
+    """'kml' | 'pines' -> tal cual (minúsculas). Cualquier otra cosa -> 'kml' (defecto)."""
+    v = str(valor or '').strip().lower()
+    return v if v in ('kml', 'pines') else 'kml'
+
+
+def normaliza_marca(m):
+    """'DiDi Élite' -> 'didi elite' (sin acentos, sin mayúsculas, espacios colapsados)."""
+    import unicodedata
+    s = str(m or '').strip()
+    if not s:
+        return ''
+    s = unicodedata.normalize('NFKD', s)
+    s = ''.join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r'\s+', ' ', s).strip().lower()
+
+
+def leer_marcas(ruta):
+    """Archivo de marcas conocidas (una por línea, `#` = comentario) -> set normalizado.
+
+    Sin archivo o sin marcas -> set() vacío = **sin validación** (la marca de la foto se
+    acepta tal cual). Sirve para validar `PROVEEDOR` cuando el KML no trae `MARCA`.
+    """
+    if not ruta or not os.path.exists(ruta):
+        return set()
+    try:
+        texto = leer_texto_auto(ruta)
+    except Exception:
+        return set()
+    out = set()
+    for linea in texto.splitlines():
+        linea = linea.strip()
+        if not linea or linea.startswith('#'):
+            continue
+        n = normaliza_marca(linea)
+        if n:
+            out.add(n)
+    return out
 
 
 def leer_config_rutas(ruta):

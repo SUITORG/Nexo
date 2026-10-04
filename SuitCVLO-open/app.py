@@ -80,10 +80,23 @@ def api_estado_ia():
     return jsonify({'proveedores': switch.estado()})
 
 
+def _ruta_cfg():
+    return switch._env('CVLO_CFG') or os.path.join(BASE, 'CVLOCFG.txt')
+
+
+def _ruta_marcas(cfg):
+    """Archivo de marcas conocidas (clave `marcas` del CVLOCFG; por defecto el del proyecto).
+    Ruta relativa -> relativa a esta carpeta. Ausente -> sin validación."""
+    ruta = ((cfg or {}).get('marcas') or 'marcas-conocidas.txt').strip()
+    if not os.path.isabs(ruta):
+        ruta = os.path.join(BASE, ruta)
+    return ruta
+
+
 @app.get('/api/config')
 def api_config():
     """Rutas precargadas desde CVLOCFG.txt (opcional; la ruta se puede cambiar con la env CVLO_CFG)."""
-    ruta_cfg = switch._env('CVLO_CFG') or os.path.join(BASE, 'CVLOCFG.txt')
+    ruta_cfg = _ruta_cfg()
     rutas = U.leer_config_rutas(ruta_cfg)
     return jsonify({'existe': bool(rutas), 'archivo': ruta_cfg, 'rutas': rutas})
 
@@ -261,6 +274,9 @@ def api_crear():
     ia_proveedor = (form.get('ia_proveedor') or 'auto').strip().lower()
     ia_modelo = (form.get('ia_modelo') or '').strip()
     comentario = (form.get('comentario') or '1').strip().lower() not in ('0', 'false', 'no')
+    # prioridad de la fuente: la página (select) manda; si no viene, la del CVLOCFG; si no, kml
+    cfg = U.leer_config_rutas(_ruta_cfg())
+    prioridad = U.prioridad_valida(form.get('prioridad') or cfg.get('prioridad'))
 
     if not salida:
         return jsonify({'error': 'Falta la Ruta de Salida.'}), 400
@@ -344,6 +360,7 @@ def api_crear():
         'drive_pics': drive, 'kml': kml, 'idx': idx, 'n_fotos': n_fotos,
         'radio': radio, 'cap': cap, 'pausa': pausa, 'max_descargas': max_descargas,
         'comentario': comentario, '_reproceso': (form.get('reproceso') == '1'),
+        'prioridad': prioridad, '_marcas': U.leer_marcas(_ruta_marcas(cfg)),
         'ia_proveedor': ia_proveedor, 'ia_modelo': ia_modelo,
         'trabajo': TRABAJO,
         '_mock_gps': mock_gps,
@@ -405,6 +422,37 @@ def api_lista():
                   'completadas': j['completadas'], 'total': j['total']} for j in JOBS.values()]
     items.sort(key=lambda x: x['inicio'], reverse=True)
     return jsonify({'corridas': items[:20]})
+
+
+@app.post('/api/reescribir-info')
+def api_reescribir_info():
+    """Reescribe TODOS los info.txt de la salida con las lecturas ya guardadas (sin IA).
+
+    Sirve para aplicar un cambio de prioridad (u otro ajuste del bloque) al entregable
+    existente: no lee ninguna foto, no copia ni borra archivos.
+    """
+    form = request.form
+    salida = (form.get('salida') or '').strip()
+    if not salida:
+        return jsonify({'error': 'Falta la Ruta de Salida.'}), 400
+    if not os.path.isdir(salida):
+        return jsonify({'error': 'La Ruta de Salida no existe: {}'.format(salida)}), 400
+    cfg = U.leer_config_rutas(_ruta_cfg())
+    prioridad = U.prioridad_valida(form.get('prioridad') or cfg.get('prioridad'))
+    comentario = (form.get('comentario') or '1').strip().lower() not in ('0', 'false', 'no')
+    ruta_pines = (form.get('pines') or '').strip()
+    if ruta_pines:
+        try:
+            pdatos = motor.cargar_pines(ruta_pines)
+        except Exception as e:
+            return jsonify({'error': 'No pude leer los pines: {}'.format(str(e)[:150])}), 400
+    else:
+        pdatos = {}
+    kdatos = motor.cargar_kml_datos((form.get('kml') or '').strip())
+    marcas = U.leer_marcas(_ruta_marcas(cfg))
+    res = proceso.reescribir_todo(salida, pdatos, kdatos, os.path.join(TRABAJO, 'reads'),
+                                  prioridad=prioridad, marcas=marcas, comentario=comentario)
+    return jsonify(res)
 
 
 if __name__ == '__main__':

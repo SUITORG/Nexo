@@ -141,10 +141,30 @@ def preparar_reproceso(params, log):
             'limpiadas': limpiadas, 'respaldo': respaldo}
 
 
-def _elegir_pin(lat, lon, pines, radio):
+def _fuente_cruce(pines, kml_datos, prioridad):
+    """Qué coordenadas gana al elegir el PIN: 'kml' (defecto) o 'pines'.
+
+    Con `kml`: manda el KML, pero un PIN que solo existe en el mapa de pines sigue
+    siendo cruzaible (regla: "el KML tiene PIN -> de ahí; si no, del mapa de pines").
+    Con `pines`: comportamiento antiguo (el KML no participa en el cruce).
+    """
+    if prioridad == 'pines':
+        return pines
+    fuente = {}
+    for pin, d in kml_datos.items():
+        if 'lat' in d and 'lon' in d:
+            fuente[pin] = d
+    for pin, d in pines.items():
+        fuente.setdefault(pin, d)
+    return fuente
+
+
+def _elegir_pin(lat, lon, cruze, radio):
     mejor = None
     dm = 1e12
-    for pin, d in pines.items():
+    for pin, d in cruze.items():
+        if 'lat' not in d or 'lon' not in d:
+            continue
         dd = motor.dist_m(lat, lon, d['lat'], d['lon'])
         if dd < dm:
             dm = dd
@@ -179,20 +199,65 @@ def _fila_idx(foto_jpg, texto, pin, d, kml_d, lat, lon, marcada, excede=False):
     return [foto_jpg, que, direccion, tipo, lat, lon, notas, marcada, pin]
 
 
-def _bloque_info(texto, d, kml_d, lat, lon, foto='', con_comentario=True):
-    # PROVEEDOR = el anunciante/marca: la IA -> columna MARCA del pines -> reglas por PIN
-    proveedor = motor.campo(texto, 'MARCA').strip()
-    if proveedor.lower() in ('', 'no visible', 'no se distingue', 'sin marca', 'no legible'):
-        proveedor = str(d.get('MARCA') or '').strip()
-    if not proveedor:
-        proveedor = motor.marca_de(d.get('PIN', ''), d)
-    proveedor = proveedor or 'no disponible'
+_NO_MARCA = ('', 'no visible', 'no se distingue', 'sin marca', 'no legible')
+
+
+def _es_sin_marca(v):
+    return str(v or '').strip().lower() in _NO_MARCA
+
+
+def _pri(*vals):
+    """Primer valor con contenido (como string)."""
+    for v in vals:
+        v = str(v or '').strip()
+        if v:
+            return v
+    return ''
+
+
+def _proveedor_de(texto, d, kml_d, prioridad, marcas):
+    """PROVEEDOR del bloque. Devuelve (valor, estrella).
+
+    prioridad='kml' (reglas 1A/2A): manda el KML -> sin estrella; si el KML no lo trae,
+    la marca detectada por la IA **solo si está en la lista de marcas conocidas** (+ ' *');
+    si no, la regla por prefijo de PIN (+ ' *'). La estrella significa "no viene del KML".
+    prioridad='pines': comportamiento original (IA -> pines -> regla, sin estrella).
+    """
+    if prioridad == 'kml':
+        m_kml = str((kml_d or {}).get('MARCA') or '').strip()
+        if not _es_sin_marca(m_kml):
+            return m_kml, ''
+        m_ia = motor.campo(texto, 'MARCA').strip()
+        if not _es_sin_marca(m_ia) and (not marcas or U.normaliza_marca(m_ia) in marcas):
+            return m_ia, ' *'
+        return (motor.marca_de(d.get('PIN', ''), d) or 'no disponible'), ' *'
+    p = motor.campo(texto, 'MARCA').strip()
+    if not _es_sin_marca(p):
+        return p, ''
+    p = str(d.get('MARCA') or '').strip()
+    if p:
+        return p, ''
+    return motor.marca_de(d.get('PIN', ''), d) or 'no disponible', ''
+
+
+def _bloque_info(texto, d, kml_d, lat, lon, foto='', con_comentario=True,
+                 prioridad='kml', marcas=None):
+    kml_d = kml_d or {}
+    a, b = (kml_d, d) if prioridad == 'kml' else (d, kml_d)   # quién manda en cada campo
+
+    # PROVEEDOR = el anunciante/marca
+    proveedor_base, estrella = _proveedor_de(texto, d, kml_d, prioridad, marcas)
+    proveedor = proveedor_base + estrella
 
     # CAMPAÑA = el eslogan; las lecturas viejas no traen el campo -> se queda con la marca
     campana = motor.campo(texto, 'CAMPAÑA').strip()
     if not campana:
-        campana = proveedor
+        campana = proveedor_base
     tipo_foto = motor.campo(texto, 'TIPO SOPORTE')
+    # con prioridad kml las coordenadas del bloque salen del KML aunque la foto difiera
+    if prioridad == 'kml':
+        lat = _pri(kml_d.get('LATITUD'), lat)
+        lon = _pri(kml_d.get('LONGITUD'), lon)
     partes = ['FOTO: %s' % (foto or 'no disponible'),
               'CAMPAÑA: %s' % campana]
     if con_comentario:
@@ -204,16 +269,31 @@ def _bloque_info(texto, d, kml_d, lat, lon, foto='', con_comentario=True):
     partes += ['PLAZA: MTY',
                'PROVEEDOR: %s' % proveedor,
                'RAZÓN SOCIAL: ',
-               'MEDIO: %s' % (d.get('MEDIO') or kml_d.get('MEDIO', '') or tipo_foto),
-               'FORMATO: %s' % (d.get('FORMATO') or kml_d.get('FORMATO', '')),
-               'ID: %s' % (d.get('ID') or d.get('CODIGO MUPI') or kml_d.get('ID', '')),
-               'UBICACIÓN: %s' % (d.get('UBICACIÓN') or d.get('DIRECCIÓN') or kml_d.get('UBICACIÓN', '')),
-               'LATITUD: %s' % (lat if lat is not None else ''),
-               'LONGITUD: %s' % (lon if lon is not None else '')]
+               'MEDIO: %s' % _pri(a.get('MEDIO'), b.get('MEDIO'), tipo_foto),
+               'FORMATO: %s' % _pri(a.get('FORMATO'), b.get('FORMATO')),
+               'ID: %s' % _pri(a.get('ID'), b.get('ID'), d.get('CODIGO MUPI')),
+               'UBICACIÓN: %s' % _pri(a.get('UBICACIÓN'), a.get('DIRECCIÓN'),
+                                      b.get('UBICACIÓN'), b.get('DIRECCIÓN')),
+               'LATITUD: %s' % lat,
+               'LONGITUD: %s' % lon]
     return '\n'.join(partes)
 
 
-def _reescribir_info(pin, d, kml_d, carpeta, reads, comentario=True):
+def _cargar_reads(reads_dir):
+    """trabajo/reads/*.json -> dict stem -> registro de lectura."""
+    reads = {}
+    if os.path.isdir(reads_dir):
+        for f in os.listdir(reads_dir):
+            if f.endswith('.json'):
+                rd = U.cargar_json(os.path.join(reads_dir, f))
+                if rd:
+                    reads[_stem(f)] = rd
+    return reads
+
+
+def _reescribir_info(pin, d, kml_d, carpeta, reads, comentario=True,
+                     prioridad='kml', marcas=None):
+    kml_d = kml_d or {}
     fotos = sorted(f for f in os.listdir(carpeta)
                    if f.lower().endswith(('.jpg', '.jpeg', '.png')))
     bloques = []
@@ -226,17 +306,29 @@ def _reescribir_info(pin, d, kml_d, carpeta, reads, comentario=True):
             lat = d.get('LATITUD', '')
         if lon is None:
             lon = d.get('LONGITUD', '')
-        bloques.append(_bloque_info(texto, d, kml_d, lat, lon,
-                                    foto=f, con_comentario=comentario))
-    encab = ['GRUPO: %s' % (d.get('CAPA', '') or ''),
+        bloques.append(_bloque_info(texto, d, kml_d, lat, lon, foto=f,
+                                    con_comentario=comentario,
+                                    prioridad=prioridad, marcas=marcas))
+    if prioridad == 'kml':
+        grupo = _pri(kml_d.get('CAPA'), d.get('CAPA'))
+        lat_c = _pri(kml_d.get('LATITUD'), d.get('LATITUD'))
+        lon_c = _pri(kml_d.get('LONGITUD'), d.get('LONGITUD'))
+    else:
+        grupo = d.get('CAPA', '')
+        lat_c = d.get('LATITUD', '')
+        lon_c = d.get('LONGITUD', '')
+    encab = ['GRUPO: %s' % grupo,
              'PIN: ' + pin,
-             'COORDENADAS: %s, %s' % (d.get('LATITUD', ''), d.get('LONGITUD', ''))]
+             'COORDENADAS: %s, %s' % (lat_c, lon_c)]
     partes = encab[:]
     for b in bloques:
-        partes.append('----------------------------------------')
+        partes.append('-' * 40)
         partes.append(b)
     partes.append('COMENTARIOS:')
-    partes.append('NOTA: Fotos del recorrido cruzadas al PIN; datos por foto (foto -> pines -> KML).')
+    partes.append('NOTA: Fotos del recorrido cruzadas al PIN; datos por foto '
+                  '(foto -> pines -> KML).' if prioridad != 'kml' else
+                  'NOTA: Fotos del recorrido cruzadas al PIN; datos del soporte desde el KML '
+                  '(si el KML no lo trae, del mapa de pines).')
     with open(os.path.join(carpeta, 'info.txt'), 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(partes) + '\n')
 
@@ -268,6 +360,13 @@ def ejecutar_corrida(params, progreso, log):
     log('Pines cargados: {}'.format(len(pines)))
     kml_datos = motor.cargar_kml_datos(params.get('kml', ''))
 
+    # prioridad de la fuente (CVLOCFG/UI) + marcas conocidas para PROVEEDOR
+    prioridad = U.prioridad_valida(params.get('prioridad'))
+    marcas = params.get('_marcas') or set()
+    cruze = _fuente_cruce(pines, kml_datos, prioridad)
+    log('Prioridad de fuente: {} · PINs cruzables: {} (KML {})'
+        .format(prioridad, len(cruze), len(kml_datos)))
+
     # conteo por capa del KML (TODOS los placemarks, incluidos los que cargar_pines descarta)
     resumen_kml = motor.kml_resumen(kml_datos)
     capas = Counter(resumen_kml['capas'])
@@ -283,13 +382,7 @@ def ejecutar_corrida(params, progreso, log):
                            reproceso=bool(params.get('_reproceso')))
     log('Excluidas (cargadas/verificadas/leídas): {}'.format(len(excluidos)))
 
-    reads = {}
-    if os.path.isdir(reads_dir):
-        for f in os.listdir(reads_dir):
-            if f.endswith('.json'):
-                rd = U.cargar_json(os.path.join(reads_dir, f))
-                if rd:
-                    reads[_stem(f)] = rd
+    reads = _cargar_reads(reads_dir)
 
     # ---------- armar candidatas ----------
     candidatas = []  # dicts: foto(ruta local), nombre, lat, lon, fecha, pin, dist
@@ -306,12 +399,13 @@ def ejecutar_corrida(params, progreso, log):
                 nombres_sin_gps.append(nombre_orig)
             return None
         cont['con_gps'] += 1
-        pin, dm = _elegir_pin(lat, lon, pines, radio)
+        pin, dm = _elegir_pin(lat, lon, cruze, radio)
         if pin is None:
             cont['fuera_radio'] += 1
             return None
+        origen = 'kml' if (prioridad == 'kml' and pin in kml_datos) else 'pines'
         return {'foto': ruta_local, 'nombre': nombre_orig, 'lat': lat, 'lon': lon,
-                'fecha': fecha, 'pin': pin, 'dist': round(dm)}
+                'fecha': fecha, 'pin': pin, 'dist': round(dm), 'origen': origen}
 
     modo = params.get('modo')  # web | local | zip | carpeta
     if modo in ('local', 'zip', 'carpeta'):
@@ -407,6 +501,10 @@ def ejecutar_corrida(params, progreso, log):
                         'capas': dict(capas), 'kml': sum(capas.values()),
                         'cara': con_cara}})
     log('Candidatas a leer: {}'.format(len(candidatas)))
+    if candidatas:
+        de_kml = sum(1 for c in candidatas if c.get('origen') == 'kml')
+        log('Cruce: {} candidatas con PIN del KML · {} con PIN solo de pines'
+            .format(de_kml, len(candidatas) - de_kml))
     progreso({'total': len(candidatas), 'fotos_estado': [{'nombre': c['nombre'], 'estado': 'pendiente'} for c in candidatas]})
 
     # ---------- procesar ----------
@@ -417,7 +515,8 @@ def ejecutar_corrida(params, progreso, log):
         stem = _stem(nombre)
         if detenido():
             return stem, 'detenido', None, None
-        d = dict(pines[c['pin']])
+        # el PIN puede venir del KML (prioridad kml) aunque el mapa de pines no lo traiga
+        d = dict(pines.get(c['pin']) or kml_datos.get(c['pin']) or {})
         d['PIN'] = c['pin']
         kml_d = kml_datos.get(c['pin'], {})
         try:
@@ -485,10 +584,11 @@ def ejecutar_corrida(params, progreso, log):
     # reescribir info.txt una vez por la carpeta de PIN (evita carreras)
     for carpeta in sorted(carpetas):
         pin = os.path.basename(carpeta)
-        d = dict(pines.get(pin, {}))
+        d = dict(pines.get(pin) or kml_datos.get(pin) or {})
         d['PIN'] = pin
         _reescribir_info(pin, d, kml_datos.get(pin, {}), carpeta, reads,
-                     comentario=params.get('comentario', True))
+                         comentario=params.get('comentario', True),
+                         prioridad=prioridad, marcas=marcas)
 
     # guardar idxfotos
     try:
@@ -501,3 +601,29 @@ def ejecutar_corrida(params, progreso, log):
     resumen['pines'] = sorted(resumen['pines'])
     resumen['detenida'] = detenido()
     return resumen
+
+
+def reescribir_todo(salida, pines, kml_datos, reads_dir, prioridad='kml',
+                    marcas=None, comentario=True, log=None):
+    """Reescribe TODOS los info.txt de la salida con las lecturas ya guardadas.
+
+    No llama a la IA, no copia ni borra nada: solo regenera el texto de cada carpeta de
+    PIN (servicio del botón "Reescribir info.txt" y para aplicar un cambio de prioridad
+    al entregable existente). Devuelve {'reescritas', 'reads', 'prioridad'}.
+    """
+    log = log or (lambda m: None)
+    reads = _cargar_reads(reads_dir)
+    carpetas = []
+    for raiz, _sub, archivos in os.walk(salida):
+        if any(f.lower().endswith(('.jpg', '.jpeg', '.png')) for f in archivos):
+            carpetas.append(raiz)
+    reescritas = 0
+    for carpeta in sorted(carpetas):
+        pin = os.path.basename(carpeta)
+        d = dict(pines.get(pin) or kml_datos.get(pin) or {})
+        d['PIN'] = pin
+        _reescribir_info(pin, d, kml_datos.get(pin, {}), carpeta, reads,
+                         comentario=comentario, prioridad=prioridad, marcas=marcas)
+        reescritas += 1
+    log('info.txt reescritos: {} ({} lecturas guardadas)'.format(reescritas, len(reads)))
+    return {'reescritas': reescritas, 'reads': len(reads), 'prioridad': prioridad}

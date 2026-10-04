@@ -12,8 +12,18 @@
 # La ruta de este archivo se puede cambiar con la variable de entorno CVLO_CFG.
 # Este archivo está en .gitignore: cada equipo tiene las suyas.
 
+# prioridad = qué fuente manda (cruce foto->PIN y llenado de info.txt):
+#   kml    = el KML manda (coordenadas, dirección, PROVEEDOR). Si un PIN no está en el
+#            KML se toma del mapa de pines. PROVEEDOR que no viene del KML se marca con *
+#   pines  = como siempre: el mapa de pines manda (comportamiento antiguo)
+# marcas   = archivo de marcas conocidas (una por línea). Valida la marca que detecta la
+#            IA cuando el KML no la trae; sin archivo = sin validación.
+# El valor de `prioridad` se puede cambiar también en la página (Opciones avanzadas).
+
 fotos : C:\ruta\a\las\fotos
 salida: C:\ruta\de\salida
 pines : C:\ruta\GooMapsPines.txt
 KML   : C:\ruta\RutaKML.kml
 idx   : C:\ruta\idxfotos.xlsx
+prioridad: kml
+# marcas: C:\ruta\marcas-conocidas.txt

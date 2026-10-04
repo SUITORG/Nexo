@@ -97,7 +97,13 @@ Ninguna se cumple hoy.
 | ¿Se puede recuperar? | **Sí: 14/14 tienen coordenadas parseables** (~6 líneas en `motor._pines_desde_kml`) |
 | Impacto | **ninguna foto puede cruzar con un PIN de competencia** (quedan "fuera de radio" o sin PIN) |
 | Dato de contexto | esas 14 filas traen campos que el resto no: `SECCION`, `ESTADO`, `TIPO DE MEDIO`, `MARCA`, `DIRECCIÓN` con CP |
-| Estado | **documentado, NO arreglado** (decisión 2026-10-03) → `GuiaTotal/PENDIENTES.md` |
+| Estado | **ARREGLADO (2026-10-04)**: `motor._pines_desde_kml` parsea `COORDENADAS` y rellena `LATITUD`/`LONGITUD` → **`cargar_pines()` y `cargar_kml_datos()` aceptan los 300**; en producción: `Pines cargados: 300` y `sin_lat: 0` |
+
+> **Prioridad de la fuente (2026-10-04)**: el KML es la fuente del soporte en el `info.txt`
+> (coordenadas, dirección, `MEDIO`, `GRUPO`, `MARCA` → `PROVEEDOR`); si un PIN no está en el KML
+> se toma del mapa de pines, y si la foto y el KML difieren en metros **gana el KML**.
+> Configurable con `prioridad: kml|pines` (select en *Opciones avanzadas*) + `marcas-conocidas.txt`
+> para validar la marca detectada por la IA. El `idxfotos.xlsx` **no cambia**: manda la foto.
 
 ## 8. Cuándo re-evaluar esta decisión
 

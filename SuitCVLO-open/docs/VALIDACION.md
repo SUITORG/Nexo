@@ -7,7 +7,7 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | # | Check | Evidencia | Estado |
 |---|---|---|---|
 | 1 | `python -m py_compile` (7 archivos, sin `SyntaxWarning`) | `py_compile app.py motor.py proceso.py utilidades.py ia/switch.py ia/__init__.py` con `-W error::SyntaxWarning` → sin salida | ✅ |
-| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 81 tests … OK** (… + 5 de reproceso) | ✅ |
+| 2 | Suite de pruebas | `python -m unittest discover -s tests -t .` → **Ran 98 tests … OK** (… + 5 de reproceso + 17 de prioridad KML) | ✅ |
 | 3 | Smoke HTTP | servidor en `:3015`: `GET /` 200 · `GET /api/estado` 200 · `GET /api/ia/modelos` 200 · `GET /api/corridas` 200 | ✅ |
 | 4 | Validación de entrada | `POST /api/corridas` sin salida → 400 `"Falta la Ruta de Salida."`; con `ia_proveedor=wat` → 400 `"Motor IA desconocido: wat"` | ✅ |
 | 5 | Sin secretos en el código | scan de `sk-…`, `AIza…`, `service_role`, `APP_KEY` hex en `*.py`/`*.js`/`*.html` → **sin coincidencias** (antes: `motor.py:43`) | ✅ |
@@ -55,6 +55,14 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 | 47 | Reproceso — preview | `GET /api/reprocesar/preview` sobre tus datos reales: **377 objetivas** (271 sin lectura · 116 formato antiguo) · **10 sin origen** (no se tocan) | ✅ |
 | 48 | Reproceso — respaldo + limpieza | `POST /api/reprocesar` → `idxfotos_backup_20261003_174938.xlsx` creado · **183 marcas limpiadas** · **294 filas intactas**, verificadas 210→27 → 5 tests (conteo, respaldo, solo las objetivas, sin origen, regresión) | ✅ |
 | 49 | Reproceso — corrida real | job `b6aed9d44496`: **2 fotos releídas en 4 s** (OpenCode) · xlsx 294→**296 filas sin duplicados** · `Verificado` rehecho ✓ · `subida=2026-10-03 17:50` · `info.txt` con `FOTO` + `CAMPAÑA: Aquí sí encuentras todo…` + `COMENTARIO` + `PROVEEDOR: Del Sol` | ✅ |
+
+| 50 | KML completo (F1) | `cargar_kml_datos` → **300/300 con `lat/lon`** (antes 286) · `COORDENADAS: lat,lon` parseada (14 COMPETENCIA) · `html.unescape` (`AT&amp;T` → `AT&T`) · `sin_lat: 0` |
+| 51 | Cruce por prioridad (F2) | `_fuente_cruce` = KML ∪ (pines−KML) · con `pines` se mantiene el comportamiento viejo · `d = pines.get(pin) or kml.get(pin)` (sin KeyError) · **comparación en frío sobre 339 fotos del índice: 0 PINs distintos y 0 fuera de radio con ambas prioridades** |
+| 52 | `info.txt` con `prioridad: kml` (F3) | 17 tests (`tests/test_prioridad_kml.py`): KML manda `PROVEEDOR/MEDIO/UBICACIÓN/GRUPO` · `LAT/LON` del KML pese al EXIF · `AT&T` sin HTML · ` *` cuando no viene del KML · IA fuera de lista → regla del PIN (1A) · sin archivo de marcas → sin validación (2A) · `prioridad=pines` = comportamiento original |
+| 53 | `idxfotos.xlsx` intacto | corrida con `prioridad=kml`: mismas 9 columnas, col 2 y 4 = IA (foto), col 5/6 = EXIF, 0 duplicados exactos (fila 349) |
+| 54 | Corrida real con prioridad | job `b2348c5704fe` (3 fotos, OpenCode, 25 s): log `Prioridad de fuente: kml · PINs cruzables: 300 (KML 300)` + `Cruce: 3 candidatas con PIN del KML` · `leidas=3, copiadas=2, excedidas=1` · `info.txt` de los PINs nuevos con `PROVEEDOR: DIDI *`, `Takis *`, `Saba *` y `LAT/LON` del KML |
+| 55 | **Reescribir info.txt** (F5) | `POST /api/reescribir-info` sobre tu salida: **`{"reescritas": 57, "reads": 211, "prioridad": "kml"}`** · diff de un `info.txt` real: **135 líneas antes y después (0 perdidas)**, 62 cambiadas → `PROVEEDOR: Little Caesars` → **`Little Caesars *`** y `LATITUD 25.659644…` (EXIF) → **`25.660370` (KML)** |
+| 56 | Config + UI | `CLAVES_CONFIG` con `prioridad`/`marcas` · `GET /api/config` devuelve la config nueva · select **`Prioridad de la fuente`** en *Opciones avanzadas* sembrado desde `CVLOCFG.txt` y enviado con la corrida · `marcas-conocidas.txt` con 59 marcas reales (seed) |
 
 ## Pruebas nuevas (`tests/test_switch.py`)
 

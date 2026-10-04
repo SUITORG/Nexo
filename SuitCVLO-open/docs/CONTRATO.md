@@ -47,6 +47,12 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 5. Sin claves en el código: ninguna `APP_KEY`/token hardcodeada (el origen tenía una en `motor.py:43` — eliminada aquí)
 6. El switch de IA **nunca corta la corrida**: si un proveedor falla, baja por la cadena y registra el motivo en el log
 7. Multi-proveedor por `.env`, no por columnas nuevas ni schema externo
+8. **Prioridad de la fuente** (2026-10-04, decisión explícita): con `prioridad: kml` el **KML**
+   manda en el cruce y en el `info.txt` (`PIN`, coordenadas, dirección, `MEDIO/FORMATO/ID/GRUPO`,
+   y `MARCA` → `PROVEEDOR`); si el KML no trae el PIN, se toma del mapa de pines; si la foto y el
+   KML difieren en metros, gana el KML. Lo que no viene del KML se marca con ` *`. La `MARCA` de la
+   IA solo se usa si está en `marcas-conocidas.txt` (sin archivo = sin validación). El
+   `idxfotos.xlsx` **no cambia**: manda la foto.
 
 ## Orden del switch (inmutable sin decisión del usuario)
 1. `opencode` — **tu suscripción**; key leída de `~/.local/share/opencode/auth.json` (o `OPENCODE_API_KEY`);
@@ -77,3 +83,7 @@ AutoClaw/AutoGLM** (servicio y clave eliminados del código, ver ADR-038).
 - 2026-10-02: **`opencode` entra el primero** (tu suscripción, `deepseek-v4-flash-vision-exp`,
   3.2 s/foto) y **se desactivan `huggingface` y `openrouter`** (líneas comentadas en `.env`) → ADR-041
 - 2026-10-03: **`SuitCVLOGCPy` sale del alcance** — no se lee ni se modifica (decisión del usuario)
+- 2026-10-04: **prioridad de la fuente configurable** (`prioridad: kml|pines` en `CVLOCFG.txt` y en
+  *Opciones avanzadas*): el KML manda en el cruce y en el `info.txt`, con ` *` para lo que no viene
+  del KML + validación de `MARCA` con `marcas-conocidas.txt`; se arregla `COORDENADAS` (300 PINs
+  cruzables, antes 286) y se añade **`Reescribir info.txt`** (regenera sin IA, `POST /api/reescribir-info`)

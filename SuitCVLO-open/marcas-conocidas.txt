@@ -1,0 +1,75 @@
+# marcas-conocidas.txt — marcas válidas para PROVEEDOR
+#
+# Una marca por línea. # = comentario. Comparación normalizada:
+# se ignoran mayúsculas, acentos y espacios dobles (PEPSI == Pepsi).
+#
+# Para qué sirve: cuando el KML de un PIN no trae MARCA, se usa la marca que
+# detecta la IA **solo si está en esta lista**; si no está, se descarta y se
+# aplica la regla por prefijo de PIN (DF_ -> DIDI, PF_COP -> COPPEL, COM -> COMPETENCIA)
+# y el valor se marca con un * en info.txt (significa: no viene del KML).
+#
+# Sin archivo (o vacío) = sin validación: la marca de la IA se acepta tal cual.
+# Se relee en cada corrida: guardar el archivo basta, no hay que reiniciar.
+#
+# Semilla: marcas ya vistas en tus lecturas + las del RutaKML.kml.
+
+AT&T
+Afore
+Almatierra Residencial
+Banamex
+Banamex / La Gran Caravana
+Blue Carwash
+Bobcat
+COMPETENCIA
+COPPEL
+DIDI
+DEMMIA ANAHUAC
+Del Sol
+DiDi
+DiDi Élite
+DiDi Food
+Domino's Pizza
+ECOVALLAS
+El Doral
+El Gran Mozo
+Expo Tu Piñata
+Foliatti Casino
+Folatti Casino Mitras
+Ford
+GMC
+Grupo de Haro Publicidad
+IMU
+Inspector
+KORDI MOTORS
+Little Caesars
+MOVISTAR
+Maroon 5
+McCormick
+Mega
+Megacable / Disney
+Miravalle Palace Casino
+ML-PRIM
+Nazil
+Pacto Comida / Red BAMX
+Pacto por la Comida / BAMX
+Pacto por la Comida / Red BAMX
+Pampas
+Pastelería Lety
+Pepe y Toño / Voz de las Empresas
+Pepe y Toño / Voz de los Empresarios
+Peñafiel
+Pepsi
+Profuturo
+Resident Evil
+SEARS
+Saba
+Tacos El Amigo
+Takis
+Tecate
+TENA
+The Home Depot
+UD Monterrey
+Universidad Pedro de Gante
+Voz de las Empresas
+west elm
+Yoplait
