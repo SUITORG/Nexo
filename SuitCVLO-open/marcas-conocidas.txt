@@ -12,64 +12,89 @@
 # Se relee en cada corrida: guardar el archivo basta, no hay que reiniciar.
 #
 # Semilla: marcas ya vistas en tus lecturas + las del RutaKML.kml.
-
-AT&T
 Afore
 Almatierra Residencial
+AT&T
 Banamex
 Banamex / La Gran Caravana
+bancomer
+banorte
+BBVA
 Blue Carwash
 Bobcat
+Bonafont
+burguer king
+carl's junior
+coca cola
 COMPETENCIA
 COPPEL
-DIDI
-DEMMIA ANAHUAC
 Del Sol
+DEMMIA ANAHUAC
 DiDi
 DiDi Élite
 DiDi Food
+DiDiÉlite
 Domino's Pizza
 ECOVALLAS
 El Doral
 El Gran Mozo
 Expo Tu Piñata
-Foliatti Casino
+farmacias del ahorro
+farmacias similares
 Folatti Casino Mitras
+Foliatti Casino
 Ford
 GMC
 Grupo de Haro Publicidad
 IMU
 Inspector
+Joe Burgers
 KORDI MOTORS
 Little Caesars
-MOVISTAR
+macdonald
+Marmolería Tepeyac
 Maroon 5
 McCormick
 Mega
 Megacable / Disney
 Miravalle Palace Casino
 ML-PRIM
+MOVISTAR
 Nazil
+nu
+oxxo
 Pacto Comida / Red BAMX
 Pacto por la Comida / BAMX
 Pacto por la Comida / Red BAMX
 Pampas
+Panteón Tepeyac
 Pastelería Lety
+Peñafiel
+pepe y toño
 Pepe y Toño / Voz de las Empresas
 Pepe y Toño / Voz de los Empresarios
-Peñafiel
 Pepsi
+Pétalo
+plata card
 Profuturo
 Resident Evil
-SEARS
 Saba
+Santander
+SEARS
+Secret
+SHEIN
+Sinuberase
+soriana
+super 7
 Tacos El Amigo
 Takis
 Tecate
 TENA
 The Home Depot
+Uber
 UD Monterrey
 Universidad Pedro de Gante
 Voz de las Empresas
+Vozy de los Empresarios / Consejo de la Comunicación
 west elm
 Yoplait

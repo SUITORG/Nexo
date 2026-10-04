@@ -148,9 +148,14 @@ se toma del **mapa de pines**; si la foto y el KML difieren en metros, **gana el
 - **`*`** = "este valor no viene del KML" (marca detectada por la IA o regla del PIN).
 - **`marcas-conocidas.txt`** (una marca por línea, `#` = comentario): valida la marca que detecta
   la IA cuando el KML no la trae; la que no está en la lista se descarta y manda la regla.
-  Sin archivo → sin validación. Se relee en cada corrida.
-- **Config**: `prioridad: kml|pines` y `marcas: <ruta>` en `CVLOCFG.txt`; en la página, el select
-  **`Prioridad de la fuente`** de *Opciones avanzadas* (manda por corrida y se siembra con la config).
+  Sin archivo → sin validación.
+- **Cómo se alimenta**: a mano (una marca por línea) y **se relee en cada corrida y en cada
+  *Reescribir info.txt y Marca*** — guardar el file basta, no hay que reiniciar.
+  Hoy trae **86**: las 59 originales + las vistas en tus 231 lecturas + las 19 que estaban en el
+  CFG de `2609coppel` (cuando la lista vive en el CFG, **esa manda** y esta queda fuera).
+- **Config**: `prioridad: kml|pines` y `marcas: <ruta|lista>` en `CVLOCFG.txt`; en la página, el
+  select **`Prioridad de la fuente`** de *Opciones avanzadas* (manda por corrida y se siembra con
+  la config).
 - `COORDENADAS: lat,lon` del KML (capa COMPETENCIA) ya se parsea → **300 de 300 PINs cruzan**.
 
 ## Reescribir info.txt y Marca (sin IA)
@@ -211,9 +216,11 @@ marcas:                                 ← sin valor: lista INLINE en el CFG
 coppel
 coca cola
 farmacias del ahorro
-                                        ← la lista termina en una línea en blanco
 ```
-Si el CFG no trae `marcas` → se usa `marcas-conocidas.txt` del proyecto.
+
+La lista inline **termina en una línea en blanco**. **Prioridad**: inline > archivo que diga
+`marcas:` > `marcas-conocidas.txt` del proyecto (el `CVLOCFG.txt` de ejemplo **no** trae `marcas`
+→ manda la del proyecto; `marcas: marcas-conocidas.txt` sería redundante).
 
 ## Favicon
 
