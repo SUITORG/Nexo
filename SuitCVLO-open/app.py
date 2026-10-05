@@ -115,21 +115,27 @@ def api_config():
 
 
 def _leer_idx(ruta_idx):
-    """(filas, verificadas, no_gps, stems verificados) del idxfotos.xlsx — solo lectura."""
+    """(filas, verificadas, no_gps, stems verificados, fotos duplicadas) del índice — solo lectura.
+
+    `duplicadas` = fotos que aparecen más de una vez (aunque cambien mayúsculas:
+    `IMG_0139.jpg` y `img_0139.jpg` son la misma) — es la "información revuelta".
+    """
     if not ruta_idx or not os.path.exists(ruta_idx):
-        return 0, 0, 0, set()
+        return 0, 0, 0, set(), 0
     try:
         from openpyxl import load_workbook
         wb = load_workbook(ruta_idx, read_only=True, data_only=True)
         ws = wb['idxfotos'] if 'idxfotos' in wb.sheetnames else wb[wb.sheetnames[0]]
         filas = verif = no_gps = 0
         stems = set()
+        vistos = {}
         # iter_rows: acceso secuencial (con ws.cell en read_only tardaba 6,5 s)
         for fila in ws.iter_rows(min_row=2, max_col=8, values_only=True):
             nombre = str(fila[0] or '').strip()
             if not nombre:
                 continue
             filas += 1
+            vistos[nombre.lower()] = vistos.get(nombre.lower(), 0) + 1
             v = str(fila[7] or '').strip()
             if v:
                 verif += 1
@@ -137,9 +143,10 @@ def _leer_idx(ruta_idx):
                 if v == 'No GPS':
                     no_gps += 1
         wb.close()
-        return filas, verif, no_gps, stems
+        dup = sum(1 for c in vistos.values() if c > 1)
+        return filas, verif, no_gps, stems, dup
     except Exception:
-        return 0, 0, 0, set()
+        return 0, 0, 0, set(), 0
 
 
 @app.get('/api/fuentes')
@@ -161,8 +168,8 @@ def api_fuentes():
             return jsonify({'error': 'No pude leer los pines: {}'.format(str(e)[:160])}), 400
     if ruta_kml:
         out['kml'] = motor.kml_resumen(motor.cargar_kml_datos(ruta_kml))
-    filas, verif, no_gps, _stems = _leer_idx(ruta_idx)
-    out['indice'] = {'filas': filas, 'verificadas': verif, 'no_gps': no_gps}
+    filas, verif, no_gps, _stems, dup = _leer_idx(ruta_idx)
+    out['indice'] = {'filas': filas, 'verificadas': verif, 'no_gps': no_gps, 'duplicadas': dup}
     return jsonify(out)
 
 
@@ -186,7 +193,7 @@ def api_fuentes_gps():
     except Exception as e:
         return jsonify({'error': 'No pude leer los pines: {}'.format(str(e)[:160])}), 400
 
-    _f, _v, _n, verif = _leer_idx(ruta_idx)
+    _f, _v, _n, verif, _d = _leer_idx(ruta_idx)
     excl = proceso._excluidos(salida, verif, os.path.join(TRABAJO, 'reads'))
     mock_gps = None
     if motor.en_mock():

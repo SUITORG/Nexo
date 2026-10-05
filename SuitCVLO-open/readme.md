@@ -171,6 +171,26 @@ cambio de prioridad (o rellenar la Marca de las filas viejas) al entregable exis
 `POST /api/reescribir-info` (lleva `idx`) · respuesta
 `{"reescritas": N, "reads": N, "marcas": N, "prioridad": "kml"}`.
 
+## Estado final (mensaje + punto de color)
+
+Al terminar la corrida, debajo del resumen aparece una línea con **todos los números** y un
+**punto de color al final**:
+
+```
+1696 fotos en la ruta · 10/10 en esta corrida · 10 leídas · 10 copiadas · 2 PINs · 1 grupos
+· 0 pendientes · 0 duplicadas — No hay más que leer: toda la información está leída y al día… ●
+```
+
+| Punto | Significado | Cuándo |
+|---|---|---|
+| 🟢 **verde** | **No hay más que leer** | 0 pendientes, 0 duplicadas, sin errores ni excedidas |
+| 🟠 **naranja** | **Falta información** | hay fotos sin leer (`Reprocesar incompletas`) o sin copiar (tope por PIN) |
+| 🔴 **rojo** | **Información inconsistente** | fotos repetidas en el índice o errores durante la corrida |
+
+Pendientes se comprueban con `GET /api/reprocesar/preview` (solo en Modo Local) y duplicadas con
+`GET /api/fuentes` (`indice.duplicadas`: `IMG_0139.jpg` y `img_0139.jpg` cuentan como una sola
+foto repetida).
+
 ## Rutas precargadas — `CVLOCFG.txt`
 
 Al abrir la página, si el switch **`☐ Cargar rutas de CVLOCFG.txt`** está activado (por defecto),

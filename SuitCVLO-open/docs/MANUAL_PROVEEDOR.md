@@ -54,7 +54,13 @@ entregable (va en `MANUAL_CLIENTE.md`) ni variables de entorno, respaldos o cade
    que lo cierres o cambies una ruta.
 3. Pon **N Fotos** (empezar con 10-20 la primera vez) y deja **auto (cadena)**.
 4. Pulsa **`Iniciar corrida`**. Sigue la barra, la línea de estadísticas y el log.
-5. Al terminar verás el resumen: **leídas / copiadas / excedidas / PINs / grupos**.
+5. Al terminar verás el resumen: **leídas / copiadas / excedidas / PINs / grupos** y, debajo,
+   **el estado final con un punto de color**:
+   - 🟢 **verde** = no hay más que leer (todo al día);
+   - 🟠 **naranja** = falta información (pendientes o sin copiar) → `Reprocesar incompletas`;
+   - 🔴 **rojo** = información inconsistente (fotos repetidas en el índice o errores) → revisa
+     antes de seguir.
+   Y suena un tono suave al llegar al 100 %.
 6. Entrega: carpeta de quincena + `info.txt` + `idxfotos.xlsx` (ver `MANUAL_CLIENTE.md`).
 
 **No repite trabajo**: excluye lo ya cargado en la salida, lo ya leído y lo ya `Verificado ✓`.

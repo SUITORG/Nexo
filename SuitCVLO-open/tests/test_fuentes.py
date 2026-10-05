@@ -64,7 +64,28 @@ class TestApiFuentes(unittest.TestCase):
         self.assertEqual(d['pines'], 2)
         self.assertEqual(d['kml']['total'], 2)
         self.assertEqual(d['kml']['cara'], 1)
-        self.assertEqual(d['indice'], {'filas': 0, 'verificadas': 0, 'no_gps': 0})
+        self.assertEqual(d['indice'], {'filas': 0, 'verificadas': 0, 'no_gps': 0, 'duplicadas': 0})
+
+    def test_indice_detecta_fotos_duplicadas(self):
+        """IMG_0139.jpg y img_0139.jpg son la misma foto: cuenta como duplicada (info revuelta)."""
+        import os
+        import tempfile
+        from openpyxl import Workbook
+        import app as appmod
+        d = tempfile.mkdtemp(prefix='cvlo_dup_')
+        ruta = os.path.join(d, 'idx.xlsx')
+        wb = Workbook()
+        ws = wb.active
+        ws.append(['NombreFoto', 'b', 'c', 'd', 'e', 'f', 'g', 'Verificado', 'PIN'])
+        ws.append(['IMG_0139.jpg', '', '', '', '', '', '', '', 'P1'])
+        ws.append(['img_0139.jpg', '', '', '', '', '', '', '✓', 'P1'])
+        ws.append(['otra.jpg', '', '', '', '', '', '', '✓', 'P1'])
+        wb.save(ruta)
+        filas, verif, no_gps, _stems, dup = appmod._leer_idx(ruta)
+        self.assertEqual((filas, verif, dup), (3, 2, 1))
+        # y sale en /api/fuentes
+        r = self.cliente.get('/api/fuentes', query_string={'idx': ruta})
+        self.assertEqual(r.get_json()['indice']['duplicadas'], 1)
 
     def test_fuentes_ruta_inexistente_devuelve_400(self):
         r = self.cliente.get('/api/fuentes', query_string={'ruta': r'C:\no\existe\xyz'})

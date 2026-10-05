@@ -240,6 +240,87 @@ function sonarFin() {
 }
 
 
+// ---------- estado final: mensaje de cierre + punto de color ----------
+// verde  = no hay más que leer (todo al día)
+// naranja= falta información (pendientes o excedidas)
+// rojo   = información inconsistente (duplicadas en el índice o errores)
+const PUNTO_COLOR = { verde: '#27ae60', naranja: '#f39c12', rojo: '#e74c3c' };
+
+async function estadoFinal(j) {
+  const r = j.resumen || {};
+  const s = j.stats || {};
+  const ruta = $('#ruta_local').value.trim();
+  const salida = $('#salida').value.trim();
+  const idx = $('#idx').value.trim();
+  const partes = [];
+  if (s.fuente) partes.push(s.fuente + ' fotos en la ruta');
+  partes.push((j.completadas || 0) + '/' + (j.total || 0) + ' en esta corrida');
+  partes.push((r.leidas || 0) + ' leídas · ' + (r.copiadas || 0) + ' copiadas');
+  if (r.excedidas) partes.push(r.excedidas + ' excedidas al tope');
+  partes.push((r.pines || []).length + ' PINs · ' + (r.grupos || []).length + ' grupos');
+
+  // pendientes (solo se pueden comprobar con ruta local)
+  let pendientes = null;
+  if (ruta && salida) {
+    try {
+      const p = await fetch('/api/reprocesar/preview?' +
+        new URLSearchParams({ ruta: ruta, salida: salida, idx: idx }));
+      if (p.ok) pendientes = (await p.json()).objetivas;
+    } catch (e) { /* sin comprobación */ }
+  }
+  // duplicadas (información revuelta en el índice)
+  let duplicadas = null;
+  try {
+    const f = await fetch('/api/fuentes?' + new URLSearchParams({ idx: idx }));
+    if (f.ok) duplicadas = ((await f.json()).indice || {}).duplicadas;
+  } catch (e) { /* sin comprobación */ }
+
+  if (pendientes !== null) partes.push(pendientes + ' pendientes');
+  if (duplicadas !== null) partes.push(duplicadas + ' duplicadas');
+
+  const conError = j.estado === 'error' ||
+    (j.log || []).some((l) => String(l).indexOf('ERROR') >= 0);
+  let color, frase;
+  if (conError || duplicadas > 0) {
+    color = 'rojo';
+    frase = 'Información inconsistente: ' +
+      (conError ? 'hubo errores durante la corrida' : '') +
+      (conError && duplicadas > 0 ? ' y ' : '') +
+      (duplicadas > 0 ? duplicadas + ' fotos repetidas en el índice' : '') +
+      '. Revisa antes de seguir.';
+  } else if (pendientes > 0 || (r.excedidas || 0) > 0) {
+    color = 'naranja';
+    frase = 'Aún falta información: ' +
+      (pendientes > 0 ? pendientes + ' fotos sin leer' : '') +
+      (pendientes > 0 && r.excedidas ? ' y ' : '') +
+      (r.excedidas ? r.excedidas + ' sin copiar (tope por PIN)' : '') +
+      '. Usa "Reprocesar incompletas" o inicia un proceso nuevo.';
+  } else {
+    color = 'verde';
+    frase = 'No hay más que leer: toda la información está leída y al día. ' +
+      'Solo haría falta reprocesar o iniciar un proceso nuevo si quieres volver a correr.';
+  }
+
+  const viejo = document.getElementById('estado-final');
+  if (viejo) viejo.remove();
+  const p = document.createElement('p');
+  p.id = 'estado-final';
+  p.className = 'nota';
+  p.style.marginTop = '6px';
+  p.textContent = partes.join(' · ') + ' — ' + frase + ' ';
+  const punto = document.createElement('span');
+  punto.title = 'verde: al día · naranja: falta información · rojo: información inconsistente';
+  punto.style.cssText = 'display:inline-block;width:11px;height:11px;border-radius:50%;' +
+    'margin-left:6px;vertical-align:middle;background:' + PUNTO_COLOR[color] +
+    ';box-shadow:0 0 0 2px rgba(0,0,0,.12)';
+  p.appendChild(punto);
+  if (el.resumenInfo && el.resumenInfo.parentNode) {
+    el.resumenInfo.insertAdjacentElement('afterend', p);
+  }
+  return color;
+}
+
+
 async function consultar() {
   if (!jobActual) return;
   try {
@@ -252,6 +333,7 @@ async function consultar() {
       if (j.estado === 'listo') sonarFin();
       terminar();
       cargarHistorial();
+      estadoFinal(j);
     }
   } catch (e) { /* reintenta */ }
 }
