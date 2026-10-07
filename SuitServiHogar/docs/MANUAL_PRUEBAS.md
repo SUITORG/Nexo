@@ -3,8 +3,8 @@
 > **Para qué sirve este manual:** explica el modo test/dev del proyecto: cómo correr el flujo completo E2E con mocks, sin depender de servicios reales (Stripe real, Google OAuth, Supabase prod).
 > **Audiencia:** desarrollador del proyecto que valida cambios antes de subirlos.
 
-> **Versión:** 1.0  
-> **Fecha:** 2026-09-15 (migrado a estándar Guía Total 2026-09-26)  
+> **Versión:** 1.1  
+> **Fecha:** 2026-09-15 (migrado a estándar Guía Total 2026-09-26 · actualizado 2026-10-07 con `qa.bat`, candado PROD y e2e `flujo-dev`)  
 > **Propósito:** Probar flujo completo E2E sin dependencias externas (Stripe real, Google OAuth, Supabase prod)
 
 ---
@@ -26,6 +26,18 @@ Cliente → Explorar → Escrow → Pago (mock) → Técnico → En ruta → Com
 ---
 
 ## 2. ACTIVACIÓN RÁPIDA
+
+### Opción 0 (recomendada): `qa.bat` — un solo comando, 3 ventanas con roles
+
+```bash
+qa.bat
+```
+
+- Mata instancias previas en 3000/3010, levanta backend (3010) y frontend (3000)
+  cada uno en su propia ventana con banner y hora de arranque (`*****`).
+- Abre 3 ventanas del navegador, una por rol, con el rol por URL param
+  (gana sobre localStorage): `?devMode=true&devMockStripe=true&devMockExchangeRate=true&devAutoLogin=client|technician|admin`.
+- En cada ventana se ve el badge **MODO PRUEBA** (esquina superior derecha).
 
 ### Opción A: Variable de entorno (recomendada)
 
@@ -57,8 +69,11 @@ location.reload();
 ### Opción C: URL param (para compartir)
 
 ```
-http://localhost:3000/?devMode=true&autoLogin=technician&seedData=true
+http://localhost:3000/?devMode=true&devAutoLogin=technician&devMockStripe=true&devMockExchangeRate=true
 ```
+
+**Precedencia** (`src/config/devMode.ts`): env `VITE_*` → URL param → `localStorage`.
+El nombre correcto del param es `devAutoLogin` (no `autoLogin`).
 
 ---
 
@@ -71,8 +86,8 @@ http://localhost:3000/?devMode=true&autoLogin=technician&seedData=true
 | `devAutoLogin=client` | Auto-login como cliente (guest) |
 | `devAutoLogin=admin` | Auto-login como admin (acceso a `/admin`) |
 | `devSeedData=true` | Precarga: 5 técnicos, 3 órdenes en distintos estados, 2 referidos, 3 cupones |
-| `devMockStripe=true` | PaymentIntent siempre exitoso, webhook automático |
-| `devMockExchangeRate=true` | Tipo de cambio fijo 18.0, sin llamadas a Fixer.io |
+| `devMockStripe=true` | Pago mock en frontend (`useStripePayment`): sin llamada a `/api/create-payment-intent` ni a la API de Stripe (Stripe.js solo carga el Card Element) |
+| `devMockExchangeRate=true` | Tipo de cambio fijo 18.0, sin llamadas a Fixer.io (también aborta `data.fixer.io` en el e2e) |
 
 ---
 
@@ -121,22 +136,26 @@ VITE_DEV_MODE=true node server.js
 ## 5. ARQUITECTURA DEL MODO DEV
 
 ### Frontend (`src/config/devMode.ts`)
-```typescript
-export const isDevMode = () => 
-  import.meta.env.VITE_DEV_MODE === 'true' || 
-  localStorage.getItem('devMode') === 'true' ||
-  new URLSearchParams(window.location.search).get('devMode') === 'true';
 
-export const getDevConfig = () => ({
-  autoLogin: import.meta.env.VITE_DEV_AUTO_LOGIN || 
-             localStorage.getItem('devAutoLogin') ||
-             new URLSearchParams(window.location.search).get('autoLogin'),
-  seedData: import.meta.env.VITE_DEV_SEED_DATA === 'true' || 
-            localStorage.getItem('devSeedData') === 'true',
-  mockStripe: import.meta.env.VITE_DEV_MOCK_STRIPE === 'true',
-  mockExchangeRate: import.meta.env.VITE_DEV_MOCK_EXCHANGE_RATE === 'true',
-});
+```typescript
+// Precedencia: env VITE_* → URL param → localStorage
+function getEnv(key: string): string | undefined {
+  return import.meta.env[key] ||
+         new URLSearchParams(window.location.search).get(key) ||
+         localStorage.getItem(key);
+}
+
+// Candado anti-producción: en build PROD fuera de localhost NUNCA hay modo prueba
+export function isDevMode(): boolean {
+  if (import.meta.env.PROD && !isLocalhost()) return false;
+  return getEnv('VITE_DEV_MODE') === 'true' || getEnv('devMode') === 'true';
+}
+
+// getDevConfig() devuelve enabled:false + todas las flags en false si !isDevMode()
 ```
+
+- Badge **MODO PRUEBA**: `src/components/DevModeBadge.tsx`, renderizado junto a
+  `<DevSessions />` en `App.tsx` — solo aparece cuando `isDevMode()`.
 
 ### Backend (`server.js` - bloques condicionales)
 ```javascript
@@ -273,70 +292,30 @@ console.log({
 
 ## 7. TESTING AUTOMATIZADO CON MODO DEV
 
-### E2E Tests (Playwright) - modo headless
-```typescript
-// tests/e2e/full-flow.dev.test.ts
-test.describe('Full Flow Dev Mode', () => {
-  test.use({ 
-    baseURL: 'http://localhost:3000/?devMode=true&autoLogin=client&seedData=true' 
-  });
+### E2E Tests (Playwright) — flujo real completo
 
-  test('flujo completo cliente → técnico → reseña', async ({ page }) => {
-    // 1. Cliente crea orden
-    await page.goto('/explorar');
-    await page.click('[data-testid="technician-card"]:first-child button:has-text("Solicitar")');
-    await expect(page).toHaveURL(/.*escrow/);
-    
-    // 2. Dirección + GPS mock
-    await page.fill('input[placeholder*="Calle"]', 'Av. Test');
-    await page.fill('input[placeholder*="Número"]', '123');
-    await page.click('button:has-text("Usar mi GPS")');
-    await expect(page.locator('text=Blindaje 150-250m')).toBeVisible();
-    
-    // 3. Pago mock
-    await page.fill('input[placeholder="Código de cupón"]', 'REF-TECH-TEST123');
-    await page.click('button:has-text("Aplicar")');
-    await expect(page.locator('text=-$150.00 MXN')).toBeVisible();
-    
-    // Stripe test card
-    await page.fill('input[name="cardnumber"]', '4242 4242 4242 4242');
-    await page.fill('input[name="exp-date"]', '12/28');
-    await page.fill('input[name="cvc"]', '123');
-    await page.fill('input[name="postal"]', '88720');
-    await page.click('button:has-text("Pagar")');
-    
-    // 4. Verifica éxito
-    await expect(page.locator('text=Pago exitoso')).toBeVisible({ timeout: 10000 });
-    
-    // 5. Cambia a técnico (nueva pestaña)
-    const techPage = await page.context().newPage();
-    await techPage.goto('/?devMode=true&autoLogin=technician&seedData=true');
-    await techPage.click('text=Ver Mis Órdenes');
-    await techPage.click('[data-testid="order-card"]:first-child button:has-text("Iniciar ruta")');
-    await techPage.click('button:has-text("Confirmar")');
-    await expect(techPage.locator('text=En ruta')).toBeVisible();
-    
-    // 6. Completar + PIN
-    await techPage.click('button:has-text("Marcar completado")');
-    await techPage.setInputFiles('input[type="file"]', 'tests/fixtures/evidence.jpg');
-    await techPage.click('button:has-text("Subir y completar")');
-    await techPage.click('button:has-text("Finalizar (PIN)")');
-    await techPage.fill('input[placeholder="PIN"]', '1234');
-    await techPage.click('button:has-text("Liberar fondos")');
-    await expect(techPage.locator('text=Fondos liberados')).toBeVisible();
-  });
-});
-```
+El flujo completo está automatizado en **`tests/e2e/flujo-dev.spec.ts`**
+(3 contextos de navegador: cliente → técnico → admin):
 
-**Ejecutar:**
+1. **Cliente**: auto-login QA → Explorar → "Contratar Garantía" en Roberto Garza →
+   dirección → paga con **mock** → modal "Custodia Escrow Activada" → extrae el id
+   real `ORD-*` creado en BD.
+2. **Técnico**: Perfil → "Ver Mis Órdenes" → localiza la orden por ref →
+   "Iniciar ruta" → "Marcar completado" → "Finalizar (PIN cliente)" → PIN `8821` →
+   "Liberar fondos" → verifica **"Liberado / Pagado"** en Historial.
+3. **Admin**: Perfil → "Panel de Administración" → heading **"Admin Panel"**.
+
 ```bash
-# Terminal 1: dev servers
-VITE_DEV_MODE=true VITE_DEV_SEED_DATA=true npm run dev &
-VITE_DEV_MODE=true node server.js &
-
-# Terminal 2: tests
-npm run test:e2e -- tests/e2e/full-flow.dev.test.ts
+# Levanta vite:3000 + backend:3010 automáticamente (playwright.config webServer)
+npm run test:e2e            # smoke (4) + flujo-dev (1)
+npm run test:e2e -- tests/e2e/flujo-dev.spec.ts   # solo el flujo completo
 ```
+
+Notas:
+- El test fuerza flags por `addInitScript` (localStorage) y aborta `data.fixer.io`,
+  así que funciona aunque el server se haya levantado a mano sin `VITE_DEV_*`.
+- La identidad QA se crea/garantiza en `POST /api/dev/qa-login` (incluye la fila
+  `sh_technicians` con rol para técnico/admin).
 
 ---
 
@@ -354,6 +333,10 @@ npm run test:e2e -- tests/e2e/full-flow.dev.test.ts
 ---
 
 ## 9. DESACTIVAR MODO DEV (PRODUCCIÓN)
+
+**Candado automático:** `isDevMode()` (`devMode.ts`) devuelve `false` en cualquier
+build PROD fuera de localhost — aunque queden `VITE_DEV_*` en el build o flags en
+localStorage. El badge "MODO PRUEBA" tampoco se renderiza.
 
 ```bash
 # 1. Quita variables .env

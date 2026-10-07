@@ -449,7 +449,8 @@ if (IS_DEV) {
   }
 
   app.post('/api/dev/qa-login', async (req, res) => {
-    const email = QA_ACCOUNTS[req.body?.role];
+    const role = req.body?.role;
+    const email = QA_ACCOUNTS[role];
     if (!email) return res.status(400).json({ error: 'role inválido (admin|technician|client)' });
     const password = process.env.DEV_QA_PASSWORD;
     if (!password) return res.status(503).json({ error: 'DEV_QA_PASSWORD no configurado en .env' });
@@ -467,6 +468,33 @@ if (IS_DEV) {
           if (updErr) throw updErr;
         }
       }
+
+      // Identidades QA: garantiza la fila en sh_technicians (rol) para que
+      // getTechnicianByEmail() asigne isTechnician/isAdmin en cada ventana.
+      if (role === 'technician' || role === 'admin') {
+        const { data: existing } = await supabase
+          .from('sh_technicians')
+          .select('id, role, active')
+          .ilike('email', email)
+          .maybeSingle();
+        if (!existing) {
+          const { error: insErr } = await supabase.from('sh_technicians').insert({
+            id: role === 'admin' ? 'qa-admin' : 'qa-technician',
+            name: role === 'admin' ? 'Administrador QA' : 'Tecnico QA',
+            email,
+            role,
+            active: true
+          });
+          if (insErr) throw insErr;
+        } else if (role === 'admin' && (existing.role !== 'admin' || !existing.active)) {
+          const { error: updErr } = await supabase
+            .from('sh_technicians')
+            .update({ role: 'admin', active: true })
+            .eq('id', existing.id);
+          if (updErr) throw updErr;
+        }
+      }
+
       res.json({ email, password });
     } catch (err) {
       console.error('[QA LOGIN]', err.message);

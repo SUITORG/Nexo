@@ -12,7 +12,7 @@ import { useTaxInfo } from '../../hooks/useTaxInfo';
 interface BookingEscrowScreenProps {
   order: EscrowOrder;
   currency: Currency;
-  onPaySuccess: () => void;
+  onPaySuccess: (createdOrder?: EscrowOrder) => void;
   onPayError: (msg: string) => void;
   onBack: () => void;
   onShowRules: () => void;
@@ -52,15 +52,18 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
       const result = await createPaymentIntent(order, stripeAccountId, couponCode || undefined);
       const payResult = await confirmPayment(null, result.clientSecret, paymentMethodId);
       if (payResult.success) {
+        let created: EscrowOrder | undefined;
         try {
-          await createOrder(order.technician.id, order.serviceTitle, order.serviceDescription, userId || 'guest', order.zoneName, {
+          created = await createOrder(order.technician.id, order.serviceTitle, order.serviceDescription, userId || 'guest', order.zoneName, {
             street,
             number,
             gpsLat: order.gpsLat,
             gpsLng: order.gpsLng
           });
-        } catch {}
-        onPaySuccess();
+        } catch (err) {
+          console.error('Error creando orden:', err);
+        }
+        onPaySuccess(created);
       } else {
         onPayError(payResult.error || 'Error al procesar el pago con Google Pay');
       }
@@ -85,15 +88,18 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
       const result = await createPaymentIntent(order, stripeAccountId, couponCode || undefined);
       const payResult = await confirmPayment(cardElement, result.clientSecret);
       if (payResult.success) {
+        let created: EscrowOrder | undefined;
         try {
-          await createOrder(order.technician.id, order.serviceTitle, order.serviceDescription, userId || 'guest', order.zoneName, {
+          created = await createOrder(order.technician.id, order.serviceTitle, order.serviceDescription, userId || 'guest', order.zoneName, {
             street,
             number,
             gpsLat: order.gpsLat,
             gpsLng: order.gpsLng
           });
-        } catch {}
-        onPaySuccess();
+        } catch (err) {
+          console.error('Error creando orden:', err);
+        }
+        onPaySuccess(created);
       } else {
         onPayError(payResult.error || 'Error al procesar el pago');
       }

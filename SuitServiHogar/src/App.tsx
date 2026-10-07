@@ -18,6 +18,7 @@ import { SettlementEscrowScreen } from './components/screens/SettlementEscrowScr
 import { LoginScreen } from './components/screens/LoginScreen';
 import { FeedbackWidget } from './components/FeedbackWidget';
 import { DevSessions } from './components/DevSessions';
+import { DevModeBadge } from './components/DevModeBadge';
 import { OnlineStatusBanner } from './components/OnlineStatusBanner';
 import { TechnicianOrdersScreen } from './components/screens/TechnicianOrdersScreen';
 import { ChatScreen } from './components/screens/ChatScreen';
@@ -209,13 +210,16 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePaySuccess = async () => {
+  const handlePaySuccess = async (created?: EscrowOrder) => {
+    // La orden creada (con id real de BD) manda; si no existe, se conserva
+    // el estado local (camino legacy con INITIAL_ORDER).
+    const target = created ?? currentOrder;
     try {
-      await updateOrderStatus(currentOrder.id, 'funded');
+      await updateOrderStatus(target.id, 'funded');
     } catch (err) {
       console.error('Error updating order status:', err);
     }
-    setCurrentOrder((prev) => ({ ...prev, status: 'funded' }));
+    setCurrentOrder((prev) => ({ ...(created ?? prev), status: 'funded' }));
     setShowPaymentSuccessModal(true);
   };
 
@@ -511,6 +515,7 @@ export default function App() {
         <OnlineStatusBanner heartbeatUrl="/" heartbeatInterval={30000} />
         <FeedbackWidget />
         <DevSessions />
+        <DevModeBadge />
       </div>
     </Elements>
   );

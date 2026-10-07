@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { stripePromise } from '../lib/stripe';
 import { supabase } from '../lib/supabase';
+import { getDevConfig } from '../config/devMode';
 import { EscrowOrder } from '../types';
 
 interface PaymentResult {
@@ -27,6 +28,13 @@ export function useStripePayment() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   const createPaymentIntent = async (order: EscrowOrder, stripeAccountId?: string, couponCode?: string) => {
+    const dev = getDevConfig();
+    if (dev.enabled && dev.mockStripe) {
+      // Modo prueba: sin llamadas reales a Stripe (PROD bloqueado en devMode.ts)
+      const mock = { clientSecret: 'pi_dev_mock_secret', couponDiscount: 0, commissionPct: 15 };
+      setClientSecret(mock.clientSecret);
+      return mock;
+    }
     try {
       const headers = await getAuthHeaders();
       const res = await fetch('/api/create-payment-intent', {
@@ -59,6 +67,8 @@ export function useStripePayment() {
   const confirmPayment = async (cardElement: any, secretOverride?: string, paymentMethodId?: string): Promise<PaymentResult> => {
     setProcessing(true);
     try {
+      const dev = getDevConfig();
+      if (dev.enabled && dev.mockStripe) return { success: true };
       const secret = secretOverride || clientSecret;
       if (!secret) throw new Error('PaymentIntent no creado');
       if (!cardElement && !paymentMethodId) throw new Error('Ingresa los datos de tu tarjeta');

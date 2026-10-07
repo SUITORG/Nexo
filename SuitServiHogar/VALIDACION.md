@@ -25,3 +25,26 @@ Fecha: 2026-10-07 · Contrato: docs/Contrato.md (v6.0) · Ronda: 1
 
 ## Veredicto global
 PASA — 6/6 pruebas con evidencia ejecutada; sin correcciones pendientes.
+
+---
+
+## Ciclo 2: modo de prueba local de un comando (qa.bat + flujo-dev + candado PROD)
+Fecha: 2026-10-07 - Contrato: docs/Contrato.md (v6.0) - Ronda: 2 (F4 corrigio 1 fallo)
+
+| ID | Verifica | Comando o accion | Resultado observado | Veredicto |
+|----|----------|------------------|---------------------|-----------|
+| V7 | TSC + ESLint tras cambios de modo prueba (devMode, badge, useStripePayment, bookingService, exchangeRate, App, BookingEscrow, server.js, tests) | `npm run lint` | exit 0 - `tsc --noEmit && eslint src --max-warnings 0` sin errores (1 fix en ronda: firma `waitForEvent`) | PASA |
+| V8 | Regresion unitaria | `npm test` (vitest run) | 2 archivos - 14/14 tests passed - exit 0 | PASA |
+| V9 | E2E completo: smoke 4 + flujo-dev 3 contextos (cliente paga mock -> tecnico libera con PIN -> admin panel) | `npm run test:e2e` (webServer vite:3000 + tsx server.js:3010) | 5 passed (18.2s) - exit 0 - orden creada `ORD-*` verificada en BD, estado `Liberado / Pagado` en Historial, heading `Admin Panel` visible | PASA |
+
+## Evidencia ciclo 2
+- Fallo ronda 1 detectado y corregido (ver CORRECCIONES.md): `[QA LOGIN] role is not defined` -> 500 en qa-login; fix `const role = req.body?.role`.
+- Orden creada por el test con id `ORD-<timestamp base36>` extraida del modal (prueba de que el INSERT llego a BD y el wiring `created -> funded` funciono).
+- Servidores del webServer terminados por Playwright (3000/3010 libres tras la corrida).
+
+## GAPs ciclo 2 (no verificable ahora)
+- **Estado vivo de RLS/perms de `sh_orders`**: el INSERT del cliente y los UPDATEs del tecnico pasaron en la corrida, pero no se audito el detalle de politicas de la BD live (regla: nada remoto sin confirmacion).
+- **`sh_referrals`/`sh_coupons`**: el release ejecuta el bloque de referidos sin error (el test llego a `Liberado / Pagado`), no se verifico si algun cupon/referido fue creado por el camino.
+
+## Veredicto global ciclo 2
+PASA - 3/3 pruebas (V7-V9); 1 correccion aplicada en F4.

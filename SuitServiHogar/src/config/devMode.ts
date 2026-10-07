@@ -20,14 +20,26 @@ function getEnv(key: string): string | undefined {
          (typeof window !== 'undefined' ? localStorage.getItem(key) : undefined);
 }
 
+function isLocalhost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const h = window.location.hostname;
+  return h === 'localhost' || h === '127.0.0.1' || h === '';
+}
+
 export function isDevMode(): boolean {
+  // Candado anti-producción: en build PROD fuera de localhost nunca hay modo prueba,
+  // aunque alguien deje VITE_DEV_* en el build o localStorage.
+  if (import.meta.env.PROD && !isLocalhost()) return false;
   return getEnv('VITE_DEV_MODE') === 'true' || 
          getEnv(DEV_MODE_KEY) === 'true';
 }
 
 export function getDevConfig(): DevConfig {
+  if (!isDevMode()) {
+    return { enabled: false, autoLogin: null, seedData: false, mockStripe: false, mockExchangeRate: false };
+  }
   return {
-    enabled: isDevMode(),
+    enabled: true,
     autoLogin: (getEnv('VITE_DEV_AUTO_LOGIN') || 
                 getEnv(DEV_AUTO_LOGIN_KEY) || 
                 null) as 'technician' | 'client' | 'admin' | null,

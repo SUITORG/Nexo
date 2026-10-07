@@ -73,6 +73,9 @@ export async function createOrder(
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   const orderData = {
+    // sh_orders.id es TEXT PK sin default: hay que generar el id aquí.
+    // ponytail: timestamp base36 (prefijo ORD-); secuencia real en BD si se necesita orden estricto
+    id: `ORD-${Date.now().toString(36).toUpperCase()}`,
     service_title: serviceTitle,
     service_description: serviceDescription,
     technician_id: technicianId,

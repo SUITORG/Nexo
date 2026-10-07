@@ -1,9 +1,13 @@
+import { getDevConfig } from '../config/devMode';
+
 const FIXER_KEY = import.meta.env.VITE_FIXER_KEY;
 const BASE = 'MXN';
 const SYMBOLS = 'USD';
 const CACHE_TTL = 3_600_000; // 1 hora
 
 export async function fetchRealRate(): Promise<number> {
+  const dev = getDevConfig();
+  if (dev.enabled && dev.mockExchangeRate) return 18.0;
   if (!FIXER_KEY) return 18.0;
   try {
     const res = await fetch(`https://data.fixer.io/api/latest?access_key=${FIXER_KEY}&base=${BASE}&symbols=${SYMBOLS}`);

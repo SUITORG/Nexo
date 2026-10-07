@@ -17,10 +17,24 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer: [
+    {
+      command: 'npm run dev',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120000,
+      env: {
+        VITE_DEV_MODE: 'true',
+        VITE_DEV_MOCK_STRIPE: 'true',
+        VITE_DEV_MOCK_EXCHANGE_RATE: 'true',
+      },
+    },
+    {
+      // Backend para /api/dev/* (qa-login) — flujo-dev lo necesita
+      command: 'npx tsx server.js',
+      url: 'http://localhost:3010/api/dev/status',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60000,
+    },
+  ],
 });
