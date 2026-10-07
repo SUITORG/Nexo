@@ -28,7 +28,7 @@ function extractJsonFromAiText(text) {
 
 // ADR-026: logo_url puede venir en formato vector de Brief (ADR-023/025 —
 // "logo: url|avatar: url|industria: ...|LAPVTFU: url,url,,,,,|...") en vez del
-// formato legado de ADR-008 ("logoUrl,avatarUrl"). Probar etiquetas primero;
+// formato legado de ADR-042 ("logoUrl,avatarUrl"). Probar etiquetas primero;
 // si no hay ninguna, caer al comma-split legado (retrocompatible).
 function parseLogoUrlField(value) {
     if (!value) return { logoUrl: '', avatarUrl: '' };
@@ -64,7 +64,7 @@ function parseLogoUrlField(value) {
     return { logoUrl: trimmed.substring(0, lastComma).trim(), avatarUrl: trimmed.substring(lastComma + 1).trim() };
 }
 
-// Gemela de parseOrigenPoliticas() en js/modules/core.js (ADR-019) — sin módulo
+// Gemela de parseOrigenPoliticas() en js/modules/core.js (ADR-043) — sin módulo
 // compartido entre root SuitOrg y SuitCampanas, misma lógica duplicada a propósito.
 // origen_politicas = "op: ROL|presentacion: SI|lp: si"; legado sin etiquetas
 // ("ROL"/"USUARIO" a secas) cae posicional a `op`.
@@ -2502,7 +2502,7 @@ function setupCompanyAutoFill() {
                 showToast(`Configuración de ${val} cargada`, 'success');
             }
 
-            // presentacion: SI / lp: SI (origen_politicas, ADR-019) + datos del Brief para
+            // presentacion: SI / lp: SI (origen_politicas, ADR-043) + datos del Brief para
             // BDPV/LP (ADR-026). No cambia de modo solo: solo avisa, precarga lo que BDPV
             // va a necesitar si lo usa, y habilita el botón correspondiente.
             const origenPol = parseOrigenPoliticas(findVal(['origen_politicas']));
@@ -3579,7 +3579,7 @@ function extractPaletteFromImage(img) {
 
 function extraerColoresDeLogo() {
     // El campo #companyLogo guarda "urlLogo,urlAvatar" pegados con una coma
-    // (ADR-008 legado — ver parseLogoUrlField) — pasarlo tal cual como src de
+    // (ADR-042 legado — ver parseLogoUrlField) — pasarlo tal cual como src de
     // <img> arma una sola URL inválida (googleusercontent.com/d/ID1,https://...ID2)
     // que el servidor de Google rechaza con 400. Hay que separarlo y usar SOLO
     // el logo, igual que ya hace el resto del código (renderCarouselFromJson,

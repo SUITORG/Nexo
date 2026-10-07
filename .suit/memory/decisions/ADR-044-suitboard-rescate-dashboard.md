@@ -1,4 +1,6 @@
-# ADR-028: SuitBoard — Rescate y organización del dashboard Crypto + US Market
+# ADR-044: SuitBoard — Rescate y organización del dashboard Crypto + US Market
+
+> ID reasignado 2026-10-07 (era ADR-028; colisión con ADR-028-raiz-mydrive-logo-en-cte).
 
 **Date:** 2026-08-31
 **Status:** Aplicado (2026-08-31)

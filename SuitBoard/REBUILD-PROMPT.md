@@ -232,4 +232,4 @@ Recomendación registrada: Finnhub free alcanza para uso personal (60 req/min cu
 5. Implementado el tooltip de análisis al hover, distinguiendo honestamente entre lectura real (crypto, con datos) y demo (US Market, sin datos históricos).
 6. Bug preexistente encontrado y arreglado de paso: `pearsonCorr()` no validaba `null`, un fetch parcial fallido (429 de CoinGecko) tumbaba toda la actualización con una excepción sin capturar.
 
-Ver `.suit/memory/decisions/ADR-028-suitboard-rescate-dashboard.md` para el detalle completo de decisiones tomadas.
+Ver `.suit/memory/decisions/ADR-044-suitboard-rescate-dashboard.md` para el detalle completo de decisiones tomadas.

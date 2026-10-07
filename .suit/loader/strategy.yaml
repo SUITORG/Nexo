@@ -7,7 +7,7 @@ strategies:
       - "{{project}}/AGENTS.md"
       - ".suit/workflows/{{workflow}}.yaml"
     excludes:
-      - "node_modules
+      - "node_modules"
       - ".git"
       - "*.zip"
       - "media/*"
@@ -49,7 +49,8 @@ strategies:
       - ".suit/skills/{{skill}}/*.md"
       - "{{project_context_files}}"
       - "{{project}}/CONTRATO.md"
-      - ".suit/memory/decisions/*.md"
+      # Índice navegable (ahorra ~48K vs decisions/*.md). Abrir solo los ADRs citados por la tarea.
+      - ".suit/memory/INDEX.md"
       - ".suit/memory/patterns/*.md"
       - ".suit/memory/bugs/*.md"
       - ".suit/memory/lecciones.yaml"

@@ -1,4 +1,6 @@
-# ADR-008: Formato dual en logo_url (logo + avatar)
+# ADR-042: Formato dual en logo_url (logo + avatar)
+
+> ID reasignado 2026-10-07 (era ADR-008; colisión con ADR-008-campanasai-security).
 
 ## Status
 Accepted (2026-07-28)

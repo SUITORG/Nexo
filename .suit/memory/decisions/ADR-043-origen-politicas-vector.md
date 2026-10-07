@@ -1,4 +1,6 @@
-# ADR-019: origen_politicas como vector etiqueta:valor multifuncional
+# ADR-043: origen_politicas como vector etiqueta:valor multifuncional
+
+> ID reasignado 2026-10-07 (era ADR-019; colisión con ADR-019-campanas-aceptar-rechazar).
 
 ## Status
 Accepted (2026-08-10)

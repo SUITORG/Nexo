@@ -2763,7 +2763,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // POST /api/lp/generate — Genera landing page HTML (lp: si en origen_politicas, ADR-019)
+    // POST /api/lp/generate — Genera landing page HTML (lp: si en origen_politicas, ADR-043)
     if (pathname === '/api/lp/generate' && req.method === 'POST') {
         let body = '';
         req.on('data', d => body += d);
