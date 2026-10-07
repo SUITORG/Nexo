@@ -40,7 +40,7 @@ Before any operation, the agent MUST:
 | **Plan** | Use `.suit/planner/template.yaml` before writing code | `template.yaml` |
 | **Follow process** | Use workflow from `.suit/workflows/` matching the task | `workflows/` |
 | **Validate** | Run `.suit/reviewer/` checks (quick/standard/architecture/security) before commit | `profiles.yaml` |
-| **Record decisions** | Write ADR to `.suit/memory/decisions/` for architectural choices | `memory/` |
+| **Record decisions** | Write ADR to `.suit/memory/decisions/` for architectural choices, then regen `node scripts/generate-adr-index.js` | `memory/INDEX.md` |
 | **Log** | Record execution in `.suit/telemetry/` following `schema.yaml` | `telemetry/` |
 
 ## Token Efficiency (mandatory)
@@ -234,7 +234,7 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 4. **Apply change** — follow workflow steps from `.suit/workflows/<workflow>.yaml`
 5. **Index** — run `node scripts/generate-index.js` if functions changed
 6. **Validate** — run `.suit/reviewer/profiles.yaml` checks matching risk level
-7. **Record** — write ADR to `.suit/memory/decisions/` for architectural choices
+7. **Record** — write ADR to `.suit/memory/decisions/` for architectural choices, then `node scripts/generate-adr-index.js` (refresca `.suit/memory/INDEX.md`; si da WARN de IDs duplicados → renumerar el **menos** referenciado de la pareja — ver ciclo)
 8. **Commit** — format `{emoji} {tipo}: {desc} (v{X.Y.Z})`
 9. **Log** — record execution in `.suit/logs/` following telemetry schema
 10. **Smoke test manually**

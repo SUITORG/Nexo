@@ -38,6 +38,8 @@
     │                                 → corrige solo ese nodo; jamás reescribe el mapa completo]
     ├── 📊 GuiaTotal/MAPA_VISUAL.html  [si cambió la sección §X → actualiza su burbuja (chip §X / data-sec)
     │                                    → corre node scripts/check-map-visual.js — debe dar OK]
+    ├── 📇 .suit/memory/INDEX.md       [si se creó/modificó un ADR o entrada en memory/ →
+    │                                    ⚡ node scripts/generate-adr-index.js (warnings = IDs duplicados/status]
     └── 📋 ≤3 líneas de cierre: qué se hizo · dónde quedó · próximo paso
 ```
 

@@ -38,11 +38,11 @@
 ## Skills
 | Directory | Contents |
 |---|---|
-| `skills/system/` | context-loader, index-navigator, registry-query |
+| `skills/system/` | context-loader, index-navigator, registry-query, parametros |
 | `skills/domain/` | multi-tenant, cotizaciones-engine, contrato-subproyecto, data-sync, data-cleanup, design-system, brief-engine |
 | `skills/language/` | javascript, gas, sql |
 | `skills/tool/` | web-search, git, web-research |
-| `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador, iteration-loop |
+| `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador, iteration-loop, descubrimiento |
 
 ## Agents
 | ID | Role | Source |
@@ -98,17 +98,13 @@
 ## Memory
 | Directory | Purpose |
 |---|---|
-| `memory/decisions/` | Architecture Decision Records (ADR-004 a ADR-018) |
+| `memory/INDEX.md` | **Índice navegable de TODO memory/** (auto-generado: `node scripts/generate-adr-index.js`) — lista ADRs, bugs, lessons, patterns, pending con status/fecha/TL;DR/refs. Leerlo primero en vez de los archivos sueltos |
+| `memory/decisions/` | Architecture Decision Records (ADR-003 a ADR-044 — ver `memory/INDEX.md`) |
 | `memory/bugs/` | Known bug database |
 | `memory/lessons/` | Cross-project learnings |
 | `memory/patterns/` | Reusable patterns |
 | `memory/pending/` | Planes de iniciativas (`plan-*.md`) — el tracker de pendientes vive en `GuiaTotal/PENDIENTES.md` (fuente única) |
 
 ## Architecture Decision Records
-| ID | Title | Date |
-|---|---|---|
-| ADR-004 | [Modo Flags 4-Partes + SuitPedidoExpress/SuitPos](memory/decisions/ADR-004-modo-flags.md) | 2026-07-09 |
-| ADR-005 | [Modo Flags 7-Partes + SuitProductos/SuitInventarios/SuitBodega](memory/decisions/ADR-005-modulo-prod-inv-bod.md) | 2026-07-09 |
-| ADR-006 | [SuitAI — Model Discovery + Auto-Routing + Circuit Breaker](memory/decisions/ADR-006-suit-ai.md) | 2026-07-09 |
-| ADR-007 | [SuitChatTG — Chatbot Telegram con IA, Leads y Memoria](memory/decisions/ADR-007-suit-chat-tg.md) | 2026-07-21 |
-| ADR-018 | [SuitComfy — Imagen + Video con ComfyUI local (CPU) + FFmpeg](memory/decisions/ADR-018-suitcomfy.md) | 2026-07-31 |
+
+> **Fuente única:** [`memory/INDEX.md`](memory/INDEX.md) (tabla completa: 42 ADRs con título, status, fecha, TL;DR y refs cruzadas). Regenerar con `node scripts/generate-adr-index.js` tras crear/modificar un ADR. Esta sección queda solo como puntero (la tabla hardcodeada caducó: llegaba hasta ADR-018).

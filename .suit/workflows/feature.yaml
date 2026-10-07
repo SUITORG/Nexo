@@ -73,12 +73,13 @@ workflow:
         - "Code is minimal — no speculative abstractions, unused imports, or over-engineering"
 
     - id: index
-      description: "Update function index"
+      description: "Update function index and memory index"
       action: run
-      command: "node scripts/generate-index.js"
-      condition: "if new functions added or renamed"
+      command: "node scripts/generate-index.js && node scripts/generate-adr-index.js"
+      condition: "if new functions added or renamed, or a new/modified ADR or memory entry"
       validation:
         - "INDEX_FUNCIONES.md regenerated"
+        - ".suit/memory/INDEX.md regenerated (WARN de IDs duplicados → renumerar)"
 
     - id: scaffold-launcher
       description: "Create start.bat from template if this is a new standalone project (has its own server.js/package.json and no launcher yet)"

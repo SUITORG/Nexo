@@ -93,6 +93,13 @@ workflow:
       validation:
         - "Bug recorded with reproduction steps and fix"
 
+    - id: memory-index
+      description: "Refresh memory index so the new bug entry is listed"
+      action: run
+      command: "node scripts/generate-adr-index.js"
+      validation:
+        - ".suit/memory/INDEX.md regenerated"
+
     - id: commit
       action: git
       condition: "user confirms"
