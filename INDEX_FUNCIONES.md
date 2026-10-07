@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-01 | **Total archivos:** 1594 JS/GS
+**Generado:** 2026-10-07 | **Total archivos:** 1594 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10322,20 +10322,34 @@
 
 | Línea | Función |
 |-------|---------|
-| 37 | `modo` |
-| 42 | `pintarPaneles` |
-| 52 | `aviso` |
-| 56 | `ocultarAviso` |
-| 105 | `sondeo` |
-| 111 | `consultar` |
-| 129 | `pintarProgreso` |
-| 156 | `stat` |
-| 165 | `pintarResultados` |
-| 188 | `estado` |
-| 197 | `cargarHistorial` |
-| 231 | `guardarIa` |
-| 237 | `cargarModelosIa` |
-| 277 | `pintarEstadoIa` |
+| 43 | `modo` |
+| 48 | `pintarPaneles` |
+| 58 | `aviso` |
+| 62 | `ocultarAviso` |
+| 64 | `iniciarCorrida` |
+| 123 | `reprocesarIncompletas` |
+| 160 | `reescribirInfo` |
+| 188 | `sondeo` |
+| 204 | `terminar` |
+| 216 | `sonarFin` |
+| 249 | `estadoFinal` |
+| 324 | `consultar` |
+| 343 | `pintarProgreso` |
+| 391 | `stat` |
+| 400 | `pintarResultados` |
+| 425 | `estado` |
+| 434 | `cargarHistorial` |
+| 468 | `guardarIa` |
+| 474 | `cargarModelosIa` |
+| 524 | `pintarEstadoIa` |
+| 537 | `_paramsFuentes` |
+| 552 | `pintarInfo` |
+| 586 | `infoFuentes` |
+| 637 | `cfgActiva` |
+| 641 | `cfgRuta` |
+| 646 | `cfgEnUso` |
+| 652 | `cargarCfg` |
+| 699 | `aplicarCfgRuta` |
 
 ## `SuitDashboard/scan.js`
 
@@ -10696,9 +10710,9 @@
 
 | Línea | Función |
 |-------|---------|
-| 12 | `scanFiles` |
-| 24 | `extractExports` |
-| 53 | `buildIndex` |
+| 14 | `scanFiles` |
+| 26 | `extractExports` |
+| 55 | `buildIndex` |
 
 ## `SuitServiHogar/server/cfdiGenerator.js`
 
@@ -10715,11 +10729,11 @@
 | 35 | `loadConfig` |
 | 86 | `requireAuth` |
 | 440 | `findAuthUserByEmail` |
-| 624 | `totalImpuestosTrasladados` |
-| 654 | `valorUnitario` |
-| 655 | `importe` |
-| 659 | `base` |
-| 663 | `importe` |
+| 652 | `totalImpuestosTrasladados` |
+| 682 | `valorUnitario` |
+| 683 | `importe` |
+| 687 | `base` |
+| 691 | `importe` |
 
 ## `SuitStableDiffusion/scripts/colab-sd.js`
 

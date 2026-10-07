@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-09-29
+  Generado: 2026-10-07
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -45,6 +45,7 @@
   auditoria                 .suit/skills/process/auditoria.yaml
   code-review               .suit/skills/process/code-review.yaml
   deployer                  .suit/skills/process/deployer.yaml
+  descubrimiento            .suit/skills/process/descubrimiento.yaml
   guia-total                .suit/skills/process/guia-total.yaml
   iteration-loop            .suit/skills/process/iteration-loop.yaml
   panel-juzgador            .suit/skills/process/panel-juzgador.yaml
@@ -61,6 +62,8 @@
   ------------------------------------------------------------------------
   context-loader            .suit/skills/system/context-loader.yaml
   index-navigator           .suit/skills/system/index-navigator.yaml
+  parametros                .suit/skills/system/parametros.yaml
+  registry-query            .suit/skills/system/registry-query.yaml
 
   -- HERRAMIENTA (.suit/skills/tool/)
 
@@ -72,7 +75,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 39 skills
+  TOTAL SUITOS: 42 skills
 
 
 ========================================================================
@@ -113,6 +116,9 @@
   cut-the-curve             .claude/skills/cut-the-curve
                             -> .agents\skills\cut-the-curve
                             The technique catalog: five velocity-matched SEAMS (zoom-through, INVERSE zoom-through, cut-the-curve, waterfall cut, rack-focus blur-cut) plus the tw
+  descubrimiento            .claude/skills/descubrimiento
+                            -> .agents\skills\descubrimiento
+                            Fase obligatoria de descubrimiento y arquitectura ANTES de escribir, modificar o eliminar código. Clasifica la solicitud, diagnostica 10 capacidades (
   embedded-captions         .claude/skills/embedded-captions
                             -> .agents\skills\embedded-captions
                             Add captions or subtitles to an existing single-subject talking-head video without editing the footage. Use for plain verbatim captions, cinematic cap
@@ -164,6 +170,8 @@
   media-use                 .claude/skills/media-use
                             -> .agents\skills\media-use
                             Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT 
+  modo-prueba               .claude/skills/modo-prueba
+                            -> .agents\skills\modo-prueba
   motion-doctrine           .claude/skills/motion-doctrine
                             -> .agents\skills\motion-doctrine
                             GATEWAY — load FIRST before composing any HyperFrames animation or video. The high-level motion law that makes a multi-scene video feel like ONE conti
@@ -182,6 +190,9 @@
   paginas-seo               .claude/skills/paginas-seo
                             -> .agents\skills\paginas-seo
                             Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir de Config_SEO: experto copywriter + arquitecto de contenido que redacta los 3 c
+  parametros                .claude/skills/parametros
+                            -> .agents\skills\parametros
+                            Parametriza el sistema con switches declarativos — cambia comportamiento global o puntual SIN tocar código. Fuente única: `.suit/config/switches.yaml`
   pr-to-video               .claude/skills/pr-to-video
                             -> .agents\skills\pr-to-video
                             Turn a GitHub pull request (a PR URL, owner/repo#N, or 'this PR' in a checked-out repo) into a code-change explainer video — changelog, feature reveal
@@ -194,6 +205,9 @@
   seam-craft                .claude/skills/seam-craft
                             -> .agents\skills\seam-craft
                             Render-correctness doctrine for scene-to-scene seams in HyperFrames launch videos — the prerequisites that make transitions composite correctly on the
+  sintesis-proyecto         .claude/skills/sintesis-proyecto
+                            -> .agents\skills\sintesis-proyecto
+                            Síntesis ejecutiva de una investigación de viabilidad: convierte Analista_Proy.md en SINTESIS_PROYECTO.md — patrones comunes, oportunidades detectadas
   slideshow                 .claude/skills/slideshow
                             -> .agents\skills\slideshow
                             Author a HyperFrames slideshow — a presentation, pitch deck, or interactive deck with discrete slides, fragment reveals, branching, hotspot navigation
@@ -204,7 +218,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 42 (4 locales + 38 symlinks)
+  TOTAL CLAUDE: 46 (4 locales + 42 symlinks)
 
 
 ========================================================================
@@ -220,6 +234,7 @@
   ciclo                     .opencode/skills/ciclo
   clusters-seo              .opencode/skills/clusters-seo
   cut-the-curve             .opencode/skills/cut-the-curve
+  descubrimiento            .opencode/skills/descubrimiento
   embedded-captions         .opencode/skills/embedded-captions
   empresa-mascara           .opencode/skills/empresa-mascara
   empresa-registro          .opencode/skills/empresa-registro
@@ -238,23 +253,26 @@
   last30days                .opencode/skills/last30days
   media-use                 .opencode/skills/media-use
   mejoras-proyecto          .opencode/skills/mejoras-proyecto
+  modo-prueba               .opencode/skills/modo-prueba
   motion-doctrine           .opencode/skills/motion-doctrine
   motion-graphics           .opencode/skills/motion-graphics
   multi-tenant-saas         .opencode/skills/multi-tenant-saas
   music-to-video            .opencode/skills/music-to-video
   oversized-cursor          .opencode/skills/oversized-cursor
   paginas-seo               .opencode/skills/paginas-seo
+  parametros                .opencode/skills/parametros
   pr-to-video               .opencode/skills/pr-to-video
   preparar-produccion       .opencode/skills/preparar-produccion
   product-launch-video      .opencode/skills/product-launch-video
   remotion-to-hyperframes   .opencode/skills/remotion-to-hyperframes
   seam-craft                .opencode/skills/seam-craft
+  sintesis-proyecto         .opencode/skills/sintesis-proyecto
   skill-creator             .opencode/skills/skill-creator
   slideshow                 .opencode/skills/slideshow
   talking-head-recut        .opencode/skills/talking-head-recut
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 42
+  TOTAL OPENCODE: 46
 
 
 ========================================================================
@@ -282,6 +300,7 @@
   skill-creator                       Crea, evalúa y mejora skills de forma iterativa. Flujo: capture intent
   video-shotcraft                     Crea videos de producto cinematográficos con Remotion. 157 shot recipe
   mcp-manager                         Gestiona qué MCPs están activos en cada proyecto. Permite listar, acti
+  bat-launcher                        Genera o actualiza el .bat lanzador del servidor local de un proyecto 
   listado-capacidades                 Regenera SKILLS-MCP-AGENTS-LISTADO.txt con el listado consolidado de t
   contrato-subproyecto                Crea, amplía, detalla o normaliza el CONTRATO.md de un subproyecto. El
   data-sync                           Sincroniza esquema y registros entre GSHEETS, SUPABASE y NEON basándos
@@ -294,12 +313,17 @@
   web-research                        Structured web research for business intelligence. Runs 3-5 parallel q
   guia-total                          Orquestador canónico: lleva un proyecto por idea → validación → constr
   auditoria                           Auditoría read-first de un sistema: inventario, C4 en Mermaid, reglas 
+  descubrimiento                      Fase obligatoria antes de escribir/modificar/eliminar código: clasific
   empresa-registro                    Alta semiautomatica de empresas en Config_Empresas (maestro Google She
   clusters-seo                        Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO (
   paginas-seo                         Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir
   empresa-mascara                     Formulario de SOLO campos obligatorios de Config_Empresas (identidad, 
+  context-loader                      Loads minimal context based on workflow requirements and load strategy
+  index-navigator                     Uses INDEX_FUNCIONES.md to locate exact function locations before read
+  registry-query                      Consulta el registry declarativo (.suit/registry/*.yaml: agents, skill
+  parametros                          Cambia comportamiento global o puntual del sistema SIN tocar código, e
 
-  TOTAL REGISTRY: 37 skills declaradas
+  TOTAL REGISTRY: 43 skills declaradas
 
 
 ========================================================================
@@ -382,14 +406,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    39      39         0
-  Skills Claude Code       42        4        38
-  Skills OpenCode           42       42         0
-  Registry YAML           37      37         0
+  Skills SuitOS (.yaml)    42      42         0
+  Skills Claude Code       46        4        42
+  Skills OpenCode           46       46         0
+  Registry YAML           43      43         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   177
+  TOTAL                   194
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

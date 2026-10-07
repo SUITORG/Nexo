@@ -252,7 +252,7 @@
 
 ## ═══ 6. MANTENIMIENTO ═══
 
-**Triggers:** "mejoras", "mejoras de proyecto X", "mejoras de X", "mantenimiento", "arregla", "refactorizar", "optimizar", "limpiar código", "brief incompleto", "taxonomía del brief" (→ ciclo directo, ya mapeado en routing.yaml)
+**Triggers:** "mejoras", "mejoras de proyecto X", "mejoras de X", "mantenimiento", "arregla", "refactorizar", "optimizar", "limpiar código", "brief incompleto", "taxonomía del brief" (→ ciclo directo, ya mapeado en routing.yaml), "modo de prueba local", "modo prueba", "qa.bat", "flujo-dev"
 
 ```text
 └── ⚡ ciclo (F1-F7)
@@ -265,6 +265,8 @@
     │      → poblar desde taxonomía (Analista/docs-TAXONOMIA → fallback tipo_negocio.split(',')[0]
     │        al catálogo) · con VALOR REAL → jamás sobreescribir  [MANUAL_OPERACION §5]
     ├── 📖 si cambió configuración de empresas → refrescar GuiaTotal/MANUAL_OPERACION.md
+    ├── 🔬 QA local (SuitServiHogar): ⚡ modo-prueba → qa.bat (3 ventanas cliente/técnico/admin,
+    │      mocks Stripe/fixer, candado PROD + badge MODO PRUEBA) + e2e flujo-dev
     └── si hay MANUAL_*.md + cambios UI/backend → ⚡ guia-total manuales  [refresco sugerido]
 ```
 
@@ -395,6 +397,7 @@
 | `auditoria` | `/suit-memory` (ADRs) | `<Proyecto>/docs/00-16` + tarjeta | reuso Fase 0.5 antes de inspeccionar |
 | `descubrimiento` | `parametros` (lee switches en fase 0) | entregable de 11 puntos → código (§1/§4/§6) | preguntas ≤3 ∥ micro-skills según diagnóstico |
 | `parametros` | — | `.suit/config/switches.yaml` (switches globales/puntuales) | — (lectura/escritura YAML) |
+| `modo-prueba` | `bat-launcher` (patrón qa.bat) | QA local SuitServiHogar: `VALIDACION` (V7-V9), `CORRECCIONES` | 3 ventanas de rol ∥ tras lista |
 
 **Orden obligatorio:** `descubrimiento` **abre** toda tarea con código (nodo común, antes de §1/§4/§6) → `analista-proy` → `sintesis-proyecto` → `panel-juzgador` (los dos últimos consumen el primero; la síntesis alimenta el diseño del prototipo). **Cadena secuencial con gates**: `empresa-mascara` (entrada por formulario) → `empresa-registro` → `clusters-seo` → `paginas-seo` (cada eslabón espera aprobación salvo switch `auto`). `auditoria` es independiente: la llama `guia-total` o el usuario. `parametros` es transversal: cualquier skill puede leer/escribir switches. El resto es independiente.
 
