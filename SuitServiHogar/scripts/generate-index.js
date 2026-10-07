@@ -2,9 +2,11 @@
  * generate-index.js — Escanea SuitServiHogar y genera INDEX_FUNCIONES.md
  * Uso: node scripts/generate-index.js
  */
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT = path.join(ROOT, 'INDEX_FUNCIONES.md');
 const EXCLUDE = new Set(['node_modules', '.git', 'dist', '.next', 'scripts']);

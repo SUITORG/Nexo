@@ -17,7 +17,7 @@ npm run dev && npx tsx server.js
 src/lib/         → supabase, stripe, constants (rate 18.0, colonias)
 src/services/    → authService, categoryService, technicianService, bookingService
 src/hooks/       → useStripePayment (createPaymentIntent + confirmPayment)
-src/components/  → screens/ (7) + modals/ (5) + Header, BottomNav, StripeCardInput
+src/components/  → screens/ (13) + modals/ (5) + Header, BottomNav, StripeCardInput
 src/App.tsx      → Auth, routing, payment handler, modals
 server.js        → Express: Connect onboarding + PaymentIntent + webhook (port 3010)
 schema.sql       → sh_service_categories, sh_technicians, sh_orders

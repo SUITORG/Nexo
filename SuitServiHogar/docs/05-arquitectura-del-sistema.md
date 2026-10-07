@@ -48,12 +48,14 @@ React 19 + Vite (3000) → Express (3010) → Supabase PostgreSQL → [Stripe Co
 
 | Brecha | Evidencia | Prioridad |
 |---|---|---|
-| **SQL en 4 ubicaciones** sin fuente canónica: `schema.sql`, `migration_v2.sql`, `migrations/` (11 archivos), `supabase/migrations/` (9) — y **drift**: `price_negotiation`, `antifuga_config`, `decisions_config` solo existen en `migrations/`, no en `supabase/migrations/` | listado de carpetas | **alta** |
-| `AGENTS.md` desactualizado: dice `screens/ (7)`, hay **13** (`src/components/screens/`) | `AGENTS.md` vs dir | media |
-| `README.md` es el template de AI Studio (no documenta el proyecto) | `README.md` | media |
-| `package.json` name = `react-example` (placeholder) | `package.json` | baja |
-| ~~Ruido en raíz + evaluaciones fuera de `docs/`~~ → **limpiado 2026-09-26**: `Contrato.bak/123/txt` y logs borrados, `veredicto.md`+`eval_*.md` migrados a `docs/`, `.zip` conservado | dir listing | `VERIFICADO` (resuelto) |
-| `@google/genai` sin uso detectado | grep en `src/`+`server.js` | baja |
+| ~~**SQL en 4 ubicaciones sin fuente canónica + drift**~~ → **RESUELTO 2026-10-07**: 3 migraciones consolidadas idempotentes en `supabase/migrations/`; `migrations/` archivado con ZIP en `_archivadas/` | `migrations/README.md` | `RESUELTO` |
+| ~~`AGENTS.md` desactualizado: dice `screens/ (7)`, hay **13**~~ → **RESUELTO 2026-10-04** | `AGENTS.md:20` | `RESUELTO` |
+| ~~`README.md` es el template de AI Studio~~ → **RESUELTO 2026-10-07** (README real) | `README.md` | `RESUELTO` |
+| ~~`package.json` name = `react-example`~~ → **RESUELTO 2026-10-07** (`suit-servihogar`) | `package.json:2` | `RESUELTO` |
+| ~~Ruido en raíz + evaluaciones fuera de `docs/`~~ → **limpiado 2026-09-26** | dir listing | `VERIFICADO` (resuelto) |
+| ~~`@google/genai` sin uso detectado~~ → **RESUELTO 2026-10-07** (`npm uninstall`) | grep en `src/`+`server.js` | `RESUELTO` |
+| `schema.sql` y `migration_v2.sql` duplicados en raíz del proyecto (fuera del estándar `supabase/migrations/`) | raíz SuitServiHogar | baja |
+| `INDEX_FUNCIONES.md` regenerado 2026-10-07 (13 pantallas + 5 modales ✓) — nota: formato simple `Línea|Export`, sin descripciones curadas de la versión anterior | `node scripts/generate-index.js` | info |
 
 ## Arquitectura objetivo
 
