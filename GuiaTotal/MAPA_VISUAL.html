@@ -230,12 +230,19 @@
     <div class="sub">context-loader · index-navigator · minimal 2K / standard 8K / deep 20K</div>
   </div>
 
+  <!-- ═══ apertura común — descubrimiento + switches (nodo sin §, como cierre) ═══ -->
+  <div class="node t-dec" id="ndesc" style="left:860px; top:42px; width:250px;">
+    <span class="ico">🚦</span>
+    <div class="ttl">⚡ Descubrimiento + switches</div>
+    <div class="sub">fase previa obligatoria · ≤3 preguntas o supuestos · lee switches.yaml (parametros)</div>
+  </div>
+
   <!-- ═══ idea / gates / altas ═══ -->
   <div class="node t-idea" id="n1" data-sec="1" style="left:575px; top:30px; border-radius:999px;">
     <span class="chip">§1</span>
     <span class="ico">💡</span>
     <div class="ttl">Idea / Validación</div>
-    <div class="sub">analista-proy → panel-juzgador</div>
+    <div class="sub">analista-proy → sintesis-proyecto → panel-juzgador</div>
   </div>
 
   <div class="gate" id="g-alta" style="left:624px; top:160px;">
@@ -400,6 +407,11 @@
       via: [[430, 2100], [430, 1525]] },
     { from: 'n1',    to: 'n2',     cls: 'e-soft',  mk: 'ar-g', label: 'sin empresa',
       via: [[1352, 75], [1352, 960]] },
+    { from: 'ndesc', to: 'n1',     cls: 'e-dec',   mk: 'ar-d', label: 'gate idea' },
+    { from: 'ndesc', to: 'n4',     cls: 'e-soft',  mk: 'ar-g', label: 'gate código',
+      via: [[1250, 130], [1250, 1235]] },
+    { from: 'ndesc', to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'mantenimiento',
+      via: [[1310, 130], [1310, 1515]] },
   ];
 
   // iconos de acción por burbuja (misma leyenda que MAPA.md: 📁 lee · ⚡ skill ·
@@ -428,7 +440,8 @@
     n9:  ['📁 audita', '⚡ skill', '✍️ docs', '∥ pilares'],
     n10: ['📁 lista', '✍️ instala'],
     n27: ['📖 lee', '🔄 actualiza'],
-    n25: ['✍️ PENDIENTES', '🔄 MAPA', '📋 ≤3 líneas'],
+    n25: ['✅ evidencia', '❓ decisión', '⛔ detenido', '✍️ PENDIENTES'],
+    ndesc: ['📁 lee switches', '❓ ≤3 preguntas', '✍️ entregable 11 pts'],
   };
 
   function rect(el) {
@@ -511,10 +524,11 @@
     '1': { t: 'Idea / Validación', steps: [
         '📁 lee GuiaTotal/GUIA.md · ❓ ¿convive con Config_Empresas?',
         '⚡ analista-proy → ✍️ Analista_Proy.md (4 pilares ∥ en paralelo)',
+        '⚡ sintesis-proyecto → ✍️ docs/SINTESIS_PROYECTO.md (síntesis para el prototipo)',
         '✍️ <Proyecto>/docs/TAXONOMIA.md (Industria·Nicho·Espec. match al catálogo)',
-        '⚡ panel-juzgador → veredicto de4 agentes + juez (recomienda, no decide)',
+        '⚡ panel-juzgador → ✍️ proposal.md (si vino del chat) → veredicto 4 agentes + juez (recomienda, no decide)',
         '✍️ tarjeta registro/<proyecto>.yaml → ↪ CIERRE'],
-      skills: ['guia-total', 'analista-proy', 'panel-juzgador'] },
+      skills: ['guia-total', 'analista-proy', 'sintesis-proyecto', 'panel-juzgador'] },
     '1.5': { t: 'empresa-registro (alta/operativa)', steps: [
         '📁 GET getAll?id_empresa → fila existe? (si no → pedir alta, nunca inventar)',
         '📁 TAXONOMIA.md → clasifica giro',

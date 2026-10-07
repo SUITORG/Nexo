@@ -7,12 +7,34 @@
 
 ---
 
+## ═══ APERTURA DE TODA TAREA (descubrimiento + parametros — nodos comunes) ═══
+
+```text
+└── ⚡ descubrimiento  [antes de escribir/modificar/eliminar código o analizar una idea]
+    ├── 📁 lee .suit/config/switches.yaml   (skill ⚡ parametros: decision_libre · nivel_preguntas · modo_descubrimiento)
+    ├── 1. clasifica la solicitud (idea/cambio/bugfix/refactor/integración/automatización/datos/reportes)
+    ├── 2. ❓ diagnóstico de 10 capacidades (config · archivos · filtros · cruce · reportes · dashboard ·
+    │       respaldos · idempotencia · validación · seguridad) — ≤3 preguntas;
+    │       decision_libre=true → 0 preguntas, supuestos documentados
+    ├── 3. ⚡ micro-skills internas (solo las relevantes: configuración · archivos · filtros · cruce ·
+    │       reportes · dashboard · respaldo · reprocesamiento · calidad)
+    ├── 4. principio 20/80 — mínima solución verificable
+    ├── 5. ✍️ entregable de 11 puntos → aprobación → recién entonces el flujo que toque
+    │       (§1 idea · §4 construcción · §6 mantenimiento) → ↪ CIERRE
+    └── 🔄 nace un switch nuevo → ✍️ .suit/config/switches.yaml (skill parametros: cambiar switch ≠ código)
+```
+
+---
+
 ## ═══ CIERRE DE TODA PASADA (nodo común — aplica a cualquier sección) ═══
+
+> **Regla de oro:** sin evidencia no hay cierre. Evidencia válida = comando con OK · archivo leído/inspeccionado · captura · **bloqueo con nombre y causa**. Estado explícito en cada cierre: `✅ Cumplido` (con evidencia) · `❓ Te necesito` (falta UNA decisión tuya) · `⛔ Detenido` (límite de seguridad o permiso — no se rodea por otra vía). Mismo bloqueo 3 turnos seguidos → `⛔ Detenido` + fila PENDIENTES.
 
 ```text
 └── ⚡ guia-total  [al terminar CUALQUIER pasada]
+    ├── ✅ estado: Cumplido / ❓ Te necesito / ⛔ Detenido  (+ evidencia o bloqueo con causa)
     ├── ✍️ GuiaTotal/PENDIENTES.md   [todo lo que quedó abierto; filas nunca se borran → se tachan con fecha]
-    ├── 🔄 GuiaTotal/MAPA.md         [solo si el flujo ejecutó DIFIERE del mapa (gatillo/skill/ramal nuevo)
+    ├── 🔄 GuiaTotal/MAPA.md         [solo si el flujo ejecutado DIFIERE del mapa (gatillo/skill/ramal nuevo)
     │                                 → corrige solo ese nodo; jamás reescribe el mapa completo]
     ├── 📊 GuiaTotal/MAPA_VISUAL.html  [si cambió la sección §X → actualiza su burbuja (chip §X / data-sec)
     │                                    → corre node scripts/check-map-visual.js — debe dar OK]
@@ -33,8 +55,11 @@
     │   └── no → (ramal Sheets omitido por completo)
     ├── ⚡ analista-proy                    [si Analista_Proy.md no existe]
     │   └── ∥ 4 pilares de búsquedas web en paralelo → ✍️ Analista_Proy.md
+    ├── ⚡ sintesis-proyecto                [si docs/SINTESIS_PROYECTO.md no existe]
+    │   └── lee Analista_Proy.md → ✍️ <Proyecto>/docs/SINTESIS_PROYECTO.md (síntesis ejecutiva para el prototipo)
     ├── ✍️ crea <Proyecto>/docs/TAXONOMIA.md  (3 campos: Industria · Nicho · Especialización — match al catálogo)
     ├── ⚡ panel-juzgador                   [tras analista-proy; recomendación, no bloquea]
+    │   ├── ✍️ persiste <Proyecto>/proposal.md (si la propuesta viene del chat, va a disco siempre)
     │   ├── ∥ agentes: mercado ∥ técnico ∥ riesgo ∥ financiero
     │   └── → ⚡ juez (serial) → ✍️ veredicto + condiciones
     ├── ✍️ crea GuiaTotal/registro/<proyecto>.yaml  (si falta)
@@ -227,11 +252,15 @@
 
 ## ═══ 6. MANTENIMIENTO ═══
 
-**Triggers:** "mejoras", "mantenimiento", "arregla", "refactorizar", "optimizar", "limpiar código", "brief incompleto", "taxonomía del brief" (→ ciclo directo, ya mapeado en routing.yaml)
+**Triggers:** "mejoras", "mejoras de proyecto X", "mejoras de X", "mantenimiento", "arregla", "refactorizar", "optimizar", "limpiar código", "brief incompleto", "taxonomía del brief" (→ ciclo directo, ya mapeado en routing.yaml)
 
 ```text
 └── ⚡ ciclo (F1-F7)
     ├── 🔄 CONTRATO.md / VALIDACION.md / CORRECCIONES.md
+    ├── 📄 si existe <Proyecto>/MEJORAS_<PROYECTO>.md (salida de §9 auditoria)
+    │      → es el backlog de la pasada: lee los puntos pendientes,
+    │        ejecútalos por fase → táchalos en GuiaTotal/PENDIENTES.md
+    │        → actualiza registro/<proyecto>.yaml (proximo_paso)
     ├── ⚖️ brief de empresas: si seg1 `industria` / seg2 `nicho` están vacíos o [PENDIENTE]
     │      → poblar desde taxonomía (Analista/docs-TAXONOMIA → fallback tipo_negocio.split(',')[0]
     │        al catálogo) · con VALOR REAL → jamás sobreescribir  [MANUAL_OPERACION §5]
@@ -261,7 +290,7 @@
 ## ═══ 9. AUDITORÍA DE ARQUITECTURA ═══
 
 **Skill:** `auditoria` (`.agents/skills/auditoria/SKILL.md` · routing priority 26)
-**Triggers:** "auditoría", "auditoria", "audita arquitectura", "audita el sistema", "documenta el sistema", "diagrama c4", "crea el c4", "inventario del sistema", "brechas de arquitectura", "qué le falta al proyecto"
+**Triggers:** "realiza auditoría", "auditoría", "auditoria", "audita arquitectura", "audita el sistema", "documenta el sistema", "diagrama c4", "crea el c4", "inventario del sistema", "brechas de arquitectura", "qué le falta al proyecto"
 
 **Dónde entra (3 puertas):**
 1. **Directa** — el usuario la invoca (cualquier momento, cualquier proyecto existente).
@@ -281,6 +310,8 @@
     │   └── ≥ 84%  → 🔄 completa/actualiza docs existentes a VERIFICADO (sin preguntar)
     ├── 🔄 migra docs dispersos del proyecto → <Proyecto>/docs/  (git mv, sin referencias rotas)
     ├── ADR nuevo → ⚡ /suit-memory → ✍️ .suit/memory/decisions/ADR-NNN-*.md
+    ├── Si piden "revisión ligera" (sin docs completos) → ✍️ <Proyecto>/MEJORAS_<PROYECTO>.md
+    │      (solo hallazgos + estado → insumo directo de §6 ciclo: "mejoras de X")
     └── Entrega reporte de 8 secciones (Estado actual → Certeza) — N archivos vacíos, jamás
 ```
 
@@ -351,19 +382,22 @@
 
 | Skill | Llama a | Alimenta a | Paralelo interno |
 |---|---|---|---|
-| `guia-total` | `analista-proy`, `panel-juzgador`, `ciclo`, `brief-engine`, `auditoria`, `empresa-registro` | registro, MAPA, manuales, identidad, origen | ver nodos `∥` |
+| `guia-total` | `descubrimiento`, `analista-proy`, `sintesis-proyecto`, `panel-juzgador`, `ciclo`, `brief-engine`, `auditoria`, `empresa-registro` | registro, MAPA, manuales, identidad, origen | ver nodos `∥` |
 | `empresa-registro` | `guia-total identidad`, `clusters-seo` → `paginas-seo` (cadena), GAS (`ensureCteFolders`/`updateRow`/`syncToSupabase`), `landing-page-copywriter` | tarjeta, `Config_Empresas` (GS), Drive `cte<id>`, espejo Supabase | identidad y copy secuenciales |
 | `clusters-seo` | GAS (`appendRows`/`subirImagenCte`), `syncToSupabase` | ≤9 filas en `Config_SEO` + `imagenurl-*.jpg` en Drive → **alimenta a `paginas-seo`** | fotos ∥ por clúster |
 | `paginas-seo` | GAS (`appendRows`), `syncToSupabase` | filas en `Config_Paginas` (3 JSON) — encadenada a clusters-seo | redacción serial por página |
 | `empresa-mascara` | plantilla YAML + GAS (`updateRow`/`appendRows`/`syncToSupabase`) → cadena | fila `Config_Empresas` (solo A+D) + `registro/<id>/MASCARA.yaml` → **dispara la cadena** | barra de avance por paso |
-| `analista-proy` | — | `panel-juzgador`, `CONTRATO` (F0), tarjeta | 4 pilares ∥ |
+| `analista-proy` | `sintesis-proyecto` (al cerrar) | `sintesis-proyecto`, `panel-juzgador`, `CONTRATO` (F0), tarjeta | 4 pilares ∥ |
+| `sintesis-proyecto` | — | `<Proyecto>/docs/SINTESIS_PROYECTO.md` (diseño del prototipo) | — (lectura) |
 | `panel-juzgador` | — | tarjeta (veredicto) | 4 agentes ∥ → juez serial |
 | `ciclo` | — | `CONTRATO`, `VALIDACION`, `CORRECCIONES` | fases seriales F0→F7 |
 | `brief-engine` | catálogos Supabase | Brief en `logo_url` | sub-agentes A-D ∥ |
 | `auditoria` | `/suit-memory` (ADRs) | `<Proyecto>/docs/00-16` + tarjeta | reuso Fase 0.5 antes de inspeccionar |
+| `descubrimiento` | `parametros` (lee switches en fase 0) | entregable de 11 puntos → código (§1/§4/§6) | preguntas ≤3 ∥ micro-skills según diagnóstico |
+| `parametros` | — | `.suit/config/switches.yaml` (switches globales/puntuales) | — (lectura/escritura YAML) |
 
-**Orden obligatorio:** `analista-proy` → `panel-juzgador` (este consume el primero). **Cadena secuencial con gates**: `empresa-mascara` (entrada por formulario) → `empresa-registro` → `clusters-seo` → `paginas-seo` (cada eslabón espera aprobación salvo switch `auto`). `auditoria` es independiente: la llama `guia-total` o el usuario. El resto es independiente.
+**Orden obligatorio:** `descubrimiento` **abre** toda tarea con código (nodo común, antes de §1/§4/§6) → `analista-proy` → `sintesis-proyecto` → `panel-juzgador` (los dos últimos consumen el primero; la síntesis alimenta el diseño del prototipo). **Cadena secuencial con gates**: `empresa-mascara` (entrada por formulario) → `empresa-registro` → `clusters-seo` → `paginas-seo` (cada eslabón espera aprobación salvo switch `auto`). `auditoria` es independiente: la llama `guia-total` o el usuario. `parametros` es transversal: cualquier skill puede leer/escribir switches. El resto es independiente.
 
 ---
 
-*Última actualización del mapa: 2026-09-29 (§1.9 Manual de operación `MANUAL_OPERACION.md` — Config_Empresas + regla taxonomía→brief seg1-2 + check en §6; §11 fichas; `MAPA_VISUAL.html` + `check-map-visual.js`; §1.8 empresa-mascara; léxico-usuario; piloto HMP; PKs de espejo).*
+*Última actualización del mapa: 2026-10-03 (nodo común APERTURA: skills `descubrimiento` + `parametros` — fase previa obligatoria con entregable de 11 puntos, ≤3 preguntas o supuestos vía `decision_libre`, y `.suit/config/switches.yaml` como fuente de switches globales/puntuales; enganches en guia-total Etapas + Flujo IDEA; tabla de dependencias actualizada; `MAPA_VISUAL.html` burbuja `ndesc` resincronizada).*

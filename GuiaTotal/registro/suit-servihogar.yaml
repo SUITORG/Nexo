@@ -1,0 +1,43 @@
+# GuiaTotal/registro/suit-servihogar.yaml - tarjeta del proyecto
+proyecto: "SuitServiHogar"
+ruta: "SuitServiHogar/"
+etapa: "construccion"             # Contrato v6.0 + 41/41 reqs hechos, pero SIN VALIDACION.md -> ciclo F3 pendiente
+creado: "2026-09-16"
+actualizado: "2026-10-07"
+
+validacion:
+  problema: "Mercado de servicios del hogar en Reynosa fragmentado: sin verificación de técnicos, precios opacos, pagos informales y sin garantía de finalización"
+  hipotesis: "Si conectamos clientes con técnicos Deep-Vetting verificados y retenemos el pago en escrow hasta PIN de conformidad, la confianza sube y el mercado formaliza"
+  metrica_exito: "50 órdenes/semana mes 3 · 200 técnicos activos mes 6 · NPS > 40 · CAC < $40 USD"
+  evidencia: "SuitServiHogar/docs/eval_mercado.md + eval_tecnico.md + eval_riesgo.md + eval_financiero.md + veredicto.md (Panel Juzgador 2026-09-16, 6.93/10) · Informe Ejecutivo + proposal.md en raíz"
+  decision: "continuar"
+  motivo: "MVP completo y testeado; panel APROBADO CONDICIONAL con 9 condiciones operativas (no bloquean construcción)"
+
+evaluacion:
+  panel_juzgador: "APROBADO CONDICIONAL"
+  veredicto_fecha: "2026-09-16"
+  recomendaciones: "ADR-029 micro-frontend (resuelta) · Fixer.io pago/Banxico · SLA disputas Stripe + T&C RC · plan seguridad técnicos (botón pánico) · alertas Maps 80% · budget $2k USD/mes 6 meses · test A/B comisión 12% vs 15% · anti-fuga WhatsApp"
+
+integraciones:
+  convive_sheets: false            # standalone: no lee Config_Empresas ni usa GAS (ADR-029, veredicto cond.1)
+  id_empresa: null
+  db_engine: null
+  brief_en_logo_url: false
+
+taxonomia:                         # de SuitServiHogar/docs/TAXONOMIA.md (match catálogo GuiaTotal/TAXONOMIA.md)
+  industria: "Hogar y Servicios del Hogar"
+  nicho: "Reparaciones del Hogar"
+  especializacion: "Plomería · Instalaciones eléctricas · Pintura · Carpintería · Aire acondicionado"
+
+documentos:
+  analista_proy: true              # SuitServiHogar/docs/Analista_Proy.md (consolidado, creado 2026-10-04)
+  taxonomia: true                  # SuitServiHogar/docs/TAXONOMIA.md
+  contrato: true                   # SuitServiHogar/docs/Contrato.md v6.0 (41/41)
+  identidad: true                  # SuitServiHogar/docs/IDENTIDAD_CORPORATIVA.md
+  manuales: true                   # SuitServiHogar/docs/MANUAL_{CLIENTE,PROVEEDOR,TECNICO,PRUEBAS}.md
+  prompt_origen: true              # SuitServiHogar/docs/PROMPT_ORIGEN.md
+  checklist_lanzamiento: true      # SuitServiHogar/docs/CHECKLIST-LANZAMIENTO.md
+  arquitectura_docs: true          # docs/05,06,08,10 OK · 09,11,13,15 creados 2026-10-04
+  runbooks: true                   # docs/runbooks/{despliegue,rollback}.md (2026-10-07, host = laptop)
+
+proximo_paso: "ciclo F3 -> SuitServiHogar/docs/VALIDACION.md (único artefacto que falta para pasar etapa a 'mantenimiento'); luego condiciones pre go-live del veredicto (Fixer.io/Banxico, disputas Stripe, seguridad técnicos)"

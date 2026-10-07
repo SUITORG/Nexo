@@ -165,6 +165,10 @@ routing:
     - patterns:
         - "auditoría"
         - "auditoria"
+        - "realiza auditoría"
+        - "realiza auditoria"
+        - "revisión de arquitectura"
+        - "revision de arquitectura"
         - "audita arquitectura"
         - "audita el sistema"
         - "documenta el sistema"
@@ -269,6 +273,8 @@ routing:
 
     - patterns:
         - "mejoras"
+        - "mejoras de proyecto"
+        - "mejoras de"
         - "cambios"
         - "mantenimiento"
         - "modificaciones"

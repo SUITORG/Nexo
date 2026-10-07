@@ -25,9 +25,9 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 - [ ] **Sync catch-up de 11 empresas**: el espejo tiene 12 empresas, la hoja 23 — `syncToSupabase` es **por empresa** (filtra `id_empresa` + GLOBAL). Falta correr el loop por cada id faltante para poner el espejo al día. *2026-09-28*
 - [ ] **empresa-registro — fase 2**: BRIEF (`brief-engine`) + Activos (`lapvtfu`) para HMP cuando el usuario dé instrucciones. *2026-09-28*
 - [ ] **HMP — listing Google Business**: 0 huella web; canal real = WhatsApp. *2026-09-27 · de Analista_Proy*
-- [ ] **SuitServiHogar — drift SQL**: definir fuente canónica (`supabase/migrations/` recomendado) y copiar las 3 migraciones que solo existen en `migrations/` (`price_negotiation`, `antifuga_config`, `decisions_config`). *2026-09-26 · decisión de esquema, requiere visto bueno*
-- [ ] **SuitServiHogar — docs de auditoría faltantes**: `09-reglas`, `11-integraciones`, `13-despliegue`, `15-riesgos` (evidencia ≥84%, pendiente aprobación). *2026-09-26*
-- [ ] **SuitServiHogar — `AGENTS.md` desactualizado**: dice `screens/ (7)`, hay 13. *2026-09-26*
+- [x] **SuitServiHogar — drift SQL**: fuente canónica `supabase/migrations/` — las 3 migraciones faltantes (`price_negotiation`, `antifuga_config`, `decisions_config`) consolidadas idempotentes + `migrations/` archivado con ZIP en `migrations/_archivadas/`. *2026-09-26 → resuelto 2026-10-07 (visto bueno del usuario)*
+- [x] **SuitServiHogar — docs de auditoría faltantes**: `09-reglas`, `11-integraciones`, `13-despliegue`, `15-riesgos` (evidencia ≥84%). *2026-10-04 · creados vía `guia-total`+`auditoria`*
+- [x] **SuitServiHogar — `AGENTS.md` desactualizado**: `screens/ (7)` → 13. *2026-10-04*
 - [ ] **SuitDashboard — instancias faltantes**: 4 manuales, identidad, prompt origen, checklist, `docs/05+06` (tarjeta `documentos: false`). *2026-09-26*
 - [ ] **Integración profunda `auditoria` ↔ `guia-total`** (hoy solo gancho en MAPA §4/§9). *2026-09-26*
 - [ ] **Skills externas**: guion `MAPA.md §10` vacío — rellenar al primer pedido de instalación. *2026-09-26*
@@ -35,6 +35,11 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 - [ ] **SuitPoke — publicar con HTTPS + gate de medición (panel-juzgador)**: hostear (itch.io/Poki u otro) y medir con 100-300 jugadores: ≥2 partidas, % rematch, D1 ≥25%, onboarding <60 s. Si falla → pivotar antes de fases 2 (condición 6 del veredicto APROBADO CONDICIONAL). *2026-09-29*
 - [ ] **SuitPoke — prueba en dispositivo móvil físico**: instalación PWA real pendiente (requiere HTTPS; en localhost el SW/manifest ya verificados). *2026-09-29*
 - [ ] **SuitPoke — identidad corporativa**: `IDENTIDAD_CORPORATIVA.md` no creada (etapa identidad no solicitada; requiere `Analista_Proy.md` que ya existe). *2026-09-29*
+- [ ] **prompt-reviewer post-instalación — API_AUTH_TOKEN**: `empresa-registro/SKILL.md:25,44` y `empresa-mascara/SKILL.md:38,76` instruyen POST a GAS sin mencionar `API_AUTH_TOKEN` (regla inmutable 4) — añadir frase de token. *2026-10-03*
+- [ ] **prompt-reviewer — panel-juzgador IDs**: workflow usa `mercado|tecnico|riesgo|financiero|juez` vs registry `*-analyst` (agents.yaml:65-109) + `produces: panel_juzgador_reporte.md` sin ruta (artefactos reales en `.suit/logs/panel-juzgador/`). *2026-10-03*
+- [ ] **prompt-reviewer — auditoria preguntas/scope**: `SKILL.md:254` permite bloques de ≤10 preguntas (pre-flight ≤3) y fases 5-7 escriben código pese a prometer solo docs. *2026-10-03*
+- [ ] **prompt-reviewer — clusters-seo tono**: description "escribe automático" (`SKILL.md:3`) vs F4 "solo tras aprobación explícita" (`SKILL.md:41`) — alinear. *2026-10-03*
+- [ ] **prompt-reviewer — ruta `Analista_Proy.md`**: analista-proy escribe "donde indique" (`SKILL.md:63`) vs sintesis-proyecto asume `<Proyecto>/Analista_Proy.md` (`SKILL.md:22`) — fijar convención. *2026-10-03*
 
 ## B. Deuda técnica SuitOS *(absorbida de `tech-debt.yaml`)*
 
