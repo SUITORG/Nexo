@@ -21,6 +21,7 @@ import { DevSessions } from './components/DevSessions';
 import { DevModeBadge } from './components/DevModeBadge';
 import { OnlineStatusBanner } from './components/OnlineStatusBanner';
 import { TechnicianOrdersScreen } from './components/screens/TechnicianOrdersScreen';
+import { ClientOrdersScreen } from './components/screens/ClientOrdersScreen';
 import { ChatScreen } from './components/screens/ChatScreen';
 import { ReviewScreen } from './components/screens/ReviewScreen';
 import { GlossaryScreen } from './components/screens/GlossaryScreen';
@@ -84,6 +85,12 @@ export default function App() {
     setCurrentTechnician,
     setAuthLoading,
   });
+
+  // Identidad visual por perfil: cliente=azul, técnico=verde, admin=ámbar (ver index.css)
+  const profileRole = isAdmin ? 'admin' : currentTechnician ? 'technician' : 'client';
+  useEffect(() => {
+    document.documentElement.dataset.role = profileRole;
+  }, [profileRole]);
 
   // SuitMargin: cotización pública compartida vía enlace #margin-quote=...
   const [sharedQuote, setSharedQuote] = useState<Quote | null>(null);
@@ -172,8 +179,10 @@ export default function App() {
       setCurrentScreen(previousScreen === 'solicitud' ? 'explorar' : previousScreen);
     } else if (currentScreen === 'escrow') {
       setCurrentScreen('inicio');
+    } else if (currentScreen === 'mis-ordenes') {
+      setCurrentScreen('perfil');
     } else if (currentScreen === 'chat') {
-      setCurrentScreen(chatUserRole === 'technician' ? 'tecnico' : 'inicio');
+      setCurrentScreen(chatUserRole === 'technician' ? 'tecnico' : previousScreen === 'mis-ordenes' ? 'mis-ordenes' : 'inicio');
       setChatOrderId(null);
     } else if (currentScreen === 'review') {
       setCurrentScreen('tecnico');
@@ -397,6 +406,21 @@ export default function App() {
             />
           )}
 
+          {!dataLoading && currentScreen === 'mis-ordenes' && user && (
+            <ClientOrdersScreen
+              clientId={user.id}
+              onBack={handleBack}
+              onOpenChat={(orderId, orderIdShort, counterpartName) => {
+                setChatOrderId(orderId);
+                setChatOrderIdShort(orderIdShort);
+                setChatCounterpartName(counterpartName);
+                setChatUserRole('client');
+                setPreviousScreen('mis-ordenes');
+                setCurrentScreen('chat');
+              }}
+            />
+          )}
+
           {!dataLoading && currentScreen === 'chat' && chatOrderId && (
             <ChatScreen
               orderId={chatOrderId}
@@ -515,7 +539,7 @@ export default function App() {
         <OnlineStatusBanner heartbeatUrl="/" heartbeatInterval={30000} />
         <FeedbackWidget />
         <DevSessions />
-        <DevModeBadge />
+        <DevModeBadge role={profileRole} />
       </div>
     </Elements>
   );

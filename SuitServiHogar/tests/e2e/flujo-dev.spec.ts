@@ -25,6 +25,8 @@ async function openAs(page: Page, role: Role) {
   const msg = await loginWait;
   expect(msg.text(), `auto-login QA (${role})`).toContain('Sesión real iniciada');
   await expect(page.getByTestId('modo-prueba-badge')).toBeVisible();
+  // Identidad por rol (index.css [data-role]): cliente=azul, tecnico=verde, admin=ambar
+  await expect(page.locator('html')).toHaveAttribute('data-role', role);
   await expect(page.getByText('Solicitar un Servicio de Confianza')).toBeVisible({ timeout: 20000 });
 }
 

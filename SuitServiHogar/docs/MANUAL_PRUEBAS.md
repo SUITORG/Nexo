@@ -84,10 +84,82 @@ El nombre correcto del param es `devAutoLogin` (no `autoLogin`).
 | `devMode=true` | Activa todos los mocks: Stripe, Supabase auth, exchange rate |
 | `devAutoLogin=technician` | Auto-login como técnico (roberto@servihogar.mx) |
 | `devAutoLogin=client` | Auto-login como cliente (guest) |
-| `devAutoLogin=admin` | Auto-login como admin (acceso a `/admin`) |
+| `devAutoLogin=admin` | Auto-login como admin (ve el botón "Panel de Administración") |
+| `devSlot=1|2|3` | Qué credencial de las 3 del rol usa el auto-login (default `1`) |
 | `devSeedData=true` | Precarga: 5 técnicos, 3 órdenes en distintos estados, 2 referidos, 3 cupones |
 | `devMockStripe=true` | Pago mock en frontend (`useStripePayment`): sin llamada a `/api/create-payment-intent` ni a la API de Stripe (Stripe.js solo carga el Card Element) |
 | `devMockExchangeRate=true` | Tipo de cambio fijo 18.0, sin llamadas a Fixer.io (también aborta `data.fixer.io` en el e2e) |
+
+---
+
+## 3A. COLORES POR PERFIL
+
+Cada perfil pinta la interfaz con una familia distinta de la **misma paleta**
+(`src/index.css`, overrides en `[data-role=...]`; `App.tsx` pone `data-role` en `<html>`):
+
+| Perfil | Color | Familia | `--color-primary` |
+|---|---|---|---|
+| Cliente (frontend) | Azul trust-blue | `primary` | `#00355f` |
+| Proveedor/Técnico (frontend) | Verde escrow | `secondary` | `#006c4a` |
+| Admin (panel de administración) | Ámbar | `tertiary` | `#4b2d00` |
+
+- El color lo hereda todo: Header, botones, nav, enlaces… y el badge **MODO PRUEBA**.
+- Detecta por **rol de la cuenta** (no por pantalla): una ventana = un color, sirve para distinguir las 3 ventanas de `qa.bat` de un vistazo.
+- Cliente sin sesión / login = azul (default).
+- **Insignia de perfil** (esquina superior derecha): píldora grande con icono y nombre —
+  `PERSON Cliente` (azul) / `HANDYMAN Técnico` (verde) / `ADMIN_PANEL_SETTINGS Administrador` (ámbar),
+  con el tag **MODO PRUEBA** debajo. Así nunca se duda en qué ventana se está.
+- **Órdenes nuevas parpadean:** en *Perfil → Ver Mis Órdenes*, toda orden `Pagada (Escrow)`
+  espera acción con un **anillo ámbar pulsante**. Si la lista sale vacía aparece una pista
+  con el nombre del técnico QA a contratar.
+- **Ojo con el cruce de roles:** cada técnico solo ve **sus** órdenes. En el loop QA el cliente
+  debe contratar a **Ing. Roberto Garza** (cuenta slot 1 del proveedor); si contratas a otro
+  técnico, esa orden **no** aparecerá en la ventana del técnico QA.
+
+---
+
+## 3B. CREDENCIALES QA — 3 POR PERFIL (9 CUENTAS)
+
+Cada rol tiene 3 cuentas reales (Supabase Auth). **Contraseña: la de `DEV_QA_PASSWORD`
+en `SuitServiHogar/.env`** (misma para las 9; ver con `type .env | findstr DEV_QA`).
+Las cuentas se crean solas en el primer login (`/api/dev/qa-login` las crea/repara).
+
+> **Contrato Req#22:** la UI **no** tiene formulario de usuario/contraseña
+> (auth de producción = Google OAuth). Se entra con estas credenciales por el
+> flujo dev: la URL de "Entrada" de abajo hace auto-login con la cuenta indicada.
+
+| # | Perfil | Email | Slot | Entrada (localhost) |
+|---|---|---|---|---|
+| 1 | Cliente | `cliente-qa@test.mx` | 1 | `/?devMode=true&devAutoLogin=client&devSlot=1` |
+| 2 | Cliente | `cliente-qa-2@test.mx` | 2 | `/?devMode=true&devAutoLogin=client&devSlot=2` |
+| 3 | Cliente | `cliente-qa-3@test.mx` | 3 | `/?devMode=true&devAutoLogin=client&devSlot=3` |
+| 4 | Proveedor | `roberto@servihogar.mx` | 1 | `/?devMode=true&devAutoLogin=technician&devSlot=1` |
+| 5 | Proveedor | `tecnico-qa-2@servihogar.mx` | 2 | `/?devMode=true&devAutoLogin=technician&devSlot=2` |
+| 6 | Proveedor | `tecnico-qa-3@servihogar.mx` | 3 | `/?devMode=true&devAutoLogin=technician&devSlot=3` |
+| 7 | Admin | `admin@servihogar.mx` | 1 | `/?devMode=true&devAutoLogin=admin&devSlot=1` |
+| 8 | Admin | `admin-qa-2@servihogar.mx` | 2 | `/?devMode=true&devAutoLogin=admin&devSlot=2` |
+| 9 | Admin | `admin-qa-3@servihogar.mx` | 3 | `/?devMode=true&devAutoLogin=admin&devSlot=3` |
+
+(Rutas relativas a `http://localhost:3000`; añade `&devMockStripe=true&devMockExchangeRate=true` para flujo completo sin Stripe/Fixer reales.)
+
+**Formas de entrar:**
+1. **`qa.bat`** — abre las 3 cuentas slot 1 (cliente/proveedor/admin) en 3 ventanas.
+2. **URL directa** de la tabla — cada credencial en su ventana/pestaña.
+3. **Consola (F12)**: `localStorage.setItem('devMode','true'); localStorage.setItem('devAutoLogin','technician'); localStorage.setItem('devSlot','2'); location.reload();`
+
+---
+
+## 3C. CHAT DE NEGOCIACIÓN (órdenes ↔ chat en vivo)
+
+**Ruta del cliente:** Perfil → "Ver Mis Órdenes" → tarjetas con estado (la pagada pulsa en ámbar) → botón **Chat**.
+**Ruta del técnico:** Perfil → "Ver Mis Órdenes" → tarjeta → icono chat.
+
+| Tema | Comportamiento esperado |
+|---|---|
+| Mensaje propio | Aparece al instante en tu pantalla (append local) |
+| Mensaje ajeno | Llega en vivo por Supabase Realtime (`sh_messages`) |
+| Si no llega en vivo | Reentrar al chat (back → chat) recarga historial por REST |
+| Realtime habilitado | `alter publication supabase_realtime add table public.sh_messages;` (proyecto `egyxgnlnzanxpqyuvmsg`) — si se recrea el proyecto, repetir |
 
 ---
 
@@ -126,7 +198,7 @@ VITE_DEV_MODE=true node server.js
 3. Como cliente nuevo (`devAutoLogin=client` en pestaña incógnito) → usa cupón → **$100 descuento**
 
 ### Paso 5: Admin (si `devAutoLogin=admin`)
-1. Navega a `/admin` → **Dashboard** ve métricas
+1. Carga en **Perfil/Técnico** → click botón **"Panel de Administración"** → **Dashboard** ve métricas
 2. Pestaña **Técnicos** → suspende/activa
 3. Pestaña **Disputas** → ve órdenes canceladas
 4. Pestaña **Insights** → "Tus trabajos de pintura tardan 18% más"

@@ -53,7 +53,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     const text = input.trim();
     setInput('');
     try {
-      await sendMessage(orderId, userId, userRole, text);
+      const sent = await sendMessage(orderId, userId, userRole, text);
+      setMessages((prev) => [...prev, sent]);
     } catch (err) {
       console.error('Error sending message:', err);
     }

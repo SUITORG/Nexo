@@ -74,9 +74,25 @@ if errorlevel 1 goto waitfront
 
 echo  Servidores listos. Abriendo 3 ventanas de prueba...
 set "DEVFLAGS=http://localhost:3000/?devMode=true&devMockStripe=true&devMockExchangeRate=true"
-start "" "%DEVFLAGS%&devAutoLogin=client"
-start "" "%DEVFLAGS%&devAutoLogin=technician"
-start "" "%DEVFLAGS%&devAutoLogin=admin"
+
+set "BROWSER_EXE=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
+if not exist "%BROWSER_EXE%" set "BROWSER_EXE=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
+if not exist "%BROWSER_EXE%" set "BROWSER_EXE=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
+if not exist "%BROWSER_EXE%" set "BROWSER_EXE=%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"
+
+if exist "%BROWSER_EXE%" (
+    REM --new-window: cada rol en su propia ventana nueva, nunca una pestana
+    REM en la ventana del navegador que ya tienes abierta trabajando.
+    start "" "%BROWSER_EXE%" --new-window "%DEVFLAGS%&devAutoLogin=client"
+    start "" "%BROWSER_EXE%" --new-window "%DEVFLAGS%&devAutoLogin=technician"
+    start "" "%BROWSER_EXE%" --new-window "%DEVFLAGS%&devAutoLogin=admin"
+) else (
+    echo  [!] No se encontro Chrome/Edge en rutas estandar - abriendo con el navegador por defecto.
+    echo      Puede abrir como pestanas en una ventana existente.
+    start "" "%DEVFLAGS%&devAutoLogin=client"
+    start "" "%DEVFLAGS%&devAutoLogin=technician"
+    start "" "%DEVFLAGS%&devAutoLogin=admin"
+)
 
 echo.
 echo  ========================================

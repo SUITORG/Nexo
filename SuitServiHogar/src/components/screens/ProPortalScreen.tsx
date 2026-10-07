@@ -457,10 +457,12 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
           </div>
         </div>
         <p className="text-body-sm text-text-muted">
-          Gestiona tus servicios asignados: inicia ruta, llega al domicilio, sube evidencia y libera fondos con PIN del cliente.
+          {isTechnician
+            ? 'Gestiona tus servicios asignados: inicia ruta, llega al domicilio, sube evidencia y libera fondos con PIN del cliente.'
+            : 'Revisa tus servicios contratados, sigue su estado y chatea con tu técnico.'}
         </p>
         <button
-          onClick={() => onNavigate('tecnico')}
+          onClick={() => onNavigate(isTechnician ? 'tecnico' : 'mis-ordenes')}
           className="w-full bg-escrow-shield hover:bg-emerald-safe text-white py-3 px-4 rounded-lg font-bold text-label-lg flex items-center justify-center gap-2 shadow-xs active:scale-95 transition-transform"
         >
           <span className="material-symbols-outlined text-[20px]">list_alt</span>

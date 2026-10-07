@@ -1,6 +1,7 @@
 export interface DevConfig {
   enabled: boolean;
   autoLogin: 'technician' | 'client' | 'admin' | null;
+  slot: 1 | 2 | 3;
   seedData: boolean;
   mockStripe: boolean;
   mockExchangeRate: boolean;
@@ -8,6 +9,7 @@ export interface DevConfig {
 
 const DEV_MODE_KEY = 'devMode';
 const DEV_AUTO_LOGIN_KEY = 'devAutoLogin';
+const DEV_SLOT_KEY = 'devSlot';
 const DEV_SEED_DATA_KEY = 'devSeedData';
 const DEV_MOCK_STRIPE_KEY = 'devMockStripe';
 const DEV_MOCK_EXCHANGE_RATE_KEY = 'devMockExchangeRate';
@@ -26,6 +28,11 @@ function isLocalhost(): boolean {
   return h === 'localhost' || h === '127.0.0.1' || h === '';
 }
 
+function getSlot(): 1 | 2 | 3 {
+  const n = parseInt(getEnv('VITE_DEV_SLOT') || getEnv(DEV_SLOT_KEY) || '', 10);
+  return n === 2 || n === 3 ? n : 1;
+}
+
 export function isDevMode(): boolean {
   // Candado anti-producción: en build PROD fuera de localhost nunca hay modo prueba,
   // aunque alguien deje VITE_DEV_* en el build o localStorage.
@@ -36,13 +43,14 @@ export function isDevMode(): boolean {
 
 export function getDevConfig(): DevConfig {
   if (!isDevMode()) {
-    return { enabled: false, autoLogin: null, seedData: false, mockStripe: false, mockExchangeRate: false };
+    return { enabled: false, autoLogin: null, slot: 1, seedData: false, mockStripe: false, mockExchangeRate: false };
   }
   return {
     enabled: true,
     autoLogin: (getEnv('VITE_DEV_AUTO_LOGIN') || 
                 getEnv(DEV_AUTO_LOGIN_KEY) || 
                 null) as 'technician' | 'client' | 'admin' | null,
+    slot: getSlot(),
     seedData: getEnv('VITE_DEV_SEED_DATA') === 'true' || 
               getEnv(DEV_SEED_DATA_KEY) === 'true',
     mockStripe: getEnv('VITE_DEV_MOCK_STRIPE') === 'true' || 
@@ -58,6 +66,7 @@ export function setDevMode(enabled: boolean) {
   } else {
     localStorage.removeItem(DEV_MODE_KEY);
     localStorage.removeItem(DEV_AUTO_LOGIN_KEY);
+    localStorage.removeItem(DEV_SLOT_KEY);
     localStorage.removeItem(DEV_SEED_DATA_KEY);
     localStorage.removeItem(DEV_MOCK_STRIPE_KEY);
     localStorage.removeItem(DEV_MOCK_EXCHANGE_RATE_KEY);
@@ -100,6 +109,7 @@ export function getDevStatus() {
   return {
     devMode: localStorage.getItem(DEV_MODE_KEY),
     autoLogin: localStorage.getItem(DEV_AUTO_LOGIN_KEY),
+    slot: localStorage.getItem(DEV_SLOT_KEY),
     seedData: localStorage.getItem(DEV_SEED_DATA_KEY),
     mockStripe: localStorage.getItem(DEV_MOCK_STRIPE_KEY),
     mockExchangeRate: localStorage.getItem(DEV_MOCK_EXCHANGE_RATE_KEY),

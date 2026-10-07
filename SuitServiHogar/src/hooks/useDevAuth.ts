@@ -130,7 +130,7 @@ export function useDevAuth(setters: DevAuthSetters) {
         const res = await fetch('/api/dev/qa-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role }),
+          body: JSON.stringify({ role, slot: config.slot }),
         });
         if (!res.ok) throw new Error(`qa-login HTTP ${res.status}`);
         const { email, password } = await res.json();

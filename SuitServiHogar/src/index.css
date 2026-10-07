@@ -52,6 +52,27 @@
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* ── Identidad por perfil (mismas familias de la paleta) ──
+   Cliente = azul primary (default) · Proveedor = verde secondary · Admin = ámbar tertiary.
+   App.tsx pone data-role en <html>; todas las utilities bg-/text-primary siguen la familia. */
+[data-role='technician'] {
+  --color-primary: #006c4a;
+  --color-primary-container: #82f5c1;
+  --color-primary-fixed: #85f8c4;
+  --color-primary-fixed-dim: #68dba9;
+  --color-trust-blue-dark: #047857;
+  --color-trust-blue-light: #ecfdf5;
+}
+
+[data-role='admin'] {
+  --color-primary: #4b2d00;
+  --color-primary-container: #ffddb8;
+  --color-primary-fixed: #ffddb8;
+  --color-primary-fixed-dim: #ffb95f;
+  --color-trust-blue-dark: #4b2d00;
+  --color-trust-blue-light: #fffbef;
+}
+
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
@@ -152,7 +173,19 @@
   scrollbar-width: none;
 }
 
-/* SuitMargin � imprimir solo la cotizaci�n (PDF v�a window.print) */
+/* Orden nueva que espera acción: anillo ámbar que parpadea para no pasar desapercibida */
+@keyframes order-pending-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.8); }
+  50% { box-shadow: 0 0 0 9px rgba(245, 158, 11, 0); }
+}
+.animate-order-pending {
+  animation: order-pending-pulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-order-pending { animation: none; }
+}
+
+/* SuitMargin � imprimir solo la cotizaci�n (PDF v�a window.print) */
 @media print {
   body * { visibility: hidden; }
   .quote-sheet, .quote-sheet * { visibility: visible; }

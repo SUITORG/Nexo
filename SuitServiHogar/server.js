@@ -430,11 +430,11 @@ if (IS_DEV) {
     res.json({ success: true, orderId });
   });
 
-  // ─── QA multi-session: credenciales reales para 3 roles (solo local) ───
+  // ─── QA multi-session: 3 credenciales por rol (solo local), slot 1..3 ───
   const QA_ACCOUNTS = {
-    admin: 'admin@servihogar.mx',
-    technician: 'roberto@servihogar.mx',
-    client: 'cliente-qa@test.mx',
+    admin: ['admin@servihogar.mx', 'admin-qa-2@servihogar.mx', 'admin-qa-3@servihogar.mx'],
+    technician: ['roberto@servihogar.mx', 'tecnico-qa-2@servihogar.mx', 'tecnico-qa-3@servihogar.mx'],
+    client: ['cliente-qa@test.mx', 'cliente-qa-2@test.mx', 'cliente-qa-3@test.mx'],
   };
 
   async function findAuthUserByEmail(email) {
@@ -450,7 +450,9 @@ if (IS_DEV) {
 
   app.post('/api/dev/qa-login', async (req, res) => {
     const role = req.body?.role;
-    const email = QA_ACCOUNTS[role];
+    const slotRaw = parseInt(req.body?.slot, 10);
+    const slot = slotRaw === 2 || slotRaw === 3 ? slotRaw : 1;
+    const email = QA_ACCOUNTS[role]?.[slot - 1];
     if (!email) return res.status(400).json({ error: 'role inválido (admin|technician|client)' });
     const password = process.env.DEV_QA_PASSWORD;
     if (!password) return res.status(503).json({ error: 'DEV_QA_PASSWORD no configurado en .env' });
@@ -479,8 +481,8 @@ if (IS_DEV) {
           .maybeSingle();
         if (!existing) {
           const { error: insErr } = await supabase.from('sh_technicians').insert({
-            id: role === 'admin' ? 'qa-admin' : 'qa-technician',
-            name: role === 'admin' ? 'Administrador QA' : 'Tecnico QA',
+            id: `qa-${role}-${slot}`,
+            name: `${role === 'admin' ? 'Administrador' : 'Tecnico'} QA${slot > 1 ? ' ' + slot : ''}`,
             email,
             role,
             active: true

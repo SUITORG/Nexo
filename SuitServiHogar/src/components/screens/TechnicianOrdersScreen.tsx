@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { EscrowOrder, Technician } from '../../types';
 import { fetchOrdersByTechnician, updateOrderStatus, processSpecialistCancellation, uploadEvidencePhoto } from '../../services/bookingService';
+import { isDevMode } from '../../config/devMode';
 
 interface TechnicianOrdersScreenProps {
   technician: Technician;
@@ -163,6 +164,12 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
             {activeTab === 'activas' ? 'assignment_turned_in' : 'history'}
           </span>
           <p>{activeTab === 'activas' ? 'No hay órdenes activas' : 'Sin historial aún'}</p>
+          {isDevMode() && activeTab === 'activas' && (
+            <p className="mt-3 inline-block text-label-sm bg-primary/10 text-primary border border-primary/20 rounded-lg px-3 py-2">
+              Modo prueba: para ver una orden aquí, contrata desde la ventana del Cliente a{' '}
+              <b>{technician.name}</b>
+            </p>
+          )}
         </div>
       )}
 
@@ -175,7 +182,11 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
           return (
             <div
               key={order.id}
-              className="bg-surface-card rounded-xl p-4 border border-border-subtle shadow-xs space-y-3"
+              className={`bg-surface-card rounded-xl p-4 border shadow-xs space-y-3 ${
+                order.status === 'funded'
+                  ? 'animate-order-pending border-amber-400/60'
+                  : 'border-border-subtle'
+              }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
