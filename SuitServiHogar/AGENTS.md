@@ -56,7 +56,14 @@ Perfil → "Ver Mis Órdenes" → tabs Activas/Historial
 
 ## Client Flow (ClientOrdersScreen.tsx)
 ```
-Perfil → "Ver Mis Órdenes" → tarjetas por estado → Chat (negociación en vivo, sh_messages)
+Perfil o nav "Mis Órdenes" → tarjetas por estado → Chat (negociación en vivo, sh_messages)
+```
+
+## Nav por perfil (BottomNav.tsx — prop role)
+```
+3ª pestaña según perfil: Cliente → mis-ordenes | Técnico → tecnico | Admin → admin (Panel)
+Perfil diferenciado: cliente oculta portal técnico (Mi Cuenta + Contratar), admin = Panel de
+Administración 1ª tarjeta. Pestaña "Garantía Escrow" (demo) eliminada de la nav.
 ```
 
 ## Conventions

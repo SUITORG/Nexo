@@ -163,6 +163,24 @@ Las cuentas se crean solas en el primer login (`/api/dev/qa-login` las crea/repa
 
 ---
 
+## 3D. NAVEGACIÓN POR PERFIL (barra inferior)
+
+La barra inferior tiene **4 pestañas**; la 3ª cambia según el perfil logueado:
+
+| Perfil (badge) | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| Cliente (azul) | Inicio | Explorar | **Mis Órdenes** | Perfil |
+| Técnico (verde) | Inicio | Explorar | **Mis Órdenes** | Perfil |
+| Admin (ámbar) | Inicio | Explorar | **Panel** (→ Admin Panel) | Perfil |
+
+- **Cliente:** Perfil muestra "Mi Cuenta" + Mis Órdenes + **Contratar servicio** (oculta la sección de alianza técnica).
+- **Técnico:** solicitudes a 1 tap desde la nav; Perfil muestra "Ver Mis Órdenes" arriba.
+- **Admin:** "Panel de Administración" es la **primera tarjeta** de Perfil (o la pestaña Panel en la nav) → Dashboard / Técnicos / Disputas / Config.
+- La antigua pestaña "Garantía Escrow" (demo) se quitó de la nav.
+- Cerrajerí­a no lista técnicos (no hay en DB) — usa Climas/Plomerí­a/Electricidad para demos.
+
+---
+
 ## 4. FLUJO DE PRUEBA COMPLETO (5 min)
 
 ### Paso 1: Iniciar en modo dev
