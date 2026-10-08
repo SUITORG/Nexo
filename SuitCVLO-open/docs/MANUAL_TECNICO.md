@@ -110,7 +110,10 @@ desactivado. El `.env` se **relee al cambiar su mtime** (pegar una key no exige 
 - **Endpoints:** `GET /` · `GET /api/estado` · `GET /api/config` (`?ruta=` = usar otro
   `CVLOCFG.txt`) · `GET /api/ia/modelos` · `GET /api/ia/estado` · `POST /api/corridas` ·
   `GET /api/corridas/<id>` · `POST /api/corridas/<id>/detener` ·
-  `GET /api/fuentes` · `GET /api/fuentes/gps` · `GET /api/reprocesar/preview` · `POST /api/reprocesar` ·
+  `GET /api/fuentes` (`campanas[]` = pines/verificadas/auditados por campaña del KML;
+  `aviso_mapa` si pines y KML no comparten PINs) · `GET /api/fuentes/gps`
+  (`campanas{capa: {dist_prom, n, pendientes}}` — distancia media foto↔pin dentro del radio) ·
+  `GET /api/reprocesar/preview` · `POST /api/reprocesar` ·
   `POST /api/reescribir-info` (regenera todos los `info.txt` **y la columna `Marca`** con las
   lecturas guardadas, sin IA; lleva `idx`) · `POST /api/marcas/actualizar` (alimenta la lista de
   marcas con las vistas en `trabajo\reads`; respuesta `{agregadas, total, vistas, archivo, tipo}`).

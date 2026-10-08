@@ -74,6 +74,8 @@ Fecha: 2026-10-01 · Workflow: `ciclo` F0-F7 · Perfil: `quick` + `security`
 
 | 62 | Estado final + punto de color | `estadoFinal(j)` al terminar la corrida: **foto de la ruta · N/M de la corrida · leídas · copiadas · excedidas · PINs · grupos · pendientes · duplicadas** + frase + **punto** · 🟢 verde = 0 pendientes/0 dup/sin errores ("No hay más que leer…") · 🟠 naranja = pendientes o excedidas ("Usa Reprocesar incompletas o inicia un proceso nuevo") · 🔴 rojo = `indice.duplicadas > 0` (nuevo en `GET /api/fuentes`, `_leer_idx` cuenta `IMG_x.jpg` = `img_x.jpg`) o errores en el log/estado · **verificado en navegador con los 4 escenarios**: colores `rgb(39,174,96)` / `rgb(243,156,18)` / `rgb(231,76,60)` y un solo punto (se reemplaza, no se acumula) · +1 test de duplicadas (119 OK) | ✅ |
 
+| 63 | Panel: campañas + dashboard | (1) **`CAMPAÑAS`**: lista de pines agrupados por campaña (carpeta `.xlsx` del mapa) con su conteo — ya existía como línea `capas:`; ahora va ordenada y con su bloque propio, **solo del KML** (sin unir el mapa de pines: con tus archivos reales la unión daba 460 pines fantasma de 2 mapas distintos). (2) **distancia media foto↔pin por campaña** con `n` muestras: procesadas desde el índice (sin EXIF) + pendientes en el mismo pase de EXIF → `COPPEL PARABUSES MTY (1) · 62.7 m (11)`. (3) **% avance por campaña** = pines auditados ÷ pines + fila **GLOBAL** (cobertura) + avance global en fotos en la leyenda. **`AVISO`** nuevo: `288 de 300 pines del mapa NO están en el KML (¿archivos de mapas distintos?)` — verificado en navegador (tabla, barras, orden por clic, footer) · +4 tests (**123 OK**) | ✅ |
+
 ## Pruebas nuevas (`tests/test_switch.py`)
 
 | Test | Qué cubre |

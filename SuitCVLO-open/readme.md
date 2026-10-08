@@ -90,24 +90,39 @@ El botón **`Ver info de las fuentes`** (junto a *Iniciar corrida*) despliega un
 
 ```
 RUTA      C:\Users\rojo-\Downloads\cteCVLO1\Recorrido
-AVANCE    12% · 210 de 1696 fotos
+AVANCE    18% · 298 de 1696 fotos
 
 FUENTES
-  FOTOS    1696 en la ruta · 1273 con GPS · 0 sin GPS
-  PINES    286 con coordenadas (cruzables)
-  KML      300 placemarks · 14 sin LATITUD · 12 con CARA
-           capas: COMPETENCIA 14 · COPPEL PARABUSES MTY (1) 12 · DIDI SEPTIEMBRE (1) 274
-           aporta: UBICACIÓN 286 · MEDIO 287 · COMENTARIOS 222 · DIRECCIÓN 11 · CIUDAD 23
-  ÍNDICE   294 filas · 210 verificadas · 7 No GPS
+  FOTOS    1696 en la ruta · 1252 con GPS · 0 sin GPS
+  PINES    300 con coordenadas (cruzables)
+  KML      172 placemarks · 13 sin LATITUD · 159 con CARA
+  AVISO    288 de 300 pines del mapa NO están en el KML (¿archivos de mapas distintos?)
+           aporta: UBICACIÓN 159 · CIUDAD 159 · CARA 159 · CLIENTE 159
+  ÍNDICE   340 filas · 298 verificadas · 7 No GPS · 24 DUPLICADAS
 
-GPS       1273 con · 0 sin · 1251 fuera de radio        ← 2º tiempo, 10-40 s (lee el EXIF)
+CAMPAÑAS                        PINs
+  COPPEL PARABUSES MTY (1)          159
+  COPPEL CARTERAS Y MURO MTY (1)     13
+
+GPS       1252 con · 0 sin · 1252 fuera de radio      ← 2º tiempo, 10-40 s (lee el EXIF)
 ```
 
-- **`AVANCE`** = verificadas ÷ total de fotos de la ruta.
+- **`AVANCE`** = verificadas ÷ total de fotos de la ruta (**el avance global en fotos**).
 - **`FUENTES`** deja ver qué aporta cada origen: la *ruta* da foto+GPS, los *pines* los
-  286 cruzables, el *KML* el inventario completo (300) con sus campos, el *índice* lo ya procesado.
-- Los datos básicos salen **en ~0,5 s**; el desglose de GPS llega después y rellena su línea
-  (`n/d (sin ruta local)` si estás en Modo Web, donde no hay EXIF que leer).
+  cruzables, el *KML* el inventario con sus campos, el *índice* lo ya procesado.
+- **`AVISO`** (solo si aparece): el mapa de pines y el KML **no comparten PINs** → son archivos
+  de mapas distintos: el cruce y las campañas no coincidirán y la distancia quedará en `n/d`.
+- **`CAMPAÑAS`** = **lista de pines agrupados por campaña** (la carpeta `.xlsx` del árbol del
+  mapa), con su número de elementos, ordenado de mayor a menor. Sale del **KML**; si no hay
+  KML, del mapa de pines (**no se mezclan los dos**: daría pines fantasma).
+- **`Análisis por campaña`** (desplegable): tabla `campaña | pines | dist. media (m) | % avance`
+  con barra, orden por clic en la cabecera y fila **GLOBAL**:
+  - **% avance** = `pines con ≥1 foto auditada ÷ pines de la campaña` (cobertura);
+  - **dist. media** = media foto↔pin de las fotos **dentro del radio**, con `n` muestras
+    (procesadas desde el índice + pendientes con EXIF);
+  - **GLOBAL** = cobertura total de pines; el avance en fotos sigue en la línea `AVANCE`.
+- Los datos básicos salen **en ~0,5 s**; el desglose de GPS llega después y rellena la columna
+  de distancia (`n/d (sin ruta local)` si estás en Modo Web, donde no hay EXIF que leer).
 - **El panel se queda abierto** hasta que vuelves a pulsar el botón (lo cierras) **o cambias de
   ruta/pines/KML/índice/fuente** (se oculta solo: los datos quedan obsoletos).
 - Si `GoogleMapsPines` es un `.txt`, la primera lectura descarga el KML de Google (~0,5 s).

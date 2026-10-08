@@ -549,10 +549,29 @@ function _paramsFuentes() {
 const CAMPOS_KML = ['UBICACIÓN', 'MEDIO', 'COMENTARIOS', 'DIRECCIÓN', 'CIUDAD', 'CARA',
                     'CLIENTE', 'CODIGO MUPI', 'MARCA', 'descripcion'];
 
+// campañas del KML/mapa + sus métricas (fase 1: pines/avance · fase 2: distancia)
+function fusionarCampanas(d) {
+  const base = (d.campanas || []).map((c) => Object.assign({}, c));
+  if (!base.length && d.kml && d.kml.capas) {                    // respaldo si no viene fase 1
+    Object.keys(d.kml.capas).forEach((n) => {
+      base.push({ nombre: n, pines: d.kml.capas[n], auditados: null, verificadas: null });
+    });
+  }
+  const gps = (d.gps && d.gps.campanas) || {};
+  base.forEach((c) => {
+    const g = gps[c.nombre];
+    if (g) {
+      c.dist_prom = g.dist_prom;
+      c.n = g.n;
+      c.pendientes = g.pendientes;
+    }
+  });
+  return base;
+}
+
 function pintarInfo(d) {
   const k = d.kml, i = d.indice, g = d.gps;
   const conGps = (g && !g.error) ? ' · ' + g.con_gps + ' con GPS · ' + g.sin_gps + ' sin GPS' : '';
-  const capas = k ? Object.keys(k.capas).map((c) => c + ' ' + k.capas[c]).join(' · ') : 'n/d';
   const aporta = (k && k.campos)
     ? CAMPOS_KML.filter((c) => k.campos[c]).slice(0, 7)
         .map((c) => c + ' ' + k.campos[c]).join(' · ')
@@ -560,7 +579,14 @@ function pintarInfo(d) {
   const avance = (d.fotos && i && i.verificadas != null)
     ? Math.round((i.verificadas / d.fotos) * 100) + '% · ' + i.verificadas + ' de ' + d.fotos + ' fotos'
     : 'n/d';
-  el.infoFuentes.textContent = [
+  const campanas = fusionarCampanas(d);
+  const lista = campanas.slice(0, 12).map((c) =>
+    '  ' + c.nombre.padEnd(34, ' ') + String(c.pines).padStart(5));
+  if (campanas.length > 12) {
+    lista.push('  … ' + (campanas.length - 12) + ' campañas más (ver Análisis)');
+  }
+  const aviso = d.aviso_mapa ? ['  AVISO    ' + d.aviso_mapa] : [];
+  const texto = [
     'RUTA      ' + (d.ruta || '(sin ruta)'),
     'AVANCE    ' + avance,
     '',
@@ -570,17 +596,148 @@ function pintarInfo(d) {
     '  PINES    ' + (d.pines == null ? 'n/d' : d.pines + ' con coordenadas (cruzables)'),
     '  KML      ' + (k ? k.total + ' placemarks · ' + k.sin_lat + ' sin LATITUD · ' +
                      k.cara + ' con CARA' : 'n/d'),
-    '           capas: ' + capas,
+    ...aviso,
     '           aporta: ' + aporta,
     '  ÍNDICE   ' + (i && i.filas ? i.filas + ' filas · ' + i.verificadas +
-                     ' verificadas · ' + i.no_gps + ' No GPS' : 'sin archivo'),
+                     ' verificadas · ' + i.no_gps + ' No GPS' +
+                     (i.duplicadas ? ' · ' + i.duplicadas + ' DUPLICADAS' : '') : 'sin archivo'),
+    '',
+    'CAMPAÑAS' + ' '.repeat(25) + 'PINs',
+    ...lista,
     '',
     'GPS       ' + (g ? (g.sin_ruta ? 'n/d (sin ruta local)'
       : g.error ? 'error: ' + g.error
       : g.con_gps + ' con · ' + g.sin_gps + ' sin · ' + g.fuera_radio + ' fuera de radio')
       : 'analizando…')
   ].join('\n');
+
+  el.infoFuentes.textContent = '';
+  el.infoFuentes.appendChild(document.createTextNode(texto));
+  if (campanas.length) {
+    el.infoFuentes.appendChild(tableroCampanas(campanas, avance, g));
+  }
   el.infoFuentes.classList.remove('oculto');
+}
+
+// ---------- dashboard de análisis (opción A: dentro del panel) ----------
+function tableroCampanas(campanas, avanceFotos, g) {
+  const det = document.createElement('details');
+  det.className = 'tablero';
+  const sum = document.createElement('summary');
+  sum.textContent = 'Análisis por campaña — pines · distancia media · % de avance';
+  det.appendChild(sum);
+
+  const leyenda = document.createElement('p');
+  leyenda.className = 'nota-tab';
+  leyenda.textContent = 'avance global en fotos (AVANCE arriba): ' + avanceFotos +
+    ' · por campaña: pines con ≥1 foto auditada ÷ pines de la campaña · ' +
+    'distancia media = media foto↔pin de las fotos dentro del radio (n = muestras)' +
+    (g && g.radio ? ' · radio ' + g.radio + ' m' : '');
+  det.appendChild(leyenda);
+
+  const cols = [
+    { k: 'nombre', t: 'Campaña' },
+    { k: 'pines', t: 'Pines' },
+    { k: 'dist', t: 'Dist. media (m)' },
+    { k: 'avance', t: '% avance' }
+  ];
+  const tabla = document.createElement('table');
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  cols.forEach((c) => {
+    const th = document.createElement('th');
+    th.textContent = c.t;
+    th.dataset.k = c.k;
+    th.title = 'clic para ordenar';
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+  tabla.appendChild(thead);
+
+  const pctDe = (c) => (c.auditados != null && c.pines ? Math.round(c.auditados / c.pines * 100) : null);
+
+  const celda = (txt, cls) => {
+    const td = document.createElement('td');
+    td.textContent = txt;
+    if (cls) td.className = cls;
+    return td;
+  };
+  const celdaBarra = (pct, titulo) => {
+    const td = document.createElement('td');
+    td.className = 'barra-cel';
+    td.appendChild(document.createTextNode(pct == null ? 'n/d' : pct + '%'));
+    const pista = document.createElement('div');
+    pista.className = 'pista';
+    const rell = document.createElement('div');
+    rell.className = 'relleno';
+    rell.style.width = (pct == null ? 0 : pct) + '%';
+    pista.appendChild(rell);
+    td.appendChild(pista);
+    if (titulo) td.title = titulo;
+    return td;
+  };
+
+  const tbody = document.createElement('tbody');
+  campanas.forEach((c) => {
+    const tr = document.createElement('tr');
+    tr.dataset.nombre = c.nombre;
+    tr.dataset.pines = c.pines;
+    tr.dataset.dist = c.dist_prom == null ? '' : c.dist_prom;
+    tr.dataset.avance = pctDe(c) == null ? '' : pctDe(c);
+    tr.appendChild(celda(c.nombre));
+    tr.appendChild(celda(String(c.pines)));
+    tr.appendChild(celda(c.dist_prom == null ? 'n/d' : c.dist_prom + ' (' + (c.n || 0) + ')'));
+    tr.appendChild(celdaBarra(pctDe(c),
+      (c.auditados != null ? c.auditados + ' de ' + c.pines + ' pines auditados' : '') +
+      (c.pendientes ? ' · ' + c.pendientes + ' fotos pendientes en ' + (g && g.radio ? g.radio : 250) + ' m' : '')));
+    tbody.appendChild(tr);
+  });
+  tabla.appendChild(tbody);
+
+  // fila GLOBAL: cobertura total de pines + distancia media global
+  const totPines = campanas.reduce((s, c) => s + (c.pines || 0), 0);
+  const totAud = campanas.reduce((s, c) => s + (c.auditados || 0), 0);
+  const conAud = campanas.filter((c) => c.auditados != null);
+  const cDist = campanas.filter((c) => c.dist_prom != null && c.n);
+  const distGlobal = cDist.length
+    ? Math.round(cDist.reduce((s, c) => s + c.dist_prom * c.n, 0) / cDist.reduce((s, c) => s + c.n, 0) * 10) / 10
+    : null;
+  const cobertura = conAud.length === campanas.length && totPines ? Math.round(totAud / totPines * 100) : null;
+  const tfoot = document.createElement('tfoot');
+  const trf = document.createElement('tr');
+  trf.appendChild(celda('GLOBAL'));
+  trf.appendChild(celda(String(totPines)));
+  trf.appendChild(celda(distGlobal == null ? 'n/d' : distGlobal + ' (todas)'));
+  trf.appendChild(celdaBarra(cobertura,
+    totAud + ' de ' + totPines + ' pines auditados · avance en fotos: ' + avanceFotos));
+  tfoot.appendChild(trf);
+  tabla.appendChild(tfoot);
+  det.appendChild(tabla);
+
+  // orden por clic en la cabecera (empieza: pines desc)
+  let kActual = null, asc = false;
+  const aplicar = (k) => {
+    asc = (k === kActual) ? !asc : (k === 'nombre');
+    kActual = k;
+    Array.from(tbody.children)
+      .sort((a, b) => {
+        const va = a.dataset[k], vb = b.dataset[k];
+        if (k === 'nombre') return asc ? va.localeCompare(vb, 'es') : vb.localeCompare(va, 'es');
+        const na = va === '' ? -1 : parseFloat(va);
+        const nb = vb === '' ? -1 : parseFloat(vb);
+        return asc ? na - nb : nb - na;
+      })
+      .forEach((tr) => tbody.appendChild(tr));
+    Array.from(trh.children).forEach((th) => {
+      th.textContent = th.dataset.k === k ? (asc ? '▲ ' : '▼ ') + th.textContent.replace(/^[▲▼]\s*/, '')
+        : th.textContent.replace(/^[▲▼]\s*/, '');
+    });
+  };
+  Array.from(trh.children).forEach((th) => {
+    th.addEventListener('click', () => aplicar(th.dataset.k));
+  });
+  aplicar('pines');
+  return det;
 }
 
 async function infoFuentes() {

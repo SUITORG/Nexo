@@ -266,12 +266,14 @@ def cargar_kml_datos(ruta_kml):
     return datos
 
 
+def nombre_capa(d):
+    """Nombre de campaña (layer del KML/mapa) limpio: colapsa espacios y quita '.xlsx'."""
+    return ' '.join(str((d or {}).get('CAPA') or '(sin capa)').split()).replace('.xlsx', '').strip()
+
+
 def kml_resumen(kml_datos):
     """Resumen del KML para la pantalla: total, capas (limpias), con CARA, sin LATITUD
     y cuántos placemarks aportan cada campo (lo que aporta cada fuente)."""
-    def capa(d):
-        return ' '.join(str(d.get('CAPA') or '(sin capa)').split()).replace('.xlsx', '').strip()
-
     # identidad, geometría y coordenadas calculadas no cuentan como "aporte"
     ruido = ('PIN', 'CAPA', 'LATITUD', 'LONGITUD', 'lat', 'lon')
     campos = Counter()
@@ -282,7 +284,7 @@ def kml_resumen(kml_datos):
             if str(v or '').strip():
                 campos[k] += 1
     return {'total': len(kml_datos),
-            'capas': dict(Counter(capa(d) for d in kml_datos.values())),
+            'capas': dict(Counter(nombre_capa(d) for d in kml_datos.values())),
             'cara': sum(1 for d in kml_datos.values() if str(d.get('CARA') or '').strip()),
             'sin_lat': sum(1 for d in kml_datos.values()
                            if not str(d.get('LATITUD') or '').strip()),

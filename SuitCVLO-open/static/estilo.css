@@ -71,6 +71,23 @@ td.suave { color: var(--tenue); }
 .como ol { margin: 0; padding-left: 22px; }
 .como li { margin-bottom: 6px; }
 .pie { text-align: center; color: var(--tenue); font-size: 12.5px; margin-top: 40px; }
+/* ---------- tablero de análisis por campaña (dentro del panel "Ver info") ---------- */
+.tablero { margin-top: 12px; border-top: 1px dashed var(--linea); padding-top: 8px; }
+.tablero summary { cursor: pointer; font-weight: 600; color: var(--texto); font-size: 11.5px;
+  letter-spacing: .05em; text-transform: uppercase; }
+.tablero .nota-tab { font-size: 11.5px; color: var(--suave); margin: 8px 0 4px; white-space: normal; }
+.tablero table { width: 100%; border-collapse: collapse; margin-top: 2px; }
+.tablero th, .tablero td { font-size: 11.5px; padding: 5px 6px; text-align: right;
+  border-bottom: 1px solid var(--linea-suave); white-space: nowrap; }
+.tablero th:first-child, .tablero td:first-child { text-align: left; white-space: normal; }
+.tablero th { cursor: pointer; user-select: none; color: var(--tenue); font-weight: 600;
+  border-bottom: 1px solid var(--linea); }
+.tablero tbody tr:hover { background: var(--linea-suave); }
+.tablero tfoot td { font-weight: 700; border-top: 1px solid var(--linea); border-bottom: none;
+  background: var(--verde-bg); }
+.barra-cel { min-width: 96px; }
+.barra-cel .pista { height: 7px; background: #EDEBE4; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+.barra-cel .relleno { height: 100%; background: var(--verde); border-radius: 4px; }
 .oculto { display: none !important; }
 @media (max-width: 720px) { .contenedor { padding: 24px 14px 56px; } .campos { grid-template-columns: 1fr; }
   .encabezado { flex-direction: column; } .insignias { align-items: flex-start; } }

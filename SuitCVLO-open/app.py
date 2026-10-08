@@ -115,13 +115,16 @@ def api_config():
 
 
 def _leer_idx(ruta_idx):
-    """(filas, verificadas, no_gps, stems verificados, fotos duplicadas) del índice — solo lectura.
+    """(filas, verificadas, no_gps, stems verificados, fotos duplicadas, filas_idx).
 
     `duplicadas` = fotos que aparecen más de una vez (aunque cambien mayúsculas:
     `IMG_0139.jpg` y `img_0139.jpg` son la misma) — es la "información revuelta".
+    `filas_idx` = {stem: {pin, verif, lat, lon}} — para saber de qué campaña es cada
+    foto procesada y su distancia al PIN, sin leer el EXIF otra vez.
     """
+    vacio = (0, 0, 0, set(), 0, {})
     if not ruta_idx or not os.path.exists(ruta_idx):
-        return 0, 0, 0, set(), 0
+        return vacio
     try:
         from openpyxl import load_workbook
         wb = load_workbook(ruta_idx, read_only=True, data_only=True)
@@ -129,14 +132,28 @@ def _leer_idx(ruta_idx):
         filas = verif = no_gps = 0
         stems = set()
         vistos = {}
+        filas_idx = {}
+
+        def num(v):
+            try:
+                return float(str(v).replace(',', '.'))
+            except Exception:
+                return None
+
         # iter_rows: acceso secuencial (con ws.cell en read_only tardaba 6,5 s)
-        for fila in ws.iter_rows(min_row=2, max_col=8, values_only=True):
+        for fila in ws.iter_rows(min_row=2, max_col=9, values_only=True):
             nombre = str(fila[0] or '').strip()
             if not nombre:
                 continue
             filas += 1
-            vistos[nombre.lower()] = vistos.get(nombre.lower(), 0) + 1
+            clave = nombre.lower()
+            vistos[clave] = vistos.get(clave, 0) + 1
             v = str(fila[7] or '').strip()
+            filas_idx[os.path.splitext(nombre)[0].lower()] = {
+                'pin': str(fila[8] or '').strip(),
+                'verif': bool(v),
+                'lat': num(fila[4]), 'lon': num(fila[5]),
+            }
             if v:
                 verif += 1
                 stems.add(os.path.splitext(nombre)[0].lower())
@@ -144,9 +161,36 @@ def _leer_idx(ruta_idx):
                     no_gps += 1
         wb.close()
         dup = sum(1 for c in vistos.values() if c > 1)
-        return filas, verif, no_gps, stems, dup
+        return filas, verif, no_gps, stems, dup, filas_idx
     except Exception:
-        return 0, 0, 0, set(), 0
+        return vacio
+
+
+def _campanas(kml_datos, pines_d, filas_idx):
+    """Campañas (layers) con sus pines y su avance: pines con >=1 foto verificada.
+
+    Las campañas salen del **KML** (los nombres con `.xlsx` del árbol del mapa) — es el
+    universo real; si no hay KML, del mapa de pines. **No se unen**: si los dos archivos
+    son de mapas distintos, mezclarlos daría pines fantasma.
+    `auditados` = pines que ya tienen al menos una foto con Verificado.
+    """
+    fuente = kml_datos or pines_d or {}
+    if not fuente:
+        return []
+    pins_por_capa = {}
+    for pin, d in fuente.items():
+        pins_por_capa.setdefault(motor.nombre_capa(d), set()).add(pin)
+    verif_por_pin = {}
+    for r in (filas_idx or {}).values():
+        if r.get('verif') and r.get('pin'):
+            verif_por_pin[r['pin']] = verif_por_pin.get(r['pin'], 0) + 1
+    res = []
+    for nombre, pins in pins_por_capa.items():
+        aud = [p for p in pins if p in verif_por_pin]
+        res.append({'nombre': nombre, 'pines': len(pins), 'auditados': len(aud),
+                    'verificadas': sum(verif_por_pin.get(p, 0) for p in pins)})
+    res.sort(key=lambda c: (-c['pines'], c['nombre']))
+    return res
 
 
 @app.get('/api/fuentes')
@@ -161,23 +205,41 @@ def api_fuentes():
         if not os.path.isdir(ruta):
             return jsonify({'error': 'La ruta de fotos no existe: {}'.format(ruta)}), 400
         out['fotos'] = sum(1 for f in os.listdir(ruta) if U.es_imagen(f))
+    pines_d = None
     if ruta_pines:
         try:
-            out['pines'] = len(motor.cargar_pines(ruta_pines))
+            pines_d = motor.cargar_pines(ruta_pines)
+            out['pines'] = len(pines_d)
         except Exception as e:
             return jsonify({'error': 'No pude leer los pines: {}'.format(str(e)[:160])}), 400
+    kml_datos = None
     if ruta_kml:
-        out['kml'] = motor.kml_resumen(motor.cargar_kml_datos(ruta_kml))
-    filas, verif, no_gps, _stems, dup = _leer_idx(ruta_idx)
+        kml_datos = motor.cargar_kml_datos(ruta_kml)
+        out['kml'] = motor.kml_resumen(kml_datos)
+    filas, verif, no_gps, _stems, dup, filas_idx = _leer_idx(ruta_idx)
     out['indice'] = {'filas': filas, 'verificadas': verif, 'no_gps': no_gps, 'duplicadas': dup}
+    out['campanas'] = _campanas(kml_datos, pines_d, filas_idx)
+    if kml_datos and pines_d:
+        fuera = len(set(pines_d) - set(kml_datos))
+        if fuera:
+            # los dos archivos son de mapas distintos: el cruce y las campañas no coincidirán
+            out['aviso_mapa'] = ('{} de {} pines del mapa NO están en el KML '
+                                 '(¿archivos de mapas distintos?)').format(fuera, len(pines_d))
     return jsonify(out)
 
 
 @app.get('/api/fuentes/gps')
 def api_fuentes_gps():
-    """Segundo tiempo: desglose de GPS sobre las fotos NO excluidas (mismos números que la corrida)."""
+    """Segundo tiempo: desglose de GPS sobre las fotos NO excluidas (mismos números que la corrida).
+
+    Además calcula, por campaña, la distancia media foto<->pin de las fotos dentro del radio.
+    El espejo de la corrida (con/sin/fuera) se calcula contra el mapa de pines; la distancia
+    por campaña se atribuye en el **universo de campañas** (el KML si hay) para que coincida
+    con la tabla del panel.
+    """
     ruta = (request.args.get('ruta') or '').strip()
     ruta_pines = (request.args.get('pines') or '').strip()
+    ruta_kml = (request.args.get('kml') or '').strip()
     salida = (request.args.get('salida') or '').strip()
     ruta_idx = (request.args.get('idx') or '').strip()
     try:
@@ -193,13 +255,35 @@ def api_fuentes_gps():
     except Exception as e:
         return jsonify({'error': 'No pude leer los pines: {}'.format(str(e)[:160])}), 400
 
-    _f, _v, _n, verif, _d = _leer_idx(ruta_idx)
+    kml_datos = motor.cargar_kml_datos(ruta_kml) if ruta_kml else {}
+    universo = kml_datos or pines          # de dónde salen las campañas de la tabla
+    distinto = bool(kml_datos) and set(kml_datos) != set(pines)
+
+    _f, _v, _n, verif, _d, filas_idx = _leer_idx(ruta_idx)
     excl = proceso._excluidos(salida, verif, os.path.join(TRABAJO, 'reads'))
     mock_gps = None
     if motor.en_mock():
         mgp = os.path.join(ruta, 'mock_gps.json')
         if os.path.exists(mgp):
             mock_gps = U.cargar_json(mgp, {})
+
+    # distancia foto<->pin por campaña: procesadas (del índice, sin EXIF) + pendientes
+    por_capa = {}
+
+    def acumula(capa, dmete, pendiente):
+        e = por_capa.setdefault(capa, {'suma': 0.0, 'n': 0, 'pendientes': 0})
+        e['suma'] += dmete
+        e['n'] += 1
+        if pendiente:
+            e['pendientes'] += 1
+
+    for r in filas_idx.values():                      # ya procesadas: foto -> SU pin
+        if not r['verif'] or not r['pin'] or r['lat'] is None or r['lon'] is None:
+            continue
+        d = universo.get(r['pin'])                    # del universo de campañas (KML)
+        if not d or 'lat' not in d:
+            continue
+        acumula(motor.nombre_capa(d), motor.dist_m(r['lat'], r['lon'], d['lat'], d['lon']), False)
 
     con = sin = fuera = 0
     for f in os.listdir(ruta):
@@ -213,10 +297,35 @@ def api_fuentes_gps():
         if not pines:
             fuera += 1
             continue
-        dm = min(motor.dist_m(lat, lon, d['lat'], d['lon']) for d in pines.values())
-        if dm > radio:
+        # espejo de la corrida: pin más cercano del mapa de pines
+        mejor, dm = None, None
+        for pin, d in pines.items():
+            if 'lat' not in d:
+                continue
+            dd = motor.dist_m(lat, lon, d['lat'], d['lon'])
+            if dm is None or dd < dm:
+                dm, mejor = dd, pin
+        if mejor is None or dm > radio:               # fuera del radio: no cruza
             fuera += 1
-    return jsonify({'con_gps': con, 'sin_gps': sin, 'fuera_radio': fuera, 'radio': radio})
+        # distancia por campaña: en el universo de campañas (si es distinto del mapa)
+        if distinto:
+            pin_u, dm_u = None, None
+            for pin, d in universo.items():
+                if 'lat' not in d:
+                    continue
+                dd = motor.dist_m(lat, lon, d['lat'], d['lon'])
+                if dm_u is None or dd < dm_u:
+                    dm_u, pin_u = dd, pin
+            if pin_u is not None and dm_u <= radio:
+                acumula(motor.nombre_capa(universo[pin_u]), dm_u, True)
+        elif mejor is not None and dm <= radio:
+            acumula(motor.nombre_capa(pines[mejor]), dm, True)
+
+    out = {'con_gps': con, 'sin_gps': sin, 'fuera_radio': fuera, 'radio': radio}
+    out['campanas'] = {c: {'dist_prom': (round(v['suma'] / v['n'], 1) if v['n'] else None),
+                           'n': v['n'], 'pendientes': v['pendientes']}
+                       for c, v in por_capa.items()}
+    return jsonify(out)
 
 
 def _params_repro():

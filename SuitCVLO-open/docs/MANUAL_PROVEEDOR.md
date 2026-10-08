@@ -37,7 +37,7 @@ entregable (va en `MANUAL_CLIENTE.md`) ni variables de entorno, respaldos o cade
 | **N Fotos** | máximo de **candidatas** a leer (foto con GPS dentro del radio de un PIN) |
 | **Motor IA** | `auto (cadena)` (recomendado) o forzar `opencode / ollama / deepseek / …` |
 | **Opciones avanzadas** | radio (250 m), tope por PIN (10), pausa (1 s), **Descargas máximas (300)**, switch **COMENTARIO**, **Prioridad de la fuente** (`KML primero` / `Mapa de pines`) |
-| **`Ver info de las fuentes`** | panel de avance y aportes **sin correr nada** |
+| **`Ver info de las fuentes`** | panel **sin correr nada**: avance, qué aporta cada fuente, **`CAMPAÑAS`** (pines por campaña), **`AVISO`** si el mapa y el KML no coinciden y el desplegable **`Análisis por campaña`** (pines · distancia media · % de avance) |
 | **`Reprocesar incompletas`** | respaldo + releer solo lo incompleto (§5) |
 | **`Reescribir info.txt y Marca`** | regenera **todos** los `info.txt` **y rellena la columna `Marca`** del índice con las lecturas guardadas y la prioridad elegida, **sin IA y sin borrar nada** (§5.1) |
 | **Ruta de entrada del CFG (CVLOCFG.txt)** | escribes la ruta de otro `CVLOCFG.txt` y pulsas **`Usar esta ruta`** (o Enter): rellena las 5 rutas + la prioridad + el modo Local (§7) |
@@ -49,9 +49,11 @@ entregable (va en `MANUAL_CLIENTE.md`) ni variables de entorno, respaldos o cade
 
 1. **Elige fuente.** Con Drive sincronizado en Windows → **`Local`** (cero descargas, GPS al instante).
    En **`Web`** hay que bajar cada foto para leer el GPS: usa el tope **Descargas máximas**.
-2. Revisa **`Ver info de las fuentes`**: verás `AVANCE 12% · 210 de 1696 fotos`, cuántas fotos
-   traen GPS, cuántos PINs cruzan y qué aporta cada fuente. El panel se queda abierto hasta
-   que lo cierres o cambies una ruta.
+2. Revisa **`Ver info de las fuentes`**: verás `AVANCE 18% · 298 de 1696 fotos`, cuántas fotos
+   traen GPS, cuántos PINs cruzan y qué aporta cada fuente; la lista **`CAMPAÑAS`** con el nº de
+   pines de cada una y, si el mapa y el KML no son el mismo, el **`AVISO`** que lo dice. Abre
+   **`Análisis por campaña`** para la tabla `campaña | pines | dist. media | % avance` (barra y
+   orden por clic). El panel se queda abierto hasta que lo cierres o cambies una ruta.
 3. Pon **N Fotos** (empezar con 10-20 la primera vez) y deja **auto (cadena)**.
 4. Pulsa **`Iniciar corrida`**. Sigue la barra, la línea de estadísticas y el log.
 5. Al terminar verás el resumen: **leídas / copiadas / excedidas / PINs / grupos** y, debajo,
