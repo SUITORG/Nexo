@@ -326,9 +326,51 @@
 
 ## ═══ 10. SKILLS EXTERNAS (por instalar / enlazar) ═══
 
+> **Lista máquina:** `GuiaTotal/SKILLS-AJENAS.json` (la lee `SuitDashboard/scan.js` → columna *Origen=externa*). Al instalar una externa nueva: agregarla al JSON **y** aquí.
+
+**Instaladas (28)** — `trigger → qué hace (lee → escribe)`:
+
 ```text
-(guion vacío — añadir aquí cada skill externa con: trigger → acciones → qué lee/escribe)
+captions-overlay        → subtítulos sobre talking-head → clip ya editado (overlay)
+changelog-video         → changelog .md → video 1080 square narrado
+cut-the-curve           → diseñar transición/seam → composición con reglas de easing
+embedded-captions       → subtítulos cinemáticos/VFX → clip local (matting incluido)
+faceless-explainer      → texto/artículo → explicador sin cara (tipografía + gráficos)
+figma                   → link de Figma → assets/frames importados en composición
+general-video           → brief/archivo → video multi-escena HyperFrames
+hyperframes             → petición de video/animación → proyecto HF (entrada obligatoria)
+hyperframes-animation   → pedido de animación → reglas/adapters (GSAP, Lottie, Three…)
+hyperframes-audio       → audio colocado → mezcla (fades, ducking, EQ) → track
+hyperframes-cli         → build/render/debug → render MP4/cloud por CLI
+hyperframes-core        → escribir composición → index.html con contrato de timing
+hyperframes-creative    → dirección de arte → frame.md/design.md (paleta, beats)
+hyperframes-keyframes   → cámara/zoom/reframe → keyframes seek-safe en composición
+hyperframes-registry    → necesitar bloque/componente → hyperframes.json + wiring
+last30days              → research "últimos 30 días" → informe con citas (Reddit/X/YouTube…)
+media-use               → BGM/foto/logo/VO/correciones → archivo local + ledger
+motion-doctrine         → componer transiciones → ley de movimiento + Seam Gate
+motion-graphics         → gráfico corto animado (kinetic type, stat, logo) → MP4
+music-to-video          → track de audio → video beat-sync → MP4
+oversized-cursor        → escena con cursor → técnica house-style de cursor
+pr-to-video             → PR/commit de GitHub → video explicador de cambios
+product-launch-video    → URL/brief de producto → promo/demo → video
+remotion-to-hyperframes → source Remotion (por pedido explícito) → composición HF
+seam-craft              → armar master timeline → seams sin flash blanco
+slideshow               → diapositivas/outline → deck navegable HTML
+talking-head-recut      → clip existente → overlays gráficos sincronizados
+video-shotcraft         → proyecto web/frontend → video producto cinematográfico → MP4
 ```
+
+**Pendientes de instalar** (refs en `GuiaTotal/PENDIENTES.md`):
+
+```text
+FT-004 addyosmani/agent-skills (24 skills)        → npx skills add (al aprobar)
+FT-005 msitarzewski/agency-agents (148k★)         → npx skills add (al aprobar)
+FT-006 opencode-claude-memory                     → memoria cruzada CLI (al aprobar)
+SamurAIGPT/Generative-Media-Skills                → plan en .suit/memory/pending/generative-media-skills.md
+```
+
+**Regla:** nunca instalar a ciegas — primero esta sección con trigger y acciones, luego instalación, luego JSON + inventario.
 
 ---
 

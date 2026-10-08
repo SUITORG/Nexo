@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-07 | **Total archivos:** 1595 JS/GS
+**Generado:** 2026-10-08 | **Total archivos:** 1595 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10361,36 +10361,42 @@
 | 37 | `parseRegistry` |
 | 65 | `parseOptimal` |
 | 78 | `parseAgentsRegistry` |
-| 98 | `scanClaudeAgents` |
-| 119 | `scanParallelGroups` |
-| 204 | `buildTriggerSources` |
-| 206 | `add` |
-| 216 | `walk` |
-| 238 | `triggersFor` |
-| 239 | `esc` |
-| 263 | `scanScripts` |
-| 289 | `desc` |
-| 298 | `scanPlugins` |
-| 319 | `readSkillDesc` |
-| 354 | `yamlDesc` |
-| 371 | `contractFor` |
-| 374 | `pick` |
-| 399 | `collectSkills` |
-| 430 | `findPort` |
-| 437 | `checkPort` |
-| 440 | `done` |
-| 449 | `loadEnvKeys` |
-| 460 | `claudeCmdArr` |
-| 467 | `countSkillDirs` |
-| 475 | `claudeContext` |
-| 499 | `pathCheck` |
-| 506 | `test` |
-| 527 | `envRequired` |
-| 529 | `scan` |
-| 538 | `stripAnsi` |
-| 541 | `probeOpenCode` |
-| 559 | `probeClaude` |
-| 573 | `scanProject` |
+| 98 | `parseSkillsRegistry` |
+| 133 | `scanClaudeAgents` |
+| 154 | `scanParallelGroups` |
+| 239 | `buildTriggerSources` |
+| 241 | `add` |
+| 251 | `walk` |
+| 273 | `triggersFor` |
+| 274 | `esc` |
+| 298 | `scanScripts` |
+| 324 | `desc` |
+| 333 | `scanPlugins` |
+| 354 | `readSkillDesc` |
+| 389 | `yamlDesc` |
+| 406 | `contractFor` |
+| 409 | `pick` |
+| 434 | `collectSkills` |
+| 465 | `findPort` |
+| 472 | `checkPort` |
+| 475 | `done` |
+| 484 | `loadEnvKeys` |
+| 495 | `claudeCmdArr` |
+| 502 | `countSkillDirs` |
+| 510 | `claudeContext` |
+| 534 | `pathCheck` |
+| 541 | `test` |
+| 562 | `envRequired` |
+| 564 | `scan` |
+| 573 | `stripAnsi` |
+| 576 | `probeOpenCode` |
+| 594 | `probeClaude` |
+| 608 | `scanProject` |
+| 728 | `ajenas` |
+| 734 | `skillOrigen` |
+| 763 | `type` |
+| 764 | `domain` |
+| 765 | `version` |
 
 ## `SuitOSCore/ai-router/circuitBreaker.js`
 

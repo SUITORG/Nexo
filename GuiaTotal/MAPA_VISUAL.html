@@ -613,9 +613,16 @@
         '✂️ umbrales: ≥25% → faltantes PROBABLE · ≥84% → completar/actualizar',
         '✍️ <Proyecto>/docs/00-16 (inventario, C4 Mermaid, reglas, brechas, plan)'],
       skills: ['auditoria'] },
-    '10': { t: 'Skills externas (por instalar)', steps: [
-        '📦 lista de skills ajenas pendientes de enlazar',
-        '✍️ si se instala → su nodo en MAPA §10 con trigger y acciones (nunca a ciegas)'] },
+    '10': { t: 'Skills externas (instaladas / por instalar)', steps: [
+        '📦 lista de skills ajenas instaladas (28) — fuente: GuiaTotal/SKILLS-AJENAS.json',
+        '✍️ si se instala otra → su fila en MAPA §10 + JSON (nunca a ciegas)'],
+      list: ['captions-overlay','changelog-video','cut-the-curve','embedded-captions',
+        'faceless-explainer','figma','general-video','hyperframes','hyperframes-animation',
+        'hyperframes-audio','hyperframes-cli','hyperframes-core','hyperframes-creative',
+        'hyperframes-keyframes','hyperframes-registry','last30days','media-use',
+        'motion-doctrine','motion-graphics','music-to-video','oversized-cursor',
+        'pr-to-video','product-launch-video','remotion-to-hyperframes','seam-craft',
+        'slideshow','talking-head-recut','video-shotcraft'] },
     '11': { t: 'Fichas operativas (nivel 4)', steps: [
         '📇4 fichas de la cadena (máscara, registro, clusters, páginas):',
         '   acciones GAS con payload · tablas maestro/espejo + PK · query de verificación · quirks',
@@ -636,9 +643,20 @@
       info.skills.map(s => `<span class="kchip">${s}</span>`).join('') + '</div>';
     if (info.files) h += '<div class="dsec">📁 archivos / tablas</div><div class="chips">' +
       info.files.map(f => `<span class="kchip f">${f}</span>`).join('') + '</div>';
+    if (info.list) h += `<div class="dsec">📦 skills ajenas instaladas (${info.list.length})</div>
+      <input id="d-filter" placeholder="filtrar por nombre…" oninput="filterDrawerList()"
+        style="width:100%;padding:6px 10px;margin-bottom:6px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:12px">
+      <div class="chips" id="d-list">` +
+      info.list.map(n => `<span class="kchip">${n}</span>`).join('') + '</div>';
     document.getElementById('d-body').innerHTML = h;
     document.getElementById('drawer').classList.add('open');
     document.getElementById('backdrop').classList.add('open');
+  }
+  function filterDrawerList() {
+    const q = (document.getElementById('d-filter').value || '').toLowerCase();
+    document.querySelectorAll('#d-list .kchip').forEach(c => {
+      c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
   }
   function closeDrawer() {
     document.getElementById('drawer').classList.remove('open');

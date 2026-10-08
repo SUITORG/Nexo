@@ -30,7 +30,7 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 - [x] **SuitServiHogar — `AGENTS.md` desactualizado**: `screens/ (7)` → 13. *2026-10-04*
 - [ ] **SuitDashboard — instancias faltantes**: 4 manuales, identidad, prompt origen, checklist, `docs/05+06` (tarjeta `documentos: false`). *2026-09-26*
 - [ ] **Integración profunda `auditoria` ↔ `guia-total`** (hoy solo gancho en MAPA §4/§9). *2026-09-26*
-- [ ] **Skills externas**: guion `MAPA.md §10` vacío — rellenar al primer pedido de instalación. *2026-09-26*
+- [ ] **Guía de 1 página SuitServiHogar (cliente/técnico/admin)**: guión de demo para enseñar a clientes — entrada por URL dev, solicitud con tarjeta `4242`, chat de negociación en vivo y monitoreo en Admin Panel. *2026-10-08*
 - [ ] **Push a GitHub**: rama `evasol-supabase-migration` ahead 45 — pendiente de decisión. *2026-09-26*
 - [ ] **SuitPoke — publicar con HTTPS + gate de medición (panel-juzgador)**: hostear (itch.io/Poki u otro) y medir con 100-300 jugadores: ≥2 partidas, % rematch, D1 ≥25%, onboarding <60 s. Si falla → pivotar antes de fases 2 (condición 6 del veredicto APROBADO CONDICIONAL). *2026-09-29*
 - [ ] **SuitPoke — prueba en dispositivo móvil físico**: instalación PWA real pendiente (requiere HTTPS; en localhost el SW/manifest ya verificados). *2026-09-29*
@@ -111,6 +111,8 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 | Decisiones arquitectónicas | `.suit/memory/decisions/` (ADRs) |
 
 ## F. Cerrados (historial — no borrar)
+
+- [x] ~~**Skills externas**: guion `MAPA.md §10` vacío~~ **rellenado** (2026-10-08): §10 con **28 ajenas instaladas** (`trigger → qué hace`) + 4 pendientes (FT-004 addyosmani, FT-005 agency-agents, FT-006 opencode-claude-memory, SamurAIGPT Generative-Media) · lista máquina `GuiaTotal/SKILLS-AJENAS.json` (la lee `SuitDashboard/scan.js` → columna Origen) · `MAPA_VISUAL` drawer §10 con **lista + filtro rápido** (`check-map-visual OK`)
 
 - [x] TD-002 · API keys en `SuitCampanas/script.js` → movidas a `/api/config/client` (2026-07-10)
 - [x] **TD-004 parcial**: `syncToSupabase` ahora diagnostica (key ausente/HTTP≠2xx) en vez de tragarse errores (2026-09-28 → backend/utils.js + core.js)
