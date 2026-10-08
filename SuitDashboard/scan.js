@@ -94,6 +94,41 @@ function parseAgentsRegistry() {
   return agents;
 }
 
+// --- Skills SuitOS (.suit/registry/skills.yaml) — metadatos version/type/domain ---
+function parseSkillsRegistry() {
+  const txt = readText(path.join(ROOT, '.suit', 'registry', 'skills.yaml'));
+  const skills = {};
+  let cur = null;
+  for (const raw of txt.split(/\r?\n/)) {
+    if (!raw.trim() || raw.trim().startsWith('#')) continue;
+    const mKey = /^ {2}([A-Za-z0-9_-]+):\s*$/.exec(raw);
+    if (mKey) { cur = { name: mKey[1] }; skills[mKey[1]] = cur; continue; }
+    if (!cur) continue;
+    const mDesc = /^ {4}description:\s*(.+)$/.exec(raw);
+    if (mDesc && !/^[>|][+-]?\d*$/.test(mDesc[1].trim())) cur.desc = mDesc[1].replace(/^["']|["']$/g, '').trim();
+    const mVer = /^ {4}version:\s*(\S+)/.exec(raw); if (mVer) cur.version = mVer[1];
+    const mType = /^ {4}type:\s*(\S+)/.exec(raw); if (mType) cur.type = mType[1];
+    const mDomain = /^ {4}domain:\s*(\S+)/.exec(raw); if (mDomain) cur.domain = mDomain[1];
+    const mPath = /^ {4}path:\s*(\S+)/.exec(raw); if (mPath) cur.path = mPath[1];
+  }
+  // Forma corta (solo path): descripción desde el yaml apuntado (description a 2 espacios)
+  for (const s of Object.values(skills)) {
+    if (s.desc || !s.path) continue;
+    const lines = readText(path.join(ROOT, s.path)).split('\n');
+    const idx = lines.findIndex(l => /^ {2}description:\s*/.test(l));
+    if (idx === -1) continue;
+    const first = lines[idx].replace(/^ {2}description:\s*/, '').trim();
+    if (/^[>|][+-]?\d*$/.test(first)) {
+      const block = [];
+      for (let i = idx + 1; i < lines.length && /^\s+\S/.test(lines[i]); i++) block.push(lines[i].trim());
+      s.desc = block.join(' ').substring(0, 160);
+    } else {
+      s.desc = first.replace(/^["']|["']$/g, '').substring(0, 160);
+    }
+  }
+  return skills;
+}
+
 // --- Agentes nativos de Claude Code (.claude/agents/*.md, solo raíz) ---
 function scanClaudeAgents() {
   const dir = path.join(ROOT, '.claude', 'agents');
@@ -685,8 +720,22 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
 
   // --- Capabilities: skills consolidadas + agentes SuitOS + agentes Claude + grupos paralelos ---
   const agentsRegistry = parseAgentsRegistry();
+  const registrySkills = parseSkillsRegistry();
   const claudeAgents = scanClaudeAgents();
   const parallelGroups = scanParallelGroups();
+
+  // Origen: suitos = registry/.suit | externa = lista GuiaTotal/SKILLS-AJENAS.json | proyecto
+  const ajenas = (() => {
+    try {
+      const j = JSON.parse(readText(path.join(ROOT, 'GuiaTotal', 'SKILLS-AJENAS.json')));
+      return new Set(Array.isArray(j.skills) ? j.skills : []);
+    } catch { return new Set(); }
+  })();
+  function skillOrigen(s, regListed) {
+    if (ajenas.has(s.name)) return 'externa';       // lista explícita manda (puede estar en registry y ser de un repo externo)
+    if (regListed || s.src.startsWith('.suit/skills')) return 'suitos';
+    return 'proyecto';
+  }
 
   const SKIP_SRC = new Set(['.ponytail/skills', 'agent/skills']); // vendored / copia de build obsoleta
   const SKIP_PROJECT = new Set(['open-design']); // submódulo externo (git propio), no es de SuitOrg
@@ -704,7 +753,19 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
         if (!existing.cli.includes(cli)) existing.cli.push(cli);
         continue;
       }
-      const entry = { name: s.name, desc: SKILL_DESC_ES[s.name] || s.desc, project: p.name, src: s.src, cli: [cli] };
+      const reg = registrySkills[s.name];
+      const entry = {
+        name: s.name,
+        desc: SKILL_DESC_ES[s.name] || (reg && reg.desc) || s.desc,
+        project: p.name,
+        src: s.src,
+        cli: [cli],
+        type: (reg && reg.type) || '',
+        domain: (reg && reg.domain) || '',
+        version: (reg && reg.version) || '',
+        registry: !!reg,
+        origen: skillOrigen(s, !!reg)
+      };
       seenSkill.set(key, entry);
       allSkills.push(entry);
     }

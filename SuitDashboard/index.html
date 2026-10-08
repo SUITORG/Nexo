@@ -31,8 +31,9 @@ select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);pa
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:18px 22px 60px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
 .card:hover{transform:translateY(-3px);border-color:#3b4c7d;box-shadow:0 8px 26px rgba(0,0,0,.45)}
-.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
-.card h3{font-size:1rem;word-break:break-word;flex:1;min-width:0}
+.card .top{display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;gap:6px;margin-bottom:8px}
+.card h3{font-size:1rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .badges{justify-content:flex-start}
 .badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
 .badge{font-size:.62rem;padding:3px 7px;border-radius:6px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
 .b-INDEP{background:#123c2c;color:var(--ok)} .b-NO-CAT{background:#3d1a24;color:var(--bad)}
@@ -183,10 +184,12 @@ table.cli tbody tr:hover td{background:#141d38}
       <span class="chipf" data-cap="claude">claude</span>
       <span class="chipf" data-cap="opencode">opencode</span>
       <span class="chipf" data-cap="suitos">suitos (.suit/skills)</span>
+      <span class="chipf" data-cap="o:externa">externas (skills.sh)</span>
+      <span class="chipf" data-cap="o:suitos">registry SuitOS</span>
     </div>
     <div class="tblwrap">
       <table class="cli">
-        <thead><tr><th>Nombre completo</th><th>Proyecto</th><th>CLI</th><th>Ubicación</th><th>Descripción</th></tr></thead>
+        <thead><tr><th>Nombre completo</th><th>Proyecto</th><th>CLI</th><th>Ubicación</th><th>Tipo</th><th>Origen</th><th>Descripción</th></tr></thead>
         <tbody id="tblCap"></tbody>
       </table>
     </div>
@@ -254,6 +257,30 @@ const grid = document.getElementById('grid');
 const filters = new Set();
 
 const KIND_LABEL = { ROOT:'raíz', INDEP:'INDEPENDIENTE', 'NO-CAT':'NO CATALOGADO', BUILD:'build-time', KIT:'kit/herramienta', ASSETS:'assets' };
+const SKILL_TIPO = {
+  'captions-overlay':'diseño','cut-the-curve':'diseño','motion-doctrine':'diseño','motion-graphics':'diseño',
+  'seam-craft':'diseño','oversized-cursor':'diseño','figma':'diseño','slideshow':'diseño',
+  'frontend-design':'diseño','frontend-slides':'diseño','hyperframes-creative':'diseño','hyperframes-animation':'diseño',
+  'hyperframes-keyframes':'diseño','design-system':'*diseño',
+  'hyperframes':'producción','hyperframes-audio':'producción','general-video':'producción','faceless-explainer':'producción',
+  'changelog-video':'producción','product-launch-video':'producción','music-to-video':'producción','pr-to-video':'producción',
+  'talking-head-recut':'producción','video-shotcraft':'producción','media-use':'producción','embedded-captions':'producción',
+  'remotion-best-practices':'producción','remotion-to-hyperframes':'producción',
+  'javascript':'*código','sql':'*código','multi-tenant':'*código','multi-tenant-saas':'*código',
+  'geo-exif':'*código','hybrid-db':'*código','panoramic-ocr':'*código','vision-yolo':'*código',
+  'yolo-training':'*código','hyperframes-core':'código','ponytail-ladder':'*código',
+  'ciclo':'*administración','mejoras-proyecto':'*administración','preparar-produccion':'*administración','analista-proy':'*administración',
+  'contrato-subproyecto':'*administración','code-review':'*administración','security-audit':'*administración','deployer':'*administración',
+  'iteration-loop':'*administración','panel-juzgador':'*administración','probador':'*administración','reportero':'*administración',
+  'prompt-reviewer':'*administración','skill-creator':'administración','descubrimiento':'*administración',
+  'last30days':'investigación','web-research':'*investigación','web-research.skill':'*investigación','web-search':'*investigación',
+  'brief-engine':'*negocio','cotizaciones-engine':'*negocio','lapvtfu':'*negocio','manychat':'*negocio',
+  'pdf-generation':'*documentos','report-pdf':'*documentos',
+  'context-loader':'*herramienta','index-navigator':'*herramienta','mcp-manager':'*herramienta','bat-launcher':'*herramienta',
+  'google-sheets':'*herramienta','telegram-bot':'*herramienta','browser-act':'herramienta',
+  'data-sync':'*herramienta','data-cleanup':'*herramienta','hyperframes-cli':'herramienta','hyperframes-registry':'herramienta',
+  'parametros':'*herramienta'
+};
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
@@ -312,7 +339,7 @@ function card(p){
     p.pkg ? `<span>${esc(p.pkg.name)}</span>` : ''
   ].filter(Boolean).join('');
   return `<div class="card" onclick="openDetail('${esc(p.name)}')">
-    <div class="top"><h3>${esc(p.name)}</h3><div class="badges">${badges}</div></div>
+    <div class="top"><h3 title="${esc(p.name)}">${esc(p.name)}</h3><div class="badges">${badges}</div></div>
     <div class="chips">${mcps || '<span class="mcp off">sin MCP</span>'}</div>
     ${sk}
     <div class="meta">${meta}</div>
@@ -502,11 +529,14 @@ const CLI_PILL = { claude:'p-cla', opencode:'p-oc', suitos:'p-suit' };
 const ROLE_PILL = { paralelo:'p-pur', orquestador:'p-info', 'estándar':'p-abs' };
 
 function capMatch(s){
-  if (capFilters.size && ![...capFilters].some(f=>s.cli.includes(f))) return false;
+  if (capFilters.size && ![...capFilters].some(f=>f.startsWith('o:') ? s.origen===f.slice(2) : s.cli.includes(f))) return false;
   const q = document.getElementById('capq').value.trim().toLowerCase();
   if (!q) return true;
   return (s.name+' '+s.project+' '+s.desc).toLowerCase().includes(q);
 }
+
+const ORIGEN_PILL = { suitos:'p-suit', proyecto:'p-info', externa:'p-pur' };
+const ORIGEN_LABEL = { suitos:'SuitOS', proyecto:'proyecto', externa:'externa' };
 
 function renderCap(){
   const k = [
@@ -514,6 +544,8 @@ function renderCap(){
     ['claude', CAP.skills.filter(s=>s.cli.includes('claude')).length, 'pur'],
     ['opencode', CAP.skills.filter(s=>s.cli.includes('opencode')).length, 'ok'],
     ['suitos (.suit/skills)', CAP.skills.filter(s=>s.cli.includes('suitos')).length, 'warn'],
+    ['registry SuitOS', CAP.skills.filter(s=>s.registry).length, 'warn'],
+    ['skills externas', CAP.skills.filter(s=>s.origen==='externa').length, 'pur'],
     ['agentes SuitOS', CAP.agents.length, 'info'],
     ['agentes Claude nativos', CAP.claudeAgents.length, 'info'],
     ['grupos en paralelo', CAP.parallelGroups.length, 'ok'],
@@ -528,8 +560,10 @@ function renderCap(){
       <td>${esc(s.project)}</td>
       <td>${s.cli.map(c=>`<span class="pill ${CLI_PILL[c]||'p-abs'}">${CLI_LABEL[c]||c}</span>`).join(' ')}</td>
       <td class="wrap"><code>${esc(s.src)}</code></td>
+      <td>${esc(s.registry ? s.type + (s.version ? ' v'+s.version : '') : (SKILL_TIPO[s.name]||'—'))}</td>
+      <td><span class="pill ${ORIGEN_PILL[s.origen]||'p-abs'}">${ORIGEN_LABEL[s.origen]||'—'}</span></td>
       <td class="wrap">${esc(s.desc||'—')}</td>
-    </tr>`).join('') : '<tr><td colspan="5" style="color:var(--dim)">Sin resultados</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="7" style="color:var(--dim)">Sin resultados</td></tr>';
 
   document.getElementById('tblAgents').innerHTML = CAP.agents.length ? [...CAP.agents].sort((a,b)=>a.name.localeCompare(b.name)).map(a=>`
     <tr>
