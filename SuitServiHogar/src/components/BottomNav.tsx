@@ -1,25 +1,36 @@
 import React from 'react';
 import { ScreenId } from '../types';
 
+export type ProfileRole = 'client' | 'technician' | 'admin';
+
 interface BottomNavProps {
   currentScreen: ScreenId;
   onNavigate: (screen: ScreenId) => void;
+  role?: ProfileRole;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate, role = 'client' }) => {
+  const thirdTab: { id: ScreenId; label: string; icon: string } =
+    role === 'admin'
+      ? { id: 'admin', label: 'Panel', icon: 'admin_panel_settings' }
+      : role === 'technician'
+        ? { id: 'tecnico', label: 'Mis Órdenes', icon: 'assignment' }
+        : { id: 'mis-ordenes', label: 'Mis Órdenes', icon: 'assignment' };
+
   const navItems: { id: ScreenId; label: string; icon: string }[] = [
     { id: 'inicio', label: 'Inicio', icon: 'home' },
     { id: 'explorar', label: 'Explorar', icon: 'search' },
-    { id: 'escrow', label: 'Garantía Escrow', icon: 'shield_with_heart' },
+    thirdTab,
     { id: 'perfil', label: 'Perfil', icon: 'person' }
   ];
+
+  const isActiveItem = (id: ScreenId): boolean =>
+    id === currentScreen || (id === 'explorar' && currentScreen === 'solicitud');
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-2 py-2 max-w-lg mx-auto bg-surface-container-lowest border-t border-border-subtle shadow-md">
       {navItems.map((item) => {
-        const isActive =
-          currentScreen === item.id ||
-          (item.id === 'explorar' && currentScreen === 'solicitud');
+        const isActive = isActiveItem(item.id);
 
         return (
           <button

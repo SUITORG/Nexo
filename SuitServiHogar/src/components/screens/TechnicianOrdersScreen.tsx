@@ -20,7 +20,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 
 const STATUS_ACTIONS: Record<string, { label: string; nextStatus: string; color: string }> = {
   funded: { label: 'Iniciar ruta', nextStatus: 'in_progress', color: 'bg-primary' },
-  in_progress: { label: 'Marcar completado', nextStatus: 'completed', color: 'bg-trust-blue-light' },
+  in_progress: { label: 'Marcar completado', nextStatus: 'completed', color: 'bg-primary-container' },
   completed: { label: 'Finalizar (PIN cliente)', nextStatus: 'released', color: 'bg-secondary' }
 };
 

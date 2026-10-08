@@ -359,6 +359,7 @@ export default function App() {
               onWhatsAppHelp={() => showToast('Conectando con mesa de ayuda Reynosa (+52 899)...')}
               onNavigate={handleNavigate}
               isTechnician={!!currentTechnician}
+              isAdmin={isAdmin}
             />
           )}
 
@@ -472,6 +473,7 @@ export default function App() {
           <BottomNav
             currentScreen={currentScreen}
             onNavigate={handleNavigate}
+            role={profileRole}
           />
         )}
 

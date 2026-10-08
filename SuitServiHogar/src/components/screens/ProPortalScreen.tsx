@@ -9,6 +9,7 @@ interface ProPortalScreenProps {
   onWhatsAppHelp: () => void;
   onNavigate: (screen: ScreenId) => void;
   isTechnician?: boolean;
+  isAdmin?: boolean;
 }
 
 export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
@@ -16,7 +17,8 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
   onUploadDoc,
   onWhatsAppHelp,
   onNavigate,
-  isTechnician = false
+  isTechnician = false,
+  isAdmin = false
 }) => {
   const [isAvailable, setIsAvailable] = useState(true);
   const [referralCode, setReferralCode] = useState('');
@@ -51,6 +53,18 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
 
   return (
     <div className="space-y-4 pb-14">
+      {!isTechnician ? (
+        /* Header Cliente */
+        <section className="bg-surface-card rounded-xl p-4 border border-border-subtle shadow-xs">
+          <div className="inline-flex items-center space-x-1 px-2 py-0.5 bg-trust-blue-light text-primary rounded-full mb-1">
+            <span className="material-symbols-outlined text-[14px]">person</span>
+            <span className="text-label-sm font-bold">CLIENTE</span>
+          </div>
+          <h1 className="text-headline-sm text-text-primary font-bold">Mi Cuenta</h1>
+          <p className="text-body-sm text-text-muted">ServiciosHogar Reynosa • Tus servicios contratados</p>
+        </section>
+      ) : (
+      <>
       {/* Portal Aliados Pro Welcome Header with Status & Availability */}
       <section className="bg-surface-card rounded-xl p-4 border border-border-subtle shadow-xs">
         <div className="flex items-start justify-between">
@@ -118,7 +132,62 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
           </div>
         </div>
       </section>
+      </>
+      )}
 
+      {/* Admin: Panel de Administración — primera tarjeta */}
+      {isAdmin && (
+        <section className="bg-surface-card rounded-xl p-4 border border-border-subtle shadow-xs space-y-3">
+          <div className="flex items-center space-x-2">
+            <span className="material-symbols-outlined text-tertiary text-[20px]">admin_panel_settings</span>
+            <h2 className="text-headline-sm text-text-primary font-bold">Panel de Administración</h2>
+          </div>
+          <p className="text-body-sm text-text-muted">
+            Dashboard del día, técnicos, disputas y configuración del negocio.
+          </p>
+          <button
+            onClick={() => onNavigate('admin')}
+            className="w-full bg-tertiary hover:bg-tertiary-container py-3 rounded-lg text-label-md text-white font-bold flex items-center justify-center gap-2 transition-colors active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+            <span>Abrir Panel de Administración</span>
+          </button>
+        </section>
+      )}
+
+      {/* Mis Órdenes de Servicio */}
+      <section className="bg-surface-card rounded-xl p-4 border border-border-subtle shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="material-symbols-outlined text-escrow-shield text-[20px]">assignment</span>
+            <h2 className="text-headline-sm text-text-primary font-bold">Mis Órdenes de Servicio</h2>
+          </div>
+        </div>
+        <p className="text-body-sm text-text-muted">
+          {isTechnician
+            ? 'Gestiona tus servicios asignados: inicia ruta, llega al domicilio, sube evidencia y libera fondos con PIN del cliente.'
+            : 'Revisa tus servicios contratados, sigue su estado y chatea con tu técnico.'}
+        </p>
+        <button
+          onClick={() => onNavigate(isTechnician ? 'tecnico' : 'mis-ordenes')}
+          className="w-full bg-escrow-shield hover:bg-emerald-safe text-white py-3 px-4 rounded-lg font-bold text-label-lg flex items-center justify-center gap-2 shadow-xs active:scale-95 transition-transform"
+        >
+          <span className="material-symbols-outlined text-[20px]">list_alt</span>
+          <span>Ver Mis Órdenes</span>
+        </button>
+        {!isTechnician && (
+          <button
+            onClick={() => onNavigate('explorar')}
+            className="w-full bg-primary hover:bg-trust-blue-dark text-on-primary py-3 px-4 rounded-lg font-bold text-label-lg flex items-center justify-center gap-2 shadow-xs active:scale-95 transition-transform"
+          >
+            <span className="material-symbols-outlined text-[20px]">search</span>
+            <span>Contratar servicio</span>
+          </button>
+        )}
+      </section>
+
+      {!isTechnician && (
+      <>
       {/* Earnings & Certainty Bento Card */}
       <section className="bg-gradient-to-br from-primary to-trust-blue-dark text-on-primary rounded-xl p-4 shadow-md relative overflow-hidden space-y-3">
         <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-primary-container rounded-full opacity-30 pointer-events-none"></div>
@@ -447,28 +516,8 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
           </button>
         </div>
       </section>
-
-      {/* Mis Órdenes - NUEVO */}
-      <section className="bg-surface-card rounded-xl p-4 border border-border-subtle shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="material-symbols-outlined text-escrow-shield text-[20px]">assignment</span>
-            <h2 className="text-headline-sm text-text-primary font-bold">Mis Órdenes de Servicio</h2>
-          </div>
-        </div>
-        <p className="text-body-sm text-text-muted">
-          {isTechnician
-            ? 'Gestiona tus servicios asignados: inicia ruta, llega al domicilio, sube evidencia y libera fondos con PIN del cliente.'
-            : 'Revisa tus servicios contratados, sigue su estado y chatea con tu técnico.'}
-        </p>
-        <button
-          onClick={() => onNavigate(isTechnician ? 'tecnico' : 'mis-ordenes')}
-          className="w-full bg-escrow-shield hover:bg-emerald-safe text-white py-3 px-4 rounded-lg font-bold text-label-lg flex items-center justify-center gap-2 shadow-xs active:scale-95 transition-transform"
-        >
-          <span className="material-symbols-outlined text-[20px]">list_alt</span>
-          <span>Ver Mis Órdenes</span>
-        </button>
-      </section>
+      </>
+      )}
 
       {/* Programa de Referidos */}
       <section className="bg-surface-card rounded-xl p-4 border border-border-subtle shadow-xs space-y-3">
@@ -523,6 +572,7 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
       </section>
 
       {/* Primary Action CTA Button */}
+      {isTechnician && (
       <div className="pt-2 pb-4 space-y-2">
         <button
           onClick={onScheduleVisit}
@@ -535,6 +585,7 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
           Disponibilidad en sectores: Las Fuentes, Jarachina, Ribereña, Del Prado e Hidalgo.
         </p>
       </div>
+      )}
 
       <button
         onClick={() => onNavigate('margin')}
@@ -551,16 +602,6 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
         <span className="material-symbols-outlined text-[18px]">menu_book</span>
         <span>Glossario Reynosa</span>
       </button>
-
-      {isTechnician && (
-        <button
-          onClick={() => onNavigate('admin')}
-          className="w-full bg-trust-blue-light hover:bg-trust-blue py-3 rounded-lg text-label-md text-primary font-medium flex items-center gap-2 transition-colors"
-        >
-          <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
-          <span>Panel de Administración</span>
-        </button>
-      )}
     </div>
   );
 };

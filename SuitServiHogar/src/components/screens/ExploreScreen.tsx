@@ -68,6 +68,10 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
     if (selectedCategoryFilter === 'climas') {
       return tech.id === 'roberto-garza' || tech.id === 'juan-carlos-mendez';
     }
+    if (selectedCategoryFilter === 'cerrajeria') {
+      // Sin técnicos de cerrajería en sh_technicians — no mostrar filas QA ($0)
+      return false;
+    }
     return true;
   });
 
