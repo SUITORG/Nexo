@@ -90,7 +90,7 @@ El botón **`Ver info de las fuentes`** (junto a *Iniciar corrida*) despliega un
 
 ```
 RUTA      C:\Users\rojo-\Downloads\cteCVLO1\Recorrido
-AVANCE    18% · 298 de 1696 fotos
+AVANCE    26% · hechas 444 de 1696 · pendientes 1252 · verificadas 298
 
 FUENTES
   FOTOS    1696 en la ruta · 1252 con GPS · 0 sin GPS
@@ -105,9 +105,20 @@ CAMPAÑAS                        PINs
   COPPEL CARTERAS Y MURO MTY (1)     13
 
 GPS       1252 con · 0 sin · 1252 fuera de radio      ← 2º tiempo, 10-40 s (lee el EXIF)
+
+[Análisis por campaña]
+  Campaña                    Pines  Dist. media (m)  % avance
+  COPPEL PARABUSES MTY (1)     159     62.7 (11)        1% ▓░░░░
+  GLOBAL                       172     62.7 (todas)     1%
+  FOTOGRAFÍAS   1696 en la ruta
+    ya hechas (copiadas o leídas)   444
+    pendientes   1252  =  0 asignadas a campañas · 1252 fuera de alcance · 0 sin GPS
+    total   444 + 1252 = 1696   ¡cuadra!
 ```
 
-- **`AVANCE`** = verificadas ÷ total de fotos de la ruta (**el avance global en fotos**).
+- **`AVANCE`** = **`hechas ÷ total de fotos de la ruta`**, donde **hechas** = lo que la corrida
+  ya salta (copiadas o leídas). **100% = no hay más que procesar** (se avisa en la misma línea).
+  `verificadas` va aparte porque es otro dato (las que ya tienen `✓`).
 - **`FUENTES`** deja ver qué aporta cada origen: la *ruta* da foto+GPS, los *pines* los
   cruzables, el *KML* el inventario con sus campos, el *índice* lo ya procesado.
 - **`AVISO`** (solo si aparece): el mapa de pines y el KML **no comparten PINs** → son archivos
@@ -117,12 +128,19 @@ GPS       1252 con · 0 sin · 1252 fuera de radio      ← 2º tiempo, 10-40 s 
   KML, del mapa de pines (**no se mezclan los dos**: daría pines fantasma).
 - **`Análisis por campaña`** (desplegable): tabla `campaña | pines | dist. media (m) | % avance`
   con barra, orden por clic en la cabecera y fila **GLOBAL**:
-  - **% avance** = `pines con ≥1 foto auditada ÷ pines de la campaña` (cobertura);
+  - **% avance** = `pines con ≥1 foto leída ÷ pines de la campaña` (50 pines con 25 leídas = 50%);
   - **dist. media** = media foto↔pin de las fotos **dentro del radio**, con `n` muestras
-    (procesadas desde el índice + pendientes con EXIF);
-  - **GLOBAL** = cobertura total de pines; el avance en fotos sigue en la línea `AVANCE`.
+    (procesadas desde el índice + pendientes con EXIF); sin fotos que crucen → `n/d`;
+  - **GLOBAL** = pines leídos ÷ pines totales; el avance en fotos vive en la línea `AVANCE`.
+- **`FOTOGRAFÍAS`** (al final del análisis): la cuenta que **tiene que cuadrar** —
+  `hechas + pendientes = total en la ruta`, con los pendientes desglosados en
+  `asignadas a campañas + fuera de alcance + sin GPS`.
+- **`Descargar análisis (PDF)`** (dentro del análisis): genera
+  **`analisis_fuentes_AAAA-MM-DD_HH-MM.pdf`** en la **Ruta de Salida** (fecha, hora y minutos
+  tanto en el nombre como dentro del documento, con las mismas leyendas). Sin dependencias:
+  el PDF lo escribe `pdf_reporte.py`.
 - Los datos básicos salen **en ~0,5 s**; el desglose de GPS llega después y rellena la columna
-  de distancia (`n/d (sin ruta local)` si estás en Modo Web, donde no hay EXIF que leer).
+  de distancia y la cuenta de `FOTOGRAFÍAS` (`n/d (sin ruta local)` en Modo Web).
 - **El panel se queda abierto** hasta que vuelves a pulsar el botón (lo cierras) **o cambias de
   ruta/pines/KML/índice/fuente** (se oculta solo: los datos quedan obsoletos).
 - Si `GoogleMapsPines` es un `.txt`, la primera lectura descarga el KML de Google (~0,5 s).

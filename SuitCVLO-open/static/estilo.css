@@ -88,6 +88,9 @@ td.suave { color: var(--tenue); }
 .barra-cel { min-width: 96px; }
 .barra-cel .pista { height: 7px; background: #EDEBE4; border-radius: 4px; overflow: hidden; margin-top: 3px; }
 .barra-cel .relleno { height: 100%; background: var(--verde); border-radius: 4px; }
+.boton.pequeno { font-size: 12px; padding: 5px 12px; margin: 6px 0 2px; }
+.tablero .cuenta { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--linea);
+  white-space: pre-wrap; line-height: 1.5; color: var(--texto); }
 .oculto { display: none !important; }
 @media (max-width: 720px) { .contenedor { padding: 24px 14px 56px; } .campos { grid-template-columns: 1fr; }
   .encabezado { flex-direction: column; } .insignias { align-items: flex-start; } }

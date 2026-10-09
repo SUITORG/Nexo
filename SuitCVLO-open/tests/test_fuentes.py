@@ -174,6 +174,88 @@ class TestApiFuentes(unittest.TestCase):
         r2 = self.cliente.get('/api/fuentes', query_string={'pines': pines})
         self.assertNotIn('aviso_mapa', r2.get_json())
 
+    def test_hechas_y_pendientes_para_el_avance(self):
+        """AVANCE = hechas (copiadas o leídas) ÷ total: 100% cuando no queda nada por procesar."""
+        import shutil
+        from unittest import mock
+        base, fotos, pines, kml = self._base(n=2)
+        salida = os.path.join(base, 'salida')
+        destino = os.path.join(salida, '260901', 'GRUPO', 'DF_1')
+        os.makedirs(destino, exist_ok=True)
+        shutil.copy2(os.path.join(fotos, 'IMG_7401.jpg'), os.path.join(destino, 'IMG_7401.jpg'))
+        import app as appmod
+        with mock.patch.object(appmod, 'TRABAJO', tempfile.mkdtemp(prefix='cvlo_trab_')):
+            r = self.cliente.get('/api/fuentes', query_string={
+                'ruta': fotos, 'salida': salida,
+                'idx': os.path.join(base, 'no-existe.xlsx')})
+        d = r.get_json()
+        self.assertEqual(d['fotos'], 2)
+        self.assertEqual(d['hechas'], 1)          # la copiada
+        self.assertEqual(d['pendientes'], 1)      # la que falta
+        self.assertEqual(d['hechas'] + d['pendientes'], d['fotos'])   # cuadra
+
+    def test_campanas_leidos_para_el_porcentaje(self):
+        """% avance = pines con >=1 foto LEÍDA (aunque no esté verificada)."""
+        from openpyxl import Workbook
+        base, fotos, pines, kml = self._base()
+        idx = os.path.join(base, 'idx.xlsx')
+        wb = Workbook()
+        ws = wb.active
+        ws.append(['NombreFoto', 'b', 'c', 'd', 'Latitud', 'Longitud', 'g', 'Verificado', 'PIN'])
+        ws.append(['IMG_7401.jpg', '', '', '', 25.7, -100.35, '', '', 'DF_KML_A'])  # sin ✓
+        wb.save(idx)
+        r = self.cliente.get('/api/fuentes', query_string={'kml': kml, 'idx': idx})
+        camp = {c['nombre']: c for c in r.get_json()['campanas']}['PRUEBA (1)']
+        self.assertEqual(camp['pines'], 2)
+        self.assertEqual(camp['leidos'], 1)        # cuenta para el %
+        self.assertEqual(camp['auditados'], 0)     # pero no está verificada
+
+
+class TestPdfInforme(unittest.TestCase):
+    """POST /api/fuentes/pdf -> analisis_fuentes_AAAA-MM-DD_HH-MM.pdf en la Ruta de Salida."""
+
+    @classmethod
+    def setUpClass(cls):
+        os.environ.setdefault('CVLO_TRABAJO', tempfile.mkdtemp(prefix='cvlo_app_trabajo_'))
+        import app as appmod
+        appmod.app.config['TESTING'] = True
+        cls.cliente = appmod.app.test_client()
+
+    def test_pdf_se_guarda_en_la_salida_con_fecha(self):
+        import re
+        salida = tempfile.mkdtemp(prefix='cvlo_pdfout_')
+        r = self.cliente.post('/api/fuentes/pdf', json={
+            'salida': salida,
+            'lineas': ['RUTA      C:\\fotos', 'AVANCE 27% · hechas 463 de 1696',
+                       'CAMPAÑAS', '  COPPEL PARABUSES MTY (1)   159', 'con ñ, á y ✓ y ≥']})
+        self.assertEqual(r.status_code, 200, r.get_data(as_text=True))
+        d = r.get_json()
+        self.assertRegex(d['archivo'], r'^analisis_fuentes_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.pdf$')
+        self.assertEqual(os.path.dirname(d['ruta']), salida)
+        self.assertTrue(os.path.exists(d['ruta']))
+        b = open(d['ruta'], 'rb').read()
+        self.assertEqual(b[:8], b'%PDF-1.4')
+        self.assertTrue(b.rstrip().endswith(b'%%EOF'))
+        self.assertIn(b'Generado: ', b)                       # fecha y hora dentro
+        self.assertIn(b'hechas 463 de 1696', b)               # contenido del análisis
+        # el xref apunta a la tabla y cada offset lleva su "N 0 obj"
+        xref = int(b.split(b'startxref')[1].split(b'%%EOF')[0].strip())
+        self.assertEqual(b[xref:xref + 4], b'xref')
+        for off in re.findall(rb'^(\d{10}) 00000 n', b[xref:], re.M):
+            i = int(off)
+            self.assertTrue(b[i:i + 1].isdigit(), 'offset roto: %r' % off)
+        self.assertGreater(d['bytes'], 900)
+
+    def test_pdf_valida_la_entrada(self):
+        self.assertEqual(self.cliente.post('/api/fuentes/pdf', json={'lineas': ['x']}).status_code, 400)
+        self.assertEqual(
+            self.cliente.post('/api/fuentes/pdf',
+                              json={'salida': r'C:\no\existe\x', 'lineas': ['x']}).status_code, 400)
+        salida = tempfile.mkdtemp(prefix='cvlo_pdfout2_')
+        self.assertEqual(
+            self.cliente.post('/api/fuentes/pdf',
+                              json={'salida': salida, 'lineas': []}).status_code, 400)
+
 
 if __name__ == '__main__':
     unittest.main()

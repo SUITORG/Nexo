@@ -569,6 +569,120 @@ function fusionarCampanas(d) {
   return base;
 }
 
+// ---------- cifras compartidas entre el panel y el PDF (una sola verdad) ----------
+function textoAvance(d) {
+  const i = d.indice;
+  if (!d.fotos || !i) return 'n/d';
+  if (d.hechas == null) {
+    return i.verificadas != null
+      ? Math.round(i.verificadas / d.fotos * 100) + '% · ' + i.verificadas + ' de ' + d.fotos + ' fotos'
+      : 'n/d';
+  }
+  let s = Math.round(d.hechas / d.fotos * 100) + '% · hechas ' + d.hechas + ' de ' + d.fotos +
+    ' · pendientes ' + d.pendientes + ' · verificadas ' + i.verificadas;
+  if (!d.pendientes) s += ' · ¡no hay más que procesar!';
+  return s;
+}
+
+function datosFotos(d, campanas) {
+  const g = d.gps;
+  const conGps = g && g.con_gps != null ? g.con_gps : null;
+  const sinGps = g && g.sin_gps != null ? g.sin_gps : null;
+  const asignadas = campanas.reduce((s, c) => s + (c.pendientes || 0), 0);
+  const pendientes = (conGps != null && sinGps != null) ? conGps + sinGps : null;
+  const fuera = conGps != null ? conGps - asignadas : null;
+  let cuadra = null;
+  if (d.fotos != null && d.hechas != null && pendientes != null) {
+    cuadra = (d.hechas + pendientes) === d.fotos;
+  }
+  return { total: d.fotos, hechas: d.hechas, pendientes: pendientes, conGps: conGps,
+           sinGps: sinGps, asignadas: asignadas, fuera: fuera, cuadra: cuadra };
+}
+
+function textoFotos(dd) {
+  const l = ['FOTOGRAFÍAS   ' + (dd.total == null ? 'n/d (sin ruta)' : dd.total + ' en la ruta')];
+  if (dd.hechas != null) {
+    l.push('  ya hechas (copiadas o leídas)   ' + dd.hechas);
+  }
+  if (dd.pendientes == null) {
+    l.push('  pendientes   n/d (falta analizar el GPS)');
+    return l;
+  }
+  l.push('  pendientes   ' + dd.pendientes +
+    '  =  ' + (dd.asignadas == null ? 'n/d' : dd.asignadas) + ' asignadas a campañas' +
+    '  ·  ' + (dd.fuera == null ? 'n/d' : dd.fuera) + ' fuera de alcance' +
+    '  ·  ' + (dd.sinGps == null ? 'n/d' : dd.sinGps) + ' sin GPS');
+  if (dd.cuadra === true) {
+    l.push('  total   ' + dd.hechas + ' + ' + dd.pendientes + ' = ' + dd.total + '   ¡cuadra!');
+  } else if (dd.cuadra === false) {
+    l.push('  AVISO   hechas (' + dd.hechas + ') + pendientes (' + dd.pendientes +
+      ') no suman el total (' + dd.total + ')');
+  }
+  return l;
+}
+
+
+// ---------- informe en PDF (mismo contenido que la pantalla) ----------
+function lineasInforme(d, campanas, avanceFotos) {
+  const conGps = (d.gps && !d.gps.error)
+    ? ' · ' + d.gps.con_gps + ' con GPS · ' + d.gps.sin_gps + ' sin GPS' : '';
+  const aporta = (d.kml && d.kml.campos)
+    ? CAMPOS_KML.filter((c) => d.kml.campos[c]).slice(0, 7)
+        .map((c) => c + ' ' + d.kml.campos[c]).join(' · ') : 'n/d';
+  const aviso = d.aviso_mapa ? ['  AVISO    ' + d.aviso_mapa] : [];
+  const l = [];
+  l.push('SALIDA     ' + ($('#salida').value.trim() || '(sin ruta)'));
+  l.push(...lineasBase(d, campanas, avanceFotos, conGps, aporta, aviso));
+  l.push('');
+  l.push('ANALISIS POR CAMPANA');
+  l.push('  ' + 'Campana'.padEnd(34) + 'Pines'.padStart(6) +
+         'Dist.media(m)'.padStart(14) + '% avance'.padStart(11));
+  campanas.forEach((c) => {
+    const pct = pctCampana(c);
+    l.push('  ' + String(c.nombre).padEnd(34) + String(c.pines).padStart(6) +
+      (c.dist_prom == null ? 'n/d' : String(c.dist_prom) + ' (' + (c.n || 0) + ')').padStart(14) +
+      (pct == null ? 'n/d' : pct + '%').padStart(11));
+  });
+  const totPines = campanas.reduce((s, c) => s + (c.pines || 0), 0);
+  const totLeidos = campanas.reduce((s, c) => s + (c.leidos || 0), 0);
+  l.push('  ' + 'GLOBAL'.padEnd(34) + String(totPines).padStart(6) + ''.padStart(14) +
+    (totPines ? Math.round(totLeidos / totPines * 100) + '%' : 'n/d').padStart(11));
+  l.push('');
+  l.push(...textoFotos(datosFotos(d, campanas)));
+  l.push('');
+  l.push('LEYENDAS');
+  l.push('  AVANCE           = fotos hechas (copiadas o leidas) / fotos en la ruta;');
+  l.push('                     100% = no hay mas que procesar.');
+  l.push('  % avance campana = pines con al menos 1 foto leida / pines de la campana.');
+  l.push('  Dist. media (m)  = media de la distancia foto-pin de las fotos dentro del');
+  l.push('                     radio, con n muestras; n/d = sin fotos que crucen.');
+  l.push('  hechas           = lo que la corrida ya salto (copiada o leida).');
+  l.push('  asignadas        = pendientes con match en una campana; fuera de alcance =');
+  l.push('                     con GPS pero sin match; sin GPS = sin coordenadas.');
+  return l;
+}
+
+function pctCampana(c) {
+  return (c.leidos != null && c.pines) ? Math.round(c.leidos / c.pines * 100) : null;
+}
+
+async function descargarInforme(d, campanas, avanceFotos) {
+  ocultarAviso();
+  const salida = $('#salida').value.trim();
+  if (!salida) { aviso('Falta la Ruta de Salida: ahí se guarda el PDF.'); return; }
+  try {
+    const r = await fetch('/api/fuentes/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ salida: salida, lineas: lineasInforme(d, campanas, avanceFotos) })
+    });
+    const j = await r.json();
+    if (!r.ok) { aviso(j.error || 'No pude generar el PDF.'); return; }
+    aviso('PDF guardado (' + j.bytes + ' bytes): ' + j.ruta, 'ok');
+  } catch (e) { aviso('Error de conexión: ' + e.message); }
+}
+
+
 function pintarInfo(d) {
   const k = d.kml, i = d.indice, g = d.gps;
   const conGps = (g && !g.error) ? ' · ' + g.con_gps + ' con GPS · ' + g.sin_gps + ' sin GPS' : '';
@@ -576,9 +690,7 @@ function pintarInfo(d) {
     ? CAMPOS_KML.filter((c) => k.campos[c]).slice(0, 7)
         .map((c) => c + ' ' + k.campos[c]).join(' · ')
     : 'n/d';
-  const avance = (d.fotos && i && i.verificadas != null)
-    ? Math.round((i.verificadas / d.fotos) * 100) + '% · ' + i.verificadas + ' de ' + d.fotos + ' fotos'
-    : 'n/d';
+  const avance = textoAvance(d);
   const campanas = fusionarCampanas(d);
   const lista = campanas.slice(0, 12).map((c) =>
     '  ' + c.nombre.padEnd(34, ' ') + String(c.pines).padStart(5));
@@ -586,7 +698,25 @@ function pintarInfo(d) {
     lista.push('  … ' + (campanas.length - 12) + ' campañas más (ver Análisis)');
   }
   const aviso = d.aviso_mapa ? ['  AVISO    ' + d.aviso_mapa] : [];
-  const texto = [
+  const texto = lineasBase(d, campanas, avance, conGps, aporta, aviso).join('\n');
+
+  el.infoFuentes.textContent = '';
+  el.infoFuentes.appendChild(document.createTextNode(texto));
+  if (campanas.length) {
+    el.infoFuentes.appendChild(tableroCampanas(campanas, avance, g, d));
+  }
+  el.infoFuentes.classList.remove('oculto');
+}
+
+// texto base del panel (una sola fuente: lo usa la pantalla y el PDF)
+function lineasBase(d, campanas, avance, conGps, aporta, aviso) {
+  const k = d.kml, i = d.indice, g = d.gps;
+  const lista = campanas.slice(0, 12).map((c) =>
+    '  ' + c.nombre.padEnd(34, ' ') + String(c.pines).padStart(5));
+  if (campanas.length > 12) {
+    lista.push('  … ' + (campanas.length - 12) + ' campañas más (ver Análisis)');
+  }
+  return [
     'RUTA      ' + (d.ruta || '(sin ruta)'),
     'AVANCE    ' + avance,
     '',
@@ -596,7 +726,7 @@ function pintarInfo(d) {
     '  PINES    ' + (d.pines == null ? 'n/d' : d.pines + ' con coordenadas (cruzables)'),
     '  KML      ' + (k ? k.total + ' placemarks · ' + k.sin_lat + ' sin LATITUD · ' +
                      k.cara + ' con CARA' : 'n/d'),
-    ...aviso,
+    ...(aviso || []),
     '           aporta: ' + aporta,
     '  ÍNDICE   ' + (i && i.filas ? i.filas + ' filas · ' + i.verificadas +
                      ' verificadas · ' + i.no_gps + ' No GPS' +
@@ -609,18 +739,18 @@ function pintarInfo(d) {
       : g.error ? 'error: ' + g.error
       : g.con_gps + ' con · ' + g.sin_gps + ' sin · ' + g.fuera_radio + ' fuera de radio')
       : 'analizando…')
-  ].join('\n');
-
-  el.infoFuentes.textContent = '';
-  el.infoFuentes.appendChild(document.createTextNode(texto));
-  if (campanas.length) {
-    el.infoFuentes.appendChild(tableroCampanas(campanas, avance, g));
-  }
-  el.infoFuentes.classList.remove('oculto');
+  ];
 }
 
 // ---------- dashboard de análisis (opción A: dentro del panel) ----------
-function tableroCampanas(campanas, avanceFotos, g) {
+function bloqueFotos(d, campanas) {
+  const div = document.createElement('div');
+  div.className = 'cuenta';
+  div.textContent = textoFotos(datosFotos(d, campanas)).join('\n');
+  return div;
+}
+
+function tableroCampanas(campanas, avanceFotos, g, d) {
   const det = document.createElement('details');
   det.className = 'tablero';
   const sum = document.createElement('summary');
@@ -630,10 +760,20 @@ function tableroCampanas(campanas, avanceFotos, g) {
   const leyenda = document.createElement('p');
   leyenda.className = 'nota-tab';
   leyenda.textContent = 'avance global en fotos (AVANCE arriba): ' + avanceFotos +
-    ' · por campaña: pines con ≥1 foto auditada ÷ pines de la campaña · ' +
+    ' · % de avance = pines con ≥1 foto leída ÷ pines de la campaña · ' +
     'distancia media = media foto↔pin de las fotos dentro del radio (n = muestras)' +
     (g && g.radio ? ' · radio ' + g.radio + ' m' : '');
   det.appendChild(leyenda);
+
+  if (d) {                                  // botón del PDF (usa los mismos datos del panel)
+    const btnPdf = document.createElement('button');
+    btnPdf.type = 'button';
+    btnPdf.className = 'boton pequeno';
+    btnPdf.textContent = 'Descargar análisis (PDF)';
+    btnPdf.title = 'Se guarda en la Ruta de Salida con fecha y hora';
+    btnPdf.addEventListener('click', () => descargarInforme(d, campanas, avanceFotos));
+    det.appendChild(btnPdf);
+  }
 
   const cols = [
     { k: 'nombre', t: 'Campaña' },
@@ -654,7 +794,7 @@ function tableroCampanas(campanas, avanceFotos, g) {
   thead.appendChild(trh);
   tabla.appendChild(thead);
 
-  const pctDe = (c) => (c.auditados != null && c.pines ? Math.round(c.auditados / c.pines * 100) : null);
+  const pctDe = (c) => (c.leidos != null && c.pines ? Math.round(c.leidos / c.pines * 100) : null);
 
   const celda = (txt, cls) => {
     const td = document.createElement('td');
@@ -688,31 +828,35 @@ function tableroCampanas(campanas, avanceFotos, g) {
     tr.appendChild(celda(String(c.pines)));
     tr.appendChild(celda(c.dist_prom == null ? 'n/d' : c.dist_prom + ' (' + (c.n || 0) + ')'));
     tr.appendChild(celdaBarra(pctDe(c),
-      (c.auditados != null ? c.auditados + ' de ' + c.pines + ' pines auditados' : '') +
-      (c.pendientes ? ' · ' + c.pendientes + ' fotos pendientes en ' + (g && g.radio ? g.radio : 250) + ' m' : '')));
+      (c.leidos != null ? c.leidos + ' de ' + c.pines + ' pines con foto leída' : '') +
+      (c.auditados != null ? ' · ' + c.auditados + ' con Verificado ✓' : '') +
+      (c.pendientes ? ' · ' + c.pendientes + ' fotos pendientes con match en ' +
+        (g && g.radio ? g.radio : 250) + ' m' : '')));
     tbody.appendChild(tr);
   });
   tabla.appendChild(tbody);
 
-  // fila GLOBAL: cobertura total de pines + distancia media global
+  // fila GLOBAL: pines leídos (cobertura) + distancia media global
   const totPines = campanas.reduce((s, c) => s + (c.pines || 0), 0);
-  const totAud = campanas.reduce((s, c) => s + (c.auditados || 0), 0);
-  const conAud = campanas.filter((c) => c.auditados != null);
+  const totLeidos = campanas.reduce((s, c) => s + (c.leidos || 0), 0);
+  const conLeidos = campanas.filter((c) => c.leidos != null);
   const cDist = campanas.filter((c) => c.dist_prom != null && c.n);
   const distGlobal = cDist.length
     ? Math.round(cDist.reduce((s, c) => s + c.dist_prom * c.n, 0) / cDist.reduce((s, c) => s + c.n, 0) * 10) / 10
     : null;
-  const cobertura = conAud.length === campanas.length && totPines ? Math.round(totAud / totPines * 100) : null;
+  const cobertura = conLeidos.length === campanas.length && totPines
+    ? Math.round(totLeidos / totPines * 100) : null;
   const tfoot = document.createElement('tfoot');
   const trf = document.createElement('tr');
   trf.appendChild(celda('GLOBAL'));
   trf.appendChild(celda(String(totPines)));
   trf.appendChild(celda(distGlobal == null ? 'n/d' : distGlobal + ' (todas)'));
   trf.appendChild(celdaBarra(cobertura,
-    totAud + ' de ' + totPines + ' pines auditados · avance en fotos: ' + avanceFotos));
+    totLeidos + ' de ' + totPines + ' pines con foto leída · avance en fotos: ' + avanceFotos));
   tfoot.appendChild(trf);
   tabla.appendChild(tfoot);
   det.appendChild(tabla);
+  if (d) det.appendChild(bloqueFotos(d, campanas));
 
   // orden por clic en la cabecera (empieza: pines desc)
   let kActual = null, asc = false;

@@ -19,6 +19,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import motor
+import pdf_reporte
 import proceso
 import utilidades as U
 from ia import switch
@@ -167,12 +168,13 @@ def _leer_idx(ruta_idx):
 
 
 def _campanas(kml_datos, pines_d, filas_idx):
-    """Campañas (layers) con sus pines y su avance: pines con >=1 foto verificada.
+    """Campañas (layers) con sus pines y su avance: pines con >=1 foto leída.
 
     Las campañas salen del **KML** (los nombres con `.xlsx` del árbol del mapa) — es el
     universo real; si no hay KML, del mapa de pines. **No se unen**: si los dos archivos
     son de mapas distintos, mezclarlos daría pines fantasma.
-    `auditados` = pines que ya tienen al menos una foto con Verificado.
+    `leidos` = pines con >=1 fila en el índice (foto ya leída) → de ahí sale el % de avance.
+    `auditados` = pines con >=1 fila con `Verificado ✓` (detalle, no el %).
     """
     fuente = kml_datos or pines_d or {}
     if not fuente:
@@ -180,14 +182,19 @@ def _campanas(kml_datos, pines_d, filas_idx):
     pins_por_capa = {}
     for pin, d in fuente.items():
         pins_por_capa.setdefault(motor.nombre_capa(d), set()).add(pin)
+    leidos = set()
     verif_por_pin = {}
     for r in (filas_idx or {}).values():
-        if r.get('verif') and r.get('pin'):
-            verif_por_pin[r['pin']] = verif_por_pin.get(r['pin'], 0) + 1
+        if r.get('pin'):
+            leidos.add(r['pin'])
+            if r.get('verif'):
+                verif_por_pin[r['pin']] = verif_por_pin.get(r['pin'], 0) + 1
     res = []
     for nombre, pins in pins_por_capa.items():
         aud = [p for p in pins if p in verif_por_pin]
-        res.append({'nombre': nombre, 'pines': len(pins), 'auditados': len(aud),
+        res.append({'nombre': nombre, 'pines': len(pins),
+                    'leidos': len([p for p in pins if p in leidos]),
+                    'auditados': len(aud),
                     'verificadas': sum(verif_por_pin.get(p, 0) for p in pins)})
     res.sort(key=lambda c: (-c['pines'], c['nombre']))
     return res
@@ -200,6 +207,7 @@ def api_fuentes():
     ruta_pines = (request.args.get('pines') or '').strip()
     ruta_kml = (request.args.get('kml') or '').strip()
     ruta_idx = (request.args.get('idx') or '').strip()
+    salida = (request.args.get('salida') or '').strip()
     out = {'ruta': ruta, 'fotos': None, 'pines': None, 'kml': None, 'indice': None}
     if ruta:
         if not os.path.isdir(ruta):
@@ -216,9 +224,16 @@ def api_fuentes():
     if ruta_kml:
         kml_datos = motor.cargar_kml_datos(ruta_kml)
         out['kml'] = motor.kml_resumen(kml_datos)
-    filas, verif, no_gps, _stems, dup, filas_idx = _leer_idx(ruta_idx)
+    filas, verif, no_gps, stems_verif, dup, filas_idx = _leer_idx(ruta_idx)
     out['indice'] = {'filas': filas, 'verificadas': verif, 'no_gps': no_gps, 'duplicadas': dup}
     out['campanas'] = _campanas(kml_datos, pines_d, filas_idx)
+    # fotos ya hechas = lo que la corrida ya salta (copiadas o leídas) sobre las de la ruta
+    if ruta and os.path.isdir(ruta):
+        stems_ruta = {os.path.splitext(f)[0].lower()
+                      for f in os.listdir(ruta) if U.es_imagen(f)}
+        excl = proceso._excluidos(salida, stems_verif, os.path.join(TRABAJO, 'reads'))
+        out['hechas'] = len(excl & stems_ruta)
+        out['pendientes'] = len(stems_ruta) - out['hechas']
     if kml_datos and pines_d:
         fuera = len(set(pines_d) - set(kml_datos))
         if fuera:
@@ -569,6 +584,34 @@ def api_marcas_actualizar():
     res['vistas'] = len(vistas)
     res['tipo'] = tipo
     return jsonify(res)
+
+
+@app.post('/api/fuentes/pdf')
+def api_fuentes_pdf():
+    """Escribe el análisis de fuentes como PDF en la Ruta de Salida (fecha y hora en el nombre).
+
+    Recibe del navegador las líneas ya calculadas (mismas que ve en pantalla) y las maquilla
+    con la cabecera: título + `Generado: AAAA-MM-DD HH:MM`. Sin dependencias: pdf_reporte.
+    """
+    data = request.get_json(silent=True) or {}
+    salida = (data.get('salida') or '').strip()
+    if not salida:
+        return jsonify({'error': 'Falta la Ruta de Salida (ahí se guarda el PDF).'}), 400
+    if not os.path.isdir(salida):
+        return jsonify({'error': 'La Ruta de Salida no existe: {}'.format(salida)}), 400
+    lineas = data.get('lineas')
+    if not isinstance(lineas, list) or not lineas:
+        return jsonify({'error': 'Sin contenido de análisis.'}), 400
+    ahora = datetime.now()
+    cabecera = ['ANALISIS DE FUENTES - SuitCVLO-open',
+                'Generado: ' + ahora.strftime('%Y-%m-%d %H:%M')]
+    nombre = 'analisis_fuentes_' + ahora.strftime('%Y-%m-%d_%H-%M') + '.pdf'
+    destino = os.path.join(salida, nombre)
+    try:
+        ruta, nbytes = pdf_reporte.generar_pdf(cabecera + [str(l) for l in lineas], destino)
+    except Exception as e:
+        return jsonify({'error': 'No pude generar el PDF: {}'.format(str(e)[:250])}), 500
+    return jsonify({'archivo': nombre, 'ruta': ruta, 'bytes': nbytes})
 
 
 @app.post('/api/reescribir-info')

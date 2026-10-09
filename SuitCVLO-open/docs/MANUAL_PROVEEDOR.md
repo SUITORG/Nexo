@@ -49,11 +49,13 @@ entregable (va en `MANUAL_CLIENTE.md`) ni variables de entorno, respaldos o cade
 
 1. **Elige fuente.** Con Drive sincronizado en Windows → **`Local`** (cero descargas, GPS al instante).
    En **`Web`** hay que bajar cada foto para leer el GPS: usa el tope **Descargas máximas**.
-2. Revisa **`Ver info de las fuentes`**: verás `AVANCE 18% · 298 de 1696 fotos`, cuántas fotos
-   traen GPS, cuántos PINs cruzan y qué aporta cada fuente; la lista **`CAMPAÑAS`** con el nº de
-   pines de cada una y, si el mapa y el KML no son el mismo, el **`AVISO`** que lo dice. Abre
-   **`Análisis por campaña`** para la tabla `campaña | pines | dist. media | % avance` (barra y
-   orden por clic). El panel se queda abierto hasta que lo cierres o cambies una ruta.
+2. Revisa **`Ver info de las fuentes`**: verás el **`AVANCE`** (`hechas ÷ total`, con `pendientes`
+   y `verificadas` aparte), cuántas fotos traen GPS, la lista **`CAMPAÑAS`** con sus pines y, si
+   el mapa y el KML no son el mismo, el **`AVISO`**. Abre **`Análisis por campaña`** para la tabla
+   `campaña | pines | dist. media | % avance` (barra y orden por clic), la cuenta
+   **`FOTOGRAFÍAS`** (que tiene que cuadrar) y el botón **`Descargar análisis (PDF)`**, que
+   guarda `analisis_fuentes_AAAA-MM-DD_HH-MM.pdf` en la **Ruta de Salida**.
+   El panel se queda abierto hasta que lo cierres o cambies una ruta.
 3. Pon **N Fotos** (empezar con 10-20 la primera vez) y deja **auto (cadena)**.
 4. Pulsa **`Iniciar corrida`**. Sigue la barra, la línea de estadísticas y el log.
 5. Al terminar verás el resumen: **leídas / copiadas / excedidas / PINs / grupos** y, debajo,

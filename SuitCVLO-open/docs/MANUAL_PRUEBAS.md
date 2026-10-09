@@ -35,7 +35,7 @@ python -m unittest tests.test_switch.SwitchHttpYModelos -v
 ```
 
 Pasos: 1) abrir terminal en `SuitCVLO-open` → 2) ejecutar el comando → 3) ver
-`Ran 106 tests ... OK` → 4) si falla, el trace apunta al archivo:caso.
+`Ran 127 tests ... OK` → 4) si falla, el trace apunta al archivo:caso.
 
 > Los `.py` editados se validan además con
 > `python -W error::SyntaxWarning -m py_compile <archivo>` y el JS con `node --check static/app.js`.
@@ -88,11 +88,12 @@ Escenarios E2E cubiertos:
 | `test_web` / `test_ui` / `test_config` | endpoints, validación de entrada, `CVLOCFG.txt`, favicon |
 | `test_prioridad_kml` | prioridad KML: cruce, `COORDENADAS`, `PROVEEDOR` con `*`, marcas conocidas, `reescribir_todo`, xlsx sin cambios |
 | `test_marca_idx` | columna `Marca` al final del índice: se agrega sin pisar columnas, se rellena en corrida y con `reescribir_todo`, filas sin lectura quedan vacías |
+| `test_fuentes` | panel *Ver info*: KML, campañas (KML vs pines), `hechas`/`pendientes` del AVANCE, `leidos` del %, duplicadas, aviso de mapas distintos y **el PDF** (`/api/fuentes/pdf`: cabecera, xref, offsets, validación de entrada) |
 | `test_motor` / `test_utilidades` / `test_detener` | GPS/PIN/xlsx, saneo, parada de corrida |
 
 ## 6. Criterios de pasada
 
-- [ ] `python -m unittest discover -s tests -t .` → **`Ran 106 tests` + `OK`** (sin errores ni fallos).
+- [ ] `python -m unittest discover -s tests -t .` → **`Ran 127 tests` + `OK`** (sin errores ni fallos).
 - [ ] `python -W error::SyntaxWarning -m py_compile app.py motor.py proceso.py utilidades.py ia/switch.py` → sin salida.
 - [ ] `node --check static/app.js` → sin salida.
 - [ ] Ningún test escribe fuera de `tempfile` (ver `test_reproceso` y `test_flujo_mock`).
