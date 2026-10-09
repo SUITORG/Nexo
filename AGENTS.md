@@ -163,7 +163,7 @@ No ejecutar modificaciones hasta no estar al **95% segura**.
 2. **Paridad**: crea los 2 junctions: `.claude/skills/<nombre>` → `.agents/skills/<nombre>` y `.opencode/skills/<nombre>` → `.agents/skills/<nombre>`. Usa `node scripts/install-skill.js <nombre> [ruta-origen]` — hace los pasos 1, 2 y la revisión de colisión de nombre sola.
 3. **¿Es de gobierno SuitOS?** Si la skill va a ser referenciada por un workflow o necesita reglas de negocio propias (más allá de lo que ya dice su `SKILL.md`), agrégala a `.suit/registry/skills.yaml` como `{name, path}` apuntando a su `.suit/skills/<categoría>/<nombre>.yaml` — nunca copies su `description` ahí. Si es una skill genérica, no la registres: el registry es solo para lo que SuitOS gobierna.
 4. **Regenera el inventario**: `node .suit/skills/process/listado-capacidades/scripts/generate-list.js` (el script de instalación ya lo corre solo).
-5. **Actualiza ambos mapas** (si la skill enlaza a un flujo, no si es herramienta suelta): añade su nodo a `GuiaTotal/MAPA.md` (sección § + tabla de dependencias) y resincroniza `GuiaTotal/MAPA_VISUAL.html` (burbuja `data-sec`, drawer `INFO['§']`, chips `skills`); valida con `node scripts/check-map-visual.js` — debe dar OK.
+5. **Actualiza ambos mapas** (si la skill enlaza a un flujo, no si es herramienta suelta): añade su nodo a `GuiaTotal/MAPA.md` (sección § + tabla de dependencias) y resincroniza `GuiaTotal/MAPA_VISUAL.html` (burbuja `data-sec` + `node scripts/gen-mapa-info.js` para regenerar el drawer `INFO` desde MAPA.md — fuente única, no editar a mano); valida con `node scripts/check-map-visual.js` — debe dar OK (falla con "INFO desincronizado" si MAPA.md cambió sin regenerar).
 
 ## Start here
 - Read `.suit/ARCHITECTURE.md` first (above) for system design

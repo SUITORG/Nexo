@@ -22,11 +22,21 @@ for (const s of htmlSecs) if (!mapaSecs.includes(s)) err(`burbuja data-sec="${s}
 if (mapaSecs.length && !fail) console.log(`OK   cobertura: ${mapaSecs.length} secciones § en ambos archivos`);
 
 // ── 1b) cobertura del drawer (INFO: cada burbuja § con panel de pasos) ───────
-const infoBlock = (html.match(/const INFO = \{([\s\S]*?)\n  \};/) || [])[1] || '';
-const infoSecs = [...infoBlock.matchAll(/'(\d+(?:\.\d+)?)'\s*:\s*\{/g)].map(m => m[1]);
+const infoBlock = (html.match(/const INFO = \{([\s\S]*?)\n {2}\};/) || [])[1] || '';
+const infoSecs = [...infoBlock.matchAll(/["'](\d+(?:\.\d+)?)["']\s*:\s*\{/g)].map(m => m[1]);
 for (const s of htmlSecs) if (!infoSecs.includes(s)) err(`drawer INFO sin entrada para §${s} (click no mostraría pasos)`);
 for (const s of infoSecs) if (!htmlSecs.includes(s)) err(`drawer INFO con §${s} sin burbuja correspondiente`);
 if (htmlSecs.length) console.log(`OK   drawer: ${infoSecs.length}/${htmlSecs.length} secciones con pasos internos`);
+
+// ── 1c) INFO generado al día con MAPA.md (fuente única) ──────────────────────
+try {
+  const { buildInfoBlock } = require('./gen-mapa-info');
+  const expected = buildInfoBlock(mapa);
+  const embedded = (html.match(/[^\n]*\/\/ @GEN:INFO-BEGIN[^\n]*\n[\s\S]*?[^\n]*\/\/ @GEN:INFO-END[^\n]*/) || [])[0];
+  if (!embedded) err('marcadores @GEN:INFO-BEGIN/END ausentes en MAPA_VISUAL.html (corre gen-mapa-info.js)');
+  else if (embedded !== expected) err('INFO desincronizado de MAPA.md — corre: node scripts/gen-mapa-info.js');
+  else console.log('OK   info: bloque INFO generado al día con MAPA.md (fuente única)');
+} catch (e) { err('no se pudo validar INFO contra MAPA.md: ' + e.message); }
 
 // ── 2) integridad de conexiones ──────────────────────────────────────────────
 const ids = [...html.matchAll(/ id="([^"]+)"/g)].map(m => m[1]);

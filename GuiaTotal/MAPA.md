@@ -36,8 +36,10 @@
     ├── ✍️ GuiaTotal/PENDIENTES.md   [todo lo que quedó abierto; filas nunca se borran → se tachan con fecha]
     ├── 🔄 GuiaTotal/MAPA.md         [solo si el flujo ejecutado DIFIERE del mapa (gatillo/skill/ramal nuevo)
     │                                 → corrige solo ese nodo; jamás reescribe el mapa completo]
-    ├── 📊 GuiaTotal/MAPA_VISUAL.html  [si cambió la sección §X → actualiza su burbuja (chip §X / data-sec)
-    │                                    → corre node scripts/check-map-visual.js — debe dar OK]
+    ├── 📊 GuiaTotal/MAPA_VISUAL.html  [si cambió la sección §X → node scripts/gen-mapa-info.js
+    │                                    (regenera el drawer INFO desde MAPA.md — fuente única;
+    │                                     si cambió el layout → actualiza su burbuja chip §X / data-sec)
+    │                                    → node scripts/check-map-visual.js — debe dar OK]
     ├── 📇 .suit/memory/INDEX.md       [si se creó/modificó un ADR o entrada en memory/ →
     │                                    ⚡ node scripts/generate-adr-index.js (warnings = IDs duplicados/status]
     └── 📋 ≤3 líneas de cierre: qué se hizo · dónde quedó · próximo paso
@@ -259,6 +261,10 @@
 ```text
 └── ⚡ ciclo (F1-F7)
     ├── 🔄 CONTRATO.md / VALIDACION.md / CORRECCIONES.md
+    ├── 📋 ⚡ pantalla-limpia  [si hay pantallas nuevas o "no se entiende/amontonado" →
+    │        auditoría solo lectura (inventario → fichas → QUITAR/MOVER/RENOMBRAR → Pareto A/M/R)
+    │        → ✍️ Veredicto-Pantallas-<Proyecto>.md + Pendientes.md
+    │        → hallazgos → GuiaTotal/PENDIENTES.md o fixes directos en F1-F7]
     ├── 📄 si existe <Proyecto>/MEJORAS_<PROYECTO>.md (salida de §9 auditoria)
     │      → es el backlog de la pasada: lee los puntos pendientes,
     │        ejecútalos por fase → táchalos en GuiaTotal/PENDIENTES.md
@@ -441,10 +447,11 @@ SamurAIGPT/Generative-Media-Skills                → plan en .suit/memory/pendi
 | `auditoria` | `/suit-memory` (ADRs) | `<Proyecto>/docs/00-16` + tarjeta | reuso Fase 0.5 antes de inspeccionar |
 | `descubrimiento` | `parametros` (lee switches en fase 0) | entregable de 11 puntos → código (§1/§4/§6) | preguntas ≤3 ∥ micro-skills según diagnóstico |
 | `parametros` | — | `.suit/config/switches.yaml` (switches globales/puntuales) | — (lectura/escritura YAML) |
+| `pantalla-limpia` | — (invocable por otras skills: contrato de invocación) | `Veredicto-Pantallas-<Proyecto>.md` + `Pendientes.md` → PENDIENTES/ciclo (§6) | — (solo lectura, evidencia file:línea) |
 | `modo-prueba` | `bat-launcher` (patrón qa.bat) | QA local SuitServiHogar: `VALIDACION` (V7-V9), `CORRECCIONES` | 3 ventanas de rol ∥ tras lista |
 
 **Orden obligatorio:** `descubrimiento` **abre** toda tarea con código (nodo común, antes de §1/§4/§6) → `analista-proy` → `sintesis-proyecto` → `panel-juzgador` (los dos últimos consumen el primero; la síntesis alimenta el diseño del prototipo). **Cadena secuencial con gates**: `empresa-mascara` (entrada por formulario) → `empresa-registro` → `clusters-seo` → `paginas-seo` (cada eslabón espera aprobación salvo switch `auto`). `auditoria` es independiente: la llama `guia-total` o el usuario. `parametros` es transversal: cualquier skill puede leer/escribir switches. El resto es independiente.
 
 ---
 
-*Última actualización del mapa: 2026-10-03 (nodo común APERTURA: skills `descubrimiento` + `parametros` — fase previa obligatoria con entregable de 11 puntos, ≤3 preguntas o supuestos vía `decision_libre`, y `.suit/config/switches.yaml` como fuente de switches globales/puntuales; enganches en guia-total Etapas + Flujo IDEA; tabla de dependencias actualizada; `MAPA_VISUAL.html` burbuja `ndesc` resincronizada).*
+*Última actualización del mapa: 2026-10-09 (drawer **INFO generado desde MAPA.md** — `node scripts/gen-mapa-info.js` regenera el bloque `// @GEN:INFO` de `MAPA_VISUAL.html`; `check-map-visual.js` valida el check 1c y falla si está desincronizado — fuente única). 2026-10-03: nodo común APERTURA (skills `descubrimiento` + `parametros`, entregable 11 puntos, ≤3 preguntas vía `decision_libre`, switches en `.suit/config/switches.yaml`); `pantalla-limpia` enlazada a §6 (auditoría UI solo lectura, burbuja `npl` + fila de dependencias); estados de cierre ✅/❓/⛔ con regla "sin evidencia no hay cierre"; enganches en guia-total Etapas + Flujo IDEA; burbuja `ndesc`.*
