@@ -10,6 +10,8 @@ interface ProPortalScreenProps {
   onNavigate: (screen: ScreenId) => void;
   isTechnician?: boolean;
   isAdmin?: boolean;
+  isAuthenticated?: boolean;
+  onLoginClick?: () => void;
 }
 
 export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
@@ -18,7 +20,9 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
   onWhatsAppHelp,
   onNavigate,
   isTechnician = false,
-  isAdmin = false
+  isAdmin = false,
+  isAuthenticated = true,
+  onLoginClick
 }) => {
   const [isAvailable, setIsAvailable] = useState(true);
   const [referralCode, setReferralCode] = useState('');
@@ -62,6 +66,14 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
           </div>
           <h1 className="text-headline-sm text-text-primary font-bold">Mi Cuenta</h1>
           <p className="text-body-sm text-text-muted">ServiciosHogar Reynosa • Tus servicios contratados</p>
+          {!isAuthenticated && onLoginClick && (
+            <button
+              onClick={onLoginClick}
+              className="mt-3 w-full bg-primary hover:bg-primary/90 text-on-primary font-label-lg py-2.5 px-4 rounded-lg transition-all active:scale-98"
+            >
+              Iniciar sesión o crear cuenta
+            </button>
+          )}
         </section>
       ) : (
       <>

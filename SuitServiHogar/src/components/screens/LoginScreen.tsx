@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithGoogle } from '../../services/authService';
+import { signInWithGoogle, signInWithPhonePassword, registerPhone } from '../../services/authService';
 
 interface LoginScreenProps {
   onLoginSuccess: (isGuest?: boolean) => void;
@@ -10,6 +10,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [acceptedLegal, setAcceptedLegal] = useState(false);
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [showPass, setShowPass] = useState(false);
 
   const handleGoogleLogin = async () => {
     if (!acceptedLegal) return;
@@ -20,6 +26,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
       onLoginSuccess();
     } catch (err: any) {
       setError(err?.message || 'Error al iniciar sesión con Google');
+      setLoading(false);
+    }
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!acceptedLegal || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      if (mode === 'register') {
+        if (password !== password2) throw new Error('Las contraseñas no coinciden');
+        await registerPhone(phone, password, displayName);
+      } else {
+        await signInWithPhonePassword(phone, password);
+      }
+      onLoginSuccess();
+    } catch (err: any) {
+      setError(err?.message || 'No se pudo iniciar sesión');
       setLoading(false);
     }
   };
@@ -67,7 +92,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
 
         {/* Error */}
         {error && (
-          <div className="bg-danger-flag/10 border border-danger-flag/30 text-danger-flag text-body-sm p-3 rounded-lg flex items-center gap-2">
+          <div role="alert" className="bg-danger-flag/10 border border-danger-flag/30 text-danger-flag text-body-sm p-3 rounded-lg flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">error</span>
             {error}
           </div>
@@ -111,6 +136,123 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onNavi
             </button>
           </span>
         </label>
+
+        {/* Phone / Register tabs */}
+        <div className="bg-surface-card rounded-xl p-4 border border-border-subtle space-y-4">
+          <div className="grid grid-cols-2 gap-1 bg-surface rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setError(null); }}
+              className={`py-2 rounded-md text-label-md font-bold transition-colors ${
+                mode === 'login' ? 'bg-primary text-on-primary' : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              Iniciar sesión
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('register'); setError(null); }}
+              className={`py-2 rounded-md text-label-md font-bold transition-colors ${
+                mode === 'register' ? 'bg-primary text-on-primary' : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              Crear cuenta
+            </button>
+          </div>
+
+          <form onSubmit={handlePhoneSubmit} className="space-y-3">
+            {mode === 'register' && (
+              <div>
+                <label htmlFor="reg-name" className="text-label-sm font-bold text-text-primary">Nombre</label>
+                <input
+                  id="reg-name"
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  autoComplete="name"
+                  placeholder="Tu nombre"
+                  className="mt-1 w-full border border-border-subtle rounded-lg px-3 py-2.5 text-body-md bg-surface focus:outline-none focus:border-primary"
+                />
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="phone-input" className="text-label-sm font-bold text-text-primary">Teléfono (México)</label>
+              <div className="mt-1 flex">
+                <span className="inline-flex items-center px-3 border border-r-0 border-border-subtle rounded-l-lg bg-surface text-body-md text-text-muted font-bold">+52</span>
+                <input
+                  id="phone-input"
+                  type="tel"
+                  inputMode="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  autoComplete="tel"
+                  placeholder="899 123 4567"
+                  className="w-full border border-border-subtle rounded-r-lg px-3 py-2.5 text-body-md bg-surface focus:outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="pass-input" className="text-label-sm font-bold text-text-primary">Contraseña</label>
+              <div className="mt-1 relative">
+                <input
+                  id="pass-input"
+                  type={showPass ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                  placeholder="10+ caracteres, letras y números"
+                  className="w-full border border-border-subtle rounded-lg px-3 py-2.5 pr-10 text-body-md bg-surface focus:outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+                >
+                  <span className="material-symbols-outlined text-[20px]">{showPass ? 'visibility_off' : 'visibility'}</span>
+                </button>
+              </div>
+            </div>
+
+            {mode === 'register' && (
+              <div>
+                <label htmlFor="pass2-input" className="text-label-sm font-bold text-text-primary">Repite la contraseña</label>
+                <input
+                  id="pass2-input"
+                  type={showPass ? 'text' : 'password'}
+                  value={password2}
+                  onChange={(e) => setPassword2(e.target.value)}
+                  autoComplete="new-password"
+                  placeholder="Misma contraseña"
+                  className="mt-1 w-full border border-border-subtle rounded-lg px-3 py-2.5 text-body-md bg-surface focus:outline-none focus:border-primary"
+                />
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !acceptedLegal}
+              className="w-full bg-primary hover:bg-primary/90 text-on-primary font-label-lg py-3 px-4 rounded-lg flex items-center justify-center transition-all active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
+              ) : mode === 'register' ? (
+                'Crear cuenta y entrar'
+              ) : (
+                'Entrar con teléfono'
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 text-label-sm text-text-muted">
+          <div className="flex-1 h-px bg-border-subtle" />
+          <span>o continúa con</span>
+          <div className="flex-1 h-px bg-border-subtle" />
+        </div>
 
         {/* Google Login Button */}
         <button

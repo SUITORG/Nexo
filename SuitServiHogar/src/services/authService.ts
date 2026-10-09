@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { normalizePhoneMX, phoneToEmail, validPassword } from '../lib/phone';
 
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -36,4 +37,34 @@ export async function getTechnicianByEmail(email: string) {
 
   if (error || !data) return null;
   return data;
+}
+
+// ─── Login teléfono + contraseña (email sintético, ver src/lib/phone.js) ───
+
+export async function signInWithPhonePassword(phoneRaw: string, password: string) {
+  const phone = normalizePhoneMX(phoneRaw);
+  if (!phone) throw new Error('Teléfono inválido (México, 10 dígitos)');
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: phoneToEmail(phone),
+    password,
+  });
+  if (error) throw new Error('Teléfono o contraseña incorrectos');
+  return data;
+}
+
+export async function registerPhone(phoneRaw: string, password: string, displayName: string) {
+  const phone = normalizePhoneMX(phoneRaw);
+  if (!phone) throw new Error('Teléfono inválido (México, 10 dígitos)');
+  if (!validPassword(password)) {
+    throw new Error('La contraseña debe tener 10+ caracteres, letras y números');
+  }
+  const res = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, password, displayName }),
+  });
+  const body = await res.json().catch(() => ({} as { error?: string }));
+  if (!res.ok) throw new Error(body?.error || 'No se pudo crear la cuenta');
+  const { error } = await supabase.auth.signInWithPassword({ email: phoneToEmail(phone), password });
+  if (error) throw new Error('Cuenta creada, pero no se pudo iniciar sesión. Intenta de nuevo.');
 }

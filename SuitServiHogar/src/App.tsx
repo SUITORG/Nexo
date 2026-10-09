@@ -198,12 +198,7 @@ export default function App() {
     }
   };
 
-  const handleBookTechnician = (tech: Technician) => {
-    if (!user) {
-      setPendingBookingTech(tech);
-      setShowLoginScreen(true);
-      return;
-    }
+  const finishBooking = (tech: Technician) => {
     setPendingBookingTech(null);
     setCurrentOrder((prev) => ({
       ...prev,
@@ -217,6 +212,15 @@ export default function App() {
     setPreviousScreen(currentScreen);
     setCurrentScreen('solicitud');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBookTechnician = (tech: Technician) => {
+    if (!user) {
+      setPendingBookingTech(tech);
+      setShowLoginScreen(true);
+      return;
+    }
+    finishBooking(tech);
   };
 
   const handlePaySuccess = async (created?: EscrowOrder) => {
@@ -270,7 +274,7 @@ export default function App() {
           <LoginScreen
             onLoginSuccess={(isGuest) => {
               setShowLoginScreen(false);
-              if (isGuest || pendingBookingTech) handleBookTechnician(pendingBookingTech!);
+              if (isGuest || pendingBookingTech) finishBooking(pendingBookingTech!);
             }}
             onNavigate={(screen) => setLoginLegalScreen(screen)}
           />
@@ -361,6 +365,8 @@ export default function App() {
               onNavigate={handleNavigate}
               isTechnician={!!currentTechnician}
               isAdmin={isAdmin}
+              isAuthenticated={!!user}
+              onLoginClick={() => setShowLoginScreen(true)}
             />
           )}
 

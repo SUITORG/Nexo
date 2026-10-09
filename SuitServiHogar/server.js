@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { generateCFDIXML, escapeXML, generateUUID } from './server/cfdiGenerator.js';
+import { normalizePhoneMX, phoneToEmail, validPassword } from './src/lib/phone.js';
 
 // override: true — hay una OPENROUTER_API_KEY stale a nivel de Windows User que gana sobre .env
 dotenv.config({ override: true });
@@ -99,6 +100,50 @@ async function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Auth failed' });
   }
 }
+
+// ─── Registro teléfono+contraseña (cliente) ───
+// Cuenta en auth.users con email sintético del teléfono (ver src/lib/phone.js).
+// service_role solo vive aquí; el frontend nunca lo toca.
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: IS_DEV ? 100 : 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos, intenta más tarde' },
+});
+
+app.post('/api/auth/register', registerLimiter, async (req, res) => {
+  const phone = normalizePhoneMX(req.body?.phone);
+  if (!phone) return res.status(400).json({ error: 'Teléfono inválido (México, 10 dígitos)' });
+  if (!validPassword(req.body?.password)) {
+    return res.status(400).json({ error: 'La contraseña debe tener 10+ caracteres, letras y números' });
+  }
+  const displayName = typeof req.body?.displayName === 'string' ? req.body.displayName.trim().slice(0, 80) : null;
+  const email = phoneToEmail(phone);
+  try {
+    const { data: created, error } = await supabase.auth.admin.createUser({
+      email,
+      password: req.body.password,
+      email_confirm: true,
+      user_metadata: { phone, login_method: 'phone' },
+    });
+    if (error) {
+      if (/already registered|email_exists|already been/i.test(error.message || '')) {
+        return res.status(409).json({ error: 'No se pudo crear la cuenta' });
+      }
+      throw error;
+    }
+    const { error: insErr } = await supabase
+      .from('sh_clients')
+      .upsert({ id: created.user.id, phone, display_name: displayName, active: true }, { onConflict: 'id' });
+    if (insErr) console.error('[REGISTER] sh_clients upsert:', insErr.message);
+    console.log(`[REGISTER] phone ${phone.slice(0, 4)}****${phone.slice(-2)} -> ${created.user.id}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[REGISTER]', err.message);
+    res.status(500).json({ error: 'No se pudo crear la cuenta' });
+  }
+});
 
 // ─── Create Connect Account (onboard technician) ───
 app.post('/api/create-connect-account', requireAuth, async (req, res) => {
