@@ -77,6 +77,9 @@ export const SettlementEscrowScreen: React.FC<SettlementEscrowScreenProps> = ({
               <span className="bg-surface-container-high px-2 py-0.5 rounded text-label-sm font-bold text-primary font-mono">
                 {data.ref}
               </span>
+              <span className="bg-amber-500/15 px-2 py-0.5 rounded text-label-sm font-bold text-amber-dark border border-amber-500/30">
+                DEMO
+              </span>
             </div>
             <p className="text-body-sm text-text-muted">
               Corte emitido: {data.issuedAt}

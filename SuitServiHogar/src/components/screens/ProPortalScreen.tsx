@@ -125,7 +125,10 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
               <p className="text-body-sm text-text-muted">Climatización & Electricidad Industrial</p>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-right space-y-1">
+            <span className="block text-label-sm px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-dark font-bold border border-amber-500/30">
+              Vista demo
+            </span>
             <span className="text-label-sm px-2 py-0.5 rounded-full bg-trust-blue-light text-primary font-bold border border-primary/20">
               ID: REY-9482
             </span>
@@ -186,7 +189,7 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
         )}
       </section>
 
-      {!isTechnician && (
+      {isTechnician && (
       <>
       {/* Earnings & Certainty Bento Card */}
       <section className="bg-gradient-to-br from-primary to-trust-blue-dark text-on-primary rounded-xl p-4 shadow-md relative overflow-hidden space-y-3">
@@ -202,9 +205,14 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
                 Depósito en Garantía Escrow
               </span>
             </div>
-            <span className="text-label-sm text-surface-container-highest opacity-90 font-medium">
-              Liquidación Semanal
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-label-sm text-surface-container-highest opacity-90 font-medium">
+                Liquidación Semanal
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 font-bold border border-amber-400/40">
+                datos de ejemplo
+              </span>
+            </div>
           </div>
 
           <div>
@@ -452,9 +460,14 @@ export const ProPortalScreen: React.FC<ProPortalScreenProps> = ({
             <span className="material-symbols-outlined text-amber-dark text-[20px]">star</span>
             <h2 className="text-headline-sm text-text-primary font-bold">Reseñas de Clientes</h2>
           </div>
-          <span className="text-label-sm bg-amber-500/10 text-amber-dark px-2 py-0.5 rounded font-bold">
-            {isTechnician ? 'Recibidas' : 'Enviadas'}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-dark font-bold border border-amber-500/30">
+              demo
+            </span>
+            <span className="text-label-sm bg-amber-500/10 text-amber-dark px-2 py-0.5 rounded font-bold">
+              {isTechnician ? 'Recibidas' : 'Enviadas'}
+            </span>
+          </div>
         </div>
 
         <p className="text-body-sm text-text-muted leading-relaxed">

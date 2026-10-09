@@ -24,6 +24,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [sendError, setSendError] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -55,8 +56,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     try {
       const sent = await sendMessage(orderId, userId, userRole, text);
       setMessages((prev) => [...prev, sent]);
+      setSendError(false);
     } catch (err) {
       console.error('Error sending message:', err);
+      setInput(text); // no perder el texto si el envío falla
+      setSendError(true);
     }
   };
 
@@ -149,6 +153,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
       {/* Input */}
       <div className="shrink-0 bg-surface-card border-t border-border-subtle p-3">
+        {sendError && (
+          <p className="text-label-sm text-red-500 text-center mb-2">No se pudo enviar — se conserva tu mensaje, reintenta.</p>
+        )}
         <div className="flex items-center gap-2">
           <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhoto} />
           <button

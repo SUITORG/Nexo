@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-08 | **Total archivos:** 1595 JS/GS
+**Generado:** 2026-10-09 | **Total archivos:** 1595 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10343,13 +10343,28 @@
 | 474 | `cargarModelosIa` |
 | 524 | `pintarEstadoIa` |
 | 537 | `_paramsFuentes` |
-| 552 | `pintarInfo` |
-| 586 | `infoFuentes` |
-| 637 | `cfgActiva` |
-| 641 | `cfgRuta` |
-| 646 | `cfgEnUso` |
-| 652 | `cargarCfg` |
-| 699 | `aplicarCfgRuta` |
+| 553 | `fusionarCampanas` |
+| 554 | `base` |
+| 573 | `textoAvance` |
+| 587 | `datosFotos` |
+| 602 | `textoFotos` |
+| 626 | `lineasInforme` |
+| 665 | `pctCampana` |
+| 669 | `descargarInforme` |
+| 686 | `pintarInfo` |
+| 712 | `lineasBase` |
+| 746 | `bloqueFotos` |
+| 753 | `tableroCampanas` |
+| 797 | `pctDe` |
+| 799 | `celda` |
+| 805 | `celdaBarra` |
+| 863 | `aplicar` |
+| 887 | `infoFuentes` |
+| 938 | `cfgActiva` |
+| 942 | `cfgRuta` |
+| 947 | `cfgEnUso` |
+| 953 | `cargarCfg` |
+| 1000 | `aplicarCfgRuta` |
 
 ## `SuitDashboard/scan.js`
 

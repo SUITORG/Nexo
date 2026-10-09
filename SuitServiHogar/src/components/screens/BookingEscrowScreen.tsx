@@ -508,8 +508,8 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
           <div className="flex justify-between items-center pt-2">
             <span className="text-text-primary">Tarifa base de tabulador</span>
             <div className="text-right">
-              <span className="font-bold text-text-primary block">$650.00 MXN</span>
-              <span className="text-body-sm text-text-muted">~$35.00 USD</span>
+              <span className="font-bold text-text-primary block">${order.basePriceMxn.toFixed(2)} MXN</span>
+              <span className="text-body-sm text-text-muted">~${order.basePriceUsd.toFixed(2)} USD</span>
             </div>
           </div>
 

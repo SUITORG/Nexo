@@ -328,6 +328,7 @@ export default function App() {
           {!dataLoading && currentScreen === 'explorar' && (
             <ExploreScreen
               technicians={technicians}
+              categories={categories}
               currency={currency}
               selectedColonia={selectedColonia}
               onSelectColoniaClick={() => setShowColoniaModal(true)}

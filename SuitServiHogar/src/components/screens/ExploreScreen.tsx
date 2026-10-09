@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Currency, Technician } from '../../types';
+import { Currency, ServiceCategory, Technician } from '../../types';
 import { useTaxInfo } from '../../hooks/useTaxInfo';
 
 interface ExploreScreenProps {
@@ -12,6 +12,7 @@ interface ExploreScreenProps {
   selectedCategoryFilter: string;
   onSelectCategoryFilter: (cat: string) => void;
   technicians: Technician[];
+  categories: ServiceCategory[];
 }
 
 export const ExploreScreen: React.FC<ExploreScreenProps> = ({
@@ -23,28 +24,13 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
   onBookTechnician,
   selectedCategoryFilter,
   onSelectCategoryFilter,
-  technicians
+  technicians,
+  categories
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistance, setSelectedDistance] = useState('5km');
   const [showAllSpecialties, setShowAllSpecialties] = useState(false);
   const showTaxInfo = useTaxInfo();
-
-  const categories = [
-    { id: 'climas', name: 'Climas / Minisplits', count: 24, icon: 'ac_unit' },
-    { id: 'plomeria', name: 'Plomería', count: 18, icon: 'plumbing' },
-    { id: 'electricidad', name: 'Electricidad', count: 12, icon: 'bolt' },
-    { id: 'cerrajeria', name: 'Cerrajería', count: 9, icon: 'key' },
-    { id: 'electro', name: 'Línea Blanca', count: 7, icon: 'kitchen' },
-    { id: 'herreria', name: 'Herrería & Portones', count: 5, icon: 'fence' },
-    { id: 'pintores', name: 'Pintores', count: 15, icon: 'format_paint' },
-    { id: 'albaniles', name: 'Albañiles', count: 12, icon: 'construction' },
-    { id: 'yeseros', name: 'Yeseros', count: 8, icon: 'wall_art' },
-    { id: 'impermeabilizante', name: 'Impermeabilizante', count: 6, icon: 'water_drop' },
-    { id: 'jardineria', name: 'Jardinería', count: 10, icon: 'yard' },
-    { id: 'escombro', name: 'Recoger Escombro', count: 4, icon: 'delete_sweep' },
-    { id: 'carpinteria', name: 'Carpintería', count: 8, icon: 'table_chart' }
-  ];
 
   const displayedCategories = showAllSpecialties ? categories : categories.slice(0, 3);
 
@@ -175,7 +161,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({
             onClick={() => setShowAllSpecialties(!showAllSpecialties)}
             className="text-body-sm font-bold text-primary hover:underline"
           >
-            {showAllSpecialties ? 'Menos' : 'Ver todas (12)'}
+            {showAllSpecialties ? 'Menos' : `Ver todas (${categories.length})`}
           </button>
         </div>
 

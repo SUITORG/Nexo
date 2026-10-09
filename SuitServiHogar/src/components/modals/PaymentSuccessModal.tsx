@@ -78,39 +78,51 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
           </p>
         </div>
 
-        {/* Buttons */}
+        {/* Buttons — 1 acción principal, el resto secundaria */}
         <div className="space-y-2 pt-2">
-          <button
-            onClick={onViewSettlement}
-            className="w-full py-3 px-4 bg-primary hover:bg-trust-blue-dark text-white rounded-xl font-label-md font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
-          >
-            <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-            <span>Ver Desglose de Liquidación Escrow</span>
-          </button>
-          {onOpenChat && (
+          {onOpenChat ? (
             <button
               onClick={onOpenChat}
-              className="w-full py-2.5 px-4 bg-trust-blue-light hover:bg-primary/10 text-primary rounded-xl font-label-md font-bold flex items-center justify-center gap-2 transition-colors border border-primary/20"
+              className="w-full py-3.5 px-4 bg-primary hover:bg-trust-blue-dark text-white rounded-xl font-label-md font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
             >
               <span className="material-symbols-outlined text-[18px]">chat</span>
-              <span>Chat con {order.technician.name}</span>
+              <span>Continuar al Chat con {order.technician.name}</span>
             </button>
-          )}
-          {onReview && (
+          ) : (
             <button
-              onClick={onReview}
-              className="w-full py-2.5 px-4 bg-amber-500/10 hover:bg-amber-500/20 text-amber-dark rounded-xl font-label-md font-bold flex items-center justify-center gap-2 transition-colors border border-amber-500/20"
+              onClick={onViewSettlement}
+              className="w-full py-3.5 px-4 bg-primary hover:bg-trust-blue-dark text-white rounded-xl font-label-md font-bold shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
             >
-              <span className="material-symbols-outlined text-[18px]">star</span>
-              <span>Calificar a {order.technician.name}</span>
+              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+              <span>Ver desglose de liquidación</span>
             </button>
           )}
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 px-4 bg-surface-alt hover:bg-surface-container text-text-muted hover:text-text-primary rounded-xl font-label-md font-semibold transition-colors"
-          >
-            Regresar al Inicio
-          </button>
+          {onOpenChat && (
+            <button
+              onClick={onViewSettlement}
+              className="w-full py-2.5 px-4 bg-trust-blue-light hover:bg-primary/10 text-primary rounded-xl font-label-md font-bold flex items-center justify-center gap-2 transition-colors border border-primary/20"
+            >
+              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+              <span>Ver desglose de liquidación</span>
+            </button>
+          )}
+          <div className="flex gap-2">
+            {onReview && (
+              <button
+                onClick={onReview}
+                className="flex-1 py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-dark rounded-xl font-label-sm font-bold flex items-center justify-center gap-1 transition-colors border border-amber-500/20"
+              >
+                <span className="material-symbols-outlined text-[16px]">star</span>
+                <span>Calificar</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className={`py-2 px-3 bg-surface-alt hover:bg-surface-container text-text-muted hover:text-text-primary rounded-xl font-label-sm font-semibold transition-colors ${onReview ? 'flex-1' : 'w-full'}`}
+            >
+              Regresar al Inicio
+            </button>
+          </div>
         </div>
       </div>
     </div>
