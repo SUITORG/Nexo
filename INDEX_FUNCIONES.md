@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-09 | **Total archivos:** 1595 JS/GS
+**Generado:** 2026-10-09 | **Total archivos:** 1596 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10747,14 +10747,14 @@
 
 | Línea | Función |
 |-------|---------|
-| 35 | `loadConfig` |
-| 86 | `requireAuth` |
-| 440 | `findAuthUserByEmail` |
-| 654 | `totalImpuestosTrasladados` |
-| 684 | `valorUnitario` |
-| 685 | `importe` |
-| 689 | `base` |
-| 693 | `importe` |
+| 36 | `loadConfig` |
+| 87 | `requireAuth` |
+| 485 | `findAuthUserByEmail` |
+| 699 | `totalImpuestosTrasladados` |
+| 729 | `valorUnitario` |
+| 730 | `importe` |
+| 734 | `base` |
+| 738 | `importe` |
 
 ## `SuitStableDiffusion/scripts/colab-sd.js`
 

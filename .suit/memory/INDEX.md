@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (42 ADRs)
+## decisions/ (43 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -49,6 +49,7 @@
 | ADR-042 | [Formato dual en logo_url (logo + avatar)](ADR-042-logo-url-dual.md) | Accepted (2026-07-28) | 2026-07-28 | El campo `logo_url` en `Config_Empresas` (GS) y Supabase almacena tradicionalmente una sola URL para el logo de la empresa. Se necesita un… | 008 |
 | ADR-043 | [origen_politicas como vector etiqueta:valor multifuncional](ADR-043-origen-politicas-vector.md) | Accepted (2026-08-10) | 2026-08-10 | `origen_politicas` era un campo simple (`ROL` o `USUARIO`) que decidía de dónde toma el usuario sus permisos al hacer login. Se necesita… | 019 |
 | ADR-044 | [SuitBoard — Rescate y organización del dashboard Crypto + US Market](ADR-044-suitboard-rescate-dashboard.md) | Aplicado (2026-08-31) | 2026-08-31 | El usuario recordaba haber armado un dashboard de mercado (crypto + acciones EE.UU.) pero no sabía dónde lo había guardado. Se hizo una… | 028 |
+| ADR-045 | [Login teléfono+contraseña con Supabase Auth (email sintético)](ADR-045-login-telefono-supabase-auth.md) | Accepted (2026-10-08) | 2026-10-08 | SuitServiHogar solo tenía Google OAuth (Req#22): no había form usuario/contraseña. Se pidió añadir login con teléfono mexicano +… | - |
 
 ## bugs/ (6)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…

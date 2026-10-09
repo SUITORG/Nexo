@@ -59,6 +59,7 @@ La app te pedirá iniciar sesión para continuar. Opciones:
 
 | Opción | Descripción |
 |--------|-------------|
+| **Teléfono + contraseña** | Crea una cuenta con tu celular mexicano (+52) y una contraseña de 10+ caracteres, o inicia sesión si ya tienes cuenta |
 | **Continuar con Google** | Usa tu cuenta de Google (recomendado para acceso rápido) |
 | **Continuar sin sesión** | Explora la app sin compromiso, pero necesitarás login para reservar |
 

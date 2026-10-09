@@ -27,6 +27,7 @@ schema.sql       → sh_service_categories, sh_technicians, sh_orders
 - `sh_service_categories` — 13 categorías
 - `sh_technicians` — 6 filas: 4 técnicos demo + 2 admins (email, stripe_account_id, active, role)
 - `sh_orders` — Órdenes escrow + status machine
+- `sh_clients` — perfil de clientes teléfono+contraseña (id = auth.users.id, RLS solo propio; ADR-045)
 - `sh-evidence` bucket — fotos de evidencia
 
 ### Status Machine
@@ -35,8 +36,13 @@ draft → funded → in_progress → completed → released
   (creada)  (pagada)   (en ruta)    (terminado)  (liberado)
 ```
 
-## Auth Flow (authService.ts:29)
-`Google OAuth → onAuthStateChange → getTechnicianByEmail(email) → currentTechnician`
+## Auth Flow (authService.ts:44)
+```
+Google OAuth → onAuthStateChange → getTechnicianByEmail(email) → currentTechnician
+Teléfono+contraseña → email sintético p<E.164>@phone.servicioshogar.mx (src/lib/phone.js)
+  registro: LoginScreen → POST /api/auth/register (server.js, service_role) → signInWithPassword
+  login: LoginScreen → signInWithPassword directo
+```
 
 ## Payment Flow (useStripePayment.ts:14)
 ```

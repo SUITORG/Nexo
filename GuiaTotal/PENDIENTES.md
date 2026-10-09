@@ -31,6 +31,7 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 - [ ] **SuitDashboard — instancias faltantes**: 4 manuales, identidad, prompt origen, checklist, `docs/05+06` (tarjeta `documentos: false`). *2026-09-26*
 - [ ] **Integración profunda `auditoria` ↔ `guia-total`** (hoy solo gancho en MAPA §4/§9). *2026-09-26*
 - [ ] **Guía de 1 página SuitServiHogar (cliente/técnico/admin)**: guión de demo para enseñar a clientes — entrada por URL dev, solicitud con tarjeta `4242`, chat de negociación en vivo y monitoreo en Admin Panel. *2026-10-08*
+- [ ] **SuitServiHogar — login teléfono v2 (diferido)**: OTP por SMS (Supabase + proveedor), recuperación de contraseña self-service y CAPTCHA en registro — ver ADR-045 (S2/S3). *2026-10-08*
 - [ ] **Push a GitHub**: rama `evasol-supabase-migration` ahead 45 — pendiente de decisión. *2026-09-26*
 - [ ] **SuitPoke — publicar con HTTPS + gate de medición (panel-juzgador)**: hostear (itch.io/Poki u otro) y medir con 100-300 jugadores: ≥2 partidas, % rematch, D1 ≥25%, onboarding <60 s. Si falla → pivotar antes de fases 2 (condición 6 del veredicto APROBADO CONDICIONAL). *2026-09-29*
 - [ ] **SuitPoke — prueba en dispositivo móvil físico**: instalación PWA real pendiente (requiere HTTPS; en localhost el SW/manifest ya verificados). *2026-09-29*
