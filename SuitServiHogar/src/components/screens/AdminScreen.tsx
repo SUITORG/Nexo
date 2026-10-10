@@ -1,7 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 
-type AdminTab = 'dashboard' | 'technicians' | 'disputes' | 'config';
+type AdminTab = 'dashboard' | 'orders' | 'technicians' | 'disputes' | 'config';
+
+interface OrderRow {
+  id: string;
+  service_title: string | null;
+  technician_id: string | null;
+  status: string;
+  total_mxn: number;
+  created_at: string;
+}
+
+const ORDER_STATUS: Record<string, { label: string; cls: string }> = {
+  draft: { label: 'Borrador', cls: 'bg-text-muted/20 text-text-muted' },
+  funded: { label: 'Pagada', cls: 'bg-primary/20 text-primary' },
+  in_progress: { label: 'En ruta', cls: 'bg-amber-dark/20 text-amber-dark' },
+  completed: { label: 'Completada', cls: 'bg-trust-blue/20 text-trust-blue' },
+  released: { label: 'Liberada', cls: 'bg-emerald-safe/20 text-emerald-safe' },
+  cancelled: { label: 'Cancelada', cls: 'bg-red-500/15 text-red-500' },
+  disputed: { label: 'Disputa', cls: 'bg-amber-dark/25 text-amber-dark' },
+};
 
 interface ConfigItem {
   key: string;
@@ -104,6 +123,7 @@ export const AdminScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [technicians, setTechnicians] = useState<TechnicianRow[]>([]);
   const [disputes, setDisputes] = useState<DisputeRow[]>([]);
+  const [ordersList, setOrdersList] = useState<OrderRow[]>([]);
   const [configs, setConfigs] = useState<ConfigItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [configLoading, setConfigLoading] = useState(false);
@@ -143,6 +163,21 @@ export const AdminScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       setLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    if (tab !== 'orders') return;
+    let alive = true;
+    const loadOrdersList = async () => {
+      const { data } = await supabase
+        .from('sh_orders')
+        .select('id, service_title, technician_id, status, total_mxn, created_at')
+        .order('created_at', { ascending: false });
+      if (alive && data) setOrdersList(data as OrderRow[]);
+    };
+    loadOrdersList();
+    const iv = setInterval(loadOrdersList, 5000);
+    return () => { alive = false; clearInterval(iv); };
+  }, [tab]);
 
   useEffect(() => {
     const loadConfigs = async () => {
@@ -217,10 +252,10 @@ export const AdminScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       </div>
 
       <div className="flex gap-1 bg-surface-alt rounded-xl p-1">
-        {(['dashboard', 'technicians', 'disputes', 'config'] as AdminTab[]).map(t => (
+        {(['dashboard', 'orders', 'technicians', 'disputes', 'config'] as AdminTab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-lg text-label-sm font-medium transition-colors ${tab === t ? 'bg-primary text-on-primary' : 'text-text-muted hover:text-text-primary'}`}>
-            {t === 'dashboard' ? 'Dashboard' : t === 'technicians' ? 'Técnicos' : t === 'disputes' ? 'Disputas' : 'Config'}
+            {t === 'dashboard' ? 'Dashboard' : t === 'orders' ? 'Órdenes' : t === 'technicians' ? 'Técnicos' : t === 'disputes' ? 'Disputas' : 'Config'}
           </button>
         ))}
       </div>
@@ -241,6 +276,32 @@ export const AdminScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               <span className={`material-symbols-outlined text-[22px] ${s.color}`}>{s.icon}</span>
               <p className="text-headline-sm font-bold text-text-primary">{s.value}</p>
               <p className="text-label-sm text-text-muted">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && tab === 'orders' && (
+        <div className="space-y-2">
+          <p className="text-label-sm text-text-muted">Actualiza cada 5s — monitoreo en vivo.</p>
+          {ordersList.length === 0 && <p className="text-center py-8 text-text-muted">Sin órdenes registradas.</p>}
+          {ordersList.map(o => (
+            <div key={o.id} className="bg-surface-card rounded-xl p-3 border border-border-subtle shadow-xs flex items-center gap-3">
+              <span className="material-symbols-outlined text-text-muted">receipt_long</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-label-md text-text-primary font-bold">{o.id}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${(ORDER_STATUS[o.status] ?? ORDER_STATUS.draft).cls}`}>
+                    {(ORDER_STATUS[o.status] ?? ORDER_STATUS.draft).label}
+                  </span>
+                </div>
+                <p className="text-label-sm text-text-muted truncate">{o.service_title || 'Sin servicio'}</p>
+                <p className="text-[11px] text-text-muted">
+                  Técnico: {technicians.find(t => t.id === o.technician_id)?.name ?? o.technician_id ?? '—'}
+                  {' · '}{new Date(o.created_at).toLocaleString('es-MX')}
+                </p>
+              </div>
+              <span className="text-label-md font-bold text-text-primary whitespace-nowrap">${o.total_mxn}</span>
             </div>
           ))}
         </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { EscrowOrder, Technician } from '../../types';
 import { fetchOrdersByTechnician, updateOrderStatus, processSpecialistCancellation, uploadEvidencePhoto } from '../../services/bookingService';
 import { isDevMode } from '../../config/devMode';
+import { sfxLiberar, sfxCerrar } from '../../lib/sfx';
 
 interface TechnicianOrdersScreenProps {
   technician: Technician;
@@ -65,6 +66,7 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
     }
     try {
       await updateOrderStatus(orderId, nextStatus as any);
+      if (nextStatus === 'completed') sfxCerrar();
       await loadOrders();
     } catch (err) {
       console.error('Error actualizando status:', err);
@@ -75,6 +77,7 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
     if (!pinOrderId || pinInput.length !== 4) return;
     try {
       await updateOrderStatus(pinOrderId, 'released');
+      sfxLiberar();
       setPinOrderId(null);
       await loadOrders();
     } catch (err) {
