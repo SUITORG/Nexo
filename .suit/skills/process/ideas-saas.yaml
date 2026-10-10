@@ -1,0 +1,57 @@
+skill:
+  name: ideas-saas
+  display_name: "Ideas SaaS — Pipeline idea → Panel → MVP Python"
+  version: 1.0.0
+  type: process
+  domain: ideation
+
+  description: >
+    Pipeline por-corrida (manual, nada de cron): genera 3 ideas digitales SaaS
+    de alta viabilidad 80/20 con fuentes gratuitas, las evalúa con el Panel de
+    Expertos (Mercado/Técnico/Riesgo/Financiero + Juez) y, si el juez aprueba
+    con score >= 7.5, hace el scaffold de un MVP en Python local en
+    SuitIdeasSaaS/<slug> (stdlib + requests/bs4/pandas/sqlite3, concurrencia
+    asyncio, sin cloud de pago). Si ninguna aprueba, solo informe, sin scaffold.
+
+  dependencies:
+    - panel-juzgador
+
+  triggers:
+    - keyword: "ideas saas"
+    - keyword: "genera ideas"
+    - keyword: "corrida de ideas"
+    - keyword: "pipeline saas"
+    - keyword: "3 ideas"
+    - keyword: "evaluar ideas"
+    - keyword: "necesito un MVP"
+    - keyword: "ideas de negocio"
+    - keyword: "pipeline autónomo de ideas"
+
+  inputs:
+    - "tema o nicho opcional del usuario; si no, filtro libre 80/20"
+
+  outputs:
+    - "SuitIdeasSaaS/<fecha>-evaluacion.md (informe con scores y veredicto)"
+    - "SuitIdeasSaaS/<slug>/ (solo si score >= 7.5): main.py, requirements.txt, db.py, README.md"
+
+  context_hint:
+    - ".agents/skills/ideas-saas/SKILL.md"
+    - ".suit/skills/process/panel-juzgador/prompts/"
+
+  rules:
+    - id: is-001
+      description: "Scaffold del MVP SOLO si el juez aprueba con score >= 7.5; si no, solo informe"
+      severity: error
+    - id: is-002
+      description: "Solo 1 scaffold (la idea de mayor score), aunque varias aprueben"
+      severity: warning
+    - id: is-003
+      description: "Stack exclusivamente Python local + libs gratuitas (requests/bs4/pandas/sqlite3); sin cloud de pago ni secrets hardcodeados"
+      severity: error
+    - id: is-004
+      description: "Es por-corrida manual — nunca disparar por cron ni en background sin que el usuario lo pida"
+      severity: error
+
+  validation:
+    - "Evaluación persistida en SuitIdeasSaaS/<fecha>-evaluacion.md"
+    - "Scaffold (si hay) en SuitIdeasSaaS/<slug>/ con main.py, requirements.txt, db.py, README.md"

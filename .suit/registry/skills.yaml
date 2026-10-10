@@ -413,6 +413,9 @@ skills:
   descubrimiento:
     path: .suit/skills/process/descubrimiento.yaml
 
+  ideas-saas:
+    path: .suit/skills/process/ideas-saas.yaml
+
   pantalla-limpia:
     path: .suit/skills/process/pantalla-limpia.yaml
 

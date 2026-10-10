@@ -165,6 +165,9 @@
   hyperframes-registry      .claude/skills/hyperframes-registry
                             -> .agents\skills\hyperframes-registry
                             Install, discover, and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add or hyperframes catalog, ins
+  ideas-saas                .claude/skills/ideas-saas
+                            -> .agents\skills\ideas-saas
+                            Pipeline por-corrida de ideas SaaS: genera 3 ideas digitales de alta viabilidad 80/20, las evalúa con el Panel de Expertos (Mercado/Técnico/Riesgo/Fin
   last30days                .claude/skills/last30days
                             -> .agents\skills\last30days
                             AI-powered cross-platform research agent. Researches any topic across Reddit, X/Twitter, YouTube, TikTok, Instagram, Hacker News, Polymarket, GitHub, 
@@ -222,7 +225,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 47 (4 locales + 43 symlinks)
+  TOTAL CLAUDE: 48 (4 locales + 44 symlinks)
 
 
 ========================================================================
@@ -254,6 +257,7 @@
   hyperframes-creative      .opencode/skills/hyperframes-creative
   hyperframes-keyframes     .opencode/skills/hyperframes-keyframes
   hyperframes-registry      .opencode/skills/hyperframes-registry
+  ideas-saas                .opencode/skills/ideas-saas
   last30days                .opencode/skills/last30days
   media-use                 .opencode/skills/media-use
   mejoras-proyecto          .opencode/skills/mejoras-proyecto
@@ -277,7 +281,7 @@
   talking-head-recut        .opencode/skills/talking-head-recut
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 47
+  TOTAL OPENCODE: 48
 
 
 ========================================================================
@@ -413,13 +417,13 @@
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
   Skills SuitOS (.yaml)    43      43         0
-  Skills Claude Code       47        4        43
-  Skills OpenCode           47       47         0
+  Skills Claude Code       48        4        44
+  Skills OpenCode           48       48         0
   Registry YAML           44      44         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   198
+  TOTAL                   200
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

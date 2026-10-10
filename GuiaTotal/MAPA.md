@@ -70,6 +70,10 @@
     │   ├── ∥ agentes: mercado ∥ técnico ∥ riesgo ∥ financiero
     │   └── → ⚡ juez (serial) → ✍️ veredicto + condiciones
     ├── ✍️ crea GuiaTotal/registro/<proyecto>.yaml  (si falta)
+    ├── ⚡ ideas-saas                     [alternativa por-corrida: pipeline idea→panel→MVP Python]
+    │   ├── ∥ 3 ideas 80/20 (fuentes gratuitas) → panel-juzgador por idea
+    │   └── juez score >= 7.5 → 📁 scaffold MVP Python en SuitIdeasSaaS/<slug>/ (stdlib+asyncio, sin cloud)
+    │                          <7.5 → solo informe SuitIdeasSaaS/<fecha>-evaluacion.md
     └── ↪ CIERRE DE TODA PASADA (sección superior: PENDIENTES + MAPA + 3 líneas)
 ```
 
@@ -451,10 +455,11 @@ SamurAIGPT/Generative-Media-Skills                → plan en .suit/memory/pendi
 | `descubrimiento` | `parametros` (lee switches en fase 0) | entregable de 11 puntos → código (§1/§4/§6) | preguntas ≤3 ∥ micro-skills según diagnóstico |
 | `parametros` | `descubrimiento` (cap. 1 Configuración, en apertura) | `.suit/config/switches.yaml` (globales/puntuales) + checklist "Recomendación de arranque" → `<modulo>/config.yaml` | — (lectura/escritura YAML) |
 | `pantalla-limpia` | — (invocable por otras skills: contrato de invocación) | `Veredicto-Pantallas-<Proyecto>.md` + `Pendientes.md` → PENDIENTES/ciclo (§6) | — (solo lectura, evidencia file:línea) |
+| `ideas-saas` | `panel-juzgador` (evalúa cada idea) | `SuitIdeasSaaS/<fecha>-evaluacion.md` + `SuitIdeasSaaS/<slug>/` (MVP Python si >= 7.5) | — (pipeline por-corrida manual) |
 | `modo-prueba` | `bat-launcher` (patrón qa.bat) | QA local SuitServiHogar: `VALIDACION` (V7-V9), `CORRECCIONES` | 3 ventanas de rol ∥ tras lista |
 
 **Orden obligatorio:** `descubrimiento` **abre** toda tarea con código (nodo común, antes de §1/§4/§6) → `analista-proy` → `sintesis-proyecto` → `panel-juzgador` (los dos últimos consumen el primero; la síntesis alimenta el diseño del prototipo). **Cadena secuencial con gates**: `empresa-mascara` (entrada por formulario) → `empresa-registro` → `clusters-seo` → `paginas-seo` (cada eslabón espera aprobación salvo switch `auto`). `auditoria` es independiente: la llama `guia-total` o el usuario. `parametros` es transversal: cualquier skill puede leer/escribir switches, y recomienda **qué parametrizar al arrancar** un módulo (checklist "Recomendación de arranque" → `<modulo>/config.yaml` sin BD, enlazada desde `descubrimiento` cap. 1). El resto es independiente.
 
 ---
 
-*Última actualización del mapa: 2026-10-09 (drawer **INFO generado desde MAPA.md** — `node scripts/gen-mapa-info.js` regenera el bloque `// @GEN:INFO` de `MAPA_VISUAL.html`; `check-map-visual.js` valida el check 1c y falla si está desincronizado — fuente única). 2026-10-09: skill `parametros` gana "Recomendación de arranque" (checklist qué parametrizar sin BD: constantes, rangos min/max, rutas, formatos fecha/hora, banderas, montos → `<modulo>/config.yaml`); nodo APERTURA + fila de dependencias enlazan con `descubrimiento` cap. 1. 2026-10-03: nodo común APERTURA (skills `descubrimiento` + `parametros`, entregable 11 puntos, ≤3 preguntas vía `decision_libre`, switches en `.suit/config/switches.yaml`); `pantalla-limpia` enlazada a §6 (auditoría UI solo lectura, burbuja `npl` + fila de dependencias); estados de cierre ✅/❓/⛔ con regla "sin evidencia no hay cierre"; enganches en guia-total Etapas + Flujo IDEA; burbuja `ndesc`.*
+*Última actualización del mapa: 2026-10-09 (drawer **INFO generado desde MAPA.md** — `node scripts/gen-mapa-info.js` regenera el bloque `// @GEN:INFO` de `MAPA_VISUAL.html`; `check-map-visual.js` valida el check 1c y falla si está desincronizado — fuente única). 2026-10-09: skill `ideas-saas` añadida a §1 (pipeline por-corrida idea→panel-juzgador→scaffold MVP Python en `SuitIdeasSaaS/` si juez >= 7.5). 2026-10-09: skill `parametros` gana "Recomendación de arranque" (checklist qué parametrizar sin BD: constantes, rangos min/max, rutas, formatos fecha/hora, banderas, montos → `<modulo>/config.yaml`); nodo APERTURA + fila de dependencias enlazan con `descubrimiento` cap. 1. 2026-10-03: nodo común APERTURA (skills `descubrimiento` + `parametros`, entregable 11 puntos, ≤3 preguntas vía `decision_libre`, switches en `.suit/config/switches.yaml`); `pantalla-limpia` enlazada a §6 (auditoría UI solo lectura, burbuja `npl` + fila de dependencias); estados de cierre ✅/❓/⛔ con regla "sin evidencia no hay cierre"; enganches en guia-total Etapas + Flujo IDEA; burbuja `ndesc`.*
