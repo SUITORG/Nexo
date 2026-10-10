@@ -325,6 +325,27 @@ skills:
   mcp-manager:
     path: .suit/skills/tool/mcp-manager.yaml
 
+  bat-launcher:
+    description: "Genera o actualiza el .bat lanzador del servidor local de un proyecto del monorepo, siguiendo el patrón ya establecido (banner, mata instancia previa por puerto, levanta el servidor en ventana propia chica, espera respuesta real por netstat, recién entonces abre el sitio en el navegador a tamaño normal)."
+    version: 1.0.0
+    type: process
+    domain: operations
+    dependencies: []
+    triggers:
+      - "hazme un bat que levante el servidor"
+      - "bat lanzador"
+      - "que el bat también abra la página"
+      - file_pattern: "*.bat"
+    inputs:
+      - "entry point y puerto del servidor del proyecto"
+    outputs:
+      - "<nombre>.bat (launcher)"
+    discoverable: true
+    context_hint:
+      - ".claude/skills/bat-launcher/SKILL.md"
+      - "SuitCVLO/iniciar.bat"
+      - "start_suitorg.bat"
+
   listado-capacidades:
     description: "Regenera SKILLS-MCP-AGENTS-LISTADO.txt con el listado consolidado de todas las skills, MCP servers y agentes. Ejecutar después de cada cambio en skills, MCPs o agentes."
     version: 1.0.0
@@ -389,6 +410,12 @@ skills:
   auditoria:
     path: .suit/skills/process/auditoria.yaml
 
+  descubrimiento:
+    path: .suit/skills/process/descubrimiento.yaml
+
+  pantalla-limpia:
+    path: .suit/skills/process/pantalla-limpia.yaml
+
   empresa-registro:
     path: .suit/skills/domain/empresa-registro.yaml
 
@@ -409,3 +436,6 @@ skills:
 
   registry-query:
     path: .suit/skills/system/registry-query.yaml
+
+  parametros:
+    path: .suit/skills/system/parametros.yaml

@@ -1,7 +1,7 @@
 # Skill: bat-launcher
 
 ## Descripción
-Genera o actualiza el `.bat` lanzador del servidor local de un proyecto dentro del monorepo SuitOrg, siguiendo el patrón ya establecido en el repo (`SuitCVLO/iniciar.bat`, `start_suitorg.bat`): banner, mata cualquier instancia previa del servidor antes de levantar una nueva, corre el servidor en su propia ventana de consola chica, espera a que responda de verdad (no un `timeout` a ciegas), y recién entonces abre el sitio en el navegador a tamaño normal.
+Genera o actualiza el `.bat` lanzador del servidor local de un proyecto dentro del monorepo SuitOrg, siguiendo el patrón ya establecido en el repo (`SuitCVLO/iniciar.bat`, `start_suitorg.bat`): banner, mata cualquier instancia previa del servidor antes de levantar una nueva, corre el servidor en su propia ventana de consola chica, espera a que responda de verdad (no un `timeout` a ciegas), y recién entonces abre el sitio en el navegador a tamaño normal. La hora exacta en que se levantó queda visible, encerrada en asteriscos (`*****`), tanto en la ventana del servidor como en el resumen final, para identificarla de un vistazo.
 
 ## Trigger
 - "hazme un bat que levante el servidor de [proyecto]"
@@ -51,8 +51,10 @@ goto killwait
 echo        Listo.
 echo.
 
+set LEVANTADO=%date% %time%
+
 echo  [1/3] Iniciando servidor en ventana propia (chica)...
-start "<NOMBRE> Server" cmd /k "mode con: cols=100 lines=25 && title <NOMBRE> Server && <COMANDO>"
+start "<NOMBRE> Server" cmd /k "mode con: cols=100 lines=25 && title <NOMBRE> Server && echo ************************************* && echo   LEVANTADO: %LEVANTADO% && echo ************************************* && <COMANDO>"
 
 echo  [2/3] Esperando a que el servidor responda...
 :waitloop
@@ -73,9 +75,13 @@ echo.
 echo  ─────────────────────────────────────────
 echo   Sitio:    http://localhost:%PORT%
 echo   Servidor: ventana "<NOMBRE> Server" (chica)
+echo   *************************************
+echo     LEVANTADO: %LEVANTADO%
+echo   *************************************
 echo   Cierra esa ventana (o Ctrl+C ahi) para detenerlo.
 echo  ─────────────────────────────────────────
 echo.
+ping -n 4 127.0.0.1 >nul
 ```
 
 ## Reglas
@@ -84,6 +90,10 @@ echo.
 - El kill-loop solo mata procesos escuchando en el puerto exacto del proyecto — nunca `taskkill` por nombre de imagen (`node.exe`) a secas, mataría procesos node de otros proyectos/sesiones.
 - `cd /d "%~dp0"` siempre (ruta relativa al propio `.bat`), nunca ruta absoluta hardcodeada — el `.bat` debe funcionar si el repo se mueve o clona en otra máquina.
 - Reusar exactamente esta plantilla entre proyectos — si un proyecto necesita algo distinto (WSL, un health-check endpoint propio en vez de solo el puerto, múltiples servicios), extender la plantilla puntualmente, no reescribirla desde cero.
+- La hora de arranque se captura **una sola vez** (`set LEVANTADO=%date% %time%`) justo antes de lanzar el servidor, y se reusa esa misma variable tanto en el banner de la ventana del servidor como en el resumen final — nunca releer `%time%` dos veces, o las dos vistas mostrarían horas distintas.
+- El banner de hora va siempre encerrado en asteriscos (`*************************************`) para que se identifique de un vistazo entre el resto del texto.
+- Proyectos sin servidor/puerto propio (p. ej. un `.bat` que solo refresca datos y abre un `.html` estático) no llevan el loop de espera por `netstat`, pero sí llevan el mismo banner `LEVANTADO` + una pausa final para que la hora sea visible un momento antes de que la ventana se cierre.
+- Para esa pausa final usar `ping -n 4 127.0.0.1 >nul` (~3s), nunca `timeout /t N /nobreak` — `timeout` exige un handle de consola real y truena con "Input redirection is not supported" en contextos no interactivos (tareas programadas, invocación desde otro script, CI). `ping` no depende de consola y funciona siempre.
 
 ## Referencias en este repo
 - `SuitCVLO/iniciar.bat` — versión con WSL + health-check por `curl` a un endpoint propio (para servidores que sí exponen `/health`).

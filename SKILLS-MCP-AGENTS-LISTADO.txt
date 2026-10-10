@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-10-07
+  Generado: 2026-10-10
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -49,6 +49,7 @@
   guia-total                .suit/skills/process/guia-total.yaml
   iteration-loop            .suit/skills/process/iteration-loop.yaml
   panel-juzgador            .suit/skills/process/panel-juzgador.yaml
+  pantalla-limpia           .suit/skills/process/pantalla-limpia.yaml
   pdf-generation            .suit/skills/process/pdf-generation.yaml
   ponytail-ladder           .suit/skills/process/ponytail-ladder.yaml
   probador                  .suit/skills/process/probador.yaml
@@ -75,7 +76,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 42 skills
+  TOTAL SUITOS: 43 skills
 
 
 ========================================================================
@@ -190,6 +191,9 @@
   paginas-seo               .claude/skills/paginas-seo
                             -> .agents\skills\paginas-seo
                             Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir de Config_SEO: experto copywriter + arquitecto de contenido que redacta los 3 c
+  pantalla-limpia           .claude/skills/pantalla-limpia
+                            -> .agents\skills\pantalla-limpia
+                            Auditoría genérica de claridad de pantallas (cualquier proyecto): menos es más, Pareto 1%/20-80, modo creativo opcional, invocable por otras skills.
   parametros                .claude/skills/parametros
                             -> .agents\skills\parametros
                             Parametriza el sistema con switches declarativos — cambia comportamiento global o puntual SIN tocar código. Fuente única: `.suit/config/switches.yaml`
@@ -218,7 +222,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 46 (4 locales + 42 symlinks)
+  TOTAL CLAUDE: 47 (4 locales + 43 symlinks)
 
 
 ========================================================================
@@ -260,6 +264,7 @@
   music-to-video            .opencode/skills/music-to-video
   oversized-cursor          .opencode/skills/oversized-cursor
   paginas-seo               .opencode/skills/paginas-seo
+  pantalla-limpia           .opencode/skills/pantalla-limpia
   parametros                .opencode/skills/parametros
   pr-to-video               .opencode/skills/pr-to-video
   preparar-produccion       .opencode/skills/preparar-produccion
@@ -272,7 +277,7 @@
   talking-head-recut        .opencode/skills/talking-head-recut
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 46
+  TOTAL OPENCODE: 47
 
 
 ========================================================================
@@ -314,6 +319,7 @@
   guia-total                          Orquestador canónico: lleva un proyecto por idea → validación → constr
   auditoria                           Auditoría read-first de un sistema: inventario, C4 en Mermaid, reglas 
   descubrimiento                      Fase obligatoria antes de escribir/modificar/eliminar código: clasific
+  pantalla-limpia                     Auditoría genérica de claridad por pantalla (solo lectura): inventario
   empresa-registro                    Alta semiautomatica de empresas en Config_Empresas (maestro Google She
   clusters-seo                        Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO (
   paginas-seo                         Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir
@@ -323,7 +329,7 @@
   registry-query                      Consulta el registry declarativo (.suit/registry/*.yaml: agents, skill
   parametros                          Cambia comportamiento global o puntual del sistema SIN tocar código, e
 
-  TOTAL REGISTRY: 43 skills declaradas
+  TOTAL REGISTRY: 44 skills declaradas
 
 
 ========================================================================
@@ -406,14 +412,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    42      42         0
-  Skills Claude Code       46        4        42
-  Skills OpenCode           46       46         0
-  Registry YAML           43      43         0
+  Skills SuitOS (.yaml)    43      43         0
+  Skills Claude Code       47        4        43
+  Skills OpenCode           47       47         0
+  Registry YAML           44      44         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   194
+  TOTAL                   198
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

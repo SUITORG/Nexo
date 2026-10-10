@@ -41,17 +41,21 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 |---|---|---|
 | **Idea** | no hay código o hay solo un README/borrador | Ejecuta el flujo IDEA abajo |
 | **Construcción** | hay código y falta `CONTRATO.md` o validación | F0-F7 vía `ciclo` + documentos faltantes |
-| **Mantenimiento** | hay `CONTRATO.md` + `VALIDACION.md` recientes | Solo `ciclo` (F1-F7) + refresco de manuales si aplica |
+| **Mantenimiento** | hay `CONTRATO.md` + `VALIDACION.md` recientes | `⚡ pantalla-limpia` (si hay UI nueva o "no se entiende": veredicto A/M/R solo lectura) + `ciclo` (F1-F7) + refresco de manuales si aplica |
+
+**Gate previo (toda etapa con código):** `⚡ descubrimiento` → clasificación + diagnóstico de capacidades + entregable de 11 puntos antes de tocar código. Lee `.suit/config/switches.yaml` (skill `parametros`): `decision_libre=true` (defecto) → 0 preguntas, supuestos documentados; si no, ≤3 preguntas.
 
 ### Flujo IDEA
 
 > **Si la empresa todavía no existe en `Config_Empresas` o hay que darla de alta/onboardear** → `⚡ empresa-registro` primero (estructura Drive `cte<id>`, fotoagente, copy, identidad, sync Supabase) y luego continúa este flujo.
 
-1. `⚡ analista-proy` → `Analista_Proy.md` (si no existe; si existe y es reciente, reúsalo).
-2. `✍️ crea <Proyecto>/docs/TAXONOMIA.md` (si falta) con **solo 3 campos**: Industria · Nicho · Especialización — los que clasifique el análisis, con match exacto al catálogo `GuiaTotal/TAXONOMIA.md`.
-3. `⚡ panel-juzgador` → veredicto + recomendaciones (insumo: propuesta + `Analista_Proy.md`). **El veredicto no bloquea**: guárdalo en la tarjeta como recomendación.
-4. `✍️ crea GuiaTotal/registro/<proyecto>.yaml` si falta (schema en `registro/schema.md`): etapa, veredicto, `convive_sheets`, taxonomía, próximo paso.
-5. Sugiere `identidad` y luego construcción. No construyas sin que el usuario lo pida.
+1. `⚡ descubrimiento` → clasifica la idea + diagnóstico de capacidades + entregable de 11 puntos (fase 0 lee `switches.yaml`: `decision_libre=true` → supuestos documentados, sin preguntas).
+2. `⚡ analista-proy` → `Analista_Proy.md` (si no existe; si existe y es reciente, reúsalo).
+3. `⚡ sintesis-proyecto` → `<Proyecto>/docs/SINTESIS_PROYECTO.md` (si falta): síntesis ejecutiva de `Analista_Proy.md` para diseñar el prototipo (patrones, oportunidades, funcionalidades, perfiles, diferenciadores, conclusiones).
+4. `✍️ crea <Proyecto>/docs/TAXONOMIA.md` (si falta) con **solo 3 campos**: Industria · Nicho · Especialización — los que clasifique el análisis, con match exacto al catálogo `GuiaTotal/TAXONOMIA.md`.
+5. `⚡ panel-juzgador` → veredicto + recomendaciones (insumo: propuesta + `Analista_Proy.md`). **Si la propuesta viene solo del chat, persiste antes `<Proyecto>/proposal.md`** — el workflow lo exige en disco. **El veredicto no bloquea**: guárdalo en la tarjeta como recomendación.
+6. `✍️ crea GuiaTotal/registro/<proyecto>.yaml` si falta (schema en `registro/schema.md`): etapa, veredicto, `convive_sheets`, taxonomía, próximo paso.
+7. Sugiere `identidad` y luego construcción. No construyas sin que el usuario lo pida.
 
 ### Flujo CONSTRUCCIÓN
 
@@ -142,4 +146,4 @@ Si el usuario pide instalar/enlazar una skill no propia, añade su nodo a `MAPA.
 - Escrituras a Supabase del catálogo de taxonomía: solo INSERT de faltantes, nunca UPDATE/DELETE.
 - El veredicto de `panel-juzgador` recomienda, no decide: el usuario aprueba continuar.
 - Si un paso requiere otra skill que no está instalada, dilo y sugiere cómo instalarla; no improvises su contenido.
-- Al cierre de cada pasada: ≤3 líneas (qué se hizo, dónde quedó, próximo paso) **y anota en `GuiaTotal/PENDIENTES.md` todo lo que quedó abierto** (nunca borrar filas; tachar con fecha al cerrar).
+- Al cierre de cada pasada: **estado explícito** (`✅ Cumplido` con evidencia · `❓ Te necesito` (falta UNA decisión) · `⛔ Detenido` (límite — no rodear)) + ≤3 líneas (qué se hizo, dónde quedó, próximo paso) **y anota en `GuiaTotal/PENDIENTES.md` todo lo que quedó abierto** (nunca borrar filas; tachar con fecha al cerrar). **Sin evidencia (comando OK, archivo leído, captura, bloqueo con causa) no se dice "listo".** Mismo bloqueo 3 turnos → ⛔ Detenido + PENDIENTES.

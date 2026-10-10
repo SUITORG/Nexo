@@ -107,7 +107,11 @@ Escribe `Analista_Proy.md` en el directorio de trabajo (o donde el usuario indiq
 - **Siguiente paso recomendado:** [validación concreta y barata]
 ```
 
-### 6. Cierre
+### 6. Síntesis para el prototipo
+
+Después de escribir `Analista_Proy.md`, invoca la skill `sintesis-proyecto` (si no está instalada, dilo y sugiere `node scripts/install-skill.js sintesis-proyecto`): genera `<Proyecto>/docs/SINTESIS_PROYECTO.md` — el documento ejecutivo (patrones, oportunidades, funcionalidades recomendadas, perfiles, diferenciadores, conclusiones) con el que se diseña el prototipo. No la reemplaces escribiendo tú la síntesis: esa skill tiene su plantilla y su trazabilidad al análisis.
+
+### 7. Cierre
 
 Al entregar, responde en ≤3 líneas: veredicto, dónde está el archivo, y si la clasificación sugerida cambió respecto a la hipótesis inicial. No repitas el contenido del MD en el chat.
 

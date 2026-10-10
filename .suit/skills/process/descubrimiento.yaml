@@ -1,0 +1,50 @@
+skill:
+  name: descubrimiento
+  display_name: "Descubrimiento y Arquitectura Previa"
+  version: 1.0.0
+  type: process
+  domain: quality
+
+  description: >
+    Fase obligatoria antes de escribir/modificar/eliminar código: clasifica la solicitud,
+    diagnostica 10 capacidades (config, archivos, filtros, cruce, reportes, dashboard,
+    respaldos, idempotencia, validación, seguridad), activa solo las micro-skills internas
+    necesarias y entrega un propuesta de 11 puntos. Máximo 3 preguntas; si decision_libre
+    (switches.yaml) es true, 0 preguntas y supuestos documentados.
+
+  dependencies: []
+
+  triggers:
+    - keyword: "descubrimiento"
+    - keyword: "antes de programar"
+    - keyword: "analiza esto primero"
+    - keyword: "diagnóstico de capacidades"
+    - keyword: "nueva idea"
+    - keyword: "feature"
+    - keyword: "bugfix"
+    - keyword: "refactorización"
+    - keyword: "integración"
+    - keyword: "automatización"
+    - keyword: "migración"
+    - keyword: "procesamiento de datos"
+    - file_pattern: "*.js"
+    - file_pattern: "*.gs"
+
+  context_hint:
+    - ".agents/skills/descubrimiento/SKILL.md"
+    - ".suit/config/switches.yaml"
+
+  rules:
+    - id: dsc-001
+      description: "No se escribe/modifica/borra código sin el entregable de 11 puntos o supuestos documentados"
+      severity: error
+    - id: dsc-002
+      description: "Maximo 3 preguntas; decision_libre=true -> 0 preguntas (supuestos en el entregable punto 4)"
+      severity: error
+    - id: dsc-003
+      description: "Nunca construir dashboard/automatización/BD si basta script, archivo o reporte"
+      severity: warning
+
+  validation:
+    - "Entregable de 11 puntos presente antes del código"
+    - "switches.yaml leído en fase 0"

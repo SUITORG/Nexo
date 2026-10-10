@@ -1,0 +1,47 @@
+skill:
+  name: parametros
+  display_name: "Parametrización del Sistema (switches)"
+  version: 1.0.0
+  type: system
+  domain: system
+
+  description: >
+    Cambia comportamiento global o puntual del sistema SIN tocar código, editando
+    switches declarativos en .suit/config/switches.yaml (alcance global|<proyecto>,
+    precedencia proyecto > global). Fuente única; sin secretos.
+
+  dependencies: []
+
+  triggers:
+    - keyword: "parametriza"
+    - keyword: "cambia el switch"
+    - keyword: "switches"
+    - keyword: "modo automático"
+    - keyword: "modo preguntar"
+    - keyword: "libertad de decisión"
+    - keyword: "configura el sistema"
+    - keyword: "qué parametrizar"
+    - keyword: "parametrización de arranque"
+    - keyword: "config del módulo"
+
+  context_hint:
+    - ".agents/skills/parametros/SKILL.md"
+    - ".suit/config/switches.yaml"
+
+  rules:
+    - id: par-001
+      description: "Cambiar switch != editar código; si no es configurable en el YAML -> PENDIENTES"
+      severity: error
+    - id: par-002
+      description: "Cambio puntual = entrada con alcance <proyecto>, nunca editar el global por un caso local"
+      severity: error
+    - id: par-003
+      description: "Nunca secretos ni credenciales en switches.yaml"
+      severity: error
+    - id: par-004
+      description: "Al crear módulo/función nuevo, aplicar checklist 'Recomendación de arranque' (constantes, rangos min/max, rutas, formatos, banderas, montos) antes de escribir código; parametrizar solo si cambia por entorno/equipo, lo ajusta un no-programador o se tunea en pruebas"
+      severity: warning
+
+  validation:
+    - "Valor dentro de los permitidos (bool o lista valores) antes de escribir"
+    - "efecto actualizado si cambió el significado"

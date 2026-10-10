@@ -1,0 +1,28 @@
+# switches.yaml — parametrización del sistema (skill `parametros`)
+# Fuente única de switches de comportamiento global/puntual.
+# Cambiar un switch aquí NO es editar código. Precedencia: alcance <proyecto> > global.
+# Esquema: valor · tipo (bool|modo|valor) · alcance (global|<proyecto>) · defecto · efecto · valores
+# Sin secretos ni credenciales (eso va a .env).
+
+decision_libre:
+  valor: true
+  tipo: bool
+  alcance: global
+  defecto: true
+  efecto: "true = el agente no hace preguntas y documenta supuestos en el entregable; false = maximo 3 preguntas antes de ejecutar"
+
+nivel_preguntas:
+  valor: lote
+  tipo: modo
+  alcance: global
+  defecto: lote
+  valores: [lote, minimo]
+  efecto: "lote = agrupa todas las preguntas en una sola tanda; minimo = solo lo imprescindible"
+
+modo_descubrimiento:
+  valor: completo
+  tipo: modo
+  alcance: global
+  defecto: completo
+  valores: [completo, rapido]
+  efecto: "completo = las 5 fases de descubrimiento; rapido = solo fases 1 (clasifica) + 5 (entregable) para cambios pequenos"

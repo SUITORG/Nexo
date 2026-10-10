@@ -42,7 +42,7 @@
 | `skills/domain/` | multi-tenant, cotizaciones-engine, contrato-subproyecto, data-sync, data-cleanup, design-system, brief-engine |
 | `skills/language/` | javascript, gas, sql |
 | `skills/tool/` | web-search, git, web-research |
-| `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador, iteration-loop, descubrimiento |
+| `skills/process/` | code-review, security-audit, deployment, pdf-generation, reportero, panel-juzgador, iteration-loop, descubrimiento, pantalla-limpia |
 
 ## Agents
 | ID | Role | Source |
