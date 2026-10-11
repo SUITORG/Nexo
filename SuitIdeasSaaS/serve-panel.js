@@ -1,9 +1,58 @@
-// serve-panel.js — sirve SuitIdeasSaaS/ en :8099 (panel + estado + solicitud + registro/pendientes) sin dependencias
+// serve-panel.js — panel SuitIdeasSaaS en :8099
+// Endpoints: /registro /pendientes /git /orden · POST /solicitud /resolver /push /orden
 const http = require('http'), fs = require('fs'), path = require('path');
-const ROOT = __dirname, PORT = 8099;
-const REG = path.join(ROOT, '..', 'GuiaTotal', 'registro');
-const PEND = path.join(ROOT, '..', 'GuiaTotal', 'PENDIENTES.md');
+const { execSync } = require('child_process');
+const ROOT = __dirname, REPO = path.join(ROOT, '..'), PORT = 8099;
+const REG = path.join(REPO, 'GuiaTotal', 'registro');
+const PEND = path.join(REPO, 'GuiaTotal', 'PENDIENTES.md');
+const ORDEN = path.join(ROOT, 'orden.json');
 const TYPES = { '.html': 'text/html', '.json': 'application/json', '.png': 'image/png', '.js': 'text/javascript' };
+
+function git(args) {
+  return execSync('git ' + args, { cwd: REPO, encoding: 'utf8', timeout: 120000 }).trim();
+}
+function gitInfo() {
+  try {
+    const branch = git('rev-parse --abbrev-ref HEAD');
+    let ahead = -1, behind = -1;
+    try { const [b, a] = git(`rev-list --left-right --count origin/${branch}...HEAD`).split('\t').map(Number); behind = b; ahead = a; } catch (_) {}
+    return { branch, ahead, behind };
+  } catch (_) { return { branch: '?', ahead: -1, behind: -1 }; }
+}
+
+function leerPorConfirmar(ruta) {
+  try {
+    const txt = fs.readFileSync(path.join(REPO, ruta, 'docs', 'CONTRATO.md'), 'utf8');
+    const m = txt.match(/## POR CONFIRMAR\n([\s\S]*?)(\n## |$)/);
+    if (!m) return [];
+    return m[1].split('\n').filter(l => l.trim().startsWith('- ')).map(l => l.replace(/^\s*- /, '').trim());
+  } catch (_) { return []; }
+}
+
+function resolverPorConfirmar(ruta, respuestas) {
+  const f = path.join(REPO, ruta, 'docs', 'CONTRATO.md');
+  const txt = fs.readFileSync(f, 'utf8');
+  const m = txt.match(/(## POR CONFIRMAR\n)([\s\S]*?)(\n## |$)/);
+  if (!m) return { ok: false, error: 'seccion POR CONFIRMAR no encontrada' };
+  const items = m[2].split('\n').filter(l => l.trim().startsWith('- '));
+  const hoy = new Date().toISOString().slice(0, 10);
+  const quedan = [], resueltos = [];
+  items.forEach((line, i) => {
+    const pregunta = line.replace(/^\s*- /, '').trim();
+    const resp = Array.isArray(respuestas) ? respuestas[i] : (respuestas || {})[pregunta];
+    if (resp && String(resp).trim()) resueltos.push(`- [x] ~~${pregunta}~~ → **${String(resp).trim()}** (${hoy}, panel)`);
+    else quedan.push(line);
+  });
+  const nueva = `## POR CONFIRMAR\n${quedan.join('\n') || '(todas resueltas)'}\n\n### Resueltos (panel)\n${resueltos.join('\n')}\n`;
+  fs.writeFileSync(f, txt.slice(0, m.index) + nueva + (m[3] || ''), 'utf8');
+  if (resueltos.length) {
+    try {
+      git(`add "${ruta.replace(/\\/g, '/')}docs/CONTRATO.md"`);
+      git(`commit -m "ciclo(f0/contrato)[${ruta.replace(/\/$/, '')}]: respuestas POR CONFIRMAR desde panel (${resueltos.length} resueltas)"`);
+    } catch (_) {}
+  }
+  return { ok: true, resueltos: resueltos.length, quedan: quedan.length };
+}
 
 function parseCard(txt) {
   const get = k => { const m = txt.match(new RegExp('^' + k + ':\\s*"([^"\\n]+)"', 'm')) || txt.match(new RegExp('^' + k + ':\\s*([^\\n#"]+)', 'm')); return m ? m[1].trim() : ''; };
@@ -13,10 +62,11 @@ function parseCard(txt) {
     const m = line.match(/^\s+\w+:\s*(true|false)/);
     if (m) { docsTotal++; if (m[1] === 'false') docsFaltan++; }
   }
+  const ruta = get('ruta');
   return {
-    proyecto: get('proyecto'), ruta: get('ruta'), etapa: get('etapa'),
+    proyecto: get('proyecto'), ruta, etapa: get('etapa'),
     actualizado: get('actualizado'), puerto: get('puerto'), proximo_paso: get('proximo_paso'),
-    docsTotal, docsFaltan
+    docsTotal, docsFaltan, porConfirmar: leerPorConfirmar(ruta)
   };
 }
 
@@ -47,30 +97,67 @@ function leerPendientes() {
   } catch (_) { return []; }
 }
 
-http.createServer((req, res) => {
+function leerBody(req) {
+  return new Promise((resolve, reject) => {
+    let b = '';
+    req.on('data', c => b += c);
+    req.on('end', () => { try { resolve(JSON.parse(b)); } catch { reject(new Error('json invalido')); } });
+  });
+}
+
+http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
   const json = data => { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(data)); };
-  if (req.method === 'GET' && url === '/registro') return json(leerRegistro());
-  if (req.method === 'GET' && url === '/pendientes') return json(leerPendientes());
-  if (req.method === 'POST' && url === '/solicitud') {
-    let body = '';
-    req.on('data', c => body += c);
-    req.on('end', () => {
+  const err = (code, msg) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: msg })); };
+
+  try {
+    if (req.method === 'GET' && url === '/registro') return json(leerRegistro());
+    if (req.method === 'GET' && url === '/pendientes') return json(leerPendientes());
+    if (req.method === 'GET' && url === '/git') return json(gitInfo());
+    if (req.method === 'GET' && url === '/orden') {
+      try { return json(JSON.parse(fs.readFileSync(ORDEN, 'utf8'))); } catch (_) { return json({ ordenes: [] }); }
+    }
+    if (req.method === 'POST' && url === '/solicitud') {
+      const d = await leerBody(req);
+      if (!d.tema) return err(400, 'tema requerido');
+      const sol = { tema: String(d.tema).slice(0, 200), modo: d.modo === 'rapidas' ? 'rapidas' : 'verificadas', ts: new Date().toISOString() };
+      fs.writeFileSync(path.join(ROOT, 'solicitud.json'), JSON.stringify(sol, null, 2));
+      return json({ ok: true, solicitud: sol });
+    }
+    if (req.method === 'POST' && url === '/resolver') {
+      const d = await leerBody(req);
+      if (!d.ruta) return err(400, 'ruta requerida');
+      return json(resolverPorConfirmar(d.ruta, d.respuestas || {}));
+    }
+    if (req.method === 'POST' && url === '/push') {
+      const d = await leerBody(req).catch(() => ({}));
+      if (!d.confirm) return err(400, 'confirm:true requerido');
+      const g = gitInfo();
+      if (!g.ahead) return json({ ok: false, error: 'nada que subir (' + g.branch + ')' });
       try {
-        const d = JSON.parse(body);
-        if (!d.tema) { res.writeHead(400, { 'Content-Type': 'application/json' }); return res.end('{"error":"tema requerido"}'); }
-        const sol = { tema: String(d.tema).slice(0, 200), modo: d.modo === 'rapidas' ? 'rapidas' : 'verificadas', ts: new Date().toISOString() };
-        fs.writeFileSync(path.join(ROOT, 'solicitud.json'), JSON.stringify(sol, null, 2));
-        json({ ok: true, solicitud: sol });
-      } catch { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end('{"error":"json invalido"}'); }
+        const out = git(`push origin ${g.branch}`);
+        json({ ok: true, branch: g.branch, output: (out.split('\n').slice(-3) || []).join(' | ') });
+      } catch (e) { json({ ok: false, error: String(e.message || e).slice(0, 300) }); }
+      return;
+    }
+    if (req.method === 'POST' && url === '/orden') {
+      const d = await leerBody(req);
+      if (!d.tipo) return err(400, 'tipo requerido');
+      let o = { ordenes: [] };
+      try { o = JSON.parse(fs.readFileSync(ORDEN, 'utf8')); } catch (_) {}
+      o.ordenes = (o.ordenes || []).filter(x => !(x.tipo === d.tipo && x.proyecto === d.proyecto));
+      o.ordenes.push({ tipo: d.tipo, proyecto: d.proyecto || '', detalle: d.detalle || '', ts: new Date().toISOString() });
+      fs.writeFileSync(ORDEN, JSON.stringify(o, null, 2));
+      return json({ ok: true, ordenes: o.ordenes });
+    }
+    if (req.method === 'POST' && url === '/orden/clear') { fs.writeFileSync(ORDEN, '{ "ordenes": [] }\n'); return json({ ok: true }); }
+
+    const f = path.join(ROOT, url === '/' ? 'panel.html' : url);
+    if (!f.startsWith(ROOT)) return err(403, 'forbidden');
+    fs.readFile(f, (e, data) => {
+      if (e) return err(404, '404');
+      res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'text/plain', 'Cache-Control': 'no-store' });
+      res.end(data);
     });
-    return;
-  }
-  const f = path.join(ROOT, url === '/' ? 'panel.html' : url);
-  if (!f.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
-  fs.readFile(f, (err, data) => {
-    if (err) { res.writeHead(404); return res.end('404'); }
-    res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'text/plain', 'Cache-Control': 'no-store' });
-    res.end(data);
-  });
+  } catch (e) { err(500, String(e.message || e).slice(0, 200)); }
 }).listen(PORT, () => console.log('IdeasSaaS panel en http://localhost:' + PORT + '/panel.html'));

@@ -96,6 +96,18 @@
   .pcard .go { margin-top:.55rem; display:inline-block; background:var(--accent); color:#04231f; border:0;
     border-radius:999px; padding:.4rem 1.1rem; font-weight:700; font-size:.82rem; cursor:pointer; }
   .pcard .go:hover { filter:brightness(1.1); }
+  .pcard .go2 { margin-top:.55rem; margin-left:.4rem; display:inline-block; background:#1e293b; color:var(--text);
+    border:1px solid #475569; border-radius:999px; padding:.4rem 1.1rem; font-weight:600; font-size:.82rem; cursor:pointer; }
+  .pcard .pcform { margin-top:.7rem; border-top:1px dashed #1c2438; padding-top:.6rem; }
+  .pcard .pcform label { display:block; font-size:.78rem; color:var(--dim); margin:.45rem 0 .15rem; }
+  .pcard .pcform input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    border-radius:7px; padding:.45rem .6rem; font-size:.85rem; font-family:inherit; }
+  .pcard .pcform button { margin-top:.6rem; background:var(--accent); color:#04231f; border:0; border-radius:999px;
+    padding:.4rem 1rem; font-weight:700; font-size:.8rem; cursor:pointer; }
+  #push-area { display:flex; gap:.5rem; align-items:center; }
+  #push-btn { background:#1e293b; border:1px solid #475569; color:var(--text); border-radius:999px;
+    padding:.3rem .85rem; font-size:.78rem; font-weight:600; cursor:pointer; }
+  #push-btn.armado { border-color:var(--err); color:var(--err); animation:pulse 1s infinite; }
   .prow { display:flex; gap:.6rem; background:var(--surface); border:1px solid var(--border); border-radius:9px;
     padding:.45rem .75rem; margin-bottom:.35rem; font-size:.83rem; align-items:baseline; }
   .prow .psec { font-weight:800; color:#64748b; font-size:.72rem; min-width:18px; }
@@ -114,7 +126,10 @@
   <span id="h-tema" class="dim"></span>
   <span id="avance-chip" class="chip">avance —</span>
   <span style="flex:1"></span>
-  <span id="h-live" class="chip">● vivo</span>
+  <span id="push-area">
+    <button id="push-btn" style="display:none"></button>
+    <span id="h-live" class="chip">● vivo</span>
+  </span>
 </header>
 
 <div id="req">
@@ -243,12 +258,14 @@ async function loadRegistro() {
       const docsPct = c.docsTotal ? Math.round((c.docsTotal - c.docsFaltan) / c.docsTotal * 100) : 0;
       const et = (c.etapa || '').toLowerCase();
       const cmd = ETAPA_CMD[et] ? ETAPA_CMD[et] + ' ' + (c.ruta || c.proyecto) : '';
+      const pcs = c.porConfirmar || [];
       return `
       <div class="pcard">
         <div class="ptop">
           <span class="pname">${c.proyecto}</span>
           <span class="etag ${et}">${c.etapa || '—'}</span>
           ${c.puerto ? `<span class="chip">:${c.puerto}</span>` : ''}
+          ${pcs.length ? `<span class="badge condicional">${pcs.length} por confirmar</span>` : ''}
         </div>
         <div class="pprox">${c.proximo_paso || 'sin próximo paso definido'}</div>
         <div class="pmeta">
@@ -256,11 +273,62 @@ async function loadRegistro() {
           ${c.actualizado ? `<span>act. ${c.actualizado}</span>` : ''}
         </div>
         <div class="docsbar"><i style="width:${docsPct}%"></i></div>
-        ${cmd ? `<button class="go" data-cmd="${cmd.replace(/"/g, '&quot;')}">▶ Continuar</button>` : ''}
+        ${pcs.length ? `
+        <div class="pcform" id="pcf-${i}" style="display:none">
+          ${pcs.map((q, j) => `
+            <label>${q}</label>
+            <input id="pcin-${i}-${j}" maxlength="300" placeholder="tu respuesta…">`).join('')}
+          <button data-save="${i}" data-ruta="${(c.ruta || '').replace(/"/g, '&quot;')}">✓ Guardar respuestas</button>
+        </div>` : ''}
+        ${cmd || pcs.length ? `
+          ${cmd ? `<button class="go" data-cmd="${cmd.replace(/"/g, '&quot;')}">▶ Continuar</button>` : ''}
+          ${pcs.length ? `<button class="go2" data-toggle="${i}">✍️ Responder POR CONFIRMAR</button>` : ''}
+          <button class="go2" data-orden="ciclo" data-proy="${(c.ruta || c.proyecto).replace(/"/g, '&quot;')}">🤖 Pedir al agente</button>
+        ` : ''}
       </div>`;
     }).join('');
     $('proy-list').querySelectorAll('.go').forEach(b => {
       b.addEventListener('click', () => continuar(b.getAttribute('data-cmd')));
+    });
+    $('proy-list').querySelectorAll('[data-toggle]').forEach(b => {
+      b.addEventListener('click', () => {
+        const f = $('pcf-' + b.getAttribute('data-toggle'));
+        f.style.display = f.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+    $('proy-list').querySelectorAll('[data-save]').forEach(b => {
+      b.addEventListener('click', async () => {
+        const i = b.getAttribute('data-save');
+        const card = cards[i];
+        const respuestas = {};
+        (card.porConfirmar || []).forEach((q, j) => {
+          const v = ($('pcin-' + i + '-' + j) || {}).value;
+          if (v && v.trim()) respuestas[q] = v.trim();
+        });
+        if (!Object.keys(respuestas).length) { toast('Responde al menos 1 pregunta'); return; }
+        b.disabled = true;
+        try {
+          const r = await fetch('resolver', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ruta: b.getAttribute('data-ruta'), respuestas })
+          });
+          const d = await r.json();
+          if (d.ok) { toast('✓ ' + d.resueltos + ' resueltas y commiteadas — recargando…'); setTimeout(loadRegistro, 1500); }
+          else toast('✗ ' + (d.error || 'error'));
+        } catch (_) { toast('✗ sin conexión con el servidor del panel'); }
+        finally { b.disabled = false; }
+      });
+    });
+    $('proy-list').querySelectorAll('[data-orden]').forEach(b => {
+      b.addEventListener('click', async () => {
+        try {
+          await fetch('orden', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipo: b.getAttribute('data-orden'), proyecto: b.getAttribute('data-proy'), detalle: 'solicitado desde panel' })
+          });
+          toast('✓ Orden lista — pega /panel en el chat y el agente la ejecuta');
+        } catch (_) { toast('✗ sin conexión'); }
+      });
     });
   } catch (_) {}
 }
@@ -279,6 +347,39 @@ async function loadPendientes() {
       </div>`).join('');
   } catch (_) {}
 }
+
+let pushArmado = false, pushH = null;
+async function loadGit() {
+  try {
+    const r = await fetch('git?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const g = await r.json();
+    const b = $('push-btn');
+    if (g.ahead > 0) {
+      b.style.display = 'inline-block';
+      if (!pushArmado) b.textContent = `⬆ Push ${g.branch} (${g.ahead})`;
+    } else b.style.display = 'none';
+  } catch (_) {}
+}
+$('push-btn').addEventListener('click', async () => {
+  const b = $('push-btn');
+  if (!pushArmado) {
+    pushArmado = true;
+    b.classList.add('armado');
+    b.textContent = '⚠ ¿Seguro? pulsa otra vez';
+    clearTimeout(pushH);
+    pushH = setTimeout(() => { pushArmado = false; b.classList.remove('armado'); loadGit(); }, 5000);
+    return;
+  }
+  clearTimeout(pushH); pushArmado = false; b.classList.remove('armado');
+  b.textContent = 'pushing…'; b.disabled = true;
+  try {
+    const r = await fetch('push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"confirm":true}' });
+    const d = await r.json();
+    if (d.ok) toast('✓ Push OK a ' + d.branch); else toast('✗ ' + (d.error || 'push falló'));
+  } catch (_) { toast('✗ sin conexión'); }
+  b.disabled = false; loadGit();
+});
 
 async function solicitar() {
   const tema = $('req-tema').value.trim();
@@ -345,10 +446,12 @@ tick();
 loadHistorial();
 loadRegistro();
 loadPendientes();
+loadGit();
 setInterval(tick, 2000);
 setInterval(loadHistorial, 15000);
 setInterval(loadRegistro, 30000);
 setInterval(loadPendientes, 30000);
+setInterval(loadGit, 60000);
 </script>
 </body>
 </html>
