@@ -397,6 +397,9 @@ skills:
   lapvtfu:
     path: .suit/skills/domain/lapvtfu.yaml
 
+  copywriter-meta:
+    path: .suit/skills/domain/copywriter-meta.yaml
+
   prompt-reviewer:
     path: .suit/skills/process/prompt-reviewer.yaml
 

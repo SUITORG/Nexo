@@ -1,0 +1,36 @@
+skill:
+  name: copywriter-meta
+  display_name: "Copywriter Meta Ads — Compliance + 5 variaciones"
+  version: 1.0.0
+  type: process
+  domain: marketing
+  description: >
+    Facebook/Instagram Ads copywriter con compliance Meta y psicología del consumidor.
+    Modo GENERAR: 5 variaciones completamente reescritas (gancho distinto cada una,
+    tono humano, urgencia natural, cero baneo: sin tú acusatorio, promesas ni urgencia falsa).
+    Modo REVISAR: auditoría por demanda de copy/hooks/estrategias con checklist Meta + scoring
+    + reescritura mínima. Complementa viral-short-form (hooks) y landing-page-copywriter
+    (frameworks); no genera campañas ni toca Ads Manager.
+  dependencies: []
+  triggers:
+    - "copy para facebook"
+    - "anuncios meta"
+    - "5 copys"
+    - "ads copy"
+    - "texto de anuncio"
+    - "revisa este copy"
+    - "mejora este hook"
+    - "compliance meta"
+    - "copy baneado"
+    - "pauta facebook"
+  inputs:
+    - "producto/servicio + público (o BRIEF existente)"
+    - "copy/hook existente (modo revisar)"
+  outputs:
+    - "5 variaciones Gancho/Cuerpo/Temporal+CTA"
+    - "auditoría compliance + scoring + reescritura"
+  discoverable: true
+  context_hint:
+    - ".agents/skills/copywriter-meta/SKILL.md"
+    - "GuiaTotal/plantillas/brief-cliente.md"
+    - ".suit/registry/agents.yaml (agente copywriter — frameworks PAS/AIDA)"

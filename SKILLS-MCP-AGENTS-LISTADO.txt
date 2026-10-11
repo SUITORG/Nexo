@@ -115,6 +115,9 @@
   clusters-seo              .claude/skills/clusters-seo
                             -> .agents\skills\clusters-seo
                             Generador de clústeres SEO + GEO/AEO para landings multi-inquilino: a partir de un registro de Config_Empresas diseña hasta 9 clústeres diferenciados 
+  copywriter-meta           .claude/skills/copywriter-meta
+                            -> .agents\skills\copywriter-meta
+                            Copywriter experto en Facebook/Instagram Ads con compliance Meta y psicología del consumidor. DOS modos: (1) GENERAR — 5 variaciones completamente dif
   cut-the-curve             .claude/skills/cut-the-curve
                             -> .agents\skills\cut-the-curve
                             The technique catalog: five velocity-matched SEAMS (zoom-through, INVERSE zoom-through, cut-the-curve, waterfall cut, rack-focus blur-cut) plus the tw
@@ -168,7 +171,7 @@
                             Install, discover, and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add or hyperframes catalog, ins
   ideas-saas                .claude/skills/ideas-saas
                             -> .agents\skills\ideas-saas
-                            Pipeline por-corrida de ideas SaaS: genera 3 ideas digitales de alta viabilidad 80/20, las evalúa con el Panel de Expertos (Mercado/Técnico/Riesgo/Fin
+                            Pipeline por-corrida de ideas SaaS en 2 modos: IDEAS RÁPIDAS (3 ideas 80/20 → panel juzgador → gate >=7.5 → scaffold + promoción automática a módulo S
   last30days                .claude/skills/last30days
                             -> .agents\skills\last30days
                             AI-powered cross-platform research agent. Researches any topic across Reddit, X/Twitter, YouTube, TikTok, Instagram, Hacker News, Polymarket, GitHub, 
@@ -226,7 +229,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 48 (4 locales + 44 symlinks)
+  TOTAL CLAUDE: 49 (4 locales + 45 symlinks)
 
 
 ========================================================================
@@ -241,6 +244,7 @@
   changelog-video           .opencode/skills/changelog-video
   ciclo                     .opencode/skills/ciclo
   clusters-seo              .opencode/skills/clusters-seo
+  copywriter-meta           .opencode/skills/copywriter-meta
   cut-the-curve             .opencode/skills/cut-the-curve
   descubrimiento            .opencode/skills/descubrimiento
   embedded-captions         .opencode/skills/embedded-captions
@@ -282,7 +286,7 @@
   talking-head-recut        .opencode/skills/talking-head-recut
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 48
+  TOTAL OPENCODE: 49
 
 
 ========================================================================
@@ -419,13 +423,13 @@
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
   Skills SuitOS (.yaml)    44      44         0
-  Skills Claude Code       48        4        44
-  Skills OpenCode           48       48         0
+  Skills Claude Code       49        4        45
+  Skills OpenCode           49       49         0
   Registry YAML           45      45         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   202
+  TOTAL                   204
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================
