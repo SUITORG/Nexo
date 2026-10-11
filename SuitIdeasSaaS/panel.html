@@ -8,7 +8,7 @@
 <style>
   :root { --accent:#2dd4bf; --bg:#0b0f1a; --surface:#131a2a; --text:#f5f6fa; --dim:#aab3c5; --border:#232c42; --err:#f87171; --warn:#fbbf24; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:130px; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:220px; }
   header { padding:1.4rem 1.6rem .6rem; display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap; }
   header h1 { font-size:1.35rem; }
   .chip { background:#1e293b; border:1px solid #475569; border-radius:999px; padding:.2rem .7rem; font-size:.78rem; color:var(--dim); }
@@ -78,6 +78,26 @@
   #hist .hname { font-weight:600; }
   #hist .hscore { color:var(--accent); font-weight:800; }
   #avance-chip { font-variant-numeric:tabular-nums; }
+  /* proyectos + pendientes */
+  #proy, #pend { padding:1.2rem 1.6rem 0; }
+  #proy h2, #pend h2 { font-size:.85rem; color:#38bdf8; margin-bottom:.5rem; }
+  .pcards { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:.7rem; }
+  .pcard { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:.9rem 1rem; font-size:.86rem; }
+  .pcard .ptop { display:flex; gap:.5rem; align-items:center; margin-bottom:.35rem; flex-wrap:wrap; }
+  .pcard .pname { font-weight:700; font-size:.95rem; }
+  .etag { font-size:.68rem; font-weight:700; padding:.12rem .5rem; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; }
+  .etag.idea { background:rgba(56,189,248,.15); color:#38bdf8; }
+  .etag.construccion { background:rgba(45,212,191,.15); color:var(--accent); }
+  .etag.mantenimiento { background:rgba(251,191,36,.12); color:var(--warn); }
+  .pcard .pprox { color:var(--dim); margin:.3rem 0; }
+  .pcard .pmeta { color:#64748b; font-size:.75rem; display:flex; gap:.8rem; flex-wrap:wrap; }
+  .pcard .docsbar { margin-top:.4rem; height:5px; border-radius:5px; background:#1c2438; overflow:hidden; }
+  .pcard .docsbar i { display:block; height:100%; background:var(--accent); }
+  .prow { display:flex; gap:.6rem; background:var(--surface); border:1px solid var(--border); border-radius:9px;
+    padding:.45rem .75rem; margin-bottom:.35rem; font-size:.83rem; align-items:baseline; }
+  .prow .psec { font-weight:800; color:#64748b; font-size:.72rem; min-width:18px; }
+  .prow .ptit { font-weight:600; }
+  .prow .pdet { color:var(--dim); font-size:.78rem; flex:1; }
 </style>
 </head>
 <body>
@@ -107,6 +127,16 @@
 <div id="hist">
   <h2>📦 Corridas anteriores (aprobadas)</h2>
   <div id="hist-list"><div class="dim" style="font-size:.85rem">ninguna aún</div></div>
+</div>
+
+<div id="proy">
+  <h2>📁 Proyectos registrados (etapa + próximo paso)</h2>
+  <div id="proy-list" class="pcards"></div>
+</div>
+
+<div id="pend">
+  <h2>📋 Pendientes abiertos (GuiaTotal/PENDIENTES.md)</h2>
+  <div id="pend-list"></div>
 </div>
 
 <div id="tools">
@@ -179,6 +209,51 @@ async function loadHistorial() {
   } catch (_) {}
 }
 
+const ETAPA_CMD = { idea: '/guia-total', construccion: '/ciclo', mantenimiento: '/ciclo' };
+
+async function loadRegistro() {
+  try {
+    const r = await fetch('registro?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const cards = await r.json();
+    if (!cards.length) return;
+    $('proy-list').innerHTML = cards.map(c => {
+      const docsPct = c.docsTotal ? Math.round((c.docsTotal - c.docsFaltan) / c.docsTotal * 100) : 0;
+      const et = (c.etapa || '').toLowerCase();
+      return `
+      <div class="pcard">
+        <div class="ptop">
+          <span class="pname">${c.proyecto}</span>
+          <span class="etag ${et}">${c.etapa || '—'}</span>
+          ${c.puerto ? `<span class="chip">:${c.puerto}</span>` : ''}
+        </div>
+        <div class="pprox">${c.proximo_paso || 'sin próximo paso definido'}</div>
+        <div class="pmeta">
+          <span>docs ${c.docsTotal - c.docsFaltan}/${c.docsTotal}</span>
+          ${c.actualizado ? `<span>act. ${c.actualizado}</span>` : ''}
+          ${ETAPA_CMD[et] ? `<span style="color:var(--accent)">${ETAPA_CMD[et]} ${c.ruta || ''}</span>` : ''}
+        </div>
+        <div class="docsbar"><i style="width:${docsPct}%"></i></div>
+      </div>`;
+    }).join('');
+  } catch (_) {}
+}
+
+async function loadPendientes() {
+  try {
+    const r = await fetch('pendientes?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const items = await r.json();
+    if (!items.length) return;
+    $('pend-list').innerHTML = items.map(p => `
+      <div class="prow">
+        <span class="psec">${p.seccion}</span>
+        <span class="ptit">${p.titulo}</span>
+        <span class="pdet">${p.detalle || ''}</span>
+      </div>`).join('');
+  } catch (_) {}
+}
+
 async function solicitar() {
   const tema = $('req-tema').value.trim();
   const modo = $('req-modo').value;
@@ -242,8 +317,12 @@ $('req-btn').addEventListener('click', solicitar);
 $('req-tema').addEventListener('keydown', e => { if (e.key === 'Enter') solicitar(); });
 tick();
 loadHistorial();
+loadRegistro();
+loadPendientes();
 setInterval(tick, 2000);
 setInterval(loadHistorial, 15000);
+setInterval(loadRegistro, 30000);
+setInterval(loadPendientes, 30000);
 </script>
 </body>
 </html>
