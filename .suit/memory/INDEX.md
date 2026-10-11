@@ -68,11 +68,12 @@
 ## lessons/ (1)
 - [soluciones.md](lessons/soluciones.md) — Memoria de Soluciones y Optimización
 
-## patterns/ (4)
+## patterns/ (5)
 - [brief-format.md](patterns/brief-format.md) — Pattern: Formato del Brief (vector en `logo_url`)
 - [estandares-inmutables.md](patterns/estandares-inmutables.md) — 🛡️ Estándares Inmutables del Proyecto (Guardrails)
 - [lexico-usuario.md](patterns/lexico-usuario.md) — Léxico del usuario — glosario intención ↔ herramienta
 - [restricciones-modo-visual.md](patterns/restricciones-modo-visual.md) — Restricciones de Modo Visual
+- [rucp.md](patterns/rucp.md) — RUCP — regla de trabajo del usuario (respuestas y código)
 
 ## pending/ (9)
 - [generative-media-skills.md](pending/generative-media-skills.md) — Generative Media Skills — Roadmap
