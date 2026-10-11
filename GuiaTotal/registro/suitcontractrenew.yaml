@@ -1,0 +1,46 @@
+# GuiaTotal/registro/suitcontractrenew.yaml
+proyecto: "SuitContractRenew"
+ruta: "SuitContractRenew/"
+etapa: "construccion"
+creado: "2026-10-10"
+actualizado: "2026-10-10"
+
+validacion:
+  problema: "Talleres HVAC 1-5 técnicos pierden renovaciones de contratos de mantenimiento que viven en Excel/papel/memoria: cada una perdida = $600-2,000/año."
+  hipotesis: "Si damos alertas 60 días antes del vencimiento por $29-49/mo (vs $200-500 enterprise), el dueño paga para proteger su ingreso recurrente."
+  metrica_exito: "MVP: contratos cargados en onboarding 30 min, reporte semanal revisado, retención de suscripción mes a mes"
+  evidencia: "SuitIdeasSaaS/2026-10-10b-evaluacion.md — panel 7.8 APROBADO; mercado 118k talleres HVAC (US); ICP y objeciones en docs/MANUAL_VENTAS.md"
+  decision: "continuar"
+  motivo: "Promoción automática Etapa 4 (is-005) del pipeline ideas-saas"
+
+evaluacion:
+  panel_juzgador: "APROBADO"
+  veredicto_fecha: "2026-10-10"
+  recomendaciones: "7.8/10 — ver SuitIdeasSaaS/2026-10-10b-evaluacion.md"
+
+integraciones:
+  convive_sheets: false
+  id_empresa: null            # producto propio de SuitOrg, NO tenant
+  db_engine: "sqlite-local"   # python/stdlib SQLite WAL (ADR-049); Supabase solo para leads de la landing
+  brief_en_logo_url: false
+  brief_local: "SuitContractRenew/docs/BRIEF_CLIENTE.md"   # 21 segmentos brief-engine, sin fila Config_Empresas
+
+taxonomia:
+  industria: "Software B2B / SaaS"
+  nicho: "Oficios y servicios (HVAC, plomería, eléctrica)"
+  especializacion: "Contratos de mantenimiento y alertas de renovación"
+
+documentos:
+  analista_proy: false
+  taxonomia: false
+  contrato: false
+  identidad: false
+  manuales: true              # SuitContractRenew/docs/MANUAL_*.md (5)
+  brief_cliente: true         # docs/BRIEF_CLIENTE.md
+  prompt_origen: false
+  checklist_lanzamiento: false
+  arquitectura_docs: false
+
+puerto: 3017
+
+proximo_paso: "Fase 2: landing en SuitContractRenew/landing/ servida por Express 3017 + captura de leads en Supabase"
