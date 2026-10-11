@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-11 | **Total archivos:** 1600 JS/GS
+**Generado:** 2026-10-11 | **Total archivos:** 1603 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10111,6 +10111,21 @@
 | 10 | `run` |
 | 19 | `zoompanExpr` |
 | 30 | `renderVideo` |
+
+## `SuitContractRenew/db/client.js`
+
+| Línea | Función |
+|-------|---------|
+| 7 | `runPy` |
+| 21 | `addContract` |
+| 28 | `dueContracts` |
+
+## `SuitContractRenew/handlers/contracts.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `handleAdd` |
+| 15 | `handleDue` |
 
 ## `SuitCotizador/public/js/admin.js`
 

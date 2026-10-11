@@ -95,6 +95,7 @@
 | `suitcvlo-open` | `SuitCVLO-open/` | archivos locales | 3015 |
 | `suitcvlo-gcpy` | `SuitCVLOGCPy/` | archivos en Drive (Colab) | n/a (notebook) |
 | `suit-review-pulse` | `SuitReviewPulse/` | sqlite-local (Python) | 3016 |
+| `suit-contract-renew` | `SuitContractRenew/` | sqlite-local (Python stdlib) | 3017 |
 
 ## Memory
 | Directory | Purpose |

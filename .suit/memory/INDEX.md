@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (46 ADRs)
+## decisions/ (47 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -53,6 +53,7 @@
 | ADR-046 | [Drawer INFO de MAPA_VISUAL generado desde MAPA.md](ADR-046-mapa-drawer-generado.md) | Accepted (2026-10-09) | 2026-10-09 | `GuiaTotal/MAPA_VISUAL.html` mantenía a mano un objeto `INFO['§']` (título, pasos, skills, GAS, archivos, lista de skills ajenas) que… | - |
 | ADR-047 | [Skill ideas-saas — pipeline idea → panel → MVP Python local](ADR-047-ideas-saas-pipeline.md) | Accepted (2026-10-09) | 2026-10-09 | Se necesitaba un pipeline que: (1) genere ideas SaaS de alta viabilidad 80/20, (2) las evalúe con Panel de Expertos, (3) si el juez… | - |
 | ADR-048 | [Promoción automática idea-saas → módulo Suit*](ADR-048-promocion-idea-suit-modulo.md) | Accepted (2026-10-10) | 2026-10-10 | La skill `ideas-saas` (ADR-047) solo scaffoldeaba un MVP Python suelto en `SuitIdeasSaaS/<slug>/`, desconectado del ecosistema Suit*… | 047 |
+| ADR-049 | [Primer ciclo completo ideas-saas → SuitContractRenew (corrida…](ADR-049-ideas-saas-corrida-contractrenew.md) | Accepted (2026-10-10) | 2026-10-10 | Segunda corrida del pipeline `ideas-saas` (ADR-047) con la Etapa 4 de promoción ya operativa (ADR-048). Usuario pide: 3 ideas nuevas →… | 047, 048 |
 
 ## bugs/ (6)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…

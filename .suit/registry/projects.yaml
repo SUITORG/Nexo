@@ -665,3 +665,36 @@ projects:
         port: 3016
         type: express
     notes: "Núcleo Python en python/ (spawn desde db/client.js, PYTHONIOENCODING=utf-8). MVP single-tenant SQLite; si se integra al ecosistema multi-tenant ? Supabase + id_empresa (regla #1)."
+
+  suit-contract-renew:
+    name: "SuitContractRenew — Contratos de mantenimiento"
+    path: SuitContractRenew/
+    description: "Idea ganadora pipeline ideas-saas 2026-10-10b (juez 7.8): registro de contratos de mantenimiento (HVAC/gremios 1-5 técnicos) + alertas de renovación 60 días. Wrapper Express 3017 sobre núcleo Python stdlib + SQLite WAL. Ver ADR-047/048/049."
+    skills:
+      - javascript
+    context:
+      - SuitContractRenew/index.js
+      - SuitContractRenew/package.json
+      - SuitContractRenew/docs/MANUAL_TECNICO.md
+      - SuitContractRenew/docs/MANUAL_VENTAS.md
+    frontend:
+      public: false
+      public_route: "none (API only)"
+      public_gate: "none"
+      staff: true
+      staff_route: "none (API + CLI)"
+      staff_gate: "proveedor SuitOrg"
+      api_endpoints:
+        - "GET /api/health"
+        - "POST /api/contracts"
+        - "GET /api/contracts/due/:dias?"
+    environment:
+      PORT: 3017
+      TYPE: service
+      DB: sqlite-local
+    servers:
+      - name: contractrenew
+        path: SuitContractRenew/index.js
+        port: 3017
+        type: express
+    notes: "Núcleo Python stdlib puro (sin pip) en python/, spawn desde db/client.js con PYTHONIOENCODING=utf-8. Soft-delete con activo=0. MVP single-tenant; integración futura ? Supabase + id_empresa."
