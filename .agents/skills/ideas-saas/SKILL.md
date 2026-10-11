@@ -13,6 +13,16 @@ description: "Pipeline por-corrida de ideas SaaS en 2 modos: IDEAS RÁPIDAS (3 i
 
 **Hardware asumido:** AMD Ryzen 7000 / Radeon / 64 GB RAM, Python local, SQLite, concurrencia asyncio sin saturar iGPU.
 
+## Panel de monitoreo (obligatorio en cada corrida)
+
+Durante toda la corrida, mantener vivo `SuitIdeasSaaS/estado.json` (formato: `corrida`, `modo`, `tema`, `fase`, `ideas[]`, `herramientas[]`, `log[]`). El usuario monitorea en **`http://localhost:3001/SuitIdeasSaaS/panel.html`** (poll cada 2s; el server raíz sirve el repo completo).
+
+- **`fase`** en cada cambio: `ideacion → panel → analisis → sintesis → rejuez → scaffold → promocion → brief → activos → landing → cierre → fin` (en rápidas: omitir `analisis/sintesis/rejuez/brief/activos/landing`, saltando de `panel` a `scaffold`).
+- **`ideas[]`**: `{nombre, nicho, score, reScore, estado}` — `estado`: `aprobado|condicional|rechazado`; `reScore` se llena en la 2V.
+- **`herramientas[]`**: al activar cada skill/herramienta → `{nombre, estado:'activo', detalle}` (ej: `panel-juzgador`, `analista-proy`, `sintesis-proyecto`, `google-flow`, `supabase`, `clasp`); al terminar → `estado:'ok'`; pendientes → `pendiente`.
+- **`log[]`**: push `{ts, fase, msg}` en cada paso (máx. mantener últimos 200).
+- Si la corrida termina o falla, `fase` queda en el estado real + log del error — no resetear el JSON a idle.
+
 ## Flujo (3 etapas)
 
 ### Etapa 1 — Ideación (3 ideas, filtro 80/20)

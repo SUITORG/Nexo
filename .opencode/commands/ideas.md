@@ -15,4 +15,6 @@ Ejecuta la skill `ideas-saas` (`.agents/skills/ideas-saas/SKILL.md`) de principi
 
 `--rapidas` = omite 2V y 4G (modo original, sin investigación).
 
+**Panel de monitoreo:** durante toda la corrida mantén vivo `SuitIdeasSaaS/estado.json` (fase, ideas, herramientas, log) — el usuario ve el avance en `http://localhost:3001/SuitIdeasSaaS/panel.html`. Formato y fases en la skill.
+
 Respeta is-001..is-005 (gate 7.5, 1 sola promoción, Python local, manual, promoción automática). **Reejecución desde cero:** borrar salidas de corridas anteriores y volver a correr `/ideas`.

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>IdeasSaaS — Panel de corrida</title>
+<style>
+  :root { --accent:#2dd4bf; --bg:#0b0f1a; --surface:#131a2a; --text:#f5f6fa; --dim:#aab3c5; --border:#232c42; --err:#f87171; --warn:#fbbf24; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:130px; }
+  header { padding:1.4rem 1.6rem .6rem; display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap; }
+  header h1 { font-size:1.35rem; }
+  .chip { background:#1e293b; border:1px solid #475569; border-radius:999px; padding:.2rem .7rem; font-size:.78rem; color:var(--dim); }
+  .chip.on { border-color:var(--accent); color:var(--accent); }
+  .dim { color:var(--dim); }
+  #ideas { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:.8rem; padding:1rem 1.6rem; }
+  .idea { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1rem 1.1rem; }
+  .idea h3 { font-size:1.02rem; margin-bottom:.25rem; }
+  .idea .nicho { font-size:.85rem; color:var(--dim); margin-bottom:.5rem; }
+  .score { font-weight:800; font-size:1.1rem; color:var(--accent); }
+  .badge { float:right; font-size:.72rem; font-weight:700; padding:.15rem .55rem; border-radius:999px; }
+  .badge.aprobado { background:rgba(45,212,191,.15); color:var(--accent); }
+  .badge.condicional { background:rgba(251,191,36,.12); color:var(--warn); }
+  .badge.rechazado { background:rgba(248,113,113,.12); color:var(--err); }
+  .badge.pendiente { background:#1e293b; color:var(--dim); }
+  #empty { padding:2rem 1.6rem; color:var(--dim); }
+  /* ventanita herramientas */
+  #tools { position:fixed; right:14px; bottom:96px; width:280px; max-height:38vh; overflow-y:auto;
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:.8rem .9rem; z-index:30;
+    box-shadow:0 10px 34px rgba(0,0,0,.45); }
+  #tools h2 { font-size:.72rem; letter-spacing:.8px; text-transform:uppercase; color:#38bdf8; margin-bottom:.5rem; }
+  .tool { display:flex; gap:.45rem; align-items:baseline; padding:.28rem 0; font-size:.86rem; border-bottom:1px dashed #1c2438; }
+  .tool:last-child { border-bottom:0; }
+  .dot { width:8px; height:8px; border-radius:50%; flex:0 0 8px; margin-top:4px; }
+  .dot.activo { background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 1.2s infinite; }
+  .dot.ok { background:#4ade80; }
+  .dot.pendiente { background:#475569; }
+  @keyframes pulse { 50% { opacity:.35; } }
+  .tool .tname { font-weight:600; }
+  .tool .tinfo { color:var(--dim); font-size:.78rem; }
+  /* log */
+  #log { position:fixed; left:14px; bottom:96px; width:min(46vw,520px); max-height:38vh; overflow-y:auto;
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:.8rem .9rem; z-index:30; }
+  #log h2 { font-size:.72rem; letter-spacing:.8px; text-transform:uppercase; color:#38bdf8; margin-bottom:.5rem; }
+  .lg { font-size:.82rem; padding:.18rem 0; color:var(--dim); }
+  .lg b { color:var(--text); font-weight:600; }
+  .lg time { color:#64748b; font-size:.72rem; margin-right:.4rem; }
+  /* barra fases inferior */
+  #phases { position:fixed; left:0; right:0; bottom:0; background:#0d1322; border-top:1px solid var(--border);
+    padding:.7rem 1rem .9rem; z-index:40; overflow-x:auto; }
+  #phases .track { display:flex; gap:.35rem; min-width:max-content; align-items:stretch; }
+  .ph { flex:1; min-width:96px; text-align:center; padding:.45rem .3rem; border-radius:10px; font-size:.72rem;
+    color:#64748b; background:#111827; border:1px solid #1c2438; position:relative; }
+  .ph .fl { display:block; font-weight:700; font-size:.78rem; color:#94a3b8; }
+  .ph.hecho { border-color:#14532d; background:rgba(74,222,128,.08); }
+  .ph.hecho .fl { color:#4ade80; }
+  .ph.activo { border-color:var(--accent); background:rgba(45,212,191,.1); }
+  .ph.activo .fl { color:var(--accent); }
+  .ph.activo::after { content:''; position:absolute; inset:auto 0 -1px 0; height:3px; border-radius:3px; background:var(--accent); animation:pulse 1.2s infinite; }
+  .ph.omitido { opacity:.4; text-decoration:line-through; }
+  .ph small { display:block; font-size:.62rem; color:#475569; margin-top:.1rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>💡 IdeasSaaS — Panel de corrida</h1>
+  <span id="h-corrida" class="chip">sin corrida</span>
+  <span id="h-modo" class="chip">—</span>
+  <span id="h-tema" class="dim"></span>
+  <span style="flex:1"></span>
+  <span id="h-live" class="chip">● vivo</span>
+</header>
+
+<div id="empty">Esperando la próxima corrida… corre <code>/ideas [tema]</code> y este panel se actualiza solo.</div>
+<div id="ideas"></div>
+
+<div id="tools">
+  <h2>🛠 Herramientas en uso</h2>
+  <div id="tools-list"><div class="tool"><span class="dot pendiente"></span><span class="tinfo">ninguna activa</span></div></div>
+</div>
+
+<div id="log">
+  <h2>📜 Log de fase</h2>
+  <div id="log-list"><div class="lg">—</div></div>
+</div>
+
+<div id="phases"><div class="track" id="track"></div></div>
+
+<script>
+const FASES = [
+  { id:'ideacion',    label:'Ideación',        grupo:'Ideas' },
+  { id:'panel',       label:'Panel Juzgador',  grupo:'Evaluación' },
+  { id:'analisis',    label:'Análisis',        grupo:'Verificación', solo:'verificadas' },
+  { id:'sintesis',    label:'Síntesis',        grupo:'Documentación', solo:'verificadas' },
+  { id:'rejuez',      label:'Re-juez',         grupo:'Verificación', solo:'verificadas' },
+  { id:'scaffold',    label:'Desarrollo MVP',  grupo:'Desarrollo' },
+  { id:'promocion',   label:'Promoción Suit*', grupo:'Desarrollo' },
+  { id:'brief',       label:'BRIEF',           grupo:'Comercial', solo:'verificadas' },
+  { id:'activos',     label:'Activos Flow',    grupo:'Comercial', solo:'verificadas' },
+  { id:'landing',     label:'Landing+Leads',   grupo:'Comercial', solo:'verificadas' },
+  { id:'cierre',      label:'Cierre',          grupo:'Docs' },
+  { id:'fin',         label:'✔ Completado',    grupo:'' }
+];
+
+const $ = id => document.getElementById(id);
+const idx = f => FASES.findIndex(p => p.id === f);
+
+function renderPhases(fase, modo) {
+  const cur = idx(fase);
+  $('track').innerHTML = FASES.map((p, i) => {
+    let cls = 'ph';
+    if (p.solo === 'verificadas' && modo === 'rapidas') cls += ' omitido';
+    else if (i < cur) cls += ' hecho';
+    else if (i === cur) cls += ' activo';
+    return `<div class="${cls}"><span class="fl">${p.label}</span><small>${p.grupo}</small></div>`;
+  }).join('');
+}
+
+function render(e) {
+  $('h-corrida').textContent = e.corrida ? `Corrida ${e.corrida}` : 'sin corrida';
+  $('h-corrida').className = 'chip' + (e.corrida ? ' on' : '');
+  $('h-modo').textContent = e.modo || '—';
+  $('h-modo').className = 'chip' + (e.modo === 'verificadas' ? ' on' : '');
+  $('h-tema').textContent = e.tema ? `· ${e.tema}` : '';
+  renderPhases(e.fase || 'idle', e.modo);
+
+  const ideas = e.ideas || [];
+  $('empty').style.display = ideas.length ? 'none' : 'block';
+  $('ideas').innerHTML = ideas.map(it => `
+    <div class="idea">
+      <span class="badge ${it.estado || 'pendiente'}">${it.estado || 'pendiente'}</span>
+      <h3>${it.nombre || '—'}</h3>
+      <div class="nicho">${it.nicho || ''}</div>
+      ${it.score != null ? `<span class="score">${Number(it.score).toFixed(1)}</span>` : '<span class="dim">sin score</span>'}
+      ${it.reScore != null ? ` → <span class="score">${Number(it.reScore).toFixed(1)}</span> <small class="dim">(re-juez)</small>` : ''}
+    </div>`).join('');
+
+  $('tools-list').innerHTML = (e.herramientas || []).map(h => `
+    <div class="tool">
+      <span class="dot ${h.estado || 'pendiente'}"></span>
+      <span><span class="tname">${h.nombre}</span>${h.detalle ? ` <span class="tinfo">— ${h.detalle}</span>` : ''}</span>
+    </div>`).join('') || '<div class="tool"><span class="dot pendiente"></span><span class="tinfo">ninguna activa</span></div>';
+
+  $('log-list').innerHTML = (e.log || []).slice(-40).reverse().map(l => `
+    <div class="lg"><time>${l.ts ? l.ts.slice(11, 19) : ''}</time><b>${l.fase || ''}</b> ${l.msg || ''}</div>`).join('') || '<div class="lg">—</div>';
+}
+
+async function tick() {
+  try {
+    const r = await fetch('estado.json?t=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) render(await r.json());
+  } catch (_) { $('h-live').textContent = '○ sin conexión'; $('h-live').className = 'chip'; }
+}
+tick();
+setInterval(tick, 2000);
+</script>
+</body>
+</html>
