@@ -224,6 +224,7 @@ node prospectos/prospect.js --ciudad Monterrey --nicho restaurantes --radio 3
 - **Model `gemini-1.5-flash` deprecated** — migrate to OpenRouter free models
 - **Stripe webhook** must be registered before `express.json()` in `server.js` (line 13)
 - **`no-cors` fetch to GAS** returns opaque response — can't read body on client side
+- **Google Flow MCP vive fuera del repo**: `C:\Users\rojo-\Downloads\google-flow-mcp` (stdio, `opencode.json` → `mcp["google-flow"]`). Chrome ≥136 exige perfil dedicado (`chrome-profile/` en el clone, ya configurado); cerrar Chrome antes de `npm run start-browser` (CDP 9222); login manual la 1ª vez. UI de Flow = chat (ProseMirror): tools del adapter del canvas viejo dan SAFETY BLOCK — generar vía chat o esperar patch. Ver ADR-050
 - No tests, lint, or typecheck exist — smoke test manually
 
 ## Workflow (SuitOS-aware)

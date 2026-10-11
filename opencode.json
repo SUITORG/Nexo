@@ -102,6 +102,11 @@
       "type": "remote",
       "url": "https://mcp.neon.tech/mcp",
       "enabled": false
+    },
+    "google-flow": {
+      "type": "local",
+      "command": ["node", "C:/Users/rojo-/Downloads/google-flow-mcp/src/index.js"],
+      "enabled": true
     }
   },
   "command": {
