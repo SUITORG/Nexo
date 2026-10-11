@@ -33,7 +33,7 @@ taxonomia:
 documentos:
   analista_proy: false
   taxonomia: false
-  contrato: false
+  contrato: true               # docs/CONTRATO.md creado ciclo f0 2026-10-11
   identidad: false
   manuales: true              # SuitContractRenew/docs/MANUAL_*.md (5)
   brief_cliente: true         # docs/BRIEF_CLIENTE.md
@@ -43,4 +43,4 @@ documentos:
 
 puerto: 3017
 
-proximo_paso: "Fase 3 (hecha 2026-10-11): landing + leads Supabase + hero Flow OK. Siguiente: decidir push a main, prospección HVAC con script MANUAL_VENTAS, o /ciclo para CONTRATO.md + docs faltantes (2/9)"
+proximo_paso: "Ciclo f0 hecho (CONTRATO.md). Esperando: 1) corrección/OK de 4 POR CONFIRMAR del contrato 2) decidir push a main 3) prospección HVAC con script MANUAL_VENTAS"
