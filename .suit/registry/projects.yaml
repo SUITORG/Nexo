@@ -633,3 +633,35 @@ projects:
       DB: archivos-en-drive
     servers: []
     notes: "Copia del pipeline desde SuitCVLO-open@7c612d3. NO se toca SuitCVLO-open (limite explicito del usuario 2026-10-02). Si la app local y Colab escriben el mismo idxfotos.xlsx a la vez, riesgo de pisarse: elegir uno por tanda."
+  suit-review-pulse:
+    name: "SuitReviewPulse — Monitor de reseñas Google"
+    path: SuitReviewPulse/
+    description: "Idea ganadora pipeline ideas-saas (juez 7.8, 2026-10-10): alerta de reseñas nuevas, caída de rating y borradores de respuesta. Wrapper Express 3016 sobre núcleo Python asyncio + SQLite WAL. Ver ADR-047 (pipeline) y ADR-048 (promoción)."
+    skills:
+      - javascript
+    context:
+      - SuitReviewPulse/index.js
+      - SuitReviewPulse/package.json
+      - SuitReviewPulse/docs/MANUAL_TECNICO.md
+      - SuitReviewPulse/docs/MANUAL_VENTAS.md
+    frontend:
+      public: false
+      public_route: "none (API only)"
+      public_gate: "none"
+      staff: true
+      staff_route: "none (API + CLI)"
+      staff_gate: "proveedor SuitOrg"
+      api_endpoints:
+        - "GET /api/health"
+        - "POST /api/import"
+        - "GET /api/report/:empresa"
+    environment:
+      PORT: 3016
+      TYPE: service
+      DB: sqlite-local
+    servers:
+      - name: reviewpulse
+        path: SuitReviewPulse/index.js
+        port: 3016
+        type: express
+    notes: "Núcleo Python en python/ (spawn desde db/client.js, PYTHONIOENCODING=utf-8). MVP single-tenant SQLite; si se integra al ecosistema multi-tenant ? Supabase + id_empresa (regla #1)."

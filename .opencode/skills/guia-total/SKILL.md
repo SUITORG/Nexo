@@ -1,6 +1,6 @@
 ---
 name: guia-total
-description: "Guía total de proyecto: orquesta el ciclo de vida completo de un proyecto de software — validación de idea (analista-proy + panel-juzgador), taxonomía de mercado, identidad corporativa, construcción (ciclo), manuales del proyecto, prompt origen vivo y manual de operación de SuitOrg (Config_Empresas + regla taxonomía→brief). Úsala SIEMPRE que el usuario diga 'guia total', 'guia-total', 'proyecto nuevo', 'tengo una idea', '¿vale la pena este proyecto?', 'validar idea', 'crea los manuales', 'manual del cliente', 'manual del proveedor', 'manual técnico', 'manual de pruebas', 'manual de operación', 'cómo configuro empresas', 'operar empresas', 'brief incompleto', 'taxonomía del brief', 'identidad corporativa', 'misión y visión', 'valores e impacto', 'políticas de la empresa', 'taxonomía', 'industrias y nichos', 'prompt origen', o pida llevar un proyecto por su etapa (idea → construcción → mantenimiento)."
+description: "Guía total de proyecto: orquesta el ciclo de vida completo de un proyecto de software — validación de idea (analista-proy + panel-juzgador), taxonomía de mercado, identidad corporativa, construcción (ciclo), manuales del proyecto, prompt origen vivo y manual de operación de SuitOrg (Config_Empresas + regla taxonomía→brief). Úsala SIEMPRE que el usuario diga 'guia total', 'guia-total', 'proyecto nuevo', 'tengo una idea', '¿vale la pena este proyecto?', 'validar idea', 'crea los manuales', 'manual del cliente', 'manual del proveedor', 'manual técnico', 'manual de pruebas', 'manual de ventas', 'ventas.md', 'manual de operación', 'cómo configuro empresas', 'operar empresas', 'brief incompleto', 'taxonomía del brief', 'identidad corporativa', 'misión y visión', 'valores e impacto', 'políticas de la empresa', 'taxonomía', 'industrias y nichos', 'prompt origen', o pida llevar un proyecto por su etapa (idea → construcción → mantenimiento)."
 license: MIT
 compatibility: "Claude Code y opencode. Requiere git. Opcional: MCP de Supabase (taxonomía/brief) y acceso a Google Sheets/GAS (Config_Empresas)."
 metadata:
@@ -62,7 +62,7 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 1. `⚡ ciclo` F0 → `CONTRATO.md` (usa `Analista_Proy.md` como insumo, igual que hace `ciclo`).
 2. `⚡ ciclo` F1-F7 con commits por fase.
 3. Si cambian funciones: `node scripts/generate-index.js` → `INDEX_FUNCIONES.md`.
-4. En paralelo (independientes entre sí): crea `<Proyecto>/docs/CHECKLIST-LANZAMIENTO.md`, los 4 `<Proyecto>/docs/MANUAL_*.md` y `<Proyecto>/docs/PROMPT_ORIGEN.md` si faltan.
+4. En paralelo (independientes entre sí): crea `<Proyecto>/docs/CHECKLIST-LANZAMIENTO.md`, los 5 `<Proyecto>/docs/MANUAL_*.md` y `<Proyecto>/docs/PROMPT_ORIGEN.md` si faltan.
 5. Si el usuario pide documentación de arquitectura, o la guía requiere generar docs al nacer el proyecto: `⚡ auditoria` — esa skill decide qué crear según sus umbrales (≥25% → faltantes marcados `PROBABLE`; ≥84% → completar/actualizar). Nunca obligatorio.
 6. `🔄 actualiza GuiaTotal/registro/<proyecto>.yaml` (etapa → construcción).
 
@@ -95,11 +95,12 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 
 - `📁 lee` código del proyecto, `CONTRATO.md`, `README*`.
 - `📄 lee GuiaTotal/templates/MANUAL_*.md`.
-- `✍️ crea` en `<Proyecto>/docs/` los 4, si faltan (independientes → créalos en orden, sin esperas entre ellos):
+- `✍️ crea` en `<Proyecto>/docs/` los 5, si faltan (independientes → créalos en orden, sin esperas entre ellos):
   - `MANUAL_CLIENTE.md` — frontend, quien solicita el servicio.
   - `MANUAL_PROVEEDOR.md` — frontend, quien presta el servicio.
   - `MANUAL_TECNICO.md` — backend, mantenimiento y configuración.
   - `MANUAL_PRUEBAS.md` — modo test/dev, E2E sin dependencias reales.
+  - `MANUAL_VENTAS.md` (alias `ventas.md`) — pitch, ICP, precios, objeciones y script de cierre (plantilla libre si no hay `GuiaTotal/templates/MANUAL_VENTAS.md`; estructura: Producto · ICP · Pitch 60s · Precios · Objeciones · Script · Cierre · Qué NO prometer).
 - Cada manual lleva en cabecera `Para qué sirve este manual` y `Audiencia` (obligatorio).
 - **Actualización**: si ya existen, compara `Última actualización` del manual contra `git log -1 --format=%cd -- <archivos relevantes>`; solo reescribe los manuales cuyo contenido quedó viejo. No regeneres los al día.
 

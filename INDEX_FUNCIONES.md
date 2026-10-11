@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-09 | **Total archivos:** 1596 JS/GS
+**Generado:** 2026-10-11 | **Total archivos:** 1600 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10727,6 +10727,21 @@
 | 6 | `sendMessage` |
 | 39 | `parseIncoming` |
 
+## `SuitReviewPulse/db/client.js`
+
+| Línea | Función |
+|-------|---------|
+| 9 | `runPy` |
+| 23 | `importRows` |
+| 34 | `report` |
+
+## `SuitReviewPulse/handlers/reviews.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `handleImport` |
+| 15 | `handleReport` |
+
 ## `SuitServiHogar/scripts/generate-index.js`
 
 | Línea | Función |
@@ -11763,6 +11778,17 @@
 |-------|---------|
 | 28 | `walk` |
 | 42 | `main` |
+
+### `scripts/gen-mapa-info.js`
+
+| Línea | Función |
+|-------|---------|
+| 24 | `titleCase` |
+| 35 | `skillsSet` |
+| 47 | `stepsFromBody` |
+| 73 | `filesFromBody` |
+| 87 | `parseMapa` |
+| 123 | `buildInfoBlock` |
 
 ### `scripts/generate-adr-index.js`
 

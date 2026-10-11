@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-10-10
+  Generado: 2026-10-11
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -47,6 +47,7 @@
   deployer                  .suit/skills/process/deployer.yaml
   descubrimiento            .suit/skills/process/descubrimiento.yaml
   guia-total                .suit/skills/process/guia-total.yaml
+  ideas-saas                .suit/skills/process/ideas-saas.yaml
   iteration-loop            .suit/skills/process/iteration-loop.yaml
   panel-juzgador            .suit/skills/process/panel-juzgador.yaml
   pantalla-limpia           .suit/skills/process/pantalla-limpia.yaml
@@ -76,7 +77,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 43 skills
+  TOTAL SUITOS: 44 skills
 
 
 ========================================================================
@@ -323,6 +324,7 @@
   guia-total                          Orquestador canónico: lleva un proyecto por idea → validación → constr
   auditoria                           Auditoría read-first de un sistema: inventario, C4 en Mermaid, reglas 
   descubrimiento                      Fase obligatoria antes de escribir/modificar/eliminar código: clasific
+  ideas-saas                          Pipeline por-corrida (manual, nada de cron): genera 3 ideas digitales 
   pantalla-limpia                     Auditoría genérica de claridad por pantalla (solo lectura): inventario
   empresa-registro                    Alta semiautomatica de empresas en Config_Empresas (maestro Google She
   clusters-seo                        Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO (
@@ -333,7 +335,7 @@
   registry-query                      Consulta el registry declarativo (.suit/registry/*.yaml: agents, skill
   parametros                          Cambia comportamiento global o puntual del sistema SIN tocar código, e
 
-  TOTAL REGISTRY: 44 skills declaradas
+  TOTAL REGISTRY: 45 skills declaradas
 
 
 ========================================================================
@@ -416,14 +418,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    43      43         0
+  Skills SuitOS (.yaml)    44      44         0
   Skills Claude Code       48        4        44
   Skills OpenCode           48       48         0
-  Registry YAML           44      44         0
+  Registry YAML           45      45         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   200
+  TOTAL                   202
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

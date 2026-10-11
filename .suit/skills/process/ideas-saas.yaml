@@ -1,7 +1,7 @@
 skill:
   name: ideas-saas
   display_name: "Ideas SaaS — Pipeline idea → Panel → MVP Python"
-  version: 1.0.0
+  version: 1.1.0
   type: process
   domain: ideation
 
@@ -10,8 +10,9 @@ skill:
     de alta viabilidad 80/20 con fuentes gratuitas, las evalúa con el Panel de
     Expertos (Mercado/Técnico/Riesgo/Financiero + Juez) y, si el juez aprueba
     con score >= 7.5, hace el scaffold de un MVP en Python local en
-    SuitIdeasSaaS/<slug> (stdlib + requests/bs4/pandas/sqlite3, concurrencia
-    asyncio, sin cloud de pago). Si ninguna aprueba, solo informe, sin scaffold.
+    SuitIdeasSaaS/<slug> y lo promueve automáticamente a módulo Suit* estándar
+    (Suit<NombrePascal>/: Express + python/ + 5 manuales incl. MANUAL_VENTAS.md
+    + projects.yaml + ADR — ADR-048). Si ninguna aprueba, solo informe, sin scaffold.
 
   dependencies:
     - panel-juzgador
@@ -26,6 +27,9 @@ skill:
     - keyword: "necesito un MVP"
     - keyword: "ideas de negocio"
     - keyword: "pipeline autónomo de ideas"
+    - keyword: "corrida desde cero"
+    - keyword: "desarrolla la ganadora"
+    - keyword: "/ideas"
 
   inputs:
     - "tema o nicho opcional del usuario; si no, filtro libre 80/20"
@@ -33,6 +37,7 @@ skill:
   outputs:
     - "SuitIdeasSaaS/<fecha>-evaluacion.md (informe con scores y veredicto)"
     - "SuitIdeasSaaS/<slug>/ (solo si score >= 7.5): main.py, requirements.txt, db.py, README.md"
+    - "Suit<NombrePascal>/ (promoción Etapa 4 si >= 7.5): Express + python/ + 5 manuales + projects.yaml + ADR"
 
   context_hint:
     - ".agents/skills/ideas-saas/SKILL.md"
@@ -51,7 +56,11 @@ skill:
     - id: is-004
       description: "Es por-corrida manual — nunca disparar por cron ni en background sin que el usuario lo pida"
       severity: error
+    - id: is-005
+      description: "Promoción Etapa 4 automática tras aprobación: Suit<NombrePascal>/ estándar (Express + python/ + 5 manuales incl. MANUAL_VENTAS.md + projects.yaml + ADR)"
+      severity: error
 
   validation:
     - "Evaluación persistida en SuitIdeasSaaS/<fecha>-evaluacion.md"
     - "Scaffold (si hay) en SuitIdeasSaaS/<slug>/ con main.py, requirements.txt, db.py, README.md"
+    - "Si >= 7.5: módulo Suit<NombrePascal>/ con Express, 5 manuales y registro projects.yaml/ADR/MAPA"

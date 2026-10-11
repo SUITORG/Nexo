@@ -94,6 +94,7 @@
 | `suitpoke` | `SuitPoke/` | - (memoria) | 3014 |
 | `suitcvlo-open` | `SuitCVLO-open/` | archivos locales | 3015 |
 | `suitcvlo-gcpy` | `SuitCVLOGCPy/` | archivos en Drive (Colab) | n/a (notebook) |
+| `suit-review-pulse` | `SuitReviewPulse/` | sqlite-local (Python) | 3016 |
 
 ## Memory
 | Directory | Purpose |
