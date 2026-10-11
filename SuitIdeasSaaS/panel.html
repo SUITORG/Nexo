@@ -60,6 +60,24 @@
   .ph.activo::after { content:''; position:absolute; inset:auto 0 -1px 0; height:3px; border-radius:3px; background:var(--accent); animation:pulse 1.2s infinite; }
   .ph.omitido { opacity:.4; text-decoration:line-through; }
   .ph small { display:block; font-size:.62rem; color:#475569; margin-top:.1rem; }
+  /* solicitar corrida */
+  #req { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; padding:.6rem 1.6rem 0; }
+  #req input, #req select { background:var(--surface); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:.55rem .75rem; font-size:.9rem; font-family:inherit; }
+  #req input { flex:1; min-width:220px; }
+  #req button { background:var(--accent); color:#04231f; border:0; border-radius:999px; padding:.55rem 1.3rem;
+    font-weight:700; font-size:.9rem; cursor:pointer; }
+  #req button:disabled { opacity:.5; cursor:wait; }
+  #req-msg { font-size:.82rem; color:var(--dim); }
+  /* historial */
+  #hist { padding:1.2rem 1.6rem 0; }
+  #hist h2 { font-size:.85rem; color:#38bdf8; margin-bottom:.5rem; }
+  #hist .hrow { display:flex; gap:.8rem; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:.55rem .8rem; margin-bottom:.4rem; font-size:.85rem; align-items:center; }
+  #hist .hdate { color:#64748b; font-size:.75rem; min-width:90px; }
+  #hist .hname { font-weight:600; }
+  #hist .hscore { color:var(--accent); font-weight:800; }
+  #avance-chip { font-variant-numeric:tabular-nums; }
 </style>
 </head>
 <body>
@@ -68,12 +86,28 @@
   <span id="h-corrida" class="chip">sin corrida</span>
   <span id="h-modo" class="chip">—</span>
   <span id="h-tema" class="dim"></span>
+  <span id="avance-chip" class="chip">avance —</span>
   <span style="flex:1"></span>
   <span id="h-live" class="chip">● vivo</span>
 </header>
 
-<div id="empty">Esperando la próxima corrida… corre <code>/ideas [tema]</code> y este panel se actualiza solo.</div>
+<div id="req">
+  <input id="req-tema" maxlength="200" placeholder="Tema o nicho a investigar (ej: talleres HVAC, dentistas MX)…">
+  <select id="req-modo">
+    <option value="verificadas">Verificadas (ciclo completo)</option>
+    <option value="rapidas">Rápidas (solo panel)</option>
+  </select>
+  <button id="req-btn">Pedir corrida</button>
+  <span id="req-msg"></span>
+</div>
+
+<div id="empty">Escribe un tema arriba y pulsa «Pedir corrida». Luego corre <code>/ideas</code> en el chat — el panel seguirá el avance aquí.</div>
 <div id="ideas"></div>
+
+<div id="hist">
+  <h2>📦 Corridas anteriores (aprobadas)</h2>
+  <div id="hist-list"><div class="dim" style="font-size:.85rem">ninguna aún</div></div>
+</div>
 
 <div id="tools">
   <h2>🛠 Herramientas en uso</h2>
@@ -106,6 +140,14 @@ const FASES = [
 const $ = id => document.getElementById(id);
 const idx = f => FASES.findIndex(p => p.id === f);
 
+function avancePct(fase, modo) {
+  const aplicables = FASES.filter(p => p.id !== 'fin' && !(p.solo === 'verificadas' && modo === 'rapidas'));
+  const cur = idx(fase);
+  if (cur < 0) return 0;
+  const hechas = aplicables.findIndex(p => p.id === fase);
+  return Math.min(100, Math.round(hechas / aplicables.length * 100));
+}
+
 function renderPhases(fase, modo) {
   const cur = idx(fase);
   $('track').innerHTML = FASES.map((p, i) => {
@@ -117,12 +159,56 @@ function renderPhases(fase, modo) {
   }).join('');
 }
 
+async function loadHistorial() {
+  try {
+    const r = await fetch('historial.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const h = await r.json();
+    const rows = (h.corridas || []).slice().reverse();
+    if (!rows.length) return;
+    $('hist-list').innerHTML = rows.map(c => `
+      <div class="hrow">
+        <span class="hdate">${c.fecha || ''}</span>
+        <span class="hname">${c.nombre || c.tema || '—'}</span>
+        <span class="dim">${c.nicho || ''}</span>
+        <span style="flex:1"></span>
+        ${c.score != null ? `<span class="hscore">${Number(c.score).toFixed(1)}</span>` : ''}
+        <span class="badge ${c.estado || 'aprobado'}">${c.estado || 'aprobado'}</span>
+        <span class="dim">${c.modulo || ''}</span>
+      </div>`).join('');
+  } catch (_) {}
+}
+
+async function solicitar() {
+  const tema = $('req-tema').value.trim();
+  const modo = $('req-modo').value;
+  if (!tema) { $('req-msg').textContent = 'Escribe un tema primero.'; return; }
+  $('req-btn').disabled = true;
+  $('req-msg').textContent = 'Enviando…';
+  try {
+    const r = await fetch('solicitud', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tema, modo })
+    });
+    if (!r.ok) throw new Error();
+    $('req-msg').textContent = '✓ Solicitud guardada. Ahora corre /ideas en el chat — usará este tema.';
+  } catch (_) {
+    $('req-msg').textContent = '✗ No se pudo guardar (¿corre el panel via abrir-panel.bat en :8099?).';
+  } finally {
+    $('req-btn').disabled = false;
+  }
+}
+
 function render(e) {
   $('h-corrida').textContent = e.corrida ? `Corrida ${e.corrida}` : 'sin corrida';
   $('h-corrida').className = 'chip' + (e.corrida ? ' on' : '');
   $('h-modo').textContent = e.modo || '—';
   $('h-modo').className = 'chip' + (e.modo === 'verificadas' ? ' on' : '');
   $('h-tema').textContent = e.tema ? `· ${e.tema}` : '';
+  const pct = avancePct(e.fase || 'idle', e.modo);
+  $('avance-chip').textContent = e.fase === 'idle' ? 'avance —' : `avance ${pct}%`;
+  $('avance-chip').className = 'chip' + (pct > 0 ? ' on' : '');
   renderPhases(e.fase || 'idle', e.modo);
 
   const ideas = e.ideas || [];
@@ -152,8 +238,12 @@ async function tick() {
     if (r.ok) render(await r.json());
   } catch (_) { $('h-live').textContent = '○ sin conexión'; $('h-live').className = 'chip'; }
 }
+$('req-btn').addEventListener('click', solicitar);
+$('req-tema').addEventListener('keydown', e => { if (e.key === 'Enter') solicitar(); });
 tick();
+loadHistorial();
 setInterval(tick, 2000);
+setInterval(loadHistorial, 15000);
 </script>
 </body>
 </html>

@@ -1,0 +1,6 @@
+{
+  "corridas": [
+    { "fecha": "2026-10-10", "nombre": "SuitReviewPulse", "nicho": "reseñas Google PYMEs 1-5 sedes", "score": 7.8, "estado": "aprobado", "modulo": "puerto 3016" },
+    { "fecha": "2026-10-10b", "nombre": "SuitContractRenew", "nicho": "contratos mantenimiento talleres HVAC", "score": 7.8, "estado": "aprobado", "modulo": "puerto 3017" }
+  ]
+}

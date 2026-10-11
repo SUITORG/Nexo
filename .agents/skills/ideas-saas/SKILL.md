@@ -15,13 +15,16 @@ description: "Pipeline por-corrida de ideas SaaS en 2 modos: IDEAS RÁPIDAS (3 i
 
 ## Panel de monitoreo (obligatorio en cada corrida)
 
-Durante toda la corrida, mantener vivo `SuitIdeasSaaS/estado.json` (formato: `corrida`, `modo`, `tema`, `fase`, `ideas[]`, `herramientas[]`, `log[]`). El usuario monitorea en **`http://localhost:3001/SuitIdeasSaaS/panel.html`** (poll cada 2s; el server raíz sirve el repo completo).
+**Solicitud:** si existe `SuitIdeasSaaS/solicitud.json` (escrita desde el panel web), usarla como entrada: tomar `tema` y `modo` de ese archivo y **borrarlo tras leerlo** (consumido). Si no existe, seguir el flujo normal (tema del usuario o libre).
+
+Durante toda la corrida, mantener vivo `SuitIdeasSaaS/estado.json` (formato: `corrida`, `modo`, `tema`, `fase`, `ideas[]`, `herramientas[]`, `log[]`). El usuario monitorea en **`http://localhost:8099/panel.html`** (`abrir-panel.bat`; puerto raíz 3001 también lo sirve estático pero sin POST de solicitud).
 
 - **`fase`** en cada cambio: `ideacion → panel → analisis → sintesis → rejuez → scaffold → promocion → brief → activos → landing → cierre → fin` (en rápidas: omitir `analisis/sintesis/rejuez/brief/activos/landing`, saltando de `panel` a `scaffold`).
 - **`ideas[]`**: `{nombre, nicho, score, reScore, estado}` — `estado`: `aprobado|condicional|rechazado`; `reScore` se llena en la 2V.
 - **`herramientas[]`**: al activar cada skill/herramienta → `{nombre, estado:'activo', detalle}` (ej: `panel-juzgador`, `analista-proy`, `sintesis-proyecto`, `google-flow`, `supabase`, `clasp`); al terminar → `estado:'ok'`; pendientes → `pendiente`.
 - **`log[]`**: push `{ts, fase, msg}` en cada paso (máx. mantener últimos 200).
 - Si la corrida termina o falla, `fase` queda en el estado real + log del error — no resetear el JSON a idle.
+- **Al alcanzar `fase: fin`** (o al fallar de forma definitiva): hacer **append** a `SuitIdeasSaaS/historial.json` (`{corridas:[…]}`) un registro `{fecha, nombre, nicho, score, estado, modulo}` por cada idea evaluada (no solo la ganadora) — es el histórico que ve el panel.
 
 ## Flujo (3 etapas)
 
