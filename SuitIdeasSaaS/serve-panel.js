@@ -56,7 +56,7 @@ function leerPorConfirmar(ruta) {
     const txt = fs.readFileSync(path.join(REPO, ruta, 'docs', 'CONTRATO.md'), 'utf8');
     const m = txt.match(/## POR CONFIRMAR\n([\s\S]*?)(\n## |$)/);
     if (!m) return [];
-    return m[1].split('\n').filter(l => l.trim().startsWith('- ')).map(l => {
+    return m[1].split('\n').filter(l => l.trim().startsWith('- ') && !/^- \[x\]/.test(l.trim())).map(l => {
       const original = l.replace(/^\s*- /, '').trim();
       const a = amigable(original);
       return { original, pregunta: a.pregunta, ops: a.ops };
@@ -69,7 +69,7 @@ function resolverPorConfirmar(ruta, respuestas) {
   const txt = fs.readFileSync(f, 'utf8');
   const m = txt.match(/(## POR CONFIRMAR\n)([\s\S]*?)(\n## |$)/);
   if (!m) return { ok: false, error: 'seccion POR CONFIRMAR no encontrada' };
-  const items = m[2].split('\n').filter(l => l.trim().startsWith('- '));
+  const items = m[2].split('\n').filter(l => l.trim().startsWith('- ') && !/^- \[x\]/.test(l.trim()));
   const hoy = new Date().toISOString().slice(0, 10);
   const quedan = [], resueltos = [];
   items.forEach((line, i) => {

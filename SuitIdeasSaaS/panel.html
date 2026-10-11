@@ -149,7 +149,7 @@
   <span id="req-msg"></span>
 </div>
 
-<div id="empty">Escribe un tema arriba y pulsa «Pedir corrida». Luego corre <code>/ideas</code> en el chat — el panel seguirá el avance aquí.</div>
+<div id="empty"><b>¿Continuar un proyecto?</b> Baja a «Proyectos registrados» y pulsa <b>▶ Continuar</b> o <b>🤖 Pedir al agente</b> en su tarjeta — luego escribe <code>/panel</code> en el chat.<br><b>¿Idea nueva?</b> Escribe un tema arriba (ej: "dentistas") y pulsa «Pedir corrida» — luego <code>/ideas</code> en el chat.</div>
 <div id="ideas"></div>
 
 <div id="hist">
@@ -427,7 +427,7 @@ async function solicitar() {
       body: JSON.stringify({ tema, modo })
     });
     if (!r.ok) throw new Error();
-    $('req-msg').textContent = '✓ Solicitud guardada. Ahora corre /ideas en el chat — usará este tema.';
+    $('req-msg').textContent = '✓ Guardado. Ve al chat y escribe /ideas — usará ese tema.';
   } catch (_) {
     $('req-msg').textContent = '✗ No se pudo guardar (¿corre el panel via abrir-panel.bat en :8099?).';
   } finally {
