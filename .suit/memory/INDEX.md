@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (48 ADRs)
+## decisions/ (49 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -55,6 +55,7 @@
 | ADR-048 | [Promoción automática idea-saas → módulo Suit*](ADR-048-promocion-idea-suit-modulo.md) | Accepted (2026-10-10) | 2026-10-10 | La skill `ideas-saas` (ADR-047) solo scaffoldeaba un MVP Python suelto en `SuitIdeasSaaS/<slug>/`, desconectado del ecosistema Suit*… | 047 |
 | ADR-049 | [Primer ciclo completo ideas-saas → SuitContractRenew (corrida…](ADR-049-ideas-saas-corrida-contractrenew.md) | Accepted (2026-10-10) | 2026-10-10 | Segunda corrida del pipeline `ideas-saas` (ADR-047) con la Etapa 4 de promoción ya operativa (ADR-048). Usuario pide: 3 ideas nuevas →… | 047, 048 |
 | ADR-050 | [Google Flow local MCP para assets creativos](ADR-050-google-flow-mcp-local.md) | Accepted (2026-10-10) | 2026-10-10 | SuitContractRenew (y futuros módulos) necesitan assets creativos (imágenes, videos) para landing y ventas. Google Flow… | 049 |
+| ADR-051 | [Ideas Verificadas + Go-to-Market automático (ciclo natural completo)](ADR-051-ideas-verificadas-go-to-market.md) | Accepted (2026-10-10) | 2026-10-10 | Las primeras corridas de `ideas-saas` (ADR-047/048/049) generaban ideas y evaluaban con el panel, pero sin investigación web real ("ideas… | 047, 048, 049, 050 |
 
 ## bugs/ (6)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…
