@@ -3,7 +3,7 @@ proyecto: "SuitContractRenew"
 ruta: "SuitContractRenew/"
 etapa: "construccion"
 creado: "2026-10-10"
-actualizado: "2026-10-10"
+actualizado: "2026-10-11"
 
 validacion:
   problema: "Talleres HVAC 1-5 técnicos pierden renovaciones de contratos de mantenimiento que viven en Excel/papel/memoria: cada una perdida = $600-2,000/año."
@@ -43,4 +43,4 @@ documentos:
 
 puerto: 3017
 
-proximo_paso: "Fase 2: landing en SuitContractRenew/landing/ servida por Express 3017 + captura de leads en Supabase"
+proximo_paso: "Fase 3 (hecha 2026-10-11): landing + leads Supabase + hero Flow OK. Siguiente: decidir push a main, prospección HVAC con script MANUAL_VENTAS, o /ciclo para CONTRATO.md + docs faltantes (2/9)"
