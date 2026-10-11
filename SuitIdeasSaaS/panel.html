@@ -93,11 +93,17 @@
   .pcard .pmeta { color:#64748b; font-size:.75rem; display:flex; gap:.8rem; flex-wrap:wrap; }
   .pcard .docsbar { margin-top:.4rem; height:5px; border-radius:5px; background:#1c2438; overflow:hidden; }
   .pcard .docsbar i { display:block; height:100%; background:var(--accent); }
+  .pcard .go { margin-top:.55rem; display:inline-block; background:var(--accent); color:#04231f; border:0;
+    border-radius:999px; padding:.4rem 1.1rem; font-weight:700; font-size:.82rem; cursor:pointer; }
+  .pcard .go:hover { filter:brightness(1.1); }
   .prow { display:flex; gap:.6rem; background:var(--surface); border:1px solid var(--border); border-radius:9px;
     padding:.45rem .75rem; margin-bottom:.35rem; font-size:.83rem; align-items:baseline; }
   .prow .psec { font-weight:800; color:#64748b; font-size:.72rem; min-width:18px; }
   .prow .ptit { font-weight:600; }
   .prow .pdet { color:var(--dim); font-size:.78rem; flex:1; }
+  #toast { position:fixed; left:50%; bottom:150px; transform:translateX(-50%); background:#0f172a; border:1px solid var(--accent);
+    color:var(--accent); border-radius:999px; padding:.55rem 1.3rem; font-size:.88rem; font-weight:600; z-index:60;
+    display:none; box-shadow:0 8px 24px rgba(0,0,0,.5); }
 </style>
 </head>
 <body>
@@ -150,6 +156,7 @@
 </div>
 
 <div id="phases"><div class="track" id="track"></div></div>
+<div id="toast"></div>
 
 <script>
 const FASES = [
@@ -211,15 +218,31 @@ async function loadHistorial() {
 
 const ETAPA_CMD = { idea: '/guia-total', construccion: '/ciclo', mantenimiento: '/ciclo' };
 
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._h);
+  t._h = setTimeout(() => { t.style.display = 'none'; }, 3200);
+}
+
+function continuar(cmd) {
+  navigator.clipboard.writeText(cmd).then(
+    () => toast('Copiado: ' + cmd + ' — pégalo en el chat'),
+    () => toast('Comando: ' + cmd + ' — cópialo al chat')
+  );
+}
+
 async function loadRegistro() {
   try {
     const r = await fetch('registro?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     const cards = await r.json();
     if (!cards.length) return;
-    $('proy-list').innerHTML = cards.map(c => {
+    $('proy-list').innerHTML = cards.map((c, i) => {
       const docsPct = c.docsTotal ? Math.round((c.docsTotal - c.docsFaltan) / c.docsTotal * 100) : 0;
       const et = (c.etapa || '').toLowerCase();
+      const cmd = ETAPA_CMD[et] ? ETAPA_CMD[et] + ' ' + (c.ruta || c.proyecto) : '';
       return `
       <div class="pcard">
         <div class="ptop">
@@ -231,11 +254,14 @@ async function loadRegistro() {
         <div class="pmeta">
           <span>docs ${c.docsTotal - c.docsFaltan}/${c.docsTotal}</span>
           ${c.actualizado ? `<span>act. ${c.actualizado}</span>` : ''}
-          ${ETAPA_CMD[et] ? `<span style="color:var(--accent)">${ETAPA_CMD[et]} ${c.ruta || ''}</span>` : ''}
         </div>
         <div class="docsbar"><i style="width:${docsPct}%"></i></div>
+        ${cmd ? `<button class="go" data-cmd="${cmd.replace(/"/g, '&quot;')}">▶ Continuar</button>` : ''}
       </div>`;
     }).join('');
+    $('proy-list').querySelectorAll('.go').forEach(b => {
+      b.addEventListener('click', () => continuar(b.getAttribute('data-cmd')));
+    });
   } catch (_) {}
 }
 
