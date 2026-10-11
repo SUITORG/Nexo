@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{NOMBRE}} — {{SLOGAN}}</title>
+    <meta name="description" content="{{META_DESC}}">
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        :root {
+            --accent: {{ACCENT}};
+            --bg: #0b0f1a;
+            --surface: #131a2a;
+            --text: #f5f6fa;
+            --text-dim: #aab3c5;
+            --border: #232c42;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        .container { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
+        h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); margin-bottom: 1.5rem; text-align: center; }
+        .dim { color: var(--text-dim); }
+        .hero { text-align: center; padding: 5.5rem 1.5rem 4.5rem; background-image: linear-gradient(rgba(11, 15, 26, 0.78), rgba(11, 15, 26, 0.94)), url('assets/hero.png'); background-size: cover; background-position: center right; }
+        .hero h1 { font-size: clamp(2.2rem, 6vw, 3.5rem); font-weight: 800; margin-bottom: 0.75rem; }
+        .slogan { font-size: clamp(1.1rem, 2.5vw, 1.4rem); color: var(--accent); font-weight: 700; margin-bottom: 1.25rem; }
+        .oferta { display: inline-block; background: linear-gradient(135deg, var(--accent), #38bdf8); color: #04231f; padding: 0.55rem 1.5rem; border-radius: 999px; font-weight: 700; margin-bottom: 1rem; }
+        .descripcion { color: var(--text-dim); max-width: 620px; margin: 0 auto 2rem; }
+        .cta { display: inline-block; background: var(--accent); color: #04231f; text-decoration: none; padding: 1rem 2.75rem; border-radius: 999px; font-weight: 700; font-size: 1.1rem; transition: transform 0.15s ease; }
+        .cta:hover { transform: translateY(-2px); }
+        section { padding: 3.5rem 0; }
+        .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
+        .card h3 { margin-bottom: 0.5rem; font-size: 1.05rem; }
+        .card p { color: var(--text-dim); font-size: 0.95rem; }
+        .num { display: inline-block; background: var(--accent); color: #04231f; font-weight: 800; border-radius: 999px; width: 28px; height: 28px; text-align: center; line-height: 28px; margin-bottom: 0.75rem; }
+        .precios { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; max-width: 700px; margin: 0 auto; }
+        .plan { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; text-align: center; }
+        .plan.destacado { border-color: var(--accent); box-shadow: 0 0 30px rgba(45, 212, 191, 0.15); }
+        .plan .precio { font-size: 2rem; font-weight: 800; color: var(--accent); }
+        .plan ul { list-style: none; margin: 1.25rem 0 1.75rem; color: var(--text-dim); font-size: 0.95rem; text-align: left; }
+        .plan li { padding: 0.3rem 0; }
+        .plan li::before { content: "✓ "; color: var(--accent); font-weight: 700; }
+        .plan .cta { font-size: 1rem; padding: 0.8rem 2rem; }
+        .faq { max-width: 700px; margin: 0 auto; }
+        .faq .card { margin-bottom: 0.75rem; }
+        .faq strong { color: var(--text); }
+        form { max-width: 520px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; }
+        label { display: block; font-size: 0.9rem; font-weight: 600; margin: 0.9rem 0 0.3rem; }
+        input, select, textarea { width: 100%; padding: 0.7rem 0.9rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+        button[type="submit"] { width: 100%; margin-top: 1.5rem; background: var(--accent); color: #04231f; border: none; padding: 1rem; border-radius: 999px; font-weight: 700; font-size: 1.05rem; cursor: pointer; }
+        button[type="submit"]:disabled { opacity: 0.6; cursor: wait; }
+        .form-msg { margin-top: 1rem; text-align: center; font-weight: 600; display: none; }
+        .form-msg.ok { color: var(--accent); display: block; }
+        .form-msg.err { color: #f87171; display: block; }
+        footer { padding: 2.5rem 0; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>{{NOMBRE}}</h1>
+        <p class="slogan">{{SLOGAN}}</p>
+        <div class="oferta">{{OFERTA}}</div>
+        <p class="descripcion">{{DESCRIPCION}}</p>
+        <a class="cta" href="#lead">{{CTA_HERO}}</a>
+    </div>
+
+    <section>
+        <div class="container">
+            <h2>El problema</h2>
+            <div class="grid3">
+                <div class="card"><h3>{{PROB1_T}}</h3><p>{{PROB1_P}}</p></div>
+                <div class="card"><h3>{{PROB2_T}}</h3><p>{{PROB2_P}}</p></div>
+                <div class="card"><h3>{{PROB3_T}}</h3><p>{{PROB3_P}}</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Cómo funciona</h2>
+            <div class="grid3">
+                <div class="card"><span class="num">1</span><h3>{{PASO1_T}}</h3><p>{{PASO1_P}}</p></div>
+                <div class="card"><span class="num">2</span><h3>{{PASO2_T}}</h3><p>{{PASO2_P}}</p></div>
+                <div class="card"><span class="num">3</span><h3>{{PASO3_T}}</h3><p>{{PASO3_P}}</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Precios</h2>
+            <div class="precios">
+                <div class="plan">
+                    <h3>{{PLAN1_NOMBRE}}</h3>
+                    <p class="precio">{{PLAN1_PRECIO}}</p>
+                    <ul>
+                        <li>{{PLAN1_LI1}}</li>
+                        <li>{{PLAN1_LI2}}</li>
+                        <li>{{PLAN1_LI3}}</li>
+                    </ul>
+                    <a class="cta" href="#lead">Empezar</a>
+                </div>
+                <div class="plan destacado">
+                    <h3>{{PLAN2_NOMBRE}}</h3>
+                    <p class="precio">{{PLAN2_PRECIO}}</p>
+                    <ul>
+                        <li>{{PLAN2_LI1}}</li>
+                        <li>{{PLAN2_LI2}}</li>
+                        <li>{{PLAN2_LI3}}</li>
+                    </ul>
+                    <a class="cta" href="#lead">Empezar</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Preguntas que todos hacen</h2>
+            <div class="faq">
+                <div class="card"><strong>“{{FAQ1_Q}}”</strong> <span class="dim">— {{FAQ1_A}}</span></div>
+                <div class="card"><strong>“{{FAQ2_Q}}”</strong> <span class="dim">— {{FAQ2_A}}</span></div>
+                <div class="card"><strong>“{{FAQ3_Q}}”</strong> <span class="dim">— {{FAQ3_A}}</span></div>
+                <div class="card"><strong>“{{FAQ4_Q}}”</strong> <span class="dim">— {{FAQ4_A}}</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="lead">
+        <div class="container">
+            <h2>{{LEAD_H1}}</h2>
+            <form id="lead-form">
+                <label for="nombre">Tu nombre *</label>
+                <input id="nombre" name="nombre" required maxlength="120" autocomplete="name">
+                <label for="negocio">Nombre del negocio</label>
+                <input id="negocio" name="negocio" maxlength="160" autocomplete="organization">
+                <label for="whatsapp">WhatsApp *</label>
+                <input id="whatsapp" name="whatsapp" required maxlength="40" inputmode="tel" placeholder="Ej. 81 1234 5678">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" maxlength="160" autocomplete="email">
+                {{FORM_CAMPOS}}
+                <label for="mensaje">Mensaje (opcional)</label>
+                <textarea id="mensaje" name="mensaje" rows="3" maxlength="500"></textarea>
+                <button type="submit">Enviar</button>
+                <p class="form-msg" id="form-msg"></p>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        {{FOOTER}}
+    </footer>
+
+    <script>
+        document.getElementById('lead-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const msg = document.getElementById('form-msg');
+            btn.disabled = true;
+            msg.className = 'form-msg';
+            try {
+                const data = Object.fromEntries(new FormData(e.target).entries());
+                const res = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error(await res.text());
+                e.target.reset();
+                msg.textContent = '¡Listo! Te contactamos pronto.';
+                msg.className = 'form-msg ok';
+            } catch (err) {
+                msg.textContent = 'No se pudo enviar. Escríbenos directo por WhatsApp.';
+                msg.className = 'form-msg err';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
