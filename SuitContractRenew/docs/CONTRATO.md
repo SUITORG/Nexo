@@ -35,11 +35,12 @@ SaaS de registro de contratos de mantenimiento con alertas de renovación 60 dí
 Origen: `SuitIdeasSaaS/2026-10-10b-evaluacion.md` · ADR-049 (promoción), ADR-051 (4G: brief+landing+leads+activos Flow) · Landing con hero generado por Google Flow MCP
 
 ## POR CONFIRMAR
-- Integración de cobros (Stripe) — fuera del MVP actual
-- ¿Un despliegue = un taller, o futuro multi-taller con login?
-- [x] ~~Hosting/despliegue de producción (hoy solo local `npm start`)~~ → **continua con lo mas sencillo** (2026-10-11, panel)
+(todas resueltas)
 
 ### Resueltos (panel)
-- [x] ~~Canal de notificación real de alertas (MVP = consulta manual `GET /api/contracts/due/60`; email/SMS fuera)~~ → **por correo** (2026-10-11, panel)
+- [x] ~~Integración de cobros (Stripe) — fuera del MVP actual~~ → **suscripción mensual con Stripe en el futuro** (2026-10-11, panel)
+- [x] ~~¿Un despliegue = un taller, o futuro multi-taller con login?~~ → **un taller por cuenta en el MVP** (2026-10-11, panel)
+- [x] ~~[x] ~~Hosting/despliegue de producción (hoy solo local `npm start`)~~ → **continua con lo mas sencillo** (2026-10-11, panel)~~ → **local por ahora; hosting al primer cliente** (2026-10-11, panel)
+- [x] ~~[x] ~~Canal de notificación real de alertas (MVP = consulta manual `GET /api/contracts/due/60`; email/SMS fuera)~~ → **por correo** (2026-10-11, panel)~~ → **consulta manual por ahora; email/SMS después** (2026-10-11, panel)
 
 ## 
