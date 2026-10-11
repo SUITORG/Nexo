@@ -203,6 +203,28 @@
     └── 🔄 refresco: con cada pasada de guia-total/ciclo que toque configuración (§6)
 ```
 
+## ═══ 1.10. BRIEF Y ACTIVOS (brief-engine + lapvtfu) ═══
+
+**Eslabones de la cadena §1.8** (switches `brief` y `activos`) — también invocables sueltos.
+**Triggers:** "genera el brief", "brief de la empresa", "activos", "lapvtfu", "7 activos", "logo y fotos"
+
+```text
+├── ⚡ brief-engine <ID>              → Brief 21 segmentos (semas A/B/C) en Config_Empresas.logo_url
+│    ├── lee catálogos Supabase (industrias/nichos) + registro del tenant [solo lectura]
+│    ├── llena/actualiza segmentos be-001..be-021 (industria, nicho, dolor, PBP, PM, objeciones…)
+│    ├── ⚖️ seg1 `industria` y seg2 `nicho` con VALOR REAL → jamás se sobreescriben
+│    └── vector `brief.parse` → logo_url · espejo Supabase
+└── ⚡ lapvtfu <ID>                   → 7 activos en Drive cte<id>/_activos
+     ├── slots: los 7 del checklist LAPVTFU (segmento 10 del Brief — logo, fotos y resto del kit)
+     ├── 📁 cte<id>/_activos + share · idempotente (overwrite, nunca duplica)
+     ├── ⚠️ "solo lo hace el cliente" → NO: el flujo genera todo (p.ej. productos propios
+     │    vía Google Flow MCP, ADR-050/051 — ver plantillas GuiaTotal/plantillas/)
+     └── ✔ 7/7 slots → segmento 10 del Brief deja de estar [PENDIENTE]
+```
+
+[brief sin id_empresa → plantilla local GuiaTotal/plantillas/brief-cliente.md (productos Suit*, ADR-051) ·
+ activos de producto propio → generate-asset.cjs del clone Flow · texto]
+
 ## ═══ 2. TAXONOMÍA ═══
 
 **Triggers:** "taxonomía", "industrias y nichos", "actualiza taxonomía", `/guia-total taxonomia`

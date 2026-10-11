@@ -289,13 +289,15 @@
     <div class="sub">→ Config_Paginas (3 JSON)</div>
   </div>
 
-  <div class="node t-brief" id="n19" style="left:875px; top:560px;">
+  <div class="node t-brief" id="n19" data-sec="1.10" style="left:875px; top:560px;">
+    <span class="chip">§1.10</span>
     <span class="ico">🎯</span>
     <div class="ttl">brief-engine</div>
     <div class="sub">→ Config_Empresas.logo_url</div>
   </div>
 
-  <div class="node t-act" id="n20" style="left:1130px; top:560px;">
+  <div class="node t-act" id="n20" data-sec="1.10" style="left:1130px; top:560px;">
+    <span class="chip">§1.10</span>
     <span class="ico">🎬</span>
     <div class="ttl">lapvtfu (activos)</div>
     <div class="sub">→ cte&lt;id&gt;/_activos</div>
@@ -920,6 +922,28 @@
       ],
       "files": [
         "GuiaTotal/MANUAL_OPERACION.md"
+      ]
+    },
+    "1.10": {
+      "t": "Brief y Activos (brief-engine + Lapvtfu)",
+      "steps": [
+        "⚡ brief-engine <ID>              → Brief 21 segmentos (semas A/B/C) en Config_Empresas.logo_url",
+        "lee catálogos Supabase (industrias/nichos) + registro del tenant [solo lectura]",
+        "llena/actualiza segmentos be-001..be-021 (industria, nicho, dolor, PBP, PM, objeciones…)",
+        "⚖️ seg1 `industria` y seg2 `nicho` con VALOR REAL → jamás se sobreescriben",
+        "vector `brief.parse` → logo_url · espejo Supabase",
+        "⚡ lapvtfu <ID>                   → 7 activos en Drive cte<id>/_activos",
+        "slots: los 7 del checklist LAPVTFU (segmento 10 del Brief — logo, fotos y resto del kit)",
+        "📁 cte<id>/_activos + share · idempotente (overwrite, nunca duplica)",
+        "⚠️ \"solo lo hace el cliente\" → NO: el flujo genera todo (p.ej. productos propios vía Google Flow MCP, ADR-050/051 — ver plantillas GuiaTotal/plantillas/)",
+        "✔ 7/7 slots → segmento 10 del Brief deja de estar [PENDIENTE]"
+      ],
+      "skills": [
+        "brief-engine",
+        "lapvtfu"
+      ],
+      "files": [
+        "GuiaTotal/plantillas/brief-cliente.md"
       ]
     }
   };
