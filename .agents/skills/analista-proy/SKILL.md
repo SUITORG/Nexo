@@ -30,7 +30,16 @@ La hipótesis final **puede cambiar** si la evidencia lo indica. Eso es señal d
 
 ### 3. Ejecutar los 4 pilares (investigación web real)
 
-Lanza búsquedas **en paralelo** y repite por cada pilar. Mínimo 3-5 queries por pilar, en inglés y español.
+**Política de fuentes — calidad > volumen (anti-gerga):**
+
+- **Cupo duro: 8-12 fuentes TOTALES** por análisis (~2-3 por pilar). Se acabó rellenar.
+- **Whitelist (fuentes confiables):** informes de industria reconocidos (Gartner, Statista, IBISWorld, cámaras/gobiernos), estudios/papers con metodología explícita, páginas oficiales de precios y rankings de competidores, tiendas (App Store/Play) con datos reales, Reddit/foros **solo** threads con engagement alto (100+ votos o 50+ comentarios) y recientes, autores/analistas con track record verificable en el nicho.
+- **Fuera de whitelist:** blogs anónimos de SEO, listicles "top 10", contenido generado por IA, foros muertos, noticias de 2do/3er nivel que solo repiten un original (ir a la fuente original), opiniones sueltas sin evidencia.
+- **Recencia: ≤24 meses** por defecto. Si un clásico es innegociable (ej: paper fundacional), incluirlo marcado `[viejo]` y que sea como máximo 1 de las 8-12.
+- **Test de descarte:** si la fuente no cambia ninguna decisión del análisis (feature, precio, riesgo, posicionamiento, ICP) → **no entra**. Pregúntate: "¿qué decido distinto gracias a esto?" Si no hay respuesta, descartada.
+- **1-2 queries por pilar** (no 3-5), en el idioma del nicho (inglés para mercados anglo; español para MX/LatAm; ambos solo si el producto vende en los dos).
+
+Lanza las búsquedas **en paralelo**. Repite por cada pilar:
 
 **Pilar 1 — Fundamentos expertos del sector**
 Estudios, informes, papers, principios probados de diseño (retención, engagement, monetización), lo que la evidencia dice sobre este tipo de producto. Qué principios debería tener una solución bien planteada.
@@ -50,7 +59,7 @@ Lo que separa una investigación mediocre de una excelente no es más búsquedas
 
 | Técnica | Cómo se aplica |
 |---|---|
-| **Triangulación** | Nunca afirmes algo con una sola fuente. ≥3 fuentes independientes por hallazgo clave. |
+| **Triangulación** | Hallazgo *decisional* (va al veredicto, precio o feature): ≥2 fuentes confiables de la whitelist, independientes entre sí. Hallazgo no-decisional: 1 fuente o se cae. Nunca cuentes 3 blogs que repiten el mismo dato original. |
 | **Evidencia desconfirmatoria** | Busca activamente razones por las que el TEMA **fallaría**. Si solo encuentras confirmación, no investigaste bien. |
 | **Señales > opiniones** | Descargas, rankings, pricing, anunciantes activos (Ads Library), tráfico = demanda real. Opiniones sueltas = ruido. |
 | **Frecuencia, no existencia** | "5 threads pidiendo X" pesa más que "1 thread". Cuenta menciones, no solo presencia. |
@@ -119,7 +128,8 @@ Al entregar, responde en ≤3 líneas: veredicto, dónde está el archivo, y si 
 
 ## Reglas
 
-- Todo hallazgo lleva fuente enlazada — sin fuente, no es hallazgo, es opinión.
-- Si un pilar sale débil (poca evidencia), dilo explícitamente en el MD en vez de rellenar.
+- Todo hallazgo lleva fuente enlazada — sin fuente, no es hallazgo, es opinión. Solo cuentan fuentes de la whitelist (sección 3).
+- Si un pilar sale débil (ninguna fuente whitelist pasa el test de descarte), márcalo **`DÉBIL`** en el MD y sigue — rellenar con ruido degrada el análisis completo.
+- Cupo 8-12 fuentes totales: si llegas al cupo y un pilar queda flojo, es preferible entregar ese pilar débil antes que bajar el listón de calidad.
 - Idioma del MD: el del usuario (español por defecto).
 - Esta skill solo investiga y recomienda — nunca escribe código ni crea el proyecto.
