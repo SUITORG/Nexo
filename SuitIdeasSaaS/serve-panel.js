@@ -20,12 +20,47 @@ function gitInfo() {
   } catch (_) { return { branch: '?', ahead: -1, behind: -1 }; }
 }
 
+// Preguntas amigables + opciones de un clic (las respuestas se guardan contra el texto original del contrato)
+const OPCIONES = [
+  { match: /hosting|servidor|nube|producci|hoy solo local/i, q: '¿Dónde vive tu producto cuando esté listo para clientes?',
+    ops: [
+      { t: 'Solo en mi computadora por ahora', v: 'local por ahora; hosting al primer cliente', rec: true },
+      { t: 'En la nube cuando llegue el primer cliente', v: 'nube al primer cliente (proveedor por definir)' }
+    ] },
+  { match: /alerta|notific|aviso|sms|correo|email/i, q: '¿Cómo quieres que se avise de una renovación próxima?',
+    ops: [
+      { t: 'Que yo entre y lo revise (más simple)', v: 'consulta manual por ahora; email/SMS después', rec: true },
+      { t: 'Que llegue un correo automático', v: 'email automático (configuración extra)' },
+      { t: 'Que llegue un WhatsApp automático', v: 'WhatsApp automático (proveedor pago)' }
+    ] },
+  { match: /stripe|cobro|pago|cobrar|factur/i, q: '¿Cobrarías por el producto?',
+    ops: [
+      { t: 'Sí, suscripción mensual', v: 'suscripción mensual con Stripe en el futuro', rec: true },
+      { t: 'No, gratis por ahora', v: 'gratis por ahora' },
+      { t: 'Aún no lo decido', v: 'pendiente de decidir' }
+    ] },
+  { match: /taller|multi|login|cuenta/i, q: '¿Una cuenta = un negocio, o varios negocios en una cuenta?',
+    ops: [
+      { t: 'Un negocio por cuenta (más simple)', v: 'un taller por cuenta en el MVP', rec: true },
+      { t: 'Varios negocios en una misma cuenta', v: 'multi-taller con login en el futuro' }
+    ] }
+];
+
+function amigable(pregunta) {
+  for (const o of OPCIONES) if (o.match.test(pregunta)) return { pregunta: o.q, ops: o.ops };
+  return { pregunta, ops: [] };
+}
+
 function leerPorConfirmar(ruta) {
   try {
     const txt = fs.readFileSync(path.join(REPO, ruta, 'docs', 'CONTRATO.md'), 'utf8');
     const m = txt.match(/## POR CONFIRMAR\n([\s\S]*?)(\n## |$)/);
     if (!m) return [];
-    return m[1].split('\n').filter(l => l.trim().startsWith('- ')).map(l => l.replace(/^\s*- /, '').trim());
+    return m[1].split('\n').filter(l => l.trim().startsWith('- ')).map(l => {
+      const original = l.replace(/^\s*- /, '').trim();
+      const a = amigable(original);
+      return { original, pregunta: a.pregunta, ops: a.ops };
+    });
   } catch (_) { return []; }
 }
 

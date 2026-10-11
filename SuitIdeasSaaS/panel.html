@@ -99,11 +99,18 @@
   .pcard .go2 { margin-top:.55rem; margin-left:.4rem; display:inline-block; background:#1e293b; color:var(--text);
     border:1px solid #475569; border-radius:999px; padding:.4rem 1.1rem; font-weight:600; font-size:.82rem; cursor:pointer; }
   .pcard .pcform { margin-top:.7rem; border-top:1px dashed #1c2438; padding-top:.6rem; }
-  .pcard .pcform label { display:block; font-size:.78rem; color:var(--dim); margin:.45rem 0 .15rem; }
+  .pcard .pcform label { display:block; font-size:.82rem; color:var(--text); margin:.55rem 0 .25rem; font-weight:600; }
+  .pcard .pcform .opwrap { display:flex; flex-wrap:wrap; gap:.35rem; }
+  .pcard .pcform .op { background:var(--bg); border:1px solid var(--border); color:var(--dim); border-radius:999px;
+    padding:.32rem .75rem; font-size:.78rem; cursor:pointer; font-family:inherit; }
+  .pcard .pcform .op.sel { border-color:var(--accent); color:var(--accent); background:rgba(45,212,191,.08); font-weight:600; }
+  .pcard .pcform .op.rec::after { content:" ★"; color:var(--warn); }
+  .pcard .pcform .otra-row { margin-top:.35rem; }
   .pcard .pcform input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
     border-radius:7px; padding:.45rem .6rem; font-size:.85rem; font-family:inherit; }
-  .pcard .pcform button { margin-top:.6rem; background:var(--accent); color:#04231f; border:0; border-radius:999px;
-    padding:.4rem 1rem; font-weight:700; font-size:.8rem; cursor:pointer; }
+  .pcard .pcform button.save { margin-top:.7rem; background:var(--accent); color:#04231f; border:0; border-radius:999px;
+    padding:.45rem 1.2rem; font-weight:700; font-size:.82rem; cursor:pointer; }
+  .pcard .pcform .hint { font-size:.72rem; color:#64748b; margin-top:.15rem; }
   #push-area { display:flex; gap:.5rem; align-items:center; }
   #push-btn { background:#1e293b; border:1px solid #475569; color:var(--text); border-radius:999px;
     padding:.3rem .85rem; font-size:.78rem; font-weight:600; cursor:pointer; }
@@ -275,10 +282,18 @@ async function loadRegistro() {
         <div class="docsbar"><i style="width:${docsPct}%"></i></div>
         ${pcs.length ? `
         <div class="pcform" id="pcf-${i}" style="display:none">
-          ${pcs.map((q, j) => `
-            <label>${q}</label>
-            <input id="pcin-${i}-${j}" maxlength="300" placeholder="tu respuesta…">`).join('')}
-          <button data-save="${i}" data-ruta="${(c.ruta || '').replace(/"/g, '&quot;')}">✓ Guardar respuestas</button>
+          ${pcs.map((p, j) => `
+            <label>${p.pregunta || p.original || p}</label>
+            <div class="opwrap" data-q="${j}">
+              ${(p.ops || []).map(o => `
+                <button type="button" class="op${o.rec ? ' rec' : ''}" data-val="${o.v.replace(/"/g, '&quot;')}">${o.t}</button>`).join('')}
+              <button type="button" class="op" data-otra="1">✎ Escribir otra…</button>
+            </div>
+            <div class="otra-row" id="otra-${i}-${j}" style="display:none">
+              <input id="pcin-${i}-${j}" maxlength="300" placeholder="Escribe tu respuesta…">
+            </div>`).join('')}
+          <button class="save" data-save="${i}" data-ruta="${(c.ruta || '').replace(/"/g, '&quot;')}">✓ Guardar respuestas</button>
+          <div class="hint">★ = sugerencia. Responde solo lo que quieras; el resto queda pendiente.</div>
         </div>` : ''}
         ${cmd || pcs.length ? `
           ${cmd ? `<button class="go" data-cmd="${cmd.replace(/"/g, '&quot;')}">▶ Continuar</button>` : ''}
@@ -296,16 +311,34 @@ async function loadRegistro() {
         f.style.display = f.style.display === 'none' ? 'block' : 'none';
       });
     });
+    $('proy-list').querySelectorAll('.opwrap').forEach(w => {
+      w.querySelectorAll('.op').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const otra = btn.hasAttribute('data-otra');
+          w.querySelectorAll('.op').forEach(x => x.classList.remove('sel'));
+          if (!otra) btn.classList.add('sel');
+          const formId = (w.closest('.pcform') || {}).id || '';
+          const fi = formId.replace('pcf-', '');
+          const row = $('otra-' + fi + '-' + w.getAttribute('data-q'));
+          if (row) row.style.display = otra ? 'block' : 'none';
+          if (!otra && row) row.querySelector('input').value = '';
+        });
+      });
+    });
     $('proy-list').querySelectorAll('[data-save]').forEach(b => {
       b.addEventListener('click', async () => {
         const i = b.getAttribute('data-save');
         const card = cards[i];
         const respuestas = {};
-        (card.porConfirmar || []).forEach((q, j) => {
-          const v = ($('pcin-' + i + '-' + j) || {}).value;
-          if (v && v.trim()) respuestas[q] = v.trim();
+        (card.porConfirmar || []).forEach((p, j) => {
+          const form = $('pcf-' + i);
+          const wrap = form && form.querySelector('.opwrap[data-q="' + j + '"]');
+          const sel = wrap && wrap.querySelector('.op.sel');
+          const otraIn = $('pcin-' + i + '-' + j);
+          const v = (otraIn && otraIn.offsetParent && otraIn.value.trim()) ? otraIn.value.trim() : (sel ? sel.getAttribute('data-val') : '');
+          if (v) respuestas[p.original || p] = v;
         });
-        if (!Object.keys(respuestas).length) { toast('Responde al menos 1 pregunta'); return; }
+        if (!Object.keys(respuestas).length) { toast('Elige al menos una opción'); return; }
         b.disabled = true;
         try {
           const r = await fetch('resolver', {
@@ -313,7 +346,7 @@ async function loadRegistro() {
             body: JSON.stringify({ ruta: b.getAttribute('data-ruta'), respuestas })
           });
           const d = await r.json();
-          if (d.ok) { toast('✓ ' + d.resueltos + ' resueltas y commiteadas — recargando…'); setTimeout(loadRegistro, 1500); }
+          if (d.ok) { toast('✓ ' + d.resueltos + ' resueltas y guardadas — recargando…'); setTimeout(loadRegistro, 1500); }
           else toast('✗ ' + (d.error || 'error'));
         } catch (_) { toast('✗ sin conexión con el servidor del panel'); }
         finally { b.disabled = false; }
