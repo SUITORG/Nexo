@@ -29,6 +29,9 @@
   .msg.ok { color:var(--accent); }
   .msg.err { color:var(--err); }
   #login-box { max-width:340px; margin:18vh auto; }
+  .pinwrap { position:relative; }
+  .pinwrap input { padding-right:2.6rem; }
+  .eye { position:absolute; right:.5rem; top:50%; transform:translateY(-50%); background:none; border:0; color:var(--dim); cursor:pointer; font-size:1.1rem; padding:.2rem; }
 </style>
 </head>
 <body>
@@ -36,7 +39,10 @@
   <h2 id="login-title">🔐 Entrar</h2>
   <p class="dim" style="font-size:.88rem;margin-bottom:.4rem" id="login-sub">PIN de tu taller</p>
   <div id="login-fields">
-    <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN de 6 dígitos">
+    <div class="pinwrap">
+      <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN de 6 dígitos">
+      <button type="button" class="eye" id="btn-eye" title="Ver/ocultar PIN">👁</button>
+    </div>
     <button id="btn-login" style="width:100%;margin-top:.8rem">Entrar</button>
   </div>
   <div id="signup-fields" style="display:none">
@@ -48,6 +54,7 @@
   <p class="msg" id="login-msg"></p>
   <p style="margin-top:.9rem;font-size:.82rem;text-align:center">
     <a href="#" id="toggle-auth" style="color:var(--accent)">¿No tienes cuenta? Crear cuenta</a>
+    <br><span class="dim" style="font-size:.75rem">¿Olvidaste tu PIN? Ejecuta <b>recuperar-pin.bat</b> en la carpeta del programa</span>
   </p>
 </div>
 
@@ -92,6 +99,10 @@ $('btn-login').addEventListener('click', async () => {
   if (r.ok) showApp(); else $('login-msg').textContent = 'PIN incorrecto';
 });
 $('pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-login').click(); });
+$('btn-eye').addEventListener('click', () => {
+  const p = $('pin');
+  p.type = p.type === 'password' ? 'text' : 'password';
+});
 
 // --- Fase 7: signup ---
 $('toggle-auth').addEventListener('click', e => {
