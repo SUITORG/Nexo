@@ -2,7 +2,7 @@
 proyecto: "SuitContractRenew"
 ruta: "SuitContractRenew/"
 etapa: "construccion"
-fase_producto: 6               # Automático — alertas diarias (SMTP o consola) + respaldo BD 7 días; falta Fase 7 (signup + cobros)
+fase_producto: 7               # Terminado (SaaS) — signup público + PIN auto + link Stripe (STRIPE_LINK_URL) + dashboard + alertas + respaldo
 creado: "2026-10-10"
 actualizado: "2026-10-12"
 
@@ -46,4 +46,4 @@ documentos:
 
 puerto: 3017
 
-proximo_paso: "Fase 7: signup público + cobros Stripe. Provisionar: SMTP_HOST/USER/PASS en .env (Gmail App Password) para correos reales"
+proximo_paso: "SaaS terminado. Provisionar produccion: STRIPE_LINK_URL (Payment Links 29 USD), SMTP para alertas, hosting. Luego: primer cliente piloto real"

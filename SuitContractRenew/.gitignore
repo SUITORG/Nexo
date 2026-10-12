@@ -3,3 +3,4 @@ python/*.db-*
 backups/
 node_modules/
 .env
+taller.json

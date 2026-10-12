@@ -1,23 +1,72 @@
 {
   "corrida": "2026-10-12-panel-fase6",
   "modo": "ciclo",
-  "tema": "SuitContractRenew/ — Fase 6 Automático",
+  "tema": "SuitContractRenew/ — Fase 7 Terminado",
   "fase": "fin",
   "fases": [
-    { "id": "f1", "label": "Encuadre" }, { "id": "f2", "label": "Implementación" },
-    { "id": "f3", "label": "Validación" }, { "id": "f4", "label": "Iteración" },
-    { "id": "f5", "label": "Plan sync" }, { "id": "f6", "label": "Visto bueno" },
-    { "id": "f7", "label": "Cierre" }, { "id": "fin", "label": "✔ Completado" }
+    {
+      "id": "f1",
+      "label": "Encuadre"
+    },
+    {
+      "id": "f2",
+      "label": "Implementación"
+    },
+    {
+      "id": "f3",
+      "label": "Validación"
+    },
+    {
+      "id": "f4",
+      "label": "Iteración"
+    },
+    {
+      "id": "f5",
+      "label": "Plan sync"
+    },
+    {
+      "id": "f6",
+      "label": "Visto bueno"
+    },
+    {
+      "id": "f7",
+      "label": "Cierre"
+    },
+    {
+      "id": "fin",
+      "label": "✔ Completado"
+    }
   ],
   "ideas": [],
   "pendientes": [],
   "artefactos": [],
   "herramientas": [
-    { "nombre": "ciclo", "estado": "ok", "detalle": "Fase 6 ejecutada desde panel" }
+    {
+      "nombre": "ciclo",
+      "estado": "ok",
+      "detalle": "Fase 6 ejecutada desde panel"
+    }
   ],
   "log": [
-    { "ts": "2026-10-12T17:00:00Z", "fase": "f2", "msg": "main.py alertar + backupDb + interval HORAS_ALERTA" },
-    { "ts": "2026-10-12T17:10:00Z", "fase": "f3", "msg": "smoke: health 200, backup creado, alertar imprime 3 contratos" },
-    { "ts": "2026-10-12T17:15:00Z", "fase": "fin", "msg": "Fase 6 completa — tarjeta F6, orden consumida" }
+    {
+      "ts": "2026-10-12T17:00:00Z",
+      "fase": "f2",
+      "msg": "main.py alertar + backupDb + interval HORAS_ALERTA"
+    },
+    {
+      "ts": "2026-10-12T17:10:00Z",
+      "fase": "f3",
+      "msg": "smoke: health 200, backup creado, alertar imprime 3 contratos"
+    },
+    {
+      "ts": "2026-10-12T17:15:00Z",
+      "fase": "fin",
+      "msg": "Fase 6 completa — tarjeta F6, orden consumida"
+    },
+    {
+      "ts": "2026-10-12T18:10:43.238Z",
+      "fase": "fin",
+      "msg": "/panel: Fase 7 ejecutada — signup publico + PIN auto + Stripe link + dashboard; smoke 6/6; tarjeta F7"
+    }
   ]
 }

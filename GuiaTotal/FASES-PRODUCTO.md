@@ -20,7 +20,7 @@
 
 | Módulo | Fase | Falta para la siguiente |
 |---|---|---|
-| SuitContractRenew | **6 (Automático)** | Fase 7: signup público y cobros |
+| SuitContractRenew | **7 (Terminado)** | Provisionar: Stripe Payment Links, SMTP, hosting → piloto real |
 | SuitPawBook | **4 (Vendible)** | Fase 5: login + dashboard de reservas (landing y API listas) |
 | SuitReviewPulse | **2-3 (MVP/Validado)** | Landing + leads (4G) pendiente |
 

@@ -37,8 +37,9 @@ python python/main.py close 3
 ```
 
 ## Gotchas
-- **Fase 5 (dashboard + login):** `GET /app` sirve `app/index.html` (dashboard del taller). Si `APP_PIN` está en `.env`, `/api/contracts*` exige login (`POST /api/login` → cookie `cr_s`, 30 días); sin PIN = abierto (solo dev). Landing `/` siempre pública.
+- **Fase 5 (dashboard + login):** `GET /app` sirve `app/index.html` (dashboard del taller). PIN = `taller.json` (lo crea el signup) o `APP_PIN` de `.env`; sin ninguno = abierto (solo dev). Landing `/` siempre pública.
 - **Fase 6 (automático):** al arrancar y cada `HORAS_ALERTA` (default 24h) corre `main.py alertar` (contratos que vencen en 60 días) + respaldo de la BD a `backups/` (últimos 7 días). Sin `SMTP_HOST` la alerta solo imprime en consola. Para correo real: Gmail → App Password en `SMTP_PASS`.
+- **Fase 7 (SaaS):** `POST /api/signup` (público, 1 sola vez por instancia) crea `taller.json` con PIN de 6 dígitos — gitignored. `GET /api/config` expone `STRIPE_LINK_URL`/`CONTACTO_WA` a la landing. Cobro vía Stripe Payment Links (no API): crear el link en Stripe y ponerlo en `.env`.
 - **Encoding Windows:** `PYTHONIOENCODING=utf-8` ya seteado en `db/client.js` (cp1252 rompe acentos).
 - **Fechas:** formato estricto `YYYY-MM-DD` (comparaciones SQL con `date()`).
 - **`close` es soft-delete** (`activo=0`), nunca DELETE físico (regla repo #2).

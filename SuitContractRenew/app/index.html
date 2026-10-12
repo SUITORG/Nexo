@@ -33,11 +33,22 @@
 </head>
 <body>
 <div id="login-box" class="card" style="display:none">
-  <h2>🔐 Entrar</h2>
-  <p class="dim" style="font-size:.88rem;margin-bottom:.4rem">PIN de tu taller</p>
-  <input id="pin" type="password" inputmode="numeric" maxlength="12">
-  <button id="btn-login" style="width:100%;margin-top:.8rem">Entrar</button>
-  <p class="msg err" id="login-msg"></p>
+  <h2 id="login-title">🔐 Entrar</h2>
+  <p class="dim" style="font-size:.88rem;margin-bottom:.4rem" id="login-sub">PIN de tu taller</p>
+  <div id="login-fields">
+    <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN de 6 dígitos">
+    <button id="btn-login" style="width:100%;margin-top:.8rem">Entrar</button>
+  </div>
+  <div id="signup-fields" style="display:none">
+    <input id="s-taller" maxlength="120" placeholder="Nombre del taller *">
+    <input id="s-nombre" maxlength="120" placeholder="Tu nombre *" style="margin-top:.5rem">
+    <input id="s-email" type="email" maxlength="160" placeholder="Tu email *" style="margin-top:.5rem">
+    <button id="btn-signup" style="width:100%;margin-top:.8rem">Crear mi cuenta</button>
+  </div>
+  <p class="msg" id="login-msg"></p>
+  <p style="margin-top:.9rem;font-size:.82rem;text-align:center">
+    <a href="#" id="toggle-auth" style="color:var(--accent)">¿No tienes cuenta? Crear cuenta</a>
+  </p>
 </div>
 
 <div class="wrap" id="app" style="display:none">
@@ -81,6 +92,35 @@ $('btn-login').addEventListener('click', async () => {
   if (r.ok) showApp(); else $('login-msg').textContent = 'PIN incorrecto';
 });
 $('pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-login').click(); });
+
+// --- Fase 7: signup ---
+$('toggle-auth').addEventListener('click', e => {
+  e.preventDefault();
+  const creating = $('login-fields').style.display !== 'none';
+  $('login-fields').style.display = creating ? 'none' : 'block';
+  $('signup-fields').style.display = creating ? 'block' : 'none';
+  $('login-title').textContent = creating ? '✂ Crear cuenta' : '🔐 Entrar';
+  $('toggle-auth').textContent = creating ? '¿Ya tienes cuenta? Entrar' : '¿No tienes cuenta? Crear cuenta';
+  $('login-msg').textContent = '';
+});
+$('btn-signup').addEventListener('click', async () => {
+  const msg = $('login-msg');
+  try {
+    const r = await fetch('/api/signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre_taller: $('s-taller').value, nombre: $('s-nombre').value, email: $('s-email').value })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'error');
+    msg.className = 'msg ok';
+    msg.innerHTML = `✓ Cuenta creada. Tu PIN: <b style="color:var(--text)">${d.pin}</b> — guárdalo y úsalo para entrar.`;
+    $('login-fields').style.display = 'block';
+    $('signup-fields').style.display = 'none';
+    $('login-title').textContent = '🔐 Entrar';
+    $('pin').value = d.pin;
+    $('toggle-auth').textContent = '¿No tienes cuenta? Crear cuenta';
+  } catch (e) { msg.className = 'msg err'; msg.textContent = '✗ ' + e.message; }
+});
 
 function diasHasta(f) { return Math.ceil((new Date(f) - new Date()) / 864e5); }
 

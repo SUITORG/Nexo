@@ -9,21 +9,40 @@ const { runPy } = require('./db/client');
 const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 3017;
-const PIN = process.env.APP_PIN || '';  // sin PIN = sin login (dev)
+const TALLER_FILE = path.join(__dirname, 'taller.json');
+function leerTaller() { try { return JSON.parse(fs.readFileSync(TALLER_FILE, 'utf8')); } catch (_) { return null; } }
+function pinActual() { const t = leerTaller(); return t ? t.pin : (process.env.APP_PIN || ''); }
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', module: 'SuitContractRenew' }));
 
+// --- Fase 7: config pública para la landing (cobro + contacto) ---
+app.get('/api/config', (req, res) => {
+  res.json({ stripe: process.env.STRIPE_LINK_URL || '', whatsapp: process.env.CONTACTO_WA || '' });
+});
+
+// --- Fase 7: signup público — crea el taller y devuelve su PIN ---
+app.post('/api/signup', (req, res) => {
+  if (leerTaller()) return res.status(409).json({ error: 'ya existe una cuenta en esta instancia' });
+  const { nombre_taller, nombre, email } = req.body || {};
+  if (!nombre_taller || !nombre || !email) return res.status(400).json({ error: 'nombre_taller, nombre y email requeridos' });
+  const pin = String(Math.floor(100000 + Math.random() * 900000));
+  fs.writeFileSync(TALLER_FILE, JSON.stringify({ nombre_taller, nombre, email, pin, creado: new Date().toISOString() }, null, 2));
+  res.status(201).json({ ok: true, pin, nota: 'Guarda tu PIN — con él entras a /app' });
+});
+
 // --- Login simple (Fase 5): PIN del taller, cookie de sesión ---
 app.post('/api/login', (req, res) => {
-  if (!PIN) return res.json({ ok: true, auth: false });
-  if (req.body.pin !== PIN) return res.status(401).json({ error: 'pin incorrecto' });
-  const tok = crypto.createHash('sha256').update(PIN + '::cr').digest('hex').slice(0, 32);
+  const p = pinActual();
+  if (!p) return res.json({ ok: true, auth: false });
+  if (req.body.pin !== p) return res.status(401).json({ error: 'pin incorrecto' });
+  const tok = crypto.createHash('sha256').update(p + '::cr').digest('hex').slice(0, 32);
   res.cookie('cr_s', tok, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 864e5 });
   res.json({ ok: true });
 });
 function auth(req, res, next) {
-  if (!PIN) return next();
-  const tok = crypto.createHash('sha256').update(PIN + '::cr').digest('hex').slice(0, 32);
+  const p = pinActual();
+  if (!p) return next();
+  const tok = crypto.createHash('sha256').update(p + '::cr').digest('hex').slice(0, 32);
   const m = (req.headers.cookie || '').match(/(?:^|;\s*)cr_s=([a-f0-9]+)/);
   if (m && m[1] === tok) return next();
   res.status(401).json({ error: 'no autorizado' });
