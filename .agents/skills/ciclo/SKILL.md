@@ -73,7 +73,7 @@ En `fase: "fin"` deja el resumen final en el log (queda visible hasta la próxim
 4. **Iteración**: si la validación falla, corrige y registra el aprendizaje en `CORRECCIONES.md`. Máximo 3 vueltas; a la cuarta detente y consulta al usuario.
 5. **Plan de sincronización**: detecta deltas de esquema/registros y redacta `PLAN-SYNC.md`. No ejecutes nada aún.
 6. **Visto bueno y sync**: pide aprobación explícita mostrando el plan. Solo con un "sí" aplicas la sincronización (`references/db-sync.md`).
-7. **Cierre GitHub**: push solo si el usuario lo decide o ya lo autorizó para este ciclo. Sin cambios, sin push. **Actualiza la tarjeta del proyecto** en `GuiaTotal/registro/<slug>.yaml`: campo `actualizado` (fecha) y `proximo_paso` = lo que quedó pendiente tras el ciclo (o "ciclo completo, sin pendientes"). Es la única escritura del ciclo permitida fuera del alcance (decisión 2026-10-11 del usuario).
+7. **Cierre GitHub**: push solo si el usuario lo decide o ya lo autorizó para este ciclo. Sin cambios, sin push. **Actualiza la tarjeta del proyecto** en `GuiaTotal/registro/<slug>.yaml`: campo `actualizado` (fecha) y `proximo_paso` = lo que quedó pendiente tras el ciclo (o "ciclo completo, sin pendientes"). Es la única escritura del ciclo permitida fuera del alcance (decisión 2026-10-11 del usuario). **Si la corrida tocó una skill** (editó `.agents/skills/*/SKILL.md` o `.suit/skills/*/*.yaml`): buscar su sección en `GuiaTotal/MAPA.md`, actualizar el árbol/§ si el comportamiento cambió, añadir entrada al footer, correr `node scripts/gen-mapa-info.js` → `node scripts/check-map-visual.js` (debe dar OK).
 
 Commit tras cada fase:
 
