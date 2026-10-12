@@ -181,7 +181,7 @@ http.createServer(async (req, res) => {
       if (!d.tipo) return err(400, 'tipo requerido');
       let o = { ordenes: [] };
       try { o = JSON.parse(fs.readFileSync(ORDEN, 'utf8')); } catch (_) {}
-      o.ordenes = (o.ordenes || []).filter(x => !(x.tipo === d.tipo && x.proyecto === d.proyecto));
+      o.ordenes = (o.ordenes || []).filter(x => !(x.tipo === d.tipo && x.proyecto === d.proyecto && x.detalle === d.detalle));
       o.ordenes.push({ tipo: d.tipo, proyecto: d.proyecto || '', detalle: d.detalle || '', ts: new Date().toISOString() });
       fs.writeFileSync(ORDEN, JSON.stringify(o, null, 2));
       return json({ ok: true, ordenes: o.ordenes });

@@ -69,6 +69,13 @@
     font-weight:700; font-size:.9rem; cursor:pointer; }
   #req button:disabled { opacity:.5; cursor:wait; }
   #req-msg { font-size:.82rem; color:var(--dim); }
+  #custom-req { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; padding:.4rem 1.6rem 0; }
+  #custom-req input { background:var(--surface); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:.55rem .75rem; font-size:.9rem; font-family:inherit; flex:1; min-width:300px; }
+  #custom-req button { background:#1e293b; color:var(--text); border:1px solid #475569; border-radius:999px;
+    padding:.55rem 1.3rem; font-weight:600; font-size:.9rem; cursor:pointer; }
+  #custom-req button:hover { border-color:var(--accent); color:var(--accent); }
+  #custom-msg { font-size:.82rem; color:var(--dim); }
   /* historial */
   #hist { padding:1.2rem 1.6rem 0; }
   #hist h2 { font-size:.85rem; color:#38bdf8; margin-bottom:.5rem; }
@@ -156,6 +163,12 @@
   </select>
   <button id="req-btn">Pedir corrida</button>
   <span id="req-msg"></span>
+</div>
+
+<div id="custom-req">
+  <input id="custom-txt" maxlength="500" placeholder="Escribe cualquier tarea (ej: crea empresa demo Taller El Roble que venda ContractRenew con brief, activos y landing)…">
+  <button id="custom-btn">🤖 Pedir al agente</button>
+  <span id="custom-msg"></span>
 </div>
 
 <div id="empty"><b>¿Continuar un proyecto?</b> Baja a «Proyectos registrados» y pulsa <b>▶ Continuar</b> o <b>🤖 Pedir al agente</b> en su tarjeta — luego escribe <code>/panel</code> en el chat.<br><b>¿Idea nueva?</b> Escribe un tema arriba (ej: "dentistas") y pulsa «Pedir corrida» — luego <code>/ideas</code> en el chat.</div>
@@ -533,6 +546,23 @@ async function tick() {
 }
 $('req-btn').addEventListener('click', solicitar);
 $('req-tema').addEventListener('keydown', e => { if (e.key === 'Enter') solicitar(); });
+$('custom-btn').addEventListener('click', async () => {
+  const txt = $('custom-txt').value.trim();
+  const msg = $('custom-msg');
+  if (!txt) { msg.textContent = 'Escribe qué quieres que haga el agente.'; return; }
+  $('custom-btn').disabled = true;
+  try {
+    const r = await fetch('orden', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo: 'custom', proyecto: '', detalle: txt })
+    });
+    const d = await r.json();
+    if (d.ok) { msg.textContent = '✓ Orden lista — escribe /panel en el chat.'; toast('✓ Orden encolada — pega /panel en el chat'); $('custom-txt').value = ''; }
+    else msg.textContent = '✗ error';
+  } catch (_) { msg.textContent = '✗ sin conexión'; }
+  finally { $('custom-btn').disabled = false; }
+});
+$('custom-txt').addEventListener('keydown', e => { if (e.key === 'Enter') $('custom-btn').click(); });
 tick();
 loadHistorial();
 loadRegistro();
