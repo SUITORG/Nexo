@@ -100,6 +100,7 @@ function parseCard(txt) {
   const ruta = get('ruta');
   return {
     proyecto: get('proyecto'), ruta, etapa: get('etapa'),
+    faseProducto: parseInt(get('fase_producto'), 10) || null,
     actualizado: get('actualizado'), puerto: get('puerto'), proximo_paso: get('proximo_paso'),
     docsTotal, docsFaltan, porConfirmar: leerPorConfirmar(ruta)
   };

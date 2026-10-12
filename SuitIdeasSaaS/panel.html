@@ -257,6 +257,16 @@ async function loadHistorial() {
 }
 
 const ETAPA_CMD = { idea: '/guia-total', construccion: '/ciclo', mantenimiento: '/ciclo' };
+const FASES_PROD = ['Idea', 'Verificado', 'MVP', 'Validado', 'Vendible', 'Operable', 'Automático', 'Terminado (SaaS)'];
+const FASE_SIG = {
+  0: 'Panel juez (evaluar la idea)',
+  1: 'Verificación (analista + re-juez) y build del MVP',
+  2: 'Ciclo de validación (contrato + evidencia)',
+  3: 'Go-to-market: landing + leads + brief + activos',
+  4: 'Fase 5 Operable: login + dashboard para que el cliente opere solo',
+  5: 'Fase 6 Automático: avisos por correo, respaldo programado',
+  6: 'Fase 7 Terminado: signup público y cobros'
+};
 
 function toast(msg) {
   const t = $('toast');
@@ -283,15 +293,20 @@ async function loadRegistro() {
       const docsPct = c.docsTotal ? Math.round((c.docsTotal - c.docsFaltan) / c.docsTotal * 100) : 0;
       const et = (c.etapa || '').toLowerCase();
       const cmd = ETAPA_CMD[et] ? ETAPA_CMD[et] + ' ' + (c.ruta || c.proyecto) : '';
+      const fp = c.faseProducto;
+      const fLabel = fp != null && fp <= 7 ? `F${fp} ${FASES_PROD[fp]}` : '';
+      const sig = fp != null && FASE_SIG[fp] ? FASE_SIG[fp] : '';
       const pcs = c.porConfirmar || [];
       return `
       <div class="pcard">
         <div class="ptop">
           <span class="pname">${c.proyecto}</span>
+          ${fLabel ? `<span class="etag construccion">${fLabel}</span>` : ''}
           <span class="etag ${et}">${c.etapa || '—'}</span>
           ${c.puerto ? `<span class="chip">:${c.puerto}</span>` : ''}
           ${pcs.length ? `<span class="badge condicional">${pcs.length} por confirmar</span>` : ''}
         </div>
+        ${sig ? `<div class="pprox" style="font-size:.78rem">→ Siguiente: ${sig}</div>` : ''}
         <div class="pprox">${c.proximo_paso || 'sin próximo paso definido'}</div>
         <div class="pmeta">
           <span>docs ${c.docsTotal - c.docsFaltan}/${c.docsTotal}</span>
@@ -313,11 +328,10 @@ async function loadRegistro() {
           <button class="save" data-save="${i}" data-ruta="${(c.ruta || '').replace(/"/g, '&quot;')}">✓ Guardar respuestas</button>
           <div class="hint">★ = sugerencia. Responde solo lo que quieras; el resto queda pendiente.</div>
         </div>` : ''}
-        ${cmd || pcs.length ? `
-          ${cmd ? `<button class="go" data-cmd="${cmd.replace(/"/g, '&quot;')}">▶ Continuar</button>` : ''}
-          ${pcs.length ? `<button class="go2" data-toggle="${i}">✍️ Responder POR CONFIRMAR</button>` : ''}
-          <button class="go2" data-orden="ciclo" data-proy="${(c.ruta || c.proyecto).replace(/"/g, '&quot;')}">🤖 Pedir al agente</button>
-        ` : ''}
+        ${sig ? `<button class="go" data-orden="fase" data-proy="${(c.ruta || c.proyecto).replace(/"/g, '&quot;')}" data-det="${sig.replace(/"/g, '&quot;')}">▶ Pedir: ${sig.split(':')[0]}</button>` : ''}
+        ${cmd ? `<button class="go2" data-cmd="${cmd.replace(/"/g, '&quot;')}">▶ Continuar (ciclo)</button>` : ''}
+        ${pcs.length ? `<button class="go2" data-toggle="${i}">✍️ Responder POR CONFIRMAR</button>` : ''}
+        <button class="go2" data-orden="ciclo" data-proy="${(c.ruta || c.proyecto).replace(/"/g, '&quot;')}">🤖 Pedir al agente</button>
       </div>`;
     }).join('');
     $('proy-list').querySelectorAll('.go').forEach(b => {
@@ -375,7 +389,7 @@ async function loadRegistro() {
         try {
           await fetch('orden', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tipo: b.getAttribute('data-orden'), proyecto: b.getAttribute('data-proy'), detalle: 'solicitado desde panel' })
+            body: JSON.stringify({ tipo: b.getAttribute('data-orden'), proyecto: b.getAttribute('data-proy'), detalle: b.getAttribute('data-det') || 'solicitado desde panel' })
           });
           toast('✓ Orden lista — pega /panel en el chat y el agente la ejecuta');
         } catch (_) { toast('✗ sin conexión'); }
