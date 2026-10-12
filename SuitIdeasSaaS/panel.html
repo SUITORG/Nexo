@@ -213,24 +213,26 @@ const FASES = [
 ];
 
 const $ = id => document.getElementById(id);
-const idx = f => FASES.findIndex(p => p.id === f);
 
-function avancePct(fase, modo) {
-  const aplicables = FASES.filter(p => p.id !== 'fin' && !(p.solo === 'verificadas' && modo === 'rapidas'));
-  const cur = idx(fase);
+function avancePct(fase, modo, lista) {
+  const L = (lista && lista.length) ? lista : FASES;
+  const aplicables = L.filter(p => p.id !== 'fin' && !(p.solo === 'verificadas' && modo === 'rapidas'));
+  const cur = L.findIndex(p => p.id === fase);
   if (cur < 0) return 0;
   const hechas = aplicables.findIndex(p => p.id === fase);
-  return Math.min(100, Math.round(hechas / aplicables.length * 100));
+  return Math.min(100, Math.round((hechas < 0 ? aplicables.length : hechas) / aplicables.length * 100));
 }
 
-function renderPhases(fase, modo) {
-  const cur = idx(fase);
-  $('track').innerHTML = FASES.map((p, i) => {
+function renderPhases(fase, modo, lista) {
+  const L = (lista && lista.length) ? lista : FASES;
+  const cur = L.findIndex(p => p.id === fase);
+  $('track').innerHTML = L.map((p, i) => {
     let cls = 'ph';
     if (p.solo === 'verificadas' && modo === 'rapidas') cls += ' omitido';
     else if (i < cur) cls += ' hecho';
     else if (i === cur) cls += ' activo';
-    return `<div class="${cls}"><span class="fl">${p.label}</span><small>${p.grupo}</small></div>`;
+    else if (cur >= 0 && L[L.length-1].id === 'fin' && fase === 'fin' && i < L.length) cls += ' hecho';
+    return `<div class="${cls}"><span class="fl">${p.label}</span><small>${p.grupo || ''}</small></div>`;
   }).join('');
 }
 
@@ -487,10 +489,10 @@ function render(e) {
   $('h-modo').textContent = e.modo || '—';
   $('h-modo').className = 'chip' + (e.modo === 'verificadas' ? ' on' : '');
   $('h-tema').textContent = e.tema ? `· ${e.tema}` : '';
-  const pct = avancePct(e.fase || 'idle', e.modo);
+  const pct = avancePct(e.fase || 'idle', e.modo, e.fases);
   $('avance-chip').textContent = e.fase === 'idle' ? 'avance —' : `avance ${pct}%`;
   $('avance-chip').className = 'chip' + (pct > 0 ? ' on' : '');
-  renderPhases(e.fase || 'idle', e.modo);
+  renderPhases(e.fase || 'idle', e.modo, e.fases);
 
   const ideas = e.ideas || [];
   $('empty').style.display = ideas.length ? 'none' : 'block';

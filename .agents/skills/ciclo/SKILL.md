@@ -45,6 +45,28 @@ Declara siempre: `Alcance: <ruta> · Contrato: <archivo o NUEVO>`. No modifiques
 
 Ejecuta en orden. Cada fase: actuar → validar → `commit_fase.sh` → evaluar contexto.
 
+**Monitoreo del panel (obligatorio):** en cada cambio de fase (F1→F7 y cada vuelta de F4), escribe/actualiza `SuitIdeasSaaS/estado.json` para que el panel web (`abrir-panel.bat`) muestre el avance en vivo:
+
+```json
+{
+  "corrida": "<fecha>-ciclo-<alcance>",
+  "modo": "ciclo",
+  "tema": "<alcance> — <objetivo>",
+  "fase": "f1|f2|f3|f4|f5|f6|f7|fin",
+  "fases": [
+    { "id": "f1", "label": "Encuadre" }, { "id": "f2", "label": "Implementación" },
+    { "id": "f3", "label": "Validación" }, { "id": "f4", "label": "Iteración" },
+    { "id": "f5", "label": "Plan sync" }, { "id": "f6", "label": "Visto bueno" },
+    { "id": "f7", "label": "Cierre" }, { "id": "fin", "label": "✔ Completado" }
+  ],
+  "ideas": [], "pendientes": [], "artefactos": [],
+  "herramientas": [{ "nombre": "ciclo", "estado": "activo", "detalle": "<fase actual>" }],
+  "log": [{ "ts": "<ISO>", "fase": "f<n>", "msg": "<qué se hizo>" }]
+}
+```
+
+En `fase: "fin"` deja el resumen final en el log (queda visible hasta la próxima corrida/ciclo). El campo `fases[]` hace que la barra del panel dibuje las fases del ciclo en vez de las de ideas.
+
 1. **Encuadre 20/80**: enumera los cambios pendientes y elige el 20% de acciones que resuelve el 80% del riesgo o valor. Escribe esa lista corta antes de tocar código y descarta el resto explícitamente.
 2. **Implementación**: aplica los cambios de código de esa lista, nada más.
 3. **Validación**: obligatoria, ver `references/validacion.md`. Nunca declares algo correcto sin evidencia ejecutada. Si el alcance tiene `MANUAL_*.md` y esta fase tocó UI/backend, compara sus fechas contra el último commit relevante: si están desactualizados, refresca con `guia-total manuales` o sugiéreselo al usuario.
