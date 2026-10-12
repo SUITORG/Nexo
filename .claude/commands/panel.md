@@ -15,4 +15,6 @@ El usuario gestiona desde `http://localhost:8099/panel.html` (abrir-panel.bat). 
 3. Al terminar TODAS las órdenes: `POST http://localhost:8099/orden/clear` (o borra el contenido del archivo a `{ "ordenes": [] }`) y di en ≤3 líneas qué se ejecutó.
 4. Si `orden.json` y `solicitud.json` están vacíos/no existen: di "sin órdenes pendientes" y termina.
 
+**Monitoreo (obligatorio para TODA orden, no solo corridas):** al empezar una orden escribe `SuitIdeasSaaS/estado.json` con `fase` actual, `fases[]` (si es ciclo: f1-f7; si es fase de producto: las fases de `FASES-PRODUCTO.md`), `log[]` con el paso en curso y `herramientas[]`; al cambiar de paso actualízalo; al terminar deja `fase: "fin"` + resumen. El panel web (poll 2s) lo muestra en vivo sin que el usuario pida nada.
+
 Mantén `estado.json` del panel si la orden genera una corrida (ver skill ideas-saas §Panel). No toques nada fuera de las órdenes pedidas.
