@@ -2,7 +2,7 @@
 proyecto: "SuitContractRenew"
 ruta: "SuitContractRenew/"
 etapa: "construccion"
-fase_producto: 5               # Operable — login PIN + dashboard /app; falta Fase 6 (avisos auto + respaldo)
+fase_producto: 6               # Automático — alertas diarias (SMTP o consola) + respaldo BD 7 días; falta Fase 7 (signup + cobros)
 creado: "2026-10-10"
 actualizado: "2026-10-12"
 
@@ -46,4 +46,4 @@ documentos:
 
 puerto: 3017
 
-proximo_paso: "Fase 6: avisos por correo 60d antes + respaldo programado de la BD; Fase 7 despues. Provisionar: APP_PIN en .env del taller"
+proximo_paso: "Fase 7: signup público + cobros Stripe. Provisionar: SMTP_HOST/USER/PASS en .env (Gmail App Password) para correos reales"

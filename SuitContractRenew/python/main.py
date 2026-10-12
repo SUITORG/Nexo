@@ -74,6 +74,34 @@ def main() -> int:
             print("No se pudo cerrar")
             return 1
         print(f"OK contrato #{sys.argv[2]} cerrado")
+    elif cmd == "alertar":
+        import os
+        import smtplib
+        from email.mime.text import MIMEText
+        hoy = date.today().isoformat()
+        rows = due_contracts(60, hoy)
+        if not rows:
+            print(f"alertar: 0 contratos por renovar en 60 días ({hoy}) — nada que enviar")
+            return 0
+        lineas = [f"  #{r[0]} {r[1]} ({r[2]}) renueva {r[3]} — ${r[4]:.0f}/mes" for r in rows]
+        cuerpo = f"Contratos por renovar en 60 días ({len(rows)}) — {hoy}:\n\n" + "\n".join(lineas)
+        host = os.environ.get("SMTP_HOST", "")
+        user = os.environ.get("SMTP_USER", "")
+        destino = os.environ.get("ALERTA_EMAIL", "") or user
+        if not host or not user or not destino:
+            print("alertar (sin SMTP configurado — salida por consola):")
+            print(cuerpo)
+            return 0
+        msg = MIMEText(cuerpo, "plain", "utf-8")
+        msg["Subject"] = f"ContractRenew — {len(rows)} contratos por renovar ({hoy})"
+        msg["From"] = user
+        msg["To"] = destino
+        puerto = int(os.environ.get("SMTP_PORT", "587"))
+        with smtplib.SMTP(host, puerto, timeout=30) as s:
+            s.starttls()
+            s.login(user, os.environ.get("SMTP_PASS", ""))
+            s.sendmail(user, [destino], msg.as_string())
+        print(f"alertar: correo enviado a {destino} — {len(rows)} contratos ({hoy})")
     else:
         print(f"Comando desconocido: {cmd}")
         return 1

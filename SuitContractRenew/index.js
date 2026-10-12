@@ -1,8 +1,10 @@
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const crypto = require('crypto');
 require('dotenv').config();
 const { handleAdd, handleDue, handleList, handleClose } = require('./handlers/contracts');
+const { runPy } = require('./db/client');
 
 const app = express();
 app.use(express.json());
@@ -60,5 +62,31 @@ app.post('/api/leads', async (req, res) => {
 app.use(express.static(path.join(__dirname, 'landing')));
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'app', 'index.html')));
 
-if (require.main === module) app.listen(PORT, () => console.log(`SuitContractRenew en http://localhost:${PORT}`));
+// --- Fase 6: automatización diaria (alertas + respaldo) ---
+function backupDb() {
+  try {
+    const db = path.join(__dirname, 'python', 'contractrenew.db');
+    if (!fs.existsSync(db)) return;
+    const dir = path.join(__dirname, 'backups');
+    fs.mkdirSync(dir, { recursive: true });
+    const hoy = new Date().toISOString().slice(0, 10);
+    fs.copyFileSync(db, path.join(dir, `contractrenew-${hoy}.db`));
+    // conservar solo los últimos 7
+    const viejos = fs.readdirSync(dir).filter(f => /^contractrenew-\d{4}-\d{2}-\d{2}\.db$/.test(f)).sort();
+    while (viejos.length > 7) fs.unlinkSync(path.join(dir, viejos.shift()));
+    console.log(`[respaldo] contractrenew-${hoy}.db`);
+  } catch (e) { console.error('[respaldo] error:', e.message); }
+}
+async function alertar() {
+  try {
+    const out = await runPy(['main.py', 'alertar']);
+    console.log(out.trim());
+  } catch (e) { console.error('[alerta] error:', e.message); }
+}
+const HORAS_ALERTA = parseInt(process.env.HORAS_ALERTA, 10) || 24;
+if (require.main === module) {
+  alertar(); backupDb();
+  setInterval(() => { alertar(); backupDb(); }, HORAS_ALERTA * 3600e3);
+  app.listen(PORT, () => console.log(`SuitContractRenew en http://localhost:${PORT} (alertas cada ${HORAS_ALERTA}h)`));
+}
 module.exports = app;
