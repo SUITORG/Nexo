@@ -1,4 +1,4 @@
-const { addContract, dueContracts } = require('../db/client');
+const { addContract, dueContracts, runPy } = require('../db/client');
 
 async function handleAdd(req, res) {
   const { cliente, renovacion, precio_mensual, tipo } = req.body;
@@ -21,4 +21,22 @@ async function handleDue(req, res) {
   }
 }
 
-module.exports = { handleAdd, handleDue };
+async function handleList(req, res) {
+  try {
+    const out = await runPy(['main.py', 'list-json']);
+    res.json(JSON.parse(out));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+}
+
+async function handleClose(req, res) {
+  try {
+    const out = await runPy(['main.py', 'close', String(req.params.id)]);
+    res.json({ ok: out.includes('OK'), detalle: out.trim() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+}
+
+module.exports = { handleAdd, handleDue, handleList, handleClose };

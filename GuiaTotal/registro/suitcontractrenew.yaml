@@ -2,9 +2,9 @@
 proyecto: "SuitContractRenew"
 ruta: "SuitContractRenew/"
 etapa: "construccion"
-fase_producto: 4               # Vendible — ver GuiaTotal/FASES-PRODUCTO.md; falta Fase 5 (login+dashboard)
+fase_producto: 5               # Operable — login PIN + dashboard /app; falta Fase 6 (avisos auto + respaldo)
 creado: "2026-10-10"
-actualizado: "2026-10-11"
+actualizado: "2026-10-12"
 
 validacion:
   problema: "Talleres HVAC 1-5 técnicos pierden renovaciones de contratos de mantenimiento que viven en Excel/papel/memoria: cada una perdida = $600-2,000/año."
@@ -46,4 +46,4 @@ documentos:
 
 puerto: 3017
 
-proximo_paso: "Ciclo cierre completo (f1+f3 PASA 6/6, PLAN-SYNC sin deltas). Queda: push a main (F7, ~107 ahead) + prospección HVAC con script MANUAL_VENTAS"
+proximo_paso: "Fase 6: avisos por correo 60d antes + respaldo programado de la BD; Fase 7 despues. Provisionar: APP_PIN en .env del taller"

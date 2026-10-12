@@ -20,7 +20,7 @@
 
 | Módulo | Fase | Falta para la siguiente |
 |---|---|---|
-| SuitContractRenew | **4 (Vendible)** | Fase 5: login + dashboard de contratos (hoy solo API/CLI) |
+| SuitContractRenew | **5 (Operable)** | Fase 6: avisos por correo automáticos + respaldo programado |
 | SuitPawBook | **4 (Vendible)** | Fase 5: login + dashboard de reservas (landing y API listas) |
 | SuitReviewPulse | **2-3 (MVP/Validado)** | Landing + leads (4G) pendiente |
 

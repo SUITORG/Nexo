@@ -59,6 +59,16 @@ def main() -> int:
         for r in list_all():
             estado = "activo" if r[5] else "cerrado"
             print(f"  #{r[0]} {r[1]} ({r[2]}) renov={r[3]} ${r[4]:.0f}/mes [{estado}]")
+    elif cmd == "list-json":
+        rows = list_all()
+        print(json.dumps({
+            "total": len(rows),
+            "contratos": [
+                {"id": r[0], "cliente": r[1], "tipo": r[2], "renovacion": r[3],
+                 "precio_mensual": r[4], "activo": bool(r[5])}
+                for r in rows
+            ],
+        }, ensure_ascii=False))
     elif cmd == "close":
         if len(sys.argv) < 3 or not deactivate(int(sys.argv[2])):
             print("No se pudo cerrar")

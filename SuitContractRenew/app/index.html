@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>ContractRenew — Mis contratos</title>
+<style>
+  :root { --accent:#2dd4bf; --bg:#0b0f1a; --surface:#131a2a; --text:#f5f6fa; --dim:#aab3c5; --border:#232c42; --err:#f87171; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  .wrap { max-width:720px; margin:0 auto; padding:1.5rem 1.2rem 4rem; }
+  h1 { font-size:1.3rem; margin-bottom:.2rem; }
+  .dim { color:var(--dim); }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.2rem; margin-bottom:1rem; }
+  .card h2 { font-size:1rem; margin-bottom:.7rem; }
+  .row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; }
+  label { display:block; font-size:.82rem; font-weight:600; margin:.5rem 0 .2rem; }
+  input { width:100%; padding:.6rem .8rem; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:1rem; }
+  button { background:var(--accent); color:#04231f; border:0; border-radius:999px; padding:.6rem 1.4rem; font-weight:700; cursor:pointer; }
+  button.sm { padding:.3rem .9rem; font-size:.85rem; }
+  button.ghost { background:transparent; color:var(--dim); border:1px solid var(--border); }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  th, td { text-align:left; padding:.5rem .4rem; border-bottom:1px solid var(--border); }
+  th { color:var(--dim); font-size:.78rem; }
+  .vencido { color:var(--err); font-weight:700; }
+  .proximo { color:var(--warn,#fbbf24); font-weight:700; }
+  .msg { margin-top:.6rem; font-size:.88rem; }
+  .msg.ok { color:var(--accent); }
+  .msg.err { color:var(--err); }
+  #login-box { max-width:340px; margin:18vh auto; }
+</style>
+</head>
+<body>
+<div id="login-box" class="card" style="display:none">
+  <h2>🔐 Entrar</h2>
+  <p class="dim" style="font-size:.88rem;margin-bottom:.4rem">PIN de tu taller</p>
+  <input id="pin" type="password" inputmode="numeric" maxlength="12">
+  <button id="btn-login" style="width:100%;margin-top:.8rem">Entrar</button>
+  <p class="msg err" id="login-msg"></p>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+  <h1>ContractRenew</h1>
+  <p class="dim" style="margin-bottom:1rem">Tus contratos de mantenimiento y sus renovaciones</p>
+
+  <div class="card">
+    <h2>📅 Vence en los próximos 60 días</h2>
+    <div id="due-list" class="dim">Cargando…</div>
+  </div>
+
+  <div class="card">
+    <h2>➕ Nuevo contrato</h2>
+    <div class="row">
+      <div style="flex:2;min-width:180px"><label>Cliente *</label><input id="f-cliente" maxlength="120"></div>
+      <div style="flex:1;min-width:130px"><label>Renueva (fecha) *</label><input id="f-fecha" type="date"></div>
+      <div style="flex:1;min-width:100px"><label>$/mes</label><input id="f-precio" type="number" min="0"></div>
+      <button id="btn-add">Agregar</button>
+    </div>
+    <p class="msg" id="add-msg"></p>
+  </div>
+
+  <div class="card">
+    <h2>📋 Todos mis contratos</h2>
+    <div id="all-list" class="dim">Cargando…</div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+async function api(p, opts) {
+  const r = await fetch(p, opts);
+  if (r.status === 401) { showLogin(); throw new Error('401'); }
+  return r;
+}
+function showLogin() { $('login-box').style.display = 'block'; $('app').style.display = 'none'; }
+function showApp() { $('login-box').style.display = 'none'; $('app').style.display = 'block'; load(); }
+
+$('btn-login').addEventListener('click', async () => {
+  const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: $('pin').value }) });
+  if (r.ok) showApp(); else $('login-msg').textContent = 'PIN incorrecto';
+});
+$('pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-login').click(); });
+
+function diasHasta(f) { return Math.ceil((new Date(f) - new Date()) / 864e5); }
+
+async function load() {
+  try {
+    const [due, all] = await Promise.all([
+      (await api('/api/contracts/due/60')).json(),
+      (await api('/api/contracts')).json()
+    ]);
+    $('due-list').innerHTML = due.total === 0
+      ? '<span class="dim">Ninguno por renovar en 60 días 🎉</span>'
+      : '<table><tr><th>Cliente</th><th>Renueva</th><th>Faltan</th><th>$/mes</th></tr>' +
+        due.contratos.map(c => {
+          const d = diasHasta(c.renovacion);
+          return `<tr><td>${c.cliente}</td><td>${c.renovacion}</td><td class="${d < 0 ? 'vencido' : 'proximo'}">${d < 0 ? 'VENCIDO ' + (-d) + 'd' : d + 'd'}</td><td>$${c.precio_mensual}</td></tr>`;
+        }).join('') + '</table>';
+    $('all-list').innerHTML = '<table><tr><th>#</th><th>Cliente</th><th>Renueva</th><th>$/mes</th><th></th></tr>' +
+      all.contratos.map(c => `<tr><td>${c.id}</td><td>${c.cliente}</td><td>${c.renovacion}</td><td>$${c.precio_mensual}</td><td>${c.activo ? `<button class="sm ghost" onclick="cerrar(${c.id})">Cerrar</button>` : '<span class="dim">cerrado</span>'}</td></tr>`).join('') + '</table>';
+  } catch (e) { if (e.message !== '401') $('due-list').textContent = 'Error cargando datos'; }
+}
+
+$('btn-add').addEventListener('click', async () => {
+  const msg = $('add-msg');
+  msg.textContent = '';
+  try {
+    const r = await api('/api/contracts', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cliente: $('f-cliente').value, renovacion: $('f-fecha').value, precio_mensual: Number($('f-precio').value || 0) })
+    });
+    if (!r.ok) throw new Error((await r.json()).error || 'error');
+    msg.textContent = '✓ Contrato agregado'; msg.className = 'msg ok';
+    $('f-cliente').value = ''; $('f-precio').value = '';
+    load();
+  } catch (e) { msg.textContent = '✗ ' + e.message; msg.className = 'msg err'; }
+});
+
+async function cerrar(id) {
+  if (!confirm('¿Cerrar este contrato?')) return;
+  await api(`/api/contracts/${id}/close`, { method: 'POST' });
+  load();
+}
+
+// arranque: si hay PIN y no autoriza → login; si no hay PIN → app directa
+fetch('/api/contracts').then(r => { if (r.status === 401) showLogin(); else showApp(); });
+</script>
+</body>
+</html>
