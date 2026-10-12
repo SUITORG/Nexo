@@ -276,13 +276,6 @@ function toast(msg) {
   t._h = setTimeout(() => { t.style.display = 'none'; }, 3200);
 }
 
-function continuar(cmd) {
-  navigator.clipboard.writeText(cmd).then(
-    () => toast('Copiado: ' + cmd + ' — pégalo en el chat'),
-    () => toast('Comando: ' + cmd + ' — cópialo al chat')
-  );
-}
-
 async function loadRegistro() {
   try {
     const r = await fetch('registro?t=' + Date.now(), { cache: 'no-store' });
@@ -328,15 +321,11 @@ async function loadRegistro() {
           <button class="save" data-save="${i}" data-ruta="${(c.ruta || '').replace(/"/g, '&quot;')}">✓ Guardar respuestas</button>
           <div class="hint">★ = sugerencia. Responde solo lo que quieras; el resto queda pendiente.</div>
         </div>` : ''}
-        ${sig ? `<button class="go" data-orden="fase" data-proy="${(c.ruta || c.proyecto).replace(/"/g, '&quot;')}" data-det="${sig.replace(/"/g, '&quot;')}">▶ Pedir: ${sig.split(':')[0]}</button>` : ''}
-        ${cmd ? `<button class="go2" data-cmd="${cmd.replace(/"/g, '&quot;')}">▶ Continuar (ciclo)</button>` : ''}
+        ${sig ? `<button class="go" data-orden="fase" data-proy="${(c.ruta || c.proyecto).replace(/"/g, '&quot;')}" data-det="${sig.replace(/"/g, '&quot;')}">▶ Pedir al agente: ${sig.split(':')[0]}</button>`
+              : `<button class="go" data-orden="ciclo" data-proy="${(c.ruta || c.proyecto).replace(/"/g, '&quot;')}">🤖 Pedir al agente (continuar)</button>`}
         ${pcs.length ? `<button class="go2" data-toggle="${i}">✍️ Responder POR CONFIRMAR</button>` : ''}
-        <button class="go2" data-orden="ciclo" data-proy="${(c.ruta || c.proyecto).replace(/"/g, '&quot;')}">🤖 Pedir al agente</button>
       </div>`;
     }).join('');
-    $('proy-list').querySelectorAll('.go').forEach(b => {
-      b.addEventListener('click', () => continuar(b.getAttribute('data-cmd')));
-    });
     $('proy-list').querySelectorAll('[data-toggle]').forEach(b => {
       b.addEventListener('click', () => {
         const f = $('pcf-' + b.getAttribute('data-toggle'));
