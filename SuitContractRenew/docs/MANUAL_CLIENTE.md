@@ -10,8 +10,8 @@ Una lista viva de sus contratos de mantenimiento que le avisa qué contrato venc
 ## Entrar a su panel
 1. Doble clic a `cliente.bat` → se abre el navegador.
 2. Primera vez: pulsa **"Crear cuenta"**, llena su nombre, taller y email → le aparece su **PIN de 6 dígitos**. Guárdelo.
-3. Cada vez que entre, escribe su PIN (el oj 👁 muestra/oculta lo que escribe).
-4. **¿Olvidó el PIN?** Ejecuta `recuperar-pin.bat` en la carpeta del programa (solo funciona en la computadora donde creó la cuenta).
+3. Cada vez que entre, escribe su PIN (el ojo 👁 muestra/oculta lo que escribe).
+4. **¿Olvidó el PIN?** En la pantalla de entrada, pulsa "¿Olvidaste tu PIN?", escribe el email con el que creó la cuenta y le aparece su PIN.
 
 ## Registro de un contrato
 Necesita: nombre del cliente, fecha de renovación (YYYY-MM-DD) y precio mensual del contrato.

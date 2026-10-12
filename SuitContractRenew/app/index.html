@@ -45,6 +45,10 @@
     </div>
     <button id="btn-login" style="width:100%;margin-top:.8rem">Entrar</button>
   </div>
+  <div id="recover-fields" style="display:none">
+    <input id="r-email" type="email" maxlength="160" placeholder="Email con el que creaste la cuenta *">
+    <button id="btn-recover" style="width:100%;margin-top:.8rem">Mostrar mi PIN</button>
+  </div>
   <div id="signup-fields" style="display:none">
     <input id="s-taller" maxlength="120" placeholder="Nombre del taller *">
     <input id="s-nombre" maxlength="120" placeholder="Tu nombre *" style="margin-top:.5rem">
@@ -52,9 +56,9 @@
     <button id="btn-signup" style="width:100%;margin-top:.8rem">Crear mi cuenta</button>
   </div>
   <p class="msg" id="login-msg"></p>
-  <p style="margin-top:.9rem;font-size:.82rem;text-align:center">
-    <a href="#" id="toggle-auth" style="color:var(--accent)">¿No tienes cuenta? Crear cuenta</a>
-    <br><span class="dim" style="font-size:.75rem">¿Olvidaste tu PIN? Ejecuta <b>recuperar-pin.bat</b> en la carpeta del programa</span>
+  <p style="margin-top:.9rem;font-size:.82rem;text-align:center;line-height:1.7">
+    <a href="#" id="toggle-auth" style="color:var(--accent)">¿No tienes cuenta? Crear cuenta</a><br>
+    <a href="#" id="toggle-recover" style="color:var(--dim);font-size:.78rem">¿Olvidaste tu PIN?</a>
   </p>
 </div>
 
@@ -110,9 +114,32 @@ $('toggle-auth').addEventListener('click', e => {
   const creating = $('login-fields').style.display !== 'none';
   $('login-fields').style.display = creating ? 'none' : 'block';
   $('signup-fields').style.display = creating ? 'block' : 'none';
+  $('recover-fields').style.display = 'none';
   $('login-title').textContent = creating ? '✂ Crear cuenta' : '🔐 Entrar';
   $('toggle-auth').textContent = creating ? '¿Ya tienes cuenta? Entrar' : '¿No tienes cuenta? Crear cuenta';
   $('login-msg').textContent = '';
+});
+$('toggle-recover').addEventListener('click', e => {
+  e.preventDefault();
+  const showing = $('recover-fields').style.display !== 'none';
+  $('recover-fields').style.display = showing ? 'none' : 'block';
+  $('login-fields').style.display = showing ? 'block' : 'none';
+  $('signup-fields').style.display = 'none';
+  $('login-title').textContent = showing ? '🔐 Entrar' : '🔑 Recuperar PIN';
+  $('login-msg').textContent = '';
+});
+$('btn-recover').addEventListener('click', async () => {
+  const msg = $('login-msg');
+  try {
+    const r = await fetch('/api/pin-recuperar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: $('r-email').value })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'error');
+    msg.className = 'msg ok';
+    msg.innerHTML = `Tu PIN: <b style="color:var(--text);font-size:1.2rem">${d.pin}</b>`;
+  } catch (e) { msg.className = 'msg err'; msg.textContent = '✗ ' + e.message; }
 });
 $('btn-signup').addEventListener('click', async () => {
   const msg = $('login-msg');

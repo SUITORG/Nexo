@@ -30,6 +30,17 @@ app.post('/api/signup', (req, res) => {
   res.status(201).json({ ok: true, pin, nota: 'Guarda tu PIN — con él entras a /app' });
 });
 
+// --- Recuperar PIN: el email del signup revela el PIN (single-tenant local) ---
+app.post('/api/pin-recuperar', (req, res) => {
+  const t = leerTaller();
+  if (!t) return res.status(404).json({ error: 'no hay cuenta creada' });
+  const email = (req.body.email || '').trim().toLowerCase();
+  if (!email || email !== (t.email || '').toLowerCase()) {
+    return res.status(401).json({ error: 'ese email no coincide con el de la cuenta' });
+  }
+  res.json({ ok: true, pin: t.pin });
+});
+
 // --- Login simple (Fase 5): PIN del taller, cookie de sesión ---
 app.post('/api/login', (req, res) => {
   const p = pinActual();
