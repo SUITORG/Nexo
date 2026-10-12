@@ -43,4 +43,4 @@ documentos:
 
 puerto: 3017
 
-proximo_paso: "POR CONFIRMAR resueltos (panel 2026-10-11: local hasta 1er cliente · alertas por correo · 1 taller/cuenta · Stripe a futuro). Siguiente: botón Pedir al agente → /panel para ciclo, o push (102 ahead), o prospección HVAC"
+proximo_paso: "Ciclo cierre completo (f1+f3 PASA 6/6, PLAN-SYNC sin deltas). Queda: push a main (F7, ~107 ahead) + prospección HVAC con script MANUAL_VENTAS"
