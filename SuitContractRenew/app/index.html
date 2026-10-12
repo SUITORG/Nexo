@@ -163,8 +163,11 @@ async function cerrar(id) {
   load();
 }
 
-// arranque: si hay PIN y no autoriza → login; si no hay PIN → app directa
-fetch('/api/contracts').then(r => { if (r.status === 401) showLogin(); else showApp(); });
+// arranque: si no hay cuenta creada → signup; si hay PIN y no autoriza → login; si no hay PIN → app directa
+fetch('/api/config').then(r => r.json()).then(cfg => {
+  if (!cfg.cuenta) { showLogin(); $('toggle-auth').click(); return; }  // sin cuenta: abrir signup
+  fetch('/api/contracts').then(r => { if (r.status === 401) showLogin(); else showApp(); });
+});
 </script>
 </body>
 </html>

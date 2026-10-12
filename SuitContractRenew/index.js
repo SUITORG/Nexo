@@ -17,7 +17,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', module: 'SuitContr
 
 // --- Fase 7: config pública para la landing (cobro + contacto) ---
 app.get('/api/config', (req, res) => {
-  res.json({ stripe: process.env.STRIPE_LINK_URL || '', whatsapp: process.env.CONTACTO_WA || '' });
+  res.json({ stripe: process.env.STRIPE_LINK_URL || '', whatsapp: process.env.CONTACTO_WA || '', cuenta: !!leerTaller() });
 });
 
 // --- Fase 7: signup público — crea el taller y devuelve su PIN ---
