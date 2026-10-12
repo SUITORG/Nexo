@@ -40,6 +40,18 @@ def main() -> int:
             sys.argv[5] if len(sys.argv) > 5 else "mantenimiento",
         )
         print(f"OK contrato #{cid} — {sys.argv[2]} renueva {sys.argv[3]}")
+    elif cmd == "facturacion":
+        from datetime import date as _d
+        hoy = _d.today().isoformat()
+        activos = [r for r in list_all() if r[5] == 1]
+        total = sum(r[4] for r in activos)
+        print(f"\n=== FACTURACIÓN ({hoy}) — {len(activos)} contratos activos ===")
+        for r in sorted(activos, key=lambda x: x[3]):
+            marca = "VENCIDO" if r[3] < hoy else ""
+            print(f"  #{r[0]:<3} {r[1]:<30} renueva {r[3]} {marca:<8} ${r[4]:>7.2f}/mes")
+        print(f"  {'':->56}")
+        print(f"  TOTAL mensual a facturar: ${total:.2f}")
+        print(f"  TOTAL anual proyectado:   ${total*12:.2f}\n")
     elif cmd == "due":
         print_due(int(sys.argv[2]) if len(sys.argv) > 2 else 60)
     elif cmd == "due-json":
