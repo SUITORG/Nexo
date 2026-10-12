@@ -698,3 +698,39 @@ projects:
         port: 3017
         type: express
     notes: "Núcleo Python stdlib puro (sin pip) en python/, spawn desde db/client.js con PYTHONIOENCODING=utf-8. Soft-delete con activo=0. MVP single-tenant; integración futura ? Supabase + id_empresa."
+
+  suit-pawbook:
+    name: "SuitPawBook - Reservas con deposito para groomers"
+    path: SuitPawBook/
+    description: "Idea ganadora pipeline ideas-saas 2026-10-11 modo verificadas (re-juez 8.0): reservas con deposito configurable + perfil mascota contra no-show epidemic (r/doggrooming). Wrapper Express 3018 sobre nucleo Python stdlib + SQLite WAL. Landing + leads Supabase (4G). Ver ADR-051/053."
+    skills:
+      - javascript
+    context:
+      - SuitPawBook/index.js
+      - SuitPawBook/package.json
+      - SuitPawBook/docs/MANUAL_TECNICO.md
+      - SuitPawBook/docs/MANUAL_VENTAS.md
+    frontend:
+      public: true
+      public_route: "/ (landing estatica + form leads)"
+      public_gate: "none (producto propio)"
+      staff: false
+      staff_route: "none (API + CLI)"
+      staff_gate: "proveedor SuitOrg"
+      api_endpoints:
+        - "GET /api/health"
+        - "GET /api/today"
+        - "POST /api/pets"
+        - "POST /api/bookings"
+        - "POST /api/bookings/:id/cancel"
+        - "POST /api/leads (landing -> Supabase leads_pawbook)"
+    environment:
+      PORT: 3018
+      TYPE: service
+      DB: "sqlite-local + SUPABASE (solo leads)"
+    servers:
+      - name: pawbook
+        path: SuitPawBook/index.js
+        port: 3018
+        type: express
+    notes: "Primera corrida ciclo completo verificadas: analista-proy (8 fuentes) + sintesis + re-juez 8.0. Deposito registrado, no cobrado (Stripe fase 2). Politica cancelacion singleton policy id=1."

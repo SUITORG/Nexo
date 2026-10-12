@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (50 ADRs)
+## decisions/ (51 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -57,6 +57,7 @@
 | ADR-050 | [Google Flow local MCP para assets creativos](ADR-050-google-flow-mcp-local.md) | Accepted (2026-10-10) | 2026-10-10 | SuitContractRenew (y futuros módulos) necesitan assets creativos (imágenes, videos) para landing y ventas. Google Flow… | 049 |
 | ADR-051 | [Ideas Verificadas + Go-to-Market automático (ciclo natural completo)](ADR-051-ideas-verificadas-go-to-market.md) | Accepted (2026-10-10) | 2026-10-10 | Las primeras corridas de `ideas-saas` (ADR-047/048/049) generaban ideas y evaluaban con el panel, pero sin investigación web real ("ideas… | 047, 048, 049, 050 |
 | ADR-052 | [Skill copywriter-meta (5 copys Meta-compliant + revisión por demanda)](ADR-052-copywriter-meta-skill.md) | Accepted (2026-10-11) | 2026-10-11 | El copywriting de pago (pauta Meta) no estaba cubierto: `clusters-seo`/`paginas-seo` cubren SEO, `landing-pages` el sitio,… | 051 |
+| ADR-053 | [Primera corrida ideas-saas en modo VERIFICADAS — PawBook (re-juez 8.0)](ADR-053-corrida-verificadas-pawbook.md) | Accepted (2026-10-11) | 2026-10-11 | Primera ejecución real del ciclo completo aprobado en ADR-051: modo VERIFICADAS (2V + 4G) aplicado de punta a punta. El usuario pidió… | 047, 049, 051 |
 
 ## bugs/ (6)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…

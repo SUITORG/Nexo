@@ -293,6 +293,7 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
  | 3015 | SuitCVLO-open (auditoría OOH + switch IA OpenCode/Ollama/HuggingFace/DeepSeek/OpenRouter/Gemini — ADR-037/038/039/041) |
  | 3016 | SuitReviewPulse (monitor de reseñas Google, idea-saas — ADR-047/048) |
  | 3017 | SuitContractRenew (contratos de mantenimiento HVAC, idea-saas — ADR-049) |
+ | 3018 | SuitPawBook (reservas con depósito groomers, idea-saas verificadas — ADR-051/053) |
  | n/a | SuitCVLOGCPy (mismo pipeline en Google Colab con VLM en GPU, sin servidor — ADR-040) |
  | 8000 | CampanasAi |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas

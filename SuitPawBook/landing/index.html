@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawBook — Sin depósito, no hay reserva</title>
+    <meta name="description" content="Reservas con depósito para groomers que hoy pierden $50-150 por cada no-show. Desde $19/mes.">
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        :root {
+            --accent: #f59e0b;
+            --bg: #0b0f1a;
+            --surface: #131a2a;
+            --text: #f5f6fa;
+            --text-dim: #aab3c5;
+            --border: #232c42;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        .container { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
+        h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); margin-bottom: 1.5rem; text-align: center; }
+        .dim { color: var(--text-dim); }
+        .hero { text-align: center; padding: 5.5rem 1.5rem 4.5rem; background-image: linear-gradient(rgba(11, 15, 26, 0.78), rgba(11, 15, 26, 0.94)), url('assets/hero.png'); background-size: cover; background-position: center right; }
+        .hero h1 { font-size: clamp(2.2rem, 6vw, 3.5rem); font-weight: 800; margin-bottom: 0.75rem; }
+        .slogan { font-size: clamp(1.1rem, 2.5vw, 1.4rem); color: var(--accent); font-weight: 700; margin-bottom: 1.25rem; }
+        .oferta { display: inline-block; background: linear-gradient(135deg, var(--accent), #38bdf8); color: #04231f; padding: 0.55rem 1.5rem; border-radius: 999px; font-weight: 700; margin-bottom: 1rem; }
+        .descripcion { color: var(--text-dim); max-width: 620px; margin: 0 auto 2rem; }
+        .cta { display: inline-block; background: var(--accent); color: #04231f; text-decoration: none; padding: 1rem 2.75rem; border-radius: 999px; font-weight: 700; font-size: 1.1rem; transition: transform 0.15s ease; }
+        .cta:hover { transform: translateY(-2px); }
+        section { padding: 3.5rem 0; }
+        .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
+        .card h3 { margin-bottom: 0.5rem; font-size: 1.05rem; }
+        .card p { color: var(--text-dim); font-size: 0.95rem; }
+        .num { display: inline-block; background: var(--accent); color: #04231f; font-weight: 800; border-radius: 999px; width: 28px; height: 28px; text-align: center; line-height: 28px; margin-bottom: 0.75rem; }
+        .precios { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; max-width: 700px; margin: 0 auto; }
+        .plan { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; text-align: center; }
+        .plan.destacado { border-color: var(--accent); box-shadow: 0 0 30px rgba(45, 212, 191, 0.15); }
+        .plan .precio { font-size: 2rem; font-weight: 800; color: var(--accent); }
+        .plan ul { list-style: none; margin: 1.25rem 0 1.75rem; color: var(--text-dim); font-size: 0.95rem; text-align: left; }
+        .plan li { padding: 0.3rem 0; }
+        .plan li::before { content: "✓ "; color: var(--accent); font-weight: 700; }
+        .plan .cta { font-size: 1rem; padding: 0.8rem 2rem; }
+        .faq { max-width: 700px; margin: 0 auto; }
+        .faq .card { margin-bottom: 0.75rem; }
+        .faq strong { color: var(--text); }
+        form { max-width: 520px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; }
+        label { display: block; font-size: 0.9rem; font-weight: 600; margin: 0.9rem 0 0.3rem; }
+        input, select, textarea { width: 100%; padding: 0.7rem 0.9rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+        button[type="submit"] { width: 100%; margin-top: 1.5rem; background: var(--accent); color: #04231f; border: none; padding: 1rem; border-radius: 999px; font-weight: 700; font-size: 1.05rem; cursor: pointer; }
+        button[type="submit"]:disabled { opacity: 0.6; cursor: wait; }
+        .form-msg { margin-top: 1rem; text-align: center; font-weight: 600; display: none; }
+        .form-msg.ok { color: var(--accent); display: block; }
+        .form-msg.err { color: #f87171; display: block; }
+        footer { padding: 2.5rem 0; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>PawBook</h1>
+        <p class="slogan">Sin depósito, no hay reserva</p>
+        <div class="oferta">Depósito configurable en cada reserva</div>
+        <p class="descripcion"><strong>Para ti si:</strong> eres groomer móvil o salón 1-5 personas, tienes agenda de 2-8 semanas y cada no-show te cuesta $50-150 perdidos + un hueco que no se rellena.</p>
+        <a class="cta" href="#lead">Pon tu política de depósito</a>
+    </div>
+
+    <section>
+        <div class="container">
+            <h2>El problema</h2>
+            <div class="grid3">
+                <div class="card"><h3>No-show epidemic</h3><p>Tres no-shows en una mañana no son mala suerte: son el problema #1 del grooming chico en 2026.</p></div>
+                <div class="card"><h3>Depósitos a mano</h3><p>Cobrar por Zelle/Venmo y llevar la cuenta en la cabeza no escala y genera conflictos.</p></div>
+                <div class="card"><h3>Confirmaciones no bastan</h3><p>Texto de confirmación leído y aún así no aparecen. El único recordatorio que funciona es el dinero en juego.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Cómo funciona</h2>
+            <div class="grid3">
+                <div class="card"><span class="num">1</span><h3>Carga tus servicios</h3><p>Baño, corte, raza grande — con tus precios reales. 10 minutos.</p></div>
+                <div class="card"><span class="num">2</span><h3>Política automática</h3><p>Default 24h=50%, menos de 24h=100%. La ajustas cuando quieras.</p></div>
+                <div class="card"><span class="num">3</span><h3>Reservas con depósito</h3><p>Cada cita deja depósito registrado (30% default). Tú lo cobras a mano como siempre.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Precios</h2>
+            <div class="precios">
+                <div class="plan">
+                    <h3>Solo</h3>
+                    <p class="precio">$19<span class="dim" style="font-size:1rem">/mes</span></p>
+                    <ul>
+                        <li>1 usuario</li>
+                        <li>Reservas ilimitadas + depósito</li>
+                        <li>Perfil de mascota</li>
+                    </ul>
+                    <a class="cta" href="#lead">Empezar</a>
+                </div>
+                <div class="plan destacado">
+                    <h3>Equipo</h3>
+                    <p class="precio">$29<span class="dim" style="font-size:1rem">/mes</span></p>
+                    <ul>
+                        <li>Hasta 5 usuarios</li>
+                        <li>Lista de espera</li>
+                        <li>Reportes básicos</li>
+                    </ul>
+                    <a class="cta" href="#lead">Empezar</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Preguntas que todos hacen</h2>
+            <div class="faq">
+                <div class="card"><strong>“Ya uso Square gratis”</strong> <span class="dim">— Square agenda pero no pone depósito ni política de cancelación. El no-show te cuesta más que $19.</span></div>
+                <div class="card"><strong>“Mis clientes se enojan”</strong> <span class="dim">— Los que implementan depósitos reportan que dejan de faltar. Los que se enojan eran tus no-shows.</span></div>
+                <div class="card"><strong>“Muy caro”</strong> <span class="dim">— Un no-show = $50-150. Dos al mes y ya pagaste un año.</span></div>
+                <div class="card"><strong>“Ya tengo agenda”</strong> <span class="dim">— ¿Te cobra depósito? ¿Sabe las vacunas del perro? Si no, sigues perdiendo huecos.</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="lead">
+        <div class="container">
+            <h2>Pon tu política de depósito en 10 minutos</h2>
+            <form id="lead-form">
+                <label for="nombre">Tu nombre *</label>
+                <input id="nombre" name="nombre" required maxlength="120" autocomplete="name">
+                <label for="negocio">Nombre del negocio</label>
+                <input id="negocio" name="negocio" maxlength="160" autocomplete="organization">
+                <label for="whatsapp">WhatsApp *</label>
+                <input id="whatsapp" name="whatsapp" required maxlength="40" inputmode="tel" placeholder="Ej. 81 1234 5678">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" maxlength="160" autocomplete="email">
+                
+                <label for="mensaje">Mensaje (opcional)</label>
+                <textarea id="mensaje" name="mensaje" rows="3" maxlength="500"></textarea>
+                <button type="submit">Enviar</button>
+                <p class="form-msg" id="form-msg"></p>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        PawBook — parte de SuitOrg · Puerto 3018 · El depósito se registra y lo cobras tú: sin cargos automáticos todavía
+    </footer>
+
+    <script>
+        document.getElementById('lead-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const msg = document.getElementById('form-msg');
+            btn.disabled = true;
+            msg.className = 'form-msg';
+            try {
+                const data = Object.fromEntries(new FormData(e.target).entries());
+                const res = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error(await res.text());
+                e.target.reset();
+                msg.textContent = '¡Listo! Te contactamos pronto.';
+                msg.className = 'form-msg ok';
+            } catch (err) {
+                msg.textContent = 'No se pudo enviar. Escríbenos directo por WhatsApp.';
+                msg.className = 'form-msg err';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

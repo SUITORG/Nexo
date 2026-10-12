@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-11 | **Total archivos:** 1603 JS/GS
+**Generado:** 2026-10-12 | **Total archivos:** 1608 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10428,6 +10428,22 @@
 | 764 | `domain` |
 | 765 | `version` |
 
+## `SuitIdeasSaaS/serve-panel.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `git` |
+| 14 | `gitInfo` |
+| 49 | `amigable` |
+| 54 | `leerPorConfirmar` |
+| 67 | `resolverPorConfirmar` |
+| 92 | `parseCard` |
+| 108 | `leerRegistro` |
+| 116 | `leerPendientes` |
+| 135 | `leerBody` |
+| 145 | `json` |
+| 146 | `err` |
+
 ## `SuitOSCore/ai-router/circuitBreaker.js`
 
 | Línea | Función |
@@ -10607,6 +10623,22 @@
 | 25 | `scanFiles` |
 | 39 | `extractFunctions` |
 | 77 | `buildIndex` |
+
+## `SuitPawBook/db/client.js`
+
+| Línea | Función |
+|-------|---------|
+| 7 | `runPy` |
+| 19 | `todayJson` |
+
+## `SuitPawBook/handlers/pawbook.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `handleToday` |
+| 8 | `handlePetAdd` |
+| 17 | `handleBookAdd` |
+| 28 | `handleCancel` |
 
 ## `SuitPoke/js/juego.js`
 
