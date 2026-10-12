@@ -298,7 +298,8 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
  | 8000 | CampanasAi |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas
 6. Si el módulo tiene gate de UI (como `modo` flags o `usa_reservaciones`), documentarlo en `projects.yaml` bajo `frontend:`
-7. Escribir ADR en `.suit/memory/decisions/` explicando la decisión arquitectónica
+7. Si el módulo tiene servidor local con puerto, crear `.bat` lanzador en la raíz del módulo con la skill `bat-launcher` (plantilla canónica: banner, kill por puerto, ventana chica, espera netstat, abre navegador)
+8. Escribir ADR en `.suit/memory/decisions/` explicando la decisión arquitectónica
 
 ## High-risk changes (always report before acting)
 - **Environment**: WSL / GitHub / Windows

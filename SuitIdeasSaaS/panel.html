@@ -393,15 +393,29 @@ async function loadPendientes() {
         <span class="psec">${p.seccion}</span>
         <span class="ptit">${p.titulo}</span>
         <span class="pdet">${p.detalle || ''}</span>
-        <button class="pdone" data-tit="${p.titulo.replace(/"/g, '&quot;')}">✓ listo</button>
+        <button class="pdone" data-tit="${p.titulo.replace(/"/g, '&quot;')}">🤖 Pedir al agente</button>
+        <button class="pdone" data-tit2="${p.titulo.replace(/"/g, '&quot;')}">✓ listo</button>
       </div>`).join('');
-    $('pend-list').querySelectorAll('.pdone').forEach(b => {
+    $('pend-list').querySelectorAll('[data-tit]').forEach(b => {
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        try {
+          await fetch('orden', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipo: 'pendiente', proyecto: '', detalle: b.getAttribute('data-tit') })
+          });
+          toast('✓ Orden lista — pega /panel en el chat y el agente resuelve esto');
+        } catch (_) { toast('✗ sin conexión'); }
+        finally { b.disabled = false; }
+      });
+    });
+    $('pend-list').querySelectorAll('[data-tit2]').forEach(b => {
       b.addEventListener('click', async () => {
         b.disabled = true;
         try {
           const r = await fetch('resolver-pendiente', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ titulo: b.getAttribute('data-tit') })
+            body: JSON.stringify({ titulo: b.getAttribute('data-tit2') })
           });
           const d = await r.json();
           if (d.ok) { toast('✓ Marcado como resuelto en PENDIENTES.md'); setTimeout(loadPendientes, 1200); }

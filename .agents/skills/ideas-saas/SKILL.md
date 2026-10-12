@@ -101,7 +101,7 @@ Si hay ganadora (>= 7.5), **sin esperar confirmación** (decisión ya tomada en 
    - `handlers/` (+ `services/` si aplica).
    - `README.md` raíz.
 3. **5 manuales** en `docs/`: `MANUAL_CLIENTE`, `MANUAL_PROVEEDOR`, `MANUAL_TECNICO`, `MANUAL_PRUEBAS` y **`MANUAL_VENTAS.md`** (obligatorio — ver estructura en `guia-total manuales`). Cada uno con `Para qué sirve este manual` + `Audiencia`.
-4. **Registro ecosistema**: entrada en `.suit/registry/projects.yaml` (puerto, frontend gates, api_endpoints) · ADR + `node scripts/generate-adr-index.js` · fila `AGENTS.md` tabla de puertos · `INDEX.md` projects · nodo en `GuiaTotal/MAPA.md` si enlaza flujo + `node scripts/gen-mapa-info.js` → `node scripts/check-map-visual.js` (debe dar OK).
+4. **Registro ecosistema**: entrada en `.suit/registry/projects.yaml` (puerto, frontend gates, api_endpoints) · ADR + `node scripts/generate-adr-index.js` · fila `AGENTS.md` tabla de puertos · `INDEX.md` projects · nodo en `GuiaTotal/MAPA.md` si enlaza flujo + `node scripts/gen-mapa-info.js` → `node scripts/check-map-visual.js` (debe dar OK) · **`.bat` lanzador** en la raíz del módulo con la plantilla de la skill `bat-launcher` (puerto del módulo, `node index.js`)
 5. **Validar**: `node --check` en los .js nuevos, `python -m py_compile` en el núcleo, smoke del API (health + import + report).
 6. **Commit por fase** como manda `ciclo` (formato `{tipo}(scope): desc`).
 
