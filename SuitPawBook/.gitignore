@@ -1,0 +1,3 @@
+python/*.db
+python/*.db-*
+node_modules/
