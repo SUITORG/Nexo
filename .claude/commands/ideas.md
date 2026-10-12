@@ -12,7 +12,10 @@ Ejecuta la skill `ideas-saas` (`.agents/skills/ideas-saas/SKILL.md`) de principi
 4. **Etapa 3** — scaffold MVP Python en `SuitIdeasSaaS/<slug>/`.
 5. **Etapa 4** — promueve a `Suit<NombrePascal>/`: núcleo en `python/`, envoltorio Express puerto libre + `db/client.js` (spawn `PYTHONIOENCODING=utf-8`), 5 manuales incl. `MANUAL_VENTAS.md`, registro `projects.yaml` + ADR + MAPA + smoke + commits (ciclo).
 6. **Etapa 4G** *(solo verificadas)* — go-to-market automático [ADR-051]: BRIEF_CLIENTE (plantilla) · decisión datos (config-texto / Supabase leads / máscara) · landing+leads desde `GuiaTotal/plantillas/landing-leads/` · activos LAPVTFU con Google Flow MCP · cierre ADR+MAPA.
+7. **Etapa 4P** *(solo verificadas)* — producto terminado [ADR-054]: CRUD `/app` con login PIN + signup + recuperación por email · alertas diarias (SMTP o consola) + respaldo BD · favicon · `abrir.bat` + `cliente.bat` · smoke completo · `fase_producto: 7` en tarjeta.
 
 `--rapidas` = omite 2V y 4G (modo original, sin investigación).
+
+**Panel de monitoreo:** durante toda la corrida mantén vivo `SuitIdeasSaaS/estado.json` (fase, ideas, herramientas, log) — el usuario ve el avance en `http://localhost:3001/SuitIdeasSaaS/panel.html`. Formato y fases en la skill.
 
 Respeta is-001..is-005 (gate 7.5, 1 sola promoción, Python local, manual, promoción automática). **Reejecución desde cero:** borrar salidas de corridas anteriores y volver a correr `/ideas`.

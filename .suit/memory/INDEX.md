@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (51 ADRs)
+## decisions/ (52 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -58,6 +58,7 @@
 | ADR-051 | [Ideas Verificadas + Go-to-Market automático (ciclo natural completo)](ADR-051-ideas-verificadas-go-to-market.md) | Accepted (2026-10-10) | 2026-10-10 | Las primeras corridas de `ideas-saas` (ADR-047/048/049) generaban ideas y evaluaban con el panel, pero sin investigación web real ("ideas… | 047, 048, 049, 050 |
 | ADR-052 | [Skill copywriter-meta (5 copys Meta-compliant + revisión por demanda)](ADR-052-copywriter-meta-skill.md) | Accepted (2026-10-11) | 2026-10-11 | El copywriting de pago (pauta Meta) no estaba cubierto: `clusters-seo`/`paginas-seo` cubren SEO, `landing-pages` el sitio,… | 051 |
 | ADR-053 | [Primera corrida ideas-saas en modo VERIFICADAS — PawBook (re-juez 8.0)](ADR-053-corrida-verificadas-pawbook.md) | Accepted (2026-10-11) | 2026-10-11 | Primera ejecución real del ciclo completo aprobado en ADR-051: modo VERIFICADAS (2V + 4G) aplicado de punta a punta. El usuario pidió… | 047, 049, 051 |
+| ADR-054 | [Etapa 4P — Producto terminado automatizado (Fases 5-7 en el pipeline)](ADR-054-etapa-4p-producto-terminado.md) | Accepted (2026-10-12) | 2026-10-12 | Tras construir ContractRenew hasta Fase 7 manualmente (dashboard CRUD, login PIN con signup y recuperación por email, alertas + respaldo,… | 051, 053 |
 
 ## bugs/ (6)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…

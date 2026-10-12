@@ -107,7 +107,7 @@ Si hay ganadora (>= 7.5), **sin esperar confirmación** (decisión ya tomada en 
 
 **Si desde cero:** borrar `SuitIdeasSaaS/<fecha>-evaluacion.md*` + `Suit<Nombre>/` de corridas anteriores (o usar nombre de fecha nuevo) y reejecutar la corrida — Etapas 1-4 repiten todo en automático.
 
-### Etapa 4G — Go-to-market automático (solo modo VERIFICADAS) [ADR-051]
+### Etapa 4G — Go-to-market automático (solo modo VERIFICADAS) [ADR-051] · Etapa 4P — Producto terminado (Fases 5-7) [ADR-054]
 
 Tras la promoción (Etapa 4), el módulo queda **vendible sin intervención del usuario**. Cadena por decisión (RUCP — reusar, no reescribir):
 
@@ -132,12 +132,36 @@ Tras la promoción (Etapa 4), el módulo queda **vendible sin intervención del 
 
 **4G.6 — Cierre:** ADR de la corrida (score inicial + re-score + decisión 4G.2/4G.3 + activos) + `node scripts/generate-adr-index.js` + MAPA footer + `gen-mapa-info.js` → `check-map-visual.js` OK + commits por fase (ciclo). El módulo queda: núcleo + landing + brief + activos + manuales + registro — listo para prospección.
 
+### Etapa 4P — Producto terminado (solo modo VERIFICADAS) — Fases 5-7 automatizadas [ADR-054]
+
+Tras 4G, el módulo no se queda en "vendible": **se construye hasta Fase 7 (SaaS terminado)** sin pedir nada. Plantilla de referencia: **`SuitContractRenew/`** (patrón probado F5/F6/F7, 2026-10-12) — leer sus archivos y adaptar, no reescribir desde cero.
+
+**4P.1 — Dashboard CRUD (`/app`)** — `app/index.html` (vanilla, dark navy/teal, tokens del BRIEF):
+- Tarjetas: reporte principal (lo que vence/sucede), alta de entidad, lista con acciones (cerrar/editar).
+- Campo fecha como **texto AAAA-MM-DD explícito** (nunca `type="date"` — locale rompe el año).
+- Favicon inline: `<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>ICONO</text></svg>">` (emoji del nicho).
+
+**4P.2 — Login + signup + recuperación (integrado, cero bats):**
+- `POST /api/signup` (1 vez por instancia) → `taller.json` {datos, pin 6 dígitos} (gitignored).
+- `POST /api/login` → cookie httpOnly 30 días; middleware protege `/api/<entidad>*`.
+- `POST /api/pin-recuperar` {email} → si matchea taller.json, devuelve el PIN.
+- UI `/app`: ojo 👁 ver/ocultar PIN · "Crear cuenta" · "¿Olvidaste tu PIN?" — todo en el mismo cuadro de login.
+- Sin PIN y sin taller.json = modo dev abierto (solo local).
+
+**4P.3 — Automatización diaria:** `setInterval(HORAS_ALERTA default 24h)`: comando `alertar` del núcleo (reporte de la entidad en riesgo — SMTP si hay `SMTP_HOST`, si no consola) + respaldo de la BD a `backups/` (últimos 7, gitignored).
+
+**4P.4 — Bats del módulo (los únicos, con plantilla bat-launcher):** `abrir.bat` (landing `/`, para SuitOrg) + `cliente.bat` (dashboard `/app`, para el cliente — auto-arranca server si no corre).
+
+**4P.5 — Tarjeta + panel:** `fase_producto: 7` en `GuiaTotal/registro/<slug>.yaml` · smoke: signup 201, recover email malo 401/bueno 200, login 401→200, CRUD alta/lista/cierre, `/app` 200 con favicon · commit + push.
+
+**Si el producto NO vende a clientes** (config interna, 4G.2): 4P se omite salvo 4P.3 (alertas+respaldo si hay BD).
+
 **Si ninguna idea llega a 4G** (rápidas sin ganadora, o verificadas que cayeron en 2V): solo el informe, sin módulo, sin landing.
 
 ## Entradas / Salidas
 
 - **Entrada:** opcionalmente un tema o nicho del usuario; si no, filtro libre 80/20. Modo: verificadas (default) o `--rapidas`.
-- **Salidas (verificadas):** `SuitIdeasSaaS/<fecha>-evaluacion.md` + `Analista_Proy.md` + `SINTESIS_PROYECTO.md` + `<fecha>-reverificacion.md` por la ganadora → `Suit<NombrePascal>/` con núcleo, 5 manuales, `docs/BRIEF_CLIENTE.md`, `landing/` + leads, activos Flow, projects.yaml y ADR.
+- **Salidas (verificadas):** `SuitIdeasSaaS/<fecha>-evaluacion.md` + `Analista_Proy.md` + `SINTESIS_PROYECTO.md` + `<fecha>-reverificacion.md` por la ganadora → `Suit<NombrePascal>/` con núcleo, CRUD `/app` + login PIN + signup + recuperación (Fase 7), alertas + respaldo (Fase 6), 5+2 manuales, `docs/BRIEF_CLIENTE.md`, `landing/` + leads, activos Flow, projects.yaml y ADR.
 - **Salidas (rápidas):** solo `<fecha>-evaluacion.md` + `Suit<NombrePascal>/` (Etapa 4), sin 2V ni 4G.
 
 ## Comando
