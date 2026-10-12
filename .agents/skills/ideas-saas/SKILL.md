@@ -25,6 +25,7 @@ Durante toda la corrida, mantener vivo `SuitIdeasSaaS/estado.json` (formato: `co
 - **`log[]`**: push `{ts, fase, msg}` en cada paso (máx. mantener últimos 200).
 - Si la corrida termina o falla, `fase` queda en el estado real + log del error — no resetear el JSON a idle.
 - **Al alcanzar `fase: fin`** (o al fallar de forma definitiva): hacer **append** a `SuitIdeasSaaS/historial.json` (`{corridas:[…]}`) un registro `{fecha, nombre, nicho, score, estado, modulo}` por cada idea evaluada (no solo la ganadora) — es el histórico que ve el panel.
+- **Al alcanzar `fase: fin`** completar también en `estado.json`: `pendientes[]` = `{txt, hecho:false}` por cada cosa que la corrida NO pudo cerrar (tabla Supabase pendiente, asset Flow pendiente, push, etc.) — el panel los lista con ⏳; `artefactos[]` = `{nombre, ruta}` de los documentos de la corrida relativos a `SuitIdeasSaaS/` (evaluación, reverificación, Analista_Proy, SINTESIS) — el panel los enlaza. Tarjeta en `GuiaTotal/registro/<slug>.yaml` con `proximo_paso` = esos pendientes.
 
 ## Flujo (3 etapas)
 

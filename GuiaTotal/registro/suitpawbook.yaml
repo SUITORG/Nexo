@@ -1,0 +1,46 @@
+# GuiaTotal/registro/suitpawbook.yaml
+proyecto: "SuitPawBook"
+ruta: "SuitPawBook/"
+etapa: "construccion"
+creado: "2026-10-11"
+actualizado: "2026-10-11"
+
+validacion:
+  problema: "No-show epidemic en grooming chico (r/doggrooming 2024-2026): cada no-show cuesta $50-150 + hueco perdido; depósitos se cobran a mano por Zelle/Venmo."
+  hipotesis: "Si cada reserva lleva depósito configurable (24h=50%, <24h=100%) por $19-29/mes, el groomer recupera el ingreso perdido y deja de regalar horas."
+  metrica_exito: "20 cuentas en 30 días con reservas entrando con depósito registrado; <5% churn mensual"
+  evidencia: "SuitIdeasSaaS/2026-10-11-evaluacion.md (panel 7.8) + pawbook/Analista_Proy.md (8 fuentes) + 2026-10-11-reverificacion.md (re-juez 8.0)"
+  decision: "continuar"
+  motivo: "Modo verificadas ADR-051: gate 7.5 superado 2 veces (panel y re-juez)"
+
+evaluacion:
+  panel_juzgador: "APROBADO"
+  veredicto_fecha: "2026-10-11"
+  recomendaciones: "8.0/10 re-juez — riesgo vigilar: fast-follow MoeGo/Square sobre ángulo depósito"
+
+integraciones:
+  convive_sheets: false
+  id_empresa: null
+  db_engine: "sqlite-local"
+  brief_en_logo_url: false
+  brief_local: "SuitPawBook/docs/BRIEF_CLIENTE.md"
+
+taxonomia:
+  industria: "Software B2B / SaaS de gestión para servicios"
+  nicho: "Groomers caninos (móviles y salones 1-5)"
+  especializacion: "Reservas con depósito configurable contra no-show"
+
+documentos:
+  analista_proy: true
+  taxonomia: false
+  contrato: false
+  identidad: false
+  manuales: true
+  brief_cliente: true
+  prompt_origen: false
+  checklist_lanzamiento: false
+  arquitectura_docs: false
+
+puerto: 3018
+
+proximo_paso: "3 pendientes de corrida: 1) crear tabla Supabase leads_pawbook 2) hero Flow (CDP apagado) 3) push a main; luego primeros 20 groomers por Instagram DM"

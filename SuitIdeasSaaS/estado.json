@@ -5,31 +5,155 @@
   "fase": "fin",
   "inicio": "2026-10-11T22:00:00Z",
   "ideas": [
-    { "nombre": "PawBook", "nicho": "groomers caninos no-show/deposito", "score": 7.8, "reScore": 8.0, "estado": "aprobado" },
-    { "nombre": "LessonLoop", "nicho": "maestros de musica", "score": 7.1, "estado": "condicional" },
-    { "nombre": "InkAgenda", "nicho": "tatuadores", "score": 7.7, "estado": "aprobado" }
+    {
+      "nombre": "PawBook",
+      "nicho": "groomers caninos no-show/deposito",
+      "score": 7.8,
+      "reScore": 8,
+      "estado": "aprobado"
+    },
+    {
+      "nombre": "LessonLoop",
+      "nicho": "maestros de musica",
+      "score": 7.1,
+      "estado": "condicional"
+    },
+    {
+      "nombre": "InkAgenda",
+      "nicho": "tatuadores",
+      "score": 7.7,
+      "estado": "aprobado"
+    }
   ],
   "herramientas": [
-    { "nombre": "panel-juzgador", "estado": "ok", "detalle": "3 ideas evaluadas" },
-    { "nombre": "analista-proy", "estado": "ok", "detalle": "PawBook 8 fuentes" },
-    { "nombre": "sintesis-proyecto", "estado": "ok", "detalle": "SINTESIS hecha" },
-    { "nombre": "re-juez", "estado": "ok", "detalle": "8.0 APROBADO" },
-    { "nombre": "scaffold", "estado": "ok", "detalle": "SuitPawBook 3018" },
-    { "nombre": "google-flow", "estado": "pendiente", "detalle": "hero: CDP apagado" },
-    { "nombre": "supabase", "estado": "pendiente", "detalle": "tabla leads_pawbook" }
+    {
+      "nombre": "panel-juzgador",
+      "estado": "ok",
+      "detalle": "3 ideas evaluadas"
+    },
+    {
+      "nombre": "analista-proy",
+      "estado": "ok",
+      "detalle": "PawBook 8 fuentes"
+    },
+    {
+      "nombre": "sintesis-proyecto",
+      "estado": "ok",
+      "detalle": "SINTESIS hecha"
+    },
+    {
+      "nombre": "re-juez",
+      "estado": "ok",
+      "detalle": "8.0 APROBADO"
+    },
+    {
+      "nombre": "scaffold",
+      "estado": "ok",
+      "detalle": "SuitPawBook 3018"
+    },
+    {
+      "nombre": "google-flow",
+      "estado": "pendiente",
+      "detalle": "hero: CDP apagado"
+    },
+    {
+      "nombre": "supabase",
+      "estado": "pendiente",
+      "detalle": "tabla leads_pawbook"
+    }
   ],
   "log": [
-    { "ts": "2026-10-11T22:00:00Z", "fase": "ideacion", "msg": "Corrida iniciada (verificadas, tema libre)" },
-    { "ts": "2026-10-11T22:05:00Z", "fase": "ideacion", "msg": "3 ideas: PawBook, LessonLoop, InkAgenda" },
-    { "ts": "2026-10-11T22:20:00Z", "fase": "panel", "msg": "Panel: PawBook 7.8, InkAgenda 7.7, LessonLoop 7.1" },
-    { "ts": "2026-10-11T22:35:00Z", "fase": "analisis", "msg": "Analista_Proy PawBook: 8 fuentes, viabilidad alta" },
-    { "ts": "2026-10-11T22:40:00Z", "fase": "sintesis", "msg": "SINTESIS_PROYECTO escrita" },
-    { "ts": "2026-10-11T22:45:00Z", "fase": "rejuez", "msg": "Re-juez con evidencia: 8.0 APROBADO" },
-    { "ts": "2026-10-11T22:46:00Z", "fase": "scaffold", "msg": "SuitPawBook/ creado (3018), smoke API PASA" },
-    { "ts": "2026-10-11T23:30:00Z", "fase": "promocion", "msg": "projects.yaml + AGENTS puerto 3018 + 5 manuales + BRIEF" },
-    { "ts": "2026-10-11T23:45:00Z", "fase": "brief", "msg": "BRIEF_CLIENTE 21 segmentos desde plantilla" },
-    { "ts": "2026-10-11T23:50:00Z", "fase": "landing", "msg": "Landing desde plantilla + /api/leads (tabla pendiente)" },
-    { "ts": "2026-10-11T23:55:00Z", "fase": "cierre", "msg": "ADR-053 + registro + historial — corrida completa" },
-    { "ts": "2026-10-11T23:56:00Z", "fase": "fin", "msg": "COMPLETADO (2 pendientes: tabla Supabase + hero Flow)" }
+    {
+      "ts": "2026-10-11T22:00:00Z",
+      "fase": "ideacion",
+      "msg": "Corrida iniciada (verificadas, tema libre)"
+    },
+    {
+      "ts": "2026-10-11T22:05:00Z",
+      "fase": "ideacion",
+      "msg": "3 ideas: PawBook, LessonLoop, InkAgenda"
+    },
+    {
+      "ts": "2026-10-11T22:20:00Z",
+      "fase": "panel",
+      "msg": "Panel: PawBook 7.8, InkAgenda 7.7, LessonLoop 7.1"
+    },
+    {
+      "ts": "2026-10-11T22:35:00Z",
+      "fase": "analisis",
+      "msg": "Analista_Proy PawBook: 8 fuentes, viabilidad alta"
+    },
+    {
+      "ts": "2026-10-11T22:40:00Z",
+      "fase": "sintesis",
+      "msg": "SINTESIS_PROYECTO escrita"
+    },
+    {
+      "ts": "2026-10-11T22:45:00Z",
+      "fase": "rejuez",
+      "msg": "Re-juez con evidencia: 8.0 APROBADO"
+    },
+    {
+      "ts": "2026-10-11T22:46:00Z",
+      "fase": "scaffold",
+      "msg": "SuitPawBook/ creado (3018), smoke API PASA"
+    },
+    {
+      "ts": "2026-10-11T23:30:00Z",
+      "fase": "promocion",
+      "msg": "projects.yaml + AGENTS puerto 3018 + 5 manuales + BRIEF"
+    },
+    {
+      "ts": "2026-10-11T23:45:00Z",
+      "fase": "brief",
+      "msg": "BRIEF_CLIENTE 21 segmentos desde plantilla"
+    },
+    {
+      "ts": "2026-10-11T23:50:00Z",
+      "fase": "landing",
+      "msg": "Landing desde plantilla + /api/leads (tabla pendiente)"
+    },
+    {
+      "ts": "2026-10-11T23:55:00Z",
+      "fase": "cierre",
+      "msg": "ADR-053 + registro + historial — corrida completa"
+    },
+    {
+      "ts": "2026-10-11T23:56:00Z",
+      "fase": "fin",
+      "msg": "COMPLETADO (2 pendientes: tabla Supabase + hero Flow)"
+    }
+  ],
+  "pendientes": [
+    {
+      "txt": "Crear tabla Supabase leads_pawbook (el form de la landing falla hasta entonces)",
+      "hecho": false
+    },
+    {
+      "txt": "Hero Flow de la landing (Chrome/CDP apagado al cierre)",
+      "hecho": false
+    },
+    {
+      "txt": "Push a main (~105 commits)",
+      "hecho": false
+    }
+  ],
+  "artefactos": [
+    {
+      "nombre": "Evaluación panel",
+      "ruta": "2026-10-11-evaluacion.md"
+    },
+    {
+      "nombre": "Re-verificación (re-juez 8.0)",
+      "ruta": "2026-10-11-reverificacion.md"
+    },
+    {
+      "nombre": "Analista_Proy (8 fuentes)",
+      "ruta": "pawbook/Analista_Proy.md"
+    },
+    {
+      "nombre": "SINTESIS_PROYECTO",
+      "ruta": "pawbook/SINTESIS_PROYECTO.md"
+    }
   ]
 }

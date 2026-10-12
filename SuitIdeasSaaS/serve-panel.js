@@ -185,6 +185,24 @@ http.createServer(async (req, res) => {
       fs.writeFileSync(ORDEN, JSON.stringify(o, null, 2));
       return json({ ok: true, ordenes: o.ordenes });
     }
+    if (req.method === 'POST' && url === '/resolver-pendiente') {
+      const d = await leerBody(req);
+      if (!d.titulo) return err(400, 'titulo requerido');
+      const txt = fs.readFileSync(PEND, 'utf8');
+      const hoy = new Date().toISOString().slice(0, 10);
+      const lines = txt.split(/\r?\n/);
+      let found = false;
+      const out = lines.map(l => {
+        if (!found && l.startsWith('- [ ]') && l.includes('**' + d.titulo + '**')) {
+          found = true;
+          return l.replace('- [ ]', '- [x]') + ` *(${hoy}, panel)*`;
+        }
+        return l;
+      }).join('\n');
+      if (!found) return err(404, 'pendiente no encontrado');
+      fs.writeFileSync(PEND, out, 'utf8');
+      return json({ ok: true });
+    }
     if (req.method === 'POST' && url === '/orden/clear') { fs.writeFileSync(ORDEN, '{ "ordenes": [] }\n'); return json({ ok: true }); }
 
     const f = path.join(ROOT, url === '/' ? 'panel.html' : url);

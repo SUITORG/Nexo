@@ -120,6 +120,15 @@
   .prow .psec { font-weight:800; color:#64748b; font-size:.72rem; min-width:18px; }
   .prow .ptit { font-weight:600; }
   .prow .pdet { color:var(--dim); font-size:.78rem; flex:1; }
+  .prow .pdone { background:none; border:1px solid #14532d; color:#4ade80; border-radius:999px;
+    font-size:.72rem; padding:.1rem .55rem; cursor:pointer; }
+  .prow .pdone:hover { background:rgba(74,222,128,.12); }
+  .pend-item { display:flex; gap:.55rem; align-items:baseline; background:var(--surface); border:1px solid var(--border);
+    border-radius:9px; padding:.5rem .8rem; margin-bottom:.4rem; font-size:.85rem; }
+  .pend-item.hecho { opacity:.55; text-decoration:line-through; }
+  .art-link { display:inline-block; background:var(--surface); border:1px solid var(--border); color:#38bdf8;
+    border-radius:999px; padding:.3rem .85rem; font-size:.8rem; margin:0 .4rem .4rem 0; text-decoration:none; }
+  .art-link:hover { border-color:#38bdf8; }
   #toast { position:fixed; left:50%; bottom:150px; transform:translateX(-50%); background:#0f172a; border:1px solid var(--accent);
     color:var(--accent); border-radius:999px; padding:.55rem 1.3rem; font-size:.88rem; font-weight:600; z-index:60;
     display:none; box-shadow:0 8px 24px rgba(0,0,0,.5); }
@@ -155,6 +164,13 @@
 <div id="hist">
   <h2>📦 Corridas anteriores (aprobadas)</h2>
   <div id="hist-list"><div class="dim" style="font-size:.85rem">ninguna aún</div></div>
+</div>
+
+<div id="corr" style="display:none">
+  <h2 style="font-size:.85rem; color:#38bdf8; margin-bottom:.5rem">⚠ Pendientes de esta corrida</h2>
+  <div id="corr-pend"></div>
+  <h2 style="font-size:.85rem; color:#38bdf8; margin:.8rem 0 .5rem">📑 Artefactos</h2>
+  <div id="corr-art"></div>
 </div>
 
 <div id="proy">
@@ -377,7 +393,23 @@ async function loadPendientes() {
         <span class="psec">${p.seccion}</span>
         <span class="ptit">${p.titulo}</span>
         <span class="pdet">${p.detalle || ''}</span>
+        <button class="pdone" data-tit="${p.titulo.replace(/"/g, '&quot;')}">✓ listo</button>
       </div>`).join('');
+    $('pend-list').querySelectorAll('.pdone').forEach(b => {
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        try {
+          const r = await fetch('resolver-pendiente', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo: b.getAttribute('data-tit') })
+          });
+          const d = await r.json();
+          if (d.ok) { toast('✓ Marcado como resuelto en PENDIENTES.md'); setTimeout(loadPendientes, 1200); }
+          else toast('✗ ' + (d.error || 'no encontrado'));
+        } catch (_) { toast('✗ sin conexión'); }
+        finally { b.disabled = false; }
+      });
+    });
   } catch (_) {}
 }
 
@@ -462,6 +494,13 @@ function render(e) {
       <span class="dot ${h.estado || 'pendiente'}"></span>
       <span><span class="tname">${h.nombre}</span>${h.detalle ? ` <span class="tinfo">— ${h.detalle}</span>` : ''}</span>
     </div>`).join('') || '<div class="tool"><span class="dot pendiente"></span><span class="tinfo">ninguna activa</span></div>';
+
+  const pends = e.pendientes || [], arts = e.artefactos || [];
+  $('corr').style.display = (pends.length || arts.length) ? 'block' : 'none';
+  $('corr-pend').innerHTML = pends.map(p => `
+    <div class="pend-item${p.hecho ? ' hecho' : ''}"><span>${p.hecho ? '✓' : '⏳'}</span><span>${p.txt}</span></div>`).join('');
+  $('corr-art').innerHTML = arts.map(a => `
+    <a class="art-link" href="${a.ruta}" target="_blank" rel="noopener">📄 ${a.nombre}</a>`).join('');
 
   $('log-list').innerHTML = (e.log || []).slice(-40).reverse().map(l => `
     <div class="lg"><time>${l.ts ? l.ts.slice(11, 19) : ''}</time><b>${l.fase || ''}</b> ${l.msg || ''}</div>`).join('') || '<div class="lg">—</div>';
