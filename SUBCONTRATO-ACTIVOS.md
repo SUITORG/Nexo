@@ -1,5 +1,5 @@
 # SUBCONTRATO-ACTIVOS — Capa LAPVTFU del vector Brief
-SuitOrg › SUBCONTRATO-ACTIVOS · Padre: `CONTRATO.md` (raíz SuitOrg) · Hermano: `SUBCONTRATO-BRIEF.md` · Fecha: 2026-09-25 · v1.1 (2026-09-29 — estándar de nombres `*01` en raíz `cte<id>/`)
+SuitOrg › SUBCONTRATO-ACTIVOS · Padre: `CONTRATO.md` (raíz SuitOrg) · Hermano: `SUBCONTRATO-BRIEF.md` · Fecha: 2026-09-25 · v1.2 (2026-10-12 — modo GENERACIÓN: Flow/ComfyUI/Gemini para fotos+videos; testimonios solo DEMO)
 
 ## Propósito
 Goberna la **Capa Activos**: el segmento `LAPVTFU` (posición 10 del vector que vive dentro de `Config_Empresas.logo_url`) — manifiesto **posicional de 7 slots** de assets en Drive. Es el único responsable de verificar, asegurar y escribir esos 7 slots.
@@ -13,11 +13,11 @@ Legado sin migrar (`logo.png`, `avatar.png`, `fotopersonal.*`, `_activos/`) qued
 |---|---|---|---|---|
 | 1 | Logo | `logo01.<ext>` (legado `logo.png`) | `ensureLogoUrl` + `favicon.png` se crea si falta | ✅ operativo |
 | 2 | Avatar | `avatar01.<ext>` (legado `avatar.png`) | `ensureAvatarUrl`: gate `fotoprs01.*` → Gemini 2.5 Flash Image; `no_foto` = skip; jamás placeholder ni fallback al logo | ✅ operativo |
-| 3 | Foto Personal | `fotoprs01.<ext>` (legado `fotopersonal.*`) | subida manual del usuario; lectura desde el gate del avatar | ⚠️ parcial — sin ensure dedicado |
-| 4 | Videos | `videos01.mp4`, `videos02…` (multi) | subida manual → `shareCteFile` → `setLapvtfuSlot` | 🔁 manual + acciones |
-| 5 | Testimonios | `testimonios01.*`, `testimonios02…` (multi) | idem | 🔁 manual + acciones |
-| 6 | Fotos | `fotos01.*`, `fotos02…` (multi; separador interno `;`) | idem | 🔁 manual + acciones |
-| 7 | Contenido (antes UGC) | `contenido01.<ext>` (un archivo) | subida manual → `shareCteFile` → `setLapvtfuSlot` | 🔁 manual + acciones |
+| 3 | Foto Personal | `fotoprs01.<ext>` (legado `fotopersonal.*`) | subida manual del usuario; lectura desde el gate del avatar | ⚠️ **NUNCA se genera** (persona real) |
+| 4 | Videos | `videos01.mp4`, `videos02…` (multi) | manual → `shareCteFile` → `setLapvtfuSlot`; **GENERA v1.2**: Flow → ComfyUI+FFmpeg → ViRe | 🔁 manual + GENERA v1.2 |
+| 5 | Testimonios | `testimonios01.*`, `testimonios02…` (multi) | idem; **GENERA solo DEMO v1.2** (marcados "DEMO") | 🔁 manual + GENERA solo DEMO |
+| 6 | Fotos | `fotos01.*`, `fotos02…` (multi; separador interno `;`) | idem; **GENERA v1.2**: Flow → ComfyUI → Gemini (hasta 6) | 🔁 manual + GENERA v1.2 |
+| 7 | Contenido (antes UGC) | `contenido01.<ext>` (un archivo) | subida manual → `shareCteFile` → `setLapvtfuSlot` | 🔁 manual (sin generación) |
 
 ## Stack y ejecución
 - **Escritor único del segmento**: `_setLapvtfuSlot_` (`backend/core.js`) — lee-modifica-escribe solo la posición indicada, preserva los 20 segmentos de contenido
@@ -41,6 +41,7 @@ Legado sin migrar (`logo.png`, `avatar.png`, `fotopersonal.*`, `_activos/`) qued
 6. Timeouts de 180 s en los 5 calls GAS del flujo avatar (gotcha verificado en vivo)
 7. Hereda del padre: `id_empresa` en toda query, soft delete, RBAC
 8. **Estándar de nombres (2026-09-29)**: `<base>NN.<ext>` plano en raíz `cte<id>/` (`logo01, avatar01, fotoprs01, videos01, testimonios01, fotos01, contenido01`) · `NN=01` y `02+` **solo V·T·F** · separador interno de multi = `;` · legado legible, **sin migrar**
+9. **MODO GENERACIÓN v1.2** (lf-011..lf-017): solo con switch `activos` en `auto|preguntar` o comando explícito · idempotencia total (segundo pase = `existing`) · cascada preferente Google Flow MCP → ComfyUI → Gemini (fotos) / Flow → ComfyUI+FFmpeg → ViRe → Kling (videos) · testimonios **solo DEMO**, marcados `DEMO` · foto personal (slot 3) **jamás** generada · `origen: ai` en metadata · URL verificada sin sesión antes de publicar · tope 6 fotos + 2 videos + 2 testimonios/DEMO por corrida
 
 ## Definición de terminado
 - Slots 1 y 2 E2E idempotentes: segunda corrida → `existing`, sin regeneración
@@ -49,10 +50,12 @@ Legado sin migrar (`logo.png`, `avatar.png`, `fotopersonal.*`, `_activos/`) qued
 - Slots 4-7 declarados `[PENDIENTE - sin flujo]` en la skill
 
 ## POR CONFIRMAR
-- ¿El fallback Avatar→Logo de ADR-025 sigue vivo en algún consumidor fuera de GAS? (se eliminó del parser y del vector en la sesión del slot 2)
-- Slot 3: ¿existe escritura dedicada o solo lectura de `fotopersonal.*`? (estándar `fotoprs01` — parcial)
-- ~~Slot 6: separador de sub-fotos~~ → **decidido `;` (aprobado 2026-09-29)** para V·T·F multi
+- ~~¿Motores definitivos y su orden?~~ → **decidido 2026-10-12**: Flow MCP (preferente) → ComfyUI → Gemini (fotos) / Flow → ComfyUI+FFmpeg → ViRe → Kling (videos)
+- ¿Voz/TTS en videos? (default: no; fase 2)
+- ¿Key de Kling activa? (default: no se usa sin aprobación)
+- ¿Sufijo para generados? (default: no; solo metadata `origen: ai`)
 
 ## Cambios
 - 2026-09-25: sub-contrato inicial creado (f0), verificado contra `core.js`, `brief-sidebar.js`, ADR-025/026/028 y la validación del slot 2
 - 2026-09-29: **estándar de nombres `*01` en raíz `cte<id>/`** (extensión natural, V·T·F multi con `;`, sin migrar legado) · `ensureCteFolders` deja de crear `_brief/_activos` · acciones nuevas `shareCteFile` + `setLapvtfuSlot` · subida V·T·F manual del usuario + reparto por el agente · v1.1
+- 2026-10-12: **MODO GENERACIÓN v1.2** — slots 4/6 generables con cascada Google Flow MCP (preferente, ADR-050/051) → ComfyUI → Gemini; slot 5 generable solo en DEMO; slot 3 nunca generada; reglas lf-011..lf-017; Flow añadido a la cascada por decisión del usuario (patrón probado en ContractRenew/PawBook 4G)
