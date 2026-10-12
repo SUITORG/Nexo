@@ -37,6 +37,8 @@ documentos:
   identidad: false
   manuales: true              # SuitContractRenew/docs/MANUAL_*.md (5)
   brief_cliente: true         # docs/BRIEF_CLIENTE.md
+  demo: true                  # docs/DEMO.md (guión demo 5-10 min)
+  instalacion: true           # docs/INSTALACION.md (máquina nueva)
   prompt_origen: false
   checklist_lanzamiento: false
   arquitectura_docs: false

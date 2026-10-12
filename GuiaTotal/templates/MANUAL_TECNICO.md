@@ -10,6 +10,19 @@
 
 Este manual es el manual de mantenimiento y configuración. Cubre cómo está construido el sistema por dentro, cómo se ejecuta, cómo se configura, cómo se respalda y cómo se recupera ante fallos. No cubre el uso de la interfaz (`MANUAL_CLIENTE.md` / `MANUAL_PROVEEDOR.md`) ni solo pruebas (`MANUAL_PRUEBAS.md`).
 
+## Resumen en corto (tabla técnica)
+
+| Aspecto | Qué es |
+|---|---|
+| **Alcance** | Carpeta `[Proyecto]/` — módulo [independiente / del SPA] |
+| **Tipo** | [Aplicación web local / servicio / micro-frontend] |
+| **Frontend** | [landing estática / SPA vanilla / ninguno] |
+| **Backend** | [Node+Express puerto X / Python / etc.] |
+| **Base de datos** | [SQLite local / Supabase / GSHEETS — tabla(s) clave] |
+| **¿Google Sheets?** | [sí (Config_Empresas, id_empresa=N) / no] |
+| **Configuración** | [local .env / config.yaml / Config_Empresas] |
+| **Para correrlo** | [abrir.bat / node index.js / npm start] |
+
 ## 1. Arquitectura general
 
 ```text
@@ -20,6 +33,7 @@ Este manual es el manual de mantenimiento y configuración. Cubre cómo está co
 
 ## 2. Stack y ejecución
 
+- **Requisitos de equipo:** CPU [mín] · RAM [mín] · SO [Win/Mac/Linux] · [Node 18+ / Python 3.x] · navegador [moderno]
 - Runtime / lenguaje:
 - Comandos: instalar `...` · desarrollo `...` · build `...` · producción `...`
 - Puertos:

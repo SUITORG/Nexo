@@ -275,11 +275,15 @@
 └── ⚡ guia-total manuales [ruta]
     ├── 📁 lee <Proyecto>/ (código, README) + docs/ (CONTRATO.md, manuales)
     ├── 📄 lee GuiaTotal/templates/MANUAL_*.md
-    ├── ∥ creación de los 4 en paralelo (independientes):
+    ├── ∥ creación de los 5 base en paralelo (independientes):
     │   ├── ✍️ MANUAL_CLIENTE.md    frontend — quien solicita el servicio
     │   ├── ✍️ MANUAL_PROVEEDOR.md  frontend — quien presta el servicio
-    │   ├── ✍️ MANUAL_TECNICO.md    backend — mantenimiento y configuración
-    │   └── ✍️ MANUAL_PRUEBAS.md    modo test/dev — E2E sin dependencias reales
+    │   ├── ✍️ MANUAL_TECNICO.md    backend — mantenimiento; incluye tabla "Resumen en corto" + requisitos de equipo
+    │   ├── ✍️ MANUAL_PRUEBAS.md    modo test/dev — E2E sin dependencias reales
+    │   └── ✍️ MANUAL_VENTAS.md     pitch, ICP, precios, objeciones, script
+    ├── ➕ si el proyecto vende a clientes (tarjeta frontend.public: true):
+    │   ├── ✍️ DEMO.md            guión de demo 5-10 min (dolor → vivo → número → siguiente paso)
+    │   └── ✍️ INSTALACION.md     máquina nueva: requisitos, 4 pasos, checklist, actualizar/desinstalar
     └── actualización: serial — compara "Última actualización" vs git log de archivos UI/backend
                         → solo reescribe los manuales desactualizados
 ```

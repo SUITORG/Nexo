@@ -2,7 +2,22 @@
 
 > **Para qué sirve:** mantener, desplegar y operar ContractRenew.
 > **Audiencia:** desarrollador SuitOrg.
-> **Última actualización:** 2026-10-10
+> **Última actualización:** 2026-10-11
+
+## Resumen en corto (tabla técnica)
+
+| Aspecto | Qué es |
+|---|---|
+| **Alcance** | Carpeta `SuitContractRenew/` — módulo **independiente** (no es parte del SPA principal ni multi-tenant) |
+| **Tipo** | Aplicación web **local**: un backend + una landing, en un solo proceso |
+| **Frontend** | Solo la **landing** (`landing/index.html`, HTML/CSS/JS vanilla — sin frameworks) con formulario de leads |
+| **Backend** | **Node.js + Express** en puerto 3017: API REST (`/api/health`, `/api/contracts`, `/api/contracts/due/:dias`, `/api/leads`) |
+| **Base de datos** | **SQLite local** (`python/contractrenew.db`, WAL) — núcleo en **Python stdlib** (sin pip); Node hace spawn con `PYTHONIOENCODING=utf-8` |
+| **¿Google Sheets?** | **No.** Sin `Config_Empresas`, `id_empresa: null`, sin GAS |
+| **¿Supabase?** | Solo para `leads_contractrenew` (leads de la landing, insert server-side con service role) |
+| **Configuración** | Local: `.env` (SUPABASE_URL + SERVICE_ROLE, gitignored); plantilla en `.env.example` |
+| **Para correrlo** | `abrir.bat` (levanta + abre navegador) o `node index.js` |
+| **Herramientas** | Node/Express · Python 3 (stdlib) · SQLite · Supabase (solo leads) · git · skill `bat-launcher` |
 
 ## Arquitectura
 - **API:** `index.js` Express, puerto **3017** (`module.exports = app`). Rutas: `GET /api/health`, `POST /api/contracts`, `GET /api/contracts/due/:dias?` (default 60).
@@ -10,6 +25,9 @@
 - **Datos:** `python/contractrenew.db` (gitignored).
 
 ## Correr
+
+**Requisitos de equipo:** cualquier PC con 4 GB RAM y Windows 10+/macOS/Linux · Node.js 18+ · Python 3.10+ · navegador moderno. Sin GPU, sin internet obligatoria (Supabase solo si se usan leads).
+
 ```bash
 cd SuitContractRenew && npm install && npm start    # :3017
 python python/main.py add "Talleres López" 2026-12-01 800
