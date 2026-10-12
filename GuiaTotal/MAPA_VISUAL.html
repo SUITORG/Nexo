@@ -941,10 +941,10 @@
         "llena/actualiza segmentos be-001..be-021 (industria, nicho, dolor, PBP, PM, objeciones…)",
         "⚖️ seg1 `industria` y seg2 `nicho` con VALOR REAL → jamás se sobreescriben",
         "vector `brief.parse` → logo_url · espejo Supabase",
-        "⚡ lapvtfu <ID>                   → 7 activos en Drive cte<id>/_activos",
-        "slots: los 7 del checklist LAPVTFU (segmento 10 del Brief — logo, fotos y resto del kit)",
-        "📁 cte<id>/_activos + share · idempotente (overwrite, nunca duplica)",
-        "⚠️ \"solo lo hace el cliente\" → NO: el flujo genera todo (p.ej. productos propios vía Google Flow MCP, ADR-050/051 — ver plantillas GuiaTotal/plantillas/)",
+        "⚡ lapvtfu <ID>                   → 7 activos en Drive cte<id>/ (raíz, nombres *01)",
+        "slots: los 7 del checklist LAPVTFU (segmento 10 del Brief)",
+        "MODO GENERACIÓN v1.2 (switch activos auto|preguntar): Fotos (Flow→ComfyUI→Gemini, hasta 6) + Videos (Flow→ComfyUI+FFmpeg→ViRe, 1-3 clips 9:16) + Testimonios (solo DEMO, marcados) Foto personal (slot 3) JAMÁS se genera · idempotente (existing = skip)",
+        "📁 raíz cte<id>/ + share ANYONE · idempotente",
         "✔ 7/7 slots → segmento 10 del Brief deja de estar [PENDIENTE]"
       ],
       "skills": [
