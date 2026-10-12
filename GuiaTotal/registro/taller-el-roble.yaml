@@ -1,0 +1,40 @@
+# GuiaTotal/registro/taller-el-roble.yaml
+proyecto: "Taller El Roble (DEMO ContractRenew)"
+ruta: "SuitContractRenew/"
+etapa: "demo"
+fase_producto: 7
+creado: "2026-10-12"
+actualizado: "2026-10-12"
+
+validacion:
+  problema: "DEMO de venta: taller HVAC ficticio para presentar ContractRenew a prospectos reales"
+  hipotesis: "Un taller de demostración con datos realistas facilita la venta del SaaS"
+  metrica_exito: "Prospecto entiende el producto en <5 min con datos de demo"
+  evidencia: "Orden panel 2026-10-12 custom"
+  decision: "demo"
+  motivo: "Soporte comercial — presentar ContractRenew sin depender de datos de clientes reales"
+
+integraciones:
+  convive_sheets: false
+  id_empresa: null
+  db_engine: "sqlite-local"
+  brief_local: "SuitContractRenew/docs/DEMO_EMPRESA.md"
+
+taxonomia:
+  industria: "Servicios HVAC"
+  nicho: "Talleres de calefacción/aire acondicionado"
+  especializacion: "Contratos de mantenimiento anual"
+
+documentos:
+  brief_cliente: true
+  landing: true
+  activos: false
+
+demo:
+  nombre: "Taller El Roble"
+  ciudad: "Monterrey, NL"
+  dueno: "Ing. Carlos Robles"
+  tecnico: "3 técnicos"
+  contratos_activos: 12
+  ticket_promedio: 750
+  ingreso_mensual_demo: 9000
