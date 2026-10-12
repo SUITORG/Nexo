@@ -206,25 +206,25 @@
   <!-- ═══ CAPA DE DECISIÓN — AGENTS.md (fuera de MAPA.md) ═══ -->
   <div class="decbanner">🧭 CAPA DE DECISIÓN — cómo AGENTS.md orquesta todo (fuera de MAPA.md)</div>
 
-  <div class="node t-dec" id="ag1" style="left:15px; top:42px; width:250px;">
+  <div class="node t-dec" id="ag1" data-sec="dec1" style="left:15px; top:42px; width:250px;">
     <span class="ico">🧠</span>
     <div class="ttl">1 · AGENTS.md (jerarquía)</div>
     <div class="sub">ARCHITECTURE → AGENTS → workflows → skills → código · activación al iniciar sesión</div>
   </div>
 
-  <div class="node t-dec" id="ag2" style="left:305px; top:42px; width:250px;">
+  <div class="node t-dec" id="ag2" data-sec="dec2" style="left:305px; top:42px; width:250px;">
     <span class="ico">🛡️</span>
     <div class="ttl">2 · Pre-flight + léxico</div>
     <div class="sub">prompt-reviewer · lexico-usuario (gíros) · 5 sesgos · ≥95% o ≤3 preguntas</div>
   </div>
 
-  <div class="node t-dec" id="ag3" style="left:305px; top:195px; width:250px;">
+  <div class="node t-dec" id="ag3" data-sec="dec3" style="left:305px; top:195px; width:250px;">
     <span class="ico">🧭</span>
     <div class="ttl">3 · routing.yaml (decide)</div>
     <div class="sub">intents → workflow + skill + prioridad · permissions.yaml · models.yaml</div>
   </div>
 
-  <div class="node t-dec" id="ag4" style="left:15px; top:195px; width:250px;">
+  <div class="node t-dec" id="ag4" data-sec="dec4" style="left:15px; top:195px; width:250px;">
     <span class="ico">📦</span>
     <div class="ttl">4 · loader strategy (contexto)</div>
     <div class="sub">context-loader · index-navigator · minimal 2K / standard 8K / deep 20K</div>
@@ -957,6 +957,56 @@
     }
   };
   // @GEN:INFO-END
+
+  // Capa de decisión (fuera de MAPA.md — hardcodeada, no regenerable)
+  Object.assign(INFO, {
+    dec1: {
+      t: 'Capa 1 · AGENTS.md — jerarquía de conocimiento',
+      steps: [
+        'Al iniciar sesión el agente carga: .suit/ARCHITECTURE.md → AGENTS.md (raíz) → AGENTS.md (subproyecto si existe) → workflows → skills → código',
+        'Cada nivel manda sobre el inferior; ninguno se salta (regla SuitOS)',
+        'AGENTS.md contiene: reglas inmutables, tabla de puertos, comandos exactos, gotchas, workflow de 10 pasos'
+      ],
+      skills: ['architect (registry)', 'developer (registry)', 'reviewer (registry)'],
+      files: ['.suit/ARCHITECTURE.md', 'AGENTS.md', 'CLAUDE.md', '.suit/INDEX.md']
+    },
+    dec2: {
+      t: 'Capa 2 · Pre-flight + léxico del usuario',
+      steps: [
+        'Antes de responder o actuar: correr pre-flight (sin imprimir checklist)',
+        'Revisar contexto, supuestos y 5 sesgos: ambigüedad, supuestos, acción prematura, confirmación, scope creep',
+        'Q&A/lectura → 0 preguntas · Modificación → ≤3 preguntas si certeza <95%',
+        'Léxico automático: interpretar gíros/erratas vía lexico-usuario.md antes de clasificar intención'
+      ],
+      skills: ['prompt-reviewer', 'respuestas-minimas'],
+      files: ['.suit/memory/patterns/lexico-usuario.md', '.suit/config/switches.yaml']
+    },
+    dec3: {
+      t: 'Capa 3 · routing.yaml — decide workflow y skills',
+      steps: [
+        'Parsear input del usuario → extraer keywords',
+        'Match contra intents de routing.yaml (patrón substring, prioridad más alta gana)',
+        'Check de overrides (proyecto + keyword)',
+        'Lookup en workflows.yaml → workflow path; agents.yaml → agent; skills.yaml → skills',
+        'Check permissions.yaml → allowed workflows/projects/max risk',
+        'Output: orchestration plan (workflow, agent, skills, context, reviewers, permissions)'
+      ],
+      skills: ['registry-query'],
+      files: ['.suit/registry/routing.yaml', '.suit/registry/workflows.yaml', '.suit/registry/agents.yaml', '.suit/registry/permissions.yaml', '.suit/registry/models.yaml']
+    },
+    dec4: {
+      t: 'Capa 4 · Loader strategy — minimiza contexto',
+      steps: [
+        'Determinar estrategia: minimal (~2K) / standard (~8K) / deep (~20K) según workflow',
+        'Leer solo archivos del include de esa estrategia (nada más)',
+        'INDEX_FUNCIONES.md → leer solo las funciones necesarias (file:line), no archivos completos',
+        'Cachear contexto en .suit/cache/ para reuso en sesión',
+        'Nunca cargar: skills no requeridos, subproyectos no target, ADRs (salvo deep), telemetría'
+      ],
+      skills: ['context-loader', 'index-navigator'],
+      files: ['.suit/loader/strategy.yaml', 'INDEX_FUNCIONES.md', '.suit/cache/']
+    }
+  });
 
   function openDrawer(sec) {
     const info = INFO[sec];
