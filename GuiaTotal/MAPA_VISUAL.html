@@ -549,9 +549,13 @@
         "∥ agentes: mercado ∥ técnico ∥ riesgo ∥ financiero",
         "→ ⚡ juez (serial) → ✍️ veredicto + condiciones",
         "✍️ crea GuiaTotal/registro/<proyecto>.yaml  (si falta)",
-        "⚡ ideas-saas                     [alternativa por-corrida: pipeline idea→panel→MVP Python]",
-        "∥ 3 ideas 80/20 (fuentes gratuitas) → panel-juzgador por idea",
-        "juez score >= 7.5 → 📁 scaffold MVP Python en SuitIdeasSaaS/<slug>/ (stdlib+asyncio, sin cloud) → 🚀 promoción automática a Suit<NombrePascal>/ (Express puerto único + python/ + 5 manuales incl. MANUAL_VENTAS + projects.yaml + ADR) [ADR-048] <7.5 → solo informe SuitIdeasSaaS/<fecha>-evaluacion.md",
+        "⚡ ideas-saas                     [pipeline por-corrida: idea → SaaS terminado]",
+        "3 ideas 80/20 → panel-juzgador por idea (gate 7.5)",
+        "VERIFICADAS (default): analista-proy → sintesis → RE-JUEZ con evidencia (si cae <7.5 se para)",
+        "ganadora >= 7.5 → scaffold → promoción Suit<NombrePascal>/ (Express + python/ + 5 manuales) [ADR-048]",
+        "4G go-to-market: BRIEF plantilla · landing+leads plantilla RUCP · activos Google Flow [ADR-051]",
+        "4P producto terminado: CRUD /app + login PIN signup+recover + alertas + respaldo + favicon + 2 bats [ADR-054] (plantilla referencia: SuitContractRenew/ — fase_producto: 7 en tarjeta)",
+        "<7.5 → solo informe SuitIdeasSaaS/<fecha>-evaluacion.md [monitoreo: estado.json vivo → panel web 8099 (abrir-panel.bat); /panel ejecuta órdenes encoladas]",
         "↪ CIERRE DE TODA PASADA (sección superior: PENDIENTES + MAPA + 3 líneas)"
       ],
       "skills": [
@@ -569,7 +573,7 @@
         "<Proyecto>/docs/TAXONOMIA.md",
         "<Proyecto>/proposal.md",
         "GuiaTotal/registro/<proyecto>.yaml",
-        "projects.yaml"
+        "SuitIdeasSaaS/<fecha>-evaluacion.md"
       ]
     },
     "2": {
