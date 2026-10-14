@@ -261,6 +261,7 @@
 
 ```text
 └── ⚡ guia-total [ruta]
+    ├── ⚡ viabilidad-operativa + ⚡ calidad-minima + ⚡ durabilidad   [3 gates de pre-diseño, solo si es diseño nuevo → veredictos → requisitos al CONTRATO]
     ├── ⚡ ciclo (F0) → ✍️ CONTRATO.md   [si falta; usa Analista_Proy.md como insumo]
     ├── ⚡ ciclo (F1→F7) — serial: code → validación → commit por fase
     ├── 🔄 node scripts/generate-index.js → 🔄 INDEX_FUNCIONES.md  [si cambian funciones]
@@ -488,6 +489,9 @@ SamurAIGPT/Generative-Media-Skills                → plan en .suit/memory/pendi
 | `descubrimiento` | `parametros` (lee switches en fase 0) | entregable de 11 puntos → código (§1/§4/§6) | preguntas ≤3 ∥ micro-skills según diagnóstico |
 | `parametros` | `descubrimiento` (cap. 1 Configuración, en apertura) | `.suit/config/switches.yaml` (globales/puntuales) + checklist "Recomendación de arranque" → `<modulo>/config.yaml` | — (lectura/escritura YAML) |
 | `pantalla-limpia` | — (invocable por otras skills: contrato de invocación) | `Veredicto-Pantallas-<Proyecto>.md` + `Pendientes.md` → PENDIENTES/ciclo (§6) | — (solo lectura, evidencia file:línea) |
+| `viabilidad-operativa` | — | veredicto APTO/CON CONDICIONES/NO APTO (ágil, tiempo, consumo, ban, dependencias) → requisitos al CONTRATO (§4) | 5 preguntas, 1 página |
+| `calidad-minima` | — | piso de calidad + checklist de rechazo anti-mediocre → requisitos al CONTRATO (§4) | gate 2/3 del pre-diseño |
+| `durabilidad` | — | veredicto DURA/FRÁGIL + decisiones de diseño (conexión futura, confiabilidad, usabilidad) → requisitos al CONTRATO (§4) | gate 3/3 del pre-diseño |
 | `ideas-saas` | `panel-juzgador`, `analista-proy`, `sintesis-proyecto` (2V), plantillas landing-leads + brief-cliente, Google Flow MCP (activos) | `SuitIdeasSaaS/<fecha>-evaluacion.md` + **SaaS completo** `Suit<NombrePascal>/` (núcleo + CRUD/login + landing + brief + manuales + ADR) [ADR-048/051/053/054] | panel web 8099 monitorea en vivo |
 | `modo-prueba` | `bat-launcher` (patrón qa.bat) | QA local SuitServiHogar: `VALIDACION` (V7-V9), `CORRECCIONES` | 3 ventanas de rol ∥ tras lista |
 

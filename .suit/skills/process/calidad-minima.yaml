@@ -1,0 +1,41 @@
+skill:
+  name: calidad-minima
+  display_name: "Calidad Mínima — Gate Anti-Mediocre (2/3)"
+  version: 1.0.0
+  type: process
+  domain: quality
+
+  description: >
+    Gate de pre-diseño anti-mediocre: juzga si el resultado de la app/proceso
+    merece existir y fija un piso de calidad concreto (qué SÍ debe tener) más
+    un checklist de rechazo para evitar salidas pobres, genéricas o a medias.
+
+  dependencies: []
+
+  triggers:
+    - keyword: "que no salga mediocre"
+    - keyword: "que no quede pobre"
+    - keyword: "¿el sistema vale la pena?"
+    - keyword: "que se vea profesional"
+    - keyword: "piso de calidad"
+
+  context_hint:
+    - ".agents/skills/calidad-minima/SKILL.md"
+
+  rules:
+    - id: cm-001
+      description: "El piso de calidad se define antes del diseño y se adjunta al CONTRATO.md"
+      severity: error
+    - id: cm-002
+      description: "Nada de adjetivos sin ejemplo concreto"
+      severity: error
+    - id: cm-003
+      description: "NO PASA entrega el cierre mínimo; no mata la idea"
+      severity: warning
+    - id: cm-005
+      description: "Pantallas existentes → pantalla-limpia; esta fija el piso antes del diseño"
+      severity: warning
+
+  validation:
+    - "Salida con estructura fija: veredicto + piso + checklist de rechazo"
+    - "2+ marcas de checklist = NO PASA"

@@ -1,0 +1,43 @@
+skill:
+  name: viabilidad-operativa
+  display_name: "Viabilidad Operativa — Gate de Pre-Diseño (1/3)"
+  version: 1.0.0
+  type: process
+  domain: quality
+
+  description: >
+    Gate de pre-diseño que cuestiona la operación de una idea/proceso antes de
+    diseñar: agilidad, tiempo vs valor, consumo (tokens/créditos/APIs), riesgo
+    de baneo/suspensión de cuenta y dependencias frágiles. Veredicto
+    APTO / APTO CON CONDICIONES / NO APTO en ≤1 página.
+
+  dependencies: []
+
+  triggers:
+    - keyword: "¿vale la pena hacer esto?"
+    - keyword: "¿cuánto se va a tardar?"
+    - keyword: "¿no nos van a banear"
+    - keyword: "evalúa el proceso"
+    - keyword: "¿es viable este proceso?"
+    - keyword: "¿cuánto consume?"
+
+  context_hint:
+    - ".agents/skills/viabilidad-operativa/SKILL.md"
+
+  rules:
+    - id: vi-001
+      description: "Cada respuesta con dato o supuesto marcado [supuesto]"
+      severity: error
+    - id: vi-002
+      description: "NO APTO solo por riesgo irremediable; si se mitiga → APTO CON CONDICIONES"
+      severity: error
+    - id: vi-003
+      description: "Máximo 3 preguntas (o 0 con decision_libre=true)"
+      severity: warning
+    - id: vi-004
+      description: "Salida ≤1 página; juzga operación, no mercado (eso es analista-proy)"
+      severity: warning
+
+  validation:
+    - "Salida con estructura fija: tabla de 5 preguntas + veredicto"
+    - "Riesgo de ban siempre evaluado (nunca APTO limpio si aplica)"

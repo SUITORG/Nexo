@@ -1,0 +1,40 @@
+skill:
+  name: durabilidad
+  display_name: "Durabilidad — Gate de Futuro (3/3)"
+  version: 1.0.0
+  type: process
+  domain: quality
+
+  description: >
+    Gate de pre-diseño para futuro: juzga si la app/proceso durará —
+    conectable después a otras funciones sin rehacerla, confiable, de fácil
+    uso (usuario final y dueño), entendible y resistente al cambio. Sus
+    decisiones pasan como requisitos al diseño.
+
+  dependencies: []
+
+  triggers:
+    - keyword: "que tenga futuro"
+    - keyword: "que sea escalable"
+    - keyword: "que después se le pueda conectar"
+    - keyword: "que dure"
+    - keyword: "fácil de mantener"
+    - keyword: "que se entienda"
+
+  context_hint:
+    - ".agents/skills/durabilidad/SKILL.md"
+
+  rules:
+    - id: du-001
+      description: "Decisiones de diseño garantizadas se adjuntan como requisitos"
+      severity: error
+    - id: du-002
+      description: "FRÁGIL lista el camino de estabilización; no mata el proyecto"
+      severity: warning
+    - id: du-003
+      description: "Máximo 3 preguntas (o 0 con decision_libre=true)"
+      severity: warning
+
+  validation:
+    - "Salida con estructura fija: tabla de 5 condiciones + decisiones de diseño"
+    - "Test de conexión futura respondido con costo concreto"

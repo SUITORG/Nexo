@@ -422,6 +422,15 @@ skills:
   pantalla-limpia:
     path: .suit/skills/process/pantalla-limpia.yaml
 
+  viabilidad-operativa:
+    path: .suit/skills/process/viabilidad-operativa.yaml
+
+  calidad-minima:
+    path: .suit/skills/process/calidad-minima.yaml
+
+  durabilidad:
+    path: .suit/skills/process/durabilidad.yaml
+
   empresa-registro:
     path: .suit/skills/domain/empresa-registro.yaml
 

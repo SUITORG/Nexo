@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-10-11
+  Generado: 2026-10-14
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -15,6 +15,7 @@
   brief-engine              .suit/skills/domain/brief-engine.yaml
   clusters-seo              .suit/skills/domain/clusters-seo.yaml
   contrato-subproyecto      .suit/skills/domain/contrato-subproyecto.yaml
+  copywriter-meta           .suit/skills/domain/copywriter-meta.yaml
   cotizaciones-engine       .suit/skills/domain/cotizaciones-engine.yaml
   data-cleanup              .suit/skills/domain/data-cleanup.yaml
   data-sync                 .suit/skills/domain/data-sync.yaml
@@ -77,7 +78,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 44 skills
+  TOTAL SUITOS: 45 skills
 
 
 ========================================================================
@@ -103,6 +104,9 @@
   browser-act               .claude/skills/browser-act
                             -> .agents\skills\browser-act
                             Browser automation CLI for AI agents. NEVER run browser-act commands directly via Bash ΓÇö always invoke this skill first. Use browser-act when a user
+  calidad-minima            .claude/skills/calidad-minima
+                            -> .agents\skills\calidad-minima
+                            Gate de pre-diseño anti-mediocre: juzga si el RESULTADO de la app/proceso merece existir y cómo evitar que salga pobre, a medias o genérico. Úsala SIE
   captions-overlay          .claude/skills/captions-overlay
                             -> .agents\skills\captions-overlay
                             Overlay doctrine for the embedded-captions workflow — the caption MODEL (drop / rail / embed) and the rule that captions are an OVERLAY composited on 
@@ -124,6 +128,9 @@
   descubrimiento            .claude/skills/descubrimiento
                             -> .agents\skills\descubrimiento
                             Fase obligatoria de descubrimiento y arquitectura ANTES de escribir, modificar o eliminar código. Clasifica la solicitud, diagnostica 10 capacidades (
+  durabilidad               .claude/skills/durabilidad
+                            -> .agents\skills\durabilidad
+                            Gate de pre-diseño para futuro: juzga si la app/proceso que va a crearse DURARÁ — que sea confiable, de fácil uso (para el usuario final y para el due
   embedded-captions         .claude/skills/embedded-captions
                             -> .agents\skills\embedded-captions
                             Add captions or subtitles to an existing single-subject talking-head video without editing the footage. Use for plain verbatim captions, cinematic cap
@@ -172,6 +179,9 @@
   ideas-saas                .claude/skills/ideas-saas
                             -> .agents\skills\ideas-saas
                             Pipeline por-corrida de ideas SaaS en 2 modos: IDEAS RÁPIDAS (3 ideas 80/20 → panel juzgador → gate >=7.5 → scaffold + promoción automática a módulo S
+  lapvtfu                   .claude/skills/lapvtfu
+                            -> .agents\skills\lapvtfu
+                            Activos del Brief (LAPVTFU): verifica, asegura, GENERA y escribe los 7 slots posicionales del segmento LAPVTFU (en Config_Empresas.logo_url) sobre la 
   last30days                .claude/skills/last30days
                             -> .agents\skills\last30days
                             AI-powered cross-platform research agent. Researches any topic across Reddit, X/Twitter, YouTube, TikTok, Instagram, Hacker News, Polymarket, GitHub, 
@@ -225,11 +235,14 @@
   talking-head-recut        .claude/skills/talking-head-recut
                             -> .agents\skills\talking-head-recut
                             Package an existing talking-head / interview / podcast video with timed, designed GRAPHIC OVERLAY cards — kinetic titles, lower-thirds, data callouts,
+  viabilidad-operativa      .claude/skills/viabilidad-operativa
+                            -> .agents\skills\viabilidad-operativa
+                            Gate de pre-diseño que cuestiona la OPERACIÓN de una idea/proceso ANTES de diseñar: ¿es ágil o se complica?, ¿el tiempo que toma vale la pena?, ¿cuánt
   video-shotcraft           .claude/skills/video-shotcraft
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 49 (4 locales + 45 symlinks)
+  TOTAL CLAUDE: 53 (4 locales + 49 symlinks)
 
 
 ========================================================================
@@ -240,6 +253,7 @@
   auditoria                 .opencode/skills/auditoria
   bat-launcher              .opencode/skills/bat-launcher
   browser-act               .opencode/skills/browser-act
+  calidad-minima            .opencode/skills/calidad-minima
   captions-overlay          .opencode/skills/captions-overlay
   changelog-video           .opencode/skills/changelog-video
   ciclo                     .opencode/skills/ciclo
@@ -247,6 +261,7 @@
   copywriter-meta           .opencode/skills/copywriter-meta
   cut-the-curve             .opencode/skills/cut-the-curve
   descubrimiento            .opencode/skills/descubrimiento
+  durabilidad               .opencode/skills/durabilidad
   embedded-captions         .opencode/skills/embedded-captions
   empresa-mascara           .opencode/skills/empresa-mascara
   empresa-registro          .opencode/skills/empresa-registro
@@ -263,6 +278,7 @@
   hyperframes-keyframes     .opencode/skills/hyperframes-keyframes
   hyperframes-registry      .opencode/skills/hyperframes-registry
   ideas-saas                .opencode/skills/ideas-saas
+  lapvtfu                   .opencode/skills/lapvtfu
   last30days                .opencode/skills/last30days
   media-use                 .opencode/skills/media-use
   mejoras-proyecto          .opencode/skills/mejoras-proyecto
@@ -284,9 +300,10 @@
   skill-creator             .opencode/skills/skill-creator
   slideshow                 .opencode/skills/slideshow
   talking-head-recut        .opencode/skills/talking-head-recut
+  viabilidad-operativa      .opencode/skills/viabilidad-operativa
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 49
+  TOTAL OPENCODE: 53
 
 
 ========================================================================
@@ -323,6 +340,7 @@
   design-system                       Manages visual identity for landings: colors, typography, palettes and
   brief-engine                        Generates complete Marketing Briefs (21 segments: 20 content + LAPVTFU
   lapvtfu                             Gestiona el segmento LAPVTFU (posición 10 del vector Brief en Config_E
+  copywriter-meta                     Facebook/Instagram Ads copywriter con compliance Meta y psicología del
   prompt-reviewer                     Pre-vuelo automático y token-eficiente de TODO pedido del usuario ante
   web-research                        Structured web research for business intelligence. Runs 3-5 parallel q
   guia-total                          Orquestador canónico: lleva un proyecto por idea → validación → constr
@@ -339,7 +357,7 @@
   registry-query                      Consulta el registry declarativo (.suit/registry/*.yaml: agents, skill
   parametros                          Cambia comportamiento global o puntual del sistema SIN tocar código, e
 
-  TOTAL REGISTRY: 45 skills declaradas
+  TOTAL REGISTRY: 46 skills declaradas
 
 
 ========================================================================
@@ -422,14 +440,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    44      44         0
-  Skills Claude Code       49        4        45
-  Skills OpenCode           49       49         0
-  Registry YAML           45      45         0
+  Skills SuitOS (.yaml)    45      45         0
+  Skills Claude Code       53        4        49
+  Skills OpenCode           53       53         0
+  Registry YAML           46      46         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   204
+  TOTAL                   214
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================
