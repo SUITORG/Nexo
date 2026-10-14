@@ -43,6 +43,9 @@
   #log { position:fixed; left:14px; bottom:96px; width:min(46vw,520px); max-height:38vh; overflow-y:auto;
     background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:.8rem .9rem; z-index:30; }
   #log h2 { font-size:.72rem; letter-spacing:.8px; text-transform:uppercase; color:#38bdf8; margin-bottom:.5rem; }
+  #agent-box { margin-top:.6rem; border-top:1px dashed #1c2438; padding-top:.5rem; display:none; }
+  #agent-box h3 { font-size:.68rem; color:#4ade80; margin-bottom:.3rem; }
+  #agent-log { font-family:monospace; font-size:.7rem; color:var(--dim); white-space:pre-wrap; max-height:120px; overflow-y:auto; }
   .lg { font-size:.82rem; padding:.18rem 0; color:var(--dim); }
   .lg b { color:var(--text); font-weight:600; }
   .lg time { color:#64748b; font-size:.72rem; margin-right:.4rem; }
@@ -151,6 +154,10 @@
   <span style="flex:1"></span>
   <span id="push-area">
     <button id="push-btn" style="display:none"></button>
+    <label style="display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--dim);cursor:pointer" title="Directo = el agente corre solo desde el panel. Chat = copias /panel al IDE.">
+      <input type="checkbox" id="mode-toggle"> ⚡ Directo
+    </label>
+    <button id="ejecutar-btn" style="display:none;background:var(--accent);color:#04231f;border:0;border-radius:999px;padding:.3rem .9rem;font-size:.78rem;font-weight:700;cursor:pointer">▶ Ejecutar</button>
     <span id="h-live" class="chip">● vivo</span>
   </span>
 </header>
@@ -204,6 +211,10 @@
 <div id="log">
   <h2>📜 Log de fase</h2>
   <div id="log-list"><div class="lg">—</div></div>
+  <div id="agent-box">
+    <h3>🤖 Agente corriendo</h3>
+    <div id="agent-log">cargando…</div>
+  </div>
 </div>
 
 <div id="phases"><div class="track" id="track"></div></div>
@@ -280,6 +291,12 @@ const FASE_SIG = {
   5: 'Fase 6 Automático: avisos por correo, respaldo programado',
   6: 'Fase 7 Terminado: signup público y cobros'
 };
+
+function toastModo() {
+  return (typeof modeToggle !== 'undefined' && modeToggle.checked)
+    ? '✓ Orden lista — pulsa ▶ Ejecutar (arriba a la derecha)'
+    : '✓ Orden lista — pega /panel en el chat';
+}
 
 function toast(msg) {
   const t = $('toast');
@@ -393,7 +410,7 @@ async function loadRegistro() {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tipo: b.getAttribute('data-orden'), proyecto: b.getAttribute('data-proy'), detalle: b.getAttribute('data-det') || 'solicitado desde panel' })
           });
-          toast('✓ Orden lista — pega /panel en el chat y el agente la ejecuta');
+          toast(toastModo());
         } catch (_) { toast('✗ sin conexión'); }
       });
     });
@@ -422,7 +439,7 @@ async function loadPendientes() {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tipo: 'pendiente', proyecto: '', detalle: b.getAttribute('data-tit') })
           });
-          toast('✓ Orden lista — pega /panel en el chat y el agente resuelve esto');
+          toast(toastModo());
         } catch (_) { toast('✗ sin conexión'); }
         finally { b.disabled = false; }
       });
@@ -456,6 +473,57 @@ async function loadGit() {
       b.style.display = 'inline-block';
       if (!pushArmado) b.textContent = `⬆ Push ${g.branch} (${g.ahead})`;
     } else b.style.display = 'none';
+  } catch (_) {}
+}
+
+// --- Modo directo vs chat ---
+const modeToggle = $('mode-toggle');
+modeToggle.checked = localStorage.getItem('panel-modo') === 'directo';
+modeToggle.addEventListener('change', () => {
+  localStorage.setItem('panel-modo', modeToggle.checked ? 'directo' : 'chat');
+  refreshEjecutar();
+});
+function refreshEjecutar() {
+  const btn = $('ejecutar-btn');
+  fetch('orden?t=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(o => {
+    const hay = (o.ordenes || []).length > 0;
+    btn.style.display = (modeToggle.checked && hay) ? 'inline-block' : 'none';
+  }).catch(() => { btn.style.display = 'none'; });
+}
+
+// --- Ejecutar agente directo ---
+let agenteActivo = false;
+$('ejecutar-btn').addEventListener('click', async () => {
+  const btn = $('ejecutar-btn');
+  btn.disabled = true; btn.textContent = 'lanzando…';
+  try {
+    const r = await fetch('ejecutar', { method: 'POST' });
+    const d = await r.json();
+    if (d.ok) { toast('✓ Agente lanzado (pid ' + d.pid + ')'); agenteActivo = true; $('agent-box').style.display = 'block'; }
+    else toast('✗ ' + (d.error || 'no se pudo lanzar'));
+  } catch (_) { toast('✗ sin conexión'); }
+  btn.disabled = false; refreshEjecutar();
+});
+
+async function loadAgente() {
+  try {
+    const r = await fetch('agente?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    const box = $('agent-box');
+    if (d.activo) {
+      box.style.display = 'block';
+      agenteActivo = true;
+      $('agent-log').textContent = d.log || 'esperando salida…';
+      $('agent-log').scrollTop = $('agent-log').scrollHeight;
+      $('ejecutar-btn').style.display = 'none';
+    } else if (agenteActivo) {
+      agenteActivo = false;
+      box.style.display = 'none';
+      toast('✓ Agente terminó');
+      refreshEjecutar();
+      loadRegistro(); loadPendientes(); loadHistorial();
+    }
   } catch (_) {}
 }
 $('push-btn').addEventListener('click', async () => {
@@ -557,7 +625,7 @@ $('custom-btn').addEventListener('click', async () => {
       body: JSON.stringify({ tipo: 'custom', proyecto: '', detalle: txt })
     });
     const d = await r.json();
-    if (d.ok) { msg.textContent = '✓ Orden lista — escribe /panel en el chat.'; toast('✓ Orden encolada — pega /panel en el chat'); $('custom-txt').value = ''; }
+    if (d.ok) { msg.textContent = '✓ Orden encolada.'; toast(toastModo()); $('custom-txt').value = ''; }
     else msg.textContent = '✗ error';
   } catch (_) { msg.textContent = '✗ sin conexión'; }
   finally { $('custom-btn').disabled = false; }
@@ -568,11 +636,15 @@ loadHistorial();
 loadRegistro();
 loadPendientes();
 loadGit();
+loadAgente();
+refreshEjecutar();
 setInterval(tick, 2000);
 setInterval(loadHistorial, 15000);
 setInterval(loadRegistro, 30000);
 setInterval(loadPendientes, 30000);
 setInterval(loadGit, 60000);
+setInterval(loadAgente, 3000);
+setInterval(refreshEjecutar, 10000);
 </script>
 </body>
 </html>

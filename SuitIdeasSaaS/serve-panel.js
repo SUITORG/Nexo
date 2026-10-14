@@ -6,6 +6,8 @@ const ROOT = __dirname, REPO = path.join(ROOT, '..'), PORT = 8099;
 const REG = path.join(REPO, 'GuiaTotal', 'registro');
 const PEND = path.join(REPO, 'GuiaTotal', 'PENDIENTES.md');
 const ORDEN = path.join(ROOT, 'orden.json');
+const ACTIVO = path.join(ROOT, 'agente-activo.json');
+const ALOG = path.join(ROOT, 'agente-log.txt');
 const TYPES = { '.html': 'text/html', '.json': 'application/json', '.png': 'image/png', '.js': 'text/javascript' };
 
 function git(args) {
@@ -185,6 +187,35 @@ http.createServer(async (req, res) => {
       o.ordenes.push({ tipo: d.tipo, proyecto: d.proyecto || '', detalle: d.detalle || '', ts: new Date().toISOString() });
       fs.writeFileSync(ORDEN, JSON.stringify(o, null, 2));
       return json({ ok: true, ordenes: o.ordenes });
+    }
+    if (req.method === 'GET' && url === '/agente') {
+      let activo = null;
+      try { activo = JSON.parse(fs.readFileSync(ACTIVO, 'utf8')); } catch (_) {}
+      let log = '';
+      try { const t = fs.readFileSync(ALOG, 'utf8'); log = t.slice(-4000); } catch (_) {}
+      return json({ activo, log });
+    }
+    if (req.method === 'POST' && url === '/ejecutar') {
+      let activo = null;
+      try { activo = JSON.parse(fs.readFileSync(ACTIVO, 'utf8')); } catch (_) {}
+      if (activo) {
+        try { process.kill(activo.pid, 0); return err(409, 'agente ya corriendo (pid ' + activo.pid + ')'); }
+        catch (_) { try { fs.unlinkSync(ACTIVO); } catch (_) {} }
+      }
+      const { spawn } = require('child_process');
+      fs.writeFileSync(ALOG, '');
+      const child = spawn('opencode', ['run', '--command', 'panel'], { cwd: REPO, detached: true, stdio: ['ignore', fs.openSync(ALOG, 'a'), fs.openSync(ALOG, 'a')] });
+      child.unref();
+      fs.writeFileSync(ACTIVO, JSON.stringify({ pid: child.pid, inicio: new Date().toISOString() }));
+      return json({ ok: true, pid: child.pid });
+    }
+    if (req.method === 'POST' && url === '/ejecutar/stop') {
+      let activo = null;
+      try { activo = JSON.parse(fs.readFileSync(ACTIVO, 'utf8')); } catch (_) {}
+      if (!activo) return json({ ok: false, error: 'no hay agente corriendo' });
+      try { process.kill(-activo.pid, 'SIGTERM'); } catch (_) { try { process.kill(activo.pid, 'SIGTERM'); } catch (_) {} }
+      try { fs.unlinkSync(ACTIVO); } catch (_) {}
+      return json({ ok: true });
     }
     if (req.method === 'POST' && url === '/resolver-pendiente') {
       const d = await leerBody(req);

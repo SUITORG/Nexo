@@ -245,6 +245,12 @@
     <div class="sub">analista-proy → sintesis-proyecto → panel-juzgador</div>
   </div>
 
+  <div class="node t-idea" id="npanel" data-sec="dec5" style="left:850px; top:30px; width:230px;">
+    <span class="ico">📊</span>
+    <div class="ttl">Panel IdeasSaaS</div>
+    <div class="sub">localhost:8099 · fase_producto F0-F7 · órdenes + /ejecutar directo</div>
+  </div>
+
   <div class="gate" id="g-alta" style="left:624px; top:160px;">
     <div class="gtxt"><span class="gi">❓</span>¿Alta de empresa?</div>
   </div>
@@ -1005,6 +1011,21 @@
       ],
       skills: ['context-loader', 'index-navigator'],
       files: ['.suit/loader/strategy.yaml', 'INDEX_FUNCIONES.md', '.suit/cache/']
+    },
+    dec5: {
+      t: 'Panel IdeasSaaS — monitoreo y control en vivo',
+      steps: [
+        'localhost:8099 (abrir-panel.bat) — estado.json con poll 2s: fases, log, herramientas',
+        'Secciones: corrida actual (pendientes ⏳ + artefactos 📑) · historial · proyectos (fase_producto F0-F7) · pendientes globales (✓ listo / 🤖 Pedir al agente)',
+        'Caja "Pedir corrida" → solicitud.json → /ideas la consume',
+        'Caja orden libre (custom) → orden.json → /panel la ejecuta',
+        'Botón ▶ Ejecutar (modo ⚡ Directo): lanza opencode run --command panel via POST /ejecutar — el agente corre SIN copiar nada al IDE; log en vivo en la ventana Log',
+        'Modo 💬 Chat (default): encolar y pegar /panel en el IDE',
+        'Push a origin con doble-confirmación (botón ⬆ en el header)',
+        'POR CONFIRMAR por proyecto: opciones de un clic con sugerencia ★ → escribe CONTRATO.md + commit'
+      ],
+      skills: ['ideas-saas', 'ciclo', 'panel (comando)'],
+      files: ['SuitIdeasSaaS/panel.html', 'SuitIdeasSaaS/serve-panel.js', 'SuitIdeasSaaS/estado.json', 'SuitIdeasSaaS/orden.json']
     }
   });
 
