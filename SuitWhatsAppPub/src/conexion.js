@@ -7,15 +7,17 @@ const { log, err, pino } = require('./logger');
 const AUTH_DIR = path.join(__dirname, '..', 'auth');
 
 let sock = null;
-let qrCallback = null;
-let statusCallback = null;
+let qrCallbacks = [];
+let statusCallbacks = [];
 let connected = false;
 
-function onQr(cb) { qrCallback = cb; }
-function onStatus(cb) { statusCallback = cb; }
+function onQr(cb) { qrCallbacks.push(cb); }
+function onStatus(cb) { statusCallbacks.push(cb); }
 
+function emitQr(qr) { qrCallbacks.forEach(cb => cb(qr)); }
 function emitStatus(state, extra) {
-  if (statusCallback) statusCallback({ estado: state, extra: extra || '', conectado: connected });
+  const s = { estado: state, extra: extra || '', conectado: connected };
+  statusCallbacks.forEach(cb => cb(s));
 }
 
 async function connect() {
@@ -38,7 +40,7 @@ async function connect() {
     if (qr) {
       log('QR generado — escanea con tu WhatsApp personal');
       emitStatus('qr', qr);
-      if (qrCallback) qrCallback(qr);
+      emitQr(qr);
     }
 
     if (connection === 'open') {

@@ -90,7 +90,7 @@ th{color:var(--dim);font-size:.72rem;text-transform:uppercase;letter-spacing:.5p
     <div class="form-row">
       <div class="grow">
         <label>Grupo destino</label>
-        <input id="f-grupo" placeholder="Nombre del grupo" list="lista-grupos">
+        <input id="f-grupo" placeholder="Nombre del grupo" autocomplete="off" spellcheck="false">
         <datalist id="lista-grupos"></datalist>
       </div>
       <button class="btn btn-ghost" onclick="cargarGrupos()">📋</button>
@@ -171,20 +171,24 @@ async function refrescar() {
 
 function render() {
   const e = estado;
-  // badge estado
+  // badge estado — usa SIEMPRE e.conectado (fuente única de verdad)
   const b = $('estado-badge');
   if (e.conectado) { b.className = 'badge ok'; b.innerHTML = '<span class="dot ok"></span> Conectado'; }
-  else if (e.estado === 'qr') { b.className = 'badge warn'; b.innerHTML = '<span class="dot warn"></span> Escanea el QR'; }
+  else if (e.qr) { b.className = 'badge warn'; b.innerHTML = '<span class="dot warn"></span> Escanea el QR'; }
   else if (e.estado === 'deslogueado') { b.className = 'badge err'; b.innerHTML = '<span class="dot err"></span> Sesión cerrada'; }
   else { b.className = 'badge warn'; b.innerHTML = '<span class="dot warn"></span> Conectando…'; }
 
-  // QR
-  if (e.qr && !e.conectado) {
+  // QR box — misma lógica que badge
+  if (e.conectado) {
+    $('qr-msg').textContent = '✅ Conectado — no necesitas QR';
+    $('qr-msg').style.display = 'block';
+    $('qr-code').style.display = 'none';
+  } else if (e.qr) {
     $('qr-msg').style.display = 'none';
     $('qr-code').style.display = 'block';
     $('qr-code').textContent = e.qr;
-  } else if (e.conectado) {
-    $('qr-msg').textContent = '✅ Conectado — no necesitas QR';
+  } else {
+    $('qr-msg').textContent = 'Esperando conexión…';
     $('qr-msg').style.display = 'block';
     $('qr-code').style.display = 'none';
   }
