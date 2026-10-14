@@ -202,9 +202,10 @@ function render() {
   $('stat-auto').textContent = e.config?.automatico ? 'ON' : 'OFF';
   $('stat-auto').style.color = e.config?.automatico ? 'var(--accent)' : 'var(--dim)';
 
-  // config → form
+  // config → form (no sobreescribir si el usuario está escribiendo)
   if (e.config) {
-    $('f-grupo').value = e.config.grupo || '';
+    const fG = $('f-grupo');
+    if (document.activeElement !== fG) fG.value = e.config.grupo || '';
     $('f-carpeta').value = e.config.carpeta || './media';
     $('f-caption').value = e.config.caption || '';
     $('f-historias').checked = e.config.historias !== false;
