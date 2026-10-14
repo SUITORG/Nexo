@@ -426,6 +426,9 @@
     { from: 'ndesc', to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'mantenimiento',
       via: [[1310, 130], [1310, 1515]] },
     { from: 'npl',   to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'claridad UI' },
+    { from: 'npanel',to: 'n1',     cls: 'e-soft',  mk: 'ar-g', label: 'monitorea + dispara /ideas', via: [[1080, 90], [1080, 45]] },
+    { from: 'npanel',to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'monitorea + dispara /ciclo', via: [[1180, 90], [1180, 1510]] },
+    { from: 'npanel',to: 'ndesc',  cls: 'e-soft',  mk: 'ar-g', label: 'órdenes + switches', route: 'v' },
   ];
 
   // iconos de acción por burbuja (misma leyenda que MAPA.md: 📁 lee · ⚡ skill ·
@@ -457,6 +460,7 @@
     n27: ['📖 lee', '🔄 actualiza'],
     n25: ['✅ evidencia', '❓ decisión', '⛔ detenido', '✍️ PENDIENTES', 'indice memory/INDEX.md'],
     ndesc: ['📁 lee switches', '❓ ≤3 preguntas', '✍️ entregable 11 pts'],
+    npanel: ['📊 estado.json', '📋 órdenes', '▶ ejecutar directo', '📈 fase_producto'],
   };
 
   function rect(el) {
