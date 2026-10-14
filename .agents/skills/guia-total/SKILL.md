@@ -111,6 +111,7 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 - El `MANUAL_TECNICO.md` siempre incluye: **tabla "Resumen en corto"** (tipo, frontend, BD, Sheets, config, cómo correrlo) + **requisitos de equipo** en §2 (plantilla `templates/MANUAL_TECNICO.md`).
 - Cada manual lleva en cabecera `Para qué sirve este manual` y `Audiencia` (obligatorio).
 - **Actualización**: si ya existen, compara `Última actualización` del manual contra `git log -1 --format=%cd -- <archivos relevantes>`; solo reescribe los manuales cuyo contenido quedó viejo. No regeneres los al día.
+- **`⚡ procesos-visual`**: tras crear/actualizar manuales, genera o refresca los mapas de proceso de los roles afectados en `<Proyecto>/docs/procesos/PROCESO_<ROL>.html` (HTML+CSS autónomo desde el §Diagrama de Flujo del manual; plantilla `GuiaTotal/plantillas/proceso-rol.html`). Ejemplo piloto: `SuitServiHogar/docs/procesos/`.
 
 ### `guia-total origen [ruta]`
 
@@ -137,6 +138,7 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 | `templates/*` | `GuiaTotal/` | solo método nuevo |
 | `registro/schema.md` + `registro/<proyecto>.yaml` | `GuiaTotal/` | esta skill |
 | `MANUAL_*.md` | `<Proyecto>/docs/` | modo `manuales` / construcción |
+| `procesos/PROCESO_*.html` | `<Proyecto>/docs/` | skill `procesos-visual` (tras manuales) |
 | `IDENTIDAD_CORPORATIVA.md` | `<Proyecto>/docs/` | modo `identidad` |
 | `PROMPT_ORIGEN.md` | `<Proyecto>/docs/` | modo `origen` |
 | `MANUAL_OPERACION.md` | `GuiaTotal/` | modo `operacion` / mantenimiento (config empresas) |

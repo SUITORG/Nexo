@@ -44,9 +44,11 @@
   NOMBRE                 RUTA
   ------------------------------------------------------------------------
   auditoria                 .suit/skills/process/auditoria.yaml
+  calidad-minima            .suit/skills/process/calidad-minima.yaml
   code-review               .suit/skills/process/code-review.yaml
   deployer                  .suit/skills/process/deployer.yaml
   descubrimiento            .suit/skills/process/descubrimiento.yaml
+  durabilidad               .suit/skills/process/durabilidad.yaml
   guia-total                .suit/skills/process/guia-total.yaml
   ideas-saas                .suit/skills/process/ideas-saas.yaml
   iteration-loop            .suit/skills/process/iteration-loop.yaml
@@ -58,6 +60,7 @@
   prompt-reviewer           .suit/skills/process/prompt-reviewer.yaml
   reportero                 .suit/skills/process/reportero.yaml
   security-audit            .suit/skills/process/security-audit.yaml
+  viabilidad-operativa      .suit/skills/process/viabilidad-operativa.yaml
 
   -- SISTEMA (.suit/skills/system/)
 
@@ -78,7 +81,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 45 skills
+  TOTAL SUITOS: 48 skills
 
 
 ========================================================================
@@ -217,6 +220,9 @@
   pr-to-video               .claude/skills/pr-to-video
                             -> .agents\skills\pr-to-video
                             Turn a GitHub pull request (a PR URL, owner/repo#N, or 'this PR' in a checked-out repo) into a code-change explainer video — changelog, feature reveal
+  procesos-visual           .claude/skills/procesos-visual
+                            -> .agents\skills\procesos-visual
+                            Genera mapas de proceso visuales en HTML (diagrama de flujo ligero en CSS, sin imágenes embebidas) a partir de los MANUAL_*.md de un proyecto — un HTM
   product-launch-video      .claude/skills/product-launch-video
                             -> .agents\skills\product-launch-video
                             Turn a product or marketing URL, pasted script, or brief into a product launch / promo video — SaaS promos, feature reveals, product demos, app and co
@@ -242,7 +248,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 53 (4 locales + 49 symlinks)
+  TOTAL CLAUDE: 54 (4 locales + 50 symlinks)
 
 
 ========================================================================
@@ -293,6 +299,7 @@
   parametros                .opencode/skills/parametros
   pr-to-video               .opencode/skills/pr-to-video
   preparar-produccion       .opencode/skills/preparar-produccion
+  procesos-visual           .opencode/skills/procesos-visual
   product-launch-video      .opencode/skills/product-launch-video
   remotion-to-hyperframes   .opencode/skills/remotion-to-hyperframes
   seam-craft                .opencode/skills/seam-craft
@@ -303,7 +310,7 @@
   viabilidad-operativa      .opencode/skills/viabilidad-operativa
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 53
+  TOTAL OPENCODE: 54
 
 
 ========================================================================
@@ -348,6 +355,9 @@
   descubrimiento                      Fase obligatoria antes de escribir/modificar/eliminar código: clasific
   ideas-saas                          Pipeline por-corrida (manual, nada de cron): genera 3 ideas digitales 
   pantalla-limpia                     Auditoría genérica de claridad por pantalla (solo lectura): inventario
+  viabilidad-operativa                Gate de pre-diseño que cuestiona la operación de una idea/proceso ante
+  calidad-minima                      Gate de pre-diseño anti-mediocre: juzga si el resultado de la app/proc
+  durabilidad                         Gate de pre-diseño para futuro: juzga si la app/proceso durará — conec
   empresa-registro                    Alta semiautomatica de empresas en Config_Empresas (maestro Google She
   clusters-seo                        Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO (
   paginas-seo                         Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir
@@ -357,7 +367,7 @@
   registry-query                      Consulta el registry declarativo (.suit/registry/*.yaml: agents, skill
   parametros                          Cambia comportamiento global o puntual del sistema SIN tocar código, e
 
-  TOTAL REGISTRY: 46 skills declaradas
+  TOTAL REGISTRY: 49 skills declaradas
 
 
 ========================================================================
@@ -440,14 +450,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    45      45         0
-  Skills Claude Code       53        4        49
-  Skills OpenCode           53       53         0
-  Registry YAML           46      46         0
+  Skills SuitOS (.yaml)    48      48         0
+  Skills Claude Code       54        4        50
+  Skills OpenCode           54       54         0
+  Registry YAML           49      49         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   214
+  TOTAL                   222
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

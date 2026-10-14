@@ -290,6 +290,7 @@
     ├── ➕ si el proyecto vende a clientes (tarjeta frontend.public: true):
     │   ├── ✍️ DEMO.md            guión de demo 5-10 min (dolor → vivo → número → siguiente paso)
     │   └── ✍️ INSTALACION.md     máquina nueva: requisitos, 4 pasos, checklist, actualizar/desinstalar
+    ├── ⚡ procesos-visual → ✍️ docs/procesos/PROCESO_<ROL>.html  (mapa de flujo por rol, HTML+CSS autónomo desde el manual)
     └── actualización: serial — compara "Última actualización" vs git log de archivos UI/backend
                         → solo reescribe los manuales desactualizados
 ```
@@ -492,6 +493,7 @@ SamurAIGPT/Generative-Media-Skills                → plan en .suit/memory/pendi
 | `viabilidad-operativa` | — | veredicto APTO/CON CONDICIONES/NO APTO (ágil, tiempo, consumo, ban, dependencias) → requisitos al CONTRATO (§4) | 5 preguntas, 1 página |
 | `calidad-minima` | — | piso de calidad + checklist de rechazo anti-mediocre → requisitos al CONTRATO (§4) | gate 2/3 del pre-diseño |
 | `durabilidad` | — | veredicto DURA/FRÁGIL + decisiones de diseño (conexión futura, confiabilidad, usabilidad) → requisitos al CONTRATO (§4) | gate 3/3 del pre-diseño |
+| `procesos-visual` | `guia-total manuales` (gatillo) | `<Proyecto>/docs/procesos/PROCESO_<ROL>.html` (1 por rol, HTML+CSS autónomo) | 1 HTML por rol, serial |
 | `ideas-saas` | `panel-juzgador`, `analista-proy`, `sintesis-proyecto` (2V), plantillas landing-leads + brief-cliente, Google Flow MCP (activos) | `SuitIdeasSaaS/<fecha>-evaluacion.md` + **SaaS completo** `Suit<NombrePascal>/` (núcleo + CRUD/login + landing + brief + manuales + ADR) [ADR-048/051/053/054] | panel web 8099 monitorea en vivo |
 | `modo-prueba` | `bat-launcher` (patrón qa.bat) | QA local SuitServiHogar: `VALIDACION` (V7-V9), `CORRECCIONES` | 3 ventanas de rol ∥ tras lista |
 

@@ -1,0 +1,39 @@
+skill:
+  name: procesos-visual
+  display_name: "Procesos visuales (mapas de flujo por rol)"
+  version: 1.0.0
+  type: process
+  domain: documentation
+
+  description: >
+    Genera mapas de proceso visuales en HTML (diagrama de flujo ligero en CSS,
+    sin imágenes embebidas) a partir de los MANUAL_*.md de un proyecto —
+    un HTML por rol en <Proyecto>/docs/procesos/. Requiere los manuales como fuente.
+
+  dependencies:
+    - guia-total
+
+  triggers:
+    - keyword: "mapa de proceso"
+    - keyword: "diagrama de flujo"
+    - keyword: "proceso visual"
+    - keyword: "flujo por rol"
+    - file_pattern: "*/docs/MANUAL_*.md"
+
+  context_hint:
+    - "GuiaTotal/plantillas/proceso-rol.html"
+    - "SuitServiHogar/docs/procesos/"
+
+  rules:
+    - id: pv-001
+      description: "El HTML es derivado — cambiar el proceso = cambiar el manual y regenerar"
+      severity: error
+    - id: pv-002
+      description: "Solo HTML+CSS inline — sin imágenes embebidas ni SVG"
+      severity: error
+    - id: pv-003
+      description: "Sin manual del rol no se inventa el flujo"
+      severity: error
+    - id: pv-004
+      description: "Contenido textual idéntico al manual (mismos estados, montos, PIN)"
+      severity: warning

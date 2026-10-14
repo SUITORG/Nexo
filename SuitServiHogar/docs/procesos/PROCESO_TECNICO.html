@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proceso — Técnico — SuitServiHogar</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f4f6f9; color: #1a2332; padding: 32px 16px; line-height: 1.5; }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  header h1 { font-size: 22px; letter-spacing: -0.02em; }
+  header .sub { color: #5b6b7f; font-size: 13px; margin-top: 4px; }
+  .flow { display: flex; flex-direction: column; align-items: stretch; }
+  .node { background: #fff; border: 1px solid #d9e0ea; border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 2px rgba(20,35,60,.05); }
+  .node .n { display: inline-block; background: #2563eb; color: #fff; font-size: 12px; font-weight: 700; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; margin-right: 8px; }
+  .node b { font-size: 15px; }
+  .node p { font-size: 13px; color: #5b6b7f; margin-top: 4px; padding-left: 30px; }
+  .arrow { text-align: center; color: #94a3b8; font-size: 18px; padding: 6px 0; }
+  .decision { background: #fffbeb; border: 1px dashed #f59e0b; }
+  .decision .n { background: #f59e0b; }
+  .branch { display: flex; gap: 8px; }
+  .branch .node { flex: 1; font-size: 13px; }
+  .branch .tag { font-weight: 700; font-size: 12px; }
+  .tag.si { color: #16a34a; } .tag.no { color: #dc2626; }
+  .result { background: #ecfdf5; border: 1px solid #34d399; }
+  .result .n { background: #16a34a; }
+  .note { background: #f1f5f9; border-left: 4px solid #94a3b8; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 13px; color: #475569; }
+  footer { margin-top: 32px; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Flujo Técnico (Mantenimiento)</h1>
+    <div class="sub">SuitServiHogar · rol técnico (backend: mantenimiento y configuración) · actualizado 2026-10-13</div>
+  </header>
+
+  <div class="flow">
+    <div class="node"><span class="n">1</span><b>Levantar servicios</b><p>Vite (3000) + Express (3010) + Supabase — 3 terminales o <code>qa.bat</code>.</p></div>
+    <div class="arrow">↓</div>
+    <div class="node"><span class="n">2</span><b>Verificar entorno</b><p><code>.env</code>: Supabase, Stripe (test), App. Webhook de Stripe apuntando a la URL real.</p></div>
+    <div class="arrow">↓</div>
+    <div class="node"><span class="n">3</span><b>Operar endpoints</b><p>Connect account, payment-intent, cupones, webhook — base <code>/api</code>.</p></div>
+    <div class="arrow">↓</div>
+    <div class="node decision"><span class="n">?</span><b>¿Hubo cambio de código?</b></div>
+    <div class="arrow">↓</div>
+    <div class="branch">
+      <div class="node"><span class="tag si">Sí →</span> <code>node --check</code> + tests e2e (Playwright).</div>
+      <div class="node"><span class="tag no">No →</span> Monitoreo directo.</div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="node"><span class="n">4</span><b>Checklist pre-producción</b><p>RLS activo, claves reales (no test), sin <code>console.log</code> DEV en <code>dist/</code>.</p></div>
+    <div class="arrow">↓</div>
+    <div class="node"><span class="n">5</span><b>Desplegar</b><p>Frontend → GitHub Pages (Action). Backend → servidor con PM2.</p></div>
+    <div class="arrow">↓</div>
+    <div class="node"><span class="n">6</span><b>Health check + monitoreo</b><p>Logs Express, eventos Stripe, logs Supabase.</p></div>
+    <div class="arrow">↓</div>
+    <div class="node result"><span class="n">✓</span><b>Operación estable</b><p>Servicio en producción con alertas.</p></div>
+    <div class="arrow"></div>
+    <div class="note">⚠ Stripe está en TEST MODE — cambiar claves y URLs de webhook antes de producción real (§10 del manual).</div>
+  </div>
+
+  <footer>Fuente: docs/MANUAL_TECNICO.md §§1-10 — regenerar con skill <b>procesos-visual</b> si cambia el manual.</footer>
+</div>
+</body>
+</html>

@@ -431,6 +431,9 @@ skills:
   durabilidad:
     path: .suit/skills/process/durabilidad.yaml
 
+  procesos-visual:
+    path: .suit/skills/process/procesos-visual.yaml
+
   empresa-registro:
     path: .suit/skills/domain/empresa-registro.yaml
 
