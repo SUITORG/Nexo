@@ -97,8 +97,8 @@ th{color:var(--dim);font-size:.72rem;text-transform:uppercase;letter-spacing:.5p
     </div>
     <div class="form-row">
       <div class="grow">
-        <label>Carpeta de media</label>
-        <input id="f-carpeta" value="./media" placeholder="./media">
+        <label>Carpeta de media <span class="dim" style="font-weight:400">(ruta completa o relativa, ej: C:\Mis Fotos o ./media)</span></label>
+        <input id="f-carpeta" value="./media" placeholder="C:\Mis Fotos" autocomplete="off" spellcheck="false">
       </div>
     </div>
     <div class="form-row">
@@ -202,16 +202,16 @@ function render() {
   $('stat-auto').textContent = e.config?.automatico ? 'ON' : 'OFF';
   $('stat-auto').style.color = e.config?.automatico ? 'var(--accent)' : 'var(--dim)';
 
-  // config → form (no sobreescribir si el usuario está escribiendo)
+  // config → form (no sobreescribir si el usuario está escribiendo en ese campo)
   if (e.config) {
-    const fG = $('f-grupo');
-    if (document.activeElement !== fG) fG.value = e.config.grupo || '';
-    $('f-carpeta').value = e.config.carpeta || './media';
-    $('f-caption').value = e.config.caption || '';
+    const setIfNotFocused = (id, val) => { const el = $(id); if (document.activeElement !== el) el.value = val; };
+    setIfNotFocused('f-grupo', e.config.grupo || '');
+    setIfNotFocused('f-carpeta', e.config.carpeta || './media');
+    setIfNotFocused('f-caption', e.config.caption || '');
+    setIfNotFocused('f-dias', (e.config.calendario?.dias || []).join(', '));
+    setIfNotFocused('f-fechas', (e.config.calendario?.fechas || []).join(', '));
     $('f-historias').checked = e.config.historias !== false;
     $('f-auto').checked = !!e.config.automatico;
-    $('f-dias').value = (e.config.calendario?.dias || []).join(', ');
-    $('f-fechas').value = (e.config.calendario?.fechas || []).join(', ');
   }
 
   // historial
