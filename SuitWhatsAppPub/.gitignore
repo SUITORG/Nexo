@@ -1,0 +1,6 @@
+auth/
+logs/
+node_modules/
+media/
+media/enviados/
+.env

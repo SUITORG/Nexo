@@ -294,6 +294,7 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
  | 3016 | SuitReviewPulse (monitor de reseñas Google, idea-saas — ADR-047/048) |
  | 3017 | SuitContractRenew (contratos de mantenimiento HVAC, idea-saas — ADR-049) |
  | 3018 | SuitPawBook (reservas con depósito groomers, idea-saas verificadas — ADR-051/053) |
+ | 3019 | SuitWhatsAppPub (publicador WhatsApp personal, panel local — ADR-055) |
  | n/a | SuitCVLOGCPy (mismo pipeline en Google Colab con VLM en GPU, sin servidor — ADR-040) |
  | 8000 | CampanasAi |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas

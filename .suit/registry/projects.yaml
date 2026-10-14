@@ -734,3 +734,36 @@ projects:
         port: 3018
         type: express
     notes: "Primera corrida ciclo completo verificadas: analista-proy (8 fuentes) + sintesis + re-juez 8.0. Deposito registrado, no cobrado (Stripe fase 2). Politica cancelacion singleton policy id=1."
+
+  suit-whatsapp-pub:
+    name: "SuitWhatsAppPub - Publicador WhatsApp personal"
+    path: SuitWhatsAppPub/
+    description: "Publica fotos/videos en grupo WhatsApp + Historias con calendario automatico. Baileys 7.x, panel web local, cola de media, mover a enviados. Puerto 3019. ADR-055."
+    skills:
+      - javascript
+    context:
+      - SuitWhatsAppPub/index.js
+      - SuitWhatsAppPub/package.json
+      - SuitWhatsAppPub/README.md
+    frontend:
+      public: false
+      public_route: "none (panel local :3019)"
+      public_gate: "none"
+      staff: true
+      staff_route: "http://localhost:3019 (panel)"
+      staff_gate: "dueno PC"
+      api_endpoints:
+        - "GET /api/estado"
+        - "POST /api/config"
+        - "POST /api/publicar"
+        - "POST /api/grupos"
+    environment:
+      PORT: 3019
+      TYPE: service
+      DB: none (config.json local)
+    servers:
+      - name: whatsapp-pub
+        path: SuitWhatsAppPub/index.js
+        port: 3019
+        type: express
+    notes: "Baileys no-oficial (riesgo suspension). auth/ con credenciales. media/enviados/ auto-creada. Calendario America/Monterrey."

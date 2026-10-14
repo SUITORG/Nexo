@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SuitWhatsAppPub — Panel</title>
+<style>
+:root{--accent:#25d366;--accent2:#128c7e;--bg:#0a0e14;--surface:#111827;--surface2:#1a2332;--text:#f0f4f8;--dim:#8899aa;--border:#1e2d3d;--err:#ff4757;--warn:#ffa502;--ok:#25d366;--glow:rgba(37,211,102,.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),#00d2ff);z-index:999}
+.wrap{max-width:1100px;margin:0 auto;padding:1.5rem 1.2rem 3rem}
+header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+header h1{font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),#00d2ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:.3rem .8rem;border-radius:999px;font-size:.78rem;font-weight:700}
+.badge.ok{background:rgba(37,211,102,.15);color:var(--ok);border:1px solid rgba(37,211,102,.3)}
+.badge.err{background:rgba(255,71,87,.15);color:var(--err);border:1px solid rgba(255,71,87,.3)}
+.badge.warn{background:rgba(255,165,2,.12);color:var(--warn);border:1px solid rgba(255,165,2,.3)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot.ok{background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 2s infinite}
+.dot.err{background:var(--err)}
+.dot.warn{background:var(--warn)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.2rem;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);opacity:.5}
+.card h2{font-size:.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.card h2 span{font-size:1.1rem}
+#qr-box{text-align:center;padding:1rem}
+#qr-box pre{display:inline-block;background:#fff;padding:1rem;border-radius:12px;font-size:8px;line-height:1;color:#000;margin:.5rem auto}
+.form-row{display:flex;gap:.6rem;align-items:end;margin-bottom:.7rem;flex-wrap:wrap}
+.form-row label{display:block;font-size:.78rem;color:var(--dim);margin-bottom:.25rem;font-weight:600}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:.6rem .8rem;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.9rem;font-family:inherit}
+.form-row input:focus,.form-row select:focus{outline:2px solid var(--accent);border-color:transparent}
+.form-row .grow{flex:1;min-width:180px}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.5rem;border-radius:12px;border:none;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 15px rgba(37,211,102,.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,211,102,.4)}
+.btn-primary:disabled{opacity:.5;cursor:wait;transform:none}
+.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.toggle{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
+.toggle input{appearance:none;width:44px;height:24px;background:var(--border);border-radius:12px;position:relative;cursor:pointer;transition:.2s}
+.toggle input::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--dim);transition:.2s}
+.toggle input:checked{background:var(--accent2)}
+.toggle input:checked::after{left:23px;background:#fff}
+.toggle label{font-size:.85rem;color:var(--dim);cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{text-align:left;padding:.5rem .4rem;border-bottom:1px solid var(--border)}
+th{color:var(--dim);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
+.ok{color:var(--ok)}.err{color:var(--err)}.dim{color:var(--dim)}
+#historial-box{grid-column:1/-1}
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--accent);color:var(--accent);padding:.7rem 1.5rem;border-radius:12px;font-weight:600;z-index:999;display:none;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#toast.err{border-color:var(--err);color:var(--err)}
+.stats{display:flex;gap:1rem;margin-bottom:1rem}
+.stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;text-align:center}
+.stat .num{font-size:1.8rem;font-weight:800;color:var(--accent)}
+.stat .lbl{font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>💬 SuitWhatsAppPub</h1>
+  <span id="estado-badge" class="badge warn"><span class="dot warn"></span> Conectando…</span>
+  <span style="flex:1"></span>
+  <span id="proxy-badge" class="badge" style="display:none"></span>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="num" id="stat-pend">—</div><div class="lbl">Archivos pendientes</div></div>
+  <div class="stat"><div class="num" id="stat-enviados">—</div><div class="lbl">Enviados hoy</div></div>
+  <div class="stat"><div class="num" id="stat-auto">—</div><div class="lbl">Modo automático</div></div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2><span>📱</span> Conexión WhatsApp</h2>
+    <div id="qr-box">
+      <p class="dim" id="qr-msg">Esperando QR…</p>
+      <pre id="qr-code" style="display:none"></pre>
+    </div>
+    <p class="dim" style="font-size:.8rem;text-align:center">Abre tu WhatsApp personal → Dispositivos vinculados → Vincular dispositivo</p>
+  </div>
+
+  <div class="card">
+    <h2><span>⚙️</span> Configuración</h2>
+    <div class="form-row">
+      <div class="grow">
+        <label>Grupo destino</label>
+        <input id="f-grupo" placeholder="Nombre del grupo" list="lista-grupos">
+        <datalist id="lista-grupos"></datalist>
+      </div>
+      <button class="btn btn-ghost" onclick="cargarGrupos()">📋</button>
+    </div>
+    <div class="form-row">
+      <div class="grow">
+        <label>Carpeta de media</label>
+        <input id="f-carpeta" value="./media" placeholder="./media">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="grow">
+        <label>Caption (opcional)</label>
+        <input id="f-caption" placeholder="Texto que acompaña el envío">
+      </div>
+    </div>
+    <div class="toggle"><input type="checkbox" id="f-historias" checked><label for="f-historias">Publicar también en Historias/Estados</label></div>
+    <div class="toggle"><input type="checkbox" id="f-auto"><label for="f-auto">Modo automático (según calendario)</label></div>
+    <button class="btn btn-primary" onclick="guardarConfig()" style="width:100%;margin-top:.5rem">💾 Guardar configuración</button>
+  </div>
+
+  <div class="card">
+    <h2><span>📅</span> Calendario</h2>
+    <div class="form-row">
+      <div class="grow">
+        <label>Días (ej: lunes 18:00, jueves 09:00)</label>
+        <input id="f-dias" placeholder="lunes 18:00, jueves 09:00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="grow">
+        <label>Fechas exactas (ej: 2026-12-24 09:00)</label>
+        <input id="f-fechas" placeholder="2026-12-24 09:00">
+      </div>
+    </div>
+    <button class="btn btn-ghost" onclick="guardarCalendario()" style="width:100%">📅 Guardar calendario</button>
+  </div>
+
+  <div class="card">
+    <h2><span>🚀</span> Publicar</h2>
+    <button class="btn btn-primary" onclick="publicarAhora()" style="width:100%;font-size:1.1rem;padding:.9rem" id="btn-publicar">▶ Publicar ahora</button>
+    <p class="dim" style="font-size:.8rem;text-align:center;margin-top:.6rem">Toma el archivo más antiguo de la carpeta y lo envía al grupo + Historias</p>
+  </div>
+
+  <div class="card" id="historial-box">
+    <h2><span>📜</span> Historial de envíos</h2>
+    <div style="max-height:300px;overflow-y:auto">
+      <table>
+        <thead><tr><th>Fecha</th><th>Archivo</th><th>Grupo</th><th>Estado</th></tr></thead>
+        <tbody id="historial-body"><tr><td colspan="4" class="dim">Sin envíos todavía</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let estado = null;
+
+function toast(msg, isErr) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = isErr ? 'err' : '';
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 4000);
+}
+
+async function refrescar() {
+  try {
+    const r = await fetch('/api/estado');
+    estado = await r.json();
+    render();
+  } catch (_) {}
+}
+
+function render() {
+  const e = estado;
+  // badge estado
+  const b = $('estado-badge');
+  if (e.conectado) { b.className = 'badge ok'; b.innerHTML = '<span class="dot ok"></span> Conectado'; }
+  else if (e.estado === 'qr') { b.className = 'badge warn'; b.innerHTML = '<span class="dot warn"></span> Escanea el QR'; }
+  else if (e.estado === 'deslogueado') { b.className = 'badge err'; b.innerHTML = '<span class="dot err"></span> Sesión cerrada'; }
+  else { b.className = 'badge warn'; b.innerHTML = '<span class="dot warn"></span> Conectando…'; }
+
+  // QR
+  if (e.qr && !e.conectado) {
+    $('qr-msg').style.display = 'none';
+    $('qr-code').style.display = 'block';
+    $('qr-code').textContent = e.qr;
+  } else if (e.conectado) {
+    $('qr-msg').textContent = '✅ Conectado — no necesitas QR';
+    $('qr-msg').style.display = 'block';
+    $('qr-code').style.display = 'none';
+  }
+
+  // stats
+  $('stat-pend').textContent = e.pendientes?.length || 0;
+  $('stat-enviados').textContent = (e.historial || []).filter(h => {
+    const d = new Date(h.ts); const hoy = new Date();
+    return d.toDateString() === hoy.toDateString();
+  }).length;
+  $('stat-auto').textContent = e.config?.automatico ? 'ON' : 'OFF';
+  $('stat-auto').style.color = e.config?.automatico ? 'var(--accent)' : 'var(--dim)';
+
+  // config → form
+  if (e.config) {
+    $('f-grupo').value = e.config.grupo || '';
+    $('f-carpeta').value = e.config.carpeta || './media';
+    $('f-caption').value = e.config.caption || '';
+    $('f-historias').checked = e.config.historias !== false;
+    $('f-auto').checked = !!e.config.automatico;
+    $('f-dias').value = (e.config.calendario?.dias || []).join(', ');
+    $('f-fechas').value = (e.config.calendario?.fechas || []).join(', ');
+  }
+
+  // historial
+  const rows = (e.historial || []).slice(0, 30);
+  $('historial-body').innerHTML = rows.length
+    ? rows.map(h => `<tr>
+        <td class="dim">${new Date(h.ts).toLocaleString('es-MX')}</td>
+        <td>${h.archivo}</td>
+        <td class="dim">${h.grupo}</td>
+        <td>${h.error ? `<span class="err">✗ ${h.error}</span>` : `<span class="ok">✓ OK</span>`}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" class="dim">Sin envíos todavía</td></tr>';
+}
+
+async function guardarConfig() {
+  try {
+    await fetch('/api/config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grupo: $('f-grupo').value,
+        carpeta: $('f-carpeta').value,
+        caption: $('f-caption').value,
+        historias: $('f-historias').checked,
+        automatico: $('f-auto').checked
+      })
+    });
+    toast('✓ Configuración guardada');
+  } catch (_) { toast('✗ Error al guardar', true); }
+}
+
+async function guardarCalendario() {
+  const dias = $('f-dias').value.split(',').map(s => s.trim()).filter(Boolean);
+  const fechas = $('f-fechas').value.split(',').map(s => s.trim()).filter(Boolean);
+  try {
+    await fetch('/api/config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ calendario: { dias, fechas } })
+    });
+    toast('✓ Calendario guardado');
+  } catch (_) { toast('✗ Error al guardar calendario', true); }
+}
+
+async function cargarGrupos() {
+  try {
+    toast('Cargando grupos…');
+    const r = await fetch('/api/grupos', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) { toast('✗ ' + d.error, true); return; }
+    $('lista-grupos').innerHTML = d.grupos.map(g => `<option value="${g.nombre}">`).join('');
+    toast(`✓ ${d.grupos.length} grupos cargados — escribe en el campo`);
+  } catch (_) { toast('✗ Error al cargar grupos', true); }
+}
+
+async function publicarAhora() {
+  const btn = $('btn-publicar');
+  btn.disabled = true; btn.textContent = '⏳ Publicando…';
+  try {
+    const r = await fetch('/api/publicar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const d = await r.json();
+    if (d.ok) toast(`✅ Publicado: ${d.archivo}`);
+    else toast('✗ ' + (d.motivo || d.error || 'No se pudo publicar'), true);
+  } catch (_) { toast('✗ Error de conexión', true); }
+  btn.disabled = false; btn.textContent = '▶ Publicar ahora';
+  refrescar();
+}
+
+refrescar();
+setInterval(refrescar, 3000);
+</script>
+</body>
+</html>

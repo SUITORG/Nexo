@@ -1,0 +1,13 @@
+{
+  "grupo": "",
+  "grupoId": "",
+  "carpeta": "./media",
+  "caption": "",
+  "historias": true,
+  "automatico": false,
+  "calendario": {
+    "dias": [],
+    "fechas": []
+  },
+  "historial": []
+}
