@@ -1,7 +1,7 @@
 # Bug: generateAsset multi-asset falla con "it.getName is not a function"
 
 ## Status
-Known (source fixed, **GAS desplegado NO — pendiente de `clasp push`**)
+**Resolved** — fix desplegado 2026-10-15 en `clasp redeploy @29` (misma URL, deployment `AKfycbzlk…`)
 
 ## First Observed
 2026-10-15 (cadena máscara LABARIES, subida de fotos)
@@ -20,8 +20,7 @@ while (it.hasNext()) {
 usaban `subirImagenCte_` (nombre explícito) o rutas no-multi (logo/avatar).
 
 ## Fix
-`var m = it.next().getName().match(re);` — aplicado en repo (2026-10-15).
-**Falta**: `clasp push && clasp deploy` para que llegue al GAS desplegado.
+`var m = it.next().getName().match(re);` — aplicado y desplegado 2026-10-15 (push + redeploy @29, misma URL).
 
 ## Affected Files
 - `backend/core.js` (`_nextAssetName_`, línea 826)
