@@ -823,7 +823,7 @@ function _nextAssetName_(folder, base, ext, multi) {
   var re = new RegExp('^' + base + '(\\d{2})\\.', 'i');
   var maxN = 0;
   while (it.hasNext()) {
-    var m = it.getName().match(re);
+    var m = it.next().getName().match(re);
     if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
   }
   var next = (maxN || 0) + 1;
