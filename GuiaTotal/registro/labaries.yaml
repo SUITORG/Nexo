@@ -1,0 +1,66 @@
+# GuiaTotal/registro/labaries.yaml — tarjeta del proyecto (tenant LABARIES)
+proyecto: "LABARIES — Laboratorio Aries"
+ruta: "(tenant de Config_Empresas — sin carpeta de código)"
+etapa: "operativa"                   # cadena máscara 9/9 completada 2026-10-15
+creado: "2026-10-15"
+actualizado: "2026-10-15"
+
+validacion:
+  problema: "Laboratorio clínico real en Monterrey (Agami 5547) sin proceso de captura/entrega digital; canal = WhatsApp"
+  hipotesis: "Con registro + identidad + SEO + brief + activos, el tenant queda operativo en la plataforma sin sitio propio"
+  metrica_exito: "Cadena máscara completa (alta → activos) + espejo Supabase reflejado + activos verificados byte-a-byte"
+  evidencia: "invocación explícita de usuario (máscara, switches auto) — sin corrida de Analista_Proy"
+  decision: "continuar"
+  motivo: "usuario invocó la cadena completa; laboratorio real con datos de contacto verificados"
+
+evaluacion:
+  panel_juzgador: "no evaluado"     # tenant cliente, no proyecto de código
+  veredicto_fecha: null
+  recomendaciones: null
+
+integraciones:
+  convive_sheets: true              # Config_Empresas es maestra en GS (db_engine GSHEETS)
+  id_empresa: "LABARIES"
+  db_engine: "GSHEETS"
+  brief_en_logo_url: true           # vector21 listo 2026-10-15 (3592 chars)
+
+taxonomia:                          # match catálogo GuiaTotal/TAXONOMIA.md §16
+  industria: "Análisis Clínicos y Laboratorio"
+  nicho: "Laboratorio Clínico"
+  especializacion: "Biometría Hemática"
+
+documentos:
+  analista_proy: false              # invocación directa de máscara
+  identidad: true                   # labaries/IDENTIDAD_CORPORATIVA.md
+  confianza: true                   # labaries/confianza.json (fuentes brief)
+  contrato: false                   # tenant sin carpeta de código
+  manuales: false
+  prompt_origen: false
+  checklist_lanzamiento: false
+
+cadena_mascara:                     # 9/9 auto — 2026-10-15
+  alta: "updateRow (fila existente)"
+  empresa_registro: "cteLABARIES + fotoagente + copy + identidad"
+  clusters: 6                       # Config_SEO: analisis-clinicos-monterrey, biometria-quimica-sanguinea, control-diabetes-colesterol, estudios-control-salud, resultados-claros, preparacion-y-proceso
+  paginas: 6                        # Config_Paginas (mismos ids) + imagenes Unsplash en cte
+  brief: "vector21 en logo_url — be-007/019 pendientes declarados [B]"
+  activos: "LAPVTFU 4/7 slots: logo (initials), videos×2, fotos×6 — verificado byte-a-byte"
+
+activos_drive:
+  estructura: "ensureCteFolders — _brief, _activos(+6), _share"
+  fotoagente: "https://drive.google.com/file/d/10jhxGu11D52zFg2VIfSrPhBL-KUh_Had/view?usp=drivesdk"
+  lapvtfu:
+    slot1_logo: "logo01.png (iniciales LA, color #00ccff) + favicon"
+    slot4_videos: "videos01.mp4, videos02.mp4 (ffmpeg 9:16 ~16s, renderVideo-suitcomfy)"
+    slot6_fotos: "fotos01..06.png (Gemini 2.5 flash image, ~1.3MB c/u)"
+    prompts: "cteLABARIES/_brief/prompts_imagenes.json (motor+prompt+fecha, origen: ai)"
+  pendientes: ["slot2 avatar (no_foto → subir fotoprs01 manual)", "slot3 fotoprs01 (manual)", "slot5 testimonios (cliente real)", "slot7 contenido (sin flujo)"]
+
+seo_paginas:
+  clusters_seo: 6
+  paginas: 6
+  imagenes: 6                       # cteLABARIES/imagenurl-*.jpg (Unsplash, share ANYONE)
+  espejo: "Config_SEO/Config_Paginas + Config_Empresas sincronizados con Supabase"
+  ruta_preview: "index.html?co=LABARIES#analisis-clinicos-monterrey (hash)"
+
+proximos_pasos: "1) subir fotoprs01.png a raíz cte (desbloquea avatar) 2) revisar copy de las 6 páginas 3) bug GAS it.getName (core.js:826) fix en repo — falta clasp push 4) descripcion vacía en Config (be-019)"

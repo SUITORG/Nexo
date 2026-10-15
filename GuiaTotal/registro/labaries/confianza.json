@@ -1,0 +1,48 @@
+{
+  "id_empresa": "LABARIES",
+  "fecha": "2026-10-15",
+  "fuentes": {
+    "industria": "GuiaTotal/TAXONOMIA.md §16 (Análisis Clínicos y Laboratorio)",
+    "nicho": "GuiaTotal/TAXONOMIA.md §16 → Laboratorio Clínico",
+    "especializacion": "GuiaTotal/TAXONOMIA.md §16 → Biometría Hemática (primera del catálogo del nicho)",
+    "vendes": "GuiaTotal/TAXONOMIA.md §16 + Config_Empresas[LABARIES].tipo_negocio/giro_especifico",
+    "audiencia": [
+      "https://medcompara.com.mx/blog/precio-biometria-hematica-mexico",
+      "https://blood-interpretation.com/es-mx/costos-y-orden-medica/cuanto-cuesta-un-examen-de-sangre/"
+    ],
+    "dolor": [
+      "https://medcompara.com.mx/blog/precio-biometria-hematica-mexico",
+      "https://blood-interpretation.com/es-mx/costos-y-orden-medica/cuanto-cuesta-un-examen-de-sangre/"
+    ],
+    "PBP": "derivado de Config_Empresas[LABARIES].slogan + GuiaTotal/registro/labaries/IDENTIDAD_CORPORATIVA.md",
+    "lograr": "Config_Empresas[LABARIES].proceso por WhatsApp (mensaje1/whatsapp_negocio)",
+    "vivir": [
+      "https://exa.ai/library/places?q=13976556ea2084e1",
+      "https://blood-interpretation.com/es-mx/costos-y-orden-medica/cuanto-cuesta-un-examen-de-sangre/"
+    ],
+    "PM": "pendiente",
+    "objecion": [
+      "https://blood-interpretation.com/es-mx/costos-y-orden-medica/cuanto-cuesta-un-examen-de-sangre/",
+      "https://medcompara.com.mx/blog/precio-biometria-hematica-mexico"
+    ],
+    "competidores": [
+      "https://exa.ai/library/places?q=13976556ea2084e1",
+      "https://laboratoriosmex.com/laboratorios/laboratorios-moreira/",
+      "https://www.laboratoriosbsh.com/estudios/biometria-hematica",
+      "https://store.tecsalud.mx/collections/laboratorio",
+      "https://medcompara.com.mx/blog/precio-biometria-hematica-mexico"
+    ],
+    "RLP": [
+      "https://dof.gob.mx/nota_detalle.php?codigo=5240925&fecha=27/03/2012",
+      "https://www.dof.gob.mx/normasOficiales/4678/salud/salud.htm"
+    ],
+    "tono": "derivado de GuiaTotal/registro/labaries/IDENTIDAD_CORPORATIVA.md",
+    "PS": "pendiente",
+    "slogan": "Config_Empresas[LABARIES].slogan",
+    "oferta": "Config_Empresas[LABARIES].proceso por WhatsApp (mensaje1)",
+    "descripcion": "pendiente: Config_Empresas[LABARIES].descripcion vacío",
+    "cta": "Config_Empresas[LABARIES].whatsapp_negocio",
+    "tipografia": "par tipográfico por defecto del sitio (patrón HMP)"
+  },
+  "prev_logo_url": ""
+}

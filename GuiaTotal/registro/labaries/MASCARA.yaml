@@ -1,0 +1,39 @@
+# Máscara LABARIES — Laboratorio Aries (generada 2026-10-15)
+# Generada desde GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
+mascara:
+  version: 1
+  plantilla_de: GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
+  id_empresa: "LABARIES"
+
+  A_datos_tuyos:                     # estado real: 8/8 completos en GS (2026-10-15)
+    nomempresa: "Laboratorio Aries"
+    tipo_negocio: "Laboratorio Clínico,no_galeria"
+    giro_especifico: "Laboratorio de Examenes médico"
+    color_tema: "#00ccff"
+    direccion: "Monterrey N.L."
+    whatsapp_negocio: "528183963268"
+    correoempresarial: "labaries@hotmail.com"
+
+  B_generados:                       # snapshot real GS — cadena completada 2026-10-15
+    slogan: "Claridad en cada resultado"
+    mensaje1: "Bienvenido a Laboratorio Aries 🔬 Estudios de laboratorio clínico con atención cercana en Monterrey. Escríbenos por WhatsApp al +52 81 8396 3268 y te decimos cómo prepararte para tu estudio."
+    mensaje2: "Existimos para que cada resultado sea claro y útil: te acompañamos desde la toma de muestra hasta la entrega de tu estudio, con información que te ayuda a cuidar tu salud."
+    descripcion: ""                   # [PENDIENTE - descripcion vacía en Config] be-019
+    logo_url: "(vector21, 3592 chars — slot1 LAPVTFU = logo01.png)"
+    foto_agente: "https://drive.google.com/file/d/10jhxGu11D52zFg2VIfSrPhBL-KUh_Had/view?usp=drivesdk"
+    mision: "En Laboratorio Aries realizamos estudios de laboratorio clínico con procesos claros y atención cercana, para que cada persona entienda sus resultados y cuide su salud con información confiable."
+    vision: "Ser el laboratorio de análisis clínicos de Monterrey al que la gente recomienda por su claridad, su trato cercano y la confianza en cada resultado que entrega."
+    valores: "1) Claridad — cada resultado explicado de forma entendible. 2) Cercanía — trato humano en la toma de muestra y en la entrega. 3) Responsabilidad — manejo cuidadoso y ético de cada muestra. 4) Honestidad — sin promesas ni afirmaciones que no podamos respaldar."
+
+  C_cadena:                          # orden del usuario 2026-10-15 — TODO auto
+    estado: "COMPLETADA 9/9 — 2026-10-15 (activos verificados byte-a-byte, espejo OK)"
+    alta: "auto"                     # updateRow (fila ya existía)
+    empresa_registro: "auto"         # Drive cteLABARIES + foto + copy + identidad ✓
+    clusters: "auto"                 # 6 filas Config_SEO + 6 imágenes ✓
+    paginas: "auto"                  # 6 filas Config_Paginas ✓
+    brief: "auto"                    # vector21 en logo_url + brief/confianza.json ✓
+    activos: "auto"                  # lapvtfu: logo + videos×2 + fotos×6 ✓ · pendientes: avatar/fotoprs/testimonios/contenido
+
+  D_toggles:                         # valores actuales en GS (difieren de semilla)
+    habilitado: true
+    modo: "PROD,0,1,1,1,1,1,0"       # PROD · stripe=0 · resto=1 · landing=0

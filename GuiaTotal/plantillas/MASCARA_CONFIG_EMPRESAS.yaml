@@ -14,7 +14,8 @@ mascara:
   # El agente los pregunta si faltan (≤3 por turno) antes de escribir.
   A_datos_tuyos:
     nomempresa: ""               # nombre comercial
-    tipo_negocio: ""             # p.ej. "Alimentos" / "Alimentos,no_galeria" / "Consultoría"
+    tipo_negocio: ""             # p.ej. "Alimentos" + sufijo ",si_galeria"/",no_galeria"
+                                 # (la máscara lo añade según el checkbox galería)
     giro_especifico: ""          # p.ej. "hamburguesas a la parrilla" (alimenta clusters geo)
     color_tema: ""               # "#hex" o vacío = default según giro
     direccion: ""                # cobertura geográfica (ciudad/zona — la piden los clústeres)
@@ -51,9 +52,10 @@ mascara:
   # (lo que no se comenta aquí NO se escribe; los vacíos de GS quedan como están)
   D_toggles:
     # habilitado: true
-    # modo: "PROD"                  # PROD | TEST (pipe: "PROD,1")
+    # es_principal: false           # empresa principal (única indexable)
+    # modo: "PROD,0,0,0,0,0,0,0"    # VISIBILIDAD,STRIPE,EXPRESS,POS,PRODUCTOS,INVENTARIOS,BODEGA,LANDING(0|1|2)
     # db_engine: "GSHEETS"          # GSHEETS | SUPABASE | NEON
-    # modo_sitio: "NOHYBRID"        # híbrido/estático del sitio
+    # modo_sitio: "NOHYBRID"        # HUB(vacío) | HYBRID | NOHYBRID | WHITE — SOLO se escribe al crear la empresa
     # usa_reservaciones: 1
     # usa_soporte_ia: ""
     # usa_qr_sitio: false

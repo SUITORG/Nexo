@@ -43,10 +43,10 @@ antes de reintentar**.
 
 | Bloque | Quién lo llena | Se escribe en GS |
 |---|---|---|
-| **A_datos_tuyos** (obligatorios): `id_empresa`, `nomempresa`, `tipo_negocio`, `giro_especifico`, `color_tema`, `direccion`, `whatsapp_negocio`, `correoempresarial` | usuario (la skill pregunta los que falten) | ✅ sí |
+| **A_datos_tuyos** (obligatorios): `id_empresa`, `nomempresa`, `tipo_negocio`, `giro_especifico`, `color_tema`, `direccion`, `whatsapp_negocio`, `correoempresarial` | usuario (la skill pregunta los que falten) | ✅ sí — `tipo_negocio` lleva sufijo `,si_galeria`/`,no_galeria` |
 | **B_generados**: slogan, mensajes, descripción, logo, foto, misión/visión/valores | cadena (nunca a mano) | solo si el usuario lo pide |
 | **C_cadena**: `alta`, `empresa_registro`, `clusters`, `paginas`, `brief`, `activos` → `auto\|preguntar\|skip` | usuario | ❌ (solo YAML) |
-| **D_toggles**: módulos (habilitado, modo, db_engine, usa_*, …) | usuario (solo descomenta lo distinto) | ✅ sí |
+| **D_toggles**: módulos (habilitado, es_principal, modo de 8 posiciones, db_engine, usa_*, …) | usuario (solo descomenta lo distinto) | ✅ sí — `modo_sitio` solo se escribe en alta |
 
 ## Barra de avance (siempre visible)
 

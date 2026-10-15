@@ -88,7 +88,13 @@
       <div class="grid">
         <div><label>id_empresa * (PK)</label><input type="text" id="f_id" placeholder="HMP, PFM…"></div>
         <div><label>nomempresa *</label><input type="text" id="f_nomempresa"></div>
-        <div><label>tipo_negocio</label><input type="text" id="f_tipo_negocio" placeholder="Alimentos / Consultoría…"></div>
+        <div class="full"><label>tipo_negocio</label>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="text" id="f_tipo_negocio" placeholder="Alimentos / Consultoría…" style="flex:1">
+            <div class="sw" style="padding:0;white-space:nowrap"><input type="checkbox" id="f_galeria"><span>🖼️ galería (si_galeria)</span></div>
+          </div>
+          <div class="hint">Al guardar se añade ",si_galeria" o ",no_galeria" según el checkbox.</div>
+        </div>
         <div><label>giro_especifico</label><input type="text" id="f_giro_especifico" placeholder="hamburguesas a la parrilla"></div>
         <div><label>color_tema</label>
           <div style="display:flex;gap:8px"><input type="color" id="f_color_pick" value="#2563eb" style="width:52px;padding:2px;height:40px;background:#1e293b;border:1.5px solid #475569;border-radius:10px" oninput="document.getElementById('f_color_tema').value=this.value"><input type="text" id="f_color_tema" placeholder="#hex" oninput="document.getElementById('f_color_pick').value=(/^#[0-9a-f]{6}$/i.test(this.value)?this.value:'#2563eb')"></div>
@@ -143,16 +149,42 @@
     <div class="body">
       <div class="grid">
         <div class="sw"><input type="checkbox" id="t_habilitado"><span>habilitado</span></div>
+        <div class="sw"><input type="checkbox" id="t_es_principal"><span>es_principal</span></div>
         <div class="sw"><input type="checkbox" id="t_usa_qr_sitio"><span>usa_qr_sitio</span></div>
         <div class="sw"><input type="checkbox" id="t_usa_otp_entrega"><span>usa_otp_entrega</span></div>
         <div class="sw"><input type="checkbox" id="t_usa_features_estandar"><span>usa_features_estandar</span></div>
         <div class="sw"><input type="checkbox" id="t_formulario"><span>formulario</span></div>
         <div class="sw"><input type="checkbox" id="t_factura"><span>factura</span></div>
         <div class="sw"><input type="checkbox" id="t_is_isolated"><span>is_isolated</span></div>
-        <div><label>modo</label><select id="t_modo"><option>PROD</option><option>TEST</option></select></div>
+
+        <div class="full">
+          <label>modo — VISIBILIDAD,STRIPE,EXPRESS,POS,PRODUCTOS,INVENTARIOS,BODEGA,LANDING</label>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+            <div class="sw" style="padding:0"><input type="checkbox" id="t_modo_hidden"><span>HIDDEN (off = PROD)</span></div>
+            <div class="sw" style="padding:0"><input type="checkbox" id="t_m_stripe"><span>stripe (TC)</span></div>
+            <div class="sw" style="padding:0"><input type="checkbox" id="t_m_express"><span>posexpress</span></div>
+            <div class="sw" style="padding:0"><input type="checkbox" id="t_m_pos"><span>POS</span></div>
+            <div class="sw" style="padding:0"><input type="checkbox" id="t_m_productos"><span>productos</span></div>
+            <div class="sw" style="padding:0"><input type="checkbox" id="t_m_inventarios"><span>inventario</span></div>
+            <div class="sw" style="padding:0"><input type="checkbox" id="t_m_bodega"><span>bodega</span></div>
+            <span style="font-size:13.5px">landing
+              <select id="t_m_landing" style="width:auto;padding:5px 8px">
+                <option value="0">0 · solo sitio</option>
+                <option value="1">1 · solo landing</option>
+                <option value="2">2 · sitio + landing</option>
+              </select>
+            </span>
+          </div>
+          <div class="hint">Alta nueva: todo en ceros → <code>PROD,0,0,0,0,0,0,0</code>. Al editar se pintan los valores efectivos (partes vacías = encendidas, como las lee la app).</div>
+        </div>
+
         <div><label>db_engine</label><select id="t_db_engine"><option>GSHEETS</option><option>SUPABASE</option><option>NEON</option></select></div>
         <div><label>modo_creditos</label><select id="t_modo_creditos"><option>DIARIO</option><option>MENSUAL</option></select></div>
-        <div><label>modo_sitio</label><input type="text" id="t_modo_sitio" placeholder="NOHYBRID / vacío"></div>
+        <div>
+          <label>modo_sitio</label>
+          <div class="sw" style="padding:0"><input type="checkbox" id="t_modo_sitio"><span>NOHYBRID (off = HUB/vacío)</span></div>
+          <div class="hint">Solo se escribe al crear la empresa — en filas existentes no se toca.</div>
+        </div>
         <div><label>usa_reservaciones (1 / vacío)</label><input type="text" id="t_usa_reservaciones"></div>
         <div><label>usa_soporte_ia (modelos, coma)</label><input type="text" id="t_usa_soporte_ia"></div>
         <div><label>stripe_activo</label><input type="text" id="t_stripe_activo"></div>
@@ -174,14 +206,37 @@ const GAS = 'https://script.google.com/macros/s/AKfycbzlkAI09chbtmf3VX5jKA9N4-6K
 const A_FIELDS = ['id_empresa','nomempresa','tipo_negocio','giro_especifico','color_tema','direccion','whatsapp_negocio','correoempresarial'];
 const B_FIELDS = ['slogan','mensaje1','mensaje2','descripcion','logo_url','foto_agente','mision','vision','valores'];
 const C_KEYS = ['alta','empresa_registro','clusters','paginas','brief','activos'];
-const BOOLS = ['habilitado','usa_qr_sitio','usa_otp_entrega','usa_features_estandar','formulario','factura','is_isolated'];
-const T_KEYS = [...BOOLS,'modo','db_engine','modo_creditos','modo_sitio','usa_reservaciones','usa_soporte_ia','stripe_activo','autodepuracion','creditos_totales'];
+const BOOLS = ['habilitado','es_principal','usa_qr_sitio','usa_otp_entrega','usa_features_estandar','formulario','factura','is_isolated'];
+const T_KEYS = [...BOOLS,'db_engine','modo_creditos','modo_sitio','usa_reservaciones','usa_soporte_ia','stripe_activo','autodepuracion','creditos_totales'];
+const MODO_IDS = ['t_modo_hidden','t_m_stripe','t_m_express','t_m_pos','t_m_productos','t_m_inventarios','t_m_bodega'];
 let ROWS = [], cur = null;
 
 const $ = id => document.getElementById(id);
 const toast = (m, err) => { const t = $('toast'); t.textContent = m; t.className = err ? 'err' : ''; t.style.display = 'block';
   clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', err ? 5200 : 3200); };
 const isTrue = v => v === true || String(v || '').toUpperCase() === 'TRUE';
+
+// Pinta `modo` con la MISMA semántica de parseModo (core.js): faltantes → stripe=0, resto=1, landing=0
+function loadModoFromRow(v) {
+  const s = (v == null ? '' : String(v)).trim();
+  const parts = s ? s.split(',') : [];
+  $('t_modo_hidden').checked = (parts[0] || 'PROD').trim().toUpperCase() === 'HIDDEN';
+  $('t_m_stripe').checked = parts.length > 1 && parts[1].trim() === '1';
+  $('t_m_express').checked = parts.length > 2 ? parts[2].trim() === '1' : true;
+  $('t_m_pos').checked = parts.length > 3 ? parts[3].trim() === '1' : true;
+  $('t_m_productos').checked = parts.length > 4 ? parts[4].trim() === '1' : true;
+  $('t_m_inventarios').checked = parts.length > 5 ? parts[5].trim() === '1' : true;
+  $('t_m_bodega').checked = parts.length > 6 ? parts[6].trim() === '1' : true;
+  const land = parts.length > 7 ? parts[7].trim() : '0';
+  $('t_m_landing').value = (land === '1' || land === '2') ? land : '0';
+}
+
+function modoFromForm() {
+  const g = id => $(id).checked ? '1' : '0';
+  return [$('t_modo_hidden').checked ? 'HIDDEN' : 'PROD',
+    g('t_m_stripe'), g('t_m_express'), g('t_m_pos'), g('t_m_productos'),
+    g('t_m_inventarios'), g('t_m_bodega'), $('t_m_landing').value].join(',');
+}
 
 async function loadAll() {
   try {
@@ -204,11 +259,19 @@ async function loadCompany() {
   cur = ROWS.find(x => x.id_empresa === id);
   if (!cur) return;
   A_FIELDS.forEach(f => { const el = $(f === 'id_empresa' ? 'f_id' : 'f_' + f); if (el) el.value = cur[f] == null ? '' : String(cur[f]); });
+  const tnRaw = cur.tipo_negocio == null ? '' : String(cur.tipo_negocio);
+  const gm = tnRaw.match(/,\s*(si_galeria|no_galeria)\s*$/i);
+  $('f_tipo_negocio').value = gm ? tnRaw.slice(0, gm.index) : tnRaw;
+  $('f_galeria').checked = !!gm && gm[1].toLowerCase() === 'si_galeria';
   $('f_id').disabled = true;
   $('f_color_pick').value = /^#[0-9a-f]{6}$/i.test(cur.color_tema || '') ? cur.color_tema : '#2563eb';
   B_FIELDS.forEach(f => { const el = $('f_' + f); if (el) el.value = cur[f] == null ? '' : String(cur[f]); });
   T_KEYS.forEach(k => { const el = $('t_' + k); if (!el) return;
     el.type === 'checkbox' ? el.checked = isTrue(cur[k]) : el.value = cur[k] == null ? '' : String(cur[k]); });
+  loadModoFromRow(cur.modo);
+  const msEl = $('t_modo_sitio');
+  msEl.checked = String(cur.modo_sitio || '').trim().toUpperCase() === 'NOHYBRID';
+  msEl.disabled = true;
   await loadSwitches(id);
 }
 
@@ -229,8 +292,13 @@ async function loadSwitches(id) {
 function updatesFromForm() {
   const u = {};
   A_FIELDS.filter(f => f !== 'id_empresa').forEach(f => { const el = $('f_' + f); if (el) u[f] = (el.value || '').trim(); });
-  T_KEYS.forEach(k => { const el = $('t_' + k); if (!el) return;
-    u[k] = el.type === 'checkbox' ? (el.checked ? 'TRUE' : 'FALSE') : el.value; });
+  if (u.tipo_negocio) u.tipo_negocio += ',' + ($('f_galeria').checked ? 'si_galeria' : 'no_galeria');
+  T_KEYS.forEach(k => {
+    if (k === 'modo_sitio') { if (cur) return; u.modo_sitio = $('t_modo_sitio').checked ? 'NOHYBRID' : ''; return; }
+    const el = $('t_' + k); if (!el) return;
+    u[k] = el.type === 'checkbox' ? (el.checked ? 'TRUE' : 'FALSE') : el.value;
+  });
+  u.modo = modoFromForm();
   return u;
 }
 
@@ -249,7 +317,7 @@ async function save() {
     } else {
       const r = await fetch(GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'appendRows', table: 'Config_Empresas',
-          rows: [Object.assign({ id_empresa: id }, updates, { habilitado: 'TRUE', modo: 'PROD', db_engine: 'GSHEETS' })] }) });
+          rows: [Object.assign({ id_empresa: id }, updates, { habilitado: 'TRUE', db_engine: 'GSHEETS' })] }) });
       res = await r.json();
     }
     if (res && (res.success || res.ok)) {
@@ -293,12 +361,16 @@ function copyOrder(autoTotal) {
 function toggleAlta() {
   cur = null; $('coSelect').value = ''; $('f_id').disabled = false; $('f_id').value = '';
   A_FIELDS.filter(f => f !== 'id_empresa').forEach(f => { const el = $('f_' + f); if (el) el.value = ''; });
+  $('f_galeria').checked = false;
   B_FIELDS.forEach(f => { const el = $('f_' + f); if (el) el.value = ''; });
   T_KEYS.forEach(k => { const el = $('t_' + k); if (!el) return;
     el.type === 'checkbox' ? el.checked = false : el.value = ''; });
+  MODO_IDS.forEach(id => $(id).checked = false);
+  $('t_m_landing').value = '0';
+  const msEl = $('t_modo_sitio'); msEl.disabled = false; msEl.checked = true;
   C_KEYS.forEach(k => $('c_' + k).value = 'preguntar');
   $('f_id').focus();
-  toast('Modo ALTA: llena A, revisa D y Guardar crea la fila');
+  toast('Modo ALTA: llena A, revisa D y Guardar crea la fila (modo en ceros)');
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 loadAll();
