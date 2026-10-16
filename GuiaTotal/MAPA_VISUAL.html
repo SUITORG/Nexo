@@ -559,6 +559,10 @@
         "∥ agentes: mercado ∥ técnico ∥ riesgo ∥ financiero",
         "→ ⚡ juez (serial) → ✍️ veredicto + condiciones",
         "✍️ crea GuiaTotal/registro/<proyecto>.yaml  (si falta)",
+        "⚡ micro-app-saas                  [gate de forma + cobro; NO APTO si no hay ruta de cobro]",
+        "forma: micro-app · micro-saas · web-app · landing-leads · herramienta-interna · multi-tenant-gs",
+        "cobro: pago único · suscripción · por uso · setup+mes · licencia/white-label · ahorro interno",
+        "✍️ bloque `producto:` en la tarjeta + <Proyecto>/docs/FORMATO.md",
         "⚡ ideas-saas                     [pipeline por-corrida: idea → SaaS terminado]",
         "3 ideas 80/20 → panel-juzgador por idea (gate 7.5)",
         "VERIFICADAS (default): analista-proy → sintesis → RE-JUEZ con evidencia (si cae <7.5 se para)",
@@ -573,6 +577,7 @@
         "analista-proy",
         "sintesis-proyecto",
         "panel-juzgador",
+        "micro-app-saas",
         "ideas-saas"
       ],
       "files": [
@@ -583,7 +588,7 @@
         "<Proyecto>/docs/TAXONOMIA.md",
         "<Proyecto>/proposal.md",
         "GuiaTotal/registro/<proyecto>.yaml",
-        "SuitIdeasSaaS/<fecha>-evaluacion.md"
+        "<Proyecto>/docs/FORMATO.md"
       ]
     },
     "2": {
@@ -627,7 +632,7 @@
       "t": "Construcción",
       "steps": [
         "⚡ guia-total [ruta]",
-        "⚡ viabilidad-operativa + ⚡ calidad-minima + ⚡ durabilidad   [3 gates de pre-diseño, solo si es diseño nuevo → veredictos → requisitos al CONTRATO]",
+        "⚡ viabilidad-operativa + ⚡ calidad-minima + ⚡ durabilidad + ⚡ micro-app-saas   [4 gates de pre-diseño, solo si es diseño nuevo → veredictos → requisitos al CONTRATO]",
         "⚡ ciclo (F0) → ✍️ CONTRATO.md   [si falta; usa Analista_Proy.md como insumo]",
         "⚡ ciclo (F1→F7) — serial: code → validación → commit por fase",
         "🔄 node scripts/generate-index.js → 🔄 INDEX_FUNCIONES.md  [si cambian funciones]",
@@ -642,6 +647,7 @@
         "viabilidad-operativa",
         "calidad-minima",
         "durabilidad",
+        "micro-app-saas",
         "ciclo",
         "auditoria"
       ],

@@ -45,7 +45,7 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 
 **Gate previo (toda etapa con código):** `⚡ descubrimiento` → clasificación + diagnóstico de capacidades + entregable de 11 puntos antes de tocar código. Lee `.suit/config/switches.yaml` (skill `parametros`): `decision_libre=true` (defecto) → 0 preguntas, supuestos documentados; si no, ≤3 preguntas.
 
-**3 gates de pre-diseño (antes de DISEÑAR cualquier proyecto/feature nueva):** `⚡ viabilidad-operativa` (¿es ágil?, ¿el tiempo vale la pena?, ¿cuánto consume?, ¿riesgo de ban?) + `⚡ calidad-minima` (¿merece existir?, piso de calidad anti-mediocre) + `⚡ durabilidad` (¿durará?, ¿se conecta después fácil?, ¿confiable/entendible?). Las 3 en ≤1 página c/u, veredictos APTO/PASA/DURA o sus versiones con condiciones; sus decisiones van como requisitos al CONTRATO.md. Se ejecutan juntas cuando hay que diseñar — no hace falta que el usuario las pida.
+**4 gates de pre-diseño (antes de DISEÑAR cualquier proyecto/feature nueva):** `⚡ viabilidad-operativa` (¿es ágil?, ¿el tiempo vale la pena?, ¿cuánto consume?, ¿riesgo de ban?) + `⚡ calidad-minima` (¿merece existir?, piso de calidad anti-mediocre) + `⚡ durabilidad` (¿durará?, ¿se conecta después fácil?, ¿confiable/entendible?) + `⚡ micro-app-saas` (¿micro-app o micro-saas? ¿cómo se cobra? — gate duro: sin ruta de cobro → NO APTO, se para). Los 4 en ≤1 página c/u, veredictos APTO/PASA/DURA o sus versiones con condiciones; sus decisiones van como requisitos al CONTRATO.md. Se ejecutan juntas cuando hay que diseñar — no hace falta que el usuario las pida.
 
 ### Flujo IDEA
 
@@ -57,11 +57,12 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 4. `✍️ crea <Proyecto>/docs/TAXONOMIA.md` (si falta) con **solo 3 campos**: Industria · Nicho · Especialización — los que clasifique el análisis, con match exacto al catálogo `GuiaTotal/TAXONOMIA.md`.
 5. `⚡ panel-juzgador` → veredicto + recomendaciones (insumo: propuesta + `Analista_Proy.md`). **Si la propuesta viene solo del chat, persiste antes `<Proyecto>/proposal.md`** — el workflow lo exige en disco. **El veredicto no bloquea**: guárdalo en la tarjeta como recomendación.
 6. `✍️ crea GuiaTotal/registro/<proyecto>.yaml` si falta (schema en `registro/schema.md`): etapa, veredicto, `convive_sheets`, taxonomía, próximo paso.
-7. Sugiere `identidad` y luego construcción. No construyas sin que el usuario lo pida.
+7. `⚡ micro-app-saas` → fija **forma** (micro-app / micro-saas / web-app / landing-leads / herramienta-interna / multi-tenant-gs) y **ruta de cobro** (6 modelos) en el bloque `producto:` de la tarjeta + `FORMATO.md`. Gate duro: sin ruta de cobro viable → `NO APTO`, se para.
+8. Sugiere `identidad` y luego construcción. No construyas sin que el usuario lo pida.
 
 ### Flujo CONSTRUCCIÓN
 
-1. Si es diseño nuevo (proyecto/feature que aún no existe): **3 gates de pre-diseño** (`⚡ viabilidad-operativa` + `⚡ calidad-minima` + `⚡ durabilidad` — ver "3 gates de pre-diseño" arriba) → veredictos y decisiones como requisitos al CONTRATO.md.
+1. Si es diseño nuevo (proyecto/feature que aún no existe): **4 gates de pre-diseño** (`⚡ viabilidad-operativa` + `⚡ calidad-minima` + `⚡ durabilidad` + `⚡ micro-app-saas` — ver "4 gates de pre-diseño" arriba) → veredictos y decisiones como requisitos al CONTRATO.md.
 2. `⚡ ciclo` F0 → `CONTRATO.md` (usa `Analista_Proy.md` como insumo, igual que hace `ciclo`).
 3. `⚡ ciclo` F1-F7 con commits por fase.
 4. Si cambian funciones: `node scripts/generate-index.js` → `INDEX_FUNCIONES.md`.

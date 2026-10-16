@@ -431,6 +431,9 @@ skills:
   durabilidad:
     path: .suit/skills/process/durabilidad.yaml
 
+  micro-app-saas:
+    path: .suit/skills/process/micro-app-saas.yaml
+
   procesos-visual:
     path: .suit/skills/process/procesos-visual.yaml
 

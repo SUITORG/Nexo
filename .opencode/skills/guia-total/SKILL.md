@@ -45,6 +45,8 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 
 **Gate previo (toda etapa con código):** `⚡ descubrimiento` → clasificación + diagnóstico de capacidades + entregable de 11 puntos antes de tocar código. Lee `.suit/config/switches.yaml` (skill `parametros`): `decision_libre=true` (defecto) → 0 preguntas, supuestos documentados; si no, ≤3 preguntas.
 
+**4 gates de pre-diseño (antes de DISEÑAR cualquier proyecto/feature nueva):** `⚡ viabilidad-operativa` (¿es ágil?, ¿el tiempo vale la pena?, ¿cuánto consume?, ¿riesgo de ban?) + `⚡ calidad-minima` (¿merece existir?, piso de calidad anti-mediocre) + `⚡ durabilidad` (¿durará?, ¿se conecta después fácil?, ¿confiable/entendible?) + `⚡ micro-app-saas` (¿micro-app o micro-saas? ¿cómo se cobra? — gate duro: sin ruta de cobro → NO APTO, se para). Los 4 en ≤1 página c/u, veredictos APTO/PASA/DURA o sus versiones con condiciones; sus decisiones van como requisitos al CONTRATO.md. Se ejecutan juntas cuando hay que diseñar — no hace falta que el usuario las pida.
+
 ### Flujo IDEA
 
 > **Si la empresa todavía no existe en `Config_Empresas` o hay que darla de alta/onboardear** → `⚡ empresa-registro` primero (estructura Drive `cte<id>`, fotoagente, copy, identidad, sync Supabase) y luego continúa este flujo.
@@ -55,16 +57,18 @@ Determina la etapa leyendo los artefactos del alcance (no la adivines):
 4. `✍️ crea <Proyecto>/docs/TAXONOMIA.md` (si falta) con **solo 3 campos**: Industria · Nicho · Especialización — los que clasifique el análisis, con match exacto al catálogo `GuiaTotal/TAXONOMIA.md`.
 5. `⚡ panel-juzgador` → veredicto + recomendaciones (insumo: propuesta + `Analista_Proy.md`). **Si la propuesta viene solo del chat, persiste antes `<Proyecto>/proposal.md`** — el workflow lo exige en disco. **El veredicto no bloquea**: guárdalo en la tarjeta como recomendación.
 6. `✍️ crea GuiaTotal/registro/<proyecto>.yaml` si falta (schema en `registro/schema.md`): etapa, veredicto, `convive_sheets`, taxonomía, próximo paso.
-7. Sugiere `identidad` y luego construcción. No construyas sin que el usuario lo pida.
+7. `⚡ micro-app-saas` → fija **forma** (micro-app / micro-saas / web-app / landing-leads / herramienta-interna / multi-tenant-gs) y **ruta de cobro** (6 modelos) en el bloque `producto:` de la tarjeta + `FORMATO.md`. Gate duro: sin ruta de cobro viable → `NO APTO`, se para.
+8. Sugiere `identidad` y luego construcción. No construyas sin que el usuario lo pida.
 
 ### Flujo CONSTRUCCIÓN
 
-1. `⚡ ciclo` F0 → `CONTRATO.md` (usa `Analista_Proy.md` como insumo, igual que hace `ciclo`).
-2. `⚡ ciclo` F1-F7 con commits por fase.
-3. Si cambian funciones: `node scripts/generate-index.js` → `INDEX_FUNCIONES.md`.
-4. En paralelo (independientes entre sí): crea `<Proyecto>/docs/CHECKLIST-LANZAMIENTO.md`, los 5 `<Proyecto>/docs/MANUAL_*.md` (+ `DEMO.md` e `INSTALACION.md` si el proyecto vende a clientes) y `<Proyecto>/docs/PROMPT_ORIGEN.md` si faltan.
-5. Si el usuario pide documentación de arquitectura, o la guía requiere generar docs al nacer el proyecto: `⚡ auditoria` — esa skill decide qué crear según sus umbrales (≥25% → faltantes marcados `PROBABLE`; ≥84% → completar/actualizar). Nunca obligatorio.
-6. `🔄 actualiza GuiaTotal/registro/<proyecto>.yaml` (etapa → construcción).
+1. Si es diseño nuevo (proyecto/feature que aún no existe): **4 gates de pre-diseño** (`⚡ viabilidad-operativa` + `⚡ calidad-minima` + `⚡ durabilidad` + `⚡ micro-app-saas` — ver "4 gates de pre-diseño" arriba) → veredictos y decisiones como requisitos al CONTRATO.md.
+2. `⚡ ciclo` F0 → `CONTRATO.md` (usa `Analista_Proy.md` como insumo, igual que hace `ciclo`).
+3. `⚡ ciclo` F1-F7 con commits por fase.
+4. Si cambian funciones: `node scripts/generate-index.js` → `INDEX_FUNCIONES.md`.
+5. En paralelo (independientes entre sí): crea `<Proyecto>/docs/CHECKLIST-LANZAMIENTO.md`, los 5 `<Proyecto>/docs/MANUAL_*.md` (+ `DEMO.md` e `INSTALACION.md` si el proyecto vende a clientes) y `<Proyecto>/docs/PROMPT_ORIGEN.md` si faltan.
+6. Si el usuario pide documentación de arquitectura, o la guía requiere generar docs al nacer el proyecto: `⚡ auditoria` — esa skill decide qué crear según sus umbrales (≥25% → faltantes marcados `PROBABLE`; ≥84% → completar/actualizar). Nunca obligatorio.
+7. `🔄 actualiza GuiaTotal/registro/<proyecto>.yaml` (etapa → construcción).
 
 ### Flujo MANTENIMIENTO
 
@@ -108,6 +112,7 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 - El `MANUAL_TECNICO.md` siempre incluye: **tabla "Resumen en corto"** (tipo, frontend, BD, Sheets, config, cómo correrlo) + **requisitos de equipo** en §2 (plantilla `templates/MANUAL_TECNICO.md`).
 - Cada manual lleva en cabecera `Para qué sirve este manual` y `Audiencia` (obligatorio).
 - **Actualización**: si ya existen, compara `Última actualización` del manual contra `git log -1 --format=%cd -- <archivos relevantes>`; solo reescribe los manuales cuyo contenido quedó viejo. No regeneres los al día.
+- **`⚡ procesos-visual`**: tras crear/actualizar manuales, genera o refresca los mapas de proceso de los roles afectados en `<Proyecto>/docs/procesos/PROCESO_<ROL>.html` (HTML+CSS autónomo desde el §Diagrama de Flujo del manual; plantilla `GuiaTotal/plantillas/proceso-rol.html`). Ejemplo piloto: `SuitServiHogar/docs/procesos/`.
 
 ### `guia-total origen [ruta]`
 
@@ -134,6 +139,7 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 | `templates/*` | `GuiaTotal/` | solo método nuevo |
 | `registro/schema.md` + `registro/<proyecto>.yaml` | `GuiaTotal/` | esta skill |
 | `MANUAL_*.md` | `<Proyecto>/docs/` | modo `manuales` / construcción |
+| `procesos/PROCESO_*.html` | `<Proyecto>/docs/` | skill `procesos-visual` (tras manuales) |
 | `IDENTIDAD_CORPORATIVA.md` | `<Proyecto>/docs/` | modo `identidad` |
 | `PROMPT_ORIGEN.md` | `<Proyecto>/docs/` | modo `origen` |
 | `MANUAL_OPERACION.md` | `GuiaTotal/` | modo `operacion` / mantenimiento (config empresas) |

@@ -30,6 +30,12 @@ integraciones:
   db_engine: null               # GSHEETS | SUPABASE | NEON
   brief_en_logo_url: false      # hay Brief generado?
 
+producto:                        # gate micro-app-saas (forma + ruta de cobro)
+  formato: null                  # micro-app | micro-saas | web-app | landing-leads | herramienta-interna | multi-tenant-gs
+  monetizacion: null             # pago-unico | suscripcion | por-uso | setup-mes | licencia-white-label | ahorro-interno
+  ruta_cobro: null               # quién paga · cuánto · con qué medio
+  gate_cobro: null               # APTO | APTO CON CONDICIONES | NO APTO
+
 taxonomia:                       # 3 campos del análisis (match al catálogo GuiaTotal/TAXONOMIA.md)
   industria: null
   nicho: null

@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-10-14
+  Generado: 2026-10-16
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -57,6 +57,7 @@
   pdf-generation            .suit/skills/process/pdf-generation.yaml
   ponytail-ladder           .suit/skills/process/ponytail-ladder.yaml
   probador                  .suit/skills/process/probador.yaml
+  procesos-visual           .suit/skills/process/procesos-visual.yaml
   prompt-reviewer           .suit/skills/process/prompt-reviewer.yaml
   reportero                 .suit/skills/process/reportero.yaml
   security-audit            .suit/skills/process/security-audit.yaml
@@ -81,7 +82,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 48 skills
+  TOTAL SUITOS: 49 skills
 
 
 ========================================================================
@@ -191,6 +192,9 @@
   media-use                 .claude/skills/media-use
                             -> .agents\skills\media-use
                             Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT 
+  micro-app-saas            .claude/skills/micro-app-saas
+                            -> .agents\skills\micro-app-saas
+                            Gate de pre-diseño que decide la FORMA del producto (micro-app · micro-saas · web-app · landing-leads · herramienta-interna · multi-tenant-gs) y su RU
   modo-prueba               .claude/skills/modo-prueba
                             -> .agents\skills\modo-prueba
   motion-doctrine           .claude/skills/motion-doctrine
@@ -248,7 +252,7 @@
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
 
-  TOTAL CLAUDE: 54 (4 locales + 50 symlinks)
+  TOTAL CLAUDE: 55 (4 locales + 51 symlinks)
 
 
 ========================================================================
@@ -288,6 +292,7 @@
   last30days                .opencode/skills/last30days
   media-use                 .opencode/skills/media-use
   mejoras-proyecto          .opencode/skills/mejoras-proyecto
+  micro-app-saas            .opencode/skills/micro-app-saas
   modo-prueba               .opencode/skills/modo-prueba
   motion-doctrine           .opencode/skills/motion-doctrine
   motion-graphics           .opencode/skills/motion-graphics
@@ -310,7 +315,7 @@
   viabilidad-operativa      .opencode/skills/viabilidad-operativa
   video-shotcraft           .opencode/skills/video-shotcraft
 
-  TOTAL OPENCODE: 54
+  TOTAL OPENCODE: 55
 
 
 ========================================================================
@@ -358,6 +363,7 @@
   viabilidad-operativa                Gate de pre-diseño que cuestiona la operación de una idea/proceso ante
   calidad-minima                      Gate de pre-diseño anti-mediocre: juzga si el resultado de la app/proc
   durabilidad                         Gate de pre-diseño para futuro: juzga si la app/proceso durará — conec
+  procesos-visual                     Genera mapas de proceso visuales en HTML (diagrama de flujo ligero en 
   empresa-registro                    Alta semiautomatica de empresas en Config_Empresas (maestro Google She
   clusters-seo                        Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO (
   paginas-seo                         Generador de Config_Paginas (páginas de servicio SEO/GEO/AEO) a partir
@@ -367,7 +373,7 @@
   registry-query                      Consulta el registry declarativo (.suit/registry/*.yaml: agents, skill
   parametros                          Cambia comportamiento global o puntual del sistema SIN tocar código, e
 
-  TOTAL REGISTRY: 49 skills declaradas
+  TOTAL REGISTRY: 50 skills declaradas
 
 
 ========================================================================
@@ -450,14 +456,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    48      48         0
-  Skills Claude Code       54        4        50
-  Skills OpenCode           54       54         0
-  Registry YAML           49      49         0
+  Skills SuitOS (.yaml)    49      49         0
+  Skills Claude Code       55        4        51
+  Skills OpenCode           55       55         0
+  Registry YAML           50      50         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   222
+  TOTAL                   226
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

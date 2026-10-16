@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (53 ADRs)
+## decisions/ (54 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -60,10 +60,12 @@
 | ADR-053 | [Primera corrida ideas-saas en modo VERIFICADAS — PawBook (re-juez 8.0)](ADR-053-corrida-verificadas-pawbook.md) | Accepted (2026-10-11) | 2026-10-11 | Primera ejecución real del ciclo completo aprobado en ADR-051: modo VERIFICADAS (2V + 4G) aplicado de punta a punta. El usuario pidió… | 047, 049, 051 |
 | ADR-054 | [Etapa 4P — Producto terminado automatizado (Fases 5-7 en el pipeline)](ADR-054-etapa-4p-producto-terminado.md) | Accepted (2026-10-12) | 2026-10-12 | Tras construir ContractRenew hasta Fase 7 manualmente (dashboard CRUD, login PIN con signup y recuperación por email, alertas + respaldo,… | 051, 053 |
 | ADR-055 | [SuitWhatsAppPub — publicador WhatsApp personal con calendario](ADR-055-suit-whatsapp-pub.md) | Accepted (2026-10-12) | 2026-10-12 | El usuario pidió un programa local para publicar fotos/videos en un grupo de WhatsApp personal (NO Business) y en Historias/Estados, con… | - |
+| ADR-056 | [Skill micro-app-saas (gate de forma + ruta de cobro)](ADR-056-micro-app-saas-skill.md) | Accepted (2026-10-16) | 2026-10-16 | Faltaba una decisión explícita antes de diseñar un producto: **qué forma** debe tener (¿hace falta un SaaS entero, o basta una micro-app?)… | 048, 051, 054 |
 
-## bugs/ (6)
+## bugs/ (7)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…
 - [debug-log.md](bugs/debug-log.md) — DEBUG LOG & INCIDENT HISTORY
+- [generate-asset-getname.md](bugs/generate-asset-getname.md)
 - [suitmidbdic-no-abre.md](bugs/suitmidbdic-no-abre.md) — Bug: SuitMiDBdic — el diccionario "no abre"
 - [videos-multiples-fallas.md](bugs/videos-multiples-fallas.md) — Bug: Fallas múltiples en VIDE (Suite Completa de Video)
 - [videos-superposiciones-subtitulos.md](bugs/videos-superposiciones-subtitulos.md) — Bug: Superposiciones (logo/títulos) y subtítulos no funcionan en VIDE

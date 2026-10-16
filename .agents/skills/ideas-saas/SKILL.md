@@ -38,7 +38,7 @@ Para cada idea: 20% esfuerzo → 80% impacto. Fuentes gratuitas/éticas (búsque
 - **Nicho:** <nicho rentable y específico>
 - **Problema:** <dolor real del usuario>
 - **Solución (MVP):** <qué hace, 1 párrafo>
-- **Monetización:** <cómo se cobra>
+- **Formato / ruta de cobro:** <micro-app | micro-saas | web-app | landing-leads | herramienta-interna | multi-tenant-gs> · <pago único | suscripción | por uso | setup+mes | licencia/white-label | ahorro interno> (gate `micro-app-saas` — sin cobro → NO APTO)
 - **Stack Python:** <libs stdlib/gratuitas>
 - **80/20:** <por qué el 20% de esfuerzo da el 80%>
 ```
@@ -70,6 +70,8 @@ Si en modo RÁPIDAS, la 2V se omite (riesgo aceptado explícitamente).
 ### Etapa 3 — Disparo condicional → scaffold MVP Python
 
 Si **alguna** idea es APROBADO (>= 7.5): hacer el scaffold de la de mayor score. Si varias, solo la mejor.
+
+**Gate de forma (`micro-app-saas`) — antes del scaffold:** fija **forma** + **ruta de cobro** (los 6 modelos del gate). Si la ganadora NO es `micro-saas` (p.ej. `micro-app`/`herramienta-interna`), **omite el andamiaje SaaS**: Etapa 4P (login/CRUD `/app`) y, si aplica, 4G.3 (landing). Si el gate da `NO APTO` (sin ruta de cobro viable), se para la corrida — mismo comportamiento que el gate 7.5.
 
 **Scaffold en `SuitIdeasSaaS/<slug>/` (slug = nombre en snake_case):**
 

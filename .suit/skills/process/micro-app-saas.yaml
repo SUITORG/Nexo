@@ -1,0 +1,52 @@
+skill:
+  name: micro-app-saas
+  display_name: "Micro-app o micro-saas — Gate de forma + cobro (4/4)"
+  version: 1.0.0
+  type: process
+  domain: product
+
+  description: >
+    Gate de pre-diseño que decide la forma mínima del producto (micro-app,
+    micro-saas, web-app, landing-leads, herramienta-interna, multi-tenant-gs) y
+    su ruta de cobro (pago único, suscripción, por uso, setup+mes,
+    licencia/white-label, ahorro interno). Gate duro: sin ruta de cobro viable
+    se para (salvo herramienta-interna con consumidor definido). Veredicto
+    APTO / APTO CON CONDICIONES / NO APTO en ≤1 página.
+
+  dependencies: []
+
+  triggers:
+    - keyword: "¿micro app o micro saas?"
+    - keyword: "micro-app o micro-saas"
+    - keyword: "qué formato"
+    - keyword: "cómo se cobra"
+    - keyword: "¿puede monetizarse?"
+    - keyword: "producto nuevo"
+    - keyword: "alcance del producto"
+    - keyword: "¿vale la pena venderlo?"
+    - keyword: "no sé si hacer una app o un SaaS"
+
+  context_hint:
+    - ".agents/skills/micro-app-saas/SKILL.md"
+
+  rules:
+    - id: ma-001
+      description: "Sin ruta de cobro clara → NO APTO y se para (salvo herramienta-interna/ahorro-interno con consumidor definido → APTO CON CONDICIONES máx.)"
+      severity: error
+    - id: ma-002
+      description: "Por defecto micro-app; subir a micro-saas solo si vende a terceros Y tiene uso repetido con login"
+      severity: error
+    - id: ma-003
+      description: "Máximo 3 preguntas (o 0 con decision_libre=true); cada supuesto marcado [supuesto]"
+      severity: warning
+    - id: ma-004
+      description: "Salida ≤1 página; estructura fija Forma · Ruta de cobro · Veredicto"
+      severity: warning
+    - id: ma-005
+      description: "Juzga forma y dinero, no mercado (analista-proy) ni esfuerzo/ban (viabilidad-operativa); no duplica los otros gates"
+      severity: warning
+
+  validation:
+    - "Bloque producto: (formato, monetizacion, ruta_cobro, gate_cobro) en la tarjeta del proyecto"
+    - "FORMATO.md (si el proyecto vive en disco) con las 3 secciones fijas"
+    - "Veredicto APTO/APTO CON CONDICIONES/NO APTO con razón de 1 línea"
