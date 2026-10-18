@@ -41,17 +41,28 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
     <span class="title" id="title">SuitDashboard</span>
     <a id="ext" href="SuitDashboard/index.html" target="_blank" rel="noopener">↗ pestaña aparte</a>
   </div>
-  <div class="frame-wrap"><iframe id="frame" src="SuitDashboard/index.html" title="herramienta"></iframe></div>
+  <div class="frame-wrap" id="wrap"></div>
 </main>
 <script>
-const frame=document.getElementById('frame'),title=document.getElementById('title'),ext=document.getElementById('ext');
-document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+const wrap=document.getElementById('wrap'),title=document.getElementById('title'),ext=document.getElementById('ext');
+const frames={}; let curSrc=null;
+function activate(b){
+  if(curSrc===b.dataset.src) return;
+  if(curSrc && frames[curSrc]) frames[curSrc].style.display='none';
   document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   title.textContent=b.dataset.name;
   ext.href=b.dataset.src;
-  frame.src=b.dataset.src;
-}));
+  if(!frames[b.dataset.src]){
+    const f=document.createElement('iframe');
+    f.src=b.dataset.src; f.title=b.dataset.name;
+    wrap.appendChild(f); frames[b.dataset.src]=f;
+  }
+  frames[b.dataset.src].style.display='block';
+  curSrc=b.dataset.src;
+}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>activate(b)));
+activate(document.querySelector('nav button.active'));
 </script>
 </body>
 </html>
