@@ -3372,6 +3372,44 @@ D.reportedWords=[
  ["now","then"],["here","there"],["this","that"],["these","those"],["ago","before"],["next week","the following week"],["last week","the previous week"]
 ];
 D.reportedNote="Al pasar de <b>estilo directo</b> ('I am tired', dijo ella) a <b>estilo indirecto</b> (She said she was tired), tres cosas cambian: 1) el tiempo verbal retrocede un paso (backshift), 2) los pronombres se ajustan a quien narra, 3) las palabras de tiempo/lugar cambian de referencia (today→that day). Si el reporte es inmediato o la verdad sigue vigente, el backshift es opcional: 'She said she IS tired' también es aceptable si sigue cansada ahora.";
+D.relNote="Una <b>oración de relativo</b> (relative clause) describe o identifica un sustantivo con una mini-oración que empieza con <b>who, whom, whose, which, that, where, when</b>: 'The woman <b>who lives next door</b> is a nurse.' Equivale al <i>que / quien / el cual / cuyo / donde</i> del español. Dos tipos: <b>defining</b> (esencial, SIN comas — dice CUÁL) y <b>non-defining</b> (información extra, ENTRE comas — no admite <i>that</i>). El pronombre se elige por lo que reemplaza (persona → who, cosa → which/that) y <b>no se repite</b> el sujeto u objeto: <i>the man who he called</i> ✗ → <i>the man who I called</i> ✓.";
+D.relPronouns=[
+ ["who","personas","sujeto (u objeto, informal)","The doctor who treated me was very kind.","El doctor que me atendió fue muy amable."],
+ ["whom","personas","objeto (formal)","The man whom I met at the conference is a lawyer.","El hombre a quien conocí en la conferencia es abogado."],
+ ["whose","personas / cosas","posesivo ('cuyo')","She's the girl whose bag was stolen.","Ella es la chica cuyo bolso fue robado."],
+ ["which","cosas / animales","sujeto u objeto","The phone which broke yesterday was brand new.","El teléfono que se rompió ayer era nuevo."],
+ ["that","personas o cosas","sujeto u objeto — solo en defining","The car that I bought is red.","El carro que compré es rojo."],
+ ["where","lugares","= in / at which","That's the café where we first met.","Ese es el café donde nos conocimos."],
+ ["when","tiempo","= on / in which","I remember the day when we moved here.","Recuerdo el día en que nos mudamos aquí."],
+ ["why","razón (tras 'reason')","= for which","That's the reason why I called you.","Esa es la razón por la que te llamé."]
+];
+D.relTypes=[
+ {t:"Defining (esencial, sin comas)",mini:"La cláusula dice CUÁL persona o cosa: si la quitas, la oración pierde sentido. Sin comas. Admite <b>that</b>, y el pronombre se puede omitir cuando es el objeto.",
+  ex:[["The students who study hard usually pass.","Los estudiantes que estudian mucho normalmente aprueban. (solo esos)"],["The book that I borrowed was boring.","El libro que pedí prestado era aburrido."],["I need a friend who can help me.","Necesito un amigo que pueda ayudarme."]]},
+ {t:"Non-defining (extra, entre comas)",mini:"Agrega información de más sobre algo que ya está identificado. Va ENTRE comas (en voz, con pausas). <b>No</b> se usa that y el pronombre <b>no</b> se puede omitir.",
+  ex:[["My brother, who lives in Dallas, is an engineer.","Mi hermano, que vive en Dallas, es ingeniero. (solo tengo uno)"],["This book, which I borrowed from Ana, is great.","Este libro, que le pedí prestado a Ana, es genial."],["Houston, where I was born, is huge.","Houston, donde nací, es enorme."]]}
+];
+D.relOmit=[
+ ["The movie that I saw was great.","The movie I saw was great.","Se omite: that es OBJETO (yo vi la película)."],
+ ["The man (that) she married is a pilot.","The man she married is a pilot.","Se omite: that es OBJETO."],
+ ["The woman who called you is my boss.","— (no se puede omitir)","who es SUJETO de 'called'; sin él queda 'The woman called you…'."],
+ ["The song which is playing now is old.","— (no se puede omitir)","which es SUJETO de 'is playing'."],
+ ["My car, which I love, is old.","— (no se puede omitir)","En non-defining nunca se omite."]
+];
+D.relPrep=[
+ ["The man (who) I talked to is a doctor.","Informal y muy común: la preposición va al final.","El hombre con quien hablé es doctor."],
+ ["The man to whom I talked is a doctor.","Formal: preposición + whom.","El hombre con quien hablé es doctor."],
+ ["The house (that) I grew up in is small.","Informal: preposición al final; that/which opcional.","La casa en la que crecí es pequeña."],
+ ["The house in which I grew up is small.","Formal: preposición + which (aquí NO se usa that).","La casa en la que crecí es pequeña."]
+];
+D.relErrors=[
+ ["The man who he called is my uncle.","The man who I called is my uncle.","No repitas el pronombre: who ya hace de 'él'."],
+ ["The book what I read was good.","The book that I read was good.","'what' no es relativo en este uso; usa that / which."],
+ ["The girl which lives here is nice.","The girl who lives here is nice.","Personas → who (o that), no which."],
+ ["My sister, that lives in Austin, is a nurse.","My sister, who lives in Austin, is a nurse.","Con comas (non-defining) no se usa that."],
+ ["The woman whose her bag was stolen…","The woman whose bag was stolen…","whose ya incluye el posesivo; no pongas her/his después."],
+ ["The place where I live in is nice.","The place where I live is nice. / The place (that) I live in is nice.","where ya contiene la preposición: no la repitas."]
+];
 
 /* 37 · Compuestos idiomáticos */
 D.idiomComp=[
@@ -3580,7 +3618,7 @@ const SECTIONS=[
  ["confuse","Palabras que se confunden"],
  ["vsplit","Verbos divididos"],
  ["variations","Variaciones para decir lo mismo"],
- ["structures","Estructuras de oración"],
+ ["structures","Estructuras de oración"],["relative","Oraciones de relativo (who, which, that)"],
  ["adjorder","Orden de los adjetivos"],["affixes","Prefijos y sufijos"],["spelling","Ortografía al agregar sufijos"],["reported","Reported speech"],
  ["esidioms","Modismos en español sin traducción literal"],["adverbs","Adverbios"],
  ["negation","Negación (no, not, neither, nor)"],
@@ -3597,7 +3635,7 @@ const SECTIONS=[
 const PARTS=[
  {k:"sonidos",label:"I · Sonidos",sections:["ipa","homoph","homon","silent","connected","stress","dialects"]},
  {k:"piezas",label:"II · Piezas del idioma",sections:["nouns","plural","adj","articles","pron","mentalmodels","prep","conj","adverbs","negation"]},
- {k:"oracion",label:"III · La oración",sections:["tenses","vtypes","multiuse","comp","adjorder","quest","cond","passive","gerund","structures","reported"]},
+ {k:"oracion",label:"III · La oración",sections:["tenses","vtypes","multiuse","comp","adjorder","quest","cond","passive","gerund","structures","relative","reported"]},
  {k:"vocab",label:"IV · Vocabulario",sections:["vocab","chunks","colloc","phrasal","vsplit","syn","anton","posneg","falsef","confuse","affixes","spelling"]},
  {k:"registro",label:"V · Registro y estilo",sections:["variations","brame","contr","contrpractice","popculture","esidioms","french","frameworks"]},
  {k:"aplicado",label:"VI · Aplicado",sections:["citizenship","news","ailab"]}
@@ -3650,7 +3688,7 @@ D.exLvl={
  tense:"b",vtype:"a",phr:"p",syn:"b",nouns:"a",voc:"a",chunk:"b",q:"a",
  col:"b",contr:"b",conj:"a",prep:"a",silent:"a",stress:"b",cond:"c",
  anton:"a",false:"b",comp:"a",pass:"c",posneg:"b",gerund:"b",pop:"n",
- confuse:"b",var:"c",struct:"b",adjorder:"b",affix:"c",reported:"c",
+ confuse:"b",var:"c",struct:"b",adjorder:"b",affix:"c",reported:"c",relative:"b",
   idiom:"c",esid:"n",adv:"b",neg:"b",french:"c",frame:"c",cp:"b",citizen:"b",fin:"c"
 };
 function exSrc(id){
@@ -3675,6 +3713,7 @@ function exSrc(id){
   case "struct": return D.imperative.map(i=>({en:i[2],ipa:"",es:i[3],note:i[0]})).concat(D.infPurpose.map(i=>({en:i[2],ipa:"",es:i[3],note:i[0]})));
   case "adjorder": return D.adjOrderEx.map(a=>({en:a[0],ipa:a[1],es:a[2]}));
   case "reported": return D.reportedBackshift.map(r=>({en:r[2],ipa:"",es:r[3],note:r[0]+" → "+r[1]}));
+  case "relative": return D.relPronouns.map(r=>({en:r[3],ipa:"",es:r[4],note:r[0]})).concat(D.relTypes.flatMap(t=>t.ex.map(e=>({en:e[0],ipa:"",es:e[1],note:t.t}))));
   case "idiom": return D.idiomComp.map(i=>({en:i[0],ipa:i[1],es:i[3],note:"literal: "+i[2]}));
   case "esid": return D.esIdioms.map(i=>({en:i.en,ipa:i.ipa,es:i.mean,note:i.es}));
   case "neg": return D.negation.map(n=>({en:n.ex,ipa:n.ipa,es:n.es,note:n.t})).concat(D.negModals.map(n=>({en:n[2],ipa:"",es:n[3],note:n[0]})),D.negAnyNo.map(n=>({en:n[2],ipa:"",es:n[3],note:n[0]})));
@@ -3846,7 +3885,7 @@ h+=`<section class="topic" id="vocab"><h2><span class="n"></span>Vocabulario por
  <div class="lesson"><b>Mini-clase.</b> 5 columnas, 5 funciones: sujeto (antes del verbo), objeto (después), adjetivo posesivo (+ sustantivo: <i>my car</i>), pronombre posesivo (solo: <i>it's mine</i>), reflexivo (mismo sujeto y objeto: <i>I hurt myself</i>). Error clásico: ✗ "its'" no existe; <b>it's</b> = it is, <b>its</b> = su.</div>
  <div class="tblwrap"><table><tr><th></th>${D.pronouns.head.map(x=>`<th>${x}</th>`).join("")}</tr>
  ${D.pronouns.rows.map((r,i)=>`<tr><td><b>${["1ª sing","2ª","3ª m","3ª f","3ª n","1ª pl","3ª pl"][i]}</b></td>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table></div>
- <div class="rule">También existen: <b>demostrativos</b> (this/that/these/those), <b>relativos</b> (who, which, that, whose) e <b>interrogativos</b> (ver sección de Interrogativo).</div>
+ <div class="rule">También existen: <b>demostrativos</b> (this/that/these/those), <b>relativos</b> (who, which, that, whose — ver sección de Oraciones de relativo) e <b>interrogativos</b> (ver sección de Interrogativo).</div>
  <h3>Pronombres indefinidos</h3>
  <div class="lesson"><b>Mini-clase.</b> Se forman combinando un prefijo (SOME-/ANY-/NO-/EVERY-) con una terminación (-one, -body, -thing, -where) — mismo patrón en las 4 filas. SOME = afirmativo ("hay alguien/algo"). ANY = preguntas y negaciones ("¿hay alguien?", "no hay nadie" se dice con NOT...ANY). NO = negación absoluta en una sola palabra (no lleva "not" adicional). EVERY = todos sin excepción. <b>-one</b> y <b>-body</b> son intercambiables (someone = somebody), solo cambia el registro (-body es un poco más informal).</div>
  ${D.indefPron.map(cat=>`<h4>${esc(cat.t)}</h4><div class="rule"><i>${esc(cat.c)}</i></div><div class="tblwrap"><table><tr><th>Palabra · IPA</th><th>Español</th><th>Ejemplo</th></tr>${cat.vs.map(v=>`<tr><td><b>${esc(v.v)}</b> ${spkBtn(v.v)}<br><span class="ipa wrap">${esc(v.ipa)}</span></td><td class="es">${esc(v.es)}</td><td>${esc(v.ex)} ${spkBtn(v.ex)}</td></tr>`).join("")}</table></div>`).join("")}
@@ -4101,6 +4140,28 @@ h+=`<section class="topic" id="vocab"><h2><span class="n"></span>Vocabulario por
   ${c.ex.map(e=>`<tr><td><b>${e[0]}</b></td><td>${e[1]}</td><td class="es">${e[2]}</td></tr>`).join("")}</table></div></div>`).join("")}
  </section>`;
 
+ /* 35c · ORACIONES DE RELATIVO */
+ h+=`<section class="topic" id="relative"><h2><span class="n"></span>Oraciones de relativo (who, which, that…)</h2>
+ <div class="lesson"><b>Mini-clase.</b> ${D.relNote}</div>
+ <h3>Los pronombres relativos</h3>
+ <div class="tblwrap"><table><tr><th>Pronombre</th><th>Reemplaza a</th><th>Función</th><th>Ejemplo</th><th>Español</th></tr>
+ ${D.relPronouns.map(r=>`<tr><td><b>${r[0]}</b></td><td class="es">${r[1]}</td><td>${r[2]}</td><td>${r[3]} ${spkBtn(r[3])}</td><td class="es">${r[4]}</td></tr>`).join("")}</table></div>
+ <h3>Defining vs. non-defining</h3>
+ <div class="grid g2">${D.relTypes.map(t=>`<div class="card"><h4>${t.t}</h4><div style="font-size:13px;margin:4px 0">${t.mini}</div>
+  <div class="tblwrap"><table><tr><th>Ejemplo</th><th>Español</th></tr>
+  ${t.ex.map(e=>`<tr><td><b>${e[0]}</b> ${spkBtn(e[0])}</td><td class="es">${e[1]}</td></tr>`).join("")}</table></div></div>`).join("")}</div>
+ <h3>¿Cuándo se puede omitir el pronombre?</h3>
+ <div class="rule">Solo en <b>defining</b> y cuando el pronombre es el <b>objeto</b> de la cláusula (si hay un sujeto nuevo justo después: <i>the movie <b>I</b> saw</i>). Si el pronombre es el <b>sujeto</b>, o la cláusula va entre comas, no se omite.</div>
+ <div class="tblwrap"><table><tr><th>Oración completa</th><th>Versión corta</th><th>Por qué</th></tr>
+ ${D.relOmit.map(o=>`<tr><td><b>${o[0]}</b></td><td>${o[1]}</td><td class="es">${o[2]}</td></tr>`).join("")}</table></div>
+ <h3>Con preposición</h3>
+ <div class="tblwrap"><table><tr><th>Oración</th><th>Registro</th><th>Español</th></tr>
+ ${D.relPrep.map(p=>`<tr><td><b>${p[0]}</b> ${spkBtn(p[0])}</td><td class="es">${p[1]}</td><td class="es">${p[2]}</td></tr>`).join("")}</table></div>
+ <h3>Errores comunes de hispanohablantes</h3>
+ <div class="tblwrap"><table><tr><th>✗ Incorrecto</th><th>✓ Correcto</th><th>Por qué</th></tr>
+ ${D.relErrors.map(e=>`<tr><td>${e[0]}</td><td><b>${e[1]}</b></td><td class="es">${e[2]}</td></tr>`).join("")}</table></div>
+ ${exWidget("relative",D.relPronouns.map(r=>r[0]),"oración con cláusula de relativo con")}</section>`;
+
  /* 36 · REPORTED SPEECH */
  h+=`<section class="topic" id="reported"><h2><span class="n"></span>Reported speech (estilo indirecto)</h2>
  <div class="lesson"><b>Mini-clase.</b> ${D.reportedNote}</div>
@@ -4287,6 +4348,7 @@ function buildSearchIndex(){
  add("BE","copulativo, auxiliar, existencia, edad, clima","multiuse");
  Object.entries(D.nounsExamples).forEach(([cat,arr])=>arr.forEach(n=>add(n[0],n[2],"nouns",showNouns,cat,n[1])));
  Object.entries(D.adjExamples).forEach(([cat,arr])=>arr.forEach(e=>add(e[0],e[2],"adj",showAdj,cat,e[1])));
+ D.relPronouns.forEach(r=>add(r[0],"relativo: "+r[1],"relative"));
  SEARCH_INDEX=idx;
 }
 function searchWord(q){
