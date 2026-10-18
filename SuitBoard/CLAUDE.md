@@ -1,7 +1,7 @@
-# SuitBoard - Dashboard Crypto + US Market
+# SuitBoard - Dashboard Crypto + US + FX Market
 
 ## Contexto del proyecto
-Dashboard de mercado en un solo archivo HTML estático (sin build, sin servidor propio): pestañas Crypto y US Market. Rescatado desde `Downloads\dashboard_extendido (1).html` (31/08/2026) — el usuario no recordaba dónde lo había guardado.
+Dashboard de mercado en un solo archivo HTML estático (sin build, sin servidor propio): 4 pestañas — Crypto, US Market, FX Market y Combined View. Rescatado desde `Downloads\dashboard_extendido (1).html` (31/08/2026) — el usuario no recordaba dónde lo había guardado.
 
 ## Alcance
 Proyecto local, un solo archivo (`index.html`). No tiene servidor Node propio ni pipeline de build. Igual que `SuitCampanas/`, no pasa por el pipeline de deploy de GitHub Pages del repo raíz — no está pensado para publicarse en `grupoevasol.com`.
@@ -12,8 +12,11 @@ Proyecto local, un solo archivo (`index.html`). No tiene servidor Node propio ni
 
 ## Stack y fuentes de datos
 - Vanilla JS + CSS embebido, sin frameworks ni dependencias.
-- **Crypto (pestaña Crypto): datos en vivo** vía API pública de CoinGecko (`api.coingecko.com/api/v3`, sin API key) — precio, cambio 24h, volumen, histórico 30d. 10 activos (ampliado de 6 el 2026-08-31): BTC, SOL, JUP, RAY, JTO, BONK, ORCA, PYTH, WIF, RENDER (foco en ecosistema Solana).
-- **US Market (pestaña US Market): datos estáticos/demo** — Dow Jones, Nasdaq, ETFs, commodities están hardcodeados en el JS (`const usIndices/topETFs/topStocks/commodities = [...]`), no se hace fetch en vivo. No hay integración real con NYSE/NASDAQ todavía (ver Pendientes).
+- **Crypto (pestaña Crypto): datos en vivo** vía API pública de CoinGecko (`api.coingecko.com/api/v3`, sin API key) — precio, cambio 24h, volumen, histórico 30d. 10 activos: BTC, SOL, JUP, RAY, JTO, BONK, ORCA, PYTH, WIF, RENDER (foco en ecosistema Solana), con rotación automática de watchlist.
+- **US Market (pestaña US Market): en vivo con Twelve Data (key del usuario)** — heatmap 30d, matriz de fases Mensual/Semanal/Diario/6H, rangos de precio y hover real salen de `time_series` (diario 32 + horario 60min, 12 activos: SPX/DJI/IXIC/RUT/VIX/NDX/SOX + SPY/QQQ/IWM + XAU/USD + WTI). La key se pega una vez en el encabezado de la pestaña y vive en `localStorage` (`suitboard_td_key`). **Sin key (o símbolo no cubierto por el plan free) las tarjetas/tablas quedan en su dato demo con tooltip honesto** — nunca se inventa precio. Refresh US cada 1h (chunks de 6 llamadas con pausa de 61s para respetar 8 créd/min del plan gratis de 800/día ≈ 576 usados/día). Los índices se muestran como puntos (sin `$`), gold/oil/ETFs en USD.
+- **FX Market (pestaña FX): en vivo keyless** vía Frankfurter (`api.frankfurter.dev`, referencias del BCE, CORS `*`) — 8 pares vs USD: EUR/USD, GBP/USD, AUD/USD (invertidos a convención de mercado con `1/rate`, porque `base=USD` devuelve "por 1 USD") + USD/JPY, USD/CHF, USD/CAD, USD/MXN, USD/BRL (directos). **1 sola llamada** por refresh (serie 30d completa, piggyback del ciclo de 5 min). ECB publica 1 vez/día ~16:00 CET — por eso sin 6H en la matriz de fases y sin rango Diario. Volatilidad anualizada ×√252 (días hábiles, no 365). Sin score de confiabilidad (no hay volumen en FX — se explica en la leyenda).
+- **Combined View**: las 3 tarjetas de resumen siguen hardcodeadas; la matriz Cross-Market (BTC/SOL/SPX/GOLD) se calcula en vivo con `pearsonCorr` cuando existen las 4 series (crypto CoinGecko + US Twelve Data), y si falta alguna cae a la tabla de referencia demo. Nota honesta: crypto opera 7d/sem e índices solo días hábiles — correlación aproximada por fechas no alineadas.
+- API keys: ninguna hardcodeada — la de Twelve Data la pega el usuario y se guarda en `localStorage`. Frankfurter y CoinGecko no llevan key.
 
 ## Rotación automática de watchlist (2026-08-31)
 El score de confiabilidad (volatilidad 30d + volumen 24h + correlación vs BTC, ya existía) ahora sí tiene efecto:
@@ -30,7 +33,8 @@ El score de confiabilidad (volatilidad 30d + volumen 24h + correlación vs BTC, 
 ## Análisis al pasar el mouse (2026-08-31)
 Al hacer hover sobre cualquier moneda, índice, ETF, acción o commodity aparece un tooltip con lectura rápida (tendencia diaria/semanal, zona suelo/techo, rango probable 24h/semana, qué vigilar), con badges de color y una barra de rango visual.
 - **Crypto**: cálculo real a partir de `priceHistorySeries` (30d de CoinGecko) — no es una IA leyendo un gráfico de TradingView, es estadística simple (min/max reciente como suelo/techo, volatilidad anualizada ya calculada para el rango probable). Queda explícito en el propio tooltip.
-- **US Market**: como no hay serie histórica real conectada, el tooltip lo dice explícitamente en vez de inventar un suelo/techo — solo muestra el cambio del día. Se resuelve solo el día que se conecte una API real (ver arriba).
+- **US Market**: con Twelve Data key + historia real, el hover usa el mismo análisis estadístico que Crypto (builder genérico `buildAnalysisFromSeries`, umbrales a escala índices: 0.5% diario / 1.5% semanal, √252). Sin historia (sin key o símbolo no cubierto), el tooltip lo dice explícitamente en vez de inventar un suelo/techo — solo muestra el cambio del día.
+- **FX Market**: mismo análisis genérico con umbrales escala FX (0.15% diario / 1% semanal) y formateo de tasa (4 decimales, sin `$`), disclaimer del BCE/intradía.
 
 ### Análisis fundamental (2026-09-02)
 El tooltip de Crypto ahora suma una sección "Fundamental" con **market cap** y **volumen 24h**, vía `include_market_cap=true` en el mismo `simple/price` de CoinGecko que ya se llamaba (sin llamada extra). Formateado compacto (`$1.55T`, `$28.74B`) con `formatCompactUsd()` (`Intl`/`toLocaleString` nativo, sin librería). US Market sigue sin esto — no hay fuente de market cap conectada para esa pestaña.
@@ -73,9 +77,18 @@ Cada tarjeta de Crypto (pestaña Crypto, `renderCryptoPrices()`) ahora tiene un 
 - Solo Crypto — US Market no tiene historial real, mismo criterio de honestidad que el resto del análisis.
 - Probado con casos sintéticos (unit test aislado de `classifyCyclePhase`, sin depender de CoinGecko): los 4 casos claros clasifican bien, lateral puro e insuficiente devuelven `null` sin crashear.
 
+### Cruce de información US + pestaña FX + Combined en vivo (2026-10-17)
+Ampliación a pedido del usuario: la pestaña US pasó de solo-demo a tener el mismo "cruce" que Crypto (heatmap 30d, matriz de fases, rangos, hover real) y se agregó la pestaña FX Markets. Fuentes evaluadas antes de decidir (2026-10-17): Yahoo Finance no sirve directo por CORS desde `file://`, los 3 proxies públicos probados (corsproxy 401, allorigins 522, codetabs timeout) estaban caídos, y Finnhub free ya no da histórico (`/stock/candle` = Premium, issue #546) — por eso Twelve Data (key) para US y Frankfurter (keyless) para FX.
+- **Refactors compartidos** (comportamiento crypto intacto, wrappers delgados): `buildAnalysisFromSeries()` (núcleo del análisis 30d con umbrales/periodos parametrizados: crypto 1%/3%/√365, US 0.5%/1.5%/√252, FX 0.15%/1%/√252), `buildSeriesAnalysisHTML()` (tooltip genérico con `fmt`/`phase`/`disclaimer` propios), `renderHeatmapGrid()`, `renderPhaseMatrix()` (lista de temporalidades por pestaña), `renderRangesGeneric()` (selector + bloques + formateador por pestaña; estado en `rangeSel.{crypto,fx,us}`), `rangeBarHTML()`/`priceRangeBlockHTML()` con formateador inyectable.
+- **FX**: `fetchFxLive()` 1 llamada/refresh (serie 30d de `api.frankfurter.dev/v1/{from}..{to}?base=USD&symbols=...`). **Gotcha verificado en vivo**: el rango v1 viene envuelto en `{amount, base, start_date, end_date, rates: {fecha: {CUR: tasa}}}` — los dates están en `rates`, no top-level. `base=USD` devuelve "por 1 USD": EUR/GBP/AUD se invierten (`1/rate`) para convención de mercado. Matriz Mensual/Semanal/Diario (sin 6H — ECB solo diario), rangos Semanal/Mensual, vol ×√252, sin score de confiabilidad (sin volumen).
+- **US (Twelve Data)**: 12 activos × 2 llamadas (diario 32 + horario 60min) por ciclo de 1h = ~576 créd/día ≤ 800 del plan gratis; chunks de 6 con `sleep(61000)` para el límite de 8/min, renders incrementales por chunk. `US_CROSS[].alts` reintenta símbolos ambiguos (DJI→DJIA, IXIC→COMP). Símbolos sin cover del plan free → tarjeta demo con badge "demo" y tooltip honesto. Índices en puntos (sin `$`), gold/oil/ETFs en USD.
+- **Combined**: matriz BTC/SOL/SPX/GOLD calculada con `pearsonCorr` real cuando existen las 4 series; si no, valores demo. Nota de aproximación por calendarios distintos (crypto 7d vs índices días hábiles).
+- Verificado: `node --check` del script extraído, 12 tests sintéticos offline (invert, umbrales FX vs crypto, fases, vol 252 vs 365, pearson retornos negados, rangos) y 1 ronda en navegador con las 4 pestañas (FX en vivo con EUR/USD 1.1253, heatmap EUR/GBP 0.82 y JPY-vs-EUR −0.47 plausibles; US placeholders sin key; Combined demo mientras CoinGecko rate-limita).
+
 ## Pendientes críticos
 - Decidir si se trackea en git (y si se agrega a `.gitignore` en su lugar).
-- La pestaña US Market sigue con datos estáticos — conectar a una API real (Yahoo Finance, Alpha Vantage, etc.) si se quiere que sea igual de "viva" que la de Crypto.
+- Pegar la API key de Twelve Data (gratis en twelvedata.com) en la pestaña US para activar el cruce en vivo — hasta entonces US queda demo.
+- Verificar en la primera corrida con key qué índices cubre el plan free (SPX/DJI/IXIC/RUT/VIX/NDX/SOX seguramente; WTI/SOX pueden caer a demo — el fallback es por diseño).
 - En `Downloads/` quedaron 4 archivos hermanos sin consolidar: `dashboard.html`, `dashboard (1).html`, `dashboard_extendido.html` (versión anterior, más chica) y `dashboard_liquidez_solana.html` — parecen iteraciones previas del mismo proyecto, no revisados aún.
 
 ---

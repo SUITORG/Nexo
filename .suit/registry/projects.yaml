@@ -487,9 +487,9 @@ projects:
         type: express
 
   suit-board:
-    name: "SuitBoard — Dashboard Crypto + US Market"
+    name: "SuitBoard  Dashboard Crypto + US + FX Market"
     path: SuitBoard/
-    description: "Dashboard de mercado en un solo archivo HTML estático (sin build, sin servidor). Pestaña Crypto con datos en vivo vía API pública de CoinGecko (BTC/SOL/JUP/RAY/JTO/BONK). Pestaña US Market con datos estáticos/demo (sin API real todavía). Rescatado desde Downloads el 31/08/2026."
+    description: "Dashboard de mercado en un solo archivo HTML estático (sin build, sin servidor). 4 pestañas: Crypto (CoinGecko en vivo, watchlist con rotación), US Markets (Twelve Data con key del usuario  heatmap/fases/rangos 30d + hover real; sin key queda demo honesto), FX Markets (Frankfurter/BCE keyless, 8 pares vs USD, 1 llamada por refresh) y Combined (matriz BTC/SOL/SPX/GOLD en vivo cuando hay series). Rescatado desde Downloads el 31/08/2026."
     type: static
     skills:
       - javascript
@@ -501,7 +501,7 @@ projects:
       staff: false
     environment:
       TYPE: static
-    notes: "No pasa por el pipeline de deploy de GitHub Pages del repo raíz (igual que SuitCampanas). No trackeado en git todavía — pendiente decisión del usuario."
+    notes: "No pasa por el pipeline de deploy de GitHub Pages del repo raíz (igual que SuitCampanas). No trackeado en git todavía  pendiente decisión del usuario. Twelve Data gratis: 800 créd/día, refresh US 1h con chunks de 6 y pausa 61s (8/min); key en localStorage suitboard_td_key."
 
   suit-landings:
     name: "SuitLandings — Plantilla de Landing Pages multi-tenant"

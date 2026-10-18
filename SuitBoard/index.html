@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Completo - Crypto + US Market</title>
+    <title>Dashboard Completo - Crypto + US + FX Market</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -416,6 +416,7 @@
     <nav class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('crypto')">Crypto Markets</button>
         <button class="tab-btn" onclick="switchTab('us')">US Markets</button>
+        <button class="tab-btn" onclick="switchTab('fx')">FX Markets</button>
         <button class="tab-btn" onclick="switchTab('combined')">Combined View</button>
     </nav>
 
@@ -657,6 +658,10 @@
                     <div class="label">Market State:</div>
                     <div class="time" id="marketState">PRE-MARKET</div>
                     <div class="next" id="marketClock"></div>
+                    <div style="margin-top: 8px; display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
+                        <input type="password" id="tdKeyInput" placeholder="Twelve Data API key" onchange="saveTdKey(this.value)" style="width: 170px; padding: 4px 8px; background: rgba(15,23,42,0.8); border: 1px solid rgba(148,163,184,0.3); border-radius: 6px; color: #e2e8f0; font-size: 0.7rem; outline: none;">
+                        <span id="usLiveStatus" style="font-size: 0.68rem; font-weight: 600; color: #64748b;">sin key — demo</span>
+                    </div>
                 </div>
             </div>
 
@@ -709,6 +714,122 @@
                 <div class="card-title"> Sector Performance</div>
                 <div class="market-indices" id="sectorPerformance"></div>
             </div>
+
+            <!-- ============ CRUCE DE INFORMACION US (30d real con Twelve Data) ============ -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title"> Heatmap Correlacion 30d</div>
+                <div id="usHeatmap"></div>
+                <div style="margin-top: 12px; padding: 10px 12px; background: rgba(30,41,59,0.6); border-radius: 8px; border: 1px solid rgba(100,116,139,0.2);">
+                    <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px;">LEYENDA CORRELACION</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.7rem;">
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 14px; height: 14px; border-radius: 3px; background: rgba(6,182,212,0.85);"></div><span style="color: #e2e8f0;"><b style="color: #06b6d4;">&gt;= 0.70</b> Fuerte — se mueven juntos</span></div>
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 14px; height: 14px; border-radius: 3px; background: rgba(34,197,94,0.75);"></div><span style="color: #e2e8f0;"><b style="color: #22c55e;">0.50 - 0.69</b> Moderada</span></div>
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 14px; height: 14px; border-radius: 3px; background: rgba(234,179,8,0.7);"></div><span style="color: #e2e8f0;"><b style="color: #eab308;">0.30 - 0.49</b> Debil — par diversificador</span></div>
+                        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 14px; height: 14px; border-radius: 3px; background: rgba(239,68,68,0.6);"></div><span style="color: #e2e8f0;"><b style="color: #ef4444;">&lt; 0.30</b> Sin relacion — ideal para hedge</span></div>
+                    </div>
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(100,116,139,0.2); font-size: 0.65rem; color: #64748b; line-height: 1.5;">
+                        <span style="color: #06b6d4;">Tip:</span> SPY/QQQ/IWM replican a los índices — alta correlación no es diversificación. VIX vs índices en rojo/negativo es lo esperado. Símbolos sin historia real quedan fuera del heatmap.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title">  Fase del Movimiento por Temporalidad</div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 12px; line-height: 1.6;">
+                    <span style="color:#3b82f6;">● Etapa 1 Acum.</span> ·
+                    <span style="color:#22c55e;">● Etapa 2 Avance</span> ·
+                    <span style="color:#eab308;">● Etapa 3 Distrib.</span> ·
+                    <span style="color:#ef4444;">● Etapa 4 Declive</span> ·
+                    <span style="color:#64748b;">● Rango</span>
+                    — Mensual/Semanal del histórico diario de 30d, Diario/6H del histórico horario (Twelve Data). Heurística de posición-en-rango + tendencia, no señal certera.
+                </div>
+                <div style="overflow-x: auto;" id="usPhaseMatrix"></div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>  Rangos de Precio</span>
+                    <select id="usRangeSelect" onchange="onUsRangeSymChange(this.value)" style="background:#1e293b; color:#e2e8f0; border:1px solid rgba(148,163,184,0.3); border-radius:6px; padding:4px 8px; font-size:0.8rem; font-weight:700;"></select>
+                </div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 16px; line-height: 1.6;">
+                    Rango real (mínimo → máximo) del período todavía en curso — Soporte = piso tocado, Resistencia = techo tocado, Midpoint = promedio de ambos. No es una proyección, es lo que ya ocurrió en lo que va del Diario/Semanal/Mensual.
+                </div>
+                <div id="usRangeBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FX MARKETS TAB -->
+    <div id="tab-fx" class="tab-content">
+        <div class="dashboard">
+            <div class="header">
+                <div>
+                    <h1>FX Markets</h1>
+                    <div class="subtitle">Tipos de cambio vs USD · referencias del BCE vía Frankfurter · publicación diaria ~16:00 CET (sin intradía)</div>
+                </div>
+                <div class="update-info">
+                    <div class="label">Ultima actualizacion:</div>
+                    <div class="time" id="lastUpdateFx">—</div>
+                    <div class="next" id="fxLiveStatus">conectando...</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-title"> Precios (base USD)</div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 12px; line-height: 1.6;">
+                    Cambio = vs día hábil anterior (tipo de cambio de referencia del BCE, no spot intradía). Fase del movimiento = semanal (franja de color a la izquierda):
+                    <span style="color:#3b82f6;">↗ Etapa 1 Acum.</span> ·
+                    <span style="color:#22c55e;">▲ Etapa 2 Avance</span> ·
+                    <span style="color:#eab308;">⚠ Etapa 3 Distrib.</span> ·
+                    <span style="color:#ef4444;">▼ Etapa 4 Declive</span> ·
+                    <span style="color:#64748b;">gris = Rango</span>.
+                    FX no tiene volumen — por eso no hay score de confiabilidad acá.
+                </div>
+                <div class="market-indices" id="fxPrices"></div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title"> Heatmap Correlacion 30d</div>
+                    <div id="fxHeatmap"></div>
+                    <div style="margin-top: 12px; padding: 10px 12px; background: rgba(30,41,59,0.6); border-radius: 8px; border: 1px solid rgba(100,116,139,0.2);">
+                        <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px;">LEYENDA CORRELACION</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.7rem;">
+                            <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 14px; height: 14px; border-radius: 3px; background: rgba(6,182,212,0.85);"></div><span style="color: #e2e8f0;"><b style="color: #06b6d4;">&gt;= 0.70</b> Fuerte — se mueven juntos</span></div>
+                            <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 14px; height: 14px; border-radius: 3px; background: rgba(34,197,94,0.75);"></div><span style="color: #e2e8f0;"><b style="color: #22c55e;">0.50 - 0.69</b> Moderada</span></div>
+                            <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 14px; height: 14px; border-radius: 3px; background: rgba(234,179,8,0.7);"></div><span style="color: #e2e8f0;"><b style="color: #eab308;">0.30 - 0.49</b> Debil — par diversificador</span></div>
+                            <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 14px; height: 14px; border-radius: 3px; background: rgba(239,68,68,0.6);"></div><span style="color: #e2e8f0;"><b style="color: #ef4444;">&lt; 0.30</b> Sin relacion — ideal para hedge</span></div>
+                        </div>
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(100,116,139,0.2); font-size: 0.65rem; color: #64748b; line-height: 1.5;">
+                            <span style="color: #06b6d4;">Tip:</span> Todo pasa contra el mismo USD: cuando el dólar se fortalece, USD/JPY sube mientras EUR/USD baja — correlación negativa esperada entre pares opuestos al dólar. Las "mayores" (EUR/GBP/JPY) suelen moverse más juntas que los pares Latam.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">  Fase del Movimiento por Temporalidad</div>
+                    <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 12px; line-height: 1.6;">
+                        <span style="color:#3b82f6;">● Etapa 1 Acum.</span> ·
+                        <span style="color:#22c55e;">● Etapa 2 Avance</span> ·
+                        <span style="color:#eab308;">● Etapa 3 Distrib.</span> ·
+                        <span style="color:#ef4444;">● Etapa 4 Declive</span> ·
+                        <span style="color:#64748b;">● Rango</span>
+                        — sin intradía: las 3 columnas salen del histórico diario del BCE. Heurística, no señal certera.
+                    </div>
+                    <div style="overflow-x: auto;" id="fxPhaseMatrix"></div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>  Rangos de Precio</span>
+                    <select id="fxRangeSelect" onchange="onFxRangeSymChange(this.value)" style="background:#1e293b; color:#e2e8f0; border:1px solid rgba(148,163,184,0.3); border-radius:6px; padding:4px 8px; font-size:0.8rem; font-weight:700;"></select>
+                </div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 16px; line-height: 1.6;">
+                    Rango real (mínimo → máximo) del período todavía en curso. Sin bloque Diario: el BCE publica una vez al día — no hay rango intradía real que mostrar.
+                </div>
+                <div id="fxRangeBody"></div>
+            </div>
         </div>
     </div>
 
@@ -739,8 +860,12 @@
 
             <!-- Correlation Matrix -->
             <div class="card" style="margin-top: 20px;">
-                <div class="card-title"> Cross-Market Correlation</div>
+                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span> Cross-Market Correlation</span>
+                    <span id="crossCorrStatus" style="font-size: 0.7rem; font-weight: 600; color: #64748b;">cargando...</span>
+                </div>
                 <div id="crossCorrelation"></div>
+                <div id="crossCorrNote" style="display:none; margin-top: 10px; font-size: 0.65rem; color: #64748b; line-height: 1.5;"></div>
             </div>
         </div>
     </div>
@@ -820,12 +945,12 @@
             if (va === 0 || vb === 0) return null;
             return cov / Math.sqrt(va * vb);
         }
-        function annualizedVolFromSeries(series) {
+        function annualizedVolFromSeries(series, periods) {
             if (!series || series.length < 3) return null;
             const rets = series.map((v, i) => i === 0 ? 0 : Math.log(v / series[i - 1])).slice(1);
             const mean = rets.reduce((s, v) => s + v, 0) / rets.length;
             const variance = rets.reduce((s, v) => s + (v - mean) ** 2, 0) / rets.length;
-            return Math.sqrt(variance) * Math.sqrt(365);
+            return Math.sqrt(variance) * Math.sqrt(periods || 365);
         }
 
         async function fetchCryptoLive() {
@@ -1149,7 +1274,8 @@
             return `<span style="background:${color}22;color:${color};padding:2px 8px;border-radius:6px;font-weight:700;font-size:0.72rem;">${label}</span>`;
         }
 
-        function rangeBarHTML(lo, hi, price) {
+        function rangeBarHTML(lo, hi, price, fmt) {
+            fmt = fmt || formatUsd;
             if (lo === null || hi === null || lo === undefined || hi === undefined || hi <= lo) {
                 return `<div class="at-note">Sin suficiente historial todavía para dibujar el rango.</div>`;
             }
@@ -1160,18 +1286,18 @@
                     <div style="position:absolute; top:-3px; left:${pct}%; transform:translateX(-50%); width:2px; height:14px; background:#fff; box-shadow:0 0 4px #fff;"></div>
                 </div>
                 <div style="display:flex; justify-content:space-between; font-size:0.62rem; color:#94a3b8; margin-top:2px;">
-                    <span>${formatUsd(lo)}</span>
-                    <span>${formatUsd(hi)}</span>
+                    <span>${fmt(lo)}</span>
+                    <span>${fmt(hi)}</span>
                 </div>
             </div>`;
         }
 
-        function computeCryptoAnalysis(sym) {
-            const t = cryptoData[sym];
-            const hist = priceHistorySeries[sym];
-            if (!t || !hist || hist.length < 8) return { insufficient: true, name: t?.name || sym };
+        // Núcleo genérico del análisis por serie (30d), compartido por Crypto/US/FX.
+        // opts: { dailyThresh, weeklyThresh, periodsPerYear, marketCap, vol24hUsd }
+        function buildAnalysisFromSeries(sym, name, price, hist, vol30d, opts) {
+            opts = opts || {};
+            if (!hist || hist.length < 8 || price === null || price === undefined) return { insufficient: true, name: name || sym };
 
-            const price = t.price;
             const last7 = hist.slice(-7);
             const floor24h = Math.min(...last7);
             const ceil24h = Math.max(...last7);
@@ -1183,13 +1309,13 @@
             const dailyChangePct = priceYesterday ? ((price - priceYesterday) / priceYesterday) * 100 : 0;
             const weeklyChangePct = price7dAgo ? ((price - price7dAgo) / price7dAgo) * 100 : 0;
             const trendOf = (pct, thresh) => pct > thresh ? 'subida' : pct < -thresh ? 'bajada' : 'lateral';
-            const dailyTrend = trendOf(dailyChangePct, 1);
-            const weeklyTrend = trendOf(weeklyChangePct, 3);
+            const dailyTrend = trendOf(dailyChangePct, opts.dailyThresh ?? 1);
+            const weeklyTrend = trendOf(weeklyChangePct, opts.weeklyThresh ?? 3);
 
-            // Rango probable a partir de la volatilidad anualizada ya calculada (vol30d)
-            const annualVol = t.vol30d;
-            const dailyStd = annualVol ? annualVol / Math.sqrt(365) : null;
-            const weeklyStd = annualVol ? (annualVol / Math.sqrt(365)) * Math.sqrt(7) : null;
+            // Rango probable a partir de la volatilidad anualizada (vol30d)
+            const ppy = opts.periodsPerYear || 365;
+            const dailyStd = vol30d ? vol30d / Math.sqrt(ppy) : null;
+            const weeklyStd = vol30d ? (vol30d / Math.sqrt(ppy)) * Math.sqrt(7) : null;
             const range24h = dailyStd ? { lo: price * (1 - dailyStd), hi: price * (1 + dailyStd) } : null;
             const rangeWeek = weeklyStd ? { lo: price * (1 - weeklyStd), hi: price * (1 + weeklyStd) } : null;
 
@@ -1200,7 +1326,13 @@
             else if (posIn7d < 0.2 && dailyTrend === 'bajada') breakoutLabel = 'más chance de romper el suelo que de quedarse dentro del rango';
             else breakoutLabel = 'más chance de quedarse dentro del rango que de romperlo';
 
-            return { insufficient: false, sym, name: t.name, price, dailyTrend, weeklyTrend, floor24h, ceil24h, floorWeek, ceilWeek, range24h, rangeWeek, breakoutLabel, marketCap: t.marketCap, vol24hUsd: t.vol24hUsd };
+            return { insufficient: false, sym, name, price, dailyTrend, weeklyTrend, floor24h, ceil24h, floorWeek, ceilWeek, range24h, rangeWeek, breakoutLabel, marketCap: opts.marketCap, vol24hUsd: opts.vol24hUsd };
+        }
+
+        function computeCryptoAnalysis(sym) {
+            const t = cryptoData[sym];
+            if (!t) return { insufficient: true, name: sym };
+            return buildAnalysisFromSeries(sym, t.name, t.price, priceHistorySeries[sym], t.vol30d, { marketCap: t.marketCap, vol24hUsd: t.vol24hUsd });
         }
 
         // Fase del movimiento (ciclo Wyckoff simplificado: inicio -> alcista -> distribucion -> bajista),
@@ -1264,39 +1396,39 @@
             return null;
         }
 
-        function classifyTimeframes(sym) {
-            const daily = priceHistorySeries[sym];
-            const hourly = priceHistoryHourly[sym];
-            const result = {};
-            TIMEFRAME_ORDER.forEach(tf => {
-                const cfg = TIMEFRAME_CONFIGS[tf];
-                const series = cfg.source === 'daily' ? daily : hourly;
-                result[tf] = phaseFromSeries(series, cfg);
-            });
-            return result;
-        }
-
         function phaseCellHTML(phase) {
             const p = CYCLE_PHASES[phase];
             if (!p) return `<div style="display:flex; flex-direction:column; align-items:center; gap:2px;"><span style="width:10px; height:10px; border-radius:50%; background:#64748b; display:inline-block;"></span><span style="font-size:0.62rem; color:#64748b;">Rango</span></div>`;
             return `<div style="display:flex; flex-direction:column; align-items:center; gap:2px;"><span style="width:10px; height:10px; border-radius:50%; background:${p.color}; display:inline-block;"></span><span style="font-size:0.62rem; color:${p.color}; font-weight:700;">${p.short}</span></div>`;
         }
 
-        function renderCyclePhaseMatrix() {
-            const container = document.getElementById('cyclePhaseMatrix');
+        // Render genérico de la matriz fases (monedas × temporalidades) — Crypto/US/FX pasan
+        // su propia lista de temporalidades y su faseFn(sym, tf).
+        function renderPhaseMatrix(containerId, tokens, tfs, labels, phaseFn, firstColLabel) {
+            const container = document.getElementById(containerId);
             if (!container) return;
-            const rows = Object.keys(CG_IDS).map(sym => {
-                const tfs = classifyTimeframes(sym);
-                const cells = TIMEFRAME_ORDER.map(tf => `<td style="text-align:center; padding:8px 4px;">${phaseCellHTML(tfs[tf])}</td>`).join('');
+            if (!tokens.length) {
+                container.innerHTML = `<div style="color:#64748b; font-size:0.75rem;">Sin datos todavía.</div>`;
+                return;
+            }
+            const rows = tokens.map(sym => {
+                const cells = tfs.map(tf => `<td style="text-align:center; padding:8px 4px;">${phaseCellHTML(phaseFn(sym, tf))}</td>`).join('');
                 return `<tr><td style="padding:8px; font-weight:700; color:#e2e8f0;">${sym}</td>${cells}</tr>`;
             }).join('');
-            const headers = TIMEFRAME_ORDER.map(tf => `<th style="text-align:center; padding:8px 4px; color:#94a3b8; font-size:0.72rem;">${TIMEFRAME_LABELS[tf]}</th>`).join('');
+            const headers = tfs.map(tf => `<th style="text-align:center; padding:8px 4px; color:#94a3b8; font-size:0.72rem;">${labels[tf]}</th>`).join('');
             container.innerHTML = `
                 <table class="stocks-table">
-                    <thead><tr><th style="text-align:left; padding:8px; color:#94a3b8; font-size:0.72rem;">MONEDA</th>${headers}</tr></thead>
+                    <thead><tr><th style="text-align:left; padding:8px; color:#94a3b8; font-size:0.72rem;">${firstColLabel || 'MONEDA'}</th>${headers}</tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
             `;
+        }
+
+        function renderCyclePhaseMatrix() {
+            renderPhaseMatrix('cyclePhaseMatrix', Object.keys(CG_IDS), TIMEFRAME_ORDER, TIMEFRAME_LABELS, (sym, tf) => {
+                const cfg = TIMEFRAME_CONFIGS[tf];
+                return phaseFromSeries(cfg.source === 'daily' ? priceHistorySeries[sym] : priceHistoryHourly[sym], cfg);
+            });
         }
 
         // ============== RANGOS DE PRECIO (SOPORTE / MIDPOINT / RESISTENCIA) ==============
@@ -1304,7 +1436,6 @@
         // (eso ya lo hace computeCryptoAnalysis con range24h/rangeWeek). Diario sale del histórico
         // horario (~48h); Semanal/Mensual del histórico diario de 30d — mismos datos que ya se piden,
         // sin fetch nuevo.
-        let selectedRangeSym = null;
 
         function nextUtcClose(kind) {
             const now = new Date();
@@ -1336,7 +1467,8 @@
             };
         }
 
-        function priceRangeBlockHTML(title, kind, r) {
+        function priceRangeBlockHTML(title, kind, r, fmt) {
+            fmt = fmt || formatUsd;
             const closeLabel = formatUtcClose(nextUtcClose(kind));
             const header = `
                 <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
@@ -1349,73 +1481,104 @@
             return `
                 <div style="margin-bottom:16px;">
                     ${header}
-                    ${rangeBarHTML(r.lo, r.hi, r.price)}
+                    ${rangeBarHTML(r.lo, r.hi, r.price, fmt)}
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:6px;">
                         <div style="background:rgba(239,68,68,0.1); border-radius:8px; padding:8px; text-align:center;">
                             <div style="color:#94a3b8; font-size:0.6rem; font-weight:700;">SOPORTE</div>
-                            <div style="color:#ef4444; font-weight:700; font-size:0.85rem;">${formatUsd(r.lo)}</div>
+                            <div style="color:#ef4444; font-weight:700; font-size:0.85rem;">${fmt(r.lo)}</div>
                         </div>
                         <div style="background:rgba(148,163,184,0.1); border-radius:8px; padding:8px; text-align:center;">
                             <div style="color:#94a3b8; font-size:0.6rem; font-weight:700;">MIDPOINT</div>
-                            <div style="color:#e2e8f0; font-weight:700; font-size:0.85rem;">${formatUsd(r.mid)}</div>
+                            <div style="color:#e2e8f0; font-weight:700; font-size:0.85rem;">${fmt(r.mid)}</div>
                         </div>
                         <div style="background:rgba(34,197,94,0.1); border-radius:8px; padding:8px; text-align:center;">
                             <div style="color:#94a3b8; font-size:0.6rem; font-weight:700;">RESISTENCIA</div>
-                            <div style="color:#22c55e; font-weight:700; font-size:0.85rem;">${formatUsd(r.hi)}</div>
+                            <div style="color:#22c55e; font-weight:700; font-size:0.85rem;">${fmt(r.hi)}</div>
                         </div>
                     </div>
                 </div>`;
         }
 
-        function renderPriceRanges() {
-            const selectEl = document.getElementById('priceRangeSelect');
-            const bodyEl = document.getElementById('priceRangeBody');
+        // Selector + cuerpo de rangos genérico (Crypto/US/FX). state: objeto {sym} mutable por pestaña.
+        function renderRangesGeneric(cfg) {
+            const selectEl = document.getElementById(cfg.selectId);
+            const bodyEl = document.getElementById(cfg.bodyId);
             if (!selectEl || !bodyEl) return;
-
-            const symbols = Object.keys(CG_IDS);
-            if (!selectedRangeSym || !symbols.includes(selectedRangeSym)) selectedRangeSym = symbols[0];
-
+            const symbols = cfg.symbols();
+            if (!symbols.length) {
+                selectEl.innerHTML = '';
+                selectEl.dataset.rendered = '';
+                bodyEl.innerHTML = `<div style="color:#64748b; font-size:0.75rem;">${cfg.emptyMsg || 'Sin datos todavía.'}</div>`;
+                return;
+            }
+            if (!cfg.state.sym || !symbols.includes(cfg.state.sym)) cfg.state.sym = symbols[0];
             const optionsKey = symbols.join(',');
             if (selectEl.dataset.rendered !== optionsKey) {
-                selectEl.innerHTML = symbols.map(s => `<option value="${s}">${s}</option>`).join('');
+                selectEl.innerHTML = symbols.map(s => `<option value="${s}">${cfg.label ? cfg.label(s) : s}</option>`).join('');
                 selectEl.dataset.rendered = optionsKey;
             }
-            selectEl.value = selectedRangeSym;
+            selectEl.value = cfg.state.sym;
+            const ranges = cfg.compute(cfg.state.sym);
+            const fmt = cfg.fmt ? cfg.fmt(cfg.state.sym) : formatUsd;
+            bodyEl.innerHTML = cfg.blocks.map(b => priceRangeBlockHTML(b.title, b.kind, ranges[b.key], fmt)).join('');
+        }
 
-            const ranges = computePriceRanges(selectedRangeSym);
-            bodyEl.innerHTML =
-                priceRangeBlockHTML('DIARIO', 'diario', ranges.diario) +
-                priceRangeBlockHTML('SEMANAL', 'semanal', ranges.semanal) +
-                priceRangeBlockHTML('MENSUAL', 'mensual', ranges.mensual);
+        const rangeSel = { crypto: { sym: null }, fx: { sym: null }, us: { sym: null } };
+
+        const CRYPTO_RANGE_BLOCKS = [
+            { key: 'diario',  title: 'DIARIO',  kind: 'diario' },
+            { key: 'semanal', title: 'SEMANAL', kind: 'semanal' },
+            { key: 'mensual', title: 'MENSUAL', kind: 'mensual' }
+        ];
+
+        function renderPriceRanges() {
+            renderRangesGeneric({
+                selectId: 'priceRangeSelect',
+                bodyId: 'priceRangeBody',
+                state: rangeSel.crypto,
+                symbols: () => Object.keys(CG_IDS),
+                compute: computePriceRanges,
+                blocks: CRYPTO_RANGE_BLOCKS,
+                emptyMsg: 'Sin watchlist.'
+            });
         }
 
         function onPriceRangeSymChange(sym) {
-            selectedRangeSym = sym;
+            rangeSel.crypto.sym = sym;
             renderPriceRanges();
         }
 
-        function buildCryptoAnalysisHTML(sym) {
-            const a = computeCryptoAnalysis(sym);
+        // Tooltip genérico para cualquier serie con análisis real (Crypto/US/FX).
+        // opts: { fmt, phase, disclaimer } — fundamental solo se muestra si la serie lo trae.
+        function buildSeriesAnalysisHTML(a, opts) {
+            opts = opts || {};
+            const fmt = opts.fmt || formatUsd;
             if (a.insufficient) {
-                return `<div class="at-title">${a.name}</div><div class="at-note">Todavía no hay suficiente historial cargado — esperá al próximo refresh (cada 5 min).</div>`;
+                return `<div class="at-title">${a.name}</div><div class="at-note">Todavía no hay suficiente historial cargado — esperá al próximo refresh.</div>`;
             }
-            const phase = classifyCyclePhase(a);
+            const phase = opts.phase !== undefined ? opts.phase : classifyCyclePhase(a);
+            const fundamental = (a.marketCap != null || a.vol24hUsd != null) ? `
+                <div class="at-section">Fundamental</div>
+                <div class="at-row"><span>Market cap: <b>${formatCompactUsd(a.marketCap)}</b></span><span>Vol 24h: <b>${formatCompactUsd(a.vol24hUsd)}</b></span></div>` : '';
             return `
-                <div class="at-title">${a.name} (${a.sym}) — ${formatUsd(a.price)}</div>
+                <div class="at-title">${a.name} (${a.sym}) — ${fmt(a.price)}</div>
                 <div class="at-row"><span>24h: ${trendBadgeHTML(a.dailyTrend)}</span><span>Semana: ${trendBadgeHTML(a.weeklyTrend)}</span></div>
                 <div class="at-row"><span>Fase del movimiento: ${cyclePhaseBadgeHTML(phase)}</span></div>
                 <div class="at-section">Zona próximas 24h (suelo → techo)</div>
-                ${rangeBarHTML(a.floor24h, a.ceil24h, a.price)}
+                ${rangeBarHTML(a.floor24h, a.ceil24h, a.price, fmt)}
                 <div class="at-section">Zona próxima semana (suelo → techo)</div>
-                ${rangeBarHTML(a.floorWeek, a.ceilWeek, a.price)}
-                <div class="at-line"><b>Rango probable 24h:</b> ${a.range24h ? formatUsd(a.range24h.lo) + ' — ' + formatUsd(a.range24h.hi) : 'sin dato aún'}</div>
-                <div class="at-line"><b>Rango probable semana:</b> ${a.rangeWeek ? formatUsd(a.rangeWeek.lo) + ' — ' + formatUsd(a.rangeWeek.hi) : 'sin dato aún'}</div>
+                ${rangeBarHTML(a.floorWeek, a.ceilWeek, a.price, fmt)}
+                <div class="at-line"><b>Rango probable 24h:</b> ${a.range24h ? fmt(a.range24h.lo) + ' — ' + fmt(a.range24h.hi) : 'sin dato aún'}</div>
+                <div class="at-line"><b>Rango probable semana:</b> ${a.rangeWeek ? fmt(a.rangeWeek.lo) + ' — ' + fmt(a.rangeWeek.hi) : 'sin dato aún'}</div>
                 <div class="at-line" style="margin-top:4px;"><b>Lectura:</b> ${a.breakoutLabel}.</div>
-                <div class="at-note">Vigilá: si el precio se acerca a ${formatUsd(a.floor24h)} sin rebotar, cuidado con más caída. Si supera ${formatUsd(a.ceil24h)} con fuerza, podría seguir subiendo.</div>
-                <div class="at-section">Fundamental</div>
-                <div class="at-row"><span>Market cap: <b>${formatCompactUsd(a.marketCap)}</b></span><span>Vol 24h: <b>${formatCompactUsd(a.vol24hUsd)}</b></span></div>
-                <div class="at-disclaimer">Lectura estadística simple de los últimos 30 días (no es un gráfico de TradingView ni asesoría financiera). La fase del movimiento es una heurística de posición-en-rango + tendencia, no una señal certera.</div>
+                <div class="at-note">Vigilá: si el precio se acerca a ${fmt(a.floor24h)} sin rebotar, cuidado con más caída. Si supera ${fmt(a.ceil24h)} con fuerza, podría seguir subiendo.</div>
+                ${fundamental}
+                <div class="at-disclaimer">${opts.disclaimer || 'Lectura estadística simple de los últimos 30 días (no es un gráfico de TradingView ni asesoría financiera). La fase del movimiento es una heurística de posición-en-rango + tendencia, no una señal certera.'}</div>
             `;
+        }
+
+        function buildCryptoAnalysisHTML(sym) {
+            return buildSeriesAnalysisHTML(computeCryptoAnalysis(sym), {});
         }
 
         function buildStaticAnalysisHTML(name, changeStr, up) {
@@ -1423,7 +1586,7 @@
                 <div class="at-title">${name}</div>
                 <div class="at-row"><span>Hoy: ${trendBadgeHTML(up ? 'subida' : 'bajada')}</span><span style="color:${up ? '#22c55e' : '#ef4444'}; font-weight:700;">${changeStr}</span></div>
                 <div class="at-note">Dato demo — sin serie histórica real conectada todavía, no se puede calcular suelo/techo ni rango probable de verdad.</div>
-                <div class="at-disclaimer">Conectá una API real (Finnhub, etc. — ver CLAUDE.md) para habilitar este análisis acá.</div>
+                <div class="at-disclaimer">Pegá tu API key de Twelve Data en el encabezado de la pestaña US para habilitar este análisis acá.</div>
             `;
         }
 
@@ -1466,6 +1629,383 @@
             document.getElementById('analysisTooltip').style.display = 'none';
         }
 
+        // ============== FX MARKETS — Frankfurter/BCE (keyless, 1 sola llamada por refresh) ==============
+        // Tasas de referencia del BCE (vía api.frankfurter.dev, CORS `*` confirmado). ECB publica
+        // 1 vez al día (~16:00 CET) — sin intradía, por eso la matriz de fases va Mensual/Semanal/
+        // Diario (sin 6H) y los rangos Semanal/Mensual (un rango "Diario" sería un solo punto).
+        // Cotización: base=USD devuelve "por 1 USD" — EUR/GBP/AUD se invierten (1/rate) para quedar
+        // en convención de mercado (EUR/USD ≈ 1.1x, no 0.8x); el resto (USD/JPY, USD/MXN…) ya vienen directos.
+        const FX_PAIRS = {
+            EUR: { pair: 'EUR/USD', invert: true },
+            GBP: { pair: 'GBP/USD', invert: true },
+            AUD: { pair: 'AUD/USD', invert: true },
+            JPY: { pair: 'USD/JPY', invert: false },
+            CHF: { pair: 'USD/CHF', invert: false },
+            CAD: { pair: 'USD/CAD', invert: false },
+            MXN: { pair: 'USD/MXN', invert: false },
+            BRL: { pair: 'USD/BRL', invert: false }
+        };
+        // Umbrales a escala FX (los de crypto ~1%/3% diario/semanal dejarían todo "lateral")
+        const FX_TF_CONFIGS = {
+            mensual: { trendLookback: 29, confirmLookback: 7, trendThresh: 3,    confirmThresh: 1,    posWindow: 30 },
+            semanal: { trendLookback: 7,  confirmLookback: 1, trendThresh: 1,    confirmThresh: 0.3,  posWindow: 8  },
+            diario:  { trendLookback: 1,  confirmLookback: 1, trendThresh: 0.15, confirmThresh: 0.05, posWindow: 5  }
+        };
+        const FX_TF_ORDER = ['mensual', 'semanal', 'diario'];
+        const FX_TF_LABELS = { mensual: 'Mensual', semanal: 'Semanal', diario: 'Diario' };
+
+        let fxData = {};        // code -> { pair, price, change, vol30d }
+        let fxHistorySeries = {}; // code -> [tasas diarias mostradas en convención de mercado, ~30d]
+        let fxLive = false;
+        let fxLastDate = null;
+
+        function formatRate(v) {
+            if (v === null || v === undefined) return '—';
+            return v.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+        }
+        const formatNum = v => (v === null || v === undefined) ? '—' : v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        const usFmtFor = sym => sym.includes('/') ? formatUsd : formatNum;
+
+        async function fetchFxLive() {
+            const statusEl = document.getElementById('fxLiveStatus');
+            try {
+                const to = new Date();
+                const from = new Date(to.getTime() - 40 * 86400000);
+                const fmtD = d => d.toISOString().slice(0, 10);
+                const url = `https://api.frankfurter.dev/v1/${fmtD(from)}..${fmtD(to)}?base=USD&symbols=${Object.keys(FX_PAIRS).join(',')}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('status ' + res.status);
+                const j = await res.json();
+                // El rango v1 viene envuelto: { amount, base, start_date, end_date, rates: { 'YYYY-MM-DD': {EUR: ..} } }
+                const rates = j.rates || j;
+                const dates = Object.keys(rates).sort();
+                if (!dates.length) throw new Error('empty series');
+                let withData = 0;
+                Object.keys(FX_PAIRS).forEach(code => {
+                    const series = [];
+                    dates.forEach(d => {
+                        const r = rates[d] && rates[d][code];
+                        if (r) series.push(FX_PAIRS[code].invert ? 1 / r : r);
+                    });
+                    if (series.length < 3) { fxHistorySeries[code] = null; return; }
+                    withData++;
+                    fxHistorySeries[code] = series;
+                    const price = series[series.length - 1];
+                    const d1 = series[series.length - 2];
+                    const d7 = series[series.length - 8];
+                    fxData[code] = {
+                        pair: FX_PAIRS[code].pair,
+                        price,
+                        change: d1 ? ((price - d1) / d1) * 100 : 0,
+                        change7d: d7 ? ((price - d7) / d7) * 100 : null,
+                        vol30d: annualizedVolFromSeries(series, 252)
+                    };
+                });
+                fxLastDate = dates[dates.length - 1];
+                if (!withData) throw new Error('no pair data');
+                fxLive = true;
+                if (statusEl) { statusEl.textContent = 'en vivo · ECB/Frankfurter'; statusEl.style.color = '#22c55e'; }
+            } catch (e) {
+                fxLive = false;
+                if (statusEl) { statusEl.textContent = fxLastDate ? 'sin conexión · mostrando último dato' : 'sin conexión'; statusEl.style.color = '#ef4444'; }
+                console.error('fetchFxLive failed', e);
+            }
+        }
+
+        function renderFxPrices() {
+            const container = document.getElementById('fxPrices');
+            if (!container) return;
+            container.innerHTML = Object.keys(FX_PAIRS).map(code => {
+                const t = fxData[code];
+                const pair = FX_PAIRS[code].pair;
+                if (!t) return `
+                <div class="index-card" style="border-left: 4px solid #334155;">
+                    <div class="name">${pair}</div>
+                    <div class="value">—</div>
+                    <div class="change" style="color:#64748b;">cargando…</div>
+                </div>`;
+                const hist = fxHistorySeries[code];
+                const phase = phaseFromSeries(hist, FX_TF_CONFIGS.semanal);
+                const phaseColor = CYCLE_PHASES[phase]?.color || '#334155';
+                const up = t.change >= 0;
+                return `
+                <div class="index-card" style="border-left: 4px solid ${phaseColor};" onmouseenter="showFxAnalysis(event,'${code}')" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
+                    <div class="name">${pair}</div>
+                    <div class="value">${formatRate(t.price)}</div>
+                    <div class="change ${up ? 'up' : 'down'}">${up ? '+' : ''}${t.change.toFixed(2)}%</div>
+                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 6px;">Vol 30d: ${t.vol30d !== null ? (t.vol30d * 100).toFixed(1) + '%' : '—'}</div>
+                    <div style="margin-top: 6px;">${cyclePhaseBadgeHTML(phase)}</div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function renderFxHeatmap() {
+            const tokens = Object.keys(FX_PAIRS).filter(c => fxHistorySeries[c] && fxHistorySeries[c].length >= 5);
+            const el = document.getElementById('fxHeatmap');
+            if (!el) return;
+            if (tokens.length < 2) { el.innerHTML = `<div style="color:#64748b; font-size:0.75rem;">Sin datos todavía — el primer fetch llega al abrir el dashboard.</div>`; return; }
+            renderHeatmapGrid('fxHeatmap', tokens, (a, b) => a === b ? 1 : pearsonCorr(fxHistorySeries[a], fxHistorySeries[b]));
+        }
+
+        function renderFxPhaseMatrix() {
+            renderPhaseMatrix('fxPhaseMatrix', Object.keys(FX_PAIRS).filter(c => fxHistorySeries[c]), FX_TF_ORDER, FX_TF_LABELS,
+                (sym, tf) => phaseFromSeries(fxHistorySeries[sym], FX_TF_CONFIGS[tf]));
+        }
+
+        const FX_RANGE_BLOCKS = [
+            { key: 'semanal', title: 'SEMANAL', kind: 'semanal' },
+            { key: 'mensual', title: 'MENSUAL', kind: 'mensual' }
+        ];
+
+        function renderFxRanges() {
+            renderRangesGeneric({
+                selectId: 'fxRangeSelect',
+                bodyId: 'fxRangeBody',
+                state: rangeSel.fx,
+                symbols: () => Object.keys(FX_PAIRS).filter(c => fxHistorySeries[c]),
+                compute: code => ({
+                    semanal: priceRangeFromSeries(fxHistorySeries[code], 7),
+                    mensual: priceRangeFromSeries(fxHistorySeries[code], 30)
+                }),
+                blocks: FX_RANGE_BLOCKS,
+                fmt: () => formatRate,
+                label: code => FX_PAIRS[code].pair,
+                emptyMsg: 'Sin datos de Frankfurter todavía.'
+            });
+        }
+
+        function onFxRangeSymChange(code) {
+            rangeSel.fx.sym = code;
+            renderFxRanges();
+        }
+
+        function buildFxAnalysisHTML(code) {
+            const cfgPair = FX_PAIRS[code];
+            if (!cfgPair) return `<div class="at-title">${code}</div><div class="at-note">Par FX desconocido.</div>`;
+            const t = fxData[code];
+            const hist = fxHistorySeries[code];
+            const a = buildAnalysisFromSeries(code, cfgPair.pair, t ? t.price : null, hist, t ? t.vol30d : null, { dailyThresh: 0.15, weeklyThresh: 1, periodsPerYear: 252 });
+            return buildSeriesAnalysisHTML(a, {
+                fmt: formatRate,
+                phase: phaseFromSeries(hist, FX_TF_CONFIGS.semanal),
+                disclaimer: 'Tipo de cambio de referencia del BCE vía Frankfurter — se publica ~16:00 CET (sin intradía). Lectura estadística simple de los últimos 30 días, no asesoría financiera.'
+            });
+        }
+
+        function showFxAnalysis(evt, code) { showAnalysis(evt, () => buildFxAnalysisHTML(code)); }
+
+        function renderFX() {
+            renderFxPrices();
+            renderFxHeatmap();
+            renderFxPhaseMatrix();
+            renderFxRanges();
+            const el = document.getElementById('lastUpdateFx');
+            if (el) el.textContent = fxLastDate ? new Date(fxLastDate + 'T12:00:00Z').toLocaleDateString('es-ES') : '—';
+        }
+
+        // ============== US MARKETS EN VIVO — Twelve Data (key en localStorage) ==============
+        // Plan gratis: 800 créditos/día, 8/min. Presupuesto: 12 símbolos × 2 llamadas (diario 30d +
+        // horario 60min) = 24 créditos por ciclo, refresco cada 1h → ~576/día. Chunks de 6 con pausa
+        // de 61s para respetar el límite por minuto. Los símbolos que el plan no cubra (o sin key)
+        // se quedan en su dato demo con tooltip honesto — nunca se inventa precio.
+        const TD_KEY_KEY = 'suitboard_td_key';
+        const US_CROSS = [
+            { sym: 'SPX',      name: 'S&P 500',              alts: ['SPX', 'SP500'] },
+            { sym: 'DJI',      name: 'Dow Jones',            alts: ['DJI', 'DJIA'] },
+            { sym: 'IXIC',     name: 'Nasdaq',               alts: ['IXIC', 'COMP'] },
+            { sym: 'RUT',      name: 'Russell 2000',         alts: ['RUT'] },
+            { sym: 'VIX',      name: 'Volatility (VIX)',     alts: ['VIX'] },
+            { sym: 'NDX',      name: 'Nasdaq 100',           alts: ['NDX'] },
+            { sym: 'SOX',      name: 'Philadelphia Semi',    alts: ['SOX'] },
+            { sym: 'SPY',      name: 'SPDR S&P 500 (ETF)',   alts: ['SPY'] },
+            { sym: 'QQQ',      name: 'Invesco Nasdaq (ETF)', alts: ['QQQ'] },
+            { sym: 'IWM',      name: 'iShares Russell (ETF)',alts: ['IWM'] },
+            { sym: 'XAU/USD',  name: 'Gold (spot)',          alts: ['XAU/USD'] },
+            { sym: 'WTI',      name: 'Crude Oil WTI',        alts: ['WTI', 'CL'] }
+        ];
+        const US_TF_CONFIGS = {
+            mensual: { source: 'daily',  trendLookback: 29, confirmLookback: 7, trendThresh: 4,    confirmThresh: 1.5,  posWindow: 30 },
+            semanal: { source: 'daily',  trendLookback: 7,  confirmLookback: 1, trendThresh: 1.5,  confirmThresh: 0.5,  posWindow: 8  },
+            diario:  { source: 'hourly', trendLookback: 24, confirmLookback: 6, trendThresh: 0.5,  confirmThresh: 0.2,  posWindow: 48 },
+            h6:      { source: 'hourly', trendLookback: 6,  confirmLookback: 1, trendThresh: 0.25, confirmThresh: 0.08, posWindow: 12 }
+        };
+        const US_TF_ORDER = ['mensual', 'semanal', 'diario', 'h6'];
+
+        let tdKey = (() => { try { return localStorage.getItem(TD_KEY_KEY) || ''; } catch (e) { return ''; } })();
+        let usHistory = {};   // sym -> [cierres diarios ~30d]
+        let usHourly = {};    // sym -> [cierres horarios ~50 barras]
+        let usLastFetch = 0;  // timestamp del último ciclo completo (throttle 1h)
+        let usFetchedCount = 0;
+
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        function setUsStatus(text, color) {
+            const el = document.getElementById('usLiveStatus');
+            if (el) { el.textContent = text; el.style.color = color || '#64748b'; }
+        }
+
+        function saveTdKey(v) {
+            tdKey = (v || '').trim();
+            try {
+                if (tdKey) localStorage.setItem(TD_KEY_KEY, tdKey); else localStorage.removeItem(TD_KEY_KEY);
+            } catch (e) {}
+            usLastFetch = 0;
+            usFetchedCount = 0;
+            if (tdKey) {
+                setUsStatus('clave guardada — cargando…', '#eab308');
+                maybeFetchUS();
+            } else {
+                setUsStatus('sin key — demo', '#64748b');
+            }
+        }
+
+        function maybeFetchUS() {
+            if (!tdKey) {
+                setUsStatus('sin key — datos demo', '#64748b');
+                renderUsHeatmap();
+                renderUsPhaseMatrix();
+                renderUsRanges();
+                return;
+            }
+            const now = Date.now();
+            if (now - usLastFetch < 60 * 60 * 1000) return; // 1h entre ciclos
+            usLastFetch = now;
+            fetchUSCross();
+        }
+
+        function usCrossTokens() {
+            return US_CROSS.filter(c => usHistory[c.sym] && usHistory[c.sym].length >= 8).map(c => c.sym);
+        }
+
+        function usQuote(sym) {
+            const daily = usHistory[sym];
+            if (!daily || daily.length < 2) return null;
+            const hourly = usHourly[sym];
+            const price = hourly && hourly.length ? hourly[hourly.length - 1] : daily[daily.length - 1];
+            const prevClose = daily[daily.length - 2];
+            return { price, change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0 };
+        }
+
+        function usNameOf(sym) {
+            return (US_CROSS.find(c => c.sym === sym) || {}).name
+                || (usIndices.find(i => i.sym === sym) || {}).name
+                || (topETFs.find(e => e.symbol === sym) || {}).name
+                || (commodities.find(c => c.symbol === sym) || {}).name
+                || sym;
+        }
+
+        async function runTdJob(sym, kind) {
+            const interval = kind === 'day' ? '1day' : '60min';
+            const outputsize = kind === 'day' ? 32 : 50;
+            const cfg = US_CROSS.find(c => c.sym === sym);
+            const candidates = cfg ? cfg.alts : [sym];
+            for (const s of candidates) {
+                try {
+                    const r = await fetch(`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(s)}&interval=${interval}&outputsize=${outputsize}&apikey=${encodeURIComponent(tdKey)}`);
+                    if (!r.ok) continue;
+                    const j = await r.json();
+                    if (j.status === 'error' || !j.values || !j.values.length) continue;
+                    const closes = j.values.map(v => parseFloat(v.close)).reverse().filter(v => !isNaN(v));
+                    if (closes.length < 3) continue;
+                    if (kind === 'day') usHistory[sym] = closes; else usHourly[sym] = closes;
+                    return true;
+                } catch (e) { /* siguiente candidato */ }
+            }
+            console.warn('TD: sin datos para', sym, kind);
+            return false;
+        }
+
+        async function fetchUSCross() {
+            const jobs = [];
+            US_CROSS.forEach(c => {
+                jobs.push({ sym: c.sym, kind: 'day' });
+                jobs.push({ sym: c.sym, kind: 'hour' });
+            });
+            let ok = 0;
+            for (let i = 0; i < jobs.length; i += 6) {
+                const chunk = jobs.slice(i, i + 6);
+                setUsStatus(`cargando Twelve Data… (${i}/${jobs.length})`, '#eab308');
+                const results = await Promise.all(chunk.map(j => runTdJob(j.sym, j.kind).catch(() => false)));
+                ok += results.filter(Boolean).length;
+                renderUSLive();
+                if (i + 6 < jobs.length) await sleep(61000); // plan gratis: 8 créditos/min
+            }
+            usFetchedCount = usCrossTokens().length;
+            renderUSLive();
+            if (usFetchedCount > 0) {
+                setUsStatus(`en vivo · Twelve Data (${usFetchedCount}/${US_CROSS.length} activos)`, '#22c55e');
+            } else {
+                setUsStatus(ok > 0 ? 'key sin acceso a estos símbolos — demo' : 'key inválida o sin crédito — demo', '#ef4444');
+            }
+        }
+
+        function renderUsHeatmap() {
+            const tokens = usCrossTokens();
+            const el = document.getElementById('usHeatmap');
+            if (!el) return;
+            if (tokens.length < 2) {
+                el.innerHTML = `<div style="color:#64748b; font-size:0.75rem;">Sin datos — pegá tu API key de Twelve Data en el encabezado de esta pestaña (o esperá al próximo ciclo de 1 h).</div>`;
+                return;
+            }
+            renderHeatmapGrid('usHeatmap', tokens, (a, b) => a === b ? 1 : pearsonCorr(usHistory[a], usHistory[b]));
+        }
+
+        function renderUsPhaseMatrix() {
+            renderPhaseMatrix('usPhaseMatrix', usCrossTokens(), US_TF_ORDER, TIMEFRAME_LABELS, (sym, tf) => {
+                const cfg = US_TF_CONFIGS[tf];
+                return phaseFromSeries(cfg.source === 'hourly' ? usHourly[sym] : usHistory[sym], cfg);
+            }, 'ACTIVO');
+        }
+
+        const US_RANGE_BLOCKS = CRYPTO_RANGE_BLOCKS;
+
+        function renderUsRanges() {
+            renderRangesGeneric({
+                selectId: 'usRangeSelect',
+                bodyId: 'usRangeBody',
+                state: rangeSel.us,
+                symbols: usCrossTokens,
+                compute: sym => ({
+                    diario: priceRangeFromSeries(usHourly[sym], 24),
+                    semanal: priceRangeFromSeries(usHistory[sym], 7),
+                    mensual: priceRangeFromSeries(usHistory[sym], 30)
+                }),
+                blocks: US_RANGE_BLOCKS,
+                fmt: usFmtFor,
+                emptyMsg: 'Sin datos de Twelve Data todavía — pegá la API key en el encabezado de esta pestaña.'
+            });
+        }
+
+        function onUsRangeSymChange(sym) {
+            rangeSel.us.sym = sym;
+            renderUsRanges();
+        }
+
+        function buildUsAnalysisHTML(sym) {
+            const hist = usHistory[sym];
+            const q = usQuote(sym);
+            const price = q ? q.price : (hist ? hist[hist.length - 1] : null);
+            const a = buildAnalysisFromSeries(sym, usNameOf(sym), price, hist, annualizedVolFromSeries(hist, 252), { dailyThresh: 0.5, weeklyThresh: 1.5, periodsPerYear: 252 });
+            return buildSeriesAnalysisHTML(a, {
+                fmt: usFmtFor(sym),
+                phase: classifyCyclePhase(a),
+                disclaimer: 'Lectura estadística simple de los últimos 30 días de Twelve Data (no asesoría financiera). La fase del movimiento es una heurística de posición-en-rango + tendencia, no una señal certera.'
+            });
+        }
+
+        function showUsAnalysis(evt, sym) { showAnalysis(evt, () => buildUsAnalysisHTML(sym)); }
+
+        function renderUSLive() {
+            renderUSIndices();
+            renderTopETFs();
+            renderCommodities();
+            renderUsHeatmap();
+            renderUsPhaseMatrix();
+            renderUsRanges();
+            renderCrossCorrelation();
+        }
+
         // ============== RENDER FUNCTIONS ==============
 
         function renderCryptoPrices() {
@@ -1490,17 +2030,10 @@
             }).join('');
         }
 
-        function renderCryptoHeatmap() {
-            const container = document.getElementById('cryptoHeatmap');
-            const tokens = Object.keys(CG_IDS);
-
-            function corrOf(a, b) {
-                if (a === b) return 1.00;
-                if (a === 'BTC') return corrVsBTC[b] ?? null;
-                if (b === 'BTC') return corrVsBTC[a] ?? null;
-                return corrHeatmap[a + '-' + b] ?? corrHeatmap[b + '-' + a] ?? null;
-            }
-
+        // Grilla de heatmap genérica (Crypto/US/FX) — corrOf(a, b) devuelve 1..-1 o null.
+        function renderHeatmapGrid(containerId, tokens, corrOf) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
             let html = `<div style="overflow-x: auto;"><div style="display: grid; grid-template-columns: 50px repeat(${tokens.length}, 55px); gap: 3px; min-width: fit-content;">`;
             html += '<div></div>';
             tokens.forEach(t => html += `<div style="text-align: center; color: #06b6d4; font-size: 0.75rem; padding: 5px;">${t}</div>`);
@@ -1509,13 +2042,22 @@
                 html += `<div style="text-align: right; color: #8b5cf6; font-size: 0.75rem; padding: 5px; display: flex; align-items: center; justify-content: flex-end;">${row}</div>`;
                 tokens.forEach(col => {
                     const val = corrOf(row, col);
-                    const color = val === null ? 'rgba(100,116,139,0.2)' : val >= 0.7 ? 'rgba(6, 182, 212, 0.85)' : val >= 0.5 ? 'rgba(34, 197, 94, 0.75)' : val >= 0.3 ? 'rgba(234, 179, 8, 0.7)' : 'rgba(239, 68, 68, 0.6)';
-                    const textColor = val !== null && val > 0.5 ? '#0f172a' : '#f1f5f9';
-                    html += `<div style="background: ${color}; color: ${textColor}; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; height: 40px;">${val !== null ? val.toFixed(2) : '—'}</div>`;
+                    const color = val === null || val === undefined ? 'rgba(100,116,139,0.2)' : val >= 0.7 ? 'rgba(6, 182, 212, 0.85)' : val >= 0.5 ? 'rgba(34, 197, 94, 0.75)' : val >= 0.3 ? 'rgba(234, 179, 8, 0.7)' : 'rgba(239, 68, 68, 0.6)';
+                    const textColor = val !== null && val !== undefined && val > 0.5 ? '#0f172a' : '#f1f5f9';
+                    html += `<div style="background: ${color}; color: ${textColor}; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; height: 40px;">${val !== null && val !== undefined ? val.toFixed(2) : '—'}</div>`;
                 });
             });
             html += '</div></div>';
             container.innerHTML = html;
+        }
+
+        function renderCryptoHeatmap() {
+            renderHeatmapGrid('cryptoHeatmap', Object.keys(CG_IDS), (a, b) => {
+                if (a === b) return 1.00;
+                if (a === 'BTC') return corrVsBTC[b] ?? null;
+                if (b === 'BTC') return corrVsBTC[a] ?? null;
+                return corrHeatmap[a + '-' + b] ?? corrHeatmap[b + '-' + a] ?? null;
+            });
         }
 
         function renderCryptoPools() {
@@ -1532,27 +2074,45 @@
 
         function renderUSIndices() {
             const container = document.getElementById('usIndices');
-            container.innerHTML = usIndices.map(idx => `
-                <div class="index-card" onmouseenter="showStaticAnalysis(event,'${idx.name}','${idx.change}',${idx.up})" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
-                    <div class="name">${idx.name}</div>
-                    <div class="value">${idx.value}</div>
-                    <div class="change ${idx.up ? 'up' : 'down'}">${idx.change}</div>
+            container.innerHTML = usIndices.map(idx => {
+                const q = usQuote(idx.sym);
+                const value = q ? formatNum(q.price) : idx.value;
+                const up = q ? q.change >= 0 : idx.up;
+                const change = q ? (q.change >= 0 ? '+' : '') + q.change.toFixed(2) + '%' : idx.change;
+                const hover = q
+                    ? `showUsAnalysis(event,'${idx.sym}')`
+                    : `showStaticAnalysis(event,'${idx.name}','${idx.change}',${idx.up})`;
+                return `
+                <div class="index-card" onmouseenter="${hover}" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
+                    <div class="name">${idx.name}${q ? '' : ' <span style="color:#64748b; font-size:0.6rem;">demo</span>'}</div>
+                    <div class="value">${value}</div>
+                    <div class="change ${up ? 'up' : 'down'}">${change}</div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function renderTopETFs() {
             const tbody = document.getElementById('topETFs');
-            tbody.innerHTML = topETFs.map(etf => `
-                <tr onmouseenter="showStaticAnalysis(event,'${etf.name} (${etf.symbol})','${etf.change}',${etf.up})" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
+            tbody.innerHTML = topETFs.map(etf => {
+                const q = usQuote(etf.symbol);
+                const price = q ? formatUsd(q.price) : etf.price;
+                const up = q ? q.change >= 0 : etf.up;
+                const change = q ? (q.change >= 0 ? '+' : '') + q.change.toFixed(2) + '%' : etf.change;
+                const hover = q
+                    ? `showUsAnalysis(event,'${etf.symbol}')`
+                    : `showStaticAnalysis(event,'${etf.name} (${etf.symbol})','${etf.change}',${etf.up})`;
+                return `
+                <tr onmouseenter="${hover}" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
                     <td>
                         <span class="stock-symbol">${etf.symbol}</span>
                         <div class="stock-name">${etf.name}</div>
                     </td>
-                    <td class="stock-price">${etf.price}</td>
-                    <td class="stock-change ${etf.up ? 'up' : 'down'}">${etf.change}</td>
+                    <td class="stock-price">${price}</td>
+                    <td class="stock-change ${up ? 'up' : 'down'}">${change}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function renderTopStocks() {
@@ -1571,21 +2131,30 @@
 
         function renderCommodities() {
             const container = document.getElementById('topCommodities');
-            container.innerHTML = commodities.map(c => `
-                <div class="commodity-card" onmouseenter="showStaticAnalysis(event,'${c.name}','${c.change}',${c.change.startsWith('+')})" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
+            container.innerHTML = commodities.map(c => {
+                const q = usQuote(c.symbol);
+                const price = q ? formatUsd(q.price) : c.price;
+                const change = q ? (q.change >= 0 ? '+' : '') + q.change.toFixed(2) + '%' : c.change;
+                const up = q ? q.change >= 0 : c.change.startsWith('+');
+                const hover = q
+                    ? `showUsAnalysis(event,'${c.symbol}')`
+                    : `showStaticAnalysis(event,'${c.name}','${c.change}',${c.change.startsWith('+')})`;
+                return `
+                <div class="commodity-card" onmouseenter="${hover}" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
                     <div class="commodity-info">
                         <div class="commodity-icon ${c.type}">${c.icon}</div>
                         <div>
                             <div class="commodity-name">${c.name}</div>
-                            <div class="commodity-symbol">${c.symbol}</div>
+                            <div class="commodity-symbol">${c.symbol}${q ? '' : ' · demo'}</div>
                         </div>
                     </div>
                     <div class="commodity-data">
-                        <div class="commodity-price">${c.price}</div>
-                        <div class="commodity-change ${c.change.startsWith('+') ? 'up' : 'down'}">${c.change}</div>
+                        <div class="commodity-price">${price}</div>
+                        <div class="commodity-change ${up ? 'up' : 'down'}">${change}</div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function renderSectors() {
@@ -1596,6 +2165,52 @@
                     <div class="change ${s.up ? 'up' : 'down'}" style="font-size: 1.2rem; font-weight: 600;">${s.change}</div>
                 </div>
             `).join('');
+        }
+
+        // Matriz BTC/SOL/SPX/GOLD: con historia crypto (CoinGecko) + US (Twelve Data) se calcula
+        // Pearson 30d real; si falta alguna serie se cae a la tabla de referencia demo de siempre.
+        function renderCrossCorrelation() {
+            const container = document.getElementById('crossCorrelation');
+            if (!container) return;
+            const statusEl = document.getElementById('crossCorrStatus');
+            const noteEl = document.getElementById('crossCorrNote');
+            const assets = ['BTC', 'SOL', 'SPX', 'GOLD'];
+            const seriesOf = {
+                BTC: priceHistorySeries.BTC,
+                SOL: priceHistorySeries.SOL,
+                SPX: usHistory.SPX,
+                GOLD: usHistory['XAU/USD']
+            };
+            const live = assets.every(a => seriesOf[a] && seriesOf[a].length >= 5);
+            const valOf = (r, c) => {
+                if (r === c) return 1;
+                if (live) {
+                    const v = pearsonCorr(seriesOf[r], seriesOf[c]);
+                    if (v !== null) return v;
+                }
+                return correlationMatrix[r][c];
+            };
+            let html = '<div style="overflow-x: auto;"><div style="display: grid; grid-template-columns: 60px repeat(4, 80px); gap: 4px; min-width: fit-content;">';
+            html += '<div></div>';
+            assets.forEach(a => html += `<div style="text-align: center; color: #06b6d4; font-size: 0.8rem; padding: 8px;">${a}</div>`);
+            assets.forEach(row => {
+                html += `<div style="text-align: right; color: #8b5cf6; font-size: 0.8rem; padding: 8px; display: flex; align-items: center; justify-content: flex-end;">${row}</div>`;
+                assets.forEach(col => {
+                    const val = valOf(row, col);
+                    const color = val >= 0.5 ? 'rgba(34, 197, 94, 0.8)' : val >= 0 ? 'rgba(234, 179, 8, 0.7)' : 'rgba(239, 68, 68, 0.7)';
+                    html += `<div style="background: ${color}; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; height: 50px;">${val.toFixed(2)}</div>`;
+                });
+            });
+            html += '</div></div>';
+            container.innerHTML = html;
+            if (statusEl) {
+                statusEl.textContent = live ? 'en vivo · correlación 30d real' : 'valores de referencia (demo)';
+                statusEl.style.color = live ? '#22c55e' : '#64748b';
+            }
+            if (noteEl) {
+                noteEl.style.display = live ? 'block' : 'none';
+                noteEl.textContent = 'Correlación por rendimientos de las últimas ~30 lecturas: crypto opera 7 días por semana y los índices solo días hábiles — las fechas no se alinean al día, es una aproximación.';
+            }
         }
 
         function renderCombined() {
@@ -1612,22 +2227,7 @@
                 <div class="commodity-card"><div class="commodity-info"><div class="commodity-icon oil">⛽</div><div><div class="commodity-name">Oil WTI</div></div></div><div class="commodity-data"><div class="commodity-price">$100.23</div><div class="commodity-change up">+2.18%</div></div></div>
             `;
 
-            // Cross correlation
-            const container = document.getElementById('crossCorrelation');
-            const assets = ['BTC', 'SOL', 'SPX', 'GOLD'];
-            let html = '<div style="overflow-x: auto;"><div style="display: grid; grid-template-columns: 60px repeat(4, 80px); gap: 4px; min-width: fit-content;">';
-            html += '<div></div>';
-            assets.forEach(a => html += `<div style="text-align: center; color: #06b6d4; font-size: 0.8rem; padding: 8px;">${a}</div>`);
-            assets.forEach(row => {
-                html += `<div style="text-align: right; color: #8b5cf6; font-size: 0.8rem; padding: 8px; display: flex; align-items: center; justify-content: flex-end;">${row}</div>`;
-                assets.forEach(col => {
-                    const val = correlationMatrix[row][col];
-                    const color = val >= 0.5 ? 'rgba(34, 197, 94, 0.8)' : val >= 0 ? 'rgba(234, 179, 8, 0.7)' : 'rgba(239, 68, 68, 0.7)';
-                    html += `<div style="background: ${color}; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; height: 50px;">${val.toFixed(2)}</div>`;
-                });
-            });
-            html += '</div></div>';
-            container.innerHTML = html;
+            renderCrossCorrelation();
         }
 
         function newsColor(sentiment) {
@@ -1992,6 +2592,8 @@
             await fetchCryptoLive();
             await maybeRotateWatchlist();
             await fetchPoolsLive();
+            await fetchFxLive();   // 1 llamada chiquita, piggyback del ciclo de 5 min
+            maybeFetchUS();        // no se await: el ciclo de Twelve Data tarda minutos (chunks + pausa 8/min)
             renderCryptoPrices();
             renderCryptoHeatmap();
             renderRotationStatus();
@@ -2001,6 +2603,8 @@
             renderPairSelector();
             autoFillPrices();
             updateCalcResult();
+            renderFX();
+            renderCrossCorrelation();
             document.getElementById('lastUpdateCrypto').textContent = new Date().toLocaleString('es-ES');
         }
 
@@ -2019,9 +2623,13 @@
             renderCommodities();
             renderSectors();
             renderCombined();
+            renderFX();
             renderTickers();
             updateMarketClock();
             setInterval(updateMarketClock, 1000);
+            const tdKeyInput = document.getElementById('tdKeyInput');
+            if (tdKeyInput) tdKeyInput.value = tdKey;
+            setUsStatus(tdKey ? 'clave cargada — en próximo ciclo' : 'sin key — datos demo', tdKey ? '#eab308' : '#64748b');
 
             await refreshCryptoAndRender();
             setInterval(refreshCryptoAndRender, 5 * 60 * 1000); // refresco cada 5 min, la correlación 30d no cambia más rápido que eso
