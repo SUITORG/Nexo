@@ -105,6 +105,32 @@ app.get('/api/config', (req, res) => {
     });
 });
 
+// GET /api/ensure-campanas — ping a CampanasAi (:8000); si no responde, lo arranca
+// detached. La máscara (E · Campañas) lo llama antes de generar/consultar estado.
+// (http y path ya están require'ados arriba/atras en este archivo)
+const { spawn } = require('child_process');
+let _campStarting = false;
+app.get('/api/ensure-campanas', (req, res) => {
+    const ping = () => new Promise(resolve => {
+        const r = http.get('http://127.0.0.1:8000/api/health', { timeout: 2500 }, resp => { resp.resume(); resolve(true); });
+        r.on('error', () => resolve(false));
+        r.on('timeout', () => { r.destroy(); resolve(false); });
+    });
+    ping().then(ok => {
+        if (ok) return res.json({ running: true });
+        if (_campStarting) return res.json({ running: false, starting: true });
+        _campStarting = true;
+        const child = spawn(process.execPath, ['local-server-node.js'], {
+            cwd: path.join(__dirname, 'SuitCampanas'), detached: true, stdio: 'ignore'
+        });
+        child.unref();
+        child.on('error', () => { _campStarting = false; });
+        setTimeout(() => { _campStarting = false; }, 25000);
+        console.log('[ENSURE-CAMPANAS] CampanasAi no responde — arrancando (:8000)…');
+        res.json({ running: false, starting: true });
+    });
+});
+
 // INICIALIZACIÓN SUPABASE ADMIN (v17.0.0)
 const { createClient } = require('@supabase/supabase-js');
 const supabaseAdmin = createClient(

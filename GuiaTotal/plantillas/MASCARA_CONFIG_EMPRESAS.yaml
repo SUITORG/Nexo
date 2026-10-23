@@ -14,8 +14,11 @@ mascara:
   # El agente los pregunta si faltan (≤3 por turno) antes de escribir.
   A_datos_tuyos:
     nomempresa: ""               # nombre comercial
-    tipo_negocio: ""             # p.ej. "Alimentos" + sufijo ",si_galeria"/",no_galeria"
+    tipo_negocio: ""             # "industria[,COMPORTAMIENTO][,si_galeria|,no_galeria]" — comportamiento canónico: MARCA PERSONAL|SERVICIOS|SEGUROS|FINANZAS|ALIMENTOS (gate de features, seg 2); galería siempre al final
                                  # (la máscara lo añade según el checkbox galería)
+                                 # Opciones con comportamiento especial (match por substring):
+                                 # MARCA PERSONAL · SERVICIOS · SEGUROS/FINANZAS ·
+                                 # ALIMENTOS/COMIDA/RESTAURANTE/FOOD (marca Suit.Bite); texto libre también vale
     giro_especifico: ""          # p.ej. "hamburguesas a la parrilla" (alimenta clusters geo)
     color_tema: ""               # "#hex" o vacío = default según giro
     direccion: ""                # cobertura geográfica (ciudad/zona — la piden los clústeres)
