@@ -1,72 +1,29 @@
 {
-  "corrida": "2026-10-12-panel-fase6",
+  "corrida": "2026-10-23-politicas-identidad",
   "modo": "ciclo",
-  "tema": "SuitContractRenew/ — Fase 7 Terminado",
-  "fase": "fin",
+  "tema": "Config_Empresas: politicas_privacidad + politicas_cookies (identidad → modal showPolicies)",
+  "fase": "f5",
   "fases": [
-    {
-      "id": "f1",
-      "label": "Encuadre"
-    },
-    {
-      "id": "f2",
-      "label": "Implementación"
-    },
-    {
-      "id": "f3",
-      "label": "Validación"
-    },
-    {
-      "id": "f4",
-      "label": "Iteración"
-    },
-    {
-      "id": "f5",
-      "label": "Plan sync"
-    },
-    {
-      "id": "f6",
-      "label": "Visto bueno"
-    },
-    {
-      "id": "f7",
-      "label": "Cierre"
-    },
-    {
-      "id": "fin",
-      "label": "✔ Completado"
-    }
+    { "id": "f1", "label": "Encuadre" },
+    { "id": "f2", "label": "Implementación" },
+    { "id": "f3", "label": "Validación" },
+    { "id": "f4", "label": "Iteración" },
+    { "id": "f5", "label": "Plan sync" },
+    { "id": "f6", "label": "Visto bueno" },
+    { "id": "f7", "label": "Cierre" },
+    { "id": "fin", "label": "✓ Completado" }
   ],
   "ideas": [],
   "pendientes": [],
   "artefactos": [],
   "herramientas": [
-    {
-      "nombre": "ciclo",
-      "estado": "ok",
-      "detalle": "Fase 6 ejecutada desde panel"
-    }
+    { "nombre": "ciclo", "estado": "ok", "detalle": "F0-F3 resueltos (contrato raíz, 8 ediciones, PASS 6/6); F4 sin iteración; F5 PLAN-SYNC en curso" }
   ],
   "log": [
-    {
-      "ts": "2026-10-12T17:00:00Z",
-      "fase": "f2",
-      "msg": "main.py alertar + backupDb + interval HORAS_ALERTA"
-    },
-    {
-      "ts": "2026-10-12T17:10:00Z",
-      "fase": "f3",
-      "msg": "smoke: health 200, backup creado, alertar imprime 3 contratos"
-    },
-    {
-      "ts": "2026-10-12T17:15:00Z",
-      "fase": "fin",
-      "msg": "Fase 6 completa — tarjeta F6, orden consumida"
-    },
-    {
-      "ts": "2026-10-12T18:10:43.238Z",
-      "fase": "fin",
-      "msg": "/panel: Fase 7 ejecutada — signup publico + PIN auto + Stripe link + dashboard; smoke 6/6; tarjeta F7"
-    }
+    { "ts": "2026-10-23T00:00:00Z", "fase": "f1", "msg": "20/80: prompt IDENTIDAD (anexo legal) + skills empresa-registro/guia-total + showPolicies + docs + prueba LABARIES + PLAN-SYNC espejo; descartados: form onboarding, rutas SSG /privacidad /cookies, regen INDEX_FUNCIONES" },
+    { "ts": "2026-10-23T00:01:00Z", "fase": "f2", "msg": "F2 en curso: 7 ediciones (prompt, 2 skills, public.js, 2 docs, estado)" },
+    { "ts": "2026-10-23T12:20:00Z", "fase": "f2", "msg": "F2 completo: 8 ediciones (prompt, 2 skills, showPolicies, 2 docs, index.html bump v261023-1200, estado); node --check public.js OK" },
+    { "ts": "2026-10-23T12:35:00Z", "fase": "f3", "msg": "F3 PASS 6/6 → VALIDACION.md 2026-10-23: V1 sintaxis · V2 updateRow LABARIES success · V3 relectura 2699/2409 chars · V4 render LABARIES 4 secciones · V4b fallback EVASOL 3 secciones · V5 ensure-campanas (8000 down→starting→up 8s)" },
+    { "ts": "2026-10-23T12:36:00Z", "fase": "f4", "msg": "F4 sin iteración (6/6 PASS, cero fallas)" }
   ]
 }

@@ -37,25 +37,25 @@
 
 ---
 
-## Ciclo gobernanza BRIEF/LAPVTFU (2026-09-25) � F3
+## Ciclo gobernanza BRIEF/LAPVTFU (2026-09-25) � F3
 
 | # | Check | Resultado |
 |---|-------|-----------|
 | 1 | `node --check backend/brief-sidebar.js` / `backend/core.js` / `scripts/tunel.js` | PASS |
 | 2 | Parse YAML `lapvtfu.yaml`, `brief-engine.yaml`, `registry/skills.yaml` (js-yaml) | PASS |
-| 3 | `clasp push` + `clasp deploy -i AKfycbz... -d` (ADR-028) | PASS � **@19** |
+| 3 | `clasp push` + `clasp deploy -i AKfycbz... -d` (ADR-028) | PASS � **@19** |
 | 4 | `POST action=setNodeBaseUrl` con token + URL cloudflared | PASS `{"success":true}` |
-| 5 | `node scripts/tunel.js` E2E: mata t�nel previo ? URL nueva ? registra en GAS | PASS `owen-logistics-happy-town` ? property |
-| 6 | `GET {t�nel}/api/brief/companies` (sidebar real, GET) | PASS HTTP 200 + empresas |
+| 5 | `node scripts/tunel.js` E2E: mata t�nel previo ? URL nueva ? registra en GAS | PASS `owen-logistics-happy-town` ? property |
+| 6 | `GET {t�nel}/api/brief/companies` (sidebar real, GET) | PASS HTTP 200 + empresas |
 | 7 | `node scripts/generate-index.js` (incluye `setNodeBaseUrl_`, `tunel.js`) | PASS 1566 archivos |
 | 8 | Invariante celda #7 en CONTRATO.md + 2 sub-contratos creados | PASS commit `6511736` |
-| 9 | Sidebar GAS (UI en Sheets) | **PENDIENTE � verificaci�n manual del usuario** |
+| 9 | Sidebar GAS (UI en Sheets) | **PENDIENTE � verificaci�n manual del usuario** |
 
-**Verdict:** PASS (9/10 � el check 9 requiere abrir el sidebar en Sheets).
+**Verdict:** PASS (9/10 � el check 9 requiere abrir el sidebar en Sheets).
 
-**Commits:** `6511736` f0 contrato � `3a803a7` f2 fix-tunel � pendiente f2/skills + f3.
-**Operaci�n:** para levantar el t�nel en el futuro: `node scripts/tunel.js` (auto-registra la URL en GAS).
-**Push a origin:** aplazado � pendiente decisi�n del usuario.
+**Commits:** `6511736` f0 contrato � `3a803a7` f2 fix-tunel � pendiente f2/skills + f3.
+**Operaci�n:** para levantar el t�nel en el futuro: `node scripts/tunel.js` (auto-registra la URL en GAS).
+**Push a origin:** aplazado � pendiente decisi�n del usuario.
 
 ---
 
@@ -125,3 +125,32 @@
 | 6 | Espejo | `syncToSupabase TOPLUXF` + MCP | PASS — `SYNC_COMPLETE` · len=3057 · **slot6_triple_ok=true** (triple con `;` verificado en Supabase) |
 
 **Verdict:** PASS (6/6) — única escritura: slot6 de TOPLUXF (aprobada).
+
+---
+
+## 2026-10-23 — Políticas privacidad/cookies en identidad (ciclo F3) + smoke tarea A (ensure-campanas)
+
+**Scope:** `GuiaTotal/prompts/IDENTIDAD_CORPORATIVA.md` (Anexo legal) · `.agents/skills/empresa-registro/SKILL.md` · `.agents/skills/guia-total/SKILL.md` · `js/modules/public.js` (`showPolicies`) · `index.html` (bump `?v=`) · `GuiaTotal/MANUAL_OPERACION.md` · `Documentacion/02-tablas-campos.md` · escritura GAS LABARIES
+**Contrato:** `CONTRATO.md` (raíz) ✓ · Ronda: 1
+
+| # | Verifica | Comando / acción | Resultado observado | Veredicto |
+|---|----------|------------------|---------------------|-----------|
+| V1 | Sintaxis JS | `node --check js/modules/public.js` | sin salida de error | PASA |
+| V2 | Escritura GAS | POST `action=updateRow` → `Config_Empresas`/LABARIES con `politicas_privacidad` + `politicas_cookies` | `{"success":true}` | PASA |
+| V3 | Persistencia | GET `getAll&id_empresa=LABARIES` | priv_len=2699 · cook_len=2409 · notas de revisión legal presentes · refs LFPDPPP/Reg.art14 correctas | PASA |
+| V4 | Render modal (con campos) | server :3001 → `?co=LABARIES` → click POLÍTICAS | secciones: **1. AVISO DE PRIVACIDAD** (texto completo, pre-wrap) · **2. POLÍTICA DE COOKIES** (texto completo) · 3. TÉRMINOS COMERCIALES · 4. POLÍTICAS PERSONALIZADAS | PASA |
+| V4b | Render fallback (sin campos) | `?co=EVASOL` → POLÍTICAS | 3 secciones (sin cookies): 1. AVISO DE PRIVACIDAD = texto base (91 chars) · 2. TÉRMINOS · 3. PERSONALIZADAS (4180 chars intactos) | PASA |
+| V5 | Tarea A: ensure-campanas | :8000 apagado → `GET /api/ensure-campanas` → espera 8s → `GET :8000` | `HTTP 200 {"running":false,"starting":true}` → 8000 **True** → responde 200 | PASA |
+
+## Evidencia
+- V2-V3: POST/GET contra GAS live (`AKfycbzh…EwN/exec`), respuesta `success:true` y relectura con conteos.
+- V4/V4b: snapshots Chrome DevTools (modal LABARIES 4 secciones con texto legal completo; EVASOL 3 secciones con fallback).
+- V5: `Test-NetConnection` 8000 antes=False / después=True + HEAD 200.
+- Nota: arranque de `server.js` tuvo 1 intento fallido por `EADDRINUSE :3006` (otra instancia previa); segundo intento OK tras liberarse el puerto.
+
+## GAPs (no verificable ahora)
+- Flujo completo de la máscara Sección E en navegador (requiere login DIOS) — solo se validó el endpoint que invoca.
+- Espejo Supabase `Config_Empresas` **no tiene** las 2 columnas nuevas → PLAN-SYNC (F5), nada ejecutado sin aprobación.
+
+## Veredicto global
+**PASA** (6/6) — redacción + escritura + render + fallback + endpoint tarea A.
