@@ -58,7 +58,7 @@ BAJA        → habilitado=FALSE + sync (nunca borrar filas)
 `slogan`, `slogan_empresa`, `mensaje1`, `mensaje2`, `color_tema`, `logo_url` (**aquí vive el brief**, ver §5), `foto_agente`, `url_logo_identidad`, `drive_folder_id`.
 
 ### C. Misión y legales (brief/identidad)
-`mision`, `vision`, `valores`, `impacto`, `politicas`, `origen_politicas`, `infobanco`, `infocuenta`, `infonom`.
+`mision`, `vision`, `valores`, `impacto`, `politicas`, `politicas_privacidad` (aviso de privacidad LFPDPPP), `politicas_cookies` (política de cookies), `origen_politicas`, `infobanco`, `infocuenta`, `infonom`.
 
 ### D. Toggles de módulos (activar/desactivar)
 | Campo | Qué controla (resumen) |

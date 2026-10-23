@@ -43,20 +43,20 @@ app.public = {
         const company = app.data.Config_Empresas.find(c => c.id_empresa === app.state.companyId);
         const content = document.getElementById('policies-content');
         if (content) {
+            const txt = v => (v || '').toString().trim();
+            const priv = txt(company?.politicas_privacidad);
+            const cook = txt(company?.politicas_cookies);
+            let n = 0;
+            const sec = (title, body) => `<section style="margin-bottom: 20px;">
+                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">${++n}. ${title}</h4>
+                        <p style="font-size: 0.85rem; color: #666; line-height: 1.4; white-space: pre-wrap;">${body}</p>
+                    </section>`;
             content.innerHTML = `
                 <div style="max-height: 400px; overflow-y: auto; padding-right: 15px;">
-                    <section style="margin-bottom: 20px;">
-                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">1. PROTECCIÓN DE DATOS</h4>
-                        <p style="font-size: 0.85rem; color: #666; line-height: 1.4;">${company?.nomempresa || 'La empresa'} garantiza que sus datos personales son tratados bajo estrictas medidas de seguridad.</p>
-                    </section>
-                    <section style="margin-bottom: 20px;">
-                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">2. TÉRMINOS COMERCIALES</h4>
-                        <p style="font-size: 0.85rem; color: #666; line-height: 1.4;">Toda orden genera un compromiso de servicio. Precios incluyen impuestos.</p>
-                    </section>
-                    <section>
-                        <h4 style="color: var(--primary-color); border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; font-size: 0.9rem;">3. POLÍTICAS PERSONALIZADAS</h4>
-                        <p style="font-size: 0.85rem; color: #444; line-height: 1.4; white-space: pre-wrap;">${company?.politicas || 'Políticas base del sistema activas.'}</p>
-                    </section>
+                    ${sec('AVISO DE PRIVACIDAD', priv || `${company?.nomempresa || 'La empresa'} garantiza que sus datos personales son tratados bajo estrictas medidas de seguridad.`)}
+                    ${cook ? sec('POLÍTICA DE COOKIES', cook) : ''}
+                    ${sec('TÉRMINOS COMERCIALES', 'Toda orden genera un compromiso de servicio. Precios incluyen impuestos.')}
+                    ${sec('POLÍTICAS PERSONALIZADAS', txt(company?.politicas) || 'Políticas base del sistema activas.')}
                 </div>`;
         }
         const modal = document.getElementById('policies-modal-overlay');
@@ -1348,7 +1348,7 @@ app.public = {
                 categories[catName].forEach(p => {
                     const card = document.createElement('div');
                     card.className = 'food-card';
-                    const img = p.imagen_url ? app.utils.fixDriveUrl(p.imagen_url) : 'https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm';
+                    const img = p.imagen_url ? app.utils.fixDriveUrl(p.imagen_url) : app.utils.DEFAULT_IMG;
                     const price = app.utils.getEffectivePrice(p);
                     const stock = parseInt(p.stock) || 0;
                     const promo = (p.etiqueta_promo || "").toString().trim();
@@ -1386,7 +1386,7 @@ app.public = {
         const hTitle = document.getElementById('header-title');
         const hLogo = document.getElementById('header-logo');
         if (hTitle) hTitle.innerText = "SuitOrg";
-        if (hLogo) hLogo.src = "https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm";
+        if (hLogo) hLogo.src = app.utils.DEFAULT_IMG;
         document.documentElement.style.setProperty('--primary-color', '#004d40'); // SuitOrg Teal base
 
         const container = document.getElementById('orbit-bubbles');
@@ -1461,7 +1461,7 @@ app.public = {
 
                 <img src="${bubbleImg ? app.utils.fixDriveUrl(bubbleImg) : ''}" class="bubble-logo" 
                      style="width: ${isEvasol ? '70%' : '60%'}; ${logoFilter}; transition: all 0.5s ease; z-index: 10; margin-bottom: 5px;"
-                     onerror="this.src='https://lh3.googleusercontent.com/d/1ZJjHncVDFsXiyzoT9pPPt4ojpJfKPAMm'">
+                     onerror="this.onerror=null;this.src='${app.utils.DEFAULT_IMG}'">
                 
                 <!-- Etiqueta de apoyo (Visible on Hover via CSS) -->
                 <span class="bubble-name" style="font-size:0.6rem; font-weight: 900; opacity: 0; transition: 0.3s; position:absolute; bottom: 10%; background: rgba(0,0,0,0.7); padding: 2px 10px; border-radius: 20px; color: white;">
@@ -1670,7 +1670,7 @@ app.public = {
         // --- OPTIMIZACIÓN MARCA PERSONAL (v16.10.11) ---
         // Si es Marca Personal, ocultamos la galería redundante ya que existe en el Hero.
         const bizType = String(company.tipo_negocio || "").toUpperCase();
-        if (bizType === 'MARCA PERSONAL') {
+        if (bizType.includes('MARCA PERSONAL')) {
             section.classList.add('hidden');
             section.style.display = 'none';
             return;

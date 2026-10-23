@@ -20,6 +20,8 @@ Esta tabla decide TODO. Vive en GSheets y también en Supabase.
 | `origen_politicas` | `op: ROL\|op: USUARIO` + extras | Vector `etiqueta:valor` separado por `\|`. `op` (obligatorio, único en producción): de dónde saca los permisos (ROL=desde Config_Roles, USUARIO=del propio registro). Extras opcionales: `presentacion: SI` (activa presentación), `lp: si` (landing page). Si `op` falta → default ROL. Valores legacy sin etiqueta (`ROL`, `USUARIO`) se leen igual. Se parsea con `parseOrigenPoliticas()` en `js/modules/core.js` |
 | `modo_creditos` | DIARIO, GLOBAL, USUARIO | Cómo se calculan los créditos |
 | `color_tema` | #hex | Color principal del negocio |
+| `politicas_privacidad` | texto largo | Aviso de privacidad (México, LFPDPPP art. 15) redactado por la cadena `guia-total identidad` + `empresa-registro` (Anexo legal del prompt). Se muestra en el modal Políticas (sección 1); si está vacío, el frontend muestra el texto base |
+| `politicas_cookies` | texto largo | Política de cookies (Reglamento LFPDPPP art. 14 último párrafo + Lineamientos DOF 17/01/2013). Sección 2 del modal; solo se muestra si no está vacía |
 
 **Importante:** Cuando `db_engine = SUPABASE`, el GAS lee las tablas desde Supabase en lugar de GSheets.
 

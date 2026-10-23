@@ -41,9 +41,15 @@ POST JSON `{action, ...}` · GET `?action=getAll&id_empresa=X`. Si cambia el dep
    mensaje1 (bienvenida), mensaje2 (propósito) — sin claims no verificables
 6. ⚡ guia-total identidad → doc completo en GuiaTotal/registro/<id>/IDENTIDAD_CORPORATIVA.md
    (reglas del prompt: nada inventado, [PENDIENTE DE VALIDAR] lo falte)
+   └─ **+ Anexo legal obligatorio**: además de las 8 secciones, pídele al prompt el
+      Anexo legal (Bloque A = aviso de privacidad LFPDPPP art. 15 → `politicas_privacidad`;
+      Bloque B = política de cookies Reglamento art. 14 + Lineamientos DOF 17/01/2013 →
+      `politicas_cookies`). Sobre México; nota de revisión legal al final del texto.
 7. ✍️ GAS updateRow {table:"Config_Empresas", matchField:"id_empresa", matchValue:<ID>,
    updates:{foto_agente, slogan, mensaje1, mensaje2, mision, vision, valores, impacto,
-   politicas, drive_folder_id}}
+   politicas, politicas_privacidad, politicas_cookies, drive_folder_id}}
+   └─ si `politicas_privacidad`/`politicas_cookies` ya tienen contenido → no los
+      sobreescribas sin pedido explícito (mismo criterio de slogan)
 8. ⚡ GAS syncToSupabase {id} → espejo Supabase
    └─ si responde SUPABASE_KEY ausente → fallback: MCP supabase (UPDATE … WHERE id_empresa)
      + anota en PENDIENTES: "fijar SUPABASE_KEY en ScriptProperties del GAS"

@@ -93,6 +93,10 @@ Requiere `Analista_Proy.md` (si no existe, ejecuta antes el flujo IDEA o avisa).
 2. Rellena sus `[CAMPOS]` con: tarjeta del proyecto, `Analista_Proy.md`, `Config_Empresas` si `convive_sheets=sí`, o lo que el usuario aporte.
 3. Si `convive_sheets` y hay `id_empresa`: `⚡ brief-engine` solo para taxonomía/tono (no escribas el Brief).
 4. `✍️ crea/actualiza <Proyecto>/docs/IDENTIDAD_CORPORATIVA.md` (Misión, Visión, Valores, Impacto, Compromisos/Políticas).
+   - **Anexo legal (obligatorio en esta plataforma)**: pídele al prompt sus Bloques A y B
+     (aviso de privacidad LFPDPPP → `politicas_privacidad`; política de cookies →
+     `politicas_cookies`). Si hay `id_empresa` y `convive_sheets`: escríbelos vía
+     `empresa-registro` paso 7 (`updateRow`); no sobrescribas columnas ya llenas sin pedido.
 5. Sección final obligatoria `## Datos pendientes de validar` (del prompt original).
 
 ### `guia-total manuales [ruta]`
