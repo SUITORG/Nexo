@@ -20,15 +20,35 @@ const MAPA = path.join(root, 'GuiaTotal/MAPA.md');
 const HTML = path.join(root, 'GuiaTotal/MAPA_VISUAL.html');
 
 const STOP = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'o', 'a', 'en', 'con', 'por', 'para', 'al', 'un', 'una']);
+// Nombres propios: titleCase solo pone mayúscula inicial y baja el resto
+// (SuitCampanas → "Suitcampanas", OmniRoute → "Omniroute"). Mapa
+// case-insensitive → forma canónica de salida, así las cabeceras pueden ir en
+// MAYÚSCULAS como el resto de MAPA.md sin perder el nombre real del producto.
+const KEEP = {
+  suitcampanas: 'SuitCampanas',
+  suitorg: 'SuitOrg',
+  omniroute: 'OmniRoute',
+  vire: 'ViRe',
+  ffmpeg: 'FFmpeg',
+  suitvidgenremotion: 'SuitVidGenRemotion',
+};
 
 function titleCase(src) {
   return src.split(' ').map(w => {
-    if (/^[A-Z]{2,3}$/.test(w)) return w;                  // siglas (SEO)
     const lead = w.match(/^[^A-Za-z0-9áéíóúüñÁÉÍÓÚÜÑ]+/);
     const p = lead ? lead[0] : '';
-    const core = w.slice(p.length);
-    if (!core || core.includes('-') || STOP.has(core.toLowerCase())) return p + core.toLowerCase();
-    return p + core[0].toUpperCase() + core.slice(1).toLowerCase();
+    const rest = w.slice(p.length);
+    // separa la puntuación FINAL: sin esto "(SPA)" tenía core="SPA)" y la sigla
+    // no casaba, saliendo como "(Spa)"
+    const trail = (rest.match(/[^A-Za-z0-9áéíóúüñÁÉÍÓÚÜÑ]+$/) || [''])[0];
+    const core = rest.slice(0, rest.length - trail.length);
+    // siglas sobre `core` (no sobre `w`): "(SPA" llegaba como "Spa" si se
+    // testeaba la palabra entera con la puntuación incluida
+    if (/^[A-Z]{2,3}$/.test(core)) return p + core + trail;
+    if (!core || core.includes('-') || STOP.has(core.toLowerCase())) return p + rest.toLowerCase();
+    const k = KEEP[core.toLowerCase()];
+    if (k) return p + k + trail;
+    return p + core[0].toUpperCase() + core.slice(1).toLowerCase() + trail;
   }).join(' ');
 }
 

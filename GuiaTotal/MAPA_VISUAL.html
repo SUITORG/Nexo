@@ -12,6 +12,12 @@
     background-size: 22px 22px;
     color: #1f2937;
     min-width: 1360px;
+    /* el lienzo es el único bloque con scroll/pan: header y footer quedan
+       pegados y #viewport absorbe el resto (sin números mágicos de altura) */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   header {
     background: linear-gradient(135deg, #1e293b, #334155);
@@ -29,10 +35,57 @@
   }
   .syncnote { margin-left: auto; font-size: 11.5px; color: #cbd5e1; max-width: 460px; text-align: right; }
 
-  #canvas {
-    position: relative; width: 1360px; height: 2230px; margin: 0 auto;
+  header { flex: 0 0 auto; }
+  #viewport {
+    position: relative; width: 100%; flex: 1 1 auto; min-height: 0;
+    overflow: hidden; margin: 0 auto; background: #eef2f9;
+    background-image: radial-gradient(#c9d4e8 1px, transparent 1px);
+    background-size: 22px 22px;
+    cursor: grab; touch-action: none;
   }
-  #edges { position: absolute; inset: 0; width: 1360px; height: 2230px; pointer-events: none; }
+  #viewport.panning { cursor: grabbing; }
+  #canvas {
+    position: absolute; top: 0; left: 0; width: 1360px; height: 3060px;
+    transform-origin: 0 0; will-change: transform;
+  }
+  #edges { position: absolute; inset: 0; width: 1360px; height: 3060px; pointer-events: none; }
+
+  /* ── controles de zoom (fixed, esquina) ── */
+  #zoombar {
+    position: fixed; right: 18px; bottom: 66px; z-index: 40;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    background: rgba(15,23,42,.93); border: 1.5px solid #334155;
+    border-radius: 14px; padding: 7px 9px;
+    box-shadow: 0 8px 22px rgba(0,0,0,.4); backdrop-filter: blur(6px);
+    max-width: calc(100vw - 36px);
+  }
+  #zoombar button {
+    background: #1e293b; border: 1px solid #475569; color: #e2e8f0;
+    font-size: 13px; font-weight: 800; min-width: 30px; height: 30px;
+    border-radius: 9px; cursor: pointer; padding: 0 8px; line-height: 1;
+  }
+  #zoombar button:hover { background: #334155; border-color: #64748b; }
+  #zoombar button.on { background: #2563eb; border-color: #60a5fa; color: #fff; }
+  #zoombar button.camp { background: #0e7490; border-color: #22d3ee; color: #fff; }
+  #zoombar button.camp.off { background: #1e293b; border-color: #475569; color: #94a3b8; }
+  #zoombar input[type=range] { width: 96px; accent-color: #38bdf8; cursor: pointer; }
+  #zoombar .zval {
+    color: #7dd3fc; font-size: 12px; font-weight: 800; font-family: Consolas, monospace;
+    min-width: 42px; text-align: center;
+  }
+  #zoombar .zsep { width: 1px; height: 20px; background: #334155; margin: 0 3px; }
+  #zoombar .zhint { color: #64748b; font-size: 10px; white-space: nowrap; }
+
+  /* ── vista compacta: oculta detalle, deja iconos + títulos ── */
+  body.compact .node { padding: 7px 8px; box-shadow: 0 3px 9px rgba(15,23,42,.14); }
+  body.compact .node .sub, body.compact .acts { display: none; }
+  body.compact .node .ico { font-size: 20px; }
+  body.compact .node .ttl { font-size: 11.5px; }
+  body.compact .elab { font-size: 9px; padding: 1px 5px; }
+  body.compact .decbanner, body.compact .campbanner { font-size: 10px; padding: 3px 9px; }
+  body.compact .gate { width: 118px; height: 118px; }
+  body.compact .gate .gtxt { font-size: 10px; max-width: 84px; }
+  body.compact .gate .gi { font-size: 16px; }
 
   .node {
     position: absolute; width: 210px; padding: 10px 12px;
@@ -51,17 +104,17 @@
   }
 
   .gate {
-    position: absolute; width: 150px; height: 150px;
+    position: absolute; width: 148px; height: 148px;
     background: radial-gradient(circle at 30% 25%, #fef3c7, #fde68a);
-    border: 3px solid #f59e0b; border-radius: 20px;
+    border: 3px solid #f59e0b; border-radius: 24px;
     transform: rotate(45deg);
-    box-shadow: 0 8px 18px rgba(245,158,11,.35);
+    box-shadow: 0 10px 22px rgba(245,158,11,.28), inset 0 1px 0 rgba(255,255,255,.7);
     display: flex; align-items: center; justify-content: center; z-index: 3;
   }
   .gate .gtxt {
     transform: rotate(-45deg); text-align: center;
-    font-weight: 800; font-size: 12.5px; color: #78350f;
-    max-width: 118px; line-height: 1.15;
+    font-weight: 800; font-size: 12px; color: #78350f;
+    max-width: 104px; line-height: 1.2;
   }
   .gate .gi { font-size: 20px; display: block; margin: 0 auto 2px; }
 
@@ -119,6 +172,41 @@
     border: 2px dashed #818cf8;
   }
 
+  /* ═══ lane SuitCampanas (arquitectura y servicios) ═══ */
+  .campbanner {
+    position: absolute; left: 15px; z-index: 5;
+    background: #164e63; color: #cffafe; font-size: 11.5px; font-weight: 800;
+    letter-spacing: .5px; padding: 5px 12px; border-radius: 999px;
+    border: 2px dashed #22d3ee;
+  }
+  .campzone {
+    position: absolute; left: 8px; z-index: 1;
+    border: 2.5px dashed #0e7490; border-radius: 26px;
+    background: rgba(8,47,73,.05); pointer-events: none;
+  }
+  /* colores burbujas camp — familia turquesa (sin colisionar con t-idx #06b6d4 ya usado) */
+  .t-camp   { --a:#a5f3fc; --b:#0e7490; }
+  .t-srv    { --a:#99f6e4; --b:#0f766e; }
+  .t-data   { --a:#c7d2fe; --b:#4338ca; }
+  .t-ai     { --a:#fbcfe8; --b:#be185d; }
+  .t-orch   { --a:#ddd6fe; --b:#6d28d9; }
+  .t-bridge { --a:#fde68a; --b:#b45309; }
+  .node.t-camp, .node.t-srv, .node.t-data, .node.t-ai, .node.t-orch, .node.t-bridge {
+    border-color: #155e75;
+  }
+  .campbridge {
+    position: absolute; z-index: 5; background: #134e4a; color: #99f6e4;
+    font-size: 10.5px; font-weight: 800; padding: 2px 9px; border-radius: 999px;
+    white-space: nowrap; transform: translate(-50%, -50%);
+    border: 1.5px solid #2dd4bf; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    pointer-events: none;
+  }
+  /* ocultar lane cuando está apagado */
+  body.camp-off .campzone, body.camp-off .campbanner,
+  body.camp-off .node[data-camp], body.camp-off .campbridge { display: none !important; }
+  path.e-camp { stroke: #0e7490; stroke-width: 2.8; fill: none; }
+  path.e-campx { stroke: #f59e0b; stroke-width: 3.2; fill: none; stroke-dasharray: 12 6; }
+
   .node[data-sec] { cursor: pointer; }
   .node[data-sec]:hover { box-shadow: 0 6px 20px rgba(56,189,248,.45), inset 0 1px 0 rgba(255,255,255,.6); }
   .hintclick {
@@ -154,7 +242,7 @@
   #backdrop { position: fixed; inset: 0; background: rgba(2,6,23,.55); z-index: 49; display: none; }
   #backdrop.open { display: block; }
 
-  footer { padding: 14px 28px 30px; font-size: 12px; color: #475569; text-align: center; }
+  footer { flex: 0 0 auto; padding: 14px 28px 30px; font-size: 12px; color: #475569; text-align: center; }
 </style>
 </head>
 <body>
@@ -164,12 +252,13 @@
   <div class="legend">
     <span class="li"><span class="swatch"></span> flujo principal</span>
     <span class="li"><span class="swatch dash"></span> switch / condicional</span>
+    <span class="li"><span class="swatch" style="border-top-color:#0e7490"></span> SuitCampanas</span>
+    <span class="li"><span class="swatch dash" style="border-top-color:#f59e0b"></span> cruce entre proyectos</span>
     <span class="li"><span class="balloon-mini">◇ rombo</span> decisión</span>
-    <span class="li"><span class="balloon-mini">▬ pastilla</span> inicio / fin</span>
     <span class="li">📁 lee · ✍️ crea · 🔄 actualiza · ⚡ skill · ❓ pregunta · ∥ paralelo</span>
   </div>
-  <div class="syncnote">Sync con MAPA.md: el drawer INFO se <b>genera</b> desde MAPA.md (<b>node scripts/gen-mapa-info.js</b>) · burbujas llevan chip §X (cambiar §X = editar esa burbuja) · validar con <b>node scripts/check-map-visual.js</b></div>
-  <span class="hintclick">👆 click en una burbuja § → pasos internos</span>
+  <div class="syncnote">Sync con MAPA.md: el drawer INFO se <b>genera</b> desde MAPA.md (<b>node scripts/gen-mapa-info.js</b>) · burbujas chip §X · el <b>lane SuitCampanas</b> son las secciones <b>§12.1-§12.11</b> de MAPA.md — también generado</div>
+  <span class="hintclick">👆 click en burbuja § → pasos · rueda = zoom · arrastra = mover</span>
 </header>
 
 <div id="backdrop" onclick="closeDrawer()"></div>
@@ -182,6 +271,7 @@
   <div class="dbody" id="d-body"></div>
 </div>
 
+<div id="viewport">
 <div id="canvas">
   <svg id="edges">
     <defs>
@@ -199,6 +289,12 @@
       </marker>
       <marker id="ar-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/>
+      </marker>
+      <marker id="ar-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#0e7490"/>
+      </marker>
+      <marker id="ar-x" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
       </marker>
     </defs>
   </svg>
@@ -231,7 +327,7 @@
   </div>
 
   <!-- ═══ apertura común — descubrimiento + switches (nodo sin §, como cierre) ═══ -->
-  <div class="node t-dec" id="ndesc" style="left:860px; top:42px; width:250px;">
+  <div class="node t-dec" id="ndesc" data-sec="dec6" style="left:860px; top:42px; width:240px;">
     <span class="ico">🚦</span>
     <div class="ttl">⚡ Descubrimiento + switches</div>
     <div class="sub">fase previa obligatoria · ≤3 preguntas o supuestos · lee switches.yaml (parametros)</div>
@@ -245,13 +341,13 @@
     <div class="sub">analista-proy → sintesis-proyecto → panel-juzgador</div>
   </div>
 
-  <div class="node t-idea" id="npanel" data-sec="dec5" style="left:850px; top:30px; width:230px;">
+  <div class="node t-idea" id="npanel" data-sec="dec5" style="left:860px; top:225px; width:240px;">
     <span class="ico">📊</span>
     <div class="ttl">Panel IdeasSaaS</div>
     <div class="sub">localhost:8099 · fase_producto F0-F7 · órdenes + /ejecutar directo</div>
   </div>
 
-  <div class="gate" id="g-alta" style="left:624px; top:160px;">
+  <div class="gate" id="g-alta" style="left:624px; top:215px;">
     <div class="gtxt"><span class="gi">❓</span>¿Alta de empresa?</div>
   </div>
 
@@ -274,7 +370,7 @@
     <div class="sub">Drive · foto · copy · identidad</div>
   </div>
 
-  <div class="node t-masc" id="n18" data-sec="1.8" style="left:860px; top:330px;">
+  <div class="node t-masc" id="n18" data-sec="1.8" style="left:860px; top:385px;">
     <span class="chip">§1.8</span>
     <span class="ico">📋</span>
     <div class="ttl">empresa-mascara</div>
@@ -369,6 +465,87 @@
     <div class="ttl">↪ Cierre de pasada</div>
     <div class="sub">PENDIENTES · MAPA · ≤3 líneas</div>
   </div>
+
+  <!-- ═══════════ LANE · SUITCAMPANAS (arquitectura y servicios) ═══════════ -->
+  <div class="campzone" style="top:2255px; width:1344px; height:720px;"></div>
+  <div class="campbanner" style="top:2270px;">🏢 SUITCAMPANAS — arquitectura y servicios · localhost:8000 · SPA única + API</div>
+
+  <div class="node t-camp" data-camp id="sc1" data-sec="12.1" style="left:110px; top:2340px; width:250px; border-radius:999px;">
+    <span class="chip">:8000</span>
+    <span class="ico">🖥️</span>
+    <div class="ttl">local-server-node.js</div>
+    <div class="sub">http puro (sin Express) · ~5300 líneas · sirve estático + API</div>
+  </div>
+
+  <div class="node t-bridge" data-camp id="sc11" data-sec="12.11" style="left:1000px; top:2340px; width:250px;">
+    <span class="ico">🌉</span>
+    <div class="ttl">Puente con SuitOrg</div>
+    <div class="sub">server.js raíz spawnea :8000 · scripts/mcp/brief-server.js (4 tools brief.*)</div>
+  </div>
+
+  <div class="node t-srv" data-camp id="sc2" data-sec="12.2" style="left:80px; top:2495px;">
+    <span class="ico">🧩</span>
+    <div class="ttl">SPA estática</div>
+    <div class="sub">index.html · script.js · style.css · sin router</div>
+  </div>
+  <div class="node t-srv" data-camp id="sc3" data-sec="12.3" style="left:400px; top:2495px; width:250px;">
+    <span class="ico">🔌</span>
+    <div class="ttl">API /api/*</div>
+    <div class="sub">~47 endpoints · brief · media · imagen · vire · comfy · proxy</div>
+  </div>
+
+  <div class="node t-data" data-camp id="sc4" data-sec="12.4" style="left:80px; top:2650px;">
+    <span class="ico">📈</span>
+    <div class="ttl">GAS backend.gs</div>
+    <div class="sub">Config_Empresas + SMMC · hoja maestra · ID_SHEET</div>
+  </div>
+  <div class="node t-data" data-camp id="sc5" data-sec="12.5" style="left:400px; top:2650px;">
+    <span class="ico">☁️</span>
+    <div class="ttl">Supabase (espejo)</div>
+    <div class="sub">campanas · prompts · recetas · video_*</div>
+  </div>
+  <div class="node t-ai" data-camp id="sc6" data-sec="12.6" style="left:720px; top:2650px; width:250px;">
+    <span class="ico">🤖</span>
+    <div class="ttl">OmniRoute :20128</div>
+    <div class="sub">IA local · brief-marker · media-planner · styledirector · fallback OpenRouter</div>
+  </div>
+
+  <div class="node t-ai" data-camp id="sc7" data-sec="12.7" style="left:80px; top:2805px;">
+    <span class="ico">🎨</span>
+    <div class="ttl">Imagen / stock</div>
+    <div class="sub">Pollinations Flux → Pexels / Unsplash / Wikimedia</div>
+  </div>
+  <div class="node t-orch" data-camp id="sc8" data-sec="12.8" style="left:400px; top:2805px;">
+    <span class="ico">🎬</span>
+    <div class="ttl">SuitVidGenRemotion</div>
+    <div class="sub">ViRe :3004 · /api/vire-* · spawn externo</div>
+  </div>
+  <div class="node t-orch" data-camp id="sc9" data-sec="12.9" style="left:720px; top:2805px;">
+    <span class="ico">🎵</span>
+    <div class="ttl">SuitComfy + SuitMusic</div>
+    <div class="sub">:8188 ComfyUI · music.py / sfx.py · FFmpeg</div>
+  </div>
+  <div class="node t-orch" data-camp id="sc10" data-sec="12.10" style="left:1040px; top:2805px;">
+    <span class="ico">⚙️</span>
+    <div class="ttl">Generadores</div>
+    <div class="sub">lp-generator → landings/ · reel-generator · bdpv-generator</div>
+  </div>
+</div>
+</div><!-- /#viewport -->
+
+<div id="zoombar">
+  <button id="z-out" title="Alejar">−</button>
+  <input id="z-range" type="range" min="25" max="200" value="100" step="5" title="Zoom">
+  <button id="z-in" title="Acercar">+</button>
+  <span class="zval" id="z-val">100%</span>
+  <span class="zsep"></span>
+  <button id="z-fit" title="Ajustar al panorama (ver todo)">⛶ Ajustar</button>
+  <button id="z-100" title="Zoom real 1:1">1:1</button>
+  <span class="zsep"></span>
+  <button id="z-camp" class="camp" title="Mostrar / ocultar el lane SuitCampanas">🏢 Campañas</button>
+  <button id="z-compact" title="Vista compacta (solo iconos + títulos)">▣ Compacta</button>
+  <span class="zsep"></span>
+  <span class="zhint">arrastra = mover · rueda = zoom</span>
 </div>
 
 <footer>
@@ -379,6 +556,126 @@
 <script>
   const canvas = document.getElementById('canvas');
   const svg = document.getElementById('edges');
+  const viewport = document.getElementById('viewport');
+
+  /* ══ VIEW (zoom + pan) ══════════════════════════════════════════════════
+   * #canvas lleva transform: translate(tx,ty) scale(s).  rect() divide las
+   * medidas de pantalla por Z.s para que las aristas (SVG interno de tamaño
+   * fijo) sigan calzando con las burbujas a cualquier zoom.                */
+  const CANVAS_W = 1360, CANVAS_H = 3060;
+  const Z = { s: 1, tx: 0, ty: 0 };
+  const ZMIN = 0.12, ZMAX = 2;
+  const LS = 'mapa-visual-view';
+
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+
+  function applyView() {
+    canvas.style.transform = `translate(${Z.tx}px,${Z.ty}px) scale(${Z.s})`;
+    const vr = document.getElementById('z-val');
+    const rg = document.getElementById('z-range');
+    if (vr) vr.textContent = Math.round(Z.s * 100) + '%';
+    if (rg && document.activeElement !== rg) rg.value = Math.round(Z.s * 100);
+    try { localStorage.setItem(LS, JSON.stringify({ s: Z.s, tx: Z.tx, ty: Z.ty })); } catch (e) {}
+  }
+
+  // zoom centrado en un punto de pantalla (px,py)
+  function zoomAt(px, py, ns) {
+    ns = clamp(ns, ZMIN, ZMAX);
+    const c = viewport.getBoundingClientRect();
+    const x = px - c.left, y = py - c.top;
+    Z.tx = x - (x - Z.tx) * (ns / Z.s);
+    Z.ty = y - (y - Z.ty) * (ns / Z.s);
+    Z.s = ns;
+    applyView();
+  }
+
+  // ajustar todo el lienzo a la ventana (panorama completo)
+  function fitView() {
+    const vr = viewport.getBoundingClientRect();
+    const s = clamp(Math.min(vr.width / CANVAS_W, vr.height / CANVAS_H) * 0.96, ZMIN, ZMAX);
+    Z.s = s;
+    Z.tx = (vr.width - CANVAS_W * s) / 2;
+    Z.ty = (vr.height - CANVAS_H * s) / 2;
+    applyView();
+  }
+
+  function resetView() { Z.s = 1; Z.tx = 0; Z.ty = 0; applyView(); }
+
+  // rueda del ratón = zoom al cursor
+  viewport.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoomAt(e.clientX, e.clientY, Z.s * (e.deltaY < 0 ? 1.12 : 1 / 1.12));
+  }, { passive: false });
+
+  // arrastrar = mover el lienzo
+  let pan = null;
+  viewport.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    if (e.target.closest('.node, .gate, .elab, #drawer, #zoombar, a, button, input')) return;
+    pan = { x: e.clientX - Z.tx, y: e.clientY - Z.ty };
+    viewport.classList.add('panning');
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!pan) return;
+    Z.tx = e.clientX - pan.x;
+    Z.ty = e.clientY - pan.y;
+    applyView();
+  });
+  window.addEventListener('mouseup', () => {
+    pan = null;
+    viewport.classList.remove('panning');
+  });
+
+  // teclado: + acerca · − aleja · 0 resetea · f ajusta
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea, select')) return;
+    const vr = viewport.getBoundingClientRect();
+    const cx = vr.left + vr.width / 2, cy = vr.top + vr.height / 2;
+    if (e.key === '+' || e.key === '=') { zoomAt(cx, cy, Z.s * 1.15); e.preventDefault(); }
+    else if (e.key === '-' || e.key === '_') { zoomAt(cx, cy, Z.s / 1.15); e.preventDefault(); }
+    else if (e.key === '0') { resetView(); e.preventDefault(); }
+    else if (e.key === 'f' || e.key === 'F') { fitView(); e.preventDefault(); }
+  });
+
+  // botones de la barra
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+  on('z-in',  () => { const r = viewport.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, Z.s * 1.2); });
+  on('z-out', () => { const r = viewport.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, Z.s / 1.2); });
+  on('z-fit', fitView);
+  on('z-100', resetView);
+  const rgEl = document.getElementById('z-range');
+  if (rgEl) rgEl.addEventListener('input', () => {
+    const r = viewport.getBoundingClientRect();
+    const ns = clamp(+rgEl.value / 100, ZMIN, ZMAX);
+    Z.tx = r.width / 2 - (r.width / 2 - Z.tx) * (ns / Z.s);
+    Z.ty = r.height / 2 - (r.height / 2 - Z.ty) * (ns / Z.s);
+    Z.s = ns; applyView();
+  });
+
+  // toggle lane SuitCampanas (re-dibuja aristas al mostrar/ocultar)
+  on('z-camp', function () {
+    const off = document.body.classList.toggle('camp-off');
+    this.classList.toggle('off', off);
+    this.textContent = off ? '🏢 Campañas (oculto)' : '🏢 Campañas';
+    requestAnimationFrame(build);
+  });
+
+  // vista compacta (solo iconos + títulos)
+  on('z-compact', function () {
+    const isOn = document.body.classList.toggle('compact');
+    this.classList.toggle('on', isOn);
+    requestAnimationFrame(build);
+  });
+
+  // restaurar vista guardada
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS) || 'null');
+    if (saved && typeof saved.s === 'number') {
+      Z.s = clamp(saved.s, ZMIN, ZMAX);
+      Z.tx = saved.tx; Z.ty = saved.ty;
+    }
+  } catch (e) {}
 
   // ruta: 'auto' (ancla por eje dominante) | 'v' (salida abajo, entrada arriba)
   //        | 'via' con puntos intermedios
@@ -426,9 +723,37 @@
     { from: 'ndesc', to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'mantenimiento',
       via: [[1310, 130], [1310, 1515]] },
     { from: 'npl',   to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'claridad UI' },
-    { from: 'npanel',to: 'n1',     cls: 'e-soft',  mk: 'ar-g', label: 'monitorea + dispara /ideas', via: [[1080, 90], [1080, 45]] },
-    { from: 'npanel',to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'monitorea + dispara /ciclo', via: [[1180, 90], [1180, 1510]] },
+    { from: 'npanel',to: 'n1',     cls: 'e-soft',  mk: 'ar-g', label: 'monitorea + dispara /ideas', via: [[825, 265], [825, 110]] },
+    { from: 'npanel',to: 'n6',     cls: 'e-soft',  mk: 'ar-g', label: 'monitorea + dispara /ciclo', via: [[1140, 275], [1140, 1510]] },
     { from: 'npanel',to: 'ndesc',  cls: 'e-soft',  mk: 'ar-g', label: 'órdenes + switches', route: 'v' },
+
+    /* ── LANE SUITCAMPANAS (:8000) — arquitectura y servicios ──────────────
+     * Flujo real: entrada → SPA+API → 3 backends → 4 orquestadores.        */
+    { from: 'sc1', to: 'sc2',  cls: 'e-camp', mk: 'ar-c', label: 'estático', route: 'v', t: 0.4 },
+    { from: 'sc1', to: 'sc3',  cls: 'e-camp', mk: 'ar-c', label: 'API', route: 'v', t: 0.4 },
+    { from: 'sc3', to: 'sc4',  cls: 'e-camp', mk: 'ar-c', label: 'lee maestra', route: 'v', t: 0.35 },
+    { from: 'sc3', to: 'sc5',  cls: 'e-camp', mk: 'ar-c', label: 'espejo', route: 'v', t: 0.35 },
+    { from: 'sc3', to: 'sc6',  cls: 'e-camp', mk: 'ar-c', label: 'prompts IA', route: 'v', t: 0.35 },
+    /* Sin etiqueta en sc3→sc7..sc10: las filas están a 155px y los huecos
+     * libres entre nodos son de ~45px, así que cualquier t caía encima de un
+     * nodo. Además son redundantes — el título del nodo destino ya dice
+     * "Imagen/stock", "SuitVidGenRemotion", etc. Las 4 flechas lo cuentan. */
+    { from: 'sc3', to: 'sc7',  cls: 'e-camp', mk: 'ar-c', route: 'v' },
+    { from: 'sc3', to: 'sc8',  cls: 'e-camp', mk: 'ar-c', route: 'v' },
+    { from: 'sc3', to: 'sc9',  cls: 'e-camp', mk: 'ar-c', route: 'v' },
+    { from: 'sc3', to: 'sc10', cls: 'e-camp', mk: 'ar-c', route: 'v' },
+    /* aristas cruzadas: lo que une SuitCampanas con SuitOrg raíz */
+    { from: 'sc11', to: 'sc1', cls: 'e-campx', mk: 'ar-x', label: 'server.js raíz spawnea :8000', route: 'v', t: 0.4 },
+    { from: 'sc11', to: 'sc3', cls: 'e-campx', mk: 'ar-x', label: 'mcp/brief-server.js → brief.*', route: 'v', t: 0.4 },
+    { from: 'sc4', to: 'n27',  cls: 'e-campx', mk: 'ar-x', label: 'Config_Empresas compartida',
+      via: [[70, 2690], [70, 820]] },
+    /* via2 en x=235 (no 330): centrado en 330 la etiqueta invadía #n22 (345-555) */
+    { from: 'sc5', to: 'n22',  cls: 'e-campx', mk: 'ar-x', label: 'mismo Supabase',
+      via: [[330, 2690], [235, 940]] },
+    /* via2 en y=1390 en vez de 1245: a 1245 la etiqueta caía encima de
+     * "gate código" (arista ndesc→n4). 145px de separación vertical basta. */
+    { from: 'sc8', to: 'n4',   cls: 'e-campx', mk: 'ar-x', label: 'ViRe :3004 compartido',
+      via: [[1330, 2850], [1330, 1390]] },
   ];
 
   // iconos de acción por burbuja (misma leyenda que MAPA.md: 📁 lee · ⚡ skill ·
@@ -461,12 +786,29 @@
     n25: ['✅ evidencia', '❓ decisión', '⛔ detenido', '✍️ PENDIENTES', 'indice memory/INDEX.md'],
     ndesc: ['📁 lee switches', '❓ ≤3 preguntas', '✍️ entregable 11 pts'],
     npanel: ['📊 estado.json', '📋 órdenes', '▶ ejecutar directo', '📈 fase_producto'],
+    sc1:  ['⚡ npm start', '📁 sirve estático', '🔌 /api/*'],
+    sc2:  ['📁 index.html', '📁 script.js', '⚡ 9 modos'],
+    sc3:  ['🔌 ~47 endpoints', '📁 JSON', '⚡ acciones'],
+    sc4:  ['📁 Config_Empresas', '📁 SMMC', '⚡ getAll'],
+    sc5:  ['📁 espejo', '⚡ upsert', '📁 8 tablas'],
+    sc6:  ['⚡ brief-marker', '⚡ media-planner', '⚡ styledirector'],
+    sc7:  ['⚡ pollinations', '📁 pexels', '📁 unsplash'],
+    sc8:  ['⚡ vire-produce', '📁 status/result', '⚡ spawn'],
+    sc9:  ['⚡ comfy', '⚡ music.py', '⚡ sfx.py', '📁 FFmpeg'],
+    sc10: ['⚡ lp-generator', '📁 landings/', '⚡ reel', '⚡ bdpv'],
+    sc11: ['⚡ server.js raíz', '⚡ mcp/brief-server', '🔌 4 tools brief.*'],
   };
 
+  // rect() mide en el marco NO escalado del canvas: con transform: scale()
+  // sobre #canvas, getBoundingClientRect() devuelve píxeles de pantalla, así
+  // que hay que dividir por Z.s para que las aristas (dibujadas en el SVG
+  // interno, cuyo viewBox es fijo) sigan calzando con las burbujas.
   function rect(el) {
     const r = el.getBoundingClientRect(), c = canvas.getBoundingClientRect();
-    return { l: r.left - c.left, t: r.top - c.top, w: r.width, h: r.height,
-             cx: r.left - c.left + r.width / 2, cy: r.top - c.top + r.height / 2 };
+    const s = Z.s || 1;
+    const l = (r.left - c.left) / s, t = (r.top - c.top) / s;
+    const w = r.width / s, h = r.height / s;
+    return { l, t, w, h, cx: l + w / 2, cy: t + h / 2 };
   }
 
   function pathFor(a, b, e) {
@@ -519,7 +861,10 @@
     canvas.querySelectorAll('.elab').forEach(n => n.remove());
     for (const e of EDGES) {
       const A = document.getElementById(e.from), B = document.getElementById(e.to);
+      // omite aristas de nodos ocultos (lane Campañas apagado) — getBoundingClientRect
+      // devolvería 0 y dibujaría trazos degenerados en la esquina del lienzo
       if (!A || !B) continue;
+      if (A.offsetParent === null || B.offsetParent === null) continue;
       const a = rect(A), b = rect(B);
       const { d, mid } = pathFor(a, b, e);
       const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -976,6 +1321,186 @@
       "files": [
         "GuiaTotal/plantillas/brief-cliente.md"
       ]
+    },
+    "12.1": {
+      "t": "SuitCampanas Entrada (local-server-node.js)",
+      "steps": [
+        "🖥️ SuitCampanas/local-server-node.js  [entrada única]",
+        "📁 sirve estático: index.html · script.js · style.css path.join(__dirname, pathname === \"/\" ? \"index.html\" : pathname)",
+        "🔌 API JSON: ~47 endpoints /api/* en el MISMO archivo ~5300 líneas · ~300 KB · sin router ni carpetas de módulos",
+        "📁 arranque lazy desde la raíz → getAll (local-server-node.js:471) server.js:118 GET /api/ensure-campanas lo spawnea",
+        "📁 extras: mock-server.js (:3000) · local-server.py · iniciar.bat"
+      ],
+      "gas": [
+        "getAll (local-server-node.js:471)"
+      ],
+      "files": [
+        "SuitCampanas/package.json",
+        "SuitCampanas/local-server-node.js",
+        "index.html",
+        "iniciar.bat"
+      ]
+    },
+    "12.2": {
+      "t": "SuitCampanas Frontend (SPA)",
+      "steps": [
+        "🧩 SuitCampanas/index.html + SuitCampanas/script.js",
+        "📁 index.html (74 KB) · switch de modos en línea 62-71",
+        "📁 script.js (279 KB) · dispatch setWorkMode (línea 2875)",
+        "📁 9 modos: Ai · BD · BDPR (preview) · IMG · BDSMT (tendencias) BDPV (presentación video) · LP (landing) · ViRe · VIDE",
+        "📁 paneles: Asistente IA · Producción Multimedia · ViRe · BDPV VIDE (sceneReview / videReview / mediaPlan = Brief→MediaPlanner) Historial · Consola de Logs · Google Drive manual",
+        "🔌 llama solo rutas relativas /api/* (mismo origen :8000) · sin Stripe"
+      ],
+      "files": [
+        "SuitCampanas/index.html",
+        "SuitCampanas/script.js",
+        "index.html"
+      ]
+    },
+    "12.3": {
+      "t": "SuitCampanas API (Endpoints)",
+      "steps": [
+        "🔌 SuitCampanas/local-server-node.js  [/api/*]",
+        "📁 brief · history · config · ensure-campanas",
+        "📁 imagen: /api/ai/image (Gemini) · /api/proxy-image (línea 3270) el proxy evita CORS contra stock externo",
+        "📁 video: /api/vire-produce | vire-status | vire-result | vire-cancel",
+        "📁 comfy: /api/comfy/*  → COMFY_WRAPPER_URL",
+        "📁 VIDE interno: FFmpeg + music.py (línea 3552) + sfx.py (línea 3671)",
+        "⚡ syncToSupabase  → espejo con PK idempotente"
+      ],
+      "gas": [
+        "syncToSupabase"
+      ],
+      "files": [
+        "SuitCampanas/local-server-node.js"
+      ]
+    },
+    "12.4": {
+      "t": "SuitCampanas Backend GAS",
+      "steps": [
+        "📈 SuitCampanas/backend.gs  [clasp]",
+        "📁 ID_SHEET + SECRET_TOKEN · hoja principal 1uyy2hz…",
+        "📁 GAS_URL hardcodeada → getAll (local-server-node.js:471)",
+        "📁 acciones: getAll · history · config leen Config_Empresas y SMMC",
+        "📁 Prompts_IA también viven en la hoja (prompts compartidos con la raíz)",
+        "⚡ syncToSupabase  → mismo espejo que la raíz (egyxgnlnzanxpqyuvmsg)"
+      ],
+      "gas": [
+        "syncToSupabase",
+        "getAll (local-server-node.js:471)"
+      ],
+      "files": [
+        "SuitCampanas/backend.gs"
+      ]
+    },
+    "12.5": {
+      "t": "SuitCampanas Supabase (Espejo)",
+      "steps": [
+        "☁️ SuitCampanas/lib/supabase.js",
+        "📁 anon key + supabaseAdmin con SERVICE_ROLE (línea 9-11) bypass de RLS → tratar como secreto",
+        "📁 tablas: campanas · industrias · nichos · piezas_creativas planes_medios · Prompts_IA · recetas · video_* (4)",
+        "📁 mismo proyecto que la raíz → el espejo es COMPARTIDO",
+        "⚡ syncToSupabase  → upsert merge-duplicates por PK"
+      ],
+      "gas": [
+        "syncToSupabase"
+      ],
+      "files": [
+        "SuitCampanas/lib/supabase.js"
+      ]
+    },
+    "12.6": {
+      "t": "SuitCampanas OmniRoute IA",
+      "steps": [
+        "🤖 OmniRoute :20128  [capa de IA]",
+        "📁 SuitCampanas/models-config.js · toOmniRouteId model ID namespacing · SSE por defecto",
+        "📁 fallback: OpenRouter directo si OmniRoute falla",
+        "📁 Gemini SOLO en /api/ai/image (local-server-node.js:2882)",
+        "📁 prompts por ID: CAMP-BRIEFMARKER · CAMP-MEDIAPLANNER CAMP-STYLEDIRECTOR  (loadPromptById)",
+        "📁 pipeline: Brief → MediaPlanner → BriefMarker → VIDE"
+      ],
+      "gas": [
+        "image (local-server-node.js:2882)"
+      ],
+      "files": [
+        "SuitCampanas/models-config.js"
+      ]
+    },
+    "12.7": {
+      "t": "SuitCampanas Imagen y Stock",
+      "steps": [
+        "🎨 imagen de campañas",
+        "📁 1ª opción: Pollinations (image.pollinations.ai, línea 374) · Flux · gratis",
+        "📁 2ª: Pexels → buscarImagenPexels (línea 35)",
+        "📁 3ª: Unsplash",
+        "📁 4ª: Wikimedia Commons",
+        "📁 5ª: fondo sólido con el color de la marca",
+        "🔌 todas pasan por /api/proxy-image (evita CORS)"
+      ]
+    },
+    "12.8": {
+      "t": "SuitCampanas ViRe Video",
+      "steps": [
+        "🎬 SuitVidGenRemotion (ViRe)  →  puerto 3004",
+        "🔌 /api/vire-produce | vire-status | vire-result | vire-cancel local-server-node.js líneas 3986 y 4592",
+        "📁 SuitCampanas hace spawn de ../SuitVidGenRemotion (ruta relativa)",
+        "📁 usado por los modos ViRe y VIDE del frontend",
+        "📁 la raíz lo comparte → ver tabla de puertos AGENTS.md"
+      ],
+      "files": [
+        "AGENTS.md"
+      ]
+    },
+    "12.9": {
+      "t": "SuitCampanas Comfy y Music",
+      "steps": [
+        "🎵 motores locales de audio/imagen",
+        "📁 SuitComfy → ComfyUI en :8188 · endpoints /api/comfy/* vía COMFY_WRAPPER_URL",
+        "📁 SuitMusic → scripts/music.py (música) · scripts/sfx.py (efectos) invocados desde VIDE (líneas 3552 y 3671)",
+        "📁 FFmpeg para corte/mux (módulo VIDE interno)",
+        "📁 referenciados por ruta relativa ../ desde SuitCampanas/"
+      ],
+      "files": [
+        "scripts/music.py",
+        "scripts/sfx.py"
+      ]
+    },
+    "12.10": {
+      "t": "SuitCampanas Generadores",
+      "steps": [
+        "⚙️ generadores de artefactos",
+        "📁 SuitCampanas/lp-generator.js → ✍️ SuitCampanas/landings/lp_*.html",
+        "📁 SuitCampanas/generators/reel-generator.js  [modo ViRe] ⚠️ bug conocido: generar() duplicado → stack overflow si se llama",
+        "📁 SuitCampanas/generators/image-processor.js",
+        "📁 bdpv-generator → proviene de ../PresentacionesVid (modo BDPV)",
+        "📁 quote-flow-poster → desde ../SuitComfy"
+      ],
+      "files": [
+        "SuitCampanas/lp-generator.js",
+        "SuitCampanas/landings/lp_*.html",
+        "SuitCampanas/generators/reel-generator.js",
+        "SuitCampanas/generators/image-processor.js"
+      ]
+    },
+    "12.11": {
+      "t": "SuitCampanas Puente SuitOrg",
+      "steps": [
+        "🌉 puente SuitOrg raíz ↔ SuitCampanas",
+        "📁 server.js:118 → GET /api/ensure-campanas spawnea el :8000 (lazy)",
+        "📁 server.js:34 → scripts/brief-generate (brief generator de la raíz)",
+        "⚡ brief-engine → SuitOrg/scripts/mcp/brief-server.js 4 tools brief.* · escribe el vector en Config_Empresas.logo_url (la carpeta SuitCampanas/mcp/ está vacía — el archivo real es de la raíz)",
+        "📁 SuitCampanas/opencode.json → MCPs con cwd = SuitOrg raíz: scripts/mcp-supabase.js · mcp-gsheets · comfyui-mcp (:8188) · Canva",
+        "📁 SuitCampanas/.env hereda ../.env (línea 6)",
+        "📁 requiere hermanos vivos: ../PresentacionesVid · ../SuitComfy ../SuitVidGenRemotion · ../SuitMusic"
+      ],
+      "skills": [
+        "brief-engine"
+      ],
+      "files": [
+        "SuitOrg/scripts/mcp/brief-server.js",
+        "SuitCampanas/opencode.json",
+        "scripts/mcp-supabase.js"
+      ]
     }
   };
   // @GEN:INFO-END
@@ -1042,6 +1567,17 @@
       ],
       skills: ['ideas-saas', 'ciclo', 'panel (comando)'],
       files: ['SuitIdeasSaaS/panel.html', 'SuitIdeasSaaS/serve-panel.js', 'SuitIdeasSaaS/estado.json', 'SuitIdeasSaaS/orden.json']
+    },
+    dec6: {
+      t: 'Apertura · Descubrimiento + switches',
+      steps: [
+        'Fase previa obligatoria antes de escribir/modificar/eliminar código — clasifica la solicitud y diagnostica 10 capacidades: configuración, archivos, filtros, cruce, reportes, dashboard, respaldos, idempotencia, validación, seguridad',
+        'Activa solo los micro-skills internas necesarias y entrega una propuesta de 11 puntos ANTES de programar',
+        'Lee .suit/config/switches.yaml al arrancar; con decision_libre=true (defecto) no pregunta y documenta supuestos; máximo 3 preguntas en total',
+        'parametros: switches declarativos global|<proyecto> con precedencia proyecto > global, sin tocar código; incluye "Recomendación de arranque" (qué parametrizar sin BD)'
+      ],
+      skills: ['descubrimiento', 'parametros'],
+      files: ['.suit/config/switches.yaml', 'descubrimiento/SKILL.md', 'parametros/SKILL.md']
     }
   });
 
@@ -1083,8 +1619,9 @@
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
-  window.addEventListener('load', build);
-  window.addEventListener('resize', build);
+  window.addEventListener('load', () => { applyView(); build(); });
+  window.addEventListener('resize', () => { build(); });
+  applyView();
   build();
 </script>
 </body>

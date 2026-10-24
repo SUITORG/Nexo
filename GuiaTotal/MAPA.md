@@ -475,6 +475,177 @@ SamurAIGPT/Generative-Media-Skills                → plan en .suit/memory/pendi
 
 ---
 
+## ═══ SUITCAMPANAS — ARQUITECTURA Y SERVICIOS (lane inferior) ═══
+
+**Subproyecto** `SuitCampanas/` · puerto **8000** · **SPA única + API** (no Express, `http` nativo). No pertenece a la cadena §1.5-§1.8: es un módulo hermano que consume los mismos maestros (`Config_Empresas`, Supabase).
+**Triggers:** "suitcampanas", "campañas", "cms de campañas", "abrir campanas", "producción multimedia", "media planner", "VIDE"
+
+> **Cómo se ve en el visual:** en `MAPA_VISUAL.html` este bloque es el **lane inferior** (caja punteada turquesa, botón `🏢 Campañas` para mostrarlo/ocultarlo) con las 11 burbujas `§12.1`-`§12.11`. Las **aristas turquesa** son el flujo interno; las **naranjas punteadas** son el cruce con la raíz (maestros compartidos). Como las secciones son numéricas, su drawer **se genera** desde aquí — editar este texto y correr `node scripts/gen-mapa-info.js`.
+
+## ═══ 12.1. SUITCAMPANAS ENTRADA (local-server-node.js) ═══
+
+**Puerto 8000** · `npm start` · `SuitCampanas/package.json` lo declara como `main`
+
+```text
+└── 🖥️ SuitCampanas/local-server-node.js  [entrada única]
+    ├── 📁 sirve estático: index.html · script.js · style.css
+    │       path.join(__dirname, pathname === "/" ? "index.html" : pathname)
+    ├── 🔌 API JSON: ~47 endpoints /api/* en el MISMO archivo
+    │       ~5300 líneas · ~300 KB · sin router ni carpetas de módulos
+    ├── 📁 arranque lazy desde la raíz → getAll (local-server-node.js:471)
+    │       server.js:118 GET /api/ensure-campanas lo spawnea
+    └── 📁 extras: mock-server.js (:3000) · local-server.py · iniciar.bat
+```
+
+## ═══ 12.2. SUITCAMPANAS FRONTEND (SPA) ═══
+
+**Sin hash routing** · todo en 2 archivos · dispatch por `setWorkMode`
+
+```text
+└── 🧩 SuitCampanas/index.html + SuitCampanas/script.js
+    ├── 📁 index.html (74 KB) · switch de modos en línea 62-71
+    ├── 📁 script.js (279 KB) · dispatch setWorkMode (línea 2875)
+    ├── 📁 9 modos: Ai · BD · BDPR (preview) · IMG · BDSMT (tendencias)
+    │       BDPV (presentación video) · LP (landing) · ViRe · VIDE
+    ├── 📁 paneles: Asistente IA · Producción Multimedia · ViRe · BDPV
+    │       VIDE (sceneReview / videReview / mediaPlan = Brief→MediaPlanner)
+    │       Historial · Consola de Logs · Google Drive manual
+    └── 🔌 llama solo rutas relativas /api/* (mismo origen :8000) · sin Stripe
+```
+
+## ═══ 12.3. SUITCAMPANAS API (endpoints) ═══
+
+**~47 rutas** · todas en `local-server-node.js` · respuestas JSON
+
+```text
+└── 🔌 SuitCampanas/local-server-node.js  [/api/*]
+    ├── 📁 brief · history · config · ensure-campanas
+    ├── 📁 imagen: /api/ai/image (Gemini) · /api/proxy-image (línea 3270)
+    │       el proxy evita CORS contra stock externo
+    ├── 📁 video: /api/vire-produce | vire-status | vire-result | vire-cancel
+    ├── 📁 comfy: /api/comfy/*  → COMFY_WRAPPER_URL
+    ├── 📁 VIDE interno: FFmpeg + music.py (línea 3552) + sfx.py (línea 3671)
+    └── ⚡ syncToSupabase  → espejo con PK idempotente
+```
+
+## ═══ 12.4. SUITCAMPANAS BACKEND GAS ═══
+
+**Hoja maestra** · archivo propio con `clasp` · `Config_Empresas` es el maestro multi-tenant
+
+```text
+└── 📈 SuitCampanas/backend.gs  [clasp]
+    ├── 📁 ID_SHEET + SECRET_TOKEN · hoja principal 1uyy2hz…
+    ├── 📁 GAS_URL hardcodeada → getAll (local-server-node.js:471)
+    ├── 📁 acciones: getAll · history · config
+    │       leen Config_Empresas y SMMC
+    ├── 📁 Prompts_IA también viven en la hoja (prompts compartidos con la raíz)
+    └── ⚡ syncToSupabase  → mismo espejo que la raíz (egyxgnlnzanxpqyuvmsg)
+```
+
+## ═══ 12.5. SUITCAMPANAS SUPABASE (espejo) ═══
+
+**Alto riesgo** si se filtra la `service_role` · mismas tablas que la raíz
+
+```text
+└── ☁️ SuitCampanas/lib/supabase.js
+    ├── 📁 anon key + supabaseAdmin con SERVICE_ROLE (línea 9-11)
+    │       bypass de RLS → tratar como secreto
+    ├── 📁 tablas: campanas · industrias · nichos · piezas_creativas
+    │       planes_medios · Prompts_IA · recetas · video_* (4)
+    ├── 📁 mismo proyecto que la raíz → el espejo es COMPARTIDO
+    └── ⚡ syncToSupabase  → upsert merge-duplicates por PK
+```
+
+## ═══ 12.6. SUITCAMPANAS OMNIROUTE IA ═══
+
+**Gateway local :20128** · prompts por ID desde la hoja `Prompts_IA`
+
+```text
+└── 🤖 OmniRoute :20128  [capa de IA]
+    ├── 📁 SuitCampanas/models-config.js · toOmniRouteId
+    │       model ID namespacing · SSE por defecto
+    ├── 📁 fallback: OpenRouter directo si OmniRoute falla
+    ├── 📁 Gemini SOLO en /api/ai/image (local-server-node.js:2882)
+    ├── 📁 prompts por ID: CAMP-BRIEFMARKER · CAMP-MEDIAPLANNER
+    │       CAMP-STYLEDIRECTOR  (loadPromptById)
+    └── 📁 pipeline: Brief → MediaPlanner → BriefMarker → VIDE
+```
+
+## ═══ 12.7. SUITCAMPANAS IMAGEN Y STOCK ═══
+
+**Cascada de fallback** · siempre devuelve algo (último recurso: color de marca)
+
+```text
+└── 🎨 imagen de campañas
+    ├── 📁 1ª opción: Pollinations (image.pollinations.ai, línea 374) · Flux · gratis
+    ├── 📁 2ª: Pexels → buscarImagenPexels (línea 35)
+    ├── 📁 3ª: Unsplash
+    ├── 📁 4ª: Wikimedia Commons
+    ├── 📁 5ª: fondo sólido con el color de la marca
+    └── 🔌 todas pasan por /api/proxy-image (evita CORS)
+```
+
+## ═══ 12.8. SUITCAMPANAS VIRE VIDEO ═══
+
+**Hermano en el monorepo** · no duplicar: la raíz y SuitCampanas apuntan al MISMO ViRe
+
+```text
+└── 🎬 SuitVidGenRemotion (ViRe)  →  puerto 3004
+    ├── 🔌 /api/vire-produce | vire-status | vire-result | vire-cancel
+    │       local-server-node.js líneas 3986 y 4592
+    ├── 📁 SuitCampanas hace spawn de ../SuitVidGenRemotion (ruta relativa)
+    ├── 📁 usado por los modos ViRe y VIDE del frontend
+    └── 📁 la raíz lo comparte → ver tabla de puertos AGENTS.md
+```
+
+## ═══ 12.9. SUITCAMPANAS COMFY Y MUSIC ═══
+
+**Hermanos vivos requeridos** para el pipeline de video completo
+
+```text
+└── 🎵 motores locales de audio/imagen
+    ├── 📁 SuitComfy → ComfyUI en :8188 · endpoints /api/comfy/*
+    │       vía COMFY_WRAPPER_URL
+    ├── 📁 SuitMusic → scripts/music.py (música) · scripts/sfx.py (efectos)
+    │       invocados desde VIDE (líneas 3552 y 3671)
+    ├── 📁 FFmpeg para corte/mux (módulo VIDE interno)
+    └── 📁 referenciados por ruta relativa ../ desde SuitCampanas/
+```
+
+## ═══ 12.10. SUITCAMPANAS GENERADORES ═══
+
+**Salen archivos al disco** · ojo con `reel-generator.js` (bug conocido)
+
+```text
+└── ⚙️ generadores de artefactos
+    ├── 📁 SuitCampanas/lp-generator.js → ✍️ SuitCampanas/landings/lp_*.html
+    ├── 📁 SuitCampanas/generators/reel-generator.js  [modo ViRe]
+    │       ⚠️ bug conocido: generar() duplicado → stack overflow si se llama
+    ├── 📁 SuitCampanas/generators/image-processor.js
+    ├── 📁 bdpv-generator → proviene de ../PresentacionesVid (modo BDPV)
+    └── 📁 quote-flow-poster → desde ../SuitComfy
+```
+
+## ═══ 12.11. SUITCAMPANAS PUENTE SUITORG ═══
+
+**Lo que la ata a la raíz** · son estas 3 líneas naranjas del lane
+
+```text
+└── 🌉 puente SuitOrg raíz ↔ SuitCampanas
+    ├── 📁 server.js:118 → GET /api/ensure-campanas spawnea el :8000 (lazy)
+    ├── 📁 server.js:34 → scripts/brief-generate (brief generator de la raíz)
+    ├── ⚡ brief-engine → SuitOrg/scripts/mcp/brief-server.js
+    │       4 tools brief.* · escribe el vector en Config_Empresas.logo_url
+    │       (la carpeta SuitCampanas/mcp/ está vacía — el archivo real es de la raíz)
+    ├── 📁 SuitCampanas/opencode.json → MCPs con cwd = SuitOrg raíz:
+    │       scripts/mcp-supabase.js · mcp-gsheets · comfyui-mcp (:8188) · Canva
+    ├── 📁 SuitCampanas/.env hereda ../.env (línea 6)
+    └── 📁 requiere hermanos vivos: ../PresentacionesVid · ../SuitComfy
+            ../SuitVidGenRemotion · ../SuitMusic
+```
+
+---
+
 ## Mapa de dependencias entre skills
 
 | Skill | Llama a | Alimenta a | Paralelo interno |
