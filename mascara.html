@@ -248,6 +248,11 @@
         <div class="full">
           <label>🖼️ a) Campaña con imágenes <span class="chip" id="chip-ea">0%</span></label>
           <div class="hint" id="st-ea">—</div>
+          <div class="hint" style="display:flex;gap:14px;align-items:center;margin-top:2px">
+            <label style="display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="ck-ea-copy" checked> ✅ copy</label>
+            <label style="display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="ck-ea-img" checked> 🖼️ img</label>
+            <label style="display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="ck-ea-zip" checked> ⬇️ zip</label>
+          </div>
           <button style="margin-top:6px" onclick="campGenerate('imagen',this)">✨ Generar campaña</button>
         </div>
         <div class="full">
@@ -446,9 +451,13 @@ function renderE() {
     return;
   }
   const a = E_STATE.imagen, b = E_STATE.video;
-  const pa = a && a.total ? Math.round(a.generadas / a.total * 6) : (a ? 6 : 0);
+  // a) chip = avance REAL de la cadena copy+img (0-6), no solo presencia
+  const copies = a ? (a.total ? a.generadas / a.total : 1) : 0;
+  const imgs = a && a.img_total ? Math.min(1, (a.img_generadas || 0) / a.img_total) : 0;
+  const pa = a ? Math.round((copies + imgs) / 2 * 6) : 0;
   const pb = b && b.total ? Math.round(b.generadas / b.total * 7) : (b ? 7 : 0);
-  set('chip-ea', 'st-ea', pa, 6, a ? `${a.generadas}/${a.total} piezas · ${a.estado}` : 'Sin campaña');
+  const stA = a ? `${a.generadas}/${a.total} copy · ${a.img_generadas ?? 0}/${a.img_total ?? '?'} img` : 'Sin campaña';
+  set('chip-ea', 'st-ea', pa, 6, stA);
   set('chip-eb', 'st-eb', pb, 7, b ? `${b.generadas}/${b.total} piezas · ${b.estado}` : 'Sin campaña');
   set('chip-ec', 'st-ec', E_STATE.presentacion ? 6 : 0, 6, E_STATE.presentacion ? `✅ ${E_STATE.presentacion.filename}` : 'Sin presentación');
   set('chip-ed', 'st-ed', E_STATE.landing ? 6 : 0, 6, E_STATE.landing ? `✅ ${E_STATE.landing.filename}` : 'Sin landing');
@@ -462,18 +471,38 @@ async function campGenerate(kind, btn) {
     if (kind === 'imagen' || kind === 'video') {
       const cap = Number($('e-cap').value) || 4;
       const vec = parseVector(($('f_logo_url').value || '').includes('|') ? $('f_logo_url').value : '');
-      const r1 = await campFetch(`${CAMP}/api/media-plan/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_empresa: cur.id_empresa, enfoque: kind,
-          industria_fallback: $('f_tipo_negocio').value || vec.industria || '',
-          nicho_fallback: vec.nicho || '', especializacion_fallback: vec.especializacion || '' }) });
-      const j1 = await r1.json();
-      if (j1.status !== 'success') throw new Error(j1.message || 'generate falló');
-      btn.textContent = '⏳ Generando piezas…';
-      const r2 = await campFetch(`${CAMP}/api/media-plan/${encodeURIComponent(j1.data.id)}/aprobar`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cap, estilo_visual: null }) });
-      const j2 = await r2.json();
-      if (j2.status !== 'success') throw new Error(j2.message || 'aprobar falló');
-      toast(`✅ ${kind}: ${j2.data.piezas_generadas ?? '?'} piezas generadas`);
+      // ☑ copy: sin él se reusa el plan existente (modo solo-imágenes)
+      const doCopy = kind === 'video' || $('ck-ea-copy').checked;
+      let planId = null;
+      if (doCopy) {
+        const r1 = await campFetch(`${CAMP}/api/media-plan/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_empresa: cur.id_empresa, enfoque: kind,
+            industria_fallback: $('f_tipo_negocio').value || vec.industria || '',
+            nicho_fallback: vec.nicho || '', especializacion_fallback: vec.especializacion || '' }) });
+        const j1 = await r1.json();
+        if (j1.status !== 'success') throw new Error(j1.message || 'generate falló');
+        btn.textContent = '⏳ Generando piezas…';
+        const r2 = await campFetch(`${CAMP}/api/media-plan/${encodeURIComponent(j1.data.id)}/aprobar`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cap, estilo_visual: null }) });
+        const j2 = await r2.json();
+        if (j2.status !== 'success') throw new Error(j2.message || 'aprobar falló');
+        planId = j2.data.plan_id;
+        toast(`✅ ${kind}: ${j2.data.piezas_generadas ?? '?'} piezas generadas`);
+      } else {
+        planId = E_STATE && E_STATE.imagen ? E_STATE.imagen.plan_id : null;
+        if (!planId) throw new Error('Sin plan existente — marca ☑ copy para crear uno');
+      }
+      // ☑ img: render Remotion por pieza, con poll de avance en st-ea
+      if (kind === 'imagen' && $('ck-ea-img').checked) {
+        await campRenderImagenes(planId, btn);
+        toast('🖼️ Imágenes listas');
+        await loadEstadoCampanas();
+      }
+      // ☑ zip: descarga del kit con las PNGs
+      if (kind === 'imagen' && $('ck-ea-zip').checked) {
+        btn.textContent = '⏳ Armando zip…';
+        await campDescargarKit(planId);
+      }
     } else if (kind === 'presentacion') {
       const r = await campFetch(`${CAMP}/api/bdpv/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ company: cur.nomempresa || cur.id_empresa, website: '', phone: cur.whatsapp_negocio || '',
@@ -491,6 +520,47 @@ async function campGenerate(kind, btn) {
     await loadEstadoCampanas();
   } catch (e) { toast('Campañas: ' + e.message, true); }
   btn.disabled = false; btn.textContent = orig;
+}
+
+// Render de imágenes por pieza (a): POST + poll de /img-status cada 3s.
+// El texto de st-ea muestra el ticker vivo (log de la última acción).
+async function campRenderImagenes(planId, btn) {
+  const r = await campFetch(`${CAMP}/api/media-plan/${encodeURIComponent(planId)}/render-imagenes`, { method: 'POST' });
+  const j = await r.json();
+  if (j.status !== 'success') throw new Error(j.message || 'render-imagenes falló');
+  const t0 = Date.now();
+  for (;;) {
+    await sleep(3000);
+    let d = null;
+    try {
+      const s = await (await campFetch(`${CAMP}/api/media-plan/${encodeURIComponent(planId)}/img-status`)).json();
+      if (s.status === 'success') d = s.data;
+    } catch (_) {}
+    if (d) {
+      const ult = d.log.length ? d.log[d.log.length - 1] : '';
+      $('st-ea').textContent = `${d.done}/${d.total} img · ${ult}`;
+      if (btn) btn.textContent = `⏳ Imágenes ${d.done}/${d.total}…`;
+      if (!d.running) return;
+    }
+    if (Date.now() - t0 > 15 * 60 * 1000) throw new Error('Timeout de imágenes (15 min)');
+  }
+}
+
+// Descarga del kit zip (blob → anchor; el fetch permite manejar 404/sin imágenes)
+async function campDescargarKit(planId) {
+  const r = await campFetch(`${CAMP}/api/media-plan/${encodeURIComponent(planId)}/descargar`);
+  if (!r.ok) {
+    let msg = 'zip no disponible';
+    try { msg = (await r.json()).message || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+  const blob = await r.blob();
+  const u = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = u; a.download = `kit_${cur.id_empresa}.zip`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(u);
+  toast('⬇ Kit zip descargado');
 }
 
 async function loadSwitches(id) {

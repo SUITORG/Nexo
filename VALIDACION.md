@@ -177,3 +177,31 @@
 
 ## Veredicto global F5/F6
 **PASA** — espejo Supabase poblado y sostenido (2699/2409) bajo visto bueno del usuario.
+
+---
+
+## 2026-10-24 — Sección E-a) cadena 100% automática: copy → imágenes → zip (nueva feature)
+
+**Scope:** `SuitCampanas/local-server-node.js` (3 endpoints + extensión estado) · `mascara.html` (casillas ☑ copy/img/zip + poll + auto-zip) · `.gitignore` (descargas/)
+**Decisiones usuario:** 1 imagen por pieza · motor Remotion still (`/api/vire-still` self-HTTP)
+
+| # | Verifica | Acción | Resultado | Veredicto |
+|---|----------|--------|-----------|-----------|
+| V1 | Sintaxis server | `node --check local-server-node.js` | sin errores | PASA |
+| V1b | Sintaxis máscara | JS inline extraído → `node --check` (1 bloque) | sin errores | PASA |
+| V2 | Contadores | `GET estado-campanas/SUITORG` | `copy: 6/6 · img: 0/6` (campos nuevos) | PASA |
+| V3 | Render batch | `POST render-imagenes` → poll `img-status` | **6/6 PNGs en 96s**, 0 errores, log por pieza (`C1-1..C3-2 ok`) | PASA |
+| V4 | Zip | `GET descargar` | HTTP 200 · `application/zip` · `kit_SUITORG.zip` 6.5MB · magic `PK` | PASA |
+| V5 | Idempotencia | re-`POST render-imagenes` | 6× "ya existe ✓", done 6/6, **0 regeneraciones** | PASA |
+| V6 | UI máscara | Chrome: `mascara.html` → SUITORG → sec E | chip `6%` verde · `st-ea = "6/6 copy · 6/6 img"` · casillas copy/img/zip presentes (on/on/on) | PASA |
+
+## Evidencia
+- PNGs en `SuitCampanas/descargas/SUITORG/`: pieza_C1-1 (1.5MB) … C3-2 (850KB), 6 archivos, 48KB–2MB.
+- Zip 6.5MB con Content-Disposition attachment (bajado vía fetch-blob en la máscara, maneja 404).
+- Plan real del usuario: `plan_1792817039033` (SUITORG, aprobado 2026-10-24 04:43).
+
+## GAPs
+- No se probó el clic completo "Generar campaña" con ☑ desde la máscara (regeneraría copy con llamadas IA nuevas); cada tramo sí está verificado por separado (V2–V5) + lógica de cadena con `node --check`.
+
+## Veredicto global
+**PASA** (7/7) — cadena copy→imágenes→zip operativa desde la Sección E-a).

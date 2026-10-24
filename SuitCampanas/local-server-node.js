@@ -13,6 +13,7 @@ const bdpvGenerator = require('../PresentacionesVid/bdpv-generator');
 const lpGenerator = require('./lp-generator');
 const { MODELS, DEFAULT_MODEL, toOmniRouteId } = require('./models-config');
 const { composePoster } = require('../SuitComfy/quote-flow-poster');
+const { execFile } = require('child_process');
 
 // Extract hex color from pipe-delimited color_tema (#hex|candado:0|pal:pal-teal|...)
 function extractHexColor(colorTema) {
@@ -1172,7 +1173,7 @@ async function callAIJson(systemContent, userContent, temperature = 0.7) {
 
 // --- MEDIA PLANNER / BRIEFMARKER (pipeline Brief → MediaPlanner → BriefMarker) ---
 // Genera el plan_de_medios desde brief_normalizado (1 llamada de IA, barata).
-async function generateMediaPlan(idEmpresa, fallbacks = {}) {
+async function generateMediaPlan(idEmpresa, fallbacks = {}, enfoque = null) {
     const empresaRow = await fetchEmpresaRow(idEmpresa);
     // ADR-026: el vector de Brief vive en logo_url desde ADR-025 (2026-08-09) —
     // tipo_negocio se revirtió a su formato corto original. Fallback a
@@ -1185,11 +1186,21 @@ async function generateMediaPlan(idEmpresa, fallbacks = {}) {
 
     const prompt = await loadPromptById('CAMP-MEDIAPLANNER');
     const systemContent = prompt.includes('{') && prompt.includes('}') ? prompt : 'Eres un media planner senior. Respondes EXCLUSIVAMENTE con un objeto JSON válido, sin texto fuera de él.';
-    const userContent = `Brief normalizado del anunciante (JSON):\n${JSON.stringify(brief, null, 2)}\n\nGenera el plan de medios completo como JSON válido.`;
+    // Enfoque de campaña (máscara Sección E): restringe el tipo de piezas del
+    // plan sin tocar el prompt base de Supabase. Se guarda como _enfoque dentro
+    // del JSON del plan (sin cambio de schema).
+    const enfoqueTxt = enfoque === 'imagen'
+        ? '\n\nRESTRICCIÓN DE ENFOQUE: genera EXCLUSIVAMENTE piezas de imagen estática (Post, Banner o Story-imagen). NO incluyas Reels ni piezas de video.'
+        : enfoque === 'video'
+            ? '\n\nRESTRICCIÓN DE ENFOQUE: genera EXCLUSIVAMENTE piezas de video corto (Reel o Story-video). NO incluyas posts estáticos ni banners.'
+            : '';
+    const userContent = `Brief normalizado del anunciante (JSON):\n${JSON.stringify(brief, null, 2)}\n\nGenera el plan de medios completo como JSON válido.${enfoqueTxt}`;
 
     const planDeMedios = await callAIJson(systemContent, userContent, 0.5);
     const totalSlots = (planDeMedios.campaigns || []).reduce((acc, c) => acc + (c.content_slots?.length || 0), 0);
     const planId = `plan_${Date.now()}`;
+    const planGuardado = (planDeMedios && typeof planDeMedios === 'object')
+        ? { ...planDeMedios, _enfoque: enfoque || null } : planDeMedios;
     const { data, error } = await supabase
         .from('planes_medios')
         .insert({
@@ -1198,7 +1209,7 @@ async function generateMediaPlan(idEmpresa, fallbacks = {}) {
             empresa: (empresaRow && empresaRow.nomempresa) || '',
             brief_raw: briefRaw,
             brief_normalizado: brief,
-            plan_de_medios: planDeMedios,
+            plan_de_medios: planGuardado,
             estado: 'pendiente_revision',
             total_slots: totalSlots
         })
@@ -1640,12 +1651,59 @@ IMPORTANTE: esta dirección SOLO controla "visual_style", "editing" y "scenes[].
     };
 }
 
+// ── Sección E de la máscara: imágenes por pieza (1 por pieza, scene[0]) ──
+// Job en memoria por plan_id (patrón vire-status) + carpeta descargas/.
+// El render reusa /api/vire-still vía self-HTTP — cero refactor de ese handler.
+const imgJobs = new Map();
+const safeName = s => String(s || '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+const descargasDir = idEmp => path.join(__dirname, 'descargas', safeName(idEmp));
+const countPngs = dir => { try { return fs.readdirSync(dir).filter(f => f.endsWith('.png')).length; } catch (_) { return 0; } };
+const pushLog = (job, msg) => { job.log.push(msg); if (job.log.length > 60) job.log.splice(0, job.log.length - 60); };
+
+async function runPiezaImgJob(planId, job, dir, plan, piezas) {
+    try {
+        for (const p of piezas) {
+            if (!Array.isArray(p.creative_json?.scenes) || !p.creative_json.scenes.length) continue;
+            const outFile = path.join(dir, `pieza_${safeName(p.slot_id)}.png`);
+            if (fs.existsSync(outFile)) { job.done++; pushLog(job, `pieza ${p.slot_id}: ya existe ✓`); continue; }
+            try {
+                const cj = p.creative_json;
+                const r = await fetch(`http://127.0.0.1:${PORT}/api/vire-still`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        empresa: plan.empresa || plan.id_empresa,
+                        guion: JSON.stringify({ escenas: cj.scenes }),
+                        visual_style: cj.visual_style || (plan.estilo_visual && plan.estilo_visual.nombre) || undefined,
+                        estilo_visual_keywords: cj.visual_style || (plan.estilo_visual && plan.estilo_visual.keywords) || undefined,
+                        brand_colors: cj.brand_colors || cj.scenes[0].brand_colors || undefined
+                    }),
+                    signal: AbortSignal.timeout(240000)
+                });
+                const j = await r.json();
+                if (j.status !== 'success' || !j.image) throw new Error(j.error || 'vire-still sin imagen');
+                fs.writeFileSync(outFile, Buffer.from(String(j.image).split(',').pop(), 'base64'));
+                job.done++; pushLog(job, `pieza ${p.slot_id}: ok ✓`);
+            } catch (e) {
+                job.errors++; pushLog(job, `pieza ${p.slot_id}: ${e.message}`);
+            }
+        }
+        pushLog(job, `imágenes: listo (${job.done}/${job.total}${job.errors ? ', ' + job.errors + ' errores' : ''})`);
+    } catch (e) {
+        pushLog(job, 'fatal: ' + e.message);
+    } finally {
+        job.running = false;
+    }
+}
+
 const server = http.createServer((req, res) => {
     serverLog('REQ', `${req.method} ${req.url}`);
 
     const origin = req.headers.origin || '';
-    const allowedOrigins = ['http://localhost:8000', 'http://127.0.0.1:8000', 'null'];
-    const allowed = allowedOrigins.includes(origin) || origin.endsWith('.suitorg.com');
+    // Cualquier origen local (máscara :3001/:813, este server :8000, file:// 'null')
+    // + dominios suitorg.com en producción.
+    const allowed = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+        || origin === 'null'
+        || origin.endsWith('.suitorg.com');
     if (allowed) res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -1973,16 +2031,16 @@ const server = http.createServer((req, res) => {
         req.on('data', d => body += d);
         req.on('end', async () => {
             try {
-                const { id_empresa, industria_fallback, nicho_fallback, especializacion_fallback } = JSON.parse(body);
+                const { id_empresa, industria_fallback, nicho_fallback, especializacion_fallback, enfoque } = JSON.parse(body);
                 if (!id_empresa) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ status: 'error', message: 'id_empresa es requerido' }));
                     return;
                 }
-                serverLog('INFO', `[MEDIAPLANNER] Generando plan para empresa ${id_empresa}...`);
+                serverLog('INFO', `[MEDIAPLANNER] Generando plan para empresa ${id_empresa}${enfoque ? ` (enfoque: ${enfoque})` : ''}...`);
                 const plan = await generateMediaPlan(id_empresa, {
                     industria: industria_fallback, nicho: nicho_fallback, especializacion: especializacion_fallback
-                });
+                }, enfoque || null);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ status: 'success', data: plan }));
             } catch (e) {
@@ -2077,6 +2135,199 @@ const server = http.createServer((req, res) => {
                 res.end(JSON.stringify({ status: 'success', data: data || [] }));
             } catch (e) {
                 serverLog('ERROR', `[MEDIAPLANNER] Listar recientes: ${e.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // POST /api/media-plan/:id/render-imagenes — Sección E máscara: 1 PNG por
+    // pieza (scene[0] vía vire-still) a descargas/<id_empresa>/. Idempotente:
+    // salta las que ya existen; errores pasan al log y el loop sigue.
+    const renderImgsMatch = pathname.match(/^\/api\/media-plan\/([^/]+)\/render-imagenes$/);
+    if (renderImgsMatch && req.method === 'POST') {
+        (async () => {
+            let job = null, dir = null, plan = null, conEscenas = null, resp;
+            try {
+                const planId = renderImgsMatch[1];
+                const { data: pl, error } = await supabase
+                    .from('planes_medios')
+                    .select('id, empresa, id_empresa, estilo_visual')
+                    .eq('id', planId).single();
+                if (error) throw error;
+                plan = pl;
+                const { data: piezas, error: pErr } = await supabase
+                    .from('piezas_creativas')
+                    .select('id, slot_id, creative_json, estado')
+                    .eq('plan_id', planId).eq('estado', 'generado')
+                    .order('slot_id');
+                if (pErr) throw pErr;
+                conEscenas = (piezas || []).filter(p => Array.isArray(p.creative_json?.scenes) && p.creative_json.scenes.length);
+                if (!conEscenas.length) throw new Error('No hay piezas generadas con escenas — corre primero copy (aprobar)');
+                const prev = imgJobs.get(planId);
+                if (prev && prev.running) {
+                    resp = { status: 'success', data: { running: true, total: prev.total } };
+                } else {
+                    dir = descargasDir(plan.id_empresa);
+                    fs.mkdirSync(dir, { recursive: true });
+                    job = { total: conEscenas.length, done: 0, errors: 0, running: true, log: [`pipeline: ${conEscenas.length} piezas listas (copy ok)`] };
+                    imgJobs.set(planId, job);
+                    resp = { status: 'success', data: { started: true, total: job.total } };
+                }
+            } catch (e) {
+                resp = { status: 'error', message: e.message };
+            }
+            res.writeHead(resp.status === 'success' ? 200 : 500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(resp));
+            if (job) runPiezaImgJob(renderImgsMatch[1], job, dir, plan, conEscenas); // fire-and-forget
+        })();
+        return;
+    }
+
+    // GET /api/media-plan/:id/img-status — avance en vivo (ticker de la máscara).
+    // done = scan de carpeta (fuente de verdad tras reinicios); log del job vivo.
+    const imgStatusMatch = pathname.match(/^\/api\/media-plan\/([^/]+)\/img-status$/);
+    if (imgStatusMatch && req.method === 'GET') {
+        (async () => {
+            try {
+                const planId = imgStatusMatch[1];
+                const { data: plan, error } = await supabase
+                    .from('planes_medios')
+                    .select('id_empresa').eq('id', planId).single();
+                if (error) throw error;
+                const { count: total } = await supabase
+                    .from('piezas_creativas')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('plan_id', planId).eq('estado', 'generado');
+                const job = imgJobs.get(planId);
+                const done = countPngs(descargasDir(plan.id_empresa));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'success',
+                    data: {
+                        total: (job && job.total) || total || 0,
+                        done,
+                        errors: job ? job.errors : 0,
+                        running: !!(job && job.running),
+                        log: job ? job.log.slice(-12) : []
+                    }
+                }));
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // GET /api/media-plan/:id/descargar — zip de descargas/<id>/ con tar -a
+    // nativo de Windows (sin dependencias nuevas). Lo baja el navegador por
+    // Content-Disposition (el clic/anchor no necesita CORS).
+    const dlMatch = pathname.match(/^\/api\/media-plan\/([^/]+)\/descargar$/);
+    if (dlMatch && req.method === 'GET') {
+        (async () => {
+            try {
+                const { data: plan, error } = await supabase
+                    .from('planes_medios')
+                    .select('id_empresa').eq('id', dlMatch[1]).single();
+                if (error) throw error;
+                const folder = safeName(plan.id_empresa);
+                const dir = descargasDir(plan.id_empresa);
+                if (countPngs(dir) === 0) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'error', message: 'Sin imágenes generadas aún' }));
+                    return;
+                }
+                const zipPath = path.join(__dirname, 'descargas', `kit_${folder}.zip`);
+                await new Promise((resolve, reject) => {
+                    execFile('tar', ['-a', '-c', '-f', zipPath, '-C', path.join(__dirname, 'descargas'), folder],
+                        err => err ? reject(err) : resolve());
+                });
+                res.writeHead(200, {
+                    'Content-Type': 'application/zip',
+                    'Content-Disposition': `attachment; filename="kit_${folder}.zip"`,
+                    'Content-Length': fs.statSync(zipPath).size
+                });
+                fs.createReadStream(zipPath).pipe(res);
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', message: e.message }));
+            }
+        })();
+        return;
+    }
+
+    // GET /api/estado-campanas/:id_empresa — estado para la Sección E de la máscara.
+    // Devuelve el plan más reciente por enfoque (imagen/video) con conteo de
+    // piezas generadas, más la existencia de presentación (BDPV) y landing (LP)
+    // escaneando los archivos locales por nombre de empresa.
+    const estadoCampMatch = pathname.match(/^\/api\/estado-campanas\/([^/]+)$/);
+    if (estadoCampMatch && req.method === 'GET') {
+        (async () => {
+            try {
+                const idEmp = decodeURIComponent(estadoCampMatch[1]);
+                const empresaRow = await fetchEmpresaRow(idEmp);
+                const nombre = (empresaRow && empresaRow.nomempresa) || idEmp;
+                const san = s => String(s || '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+
+                // a) b) — último plan por enfoque (imagen/video); los planes sin
+                // _enfoque (generados desde la UI de Campanas) se ignoran aquí.
+                const { data: planes, error } = await supabase
+                    .from('planes_medios')
+                    .select('id, estado, total_slots, created_at, plan_de_medios')
+                    .eq('id_empresa', idEmp)
+                    .order('created_at', { ascending: false })
+                    .limit(30);
+                if (error) throw error;
+                const porEnfoque = {};
+                for (const p of (planes || [])) {
+                    const enf = p.plan_de_medios && p.plan_de_medios._enfoque;
+                    if ((enf === 'imagen' || enf === 'video') && !porEnfoque[enf]) {
+                        const { count } = await supabase
+                            .from('piezas_creativas')
+                            .select('id', { count: 'exact', head: true })
+                            .eq('plan_id', p.id)
+                            .eq('estado', 'generado');
+                        porEnfoque[enf] = {
+                            plan_id: p.id, estado: p.estado,
+                            total: p.total_slots || 0, generadas: count || 0,
+                            created_at: p.created_at
+                        };
+                    }
+                }
+
+                // Avance real de imágenes (Sección E): fuente = carpeta descargas/
+                if (porEnfoque.imagen) {
+                    porEnfoque.imagen.img_generadas = countPngs(descargasDir(idEmp));
+                    porEnfoque.imagen.img_total = porEnfoque.imagen.generadas; // 1 imagen por pieza
+                }
+
+                // c) presentación — escanea PresentacionesVid/<company>_<ts>.html
+                const scanLatest = (dir, prefixes) => {
+                    try {
+                        const toks = [san(idEmp), san(nombre)];
+                        const hits = fs.readdirSync(dir).filter(f => {
+                            if (!f.toLowerCase().endsWith('.html')) return false;
+                            const fl = f.toLowerCase();
+                            return toks.some(t => t && prefixes.some(p => fl.startsWith((p + t).toLowerCase() + '_')));
+                        });
+                        if (!hits.length) return null;
+                        hits.sort((a, b) => fs.statSync(path.join(dir, b)).mtimeMs - fs.statSync(path.join(dir, a)).mtimeMs);
+                        return { filename: hits[0] };
+                    } catch (e) { return null; }
+                };
+                const presentacion = scanLatest(path.join(__dirname, '..', 'PresentacionesVid'), ['']);
+                // d) landing — SuitCampanas/landings/lp_<company>_<ts>.html
+                const landing = scanLatest(path.join(__dirname, 'landings'), ['lp_']);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'success',
+                    data: { empresa: nombre, imagen: porEnfoque.imagen || null, video: porEnfoque.video || null, presentacion, landing }
+                }));
+            } catch (e) {
+                serverLog('ERROR', `[ESTADO-CAMPANAS] ${e.message}`);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ status: 'error', message: e.message }));
             }

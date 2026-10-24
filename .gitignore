@@ -123,3 +123,9 @@ neo4j-community-5.26.0/
 # (solo ra√≠z: / al inicio; los manuales de subproyectos como SuitServiHogar/ siguen versionados)
 /MANUAL_*.md
 
+
+# SuitMarket ó keys locales (no commitear: el repo es publico via GH Pages)
+SuitMarket/config.json
+
+# SuitCampanas - kits generados por Seccion E (PNGs/zip de campanas)
+SuitCampanas/descargas/
