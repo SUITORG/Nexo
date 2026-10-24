@@ -69,7 +69,7 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 
 ### ⏸ Diferidos (con motivo — no olvidar)
 
-- [ ] **FT-006** · *alto, PRIORIDAD usuario* · `opencode-claude-memory` (npm): memoria persistente compartida OpenCode↔Claude, auto-extracción post-sesión, `.claude/memory/`. Instalar lo antes posible: `npm install -g opencode-claude-memory` + shell hook. *2026-08-27*
+- [~] **FT-006** · *alto, PRIORIDAD usuario* · `opencode-claude-memory` (npm, `kuitos`): memoria persistente compartida OpenCode↔Claude, auto-extracción post-sesión, `.claude/projects/<repo>/memory/`. **Parcial (2026-10-16):** plugin `MemoryPlugin` habilitado en `SuitOrg/opencode.json` (`plugin[]`) — funciona en Windows. **Falta (solo si se usa WSL):** el wrapper/CLI `opencode-memory install` (shell hook) es bash-only → inviable en PowerShell. *2026-08-27*
 - [ ] **FT-001** · medio · ComfyUI como motor visual/audio para VIDE (workflows text2img+ControlNet, AnimateDiff, SFX; conectar `generateVideJson()`→MCP). Solo paso 1 (registro) hecho — pausado hasta probar manualmente el pipeline VIDE mejorado. *2026-07-30*
 - [ ] **FT-002** · bajo · DaVinci Resolve vía MCP (color grading, mezcla). Pendiente de que la prueba manual del pipeline VIDE muestre gaps que FFmpeg no resuelva. *2026-07-30*
 - [ ] **FT-003** · medio · OpenSandbox como backend de ejecución segura para agentes (Docker/K8s, skill, registro, MCP). *2026-08-27*
@@ -137,6 +137,7 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 - [x] Taxonomías por proyecto creadas (2026-09-26)
 - [x] Limpieza SuitServiHogar (ruido borrado, evaluaciones a `docs/`) (2026-09-26)
 - [x] Consolidación de pendientes a 4 fuentes (2026-09-26 → este archivo)
+- [x] **SuitDashboard — Cerebro "Foco"** (2026-10-21): panel Top 5 pendientes + pills `hace Xd`/`N pend` por tarjeta + drawer "Último hecho/Pendientes" + filtro "con pendientes". Fuentes: `git log` 30d y este archivo (filas `- [ ]`) + `memory/pending/*.md`; validado ronda 3 (PASA 4/4 en `SuitDashboard/VALIDACION.md`). Este archivo ahora alimenta el dashboard — cerrar pendientes aquí refleja el Foco.
 - [ ] **SuitCVLO-open** (2026-10-01, ciclo F0->F7): fork open de cvlo-auditor + switch IA ollama -> openrouter -> gemini -> autoclaw (3015, ADR-037, 23 tests OK). PENDIENTE: **corrida real con un lote de cteCVLO1** para contrastar calidad de lectura Ollama local (qwen3.5 vision) vs Gemini/OpenRouter y fijar CVLO_VLM por defecto.
 - [ ] **SuitCVLO-open: OPENROUTER_API_KEY inválida** (2026-10-01): en la corrida real devolvió 401 User not found, así que el eslabón 2 de la cadena nunca funciona. PENDIENTE: renovar la key o vaciarla para que el switch la salte limpio.
 - [ ] **SuitCVLO-open: DEEPSEEK_API_KEY** (2026-10-01): AutoClaw eliminado de la cadena (ADR-038) y metido DeepSeek como eslabón 2, pero falta la key. PENDIENTE del usuario: alta en https://platform.deepseek.com (Sign Up con email o GitHub, sin tarjeta) → API Keys → Generate → pegar en SuitCVLO-open/.env como DEEPSEEK_API_KEY (el grant son 5M tokens / 30 días).

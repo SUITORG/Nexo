@@ -61,7 +61,8 @@
     }
   },
   "plugin": [
-    ".ponytail/.opencode/plugins/ponytail.mjs"
+    ".ponytail/.opencode/plugins/ponytail.mjs",
+    "opencode-claude-memory"
   ],
   "instructions": [
     "AGENTS.md",
@@ -102,6 +103,15 @@
       "type": "remote",
       "url": "https://mcp.neon.tech/mcp",
       "enabled": false
+    },
+    "meigen": {
+      "type": "remote",
+      "url": "https://www.meigen.ai/api/mcp",
+      "headers": {
+        "Authorization": "Bearer {env:MEIGEN_API_KEY}"
+      },
+      "oauth": false,
+      "enabled": true
     },
     "google-flow": {
       "type": "local",
