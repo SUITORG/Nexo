@@ -176,7 +176,21 @@ function renderLanding(tpl, company, coSeo, file, suitorgCompany = {}) {
         .replace(/{{CORREO}}/g, correo)
         .replace(/{{QUE_HACE}}/g, queHace)
         .replace(/{{PARA_QUIEN}}/g, paraQuien)
-        .replace(/{{PRECIO}}/g, precio);
+        .replace(/{{PRECIO}}/g, precio)
+        // Aviso de privacidad / cookies: solo si la id_empresa los trae (ADR-057).
+        // <details> sin JS; esc para que texto con <> no rompa la página.
+        .replace(/{{POLITICAS_SECCION}}/g, (() => {
+            const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const priv = String(company.politicas_privacidad || '').trim();
+            const cook = String(company.politicas_cookies || '').trim();
+            if (!priv && !cook) return '';
+            const st = 'cursor:pointer;font-weight:600;color:var(--text);';
+            const body = 'white-space:pre-wrap;margin-top:0.5rem;line-height:1.5;';
+            let f = '<footer style="max-width:720px;margin:2.5rem auto 0;padding:0 1.5rem 2.5rem;font-size:0.8rem;color:var(--text-dim);">';
+            if (priv) f += `<details style="margin-bottom:0.75rem;"><summary style="${st}">Aviso de privacidad</summary><p style="${body}">${esc(priv)}</p></details>`;
+            if (cook) f += `<details><summary style="${st}">Política de cookies</summary><p style="${body}">${esc(cook)}</p></details>`;
+            return f + '</footer>';
+        })());
 
     // Preguntas de pre-compra: ocultar cada línea si el Brief no trae el dato
     // (nunca mostrar "¿Qué hace? " vacío, y nunca inventar un precio).
