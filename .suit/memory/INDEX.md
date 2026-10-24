@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (54 ADRs)
+## decisions/ (55 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -61,6 +61,7 @@
 | ADR-054 | [Etapa 4P — Producto terminado automatizado (Fases 5-7 en el pipeline)](ADR-054-etapa-4p-producto-terminado.md) | Accepted (2026-10-12) | 2026-10-12 | Tras construir ContractRenew hasta Fase 7 manualmente (dashboard CRUD, login PIN con signup y recuperación por email, alertas + respaldo,… | 051, 053 |
 | ADR-055 | [SuitWhatsAppPub — publicador WhatsApp personal con calendario](ADR-055-suit-whatsapp-pub.md) | Accepted (2026-10-12) | 2026-10-12 | El usuario pidió un programa local para publicar fotos/videos en un grupo de WhatsApp personal (NO Business) y en Historias/Estados, con… | - |
 | ADR-056 | [Skill micro-app-saas (gate de forma + ruta de cobro)](ADR-056-micro-app-saas-skill.md) | Accepted (2026-10-16) | 2026-10-16 | Faltaba una decisión explícita antes de diseñar un producto: **qué forma** debe tener (¿hace falta un SaaS entero, o basta una micro-app?)… | 048, 051, 054 |
+| ADR-057 | [Aviso de privacidad + cookies por empresa en Config_Empresas](ADR-057-aviso-privacidad-cookies-por-empresa.md) | Accepted (2026-10-23) | 2026-10-23 | El flujo de identidad corporativa (guia-total → empresa-registro) no generaba aviso de privacidad ni política de cookies. El frontend… | - |
 
 ## bugs/ (7)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…
@@ -71,7 +72,8 @@
 - [videos-superposiciones-subtitulos.md](bugs/videos-superposiciones-subtitulos.md) — Bug: Superposiciones (logo/títulos) y subtítulos no funcionan en VIDE
 - [vire-audio-cache-tema-distinto.md](bugs/vire-audio-cache-tema-distinto.md) — Bug: ViRe reproducía audio de un guion completamente distinto
 
-## lessons/ (1)
+## lessons/ (2)
+- [postgrest-schema-cache.md](lessons/postgrest-schema-cache.md) — Lección: PostgREST cachea el schema — ALTER + sync inmediato = no-op silencioso
 - [soluciones.md](lessons/soluciones.md) — Memoria de Soluciones y Optimización
 
 ## patterns/ (5)
