@@ -154,3 +154,26 @@
 
 ## Veredicto global
 **PASA** (6/6) — redacción + escritura + render + fallback + endpoint tarea A.
+
+---
+
+## 2026-10-23 — Sync espejo Supabase (ciclo F5 PLAN-SYNC + F6 visto bueno)
+
+**Scope:** espejo Supabase `Config_Empresas` (proyecto `egyxgnlnzanxpqyuvmsg`) · `ALTER ADD COLUMN` + `syncToSupabase LABARIES` · aprobado por usuario (F6)
+**Contrato:** `CONTRATO.md` ✓ · Ronda: 1
+
+| # | Verifica | Acción | Resultado | Veredicto |
+|---|----------|--------|-----------|-----------|
+| F5 | Columnas ausentes | `information_schema.columns` = 0 filas para las 2 col. | confirmado divergente del maestro GSHEETS | PLAN-SYNC escrito |
+| F6.1 | ALTER | `ADD COLUMN IF NOT EXISTS politicas_privacidad/cookies text` | `{"success":true}` | PASA |
+| F6.2 | Sync 1er intento | `syncToSupabase LABARIES` (GAS) | `SYNC_COMPLETE` pero SELECT = NULL (no-op) | FALLA transitoria |
+| F6.3 | Diagnóstico | PK `Config_Empresas_pkey(id_empresa)` existe · 13 filas · 0 dup · 0 null | schema OK → no es PK | — |
+| F6.4 | Purga caché + upsert directo PostgREST | POST merge-duplicates LABARIES (anon) | HTTP 200 · pobla 2699/2409 | PASA |
+| F6.5 | Re-sync oficial GAS | `syncToSupabase LABARIES` | `SYNC_COMPLETE` · SELECT **mantiene 2699/2409** | PASA |
+
+**Causa raíz F6.2:** caché de schema de PostgREST recién tras el ALTER (upsert no ve columnas nuevas). Con caché tibio (tras F6.4) el sync oficial GAS pobla y sostiene. **Lección registrada:** tras ALTER, dejar reposar/upsert de prueba antes de confiar en `syncToSupabase`.
+
+**GAP:** ninguna. Espejo LABARIES consistente con maestro GSHEETS. Brecha preexistente de cobertura (13 espejo vs 21 GAS) anotada en PLAN-SYNC, fuera de alcance.
+
+## Veredicto global F5/F6
+**PASA** — espejo Supabase poblado y sostenido (2699/2409) bajo visto bueno del usuario.
