@@ -205,3 +205,32 @@
 
 ## Veredicto global
 **PASA** (7/7) — cadena copy→imágenes→zip operativa desde la Sección E-a).
+
+---
+
+## 2026-10-24 — Quality Gate de campaña (CAMP-CAMPAIGN-QA) + fixes de render (logo/CTA/hook)
+
+**Scope:** prompt nuevo `CAMP-CAMPAIGN-QA` (Supabase `Prompts_IA` + `SuitCampanas/prompts/CAMP-CAMPAIGN-QA.md`) · cableado `withCampaignQA` en MEDIAPLANNER y BRIEFMARKER · fixes en `runPiezaImgJob` (logo data URL, contacto, hook overlay)
+**Diagnóstico de la corrida previa (SUITORG):** brief_normalizado casi vacío (logo_url sin vector), logo/teléfono NO se pasaban al render, imagen = scene[0] sin overlay (caía "Escena 1"), copy genérico → los 4 síntomas reportados por el usuario.
+
+| # | Verifica | Acción | Resultado | Veredicto |
+|---|----------|--------|-----------|-----------|
+| V1 | Prompt insertado | SQL `Prompts_IA` row `CAMP-CAMPAIGN-QA` | 3919 chars, habilitado TRUE | PASA |
+| V2 | Sintaxis | `node --check local-server-node.js` | sin errores | PASA |
+| V3 | Gate cableado | `withCampaignQA()` en los 2 generadores (fallback si no existe) | code review + carga OK al reiniciar | PASA |
+| V4 | Logo en render | Drive URL cruda → 403/ORB en browser headless (falló 1 pieza); fix: **descarga Node → data URL** + fallback sin-logo | re-render: **logo visible** en PNG | PASA |
+| V5 | CTA/contacto | `telefono` + `sitio_web` al vire-still → overlay de contacto | PNG muestra "528110463721 · grupoevasol.com/?co=SUITORG#home" | PASA |
+| V6 | Hook overlay | fallback: overlay vacío → `cj.hook` (nunca "Escena 1") | PNG muestra "¿Sabías qué apps pueden hacer por ti hoy?" | PASA |
+| V7 | Cadena | re-render completo | 6/6 PNGs, 0 errores, idempotencia intacta | PASA |
+
+## Evidencia
+- Imagen `descargas/SUITORG/pieza_C1-1.png` inspeccionada visualmente: logo (esquina sup-izq) + hook + teléfono/sitio ✓.
+- Prompt maestro GAS: `appendRows` no existe en el GAS desplegado (`ACTION_WAITING`) — paridad pendiente de `clasp push` (no ejecutado, requiere visto bueno). El server lee de Supabase → **gate ya operativo**; el auto-sync 5min es upsert (no borra la fila).
+
+## GAPs
+- **BRIEF de SUITORG vacío** (Config_Empresas.logo_url sin vector de brief ni LAPVTFU) — el gate lo marcará `BRIEF_INCOMPLETO`; rellenar datos de la empresa antes de esperar campañas buenas.
+- Copy/material viejo de la corrida previa no se regenera solo (idempotencia) — re-clic con ☑ copy genera copias nuevas bajo el gate.
+- Paridad GAS del prompt (clasp push) pendiente de aprobación.
+
+## Veredicto global
+**PASA** (7/7) — gate activo en ambos generadores + render con logo/contacto/hook verificado visualmente.

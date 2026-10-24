@@ -1056,6 +1056,18 @@ async function loadPromptById(promptId) {
     return data[0].prompt_base;
 }
 
+// Quality Gate CAMP-CAMPAIGN-QA (brief+activos+material+CTA+auto-QA+score):
+// se adjunta a los 2 generadores de campaña (MEDIAPLANNER y BRIEFMARKER).
+// Si el gate no existe en Prompts_IA, los prompts base siguen solos (no rompe).
+async function withCampaignQA(promptBase) {
+    try {
+        const qa = await loadPromptById('CAMP-CAMPAIGN-QA');
+        return qa ? promptBase + '\n\n' + qa : promptBase;
+    } catch (_) {
+        return promptBase;
+    }
+}
+
 // Modelos gratis con soporte de imagen verificados en vivo contra la API real
 // de OpenRouter (openrouter.ai/api/v1/models, filtrado a input_modalities
 // incluye "image" + ":free") — lista corta y puede rotar, por eso hay 2 de
@@ -1184,7 +1196,7 @@ async function generateMediaPlan(idEmpresa, fallbacks = {}, enfoque = null) {
     if (!brief.nicho && fallbacks.nicho) brief.nicho = fallbacks.nicho;
     if (!brief.especializacion && fallbacks.especializacion) brief.especializacion = fallbacks.especializacion;
 
-    const prompt = await loadPromptById('CAMP-MEDIAPLANNER');
+    const prompt = await withCampaignQA(await loadPromptById('CAMP-MEDIAPLANNER'));
     const systemContent = prompt.includes('{') && prompt.includes('}') ? prompt : 'Eres un media planner senior. Respondes EXCLUSIVAMENTE con un objeto JSON válido, sin texto fuera de él.';
     // Enfoque de campaña (máscara Sección E): restringe el tipo de piezas del
     // plan sin tocar el prompt base de Supabase. Se guarda como _enfoque dentro
@@ -1579,7 +1591,7 @@ async function approveMediaPlan(planId, estiloVisual = null, cap = 12) {
     const yaGeneradas = new Set((existentes || []).filter(p => p.estado === 'generado').map(p => p.slot_id));
     const pendientes = capped.filter(slot => !yaGeneradas.has(slot.id || ''));
 
-    const prompt = await loadPromptById('CAMP-BRIEFMARKER');
+    const prompt = await withCampaignQA(await loadPromptById('CAMP-BRIEFMARKER'));
     const brief = plan.brief_normalizado || {};
     // El estilo se fija en la PRIMERA aprobación y se reusa en reintentos — sin
     // esto, un reintento tras un 429 a mitad del lote (ver ADR-021) podía
@@ -1662,17 +1674,53 @@ const pushLog = (job, msg) => { job.log.push(msg); if (job.log.length > 60) job.
 
 async function runPiezaImgJob(planId, job, dir, plan, piezas) {
     try {
+        // Activos de la empresa señalada: logo/avatar entran como overlay del
+        // still y teléfono/sitio como overlay de contacto (CTA visible en
+        // pantalla). El logo se DESCARGA aquí a data URL — el browser headless
+        // de Remotion recibe 403/ORB de Drive si le pegan la URL directa
+        // (visto en vivo), y si el logo falla la pieza sigue sin él en vez de
+        // abortar el render.
+        let row = null;
+        try { row = await fetchEmpresaRow(plan.id_empresa); } catch (_) {}
+        const logoRaw = String((row && row.logo_url) || '').match(/https?:\/\/[^\s|,"']+/g) || [];
+        const aDataUrl = async (u) => {
+            if (!u) return undefined;
+            try {
+                const r = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(20000) });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const mime = (r.headers.get('content-type') || '').split(';')[0];
+                if (!mime.startsWith('image/')) throw new Error('no image: ' + mime);
+                return `data:${mime};base64,${Buffer.from(await r.arrayBuffer()).toString('base64')}`;
+            } catch (e) {
+                pushLog(job, `logo no disponible (${e.message}) — pieza sin logo`);
+                return undefined;
+            }
+        };
+        const contacto = {
+            logo_url: await aDataUrl(normalizeDriveUrl(logoRaw[0])),
+            avatar_url: await aDataUrl(normalizeDriveUrl(logoRaw[1])),
+            telefono: (row && (row.telefonowhatsapp || row.telefonowhastapp)) || undefined,
+            sitio_web: (row && (row.enlace_oficial || row.sitioweb)) || undefined
+        };
         for (const p of piezas) {
             if (!Array.isArray(p.creative_json?.scenes) || !p.creative_json.scenes.length) continue;
             const outFile = path.join(dir, `pieza_${safeName(p.slot_id)}.png`);
             if (fs.existsSync(outFile)) { job.done++; pushLog(job, `pieza ${p.slot_id}: ya existe ✓`); continue; }
             try {
                 const cj = p.creative_json;
+                // Overlay de la escena 1: si el copy no puso uno (o quedó vacío),
+                // cae al hook de la pieza — nunca al placeholder "Escena 1".
+                const escenas = cj.scenes.map((s, i) => {
+                    if (i > 0) return s;
+                    const ov = String(s.texto_overlay || s.titulo || s.title || s.overlay || '').trim();
+                    return { ...s, texto_overlay: ov || String(cj.hook || '').trim() };
+                });
                 const r = await fetch(`http://127.0.0.1:${PORT}/api/vire-still`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         empresa: plan.empresa || plan.id_empresa,
-                        guion: JSON.stringify({ escenas: cj.scenes }),
+                        guion: JSON.stringify({ escenas }),
+                        ...contacto,
                         visual_style: cj.visual_style || (plan.estilo_visual && plan.estilo_visual.nombre) || undefined,
                         estilo_visual_keywords: cj.visual_style || (plan.estilo_visual && plan.estilo_visual.keywords) || undefined,
                         brand_colors: cj.brand_colors || cj.scenes[0].brand_colors || undefined
