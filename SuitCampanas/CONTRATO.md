@@ -11,8 +11,8 @@ CMS de generación de campañas publicitarias con IA. Pipeline Brief → MediaPl
 
 ## Datos y multi-inquilino
 - Consume `Config_Empresas`: **sí** · campos usados: `logo_url` (BRIEF vector), `tipo_negocio`, `nomempresa`, `db_engine`, `modo`, `galeria`, flags `usa_*`, campos de contacto
-- Motores soportados: GSHEETS (principal vía GAS) + SUPABASE (tablas `planes_medios`, `piezas_creativas`, `video_subestilos`, `video_categorias_estilo`, `video_tendencias_estilo`, `Prompts_IA`, `recetas`, `tendencias`)
-- Ubicación de esquema o migraciones: Supabase (tablas creadas por seed scripts) + Google Sheets (`Config_Empresas`, `Prompts_IA` vía GAS)
+- Motores soportados: GSHEETS (principal vía GAS) + SUPABASE (tablas `planes_medios`, `piezas_creativas`, `video_subestilos`, `video_categorias_estilo`, `video_tendencias_estilo`, `Prompts_IA`, `recetas`, `tendencias`, `empresa_estilo_config`)
+- Ubicación de esquema o migraciones: Supabase (`database/migrations/` + seed scripts) + Google Sheets (`Config_Empresas`, `Prompts_IA` vía GAS)
 - Reglas de aislamiento entre empresas: toda query filtrada por `id_empresa`; `id_empresa='ALL'` solo para sub-estilos compartidos
 
 ## Límites

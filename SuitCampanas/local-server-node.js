@@ -1124,6 +1124,34 @@ async function resolveEstiloVisualForEmpresa(idEmpresa, brief = {}) {
             .select('id,nombre,slug');
         const catById = new Map((categorias || []).map(c => [c.id, c]));
 
+        // Switch por empresa: 'auto' = criterio de los expertos; 'manual' =
+        // id_subestilo elegido por el usuario en la mácara. La fila vive en
+        // Supabase (empresa_estilo_config) y se crea en modo auto por defecto.
+        let estiloConfig = null;
+        try {
+            const { data: cfgRows } = await supabaseAdmin
+                .from('empresa_estilo_config')
+                .select('modo,id_subestilo')
+                .eq('id_empresa', idEmpresa)
+                .limit(1);
+            estiloConfig = cfgRows && cfgRows[0] ? cfgRows[0] : null;
+        } catch (e) {
+            serverLog('WARN', `[ESTILO] No se pudo leer empresa_estilo_config para ${idEmpresa}: ${e.message}`);
+        }
+        if (estiloConfig && estiloConfig.modo === 'manual' && estiloConfig.id_subestilo) {
+            const { data: manualRows } = await supabaseAdmin
+                .from('video_subestilos')
+                .select('*')
+                .eq('id', estiloConfig.id_subestilo)
+                .eq('activo', true)
+                .limit(1);
+            const manual = manualRows && manualRows[0];
+            if (manual) {
+                return normalizeEstiloVisualRow(manual, catById.get(manual.id_categoria));
+            }
+            serverLog('WARN', `[ESTILO] La empresa ${idEmpresa} tiene modo manual pero el subestilo ${estiloConfig.id_subestilo} no existe/está inactivo; se usa auto.`);
+        }
+
         const { data: propios } = await supabase
             .from('video_subestilos')
             .select('*')
@@ -5124,6 +5152,74 @@ Responde EXCLUSIVAMENTE con un objeto JSON válido:
     }
 
     // 🎨 ESTILOS VISUALES ENDPOINT (VIDE)
+    // GET/POST /api/estilo-config/:id_empresa - switch auto/manual + estilo elegido
+    const estiloConfigMatch = pathname.match(/^\/api\/estilo-config\/([^/]+)$/);
+    if (estiloConfigMatch && req.method === 'GET') {
+        (async () => {
+            try {
+                const idEmpresa = decodeURIComponent(estiloConfigMatch[1]);
+                const { data, error } = await supabaseAdmin
+                    .from('empresa_estilo_config')
+                    .select('id_empresa,modo,id_subestilo,actualizado_en')
+                    .eq('id_empresa', idEmpresa)
+                    .limit(1);
+                if (error) throw error;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'success',
+                    data: data && data[0] ? data[0] : { id_empresa: idEmpresa, modo: 'auto', id_subestilo: null }
+                }));
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        })();
+        return;
+    }
+    if (estiloConfigMatch && req.method === 'POST') {
+        let body = '';
+        req.on('data', d => body += d);
+        req.on('end', async () => {
+            try {
+                const idEmpresa = decodeURIComponent(estiloConfigMatch[1]);
+                const parsed = JSON.parse(body || '{}');
+                const modo = parsed.modo === 'manual' ? 'manual' : 'auto';
+                const idSubestilo = modo === 'manual' ? parseInt(parsed.id_subestilo, 10) : null;
+                if (modo === 'manual' && (!Number.isInteger(idSubestilo) || idSubestilo <= 0)) {
+                    throw new Error('Para modo manual necesitas elegir un estilo válido');
+                }
+                if (modo === 'manual') {
+                    const { data: styleRows, error: styleErr } = await supabaseAdmin
+                        .from('video_subestilos')
+                        .select('id')
+                        .eq('id', idSubestilo)
+                        .eq('activo', true)
+                        .limit(1);
+                    if (styleErr) throw styleErr;
+                    if (!styleRows || !styleRows.length) throw new Error('El estilo elegido no existe o está inactivo');
+                }
+                const { data, error } = await supabaseAdmin
+                    .from('empresa_estilo_config')
+                    .upsert({
+                        id_empresa: idEmpresa,
+                        modo,
+                        id_subestilo: modo === 'manual' ? idSubestilo : null,
+                        actualizado_en: new Date().toISOString()
+                    }, { onConflict: 'id_empresa' })
+                    .select('id_empresa,modo,id_subestilo,actualizado_en')
+                    .single();
+                if (error) throw error;
+                serverLog('INFO', `[ESTILO] ${idEmpresa}: modo=${modo}${idSubestilo ? ' id_subestilo=' + idSubestilo : ''}`);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'success', data }));
+            } catch (e) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'error', error: e.message }));
+            }
+        });
+        return;
+    }
+
     if (pathname === '/api/estilos-visuales' && req.method === 'GET') {
         const empresa = parsedUrl.searchParams.get('empresa') || 'ALL';
         (async () => {

@@ -56,3 +56,19 @@ Fecha: 2026-10-24 · Contrato: SuitCampanas/CONTRATO.md · Ronda: 1
 - Body opcional: cuando el hook se repite, la pieza queda con espacio vacío (no rompe, pero se puede enriquecer).
 - Segunda empresa (SUITORG) aún no re-renderizada con el pipeline nuevo.
 - Video real (MP4) todavía no se genera desde el alta; Fase 4.
+
+---
+
+## Ronda 2.1 - switch de estilo por empresa (2026-10-24)
+
+| ID | Verifica | Acción | Resultado observado | Veredicto |
+|----|----------|--------|---------------------|-----------|
+| V14 | Tabla `empresa_estilo_config` | Consulta SQL | 13 empresas sembradas en `auto` | PASA |
+| V15 | API GET/POST | `GET /api/estilo-config/LABARIES` → `POST manual 41` → `GET` → `POST auto` | `auto` → `manual/41` → `auto`, sin errores | PASA |
+| V16 | UI mácara | `node --check` del script inline extraído | Sin errores de sintaxis | PASA |
+
+### Evidencia Ronda 2.1
+- Migración: `database/migrations/2026-10-24_empresa_estilo_config.sql`.
+- Endpoints en `local-server-node.js`: `GET/POST /api/estilo-config/:id_empresa`.
+- UI: `mascara.html` Sección E → “Estilo visual” (Automático / Elegir estilo).
+- `resolveEstiloVisualForEmpresa()` lee la config y, en manual, usa el `id_subestilo` elegido; si no existe, cae a auto.

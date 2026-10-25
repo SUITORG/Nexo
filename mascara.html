@@ -246,6 +246,17 @@
           </select>
         </div>
         <div class="full">
+          <label>Estilo visual</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="e-estilo-modo" style="width:auto;min-width:220px">
+              <option value="auto">Automático (expertos)</option>
+              <option value="manual">Elegir estilo</option>
+            </select>
+            <select id="e-estilo-id" style="width:auto;min-width:280px;display:none"></select>
+          </div>
+          <div class="hint" id="st-e-estilo">-</div>
+        </div>
+        <div class="full">
           <label>🖼️ a) Campaña con imágenes <span class="chip" id="chip-ea">0%</span></label>
           <div class="hint" id="st-ea">—</div>
           <div class="hint" style="display:flex;gap:14px;align-items:center;margin-top:2px">
@@ -339,6 +350,7 @@ async function loadCompany() {
   localStorage.setItem('mascara_co', id);
   cur = ROWS.find(x => x.id_empresa === id);
   if (!cur) return;
+  await loadEstiloConfig().catch(() => {});
   A_FIELDS.forEach(f => { const el = $(f === 'id_empresa' ? 'f_id' : 'f_' + f); if (el) el.value = cur[f] == null ? '' : String(cur[f]); });
   const tnRaw = cur.tipo_negocio == null ? '' : String(cur.tipo_negocio);
   // Formato: "industria[,COMPORTAMIENTO],si_galeria|no_galeria" — galería siempre al final
@@ -416,6 +428,7 @@ function updateProgress() {
 // ── E · Campañas (CampanasAi) — chips 6/7/6/6 → máx 25 ──
 const CAMP = 'http://127.0.0.1:8000';
 let E_STATE = null;
+let E_ESTILOS = [];
 // Si :8000 no responde → pide a :3001 arrancarlo (spawn), espera al boot y reintenta.
 async function campFetch(url, opts) {
   try { return await fetch(url, opts); }
@@ -464,11 +477,79 @@ function renderE() {
   const pe = pa + pb + (E_STATE.presentacion ? 6 : 0) + (E_STATE.landing ? 6 : 0);
   $('pct-e').textContent = pe + '%'; $('pct-e').classList.toggle('full', pe >= 25);
 }
+async function loadEstiloConfig() {
+  const id = cur && cur.id_empresa;
+  if (!id) return;
+  try {
+    const [cfgRes, estRes] = await Promise.all([
+      campFetch(`${CAMP}/api/estilo-config/${encodeURIComponent(id)}`),
+      campFetch(`${CAMP}/api/estilos-visuales?empresa=${encodeURIComponent(id)}`)
+    ]);
+    const cfg = await cfgRes.json();
+    const est = await estRes.json();
+    E_ESTILOS = [];
+    (est.data || []).forEach(cat => (cat.subestilos || []).forEach(sub => E_ESTILOS.push({
+      id: sub.id,
+      nombre: `${cat.nombre} · ${sub.nombre}`,
+      template: (sub.parametros_visuales && sub.parametros_visuales.template) || ''
+    })));
+    const sel = $('e-estilo-id');
+    sel.innerHTML = E_ESTILOS.map(x => `<option value="${x.id}">${x.nombre}${x.template ? ' · ' + x.template : ''}</option>`).join('');
+    const modo = (cfg.data && cfg.data.modo) || 'auto';
+    $('e-estilo-modo').value = modo;
+    if (cfg.data && cfg.data.id_subestilo) sel.value = String(cfg.data.id_subestilo);
+    renderEstiloConfig();
+  } catch (e) {
+    const st = $('st-e-estilo');
+    if (st) st.textContent = 'No se pudo cargar el estilo: ' + e.message;
+  }
+}
+
+function renderEstiloConfig() {
+  const modo = $('e-estilo-modo').value;
+  const manual = modo === 'manual';
+  $('e-estilo-id').style.display = manual ? '' : 'none';
+  const sub = E_ESTILOS.find(x => String(x.id) === $('e-estilo-id').value);
+  $('st-e-estilo').textContent = manual
+    ? (sub ? `Manual: ${sub.nombre}` : 'Elige un estilo')
+    : 'Automático: el sistema elige según Brief, tendencias y giro.';
+}
+
+async function saveEstiloConfig() {
+  const id = cur && cur.id_empresa;
+  if (!id) return;
+  const modo = $('e-estilo-modo').value;
+  const idSubestilo = modo === 'manual' ? Number($('e-estilo-id').value) : null;
+  if (modo === 'manual' && !idSubestilo) throw new Error('Elige un estilo o cambia a Automático');
+  const r = await campFetch(`${CAMP}/api/estilo-config/${encodeURIComponent(id)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ modo, id_subestilo: idSubestilo })
+  });
+  const j = await r.json();
+  if (j.status !== 'success') throw new Error(j.error || j.message || 'No se guardó el estilo');
+}
+
+['e-estilo-modo', 'e-estilo-id'].forEach(id => {
+  const el = $(id);
+  if (!el) return;
+  el.addEventListener('change', async () => {
+    renderEstiloConfig();
+    try {
+      await saveEstiloConfig();
+      toast('Estilo visual guardado');
+    } catch (e) {
+      toast(e.message, true);
+    }
+  });
+});
+
 async function campGenerate(kind, btn) {
   if (!cur) { toast('Elige una empresa', true); return; }
   btn.disabled = true; const orig = btn.textContent; btn.textContent = '⏳ Generando…';
   try {
     if (kind === 'imagen' || kind === 'video') {
+      await saveEstiloConfig();
       const cap = Number($('e-cap').value) || 4;
       const vec = parseVector(($('f_logo_url').value || '').includes('|') ? $('f_logo_url').value : '');
       // ☑ copy: sin él se reusa el plan existente (modo solo-imágenes)

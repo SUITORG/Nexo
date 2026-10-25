@@ -40,6 +40,26 @@ Pendiente inmediato de Fase 1: QA de copy/claims (ej. “puedes agenda”), rell
 
 ---
 
+## 1.2 Switch de estilo por empresa (2026-10-24)
+
+Se agregó una configuración por empresa en Supabase para elegir entre:
+
+- `auto`: el sistema elige el estilo con el criterio de los expertos (estilo propio → tendencia → giro).
+- `manual`: el usuario elige un `id_subestilo` del catálogo.
+
+Tabla: `public.empresa_estilo_config` (`id_empresa`, `modo`, `id_subestilo`, `actualizado_en`). Migración: `database/migrations/2026-10-24_empresa_estilo_config.sql`. Las 13 empresas existentes quedaron sembradas en `auto`.
+
+API:
+
+- `GET /api/estilo-config/:id_empresa`
+- `POST /api/estilo-config/:id_empresa` con `{ modo: "auto"|"manual", id_subestilo }`
+
+UI: `mascara.html`, Sección E → “Estilo visual”: Automático (expertos) / Elegir estilo. Se guarda en Supabase al cambiar el switch y antes de generar la campaña.
+
+El resolvedor `resolveEstiloVisualForEmpresa()` revisa primero `empresa_estilo_config`; si es manual y el estilo existe/está activo, lo usa. Si no, cae al criterio automático sin romper la generación.
+
+---
+
 ## 2. Evidencia concreta
 
 ### 2.1 Piezas reales revisadas
