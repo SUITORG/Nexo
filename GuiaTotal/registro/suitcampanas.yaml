@@ -37,12 +37,12 @@ taxonomia:
 
 documentos:
   analista_proy: false
-  taxonomia: false
+  taxonomia: true
   contrato: true
   identidad: false
-  manuales: false
+  manuales: true
   prompt_origen: false
-  checklist_lanzamiento: false
+  checklist_lanzamiento: true
   arquitectura_docs: false
 
-proximo_paso: "Crear docs/ (TAXONOMIA, manuales) y correr ciclo F1-F7"
+proximo_paso: "Fase de validación (F3): smoke test end-to-end del pipeline Brief→Plan→Pieza→Video"
