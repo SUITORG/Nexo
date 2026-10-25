@@ -77,8 +77,7 @@
   #zoombar .zhint { color: #64748b; font-size: 10px; white-space: nowrap; }
 
   /* ── vista compacta: oculta detalle, deja iconos + títulos ── */
-  body.compact .node { padding: 7px 8px; box-shadow: 0 3px 9px rgba(15,23,42,.14); }
-  body.compact .node .sub, body.compact .acts { display: none; }
+  body.compact .node { padding: 7px 8px; box-shadow: 0 3px 9px rgba(15,23,42,.14); }  body.compact .node .sub, body.compact .acts { display: none; }
   body.compact .node .ico { font-size: 20px; }
   body.compact .node .ttl { font-size: 11.5px; }
   body.compact .elab { font-size: 9px; padding: 1px 5px; }
@@ -86,6 +85,30 @@
   body.compact .gate { width: 118px; height: 118px; }
   body.compact .gate .gtxt { font-size: 10px; max-width: 84px; }
   body.compact .gate .gi { font-size: 16px; }
+
+  /* ── incrustado (iframe del panel MASTER) ───────────────────────────────
+   * El iframe mide ~707px y el lienzo 3060px: con el header (180px) y el
+   * footer (59px) solo quedaban ~466px de lienzo y a 100% no entraba el
+   * lane SuitCampanas. Aquí se ocultan esos dos bloques y se arranca en
+   * vista de Ajustar, para ver Guía Total + SuitCampanas de un vistazo.   */
+  body.embed header, body.embed footer { display: none; }
+  body.embed #zoombar { bottom: 16px; }
+  /* el body pide 1360px de mínimos (para poder desplazarse en ventanas
+   * estrechas); dentro del iframe eso provoca scroll horizontal y centra el
+   * lienzo en un ancho que no se ve. Aquí se anula: el viewport pasa a medir
+   * el ancho real del iframe y el mapa se centra en lo que hay. */
+  body.embed { min-width: 0; }
+
+  /* ── vista dedicada (?solo=campanas) ───────────────────────────────────
+   * Solo se enseña el lane de SuitCampanas: se ocultan los nodos, puertas y
+   * el banner de decisión de Guía Total. Las aristas que tocan nodos ocultos
+   * las omite build() sola (offsetParent null), así que EDGES no se toca. */
+  body.solo-camp .node:not([data-camp]),
+  body.solo-camp .gate,
+  body.solo-camp .decbanner { display: none; }
+  /* el modo embed esconde el header, pero en esta vista hace falta
+   * (título + leyenda): se recupera solo aquí */
+  body.embed.solo-camp header { display: flex; }
 
   .node {
     position: absolute; width: 210px; padding: 10px 12px;
@@ -566,6 +589,20 @@
   const Z = { s: 1, tx: 0, ty: 0 };
   const ZMIN = 0.12, ZMAX = 2;
   const LS = 'mapa-visual-view';
+  // true mientras corre dentro del iframe del panel MASTER: la vista de ajuste
+  // es provisional y NO se guarda, para que al abrir el mapa en pestaña propia
+  // (opción D→7) siga arrancando con el zoom que guardó el usuario (100%).
+  let EMBED = false;
+  // Vista dedicada a SuitCampanas: MAPA_VISUAL.html?solo=campanas
+  // Es el MISMO archivo (no un duplicado) — así el bloque INFO y las burbujas
+  // siguen viniendo de MAPA.md y no hay dos mapas que desincronizarse.
+  const SOLO_CAMP = new URLSearchParams(location.search).get('solo') === 'campanas';
+  if (SOLO_CAMP) {
+    document.body.classList.add('solo-camp');
+    document.title = 'MAPA VISUAL — SuitCampanas';
+    const h1 = document.querySelector('header h1');
+    if (h1) h1.textContent = '🗺️ MAPA VISUAL — SuitCampanas';
+  }
 
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
 
@@ -575,7 +612,7 @@
     const rg = document.getElementById('z-range');
     if (vr) vr.textContent = Math.round(Z.s * 100) + '%';
     if (rg && document.activeElement !== rg) rg.value = Math.round(Z.s * 100);
-    try { localStorage.setItem(LS, JSON.stringify({ s: Z.s, tx: Z.tx, ty: Z.ty })); } catch (e) {}
+    if (!EMBED && !SOLO_CAMP) { try { localStorage.setItem(LS, JSON.stringify({ s: Z.s, tx: Z.tx, ty: Z.ty })); } catch (e) {} }
   }
 
   // zoom centrado en un punto de pantalla (px,py)
@@ -592,10 +629,17 @@
   // ajustar todo el lienzo a la ventana (panorama completo)
   function fitView() {
     const vr = viewport.getBoundingClientRect();
-    const s = clamp(Math.min(vr.width / CANVAS_W, vr.height / CANVAS_H) * 0.96, ZMIN, ZMAX);
+    // en la vista dedicada se encaja la caja del lane, no el lienzo entero
+    // (si no, saldría el lane minúsculo y con un montón de vacío encima)
+    let bx = 0, by = 0, bw = CANVAS_W, bh = CANVAS_H;
+    if (SOLO_CAMP) {
+      const z = document.querySelector('.campzone');
+      if (z) { const r = rect(z); bx = r.l; by = r.t; bw = r.w; bh = r.h; }
+    }
+    const s = clamp(Math.min(vr.width / bw, vr.height / bh) * 0.96, ZMIN, ZMAX);
     Z.s = s;
-    Z.tx = (vr.width - CANVAS_W * s) / 2;
-    Z.ty = (vr.height - CANVAS_H * s) / 2;
+    Z.tx = (vr.width - bw * s) / 2 - bx * s;
+    Z.ty = (vr.height - bh * s) / 2 - by * s;
     applyView();
   }
 
@@ -1619,9 +1663,18 @@
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
-  window.addEventListener('load', () => { applyView(); build(); });
-  window.addEventListener('resize', () => { build(); });
-  applyView();
+  // Incrustado en el iframe del panel MASTER (window.self !== window.top):
+  // sin sitio para header/footer y hay que mostrar TODO (Guía Total + lane
+  // SuitCampanas) de un vistazo → se ocultan y se ajusta al panorama.
+  // La vista dedicada (?solo=campanas) también arranca ajustada a su caja,
+  // dentro del iframe o en pestaña propia.
+  // Fuera de ambas: se conserva header, footer y el zoom que guardó el usuario.
+  const inIframe = window.self !== window.top;
+  if (inIframe) { EMBED = true; document.body.classList.add('embed'); }
+  const needFit = SOLO_CAMP || inIframe;
+  window.addEventListener('load', () => { if (needFit) fitView(); else applyView(); build(); });
+  window.addEventListener('resize', () => { build(); if (needFit) fitView(); });
+  if (needFit) fitView(); else applyView();
   build();
 </script>
 </body>
