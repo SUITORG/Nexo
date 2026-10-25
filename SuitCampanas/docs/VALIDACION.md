@@ -47,6 +47,7 @@ Fecha: 2026-10-24 · Contrato: SuitCampanas/CONTRATO.md · Ronda: 1
 ### Evidencia Ronda 2
 - `SuitCampanas/descargas/LABARIES/` - 7 PNG finales.
 - `SuitCampanas/docs/comparativa-fase1-2026-10-24.png` - antes (Pollinations, estudio fotográfico) vs después (foto real + layout de marca).
+- `SuitCampanas/docs/kit-labaries-fase1-2026-10-24.png` - las 7 piezas finales de LABARIES en una hoja de contacto.
 - `SuitCampanas/docs/comparativa-actual-vs-gemini-2026-10-24.png` - calidad de imagen actual vs Gemini 3 Pro.
 - Cambios: `mascara.html` ya no manda `estilo_visual: null`; `approveMediaPlan()` auto-resuelve template; `runPiezaImgJob()` usa fotos reales + `brand_colors`; `generators/static_renderer.py`; Gemini 2.5 Flash default; `render.js --still` hace `process.exit(0)`.
 

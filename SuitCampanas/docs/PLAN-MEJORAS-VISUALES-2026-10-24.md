@@ -34,7 +34,7 @@ Completado en código:
 - `SuitVidGenRemotion/scripts/render.js --still` ahora termina con `process.exit(0)`; antes el proceso quedaba colgado y el endpoint reportaba timeout de 90 s.
 - 7/7 piezas de LABARIES regeneradas: 1080x1350 (Post/Story) y 1080x1080 (Banner), sin watermark, con foto real y paleta de marca.
 
-Evidencia: `docs/comparativa-fase1-2026-10-24.png`.
+Evidencia: `docs/comparativa-fase1-2026-10-24.png` y `docs/kit-labaries-fase1-2026-10-24.png` (7 piezas finales).
 
 Pendiente inmediato de Fase 1: QA de copy/claims (ej. “puedes agenda”), rellenar body cuando el hook se repite, y probar con una segunda empresa.
 
