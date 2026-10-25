@@ -147,6 +147,40 @@ async function buscarIconoIconify(query, colorHex) {
 // (ver ADR-031) — el timeout de 150s original (basado en el estimado "~1-2
 // min" de SuitComfy/README.md) abortaba generaciones reales antes de tiempo.
 const COMFY_WRAPPER_URL = process.env.COMFY_WRAPPER_URL || 'http://127.0.0.1:3012';
+// Imagen real vía Gemini (Nano Banana Pro / 2.5 Flash Image). La llave del
+// proyecto ya tiene acceso a estos modelos; el endpoint viejo
+// imagen-3.0-generate-001:predict que usaba /api/ai/image responde 404.
+// Devuelve Buffer PNG/JPEG o null si falla (el caller hace fallback).
+async function generarImagenGemini(prompt, width, height) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return null;
+    const model = process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image';
+    const ratio = width / height;
+    const aspectRatio = ratio > 1.6 ? '16:9' : ratio > 1.1 ? '4:3' : ratio > 0.9 ? '1:1' : ratio > 0.7 ? '3:4' : '9:16';
+    try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio, imageSize: '1K' } }
+            }),
+            signal: AbortSignal.timeout(180000)
+        });
+        if (!res.ok) {
+            const errText = (await res.text()).slice(0, 300);
+            throw new Error(`HTTP ${res.status}: ${errText}`);
+        }
+        const data = await res.json();
+        const part = (data.candidates?.[0]?.content?.parts || []).find(p => p.inlineData && p.inlineData.data);
+        if (!part) throw new Error('Gemini no devolvió imagen');
+        return Buffer.from(part.inlineData.data, 'base64');
+    } catch (e) {
+        serverLog('WARN', `[Gemini] Imagen no generada (${model}): ${e.message}`);
+        return null;
+    }
+}
+
 async function generarImagenComfy(prompt, width, height) {
     try {
         const res = await fetch(`${COMFY_WRAPPER_URL}/api/image`, {
@@ -343,7 +377,7 @@ async function buscarSonidoFreesound(query) {
 // endpoint /api/scene-image (modo "revisar por escena"), sin duplicar la lógica.
 // Escribe el PNG final en imgPath; no retorna nada (mismo estilo que el loop
 // original, que ya trabajaba directo sobre archivos en vez de buffers en memoria).
-async function generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image_source, imgDim, imgPath, logoPath, avatarPath, existingImageUrl }) {
+async function generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image_source, imgDim, imgPath, logoPath, avatarPath, existingImageUrl, brand_colors }) {
     let finalBuf = null;
 
     if (existingImageUrl) {
@@ -365,10 +399,17 @@ async function generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image
     if (!finalBuf) {
         const estiloPrefix = estilo_visual_keywords ? `${estilo_visual_keywords}, ` : '';
         // Ancla de calidad fija, igual que hace ViRe (SuitVidGenRemotion/scripts/
-        // helpers/imageProvider.js) — sin esto, la nitidez dependía de si el estilo
+        // helpers/imageProvider.js) - sin esto, la nitidez dependía de si el estilo
         // elegido traía o no términos técnicos de foto (Realista sí, Acuarela no).
         const qualityAnchor = 'sharp focus, highly detailed, professional photography, ';
-        const prompt = qualityAnchor + estiloPrefix + visualDesc.substring(0, 200) + ', no text, no readable signage, no logos, no writing';
+        // El color exacto de marca solo se puede garantizar en el overlay de
+        // Remotion; en la foto se pide como pista de paleta. Antes VIDE nunca
+        // mandaba este dato y todas las fotos salían con la paleta default del
+        // modelo, no la de la empresa.
+        const colorHint = brand_colors
+            ? `color palette: ${[brand_colors.accent, brand_colors.background, brand_colors.ink].filter(Boolean).join(', ')}, `
+            : '';
+        const prompt = qualityAnchor + colorHint + estiloPrefix + visualDesc.substring(0, 200) + ', no text, no readable signage, no logos, no writing, no watermark';
         serverLog('INFO', `[VIDE] Prompt de imagen: ${prompt}`);
         const seed = Math.floor(Math.random() * 1000000);
         const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${imgDim.w}&height=${imgDim.h}&seed=${seed}&nologo=true&model=flux`;
@@ -393,26 +434,31 @@ async function generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image
                 if (pexelsUrl) finalBuf = Buffer.from(await (await fetch(pexelsUrl)).arrayBuffer());
             }
         } else {
-            const imgRes = await fetch(imgUrl);
-            const imgBuf = Buffer.from(await imgRes.arrayBuffer());
-            // Pollinations a veces responde 200 con un JSON de error (ej. rate
-            // limit) en vez de una imagen real — sin validar, ese JSON se
-            // escribía tal cual como si fuera el PNG. Río abajo eso tronaba
-            // FFmpeg dos veces: en el overlay de esa escena ("Invalid PNG
-            // signature") y, peor, en el ensamblado final del video completo
-            // (el error verboso de decodificar basura repetido por escena
-            // parece ser lo que desbordaba el pipe de spawnSync -> ENOBUFS).
-            const isValidImage = imgRes.ok && imgBuf.length > 100 &&
-                ((imgBuf[0] === 0x89 && imgBuf[1] === 0x50) || (imgBuf[0] === 0xFF && imgBuf[1] === 0xD8));
-            if (isValidImage) {
-                finalBuf = imgBuf;
-            } else {
-                const pexelsUrl = await buscarImagenPexels(visualDesc, imgDim.w, imgDim.h);
-                if (pexelsUrl) {
-                    serverLog('WARN', `[VIDE] Imagen inválida (Pollinations HTTP ${imgRes.status}), usando foto de stock de Pexels`);
-                    finalBuf = Buffer.from(await (await fetch(pexelsUrl)).arrayBuffer());
+            // Default ('ia'): Gemini primero. Pollinations queda solo como
+            // fallback si Gemini no responde o no devuelve imagen válida.
+            if (image_source !== 'pollinations') {
+                finalBuf = await generarImagenGemini(prompt, imgDim.w, imgDim.h);
+            }
+            if (!finalBuf) {
+                const imgRes = await fetch(imgUrl);
+                const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+                // Pollinations a veces responde 200 con un JSON de error (ej. rate
+                // limit) en vez de una imagen real - sin validar, ese JSON se
+                // escribía tal cual como si fuera el PNG. Río abajo eso tronaba
+                // FFmpeg dos veces: en el overlay de esa escena ("Invalid PNG
+                // signature") y, peor, en el ensamblado final del video completo.
+                const isValidImage = imgRes.ok && imgBuf.length > 100 &&
+                    ((imgBuf[0] === 0x89 && imgBuf[1] === 0x50) || (imgBuf[0] === 0xFF && imgBuf[1] === 0xD8));
+                if (isValidImage) {
+                    finalBuf = imgBuf;
                 } else {
-                    serverLog('WARN', `[VIDE] Imagen inválida (Pollinations HTTP ${imgRes.status}) y sin resultado de Pexels, usando fondo sólido de respaldo`);
+                    const pexelsUrl = await buscarImagenPexels(visualDesc, imgDim.w, imgDim.h);
+                    if (pexelsUrl) {
+                        serverLog('WARN', `[VIDE] Imagen inválida (Pollinations HTTP ${imgRes.status}), usando foto de stock de Pexels`);
+                        finalBuf = Buffer.from(await (await fetch(pexelsUrl)).arrayBuffer());
+                    } else {
+                        serverLog('WARN', `[VIDE] Imagen inválida (Pollinations HTTP ${imgRes.status}) y sin resultado de Pexels, usando fondo sólido de respaldo`);
+                    }
                 }
             }
         }
@@ -1042,6 +1088,101 @@ async function fetchEmpresaRow(idEmpresa) {
         || null;
 }
 
+// Paleta de marca para los templates de Remotion. color_tema puede venir como
+// "#00ccff" o pipe-delimited ("#00ccff|candado:0|...") - se usa el primer hex.
+// Fondo/ink son neutros de alta legibilidad; el acento es el color de marca.
+// Sin esto los templates caían siempre a sus defaults (papel crema / rojo
+// Pinterest) y la pieza no se veía de la empresa.
+function brandColorsFromEmpresa(empresaRow) {
+    const accent = extractHexColor(empresaRow && empresaRow.color_tema) || '#00A3C4';
+    return { background: '#F7FBFF', ink: '#0B1B2B', accent };
+}
+
+function normalizeEstiloVisualRow(row, categoria) {
+    const pv = (row && row.parametros_visuales) || {};
+    return {
+        id: row.id,
+        cat: (categoria && categoria.slug) || 'all',
+        catNombre: (categoria && categoria.nombre) || '',
+        sub: row.slug,
+        nombre: row.nombre,
+        descripcion: row.descripcion || '',
+        keywords: row.keywords_ia || '',
+        visualTemplate: pv.template || null,
+        contentShape: pv.content_shape || null,
+        itemCount: pv.item_count || null,
+    };
+}
+
+// Resuelve un estilo visual REAL (con template de Remotion) para una empresa.
+// Orden: estilo propio con template -> tendencia propia con template -> estilo
+// global con template elegido por giro -> primer template global.
+async function resolveEstiloVisualForEmpresa(idEmpresa, brief = {}) {
+    try {
+        const { data: categorias } = await supabase
+            .from('video_categorias_estilo')
+            .select('id,nombre,slug');
+        const catById = new Map((categorias || []).map(c => [c.id, c]));
+
+        const { data: propios } = await supabase
+            .from('video_subestilos')
+            .select('*')
+            .eq('id_empresa', idEmpresa)
+            .eq('activo', true);
+        const propiosConTemplate = (propios || []).filter(s => s.parametros_visuales && s.parametros_visuales.template);
+        if (propiosConTemplate.length) {
+            return normalizeEstiloVisualRow(propiosConTemplate[0], catById.get(propiosConTemplate[0].id_categoria));
+        }
+
+        const { data: tendencias } = await supabase
+            .from('video_tendencias_estilo')
+            .select('id_subestilo,puntuacion')
+            .eq('id_empresa', idEmpresa)
+            .order('puntuacion', { ascending: false })
+            .limit(5);
+        for (const t of (tendencias || [])) {
+            const { data: rows } = await supabase
+                .from('video_subestilos')
+                .select('*')
+                .eq('id', t.id_subestilo)
+                .limit(1);
+            const row = rows && rows[0];
+            if (row && row.parametros_visuales && row.parametros_visuales.template) {
+                return normalizeEstiloVisualRow(row, catById.get(row.id_categoria));
+            }
+        }
+
+        const { data: globales } = await supabase
+            .from('video_subestilos')
+            .select('*')
+            .eq('id_empresa', 'ALL')
+            .eq('activo', true);
+        const templates = (globales || []).filter(s => s.parametros_visuales && s.parametros_visuales.template);
+        if (!templates.length) return null;
+
+        const texto = [brief.industria, brief.nicho, brief.especializacion, brief.giro_especifico, brief.descripcion]
+            .filter(Boolean).join(' ').toLowerCase();
+        let preferidos;
+        if (/salud|laboratorio|clínic|clinic|medic|doctor|paciente|dental|farmac/.test(texto)) {
+            preferidos = ['paper', 'pizarra_minimalista', 'diario_ilustrado'];
+        } else if (/finanza|dinero|inversi|ahorro|seguro|credito|crédito/.test(texto)) {
+            preferidos = ['pinterest_ad', 'ranking_tarjetas'];
+        } else if (/lista|ranking|tip|paso|guia|guía/.test(texto)) {
+            preferidos = ['ranking_tarjetas', 'pizarra_minimalista', 'cosmic_listicle_dorado'];
+        } else {
+            preferidos = ['paper', 'pizarra_minimalista', 'diario_ilustrado'];
+        }
+        for (const key of preferidos) {
+            const row = templates.find(x => x.parametros_visuales.template === key);
+            if (row) return normalizeEstiloVisualRow(row, catById.get(row.id_categoria));
+        }
+        return normalizeEstiloVisualRow(templates[0], catById.get(templates[0].id_categoria));
+    } catch (e) {
+        serverLog('WARN', `[ESTILO] No se pudo resolver estilo para ${idEmpresa}: ${e.message}`);
+        return null;
+    }
+}
+
 // Carga un prompt de Prompts_IA por id_agente (mismo mecanismo que /api/prompts/:id).
 async function loadPromptById(promptId) {
     const { data, error } = await supabase
@@ -1596,9 +1737,16 @@ async function approveMediaPlan(planId, estiloVisual = null, cap = 12) {
     // esto, un reintento tras un 429 a mitad del lote (ver ADR-021) podía
     // aplicar un estilo distinto al de las piezas ya generadas del mismo plan,
     // dejando una campaña con visual mezclado sin que nadie lo pidiera.
-    const estiloAAplicar = plan.estilo_visual || estiloVisual || null;
-    if (!plan.estilo_visual && estiloVisual) {
-        await supabase.from('planes_medios').update({ estilo_visual: estiloVisual }).eq('id', planId);
+    let estiloAAplicar = plan.estilo_visual || estiloVisual || null;
+    // Si el caller no mandó estilo (caso real: la mácara de alta mandaba
+    // estilo_visual: null), se resuelve uno con template REAL de Remotion y se
+    // persiste en el plan. Antes esto quedaba en null y todas las piezas caían
+    // al TextScene genérico (texto blanco centrado sobre una foto random).
+    if (!estiloAAplicar) {
+        estiloAAplicar = await resolveEstiloVisualForEmpresa(plan.id_empresa, brief);
+        if (estiloAAplicar) {
+            await supabase.from('planes_medios').update({ estilo_visual: estiloAAplicar }).eq('id', planId);
+        }
     }
     // Estilo visual resuelto (Director o elección manual del usuario). Solo
     // controla la piel visual, nunca el copy — ver plan-pieza-a-video.md Parte 2.
@@ -1671,6 +1819,26 @@ const descargasDir = idEmp => path.join(__dirname, 'descargas', safeName(idEmp))
 const countPngs = dir => { try { return fs.readdirSync(dir).filter(f => f.endsWith('.png')).length; } catch (_) { return 0; } };
 const pushLog = (job, msg) => { job.log.push(msg); if (job.log.length > 60) job.log.splice(0, job.log.length - 60); };
 
+// Render estático determinista (Pillow). Mucho más rápido y predecible que
+// levantar Remotion por cada pieza (~90s+): recibe copy ya generado, paleta,
+// logo y una imagen resuelta, y devuelve el PNG final en ~1-2s.
+function renderStaticPiece(payload, outputPath) {
+    const script = path.join(__dirname, 'generators', 'static_renderer.py');
+    // El payload puede llevar una imagen en base64 de ~2MB; se escribe en tmp
+    // y se borra al terminar para no dejar basura en descargas/.
+    const payloadPath = path.join(os.tmpdir(), 'static_payload_' + Date.now() + '_' + Math.floor(Math.random() * 1e6) + '.json');
+    fs.writeFileSync(payloadPath, JSON.stringify(payload), 'utf8');
+    try {
+        const result = spawnSync('python', [script, '--input', payloadPath, '--output', outputPath], { timeout: 60000 });
+        if (result.status !== 0 || !fs.existsSync(outputPath)) {
+            const err = (result.stderr || Buffer.from('')).toString().slice(-400);
+            throw new Error('static_renderer falló: ' + (err || 'sin salida'));
+        }
+    } finally {
+        try { if (fs.existsSync(payloadPath)) fs.unlinkSync(payloadPath); } catch (_) {}
+    }
+}
+
 async function runPiezaImgJob(planId, job, dir, plan, piezas) {
     try {
         // Activos de la empresa señalada: logo/avatar entran como overlay del
@@ -1681,7 +1849,8 @@ async function runPiezaImgJob(planId, job, dir, plan, piezas) {
         // abortar el render.
         let row = null;
         try { row = await fetchEmpresaRow(plan.id_empresa); } catch (_) {}
-        const logoRaw = String((row && row.logo_url) || '').match(/https?:\/\/[^\s|,"']+/g) || [];
+        const logoRaw = String((row && row.logo_url) || '').match(/https?:\/\/[^\s|,"';]+/g) || [];
+        const brandColors = brandColorsFromEmpresa(row);
         const aDataUrl = async (u) => {
             if (!u) return undefined;
             try {
@@ -1695,34 +1864,122 @@ async function runPiezaImgJob(planId, job, dir, plan, piezas) {
                 return undefined;
             }
         };
+        const logoData = await aDataUrl(normalizeDriveUrl(logoRaw[0]));
+        // El slot de avatar del Brief puede traer un video (LABARIES es el caso
+        // real): si no es imagen, se cae al logo para no romper el overlay.
+        const avatarData = (await aDataUrl(normalizeDriveUrl(logoRaw[1]))) || logoData;
         const contacto = {
-            logo_url: await aDataUrl(normalizeDriveUrl(logoRaw[0])),
-            avatar_url: await aDataUrl(normalizeDriveUrl(logoRaw[1])),
+            logo_url: logoData,
+            avatar_url: avatarData,
             telefono: (row && (row.telefonowhatsapp || row.telefonowhastapp)) || undefined,
             sitio_web: (row && (row.enlace_oficial || row.sitioweb)) || undefined
         };
+        // Fotos reales del brief (LAPVTFU: después del logo/avatar vienen
+        // foto personal, videos, testimonios, fotos, UGC). Se usan ANTES de
+        // generar una imagen AI: una foto real del negocio siempre es más
+        // relevante que un stock genérico. Si no hay, el flujo sigue con Gemini.
+        const brandPhotoUrls = (String((row && row.logo_url) || '').match(/https?:\/\/[^\s|,"';]+/g) || []).slice(2);
+        const assetCache = new Map();
+        const assetDataFor = async (url) => {
+            if (!url) return undefined;
+            if (!assetCache.has(url)) assetCache.set(url, await aDataUrl(normalizeDriveUrl(url)));
+            return assetCache.get(url);
+        };
+        // Candidatos reales del Brief (LAPVTFU): se prueban uno por uno y solo
+        // se quedan los que el servidor confirma como imagen (los slots de
+        // video/testimonios pueden ser .mp4). Así la pieza usa una foto real
+        // del negocio y no un video roto ni una imagen AI genérica.
+        const brief = parseBrief(String((row && row.logo_url) || ''), row);
+        const activos = brief.activos || {};
+        const candidateUrls = [
+            activos.fotoPersonal,
+            ...String(activos.fotos || '').split(/[;,]/),
+            ...String(activos.ugc || '').split(/[;,]/),
+            ...String(activos.testimonios || '').split(/[;,]/),
+        ].map(u => String(u || '').trim()).filter(u => /^https?:\/\//i.test(u));
+        const imageAssets = [];
+        for (const u of candidateUrls) {
+            const d = await assetDataFor(u);
+            if (d) imageAssets.push(d);
+        }
+        let piezaIdx = 0;
         for (const p of piezas) {
             if (!Array.isArray(p.creative_json?.scenes) || !p.creative_json.scenes.length) continue;
             const outFile = path.join(dir, `pieza_${safeName(p.slot_id)}.png`);
             if (fs.existsSync(outFile)) { job.done++; pushLog(job, `pieza ${p.slot_id}: ya existe ✓`); continue; }
             try {
                 const cj = p.creative_json;
+                // Activo real primero: imagen ya aprobada de la pieza o una foto
+                // del brief. Sin esto, la campaña ignoraba las fotos reales de la
+                // empresa y generaba una imagen AI genérica para todo.
+                const existingAsset = (cj.scenes[0] && (cj.scenes[0].asset_url || cj.scenes[0].image_url))
+                    || (imageAssets.length ? imageAssets[piezaIdx % imageAssets.length] : null);
+                const assetData = existingAsset
+                    ? (String(existingAsset).startsWith('data:') ? existingAsset : await assetDataFor(existingAsset))
+                    : undefined;
+                piezaIdx++;
                 // Overlay de la escena 1: si el copy no puso uno (o quedó vacío),
                 // cae al hook de la pieza — nunca al placeholder "Escena 1".
                 const escenas = cj.scenes.map((s, i) => {
-                    if (i > 0) return s;
-                    const ov = String(s.texto_overlay || s.titulo || s.title || s.overlay || '').trim();
-                    return { ...s, texto_overlay: ov || String(cj.hook || '').trim() };
+                    const withAsset = (i === 0 && assetData) ? { ...s, image_url: assetData } : s;
+                    if (i > 0) return withAsset;
+                    const ov = String(withAsset.texto_overlay || withAsset.titulo || withAsset.title || withAsset.overlay || '').trim();
+                    return { ...withAsset, texto_overlay: ov || String(cj.hook || '').trim() };
                 });
+                const templateKey = plan.estilo_visual && (plan.estilo_visual.visualTemplate || plan.estilo_visual.template);
+                const canUseStatic = !templateKey || ['paper', 'clinical_editorial'].includes(templateKey);
+                if (canUseStatic) {
+                    try {
+                        const fmt = String(p.format || 'Post').trim();
+                        const dims = (fmt === 'Reel' || fmt === 'Story')
+                            ? { w: 1080, h: 1920 }
+                            : fmt === 'Banner' ? { w: 1080, h: 1080 } : { w: 1080, h: 1350 };
+                        let imageData = assetData;
+                        if (!imageData) {
+                            const visualDesc = (escenas[0] && (escenas[0].visual || escenas[0].shot || escenas[0].body)) || cj.hook || '';
+                            const styleKeywords = (plan.estilo_visual && plan.estilo_visual.keywords) || '';
+                            const prompt = `professional commercial photography, color palette: ${[brandColors.accent, brandColors.background, brandColors.ink].filter(Boolean).join(', ')}, ${styleKeywords}, ${visualDesc}, no text, no readable signage, no logos, no writing, no watermark`;
+                            const imgBuf = await generarImagenGemini(prompt, dims.w, dims.h);
+                            if (imgBuf) imageData = `data:image/png;base64,${imgBuf.toString('base64')}`;
+                        }
+                        const first = escenas[0] || {};
+                        // El hook es el titular natural de una pieza estática.
+                        // Antes se usaba el overlay de la escena 1, que en varias
+                        // piezas era el CTA ("Haz tu cita por WhatsApp") y dejaba
+                        // la jerarquía invertida (CTA de titular, hook de cuerpo).
+                        const staticHeadline = cj.hook || first.texto_overlay || first.title || '';
+                        let staticBody = cj.benefit || cj.solution || first.body || first.spoken || '';
+                        if (String(staticBody).trim().toLowerCase() === String(staticHeadline).trim().toLowerCase()) {
+                            staticBody = cj.proof || '';
+                        }
+                        await renderStaticPiece({
+                            width: dims.w,
+                            height: dims.h,
+                            headline: staticHeadline,
+                            body: staticBody,
+                            cta: cj.cta || '',
+                            phone: contacto.telefono || '',
+                            website: contacto.sitio_web || '',
+                            brand: brandColors,
+                            image: imageData,
+                            logo: contacto.logo_url,
+                        }, outFile);
+                        job.done++;
+                        pushLog(job, `pieza ${p.slot_id}: ok (estático) ✅`);
+                        continue;
+                    } catch (e) {
+                        pushLog(job, `pieza ${p.slot_id}: static fallback (${e.message})`);
+                    }
+                }
                 const r = await fetch(`http://127.0.0.1:${PORT}/api/vire-still`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         empresa: plan.empresa || plan.id_empresa,
                         guion: JSON.stringify({ escenas }),
                         ...contacto,
-                        visual_style: cj.visual_style || (plan.estilo_visual && plan.estilo_visual.nombre) || undefined,
-                        estilo_visual_keywords: cj.visual_style || (plan.estilo_visual && plan.estilo_visual.keywords) || undefined,
-                        brand_colors: cj.brand_colors || cj.scenes[0].brand_colors || undefined
+                        visual_style: (plan.estilo_visual && (plan.estilo_visual.visualTemplate || plan.estilo_visual.template)) || undefined,
+                        estilo_visual_keywords: (plan.estilo_visual && plan.estilo_visual.keywords) || cj.visual_style || undefined,
+                        brand_colors: cj.brand_colors || (cj.scenes[0] && cj.scenes[0].brand_colors) || brandColors
                     }),
                     signal: AbortSignal.timeout(240000)
                 });
@@ -2206,7 +2463,7 @@ const server = http.createServer((req, res) => {
                 plan = pl;
                 const { data: piezas, error: pErr } = await supabase
                     .from('piezas_creativas')
-                    .select('id, slot_id, creative_json, estado')
+                    .select('id, slot_id, format, channel, goal, creative_json, estado')
                     .eq('plan_id', planId).eq('estado', 'generado')
                     .order('slot_id');
                 if (pErr) throw pErr;
@@ -3385,7 +3642,7 @@ const server = http.createServer((req, res) => {
         req.on('end', async () => {
             let tmpDir = null;
             try {
-                const { visual, title, body: sceneBody, estilo_visual_keywords, image_source, format, logo_url, avatar_url } = JSON.parse(body);
+                const { visual, title, body: sceneBody, estilo_visual_keywords, image_source, format, logo_url, avatar_url, brand_colors } = JSON.parse(body);
                 const visualDesc = visual || `${title || ''} ${sceneBody || ''}`.trim() || 'abstract background, no text';
                 const imgDim = FMT_DIMS[format] || FMT_DIMS.Reel;
 
@@ -3418,7 +3675,7 @@ const server = http.createServer((req, res) => {
                 }
 
                 const imgPath = path.join(tmpDir, 'scene.png');
-                await generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image_source, imgDim, imgPath, logoPath, avatarPath });
+                await generateSceneImagePNG({ visualDesc, estilo_visual_keywords, image_source, imgDim, imgPath, logoPath, avatarPath, brand_colors });
 
                 const buf = fs.readFileSync(imgPath);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -3471,7 +3728,7 @@ const server = http.createServer((req, res) => {
         req.on('data', d => body += d);
         req.on('end', async () => {
             try {
-                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, duration, modules, format, platform, voice, voice_rate, estilo_visual_keywords, visual_style, image_source, tipografia, transicion } = JSON.parse(body);
+                const { empresa, sitio_web, logo_url, avatar_url, telefono, guion, style, duration, modules, format, platform, voice, voice_rate, estilo_visual_keywords, visual_style, image_source, tipografia, transicion, brand_colors } = JSON.parse(body);
                 serverLog('INFO', `[VIDE] Iniciando para: ${empresa} (${modules.join(', ')})`);
 
                 const tmpDir = path.join(__dirname, `tmp_vide_${Date.now()}`);
@@ -3566,6 +3823,7 @@ const server = http.createServer((req, res) => {
                             await generateSceneImagePNG({
                                 visualDesc, estilo_visual_keywords, image_source, imgDim, imgPath,
                                 logoPath, avatarPath, existingImageUrl: scene.image_url || null,
+                                brand_colors,
                             });
                             steps.push(`✅ Imagen ${i + 1}/${scenes.length}: ${scene.title.substring(0, 30)}`);
                         } catch (e) {
@@ -4757,7 +5015,7 @@ Responde EXCLUSIVAMENTE con un objeto JSON válido:
                     const timer = setTimeout(() => {
                         child.kill();
                         reject(new Error('Timeout generando la imagen (90s)'));
-                    }, 90000);
+                    }, 240000);
                     child.stderr.on('data', (d) => { stderrTail = (stderrTail + d.toString()).slice(-2000); });
                     child.on('error', (err) => { clearTimeout(timer); reject(err); });
                     child.on('close', (code) => {

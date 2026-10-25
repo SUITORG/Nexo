@@ -147,6 +147,10 @@ async function main() {
         overwrite: true,
       });
       console.log(`\n[ViRe] ✅ Imagen renderizada: ${output}`);
+      // renderStill deja handles del browser abiertos; sin este exit el
+      // proceso padre (local-server-node.js) espera el "close" y reporta
+      // timeout de 90s aunque el PNG ya este escrito.
+      process.exit(0);
       return;
     }
 

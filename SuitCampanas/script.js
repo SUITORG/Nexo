@@ -2654,7 +2654,7 @@ function attachMediaPlanPanel(planId, plan) {
 
             // Lista las piezas reales y ofrece "🎬 Generar Video" por cada una,
             // reusando el MISMO motor de VIDE con el guion pre-armado de la pieza.
-            await renderPlanPiezas(planId, piezasEl);
+            await renderPlanPiezas(planId, piezasEl, plan);
         } catch (e) {
             piezasEl.innerHTML = '';
             errEl.textContent = '❌ ' + e.message;
@@ -2684,7 +2684,7 @@ function attachMediaPlanPanel(planId, plan) {
 
     // Al retomar un plan ya aprobado, mostrar sus piezas generadas de una vez
     if (plan && plan.estado === 'aprobado') {
-        renderPlanPiezas(planId, piezasEl);
+        renderPlanPiezas(planId, piezasEl, plan);
     }
 }
 
@@ -2692,7 +2692,7 @@ function attachMediaPlanPanel(planId, plan) {
 // y un botón "🎬 Generar Video" por cada una. El botón reusa generateVideVideo()
 // con el guion pre-armado de la pieza (creative_json.scenes) — mismo motor
 // /api/video-produce de VIDE, sin pipeline nuevo.
-async function renderPlanPiezas(planId, container) {
+async function renderPlanPiezas(planId, container, plan = null) {
     if (!container) return;
     try {
         const res = await fetch(`/api/media-plan/${planId}/piezas`);
@@ -2755,8 +2755,9 @@ async function renderPlanPiezas(planId, container) {
                 // selector global del formulario, que puede haber cambiado desde
                 // entonces.
                 const genOpts = { skipStyleOverride: auto };
-                if (auto && p.creative_json.visual_style) {
-                    genOpts.estiloKeywords = p.creative_json.visual_style;
+                if (auto) {
+                    genOpts.estiloKeywords = (plan && plan.estilo_visual && plan.estilo_visual.keywords) || p.creative_json.visual_style;
+                    genOpts.visualTemplate = plan && plan.estilo_visual && (plan.estilo_visual.visualTemplate || plan.estilo_visual.template);
                 }
                 generateVideVideo(overrideGuion, genOpts);
             };
@@ -4489,6 +4490,7 @@ async function generateVideVideo(overrideGuion = null, opts = {}) {
     // pieza) gana sobre el selector global; si no hay ninguno, cae al fallback
     // en vez de mandar "sin estilo" por una condición de carrera.
     const estiloVisualKeywords = opts.estiloKeywords || estiloVisualSeleccionado?.keywords || fallbackEstiloKeywords();
+    const visualTemplate = opts.visualTemplate || estiloVisualSeleccionado?.visualTemplate || undefined;
 
     // Collect selected modules from unified Producción Multimedia
     const modules = [];
@@ -4565,7 +4567,7 @@ async function generateVideVideo(overrideGuion = null, opts = {}) {
                 format,
                 platform,
                 estilo_visual_keywords: estiloVisualKeywords,
-                visual_style: estiloVisualSeleccionado?.visualTemplate || undefined,
+                visual_style: visualTemplate,
                 image_source: document.getElementById('imageSourceSelect')?.value || 'ia',
                 tipografia: briefParaFuente?.tipografia || undefined,
                 transicion: document.getElementById('videTransicionSelect')?.value || 'auto'
