@@ -1,0 +1,48 @@
+# GuiaTotal/registro/suitcampanas.yaml
+proyecto: "SuitCampanas (Campañas AI)"
+ruta: "SuitCampanas/"
+etapa: "construccion"
+creado: "2026-10-24"
+actualizado: "2026-10-24"
+
+validacion:
+  problema: "Las pymes no tienen tiempo ni recursos para producir contenido publicitario consistente para redes sociales"
+  hipotesis: "Si automatizamos Brief → Plan de Medios → Piezas con IA, las campañas se producen en minutos en vez de días"
+  metrica_exito: "Pipeline completo genera piezas aprobables en <5 min por empresa"
+  evidencia: "Sin Analista_Proy.md — proyecto nacido como herramienta interna, validación de mercado pendiente"
+  decision: "continuar"
+  motivo: "Código en producción, pipeline funcional, sin evaluación formal de mercado aún"
+
+evaluacion:
+  panel_juzgador: "no evaluado"
+  veredicto_fecha: null
+  recomendaciones: "Evaluar con panel-juzgador si se planea ofrecer a clientes externos"
+
+integraciones:
+  convive_sheets: true
+  id_empresa: null  # es herramienta multi-tenant, no una empresa puntual
+  db_engine: "GSHEETS + SUPABASE"
+  brief_en_logo_url: true
+
+producto:
+  formato: "herramienta-interna"
+  monetizacion: "ahorro-interno"
+  ruta_cobro: "No se cobra directamente — reduce tiempo de producción de campañas para tenants de SuitOrg"
+  gate_cobro: "APTO"
+
+taxonomia:
+  industria: "Tecnología"
+  nicho: "Software"
+  especializacion: "IA/Machine Learning"
+
+documentos:
+  analista_proy: false
+  taxonomia: false
+  contrato: true
+  identidad: false
+  manuales: false
+  prompt_origen: false
+  checklist_lanzamiento: false
+  arquitectura_docs: false
+
+proximo_paso: "Crear docs/ (TAXONOMIA, manuales) y correr ciclo F1-F7"
