@@ -936,8 +936,7 @@ function normalizeDriveUrl(url) {
 const BRIEF_LIST_FIELDS = {
     dolor: 'dolor',
     pcp: 'promesa_beneficio_prueba',
-    pbp: 'promesa_beneficio_prueba',  // alias canónico (ADR-026)
-    pbm: 'promesa_beneficio_prueba',  // alias legado
+    pbm: 'promesa_beneficio_prueba',
     objecion: 'objeciones',
     competidores: 'competidores'
 };

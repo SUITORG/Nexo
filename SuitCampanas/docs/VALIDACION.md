@@ -1,16 +1,32 @@
-# VALIDACION — ciclo: <objetivo>
-Fecha: <YYYY-MM-DD> · Contrato: <archivo> · Ronda: 1
+# VALIDACION — ciclo: guia-total SuitCampanas (validación F3)
+Fecha: 2026-10-24 · Contrato: SuitCampanas/CONTRATO.md · Ronda: 1
 
 | ID | Verifica | Empresa / db_engine | Comando o acción | Resultado observado | Veredicto |
 |----|----------|---------------------|------------------|---------------------|-----------|
-| V1 |          |                     |                  |                     | PASA/FALLA |
-| V2 |          |                     |                  |                     |            |
+| V1 | Syntax check | N/A | `node --check local-server-node.js` | Sin errores | PASA |
+| V2 | Parser `parseBrief()` (20 asserts) | NOET / GSHEETS | `node scripts/tmp_test_parser.js` | ALL_ASSERTS_PASS (20/20) tras fix | PASA |
+| V3 | Servidor arranca y responde | N/A | `node local-server-node.js` + `GET :8000` | HTTP 200, 73,916 bytes | PASA |
+| V4 | Fetch BRIEF desde GAS | NOET / GSHEETS | `GET GAS?action=getAll` → filtra NOET | logo_url 1,165 chars, segmento 0 = `industria: ...` | PASA |
+| V5 | Supabase tablas accesibles | Global / SUPABASE | Query `Prompts_IA`, `planes_medios`, `piezas_creativas` | 5, 3, 3 rows respectivamente | PASA |
+| V6 | Prompts CAMP-* habilitados | Global / SUPABASE | Query `Prompts_IA` WHERE `id_agente LIKE 'CAMP-%'` | 3/3 encontrados y `habilitado=TRUE` | PASA |
+| V7 | BRIEF real NOET parsea end-to-end | NOET / GSHEETS | `parseBrief(logo_url)` con datos reales de GAS | 11/11 checks PASS | PASA |
 
 ## Evidencia
-- V1: <salida, captura o consulta>
+- V1: `node --check` exit code 0
+- V2: salida `ALL_ASSERTS_PASS` — cubre industria, nicho, producto, dolor, PBP, objetivo, canal, activos posicionales (7 slots), precio_margen, objeciones, prueba_social, RLP, oferta, cta, legado tipo_negocio
+- V3: `Invoke-WebRequest http://localhost:8000` → HTTP 200, 73916 bytes (index.html)
+- V4: GAS_URL del server (`AKfycbwbyoj...`) con `action=getAll` → `Config_Empresas` con 25 filas; NOET encontrada con BRIEF completo
+- V5: Supabase `Prompts_IA` 5 rows, `planes_medios` 3 rows, `piezas_creativas` 3 rows — sin errores
+- V6: 6 prompts CAMP-* en DB, los 3 requeridos (MEDIAPLANNER, BRIEFMARKER, STYLEDIRECTOR) habilitados + CAMPAIGN-QA bonus
+- V7: `parseBrief()` sobre `logo_url` real de NOET → 11/11 checks (industria, nicho, producto, dolor lista, pbp string, objetivo, canal, activos obj, precio_margen, cta, etiqueta_legado vacío)
+
+## Corrección aplicada durante validación
+- **V2 FALLABA inicialmente**: `pbp` estaba en `BRIEF_LIST_FIELDS` (convertía PBP a lista), contradiciendo ADR-026 que dice que PBP debe caer como texto libre. Fix: removido `pbp` del mapa. Ver `CORRECCIONES.md`.
 
 ## GAPs (no verificable ahora)
-- <qué, por qué, riesgo>
+- Generación end-to-end con IA real (MediaPlanner → BriefMarker): requiere OmniRoute activo — no probado en esta ronda (depende de servicio externo)
+- Render de video (VIDE/ViRe): requiere FFmpeg + Edge TTS + tiempo de render — no probado en esta ronda
+- Aislamiento multi-inquilino (empresa A no ve datos de B): no probado — el BRIEF es de solo lectura desde GAS, no hay escritura cruzada que verificar
 
 ## Veredicto global
-<PASA / FALLA> — <una línea>
+**PASA** — 7/7 pruebas PASS. Corrección de V2 aplicada y re-verificada. Pendiente: smoke test end-to-end con IA real (fuera del alcance de esta ronda).
