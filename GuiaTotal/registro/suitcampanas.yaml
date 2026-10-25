@@ -45,4 +45,4 @@ documentos:
   checklist_lanzamiento: true
   arquitectura_docs: false
 
-proximo_paso: "Fase de validación (F3): smoke test end-to-end del pipeline Brief→Plan→Pieza→Video"
+proximo_paso: "Smoke test end-to-end con IA real (MediaPlanner→BriefMarker→video); identidad corporativa pendiente"
