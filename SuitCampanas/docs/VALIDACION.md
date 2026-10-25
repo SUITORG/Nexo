@@ -67,8 +67,11 @@ Fecha: 2026-10-24 · Contrato: SuitCampanas/CONTRATO.md · Ronda: 1
 | V15 | API GET/POST | `GET /api/estilo-config/LABARIES` → `POST manual 41` → `GET` → `POST auto` | `auto` → `manual/41` → `auto`, sin errores | PASA |
 | V16 | UI mácara | `node --check` del script inline extraído | Sin errores de sintaxis | PASA |
 
+| V17 | UI real (Playwright) | Abrir mácara, elegir LABARIES, cambiar a manual y estilo 41 | 37 estilos cargados, toast “Estilo visual guardado”, Supabase `manual/41`, 0 errores de consola | PASA |
+
 ### Evidencia Ronda 2.1
 - Migración: `database/migrations/2026-10-24_empresa_estilo_config.sql`.
 - Endpoints en `local-server-node.js`: `GET/POST /api/estilo-config/:id_empresa`.
 - UI: `mascara.html` Sección E → “Estilo visual” (Automático / Elegir estilo).
+- Playwright: `mascara.html` cargó 37 estilos; el switch guardó `manual/41` en Supabase y luego se regresó a `auto` para no dejar estado de prueba.
 - `resolveEstiloVisualForEmpresa()` lee la config y, en manual, usa el `id_subestilo` elegido; si no existe, cae a auto.
