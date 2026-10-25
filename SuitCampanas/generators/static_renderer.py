@@ -31,6 +31,10 @@ def clean_text(value):
     repetidos que el LLM a veces escribe ('¿¿¿Quién...', '!!!')."""
     text = str(value or "")
     text = re.sub(r"([¿¡!?])\1{1,}", r"\1", text)
+    # Errores de conjugación frecuentes del copy generado por IA: el verbo
+    # detrás de un modal va en infinitivo ("puedes agendar", no "puedes agenda").
+    text = re.sub(r"\b(puedes|debes|quieres|necesitas)\s+agenda\b", r"\1 agendar", text, flags=re.I)
+    text = re.sub(r"\bagenda\s+y\s+obtener\b", "agendar y obtener", text, flags=re.I)
     text = "".join(ch for ch in text if unicodedata.category(ch) != "So")
     return " ".join(text.split()).strip()
 
