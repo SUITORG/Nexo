@@ -1,0 +1,64 @@
+# Máscara Config_Empresas — SUITORG
+# Origen: GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml (plantilla maestra)
+# Generada por: skill empresa-mascara · orden "máscara auto total SUITORG" (2026-10-25)
+#
+# A = copiado TAL CUAL de la fila existente en Config_Empresas (no inventado).
+# B = lo escribe la cadena (no se toca a mano).
+# C = "auto total" → los 6 switches a auto (decisión del usuario).
+# D = sin descomentar nada → no se escribe, la hoja conserva lo suyo.
+mascara:
+  version: 1
+  plantilla_de: GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
+  id_empresa: "SUITORG"
+
+  # ── A. DATOS TUYOS — obligatorios, imposibles de inventar ──────────────────
+  A_datos_tuyos:
+    nomempresa: "SUIT.ORG"
+    tipo_negocio: "Servicio de Software asistido por AI,no_galeria"
+    giro_especifico: "saas,1"
+    color_tema: ""                 # vacío = default según giro (permitido por la plantilla)
+    direccion: "Nuevo Las puentes"
+    whatsapp_negocio: "8110463721"
+    correoempresarial: "rbtpdrn@gmail.com"
+
+  # ── B. GENERADOS POR LA CADENA — no escribir a mano ────────────────────────
+  B_generados:
+    slogan: ""
+    mensaje1: ""
+    mensaje2: ""
+    descripcion: ""
+    logo_url: ""
+    foto_agente: ""
+    mision: ""
+    vision: ""
+    valores: ""
+
+  # ── C. SWITCHES DE CADENA — "auto total" ──────────────────────────────────
+  C_cadena:
+    alta: "auto"                   # la fila YA existe → updateRow, no appendRows
+    empresa_registro: "auto"       # estructura Drive + fotoagente + copy + identidad
+    clusters: "auto"               # clusters-seo → Config_SEO
+    paginas: "auto"                # paginas-seo → Config_Paginas
+    brief: "auto"                  # brief-engine → logo_url
+    activos: "auto"                # lapvtfu → cte<id>/_activos
+
+  # ── D. TOGGLES MÓDULOS — sin cambios respecto a la hoja (todo comentado) ───
+  D_toggles:
+    # habilitado: true
+    # es_principal: false
+    # modo: "PROD,0,0,0,0,0,0,0"
+    # db_engine: "GSHEETS"
+    # modo_sitio: "NOHYBRID"
+    # usa_reservaciones: 1
+    # usa_soporte_ia: ""
+    # usa_qr_sitio: false
+    # usa_otp_entrega: false
+    # usa_features_estandar: false
+    # agent_enabled: true
+    # formulario: false
+    # factura: false
+    # stripe_activo: ""
+    # autodepuracion: 60
+    # modo_creditos: "DIARIO"
+    # creditos_totales: 100
+    # is_isolated: false

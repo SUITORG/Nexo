@@ -1,0 +1,70 @@
+{
+  "id_empresa": "SUITORG",
+  "fecha": "2026-10-25T13:33:33.384Z",
+  "slot6_query": [
+    "software development team office",
+    "business analytics dashboard laptop",
+    "retail store point of sale tablet",
+    "coworkers discussing project office",
+    "developer coding computer screen",
+    "modern office workspace technology"
+  ],
+  "assets": [
+    {
+      "archivo": "fotos01.jpg",
+      "pexels_id": 6804068,
+      "autor": "cottonbro studio",
+      "query": "software development team office",
+      "origen": "pexels",
+      "license": "Pexels License (free comercial, sin atribución obligatoria)",
+      "drive": "https://drive.google.com/file/d/11Y5pQ9fJ-IHQha_SXmFTH68aMehM64Gh/view?usp=drivesdk"
+    },
+    {
+      "archivo": "fotos02.jpg",
+      "pexels_id": 577210,
+      "autor": "Lukas Blazek",
+      "query": "business analytics dashboard laptop",
+      "origen": "pexels",
+      "license": "Pexels License (free comercial, sin atribución obligatoria)",
+      "drive": "https://drive.google.com/file/d/1_taII-hKE6iQBoHU9zzmfS2vNQVQWSfH/view?usp=drivesdk"
+    },
+    {
+      "archivo": "fotos03.jpg",
+      "pexels_id": 12935042,
+      "autor": "iMin Technology",
+      "query": "retail store point of sale tablet",
+      "origen": "pexels",
+      "license": "Pexels License (free comercial, sin atribución obligatoria)",
+      "drive": "https://drive.google.com/file/d/1hQsZvvABxk1C1JN3RTD2n8QL6JfZ59qU/view?usp=drivesdk"
+    },
+    {
+      "archivo": "fotos04.jpg",
+      "pexels_id": 7651545,
+      "autor": "Kindel Media",
+      "query": "coworkers discussing project office",
+      "origen": "pexels",
+      "license": "Pexels License (free comercial, sin atribución obligatoria)",
+      "drive": "https://drive.google.com/file/d/1Me-yTvGrTVEhnKY-DUBXkLMfb6ECZNkP/view?usp=drivesdk"
+    },
+    {
+      "archivo": "fotos05.jpg",
+      "pexels_id": 89724,
+      "autor": "Lee Campbell",
+      "query": "developer coding computer screen",
+      "origen": "pexels",
+      "license": "Pexels License (free comercial, sin atribución obligatoria)",
+      "drive": "https://drive.google.com/file/d/1bbDdD_oJ01QtVNlQjTpWacDO9TPsj3Ul/view?usp=drivesdk"
+    },
+    {
+      "archivo": "fotos06.jpg",
+      "pexels_id": 6337,
+      "autor": "Karolina Grabowska www.kaboompics.com",
+      "query": "modern office workspace technology",
+      "origen": "pexels",
+      "license": "Pexels License (free comercial, sin atribución obligatoria)",
+      "drive": "https://drive.google.com/file/d/1Iv1tT2BPNzg8UQ_X5SqatgQovg73QZ1r/view?usp=drivesdk"
+    }
+  ],
+  "slot4": "[PENDIENTE - Videos]",
+  "nota": "Fotos de stock Pexels (licencia free), NO generadas por IA → origen \"pexels\", no \"ai\"."
+}

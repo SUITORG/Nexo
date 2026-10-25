@@ -1,0 +1,90 @@
+# GuiaTotal/registro/SUITORG.yaml — tarjeta del proyecto (tenant SUITORG)
+proyecto: "SUITORG — SUIT.ORG"
+ruta: "(tenant de Config_Empresas — el propio sistema que opera SuitOrg)"
+etapa: "cadena máscara 8/8 completada"   # auto total 2026-10-25
+creado: "2026-10-25"
+actualizado: "2026-10-25"
+
+validacion:
+  problema: "Tenant SUITORG con fila a medio llenar (mision/vision/valores/impacto/politicas vacíos, sin identidad ni estructura registrada)"
+  hipotesis: "La cadena máscara (empresa-registro → clusters → paginas → brief → activos) deja el tenant operativo y reflejado en el espejo"
+  metrica_exito: "Cadena completa con switches auto + espejo Supabase campo a campo + configuración de SEO"
+  evidencia: "invocación explícita del usuario: 'máscara auto total SUITORG' (switches a auto, sin preguntas)"
+  decision: "continuar"
+  motivo: "fila ya existente en GS, sin altas destructivas; solo updateRow de A+D y cadena"
+
+evaluacion:
+  panel_juzgador: "no evaluado"     # tenant interno de SuitOrg, no proyecto a validar
+  veredicto_fecha: null
+  recomendaciones: null
+
+integraciones:
+  convive_sheets: true              # Config_Empresas es maestra en GS
+  id_empresa: "SUITORG"
+  db_engine: "SUPABASE"
+  brief_en_logo_url: false          # vector21 pendiente (eslabón brief)
+
+taxonomia:                          # match exacto catálogo GuiaTotal/TAXONOMIA.md §3
+  industria: "Tecnología"
+  nicho: "Software"
+  especializacion: "SaaS"
+
+documentos:
+  analista_proy: false              # invocación directa de máscara
+  identidad: true                   # registro/SUITORG/IDENTIDAD_CORPORATIVA.md (8 secciones + anexo legal)
+  mascara: true                     # registro/SUITORG/MASCARA.yaml (C = auto total)
+  confianza: false
+  contrato: false
+  manuales: false
+  prompt_origen: false
+  checklist_lanzamiento: false
+
+cadena_mascara:                     # 8/8 auto — 2026-10-25 ("máscara auto total SUITORG")
+  base:
+    valida_A: "7/7 campos A presentes · color_tema lo dio el usuario (#2563eb)"
+    escribe_A: "updateRow → OK (7 campos A)"
+    sync_espejo: "Config_Empresas/Config_SEO/Config_Paginas verificados en Supabase (Logs_Chat_IA devuelve 500 — tabla ajena, ver incidencias)"
+  empresa_registro:
+    drive: "ensureCteFolders → estructura ya existía (id 1S0CH_dfmP52g_BWBrrKmt8lZrOnTeqBJ)"
+    copy: "mensaje1 + mensaje2 escritos · slogan NO se sobreescribe (be-005)"
+    identidad: "IDENTIDAD_CORPORATIVA.md · 8 secciones + Anexo legal → politicas_privacidad 3159 ch · politicas_cookies 2241 ch"
+    fotoagente: "[PENDIENTE] — las búsquedas devolvieron Unsplash+ (licencia de pago); requiere URL de licencia free"
+  clusters: 7                       # Config_SEO kebab + 3 legacy intactas · 6/7 con imagen Pexels · hex #2563eb
+  paginas: 7                        # Config_Paginas · 309-328 palabras · 3 JSON · FAQ · imagen heredada
+  brief: "vector21 en logo_url (3350 ch) · backup be-008 local · brief.json + confianza.json en cteSUITORG/_brief/"
+  activos: "LAPVTFU: slot1 logo01.png ✓ · slot6 fotos01-06 (6 Pexels, share ANYONE, HTTP 200) · slots 2/3/5/7 [PENDIENTE] · slot4 [PENDIENTE - Videos]"
+
+incidencias_abiertas:
+  - "syncToSupabase → Logs_Chat_IA HTTP 500 (21000, dup en ON CONFLICT). PREEXISTENTE, no toca Config_*: cada sync sí espeja Config_Empresas/Config_SEO/Config_Paginas."
+  - "1 clúster sin imagen: software-a-medida-negocios → PENDIENTE_IMAGEN (Pexels no devolvió resultado)"
+  - "Google Flow: genera pero el adapter no entrega el archivo (no-images-detected, ADR-050) — se gastó 1 generación de prueba"
+  - "slot 4 (videos): sin motor — ComfyUI no instalado y la máquina NO tiene GPU; Flow descartado por lo anterior"
+
+activos_drive:
+  estructura: "ensureCteFolders — _brief, _activos(+6), _share (preexistente)"
+  fotoagente: null                   # [PENDIENTE] licencia free
+  lapvtfu:
+    slot1_logo: "logo01.png + favicon (initials, source=initials) ✓"
+    slot6_fotos: "fotos01..06.jpg (Pexels, cteSUITORG/ raíz, share ANYONE, HTTP 200 verificado)"
+    slot4_videos: "[PENDIENTE - Videos] — sin motor (sin GPU, Flow no entrega archivo)"
+    slot2_avatar: "no_foto → skip (depende de fotoprs01, manual)"
+    slot3_foto_personal: "[PENDIENTE] — nunca se genera (persona real)"
+    slot5_testimonios: "[PENDIENTE] — sin cliente real que testimonie"
+    slot7_contenido: "[PENDIENTE] — sin flujo (catálogo lapvtfu)"
+    registro: "GuiaTotal/registro/SUITORG/activos_registro.json (origen: pexels, no ai)"
+  pendientes: ["fotoagente con licencia free", "slot4 videos", "1 clúster sin imagen"]
+
+seo_paginas:
+  clusters_seo: 7                    # + 3 legacy (ids 1/2/3) intactas
+  paginas: 7
+  imagenes: 6                        # 1 PENDIENTE_IMAGEN
+  espejo: "Config_SEO + Config_Paginas + Config_Empresas sincronizados con Supabase"
+  brief: "vector21 en logo_url — 21/21 segmentos"
+
+conocido:
+  alias_seo: "suit"
+  enlace_oficial: "https://grupoevasol.com/?co=SUITORG#home"
+  ubicacion: "Apodaca, N.L. Mex. (Nuevo Las puentes)"
+  contacto: "WhatsApp 8110463721 · rbtpdrn@gmail.com"
+
+proximos_pasos: "1) fotoagente con URL de licencia free 2) clúster software-a-medida-negocios → su imagen 3) slot4 videos cuando haya motor (GPU/ComfyUI o Flow arreglado) 4) revisar copy de las 7 páginas 5) bug Logs_Chat_IA 500 (dup ON CONFLICT) en el sync"
