@@ -49,16 +49,22 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 <script>
 const wrap=document.getElementById('wrap'),title=document.getElementById('title'),ext=document.getElementById('ext');
 const frames={}; let curSrc=null;
+// Cache-busting: python -m http.server no manda Cache-Control, así que el navegador
+// aplica caché heurística y podía servir una versión vieja de un módulo aunque el
+// disco ya tuviera la nueva. Cada apertura del panel pone un timestamp en la URL
+// del iframe → siempre pide el archivo fresco. (patrón ya usado en mascara.html?v=3)
+const BUILD = Date.now();
+const withV = url => url + (url.includes('?') ? '&' : '?') + 't=' + BUILD;
 function activate(b){
   if(curSrc===b.dataset.src) return;
   if(curSrc && frames[curSrc]) frames[curSrc].style.display='none';
   document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   title.textContent=b.dataset.name;
-  ext.href=b.dataset.src;
+  ext.href=withV(b.dataset.src);
   if(!frames[b.dataset.src]){
     const f=document.createElement('iframe');
-    f.src=b.dataset.src; f.title=b.dataset.name;
+    f.src=withV(b.dataset.src); f.title=b.dataset.name;
     wrap.appendChild(f); frames[b.dataset.src]=f;
   }
   frames[b.dataset.src].style.display='block';

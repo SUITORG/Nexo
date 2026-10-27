@@ -22,7 +22,11 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Master listo: http://127.0.0.1:%PORT%/MASTER.html
-start "" "http://127.0.0.1:%PORT%/MASTER.html"
+rem %RANDOM% rompe la caché del navegador: sin esto Chrome servía un MASTER.html
+rem guardado, y al no cargar el nuevo tampoco se aplicaba el cache-busting de los
+rem iframes → los módulos (p. ej. SuitMisCtas) se quedaban en una versión vieja.
+set STAMP=%RANDOM%%RANDOM%
+echo Master listo: http://127.0.0.1:%PORT%/MASTER.html?t=%STAMP%
+start "" "http://127.0.0.1:%PORT%/MASTER.html?t=%STAMP%"
 echo (Para detener el servidor cierra la ventana minimizada "SuitOS-Master-server")
 timeout /t 3 >nul

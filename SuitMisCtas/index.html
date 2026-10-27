@@ -1155,10 +1155,11 @@ function renderAll(){
   if(fh){
     if(!db.entries || db.entries.length===0){
       fh.style.display='block';
-      fh.innerHTML = '<b>Ves datos de ejemplo — este navegador no tiene tus capturas.</b> ' +
-        'Cada navegador guarda sus datos por separado. Opciones: ' +
-        '(1) abre este archivo en el navegador donde lo venías usando, o ' +
-        '(2) pega tu respaldo: pestaña <b>Datos → ⬆ Importar JSON</b> (respaldo recomendado: <span style="color:var(--accent)">suitmisctas-2026-10-21.json</span> de tu carpeta Descargas).';
+      fh.innerHTML = '<b>Ves datos de ejemplo — esta dirección no tiene tus capturas.</b> ' +
+        'Los datos viven en la dirección donde los venías usando, y esa es <b>el panel MASTER</b>: ' +
+        'ábrelo desde <b>suitorg-menu → [4] Sistemas → [7] MASTER → pestaña SuitMisCtas</b>. ' +
+        'Si abriste el archivo directo (doble click o pegando la ruta) verás datos de ejemplo porque es otra dirección. ' +
+        'Solo si necesitas mover tus datos a otro navegador: <b>Datos → ⬆ Importar JSON</b> con tu respaldo de Descargas.';
     } else {
       fh.style.display='none';
     }
