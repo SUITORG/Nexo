@@ -605,6 +605,101 @@ function probeClaude() {
 }
 
 // --- Proyecto ---
+// ===== Foco (ronda 3): ultimo commit por proyecto + pendientes =====
+// git: UNA sola pasada git log --since=30.days --name-only para todo el repo;
+// dirs sin actividad en 30d consultan su -1 individual (pocos). Tolerante: si git
+// falla → null/"sin datos" sin tumbar el escaneo (regla CORRECCIONES.md).
+function daysAgo(iso) {
+  if (!iso) return null;
+  const d = (Date.now() - new Date(iso).getTime()) / 86400000;
+  return d >= 0 ? Math.floor(d) : 0;
+}
+function buildGitMap(allDirs) {
+  const map = {}; // dir -> {fecha, msg, n30}
+  const norm = d => (d || '').split('/')[0];
+  try {
+    const out = execSync('git -C "' + ROOT + '" log --since=30.days --name-only --format=%cI%x1f%s',
+      { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+    let cur = null;
+    const top = l => l.includes('/') ? l.split('/')[0] : '.'; // archivos de raiz → '.'
+    for (const line of out.split(/\r?\n/)) {
+      if (!line) continue;
+      if (line.includes('\x1f')) {
+        const [fecha, msg] = line.split('\x1f');
+        cur = { fecha: (fecha || '').slice(0, 10), msg: msg || '' };
+      } else if (cur) {
+        const d = top(line);
+        if (!map[d]) map[d] = { fecha: cur.fecha, msg: cur.msg, n30: 0 };
+        map[d].n30++;
+      }
+    }
+  } catch { /* git no disponible → sin datos */ }
+  // dirs sin actividad reciente: ultimo commit individual (solo los que falten)
+  for (const d of allDirs) {
+    if (map[d]) continue;
+    try {
+      const one = execSync('git -C "' + ROOT + '" log -1 --format=%cI%x1f%s -- "' + d + '"',
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+      if (one.includes('\x1f')) {
+        const [fecha, msg] = one.split('\x1f');
+        map[d] = { fecha: (fecha || '').slice(0, 10), msg: msg || '', n30: 0 };
+      }
+    } catch { /* sin commits para ese dir */ }
+  }
+  return map;
+}
+
+// Pendientes: GuiaTotal/PENDIENTES.md (fuente 1, solo filas abiertas "- [ ]")
+// + planes de .suit/memory/pending/*.md. Asignacion por nombre de proyecto
+// (coincidencia insensible a mayusculas, la mas larga gana) → si no, "Global".
+function buildPendientes(allDirs) {
+  const pend = {};   // proj -> [{txt, fuente}]
+  const ordered = []; // orden de archivo (para focoTop5) con proyecto ya asignado
+  const push = (proj, txt, fuente) => {
+    const item = { txt, fuente };
+    (pend[proj] = pend[proj] || []).push(item);
+    if (proj !== '@@RAW@@') ordered.push({ proj, txt, fuente });
+  };
+  const clean = s => s.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
+  // 1) PENDIENTES.md — filas abiertas
+  const pm = readText(path.join(ROOT, 'GuiaTotal', 'PENDIENTES.md'));
+  for (const line of pm.split(/\r?\n/)) {
+    const m = line.match(/^\s*-\s+\[\s\]\s+(.*)$/);
+    if (m) push('@@RAW@@', clean(m[1]), 'PENDIENTES.md');
+  }
+  // 2) .suit/memory/pending/*.md — un pendiente por archivo (titulo + primera linea)
+  const pendDir = path.join(ROOT, '.suit', 'memory', 'pending');
+  try {
+    for (const f of fs.readdirSync(pendDir).filter(f => f.endsWith('.md')).sort()) {
+      const txt = readText(path.join(pendDir, f));
+      if (/status:\s*(cerrad|done|completad|finalizad)/i.test(txt)) continue;
+      const title = (txt.match(/^#\s+(.+)$/m) || [null, f.replace(/\.md$/, '')])[1];
+      const desc = (txt.match(/^description:\s*(.+)$/m) || [null, ''])[1];
+      push('@@RAW@@', clean(title) + (desc ? ' — ' + clean(desc) : ''), 'memory/pending/' + f);
+    }
+  } catch { /* sin carpeta */ }
+  // asignar @@RAW@@ al proyecto mas largo cuyo nombre aparezca en el texto
+  const keys = Object.keys(pend).filter(k => k === '@@RAW@@');
+  if (keys.length) {
+    const raw = pend['@@RAW@@']; delete pend['@@RAW@@'];
+    // carpetas genericas no reclaman pendientes (evita que "Config_Paginas" caiga
+    // en el dir config/, "docs/05" en docs/, etc.) → esos van a Global
+    const GENERIC = new Set(['config', 'docs', 'backend', 'plantilla', 'plantillas', 'src', 'test', 'tests', 'scripts', 'media', 'assets', 'public', 'index']);
+    const dirs = allDirs.filter(d => !GENERIC.has(d.toLowerCase()))
+      .sort((a, b) => b.length - a.length); // mas largo primero
+    for (const item of raw) {
+      const t = item.txt.toLowerCase().replace(/[^a-z0-9]/g, '');
+      let proj = null;
+      for (const d of dirs) {
+        const n = d.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (n.length >= 4 && t.includes(n)) { proj = d; break; }
+      }
+      push(proj || 'Global', item.txt, item.fuente);
+    }
+  }
+  return { pend, ordered };
+}
+
 function scanProject(name, dir, isRoot, reg, optimal, ctx) {
   const pkg = readJson(path.join(dir, 'package.json'));
   const oc = readJson(path.join(dir, 'opencode.json'));
@@ -718,6 +813,19 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
   const projects = [scanProject('root', ROOT, true, reg, optimal, ctx)];
   for (const d of dirs) projects.push(scanProject(d, path.join(ROOT, d), false, reg, optimal, ctx));
 
+  // --- Foco: ultimo commit + pendientes por proyecto (ronda 3) ---
+  const gitMap = buildGitMap(['.', ...dirs]);
+  const { pend: pendMap, ordered: pendOrdered } = buildPendientes(['.', ...dirs]);
+  for (const p of projects) {
+    const g = gitMap[p.dir];
+    p.ultimoCommit = g && g.fecha ? { fecha: g.fecha, msg: g.msg } : null;
+    p.commits30d = g ? (g.n30 || 0) : 0;
+    p.pendientes = pendMap[p.dir] || [];
+    p.foco = p.pendientes.length > 0;
+  }
+  const focoTop5 = pendOrdered.slice(0, 5);
+  const pendGlobal = pendMap['Global'] || [];
+
   // --- Capabilities: skills consolidadas + agentes SuitOS + agentes Claude + grupos paralelos ---
   const agentsRegistry = parseAgentsRegistry();
   const registrySkills = parseSkillsRegistry();
@@ -825,6 +933,8 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
     generatedAt: new Date().toISOString(),
     live: LIVE,
     probe,
+    focoTop5,
+    pendGlobal,
     claude: {
       allow: ctx.allow,
       globalSkills: ctx.globalSkills,

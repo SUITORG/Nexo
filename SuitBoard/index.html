@@ -658,16 +658,46 @@
                     <div class="label">Market State:</div>
                     <div class="time" id="marketState">PRE-MARKET</div>
                     <div class="next" id="marketClock"></div>
-                    <div style="margin-top: 8px; display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
+                    <div style="margin-top: 8px; display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+                        <select id="usModeSelect" onchange="setUsMode(this.value)" title="Cuándo cargar los datos US de Twelve Data" style="padding: 4px 6px; background: rgba(15,23,42,0.8); border: 1px solid rgba(148,163,184,0.3); border-radius: 6px; color: #e2e8f0; font-size: 0.68rem; outline: none;">
+                            <option value="auto">US: auto 1h</option>
+                            <option value="ondemand">US: al abrir pestaña</option>
+                        </select>
                         <input type="password" id="tdKeyInput" placeholder="Twelve Data API key" onchange="saveTdKey(this.value)" style="width: 170px; padding: 4px 8px; background: rgba(15,23,42,0.8); border: 1px solid rgba(148,163,184,0.3); border-radius: 6px; color: #e2e8f0; font-size: 0.7rem; outline: none;">
                         <span id="usLiveStatus" style="font-size: 0.68rem; font-weight: 600; color: #64748b;">sin key — demo</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Market Indices -->
+            <!-- Índices Fijos -->
             <div class="card" style="margin-bottom: 20px;">
-                <div class="card-title"> Market Indices</div>
+                <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span> Índices Fijos</span>
+                    <span id="moversStatus" style="font-size: 0.7rem; font-weight: 600; color: #64748b;"></span>
+                </div>
+                <div class="market-indices" id="usFixed"></div>
+            </div>
+
+            <!-- Top Gainers del mercado -->
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-title">🏆 Top 5 del día</div>
+                    <div id="mktTopGainers"><div class="muted" style="font-size:0.75rem;padding:8px 0;">Cargando…</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🔻 Top 5 más bajos</div>
+                    <div id="mktTopLosers"><div class="muted" style="font-size:0.75rem;padding:8px 0;">Cargando…</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"> Gainers por capitalización</div>
+                    <div class="muted" style="font-size:0.65rem;margin-bottom:8px;">Small &lt; $2B · Mid $2–10B · Large ≥ $10B — del top del día</div>
+                    <div id="mktByCap"><div class="muted" style="font-size:0.75rem;padding:8px 0;">Cargando…</div></div>
+                </div>
+            </div>
+
+            <!-- Índices complementarios -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title"> Complementarios</div>
                 <div class="market-indices" id="usIndices"></div>
             </div>
 
@@ -953,6 +983,35 @@
             return Math.sqrt(variance) * Math.sqrt(periods || 365);
         }
 
+        // Fallback de PRECIOS cuando CoinGecko esta rate-limitado (429/CORS): Twelve Data
+        // con la MISMA key del campo US (localStorage suitboard_td_key). Solo precios —
+        // sin historia los analisis de hover/matriz quedan en "insuficiente" (degradacion honesta).
+        // Chunks de 4 + pausa 16s para respetar 8 creditos/min del plan free.
+        async function cryptoFallbackTwelveData() {
+            if (!tdKey) return 0;
+            let ok = 0;
+            const syms = Object.keys(CG_IDS);
+            for (let i = 0; i < syms.length; i += 4) {
+                const chunk = syms.slice(i, i + 4);
+                const results = await Promise.all(chunk.map(async sym => {
+                    try {
+                        const r = await fetch(`https://api.twelvedata.com/quote?symbol=${encodeURIComponent(sym + '/USD')}&apikey=${encodeURIComponent(tdKey)}`);
+                        if (!r.ok) return false;
+                        const j = await r.json();
+                        // /quote de TD: crypto trae 'close' (ultimo), no siempre 'price'
+                        const px = parseFloat(j.price || j.close);
+                        if (j.status === 'error' || !px) return false;
+                        cryptoData[sym].price = px;
+                        cryptoData[sym].change = +(parseFloat(j.percent_change) || 0).toFixed(2);
+                        return true;
+                    } catch (e) { return false; }
+                }));
+                ok += results.filter(Boolean).length;
+                if (i + 4 < syms.length) await sleep(16000);
+            }
+            return ok;
+        }
+
         async function fetchCryptoLive() {
             const statusEl = document.getElementById('cryptoLiveStatus');
             try {
@@ -1008,8 +1067,18 @@
                 if (statusEl) { statusEl.textContent = 'en vivo · CoinGecko'; statusEl.style.color = '#22c55e'; }
             } catch (e) {
                 cryptoDataLive = false;
-                if (statusEl) { statusEl.textContent = 'sin conexión (CORS/red) · mostrando último dato'; statusEl.style.color = '#ef4444'; }
                 console.error('fetchCryptoLive failed', e);
+                const fell = await cryptoFallbackTwelveData();
+                if (statusEl) {
+                    if (fell > 0) {
+                        statusEl.textContent = ` Twelve Data (CoinGecko caído · ${fell} tokens)`;
+                        statusEl.style.color = '#eab308';
+                        renderCryptoPrices();
+                    } else {
+                        statusEl.textContent = tdKey ? 'sin conexión (CoinGecko + Twelve Data) · mostrando último dato' : 'sin conexión (CORS/red) · mostrando último dato (pegá tu key Twelve Data en la pestaña US para activar el fallback)';
+                        statusEl.style.color = '#ef4444';
+                    }
+                }
             }
         }
 
@@ -1833,6 +1902,10 @@
         const US_TF_ORDER = ['mensual', 'semanal', 'diario', 'h6'];
 
         let tdKey = (() => { try { return localStorage.getItem(TD_KEY_KEY) || ''; } catch (e) { return ''; } })();
+        // Modo de carga US: 'auto' = background con guard 1h (default);
+        // 'ondemand' = solo al abrir la pestaña US (gasta menos presupuesto de la key).
+        const US_MODE_KEY = 'suitboard_us_mode';
+        let usMode = (() => { try { return localStorage.getItem(US_MODE_KEY) || 'auto'; } catch (e) { return 'auto'; } })();
         let usHistory = {};   // sym -> [cierres diarios ~30d]
         let usHourly = {};    // sym -> [cierres horarios ~50 barras]
         let usLastFetch = 0;  // timestamp del último ciclo completo (throttle 1h)
@@ -1858,6 +1931,12 @@
             } else {
                 setUsStatus('sin key — demo', '#64748b');
             }
+        }
+
+        function setUsMode(v) {
+            usMode = v === 'ondemand' ? 'ondemand' : 'auto';
+            try { localStorage.setItem(US_MODE_KEY, usMode); } catch (e) {}
+            if (usMode === 'auto') maybeFetchUS(); // al volver a auto, dispara si corresponde
         }
 
         function maybeFetchUS() {
@@ -1998,6 +2077,7 @@
 
         function renderUSLive() {
             renderUSIndices();
+            renderFixedIndices();
             renderTopETFs();
             renderCommodities();
             renderUsHeatmap();
@@ -2072,15 +2152,125 @@
             `).join('');
         }
 
+        // ============== ÍNDICES FIJOS + MOVERS DEL MERCADO (vía sidecar SuitMarket :3020) ==============
+        // Gain/losers del mercado no existen en Twelve Data free ni con CORS desde file:// —
+        // se sirven por el sidecar Python de SuitMarket (Yahoo server-side, cache 10 min).
+        // Sin SuitMarket corriendo: la sección lo dice y el resto de la pestaña sigue igual.
+        const SIDE = 'http://127.0.0.1:3020';
+        const US_FIXED = ['DJI', 'IXIC', 'SPX', 'RUT'];
+        const FIXED_NAME = { DJI: 'Dow Jones (DJIA)', IXIC: 'Nasdaq', SPX: 'S&P 500', RUT: 'Russell 2000' };
+        let usFixedLive = {}; // key -> {price, changePct} desde el sidecar
+        const escm = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+        function fmtCap(v) {
+            if (!v) return '';
+            if (v >= 1e12) return '$' + (v / 1e12).toFixed(2) + 'T';
+            if (v >= 1e9) return '$' + (v / 1e9).toFixed(1) + 'B';
+            if (v >= 1e6) return '$' + (v / 1e6).toFixed(0) + 'M';
+            return '$' + v;
+        }
+        function showFixedAnalysis(evt, sym) {
+            const f = usFixedLive[sym];
+            if (f) showAnalysis(evt, () => `
+                <div class="at-title">${FIXED_NAME[sym] || sym} (${sym}) — ${formatNum(f.price)}</div>
+                <div class="at-row"><span>Hoy: ${trendBadgeHTML(f.changePct >= 0 ? 'subida' : 'bajada')}</span><span style="color:${f.changePct >= 0 ? '#22c55e' : '#ef4444'};font-weight:700;">${(f.changePct || 0) >= 0 ? '+' : ''}${(f.changePct || 0).toFixed(2)}%</span></div>
+                <div class="at-note">En vivo vía Yahoo a través del sidecar SuitMarket (:3020).</div>`);
+            else showUsAnalysis(evt, sym);
+        }
+        function renderFixedIndices() {
+            const c = document.getElementById('usFixed');
+            if (!c) return;
+            c.innerHTML = US_FIXED.map(sym => {
+                const f = usFixedLive[sym];
+                const q = f ? null : usQuote(sym);
+                const price = f ? f.price : (q ? q.price : null);
+                const change = f ? f.changePct : (q ? q.change : null);
+                const up = (change || 0) >= 0;
+                const live = !!(f || q);
+                const name = FIXED_NAME[sym];
+                const val = price != null ? formatNum(price) : (usIndices.find(x => x.symbol === sym) || {}).value || '—';
+                const chg = change != null ? ((change >= 0 ? '+' : '') + change.toFixed(2) + '%') : (usIndices.find(x => x.symbol === sym) || {}).change || '—';
+                const hover = live ? `showFixedAnalysis(event,'${sym}')` : `showStaticAnalysis(event,'${name}','${chg}',${up})`;
+                return `
+                <div class="index-card" onmouseenter="${hover}" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
+                    <div class="name">${name}${live ? '' : ' <span style="color:#64748b; font-size:0.6rem;">demo</span>'}</div>
+                    <div class="value">${val}</div>
+                    <div class="change ${up ? 'up' : 'down'}">${chg}</div>
+                </div>`;
+            }).join('');
+        }
+        function mktRow(q, rank) {
+            const up = (q.changePct || 0) >= 0;
+            const badge = rank ? `<span class="rank ${rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : ''}">${rank}</span>` : '';
+            return `<div class="row-item" style="cursor:default">
+                <div class="row-symbol"><div class="sym">${badge}${escm(q.symbol)}</div><div class="name">${escm(q.name || '')}${q.marketCap ? ' · ' + fmtCap(q.marketCap) : ''}</div></div>
+                <div class="row-price">${formatUsd(q.price)}</div>
+                <div class="row-change ${up ? 'up' : 'down'}">${up ? '+' : ''}${(q.changePct || 0).toFixed(2)}%</div>
+            </div>`;
+        }
+        async function fetchMarketMovers(isRetry) {
+            const st = document.getElementById('moversStatus');
+            try {
+                const [g25, losers, smallRaw] = await Promise.all([
+                    fetch(SIDE + '/api/market/screener?scr=day_gainers&count=25').then(r => { if (!r.ok) throw new Error('gainers'); return r.json(); }),
+                    fetch(SIDE + '/api/market/screener?scr=day_losers&count=10').then(r => { if (!r.ok) throw new Error('losers'); return r.json(); }).catch(() => []),
+                    fetch(SIDE + '/api/market/screener?scr=small_cap_gainers&count=10').then(r => { if (!r.ok) throw 0; return r.json(); }).catch(() => [])
+                ]);
+                if (!Array.isArray(g25) || !g25.length || g25.error) throw new Error('vacio');
+                // índices fijos en vivo por el mismo sidecar
+                try {
+                    const fq = await fetch(SIDE + '/api/market/quotes?symbols=' + encodeURIComponent('^GSPC,^DJI,^IXIC,^RUT')).then(r => r.json());
+                    const MAP = { '^DJI': 'DJI', '^IXIC': 'IXIC', '^GSPC': 'SPX', '^RUT': 'RUT' };
+                    usFixedLive = {};
+                    (fq || []).forEach(x => { const k = MAP[x.symbol]; if (k && x.regularMarketPrice != null) usFixedLive[k] = { price: x.regularMarketPrice, changePct: x.regularMarketChangePercent || 0 }; });
+                } catch (e) { /* fijos siguen con su última fuente */ }
+                if (st) { st.textContent = 'en vivo · Yahoo (SuitMarket :3020)'; st.style.color = '#22c55e'; }
+                renderMktMovers(g25, Array.isArray(losers) ? losers : [], Array.isArray(smallRaw) ? smallRaw : []);
+                renderFixedIndices();
+            } catch (e) {
+                if (!isRetry) { // un reintento corto cubre el screener frío de Yahoo
+                    if (st) { st.textContent = 'reintentando…'; st.style.color = '#f97316'; }
+                    await new Promise(r => setTimeout(r, 4000));
+                    return fetchMarketMovers(true);
+                }
+                if (st) { st.textContent = 'sin SuitMarket — ejecuta SuitMarket.bat para gainers en vivo'; st.style.color = '#f97316'; }
+                const msg = '<div class="muted" style="font-size:0.73rem;padding:8px 0;line-height:1.5;">Requiere SuitMarket corriendo (sidecar :3020, gratis vía Yahoo). Los índices fijos mantienen su última fuente.</div>';
+                const el1 = document.getElementById('mktTopGainers'), el2 = document.getElementById('mktTopLosers'), el3 = document.getElementById('mktByCap');
+                if (el1 && !el1.dataset.listo) el1.innerHTML = msg;
+                if (el2 && !el2.dataset.listo) el2.innerHTML = '';
+                if (el3 && !el3.dataset.listo) el3.innerHTML = '';
+                renderFixedIndices();
+            }
+        }
+        function renderMktMovers(g, losers, smallRaw) {
+            document.getElementById('mktTopGainers').dataset.listo = '1';
+            document.getElementById('mktTopGainers').innerHTML = g.slice(0, 5).map((q, i) => mktRow(q, i + 1)).join('');
+            document.getElementById('mktTopLosers').dataset.listo = '1';
+            document.getElementById('mktTopLosers').innerHTML = losers.slice(0, 5).map((q, i) => mktRow(q, i + 1)).join('') || '<div class="muted" style="font-size:0.73rem;">sin datos</div>';
+            const capOf = q => q.marketCap || 0;
+            let small = g.filter(x => capOf(x) > 0 && capOf(x) < 2e9).slice(0, 3);
+            if (small.length < 3 && smallRaw.length) {
+                const extra = smallRaw.filter(x => !small.some(s => s.symbol === x.symbol));
+                small = small.concat(extra).slice(0, 3);
+            }
+            const mid = g.filter(x => capOf(x) >= 2e9 && capOf(x) < 1e10).slice(0, 3);
+            const large = g.filter(x => capOf(x) >= 1e10).slice(0, 3);
+            const sec = (t, arr, color) => `<div style="font-size:0.68rem;font-weight:700;color:${color};margin:8px 0 2px;">${t}</div>` + (arr.length ? arr.map(q => mktRow(q, 0)).join('') : '<div class="muted" style="font-size:0.7rem;">— hoy sin nombres en el top</div>');
+            document.getElementById('mktByCap').dataset.listo = '1';
+            document.getElementById('mktByCap').innerHTML =
+                sec(' Small cap (&lt;$2B)', small, '#10b981') +
+                sec('📊 Mid cap ($2–10B)', mid, '#06b6d4') +
+                sec(' Large cap (≥$10B)', large, '#8b5cf6');
+        }
+
         function renderUSIndices() {
             const container = document.getElementById('usIndices');
-            container.innerHTML = usIndices.map(idx => {
-                const q = usQuote(idx.sym);
+            container.innerHTML = usIndices.filter(idx => !US_FIXED.includes(idx.symbol)).map(idx => {
+                const q = usQuote(idx.symbol);
                 const value = q ? formatNum(q.price) : idx.value;
                 const up = q ? q.change >= 0 : idx.up;
                 const change = q ? (q.change >= 0 ? '+' : '') + q.change.toFixed(2) + '%' : idx.change;
                 const hover = q
-                    ? `showUsAnalysis(event,'${idx.sym}')`
+                    ? `showUsAnalysis(event,'${idx.symbol}')`
                     : `showStaticAnalysis(event,'${idx.name}','${idx.change}',${idx.up})`;
                 return `
                 <div class="index-card" onmouseenter="${hover}" onmousemove="positionAnalysis(event)" onmouseleave="hideAnalysis()">
@@ -2277,6 +2467,8 @@
             
             event.target.classList.add('active');
             document.getElementById(`tab-${tab}`).classList.add('active');
+            // Modo 'ondemand': cargar US al abrir su pestaña (en 'auto' el guard 1h lo hace no-op)
+            if (tab === 'us') maybeFetchUS();
         }
 
         // ============== MARKET CLOCK ==============
@@ -2593,7 +2785,11 @@
             await maybeRotateWatchlist();
             await fetchPoolsLive();
             await fetchFxLive();   // 1 llamada chiquita, piggyback del ciclo de 5 min
-            maybeFetchUS();        // no se await: el ciclo de Twelve Data tarda minutos (chunks + pausa 8/min)
+            // movers: sin await — el primer screener de Yahoo puede tardar ~15s en frío;
+            // renderiza cuando llegue y no frena el resto del dashboard
+            fetchMarketMovers();
+            // US: en modo 'auto' se refresca en background (guard 1h); en 'ondemand' solo al abrir la pestaña
+            if (usMode === 'auto') maybeFetchUS();
             renderCryptoPrices();
             renderCryptoHeatmap();
             renderRotationStatus();
@@ -2618,6 +2814,7 @@
             renderPriceRanges();
             renderPairSelector();
             renderUSIndices();
+            renderFixedIndices();
             renderTopETFs();
             renderTopStocks();
             renderCommodities();
@@ -2629,7 +2826,13 @@
             setInterval(updateMarketClock, 1000);
             const tdKeyInput = document.getElementById('tdKeyInput');
             if (tdKeyInput) tdKeyInput.value = tdKey;
-            setUsStatus(tdKey ? 'clave cargada — en próximo ciclo' : 'sin key — datos demo', tdKey ? '#eab308' : '#64748b');
+            const usModeSelect = document.getElementById('usModeSelect');
+            if (usModeSelect) usModeSelect.value = usMode;
+            if (tdKey) {
+                setUsStatus(usMode === 'auto' ? 'clave cargada — en próximo ciclo' : 'clave cargada — se carga al abrir la pestaña US', '#eab308');
+            } else {
+                setUsStatus('sin key — datos demo', '#64748b');
+            }
 
             await refreshCryptoAndRender();
             setInterval(refreshCryptoAndRender, 5 * 60 * 1000); // refresco cada 5 min, la correlación 30d no cambia más rápido que eso

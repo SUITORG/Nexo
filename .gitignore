@@ -129,3 +129,6 @@ SuitMarket/config.json
 
 # SuitCampanas - kits generados por Seccion E (PNGs/zip de campanas)
 SuitCampanas/descargas/
+
+# SuitMisCtas — respaldos con datos financieros personales (no publicar)
+SuitMisCtas/respaldos/

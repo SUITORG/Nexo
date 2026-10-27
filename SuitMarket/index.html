@@ -210,7 +210,7 @@ body{display:flex;flex-direction:column}
       <div class="sc-change" id="scVIXch">—</div>
     </div>
     <div class="summary-card" id="scDXY">
-      <div class="sc-label">DXY (USD)</div>
+      <div class="sc-label">USD/MXN</div>
       <div class="sc-value" id="scDXYval">—</div>
       <div class="sc-change" id="scDXYch">—</div>
     </div>
@@ -257,13 +257,24 @@ body{display:flex;flex-direction:column}
       </div>
     </div>
 
+    <!-- Señales de entrada (estructura de mercado) -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon"> </span> Entradas (estructura)</div>
+        <div class="panel-count" id="sigCount">D · scan</div>
+      </div>
+      <div class="panel-body" id="signalsPanel">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <!-- FOOTER -->
 <div class="footer">
-  <span>SuitMarket v1.0 — Datos vía Yahoo Finance (delay ~15min en mercados cerrados)</span>
-  <span>Auto-refresh: 30s</span>
+  <span>SuitMarket v2.0 — Datos vía Twelve Data free (key opcional) + Yahoo Finance; caché local 10-15 min</span>
+  <span>Auto-refresh UI: 30s · fuentes: cada 10-15 min</span>
 </div>
 
 <script>
@@ -272,9 +283,10 @@ const $$ = s => document.querySelectorAll(s);
 
 // ── CONFIG ──
 const ETF_SYMBOLS = 'SPY,QQQ,DIA,IVV,VOO';
-const INDEX_SYMBOLS = '^GSPC,^DJI,^IXIC,^VIX,DX-Y.NYB,BTC-USD';
+const INDEX_SYMBOLS = '^GSPC,^DJI,^IXIC,^VIX,USD/MXN,BTC-USD';
 const COMMODITY_SYMBOLS = 'GC=F,SI=F,CL=F,HG=F,NG=F';
 const REFRESH_MS = 30000;
+const encList = s => s.split(',').map(encodeURIComponent).join(',');
 
 const ETF_NAMES = {SPY:'SPDR S&P 500',QQQ:'Invesco QQQ',DIA:'SPDR Dow Jones',IVV:'iShares S&P 500',VOO:'Vanguard S&P 500'};
 const COMMODITY_NAMES = {'GC=F':'Oro (Gold)','SI=F':'Plata (Silver)','CL=F':'Petróleo WTI','HG=F':'Cobre (Copper)','NG=F':'Gas Natural'};
@@ -338,7 +350,7 @@ function renderSummary(quotes){
     {sym:'^DJI',valEl:'scDJIval',chEl:'scDJIch'},
     {sym:'^IXIC',valEl:'scIXICval',chEl:'scIXICch'},
     {sym:'^VIX',valEl:'scVIXval',chEl:'scVIXch'},
-    {sym:'DX-Y.NYB',valEl:'scDXYval',chEl:'scDXYch'},
+    {sym:'USD/MXN',valEl:'scDXYval',chEl:'scDXYch'},
     {sym:'BTC-USD',valEl:'scBTCval',chEl:'scBTCch'},
   ];
   items.forEach(i => {
@@ -393,13 +405,71 @@ function renderTicker(news){
   $('#tickerTrack').innerHTML = items + items;
 }
 
+// ── SIGNALS: entradas por estructura (diario, filtro semanal, frescura ≤5d) ──
+function escAttr(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+const SIG_FOOTER = `<div style="padding:9px 18px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text3);line-height:1.5">
+  Heurística de estructura de mercado (rotura del último menor máximo tras menor mínimo) — no es asesoría; una rotura puede fallar.
+  <b style="color:#94a3b8">Confirmada</b> = volumen de la rompición ≥1.5× su promedio (Wyckoff/VSA); <b style="color:#ef4444">✗ tocó stop</b> = invalidada.
+  <b style="color:#94a3b8">Frecuencia:</b> 1×/día tras el cierre NY (~13:00 PT / 16:00 ET); contexto semanal los viernes. No hace falta mirarla cada minuto.</div>`;
+function renderSignals(sig){
+  const el = document.getElementById('signalsPanel');
+  if(!sig || !sig.length){
+    document.getElementById('sigCount').textContent = 'sin señales';
+    el.innerHTML = `<div style="padding:18px;text-align:center;color:var(--text3);font-size:12px;line-height:1.6">
+      Sin señales frescas (≤5 días) en el watchlist.<br><span style="font-size:11px">El scan corre solo tras el cierre NY — revisa 1 vez al día.</span></div>` + SIG_FOOTER;
+    return;
+  }
+  const conf = sig.filter(s => s.volOK === true).length;
+  document.getElementById('sigCount').textContent = sig.length + ' señal' + (sig.length>1?'es':'') + (conf ? ' · ' + conf + ' ✓ vol' : '');
+  const swingsTxt = s => (s.swings||[]).map(x=>(x.t==='L'?'valle ':'pico ')+x.v+' ('+x.d+')').join(' → ');
+  const volChip = s => s.volRatio == null
+    ? '<span style="color:#64748b;font-size:10px">vol s/d</span>'
+    : (s.volOK ? `<span style="color:#10b981;font-size:10px;font-weight:700">✓ vol ${s.volRatio}×</span>`
+               : `<span style="color:#f59e0b;font-size:10px;font-weight:700">⚠ vol ${s.volRatio}× débil</span>`);
+  const estadoChip = s => {
+    if(s.estado === 'invalidada') return '<span style="color:#ef4444;font-size:10px;font-weight:700">✗ tocó stop</span>';
+    if(s.estado === 'objetivo') return '<span style="color:#10b981;font-size:10px;font-weight:700">✓ objetivo</span>';
+    const p = s.pnl || 0;
+    return `<span style="color:${p>=0?'#06b6d4':'#f59e0b'};font-size:10px;font-weight:700">en curso ${p>=0?'+':''}${p}%</span>`;
+  };
+  el.innerHTML = sig.map(s=>{
+    const age = Math.max(0, Math.floor((Date.now() - new Date(s.fecha+'T12:00:00').getTime())/86400000));
+    const wk = s.weeklyOk === true
+      ? '<span style="color:#10b981;font-size:10px;font-weight:700">✓ semanal</span>'
+      : (s.weeklyOk === false ? '<span style="color:#f59e0b;font-size:10px;font-weight:700">⚠ semanal en contra</span>' : '');
+    const dead = s.estado === 'invalidada';
+    return `<div class="row-item" style="display:block;cursor:default;${dead?'opacity:.55':''}" title="${escAttr('Señal del '+s.fecha+' · estructura: '+swingsTxt(s))}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span><span class="rank" style="background:${dead?'#3d1a24':'#1c3057'};color:${dead?'#ef4444':'#cfe1ff'}">D</span><b style="font-family:'JetBrains Mono',monospace;${dead?'text-decoration:line-through':''}">${s.sym}</b></span>
+        <span style="font-size:10.5px;color:${age<=3?'#10b981':'#94a3b8'}">hace ${age}d</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:6px;margin-top:4px;font-size:11.5px;color:#cbd5e1">
+        <span>rompió <b style="color:#06b6d4">${s.rompe}</b> · cierre <b style="color:#e2e8f0">${s.entrada}</b></span>
+        ${wk}
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:6px;margin-top:3px;font-size:10.5px;color:#94a3b8">
+        <span>stop <b style="color:#ef4444">${s.stop}</b> · obj <b style="color:#10b981">${s.target}</b></span>
+        <span style="font-family:'JetBrains Mono',monospace;color:${s.rrr>=1.5?'#10b981':'#94a3b8'}">R:R ${s.rrr}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:6px;margin-top:3px">
+        ${estadoChip(s)}
+        <span>${volChip(s)}</span>
+      </div>
+    </div>`;
+  }).join('') + SIG_FOOTER;
+}
+async function loadSignals(){
+  const sig = await fetchJSON('/api/market/signals');
+  if(sig) renderSignals(sig);
+}
+
 // ── MAIN REFRESH ──
 async function refresh(){
   try {
     const [etfQ, indexQ, commQ, news] = await Promise.all([
-      fetchJSON('/api/market/quotes?symbols=' + ETF_SYMBOLS),
-      fetchJSON('/api/market/quotes?symbols=' + INDEX_SYMBOLS),
-      fetchJSON('/api/market/quotes?symbols=' + COMMODITY_SYMBOLS),
+      fetchJSON('/api/market/quotes?symbols=' + encList(ETF_SYMBOLS)),
+      fetchJSON('/api/market/quotes?symbols=' + encList(INDEX_SYMBOLS)),
+      fetchJSON('/api/market/quotes?symbols=' + encList(COMMODITY_SYMBOLS)),
       fetchJSON('/api/market/news'),
     ]);
 
@@ -419,6 +489,9 @@ async function refresh(){
     if(news) renderTicker(news);
 
     $('#lastUpdate').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York'}) + ' ET';
+
+    // señales: separado y sin await — el primer scan tarda y no debe frenar el dashboard
+    loadSignals().catch(()=>{});
   } catch(e) {
     console.error('[REFRESH]', e);
   }

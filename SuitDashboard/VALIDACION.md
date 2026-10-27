@@ -1,6 +1,34 @@
 # VALIDACION — SuitDashboard
 Fecha: 2026-09-25 · Contrato: SuitDashboard/docs/CONTRATO.md
 
+## Ronda 3 — Cerebro "Foco": git + pendientes (CERRADA, 2026-10-21)
+
+**Veredicto: PASA 4/4** — encuadre y evidencia:
+1. `scan.js`: `buildGitMap()` (1 pasada `git log --since=30.days --name-only` + fallback `-1` por dir) y `buildPendientes()` (filas `- [ ]` de `GuiaTotal/PENDIENTES.md` + `.suit/memory/pending/*.md`; asignación por nombre con stoplist de carpetas genéricas `config/docs/backend/...` → Global) → por proyecto `ultimoCommit/commits30d/pendientes/foco` + global `focoTop5/pendGlobal`
+2. `index.html`: panel **FOCO — Top 5 pendientes** (orden de archivo), pills `hace Xd` + `N pend` en `card()`, secciones **Último hecho** y **Pendientes** en el drawer, chip de filtro **con pendientes** (incluye texto de pendientes en el buscador)
+3. `CONTRATO.md` actualizado (Fuente real de datos + Cambios) · `abrir.bat`/`sondear.bat` intocados
+4. Fixes de pase: cabecera `scanProject` restaurada tras inserción; stoplist anti-falso-match; favicon `data:,` (elimina el único 404 de consola)
+
+| ID | Verifica | Comando o acción | Resultado observado | Veredicto |
+|----|----------|------------------|---------------------|-----------|
+| V1 | sintaxis scan.js | `node --check SuitDashboard/scan.js` | exit 0 (tras cada edición) | PASA |
+| V2 | scan corre y escribe data.js | `node SuitDashboard/scan.js` | `88 dirs, 38 assets` · 50 proyectos · 0 fallos | PASA |
+| V3 | asserts de campos nuevos | script node temp sobre `data.js` (`assert_r3.js`) | 10/10 PASS: 69/88 con ultimoCommit · commits30d numérico · pendientes[] en todos · focoTop5=5 con proj/txt/fuente (orden PENDIENTES.md) · pendGlobal=39 · asignados a 17 proyectos (SuitCampanas:6, SuitCVLO-open:5…) · fechas YYYY-MM-DD | PASA |
+| V4 | navegador: Foco panel, pills, filtro, drawer, 0 consola | server temporal :8137 + chrome-devtools | Foco con 5 ítems (Global×5 tras stoplist) · pills `hace 4d`/`hace 65d` + 15 `N pend` · filtro `con pendientes` 15/50 · drawer Citas con "Último hecho"+Pendientes(1) · **0 errores de consola** (favicon fix) | PASA |
+
+### Evidencia
+- V3: `assert_r3.js` → 10/10 PASS (temp, fuera del repo); corregido tras stoplist (focoTop5 pasó de mezclar `config` a `Global` honesto).
+- V4: captura del panel Foco completo con los 5 pendientes de PENDIENTES.md y el chip `con pendientes` en la barra de filtros; network: solo `index.html` 200 + `data.js` 200.
+
+### GAPs (no verificable ahora)
+- `abrir.bat` real (doble click) no se ejecuta desde Playwright/chrome (patrón de rondas previas) — se valida con server temporal.
+- Pendientes cuyo texto no nombra ningún proyecto (39) viven en `pendGlobal` — el panel Foco los muestra como "Global" (por diseño: no se inventa asignación).
+
+### Veredicto global
+**PASA 4/4** — ronda 3.
+
+---
+
 ## Ronda 2 — skills en español + evaluaciones por contrato (CERRADA, 2026-09-26)
 
 **Veredicto: PASA 4/4** — encuadre y evidencia:
