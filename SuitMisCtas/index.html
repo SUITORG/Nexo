@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SuitMisCtas — Finanzas Personales</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e17;--bg2:#111827;--bg3:#1a2332;--bg4:#243044;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--accent:#2dd4bf;--accent-dim:rgba(45,212,191,.12);--red:#ef4444;--red-bg:rgba(239,68,68,.12);--yellow:#f59e0b;--yellow-bg:rgba(245,158,11,.12);--green:#10b981;--green-bg:rgba(16,185,129,.12);--blue:#3b82f6;--line:#243044;--radius:12px}
+html,body{height:100%;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+body{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:1.3rem;letter-spacing:-.3px}
+h1 span{color:var(--accent)}
+.sub{color:var(--text2);font-size:.8rem}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.nav button{padding:8px 14px;border:1px solid var(--line);background:var(--bg2);color:var(--text2);border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;font-family:inherit}
+.nav button.active{background:var(--accent);color:#04211c;border-color:var(--accent)}
+.nav button:hover:not(.active){color:var(--text);border-color:var(--text3)}
+.view{display:none}.view.active{display:block}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{font-size:.95rem;color:var(--accent);margin-bottom:10px}
+label{display:block;font-size:.72rem;color:var(--text2);font-weight:600;margin:8px 0 3px}
+input,select,textarea{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:.9rem;outline:none;font-family:inherit}
+input:focus,select:focus{border-color:var(--accent)}
+.btn{padding:8px 16px;border:0;border-radius:8px;background:var(--accent);color:#04211c;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit}
+.btn:hover{filter:brightness(1.1)}
+.btn.sec{background:var(--bg4);color:var(--text)}
+.btn.sm{padding:4px 10px;font-size:.72rem;border-radius:6px}
+.btn.red{background:var(--red);color:#fff}
+.row{display:grid;grid-template-columns:1fr 110px 110px auto;gap:8px;align-items:end}
+@media(max-width:640px){.row{grid-template-columns:1fr 1fr}}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{color:var(--text3);font-size:.68rem;text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid rgba(36,48,68,.6)}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.68rem;font-weight:700}
+.tag.ok{background:var(--green-bg);color:var(--green)}
+.tag.warn{background:var(--yellow-bg);color:var(--yellow)}
+.tag.bad{background:var(--red-bg);color:var(--red)}
+.tag.info{background:var(--accent-dim);color:var(--accent)}
+.money{font-family:'JetBrains Mono',Consolas,monospace}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat .k{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.stat .v{font-size:1.15rem;font-weight:700;font-family:'JetBrains Mono',Consolas,monospace;margin-top:3px}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;margin-bottom:8px;font-size:.82rem;line-height:1.45}
+.alert.bad{background:var(--red-bg);border:1px solid rgba(239,68,68,.3)}
+.alert.warn{background:var(--yellow-bg);border:1px solid rgba(245,158,11,.3)}
+.alert.ok{background:var(--green-bg);border:1px solid rgba(16,185,129,.3)}
+.acct-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 12px;border:1px solid var(--line);border-radius:20px;font-size:.72rem;font-weight:700;color:var(--text2);cursor:pointer;background:var(--bg)}
+.chip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.cat-chips{display:flex;gap:6px;flex-wrap:wrap}
+.muted{color:var(--text3);font-size:.72rem}
+.suggest{position:absolute;background:var(--bg3);border:1px solid var(--accent);border-radius:8px;z-index:30;max-height:180px;overflow:auto;width:100%}
+.suggest div{padding:7px 10px;cursor:pointer;font-size:.82rem}
+.suggest div:hover{background:var(--bg4)}
+.sug-wrap{position:relative}
+.footer{margin-top:20px;padding-top:10px;border-top:1px solid var(--line);font-size:.68rem;color:var(--text3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+h3{font-size:.85rem;margin:12px 0 6px;color:var(--text2)}
+.num-r{text-align:right}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Suit<span>MisCtas</span> — Finanzas Personales</h1>
+    <div class="sub">Gastos · Rentas · Servicios — modo local (navegador + respaldo JSON)</div>
+  </div>
+  <div class="muted" id="clock"></div>
+</div>
+
+<div class="nav">
+  <button data-v="alertas" class="active"> Alertas <span id="alertCount" class="tag bad" style="display:none"></span></button>
+  <button data-v="registro">Registro</button>
+  <button data-v="servicios">Servicios</button>
+  <button data-v="rentas">Rentas</button>
+  <button data-v="resumen">Resumen</button>
+  <button data-v="datos">Datos</button>
+</div>
+
+<div id="freshHint" style="display:none;margin-bottom:14px;padding:12px 14px;background:var(--yellow-bg);border:1px solid rgba(245,158,11,.35);border-radius:10px;font-size:.8rem;line-height:1.5"></div>
+
+<!-- ============ ALERTAS ============ -->
+<div id="v-alertas" class="view active">
+  <div id="alertsBox"></div>
+  <div class="card">
+    <h2> Por saldar — <span id="monthLabel"></span></h2>
+    <div id="settleBar" style="margin-bottom:10px"></div>
+    <div id="settleList"></div>
+    <div id="monthStatus" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ============ REGISTRO ============ -->
+<div id="v-registro" class="view">
+  <div class="card">
+    <h2>Captura rápida</h2>
+    <div class="sug-wrap">
+      <label>Concepto (empieza a escribir — catálogo: servicios, rentas, gastos)</label>
+      <input id="rConcept" autocomplete="off" placeholder="Ej: CFE Hu, Mtto Cr, I Uriel, uber…">
+      <div id="rSuggest" class="suggest" style="display:none"></div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Tipo</label>
+        <select id="rType" onchange="toggleTransferUI()">
+          <option value="gasto">Gasto</option>
+          <option value="ingreso">Ingreso / Renta</option>
+          <option value="transferencia">Transferencia entre cuentas</option>
+        </select>
+      </div>
+      <div>
+        <label>Monto</label>
+        <input id="rAmount" type="number" step="0.01" min="0" placeholder="0">
+      </div>
+      <div>
+        <label>Fecha</label>
+        <input id="rDate" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" title="Acepta dd/mm/aaaa o aaaa-mm-dd" style="font-family:inherit">
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button class="btn" onclick="addEntry()">Agregar</button>
+      </div>
+    </div>
+    <label>Cuenta</label>
+    <div class="acct-chips" id="rAccounts"></div>
+    <div id="rTransferRow" style="display:none;align-items:center;gap:10px;margin-top:8px;padding:10px;background:var(--accent-dim);border:1px solid rgba(45,212,191,.3);border-radius:10px">
+      <span class="muted" style="max-width:280px">Transferencia: sale de una cuenta y entra a otra — no cuenta como gasto ni ingreso, solo mueve saldos.</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="rFrom" style="width:110px"></select>
+        <span style="color:var(--accent);font-weight:700">→</span>
+        <select id="rTo" style="width:110px"></select>
+      </div>
+    </div>
+    <label>Categoría</label>
+    <div class="cat-chips" id="rCats"></div>
+    <label>Nota (opcional)</label>
+    <input id="rNote" placeholder="Descripción / destino">
+    <label style="display:flex;gap:6px;align-items:center;margin-top:10px">
+      <input type="checkbox" id="rClassified" checked style="width:auto"> Clasificado (si está en OFF queda en la bandeja "Por clasificar")
+    </label>
+  </div>
+
+  <div class="card">
+    <h2> Por clasificar — bandeja (capturas X→AC del mes)</h2>
+    <div id="scratchList"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span> Movimientos</span>
+      <span id="recentSort" style="display:flex;gap:6px">
+        <button class="chip" data-sort="fecha" onclick="setSortMode('fecha')"> Recientes</button>
+        <button class="chip" data-sort="categoria" onclick="setSortMode('categoria')">Por categoría</button>
+        <button class="chip" data-sort="cuenta" onclick="setSortMode('cuenta')">Por cuenta</button>
+      </span>
+    </h2>
+    <div id="recentHint" class="muted" style="margin-bottom:6px"></div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Cuenta</th><th class="num-r">Monto</th><th></th></tr></thead>
+      <tbody id="recentList"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ============ SERVICIOS ============ -->
+<div id="v-servicios" class="view">
+  <div class="card">
+    <h2> Servicios del mes — <span id="monthLabel2"></span></h2>
+    <div class="muted" style="margin-bottom:8px">Click en "Pagado" para registrarlo como gasto del mes con un click. Día = corte/vencimiento.</div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Servicio</th><th>Día</th><th>Cuenta</th><th class="num-r">Monto típico</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="servicesList"></tbody>
+      <tfoot id="servicesFoot"></tfoot>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>+ Agregar servicio</h2>
+    <div class="row">
+      <div><label>Nombre</label><input id="sName" placeholder="Ej: Internet"></div>
+      <div><label>Día</label><input id="sDay" type="number" min="1" max="31" placeholder="15"></div>
+      <div><label>Monto</label><input id="sAmount" type="number" step="0.01" min="0"></div>
+      <div><label>&nbsp;</label><button class="btn" onclick="addService()">Agregar</button></div>
+    </div>
+    <label>Cuenta</label><div class="acct-chips" id="sAccounts"></div>
+    <label>Frecuencia</label>
+    <select id="sFreq" style="max-width:220px">
+      <option value="mensual">Mensual</option>
+      <option value="bimestral">Bimestral (meses pares)</option>
+    </select>
+  </div>
+</div>
+
+<!-- ============ RENTAS ============ -->
+<div id="v-rentas" class="view">
+  <div class="card">
+    <h2> Unidades / Rentas — <span id="monthLabel3"></span></h2>
+    <div class="muted" style="margin-bottom:8px">El inquilino cambia con el tiempo — editá el nombre libremente. Click en "Recibido" cuando entre el depósito.</div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Unidad</th><th>Inquilino actual</th><th>Día esperado</th><th>Cuenta</th><th class="num-r">Renta</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="unitsList"></tbody>
+      <tfoot id="unitsFoot"></tfoot>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>+ Agregar unidad</h2>
+    <div class="row">
+      <div><label>Unidad</label><input id="uName" placeholder="Ej: Hu"></div>
+      <div><label>Inquilino</label><input id="uTenant" placeholder="Nombre"></div>
+      <div><label>Día</label><input id="uDay" type="number" min="1" max="31"></div>
+      <div><label>&nbsp;</label><button class="btn" onclick="addUnit()">Agregar</button></div>
+    </div>
+    <label>Renta $</label><input id="uAmount" type="number" step="0.01" min="0" style="max-width:220px">
+    <label>Cuenta (a dónde entra)</label><div class="acct-chips" id="uAccounts"></div>
+  </div>
+</div>
+
+<!-- ============ RESUMEN ============ -->
+<div id="v-resumen" class="view">
+  <div class="card">
+    <h2> Mes: <select id="resMonthSel" onchange="setResMonth(this.value)" style="width:auto;display:inline-block;padding:4px 8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--accent);font-weight:700;font-size:.9rem"></select></h2>
+    <div class="stat-grid" id="statsNow"></div>
+  </div>
+  <div class="card">
+    <h2> Por categoría</h2>
+    <div id="catBreak"></div>
+  </div>
+  <div class="card">
+    <h2> Por cuenta</h2>
+    <div id="acctBreak"></div>
+  </div>
+  <div class="card">
+    <h2> Histórico (clic en un mes para verlo arriba)</h2>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Mes</th><th class="num-r">Ingresos</th><th class="num-r">Servicios</th><th class="num-r">Otros gastos</th><th class="num-r">Ahorro</th><th class="num-r">Tasa ahorro</th></tr></thead>
+      <tbody id="historyList"></tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2 id="yearTitle"> Resumen del año</h2>
+    <div class="stat-grid" id="yearStats"></div>
+  </div>
+  <div class="card">
+    <h2> Proyección 12 meses</h2>
+    <div class="muted" style="margin-bottom:8px">Misma fórmula de tu hoja: Proy = Saldo actual + (gasto − ingreso) × 12 (promedio de los meses registrados)</div>
+    <label>Saldo actual (efectivo + cuentas, lo que quieras usar como base)</label>
+    <input id="pSaldo" type="number" step="0.01" style="max-width:260px" onchange="saveSaldo()">
+    <div class="stat-grid" style="margin-top:10px" id="projection"></div>
+  </div>
+</div>
+
+<!-- ============ DATOS ============ -->
+<div id="v-datos" class="view">
+  <div class="card">
+    <h2> Respaldo</h2>
+    <p class="muted" style="margin-bottom:10px">Todo vive en este navegador (localStorage). Exporta un JSON como respaldo o para moverte de compu. Importar reemplaza los datos actuales.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="exportJSON()">⬇ Exportar JSON</button>
+      <button class="btn sec" onclick="document.getElementById('importFile').click()">⬆ Importar JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
+      <button class="btn red" onclick="resetAll()">Reiniciar todo</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2> Saldos iniciales por cuenta</h2>
+    <div class="muted" style="margin-bottom:10px">Lo que tenías en cada cuenta cuando empezaste a registrar. Saldo actual = inicial + ingresos − gastos (las transferencias solo mueven entre cuentas).</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px" id="openingGrid"></div>
+    <button class="btn" style="margin-top:12px" onclick="saveOpening()">Guardar saldos iniciales</button>
+  </div>
+  <div class="card">
+    <h2> Ajustes</h2>
+    <label>Saldo actual para proyección</label>
+    <input id="pSaldo2" type="number" step="0.01" style="max-width:260px" onchange="saveSaldo()">
+    <div class="muted" style="margin-top:8px">Datos sembrados desde tu hoja GS (pestaña GastosTarjetas) el <span id="seededAt"></span>. Editable todo: servicios, unidades, montos.</div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>SuitMisCtas v1.0 — datos locales en tu navegador · noindex</span>
+  <span id="saveState"></span>
+</div>
+
+<script>
+'use strict';
+// ============== ESTADO ==============
+const LS_KEY = 'suitmisctas_v1';
+const ACCOUNTS = ['STD','LU','M40 IMSS','Efectivo','Efectivo Casa'];
+// Cuentas archivadas: no aparecen para capturar, pero se conservan en editores y
+// transferencias para poder seguir moviendo el dinero que aún tenga ahí.
+const ACCOUNTS_ALL = ACCOUNTS.concat(['BBVA','IVX','FAL']);
+  const CATS = ['Servicios','Mtto Cr','Mtto Hu','Gasto Ax','Gasto Lz','Inversion','Seguro','Imprevistos','Viaje/Transporte','Alimentos','Medico','Ingreso','Otros'];
+
+// Siembra desde la hoja GastosTarjetas (lectura 2026-10-20) — montos típicos recientes, editable
+const SEED = {
+  services: [
+    {name:'Predial', day:15, amount:0, account:'BBVA', freq:'mensual'},
+    {name:'Google One', day:5, amount:23.86, account:'BBVA', freq:'mensual'},
+    {name:'Amazon Prime', day:19, amount:306.98, account:'BBVA', freq:'mensual'},
+    {name:'Openclaw', day:1, amount:12, account:'BBVA', freq:'mensual'},
+    {name:'Opendode', day:1, amount:25, account:'BBVA', freq:'mensual'},
+    {name:'Movistar 1', day:8, amount:514, account:'BBVA', freq:'mensual'},
+    {name:'Tello', day:8, amount:182, account:'BBVA', freq:'mensual'},
+    {name:'AutoGLM', day:8, amount:373, account:'BBVA', freq:'mensual'},
+    {name:'GooWS+GooCl', day:8, amount:22.42, account:'BBVA', freq:'mensual'},
+    {name:'Tmex Cr', day:8, amount:349, account:'BBVA', freq:'mensual'},
+    {name:'Tmex Hu', day:25, amount:458, account:'BBVA', freq:'mensual'},
+    {name:'CFE Cr', day:20, amount:1041, account:'BBVA', freq:'mensual'},
+    {name:'CFE Hu', day:25, amount:764, account:'BBVA', freq:'mensual'},
+    {name:'AyD Cr Dom', day:27, amount:27, account:'BBVA', freq:'mensual'},
+    {name:'AyD Hu', day:27, amount:320, account:'BBVA', freq:'mensual'},
+    {name:'Gas Cromo', day:10, amount:875, account:'PayPal', freq:'bimestral'},
+    {name:'Gas Huizache', day:10, amount:602, account:'BBVA', freq:'bimestral'}
+  ],
+  units: [
+    {name:'Hu', tenant:'César Gzz', amount:3300, day:22, account:'BBVA'},
+    {name:'Hu', tenant:'Isaac', amount:2800, day:22, account:'BBVA'},
+    {name:'Hu', tenant:'Cesar Reza', amount:4200, day:18, account:'BBVA'},
+    {name:'Hu', tenant:'Fer Espinosa', amount:4300, day:22, account:'BBVA'},
+    {name:'Hu', tenant:'Erick', amount:4000, day:15, account:'BBVA'},
+    {name:'Cr', tenant:'Uriel', amount:2800, day:30, account:'BBVA'},
+    {name:'Cr', tenant:'Alexis', amount:4200, day:28, account:'BBVA'},
+    {name:'Cr', tenant:'Luis Jairo', amount:5200, day:20, account:'BBVA'},
+    {name:'Cr', tenant:'Javier', amount:2800, day:16, account:'BBVA'},
+    {name:'Cr', tenant:'Jesús', amount:2900, day:10, account:'BBVA'},
+    {name:'Cr', tenant:'Jorge Ant', amount:2800, day:2, account:'BBVA'},
+    {name:'Cr', tenant:'Víctor', amount:0, day:30, account:'BBVA'},
+    {name:'Alexis', tenant:'—', amount:0, day:0, account:'BBVA'},
+    {name:'Martha', tenant:'—', amount:0, day:0, account:'BBVA'}
+  ],
+  entries: [], saldo: 118924.65,
+  servicesMeta: {}, unitsMeta: {}
+};
+SEED.services.forEach((s,i)=>SEED.servicesMeta[i]={paid:false, note:''});
+SEED.unitsMeta = {};
+
+let db = load();
+function load(){
+  try{ const raw = localStorage.getItem(LS_KEY); if(raw){
+    const d = JSON.parse(raw);
+    // Migración de categorías (2026-10): Gasto → Gasto Ax, Mtto → Mtto Cr
+    if(d.catSchema !== 2){
+      (d.entries||[]).forEach(e=>{
+        if(e.category==='Gasto') e.category='Gasto Ax';
+        else if(e.category==='Mtto') e.category='Mtto Cr';
+      });
+      d.catSchema = 2;
+    }
+    return d;
+  } }catch(e){}
+  const seed = JSON.parse(JSON.stringify(SEED));
+  seed.seededAt = new Date().toISOString().slice(0,10);
+  seed.catSchema = 2;
+  return seed;
+}
+function save(){
+  localStorage.setItem(LS_KEY, JSON.stringify(db));
+  const el = document.getElementById('saveState');
+  el.textContent = 'guardado ' + new Date().toLocaleTimeString('es-MX');
+}
+
+// ============== HELPERS ==============
+const $ = id => document.getElementById(id);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const todayISO = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const monthKey = (iso) => (iso||todayISO()).slice(0,7);
+const fmtMXN = v => (v==null||isNaN(v)) ? '—' : '$' + Number(v).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+const monthName = mk => { const [y,m]=mk.split('-'); return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][+m-1]+' '+y; };
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// ¿el servicio bimestral corre este mes? (meses pares — convención "par 10" de la hoja: feb abr jun ago oct dic)
+function serviceActiveThisMonth(svc){
+  const m = +todayISO().slice(5,7);
+  if(svc.freq === 'bimestral' && m % 2 !== 0) return false;
+  return svc.active !== false;
+}
+function paidKey(svc, mk){ return svc.name + '|' + mk; }
+function isPaid(svc, mk){ return !!(db.paidMap && db.paidMap[paidKey(svc,mk)]); }
+function markPaid(svc, mk, paid){
+  if(!db.paidMap) db.paidMap = {};
+  if(paid){
+    db.paidMap[paidKey(svc,mk)] = {ts:Date.now(), amount:svc.amount, account:svc.account};
+    // registrar el gasto automáticamente
+    db.entries.push({id:uid(), date: todayISO(), type:'gasto', concept:svc.name, category:'Servicios', amount:+svc.amount||0, account:svc.account, note:'pago mensual', scratch:false});
+  } else {
+    delete db.paidMap[paidKey(svc,mk)];
+    // quitar el gasto auto-registrado de hoy con ese concepto
+    db.entries = db.entries.filter(e => !(e.concept === svc.name && e.note === 'pago mensual' && e.date === todayISO()));
+  }
+  save(); renderAll();
+}
+
+// Sanación al arrancar: si un servicio quedó marcado como "Pagado" en paidMap pero
+// su movimiento ya no está en entries (paso habitual: se borra desde Movimientos),
+// se recrea el gasto con la fecha del pago. Idempotente — solo crea lo que falta.
+// Sin esto Resumen se queda en $0.00 mientras la pestaña Servicios dice "pagado".
+function healPagosHuerfanos(){
+  if(!db.paidMap || !db.services) return 0;
+  let creados = 0;
+  Object.keys(db.paidMap).forEach(k=>{
+    const i = k.lastIndexOf('|');
+    if(i < 0) return;
+    const name = k.slice(0, i), mk = k.slice(i+1);
+    if(!/^\d{4}-\d{2}$/.test(mk)) return;
+    const svc = db.services.find(s=>s.name===name);
+    if(!svc) return;
+    const existe = db.entries.some(e=>e.concept===name && e.note==='pago mensual' && monthKey(e.date)===mk && !e.scratch);
+    if(existe) return;
+    const p = db.paidMap[k] || {};
+    const fecha = p.ts ? new Date(p.ts).toISOString().slice(0,10) : mk+'-01';
+    db.entries.push({ id:uid(), date: fecha, type:'gasto', concept:name, category:'Servicios',
+      amount:+p.amount || +svc.amount || 0, account:p.account || svc.account, note:'pago mensual', scratch:false });
+    creados++;
+  });
+  if(creados) save();
+  return creados;
+}
+
+// ============== CAPTURA RAPIDA ==============
+  let selAcct = 'BBVA', selCat = 'Servicios'; // 'Gasto' dejó de existir en la migración 2026-10 (catSchema 2)
+function renderChips(){
+  $('rAccounts').innerHTML = ACCOUNTS.map(a=>`<span class="chip ${a===selAcct?'on':''}" onclick="selAcct='${a}';renderChips()">${a}</span>`).join('');
+  $('rCats').innerHTML = CATS.map(c=>`<span class="chip ${c===selCat?'on':''}" onclick="selCat='${c}';renderChips()">${c}</span>`).join('');
+  const sa = $('sAccounts'); let sacct = sa?.dataset.acct || 'BBVA';
+  if(sa) sa.innerHTML = ACCOUNTS.map(a=>`<span class="chip ${a===sacct?'on':''}" onclick="this.parentNode.dataset.acct='${a}';renderChips()">${a}</span>`).join('');
+  const ua = $('uAccounts'); let uacct = ua?.dataset.acct || 'BBVA';
+  if(ua) ua.innerHTML = ACCOUNTS.map(a=>`<span class="chip ${a===uacct?'on':''}" onclick="this.parentNode.dataset.acct='${a}';renderChips()">${a}</span>`).join('');
+}
+function catalogNames(){
+  return [
+    ...db.services.map(s=>({name:s.name, cat:'Servicios', day:s.day, amount:s.amount, account:s.account})),
+    ...db.units.filter(u=>u.tenant && u.tenant!=='—').map(u=>({name:'I '+u.tenant+' ('+u.name+')', cat:'Ingreso', day:u.day, amount:u.amount, account:u.account})),
+    {name:'Mtto Cr', cat:'Mtto'},{name:'Mtto Hu', cat:'Mtto'},{name:'Mtto Alexis', cat:'Mtto'},
+    {name:'Uber', cat:'Gasto'},{name:'Temu', cat:'Gasto'},{name:'Alimentos', cat:'Gasto'},
+    {name:'Amazon', cat:'Gasto'},{name:'Predial', cat:'Servicios'}
+  ];
+}
+function setupSuggest(){
+  const inp = $('rConcept'), box = $('rSuggest');
+  inp.addEventListener('input', ()=>{
+    const q = inp.value.trim().toLowerCase();
+    if(q.length < 2){ box.style.display='none'; return; }
+    const hits = catalogNames().filter(c=>c.name.toLowerCase().includes(q)).slice(0,8);
+    if(!hits.length){ box.style.display='none'; return; }
+    box.innerHTML = hits.map(h=>`<div onclick="pickSuggest('${esc(h.name).replace(/'/g,"\\'")}','${h.cat}',${h.amount||0},'${h.account||'BBVA'}')">${esc(h.name)} <span class="muted">· ${h.cat}${h.day?' · día '+h.day:''}${h.amount?' · '+fmtMXN(h.amount):''}</span></div>`).join('');
+    box.style.display='block';
+  });
+  inp.addEventListener('blur', ()=> setTimeout(()=>box.style.display='none', 200));
+}
+function pickSuggest(name, cat, amount, account){
+  $('rConcept').value = name;
+  $('rSuggest').style.display='none';
+  if(cat==='Ingreso') $('rType').value='ingreso';
+  selCat = cat; if(account) selAcct = account;
+  if(amount && !$('rAmount').value) $('rAmount').value = amount;
+  renderChips();
+}
+// Fecha en texto libre: dd/mm/aaaa, dd-mm-aaaa o aaaa-mm-dd → ISO (aaaa-mm-dd)
+function parseDateInput(v){
+  v = (v||'').trim();
+  if(!v) return todayISO();
+  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m){ const mo=+m[2], dy=+m[3]; if(mo<1||mo>12||dy<1||dy>31) return null;
+    return m[1]+'-'+String(mo).padStart(2,'0')+'-'+String(dy).padStart(2,'0'); }
+  m = v.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if(m){ const dy=+m[1], mo=+m[2]; let y=+m[3]; if(y<100) y+=2000;
+    if(mo<1||mo>12||dy<1||dy>31) return null;
+    return y+'-'+String(mo).padStart(2,'0')+'-'+String(dy).padStart(2,'0'); }
+  return null;
+}
+function todayUI(){ const d=new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+function toggleTransferUI(){
+  const isT = $('rType').value === 'transferencia';
+  $('rTransferRow').style.display = isT ? 'flex' : 'none';
+  document.querySelector('#v-registro .acct-chips#rAccounts').style.display = isT ? 'none' : 'flex';
+  if(isT && !$('rFrom').options.length){
+    const opts = ACCOUNTS_ALL.map(a=>`<option value="${a}">${a}</option>`).join('');
+    $('rFrom').innerHTML = opts; $('rTo').innerHTML = opts;
+    $('rFrom').value = 'STD'; $('rTo').value = 'LU';
+  }
+}
+function addEntry(){
+  const concept = $('rConcept').value.trim();
+  const amount = parseFloat($('rAmount').value);
+  if(isNaN(amount)){ alert('El monto es obligatorio'); return; }
+  const type = $('rType').value;
+  if(type === 'transferencia'){
+    const from = $('rFrom').value, to = $('rTo').value;
+    if(!amount || from===to){ alert('Monto y cuentas distintas (de → a)'); return; }
+    const iso = parseDateInput($('rDate').value);
+    if(!iso){ alert('Fecha inválida — usa dd/mm/aaaa o aaaa-mm-dd'); return; }
+    db.entries.push({id:uid(), date:iso, type:'transferencia', concept: concept || ('Transferencia '+from+'→'+to), category:'Otros', amount, account:from, accountTo:to, note:$('rNote').value.trim(), scratch:!$('rClassified').checked});
+    $('rConcept').value=''; $('rAmount').value=''; $('rNote').value='';
+    $('rDate').value = todayUI();
+    save(); renderAll(); return;
+  }
+  if(!concept || isNaN(amount)){ alert('Concepto y monto son obligatorios'); return; }
+  const iso = parseDateInput($('rDate').value);
+  if(!iso){ alert('Fecha inválida — usa dd/mm/aaaa o aaaa-mm-dd'); return; }
+  db.entries.push({
+    id: uid(), date: iso, type: type,
+    concept, category: selCat, amount, account: selAcct,
+    note: $('rNote').value.trim(), scratch: !$('rClassified').checked
+  });
+  $('rConcept').value=''; $('rAmount').value=''; $('rNote').value='';
+  $('rDate').value = todayUI();
+  save(); renderAll();
+}
+
+// ============== BANDEJA / RECIENTES / EDICION DE MOVIMIENTOS ==============
+let editEntry = null; // id del movimiento en edición
+function uiDate(iso){ const p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function startEditEntry(id){ editEntry = id; renderScratch(); renderRecent(); }
+function cancelEditEntry(){ editEntry = null; renderScratch(); renderRecent(); }
+function saveEditEntry(){
+  const e = db.entries.find(x=>x.id===editEntry);
+  if(!e){ editEntry = null; return; }
+  const iso = parseDateInput(document.getElementById('e_eDate').value);
+  if(!iso){ alert('Fecha inválida — usa dd/mm/aaaa o aaaa-mm-dd'); return; }
+  const concept = document.getElementById('e_eConcept').value.trim();
+  const amount = parseFloat(document.getElementById('e_eAmount').value);
+  if(!concept || isNaN(amount)){ alert('Concepto y monto son obligatorios'); return; }
+  e.date = iso;
+  e.concept = concept;
+  e.amount = amount;
+  e.type = document.getElementById('e_eType').value;
+  e.category = document.getElementById('e_eCat').value;
+  e.account = document.getElementById('e_eAcct').value;
+  e.accountTo = document.getElementById('e_eAcctTo').value || null;
+  if(e.type==='transferencia' && (!e.accountTo || e.accountTo===e.account)){
+    alert('Transferencia necesita destino distinto al origen'); return;
+  }
+  e.note = document.getElementById('e_eNote').value.trim();
+  e.scratch = !document.getElementById('e_eClassified').checked;
+  editEntry = null; save(); renderAll();
+}
+function entryEditorFields(e){
+  const isT = e.type==='transferencia';
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;padding:4px 0">
+    <div><label style="margin:0 0 2px">Fecha</label><input id="e_eDate" value="${uiDate(e.date)}" style="width:95px"></div>
+    <div style="flex:1;min-width:150px"><label style="margin:0 0 2px">Concepto</label><input id="e_eConcept" value="${esc(e.concept)}"></div>
+    <div><label style="margin:0 0 2px">Tipo</label><select id="e_eType" style="width:120px"><option value="gasto" ${e.type==='gasto'?'selected':''}>Gasto</option><option value="ingreso" ${e.type==='ingreso'?'selected':''}>Ingreso</option><option value="transferencia" ${isT?'selected':''}>Transferencia</option></select></div>
+    <div><label style="margin:0 0 2px">Monto</label><input id="e_eAmount" type="number" step="0.01" value="${e.amount}" style="width:110px"></div>
+    <div><label style="margin:0 0 2px">Categoría</label><select id="e_eCat" style="width:125px">${CATS.map(c=>`<option value="${c}" ${c===e.category?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div><label style="margin:0 0 2px">Cuenta</label><select id="e_eAcct" style="width:100px">${ACCOUNTS_ALL.map(a=>`<option ${a===e.account?'selected':''}>${a}</option>`).join('')}</select></div>
+    <div><label style="margin:0 0 2px">Hacia (transfer.)</label><select id="e_eAcctTo" style="width:100px"><option value="">—</option>${ACCOUNTS_ALL.map(a=>`<option ${a===e.accountTo?'selected':''}>${a}</option>`).join('')}</select></div>
+    <div style="flex:1;min-width:110px"><label style="margin:0 0 2px">Nota</label><input id="e_eNote" value="${esc(e.note||'')}"></div>
+    <div><label style="margin:0 0 2px;visibility:hidden">·</label>
+      <label style="font-size:.65rem;display:flex;gap:4px;align-items:center;margin:0 0 5px;color:var(--text2)"><input type="checkbox" id="e_eClassified" ${!e.scratch?'checked':''} style="width:auto">clasificado</label>
+      <div style="display:flex;gap:4px">
+        <button class="btn sm" onclick="saveEditEntry()">Guardar</button>
+        <button class="btn sm sec" onclick="cancelEditEntry()">Cancelar</button>
+      </div>
+    </div>
+  </div>`;
+}
+function classifyEntry(id, cat){
+  const e = db.entries.find(x=>x.id===id);
+  if(e){ e.category = cat; e.scratch = false; save(); renderAll(); }
+}
+  function delEntry(id){
+    const x = db.entries.find(e=>e.id===id);
+    db.entries = db.entries.filter(e=>e.id!==id);
+    // Si se borra un pago automático, la marca "Pagado"/"Recibido" debe irse con él.
+    // Si no, paidMap queda huérfano: el servicio sigue marcado como pagado pero el
+    // movimiento desaparece de Movimientos y de Resumen (bug de 2026-10-26).
+    if(x){
+      if(x.category==='Servicios' && x.note==='pago mensual' && db.paidMap){
+        const mk = monthKey(x.date);
+        const k = x.concept + '|' + mk;
+        if(db.paidMap[k]) delete db.paidMap[k];
+      }
+      if(x.type==='ingreso' && /^renta /.test(x.note||'') && db.rentMap){
+        const mk = monthKey(x.date);
+        Object.keys(db.rentMap).forEach(k=>{
+          if(!k.endsWith('|'+mk)) return;
+          const [nombre, inq] = k.split('|');
+          if(x.concept === 'I '+(inq||'')+' ('+(nombre||'')+')') delete db.rentMap[k];
+        });
+      }
+    }
+    save(); renderAll();
+  }
+function renderScratch(){
+  const items = db.entries.filter(e=>e.scratch).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!items.length){ $('scratchList').innerHTML = '<div class="muted">Bandeja vacía — las capturas sin clasificar caen aquí.</div>'; return; }
+  $('scratchList').innerHTML = '<table><thead><tr><th>Fecha</th><th>Concepto</th><th>Cuenta</th><th class="num-r">Monto</th><th> mover a </th></tr></thead><tbody>' +
+    items.map(e=>{
+      if(e.id===editEntry) return `<tr><td colspan="5" style="background:var(--accent-dim)">${entryEditorFields(e)}</td></tr>`;
+      return `<tr><td>${e.date}</td><td>${esc(e.concept)}</td><td>${e.account||'—'}${e.type==='transferencia'&&e.accountTo?' <span style="color:'+COLOR.transfer+'">→ '+e.accountTo+'</span>':''}</td><td class="num-r money" style="color:${amountColor(e)}">${e.type==='ingreso'?'+':(e.type==='transferencia'?'':'−')}${fmtMXN(e.amount)}</td>
+      <td style="display:flex;gap:6px;align-items:center;padding-top:10px"><select onchange="classifyEntry('${e.id}',this.value)">${CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+      <button class="btn sm sec" onclick="startEditEntry('${e.id}')">Editar</button></td></tr>`;}).join('') + '</tbody></table>';
+}
+// ============== MOVIMIENTOS (ordenes: fecha / categoría / cuenta con subtotales) ==============
+let sortMode = 'fecha';
+function setSortMode(m){ sortMode = m; renderRecent(); }
+function recentRowHTML(e){
+  if(e.id===editEntry) return `<tr><td colspan="6" style="background:var(--accent-dim)">${entryEditorFields(e)}</td></tr>`;
+  const col = amountColor(e);
+  return `<tr>
+    <td>${e.date}</td><td>${esc(e.concept)}${e.note?' <span class="muted">'+esc(e.note)+'</span>':''}</td>
+    <td><span class="tag" style="background:${col}22;color:${col}">${e.category}</span></td>
+    <td>${e.account||'—'}${e.type==='transferencia'&&e.accountTo?' <span style="color:'+COLOR.transfer+'">→ '+e.accountTo+'</span>':''}</td>
+    <td class="num-r money" style="color:${col}">${e.type==='ingreso'?'+':'−'}${fmtMXN(e.amount)}</td>
+    <td style="white-space:nowrap">
+      <button class="btn sm sec" onclick="startEditEntry('${e.id}')">Editar</button>
+      <button class="btn sm sec" onclick="delEntry('${e.id}')">✕</button></td></tr>`;
+}
+function renderRecent(){
+  const all = db.entries.filter(e=>!e.scratch).sort((a,b)=>b.date.localeCompare(a.date));
+  document.querySelectorAll('#recentSort .chip').forEach(c=>c.classList.toggle('on', c.dataset.sort===sortMode));
+  const hint = $('recentHint');
+  if(!all.length){ if(hint) hint.textContent=''; $('recentList').innerHTML = '<tr><td colspan="6" class="muted">Sin movimientos todavía.</td></tr>'; return; }
+  if(sortMode==='fecha'){
+    const items = all.slice(0,50);
+    if(hint) hint.textContent = 'Orden: más recientes primero (por fecha).';
+    const nota = all.length > items.length ? `<tr><td colspan="6" class="muted">Mostrando los ${items.length} más recientes de ${all.length} — los demás en Resumen por mes.</td></tr>` : '';
+    $('recentList').innerHTML = items.map(recentRowHTML).join('') + nota;
+    return;
+  }
+  // agrupado por categoría o cuenta, con subtotales
+  const keyOf = e => sortMode==='categoria' ? (e.category||'Sin categoría') : (e.account||'—');
+  const signed = e => e.type==='ingreso' ? e.amount : -e.amount; // gasto y transferencia = salida
+  const groups = {};
+  all.forEach(e=>{ (groups[keyOf(e)] = groups[keyOf(e)] || []).push(e); });
+  const keys = Object.keys(groups).sort((a,b)=>{
+    const ta = groups[a].reduce((s,e)=>s+Math.abs(e.amount),0);
+    const tb = groups[b].reduce((s,e)=>s+Math.abs(e.amount),0);
+    return tb - ta;
+  });
+  if(hint) hint.textContent = `Orden: agrupado por ${sortMode==='categoria'?'categoría':'cuenta'} (mayor a menor por volumen) con subtotales.`;
+  $('recentList').innerHTML = keys.map(k=>{
+    const items = groups[k];
+    const total = items.reduce((s,e)=>s+signed(e),0);
+    const abs = items.reduce((s,e)=>s+Math.abs(e.amount),0);
+    const tcol = total>=0 ? COLOR.ingreso : COLOR.gasto;
+    return `<tr><td colspan="6" style="background:var(--bg3);border-bottom:0;padding:8px">
+        <b style="color:var(--accent)">${esc(k)}</b> <span class="muted" style="font-size:.68rem">· ${items.length} movimiento${items.length>1?'s':''}</span></td></tr>`
+      + items.map(recentRowHTML).join('')
+      + `<tr style="background:rgba(45,212,191,.05)">
+          <td colspan="4" class="muted" style="text-align:right;font-size:.72rem">Subtotal ${esc(k)}</td>
+          <td class="num-r money" style="font-weight:700;color:${tcol}">${total>=0?'+':'−'}${fmtMXN(Math.abs(total))}</td>
+          <td class="muted" style="font-size:.65rem">${fmtMXN(abs)} movido</td></tr>`;
+  }).join('');
+}
+
+// ============== SERVICIOS ==============
+let editSvc = -1;
+function addService(){
+  const name = $('sName').value.trim();
+  const day = parseInt($('sDay').value);
+  const amount = parseFloat($('sAmount').value)||0;
+  if(!name || !day){ alert('Nombre y día requeridos'); return; }
+  const acct = $('sAccounts').dataset.acct || 'BBVA';
+  db.services.push({name, day, amount, account:acct, freq: $('sFreq').value});
+  $('sName').value=''; $('sDay').value=''; $('sAmount').value='';
+  save(); renderAll();
+}
+function startEditSvc(i){ editSvc = i; renderServices(); }
+function cancelEditSvc(){ editSvc = -1; renderServices(); }
+function saveEditSvc(i){
+  const s = db.services[i];
+  const name = document.getElementById('e_sName').value.trim();
+  const day = parseInt(document.getElementById('e_sDay').value);
+  if(!name || !day){ alert('Nombre y día requeridos'); return; }
+  s.name = name;
+  s.day = day;
+  s.amount = parseFloat(document.getElementById('e_sAmount').value)||0;
+  s.account = document.getElementById('e_sAcct').value;
+  s.freq = document.getElementById('e_sFreq').value;
+  editSvc = -1; save(); renderAll();
+}
+function delService(i){
+  if(!confirm('¿Quitar el servicio "'+db.services[i].name+'"?')) return;
+  db.services.splice(i,1); editSvc=-1; save(); renderAll();
+}
+function renderServices(){
+  const mk = monthKey();
+  const today = +todayISO().slice(8,10);
+  const rows = db.services.map((s,i)=>{
+    if(i === editSvc){
+      return `<tr style="background:var(--accent-dim)">
+        <td><input id="e_sName" value="${esc(s.name)}" style="min-width:140px"></td>
+        <td><input id="e_sDay" type="number" min="1" max="31" value="${s.day}" style="width:60px"></td>
+        <td><select id="e_sAcct">${ACCOUNTS_ALL.map(a=>`<option ${a===s.account?'selected':''}>${a}</option>`).join('')}</select></td>
+        <td><input id="e_sAmount" type="number" step="0.01" min="0" value="${s.amount}" style="width:100px"></td>
+        <td><select id="e_sFreq"><option value="mensual" ${s.freq!=='bimestral'?'selected':''}>Mensual</option><option value="bimestral" ${s.freq==='bimestral'?'selected':''}>Bimestral</option></select></td>
+        <td style="white-space:nowrap">
+          <button class="btn sm" onclick="saveEditSvc(${i})">Guardar</button>
+          <button class="btn sm sec" onclick="cancelEditSvc()">Cancelar</button>
+        </td></tr>`;
+    }
+    const active = serviceActiveThisMonth(s);
+    const paid = isPaid(s, mk);
+    const daysLeft = s.day - today;
+    let estado, estadoCls;
+    if(!active){ estado='no corre este mes'; estadoCls='info'; }
+    else if(paid){ estado='pagado'; estadoCls='ok'; }
+    else if(daysLeft < 0){ estado='vencido hace '+(-daysLeft)+'d'; estadoCls='bad'; }
+    else if(daysLeft <= 3){ estado='vence en '+daysLeft+'d (día '+s.day+')'; estadoCls='warn'; }
+    else { estado='día '+s.day+' · falta '+daysLeft+'d'; estadoCls='info'; }
+    return `<tr>
+      <td><b>${esc(s.name)}</b>${s.freq==='bimestral'?' <span class="muted">(bim.)</span>':''}</td>
+      <td>${s.day||'—'}</td><td>${s.account||'—'}</td>
+      <td class="num-r money" style="color:${COLOR.servicio}">${fmtMXN(s.amount)}</td>
+      <td><span class="tag ${estadoCls}">${estado}</span></td>
+      <td style="white-space:nowrap">
+        ${active&&!paid?`<button class="btn sm" onclick="markPaid(db.services[${i}], '${mk}', true)">Pagado</button>`:''}
+        ${active&&paid?`<button class="btn sm sec" onclick="markPaid(db.services[${i}], '${mk}', false)">Deshacer</button>`:''}
+        <button class="btn sm sec" onclick="startEditSvc(${i})">Editar</button>
+        <button class="btn sm red" onclick="delService(${i})">✕</button>
+      </td></tr>`;
+  }).join('');
+  // Subtotales: pagado vs. pendiente (vencido + por vencer) — mismos criterios de la columna Estado
+  const tot = { pagado:0, pagadoN:0, vencido:0, vencidoN:0, porVencer:0, porVencerN:0 };
+  db.services.forEach(s=>{
+    const amt = +s.amount||0;
+    if(!serviceActiveThisMonth(s)) return;         // bimestral que no corre: fuera del subtotal
+    if(isPaid(s, mk)){ tot.pagado+=amt; tot.pagadoN++; }
+    else if(s.day - today < 0){ tot.vencido+=amt; tot.vencidoN++; }
+    else { tot.porVencer+=amt; tot.porVencerN++; }
+  });
+  const pend = tot.vencido + tot.porVencer, pendN = tot.vencidoN + tot.porVencerN;
+  $('servicesList').innerHTML = rows || '<tr><td colspan="6" class="muted">Sin servicios.</td></tr>';
+  $('servicesFoot').innerHTML = !rows ? '' : `
+    <tr style="border-top:2px solid var(--line)">
+      <td colspan="3" style="font-weight:700">Subtotal pagado</td>
+      <td class="num-r money" style="font-weight:700;color:${COLOR.ingreso}">${fmtMXN(tot.pagado)}</td>
+      <td colspan="2" class="muted">${tot.pagadoN} ${tot.pagadoN===1?'servicio':'servicios'}</td>
+    </tr>
+    <tr>
+      <td colspan="3" style="font-weight:700">Resto — vencido o por vencer</td>
+      <td class="num-r money" style="font-weight:700;color:${COLOR.gasto}">${fmtMXN(pend)}</td>
+      <td colspan="2" class="muted">${pendN} ${pendN===1?'servicio':'servicios'}${tot.vencidoN?` · vencido ${fmtMXN(tot.vencido)} (${tot.vencidoN}) · por vencer ${fmtMXN(tot.porVencer)} (${tot.porVencerN})`:''}</td>
+    </tr>
+    <tr>
+      <td colspan="3" class="muted">Total activos del mes</td>
+      <td class="num-r money muted" style="font-weight:700">${fmtMXN(tot.pagado+pend)}</td>
+      <td colspan="2" class="muted">${tot.pagadoN+pendN} servicios</td>
+    </tr>`;
+}
+
+// ============== RENTAS ==============
+let editUnit = -1;
+function addUnit(){
+  const name = $('uName').value.trim();
+  const day = parseInt($('uDay').value);
+  if(!name || !day){ alert('Unidad y día requeridos'); return; }
+  db.units.push({name, tenant: $('uTenant').value.trim()||'—', amount: parseFloat($('uAmount').value)||0, day, account: $('uAccounts').dataset.acct||'BBVA'});
+  $('uName').value=''; $('uTenant').value=''; $('uAmount').value=''; $('uDay').value='';
+  save(); renderAll();
+}
+function editUnitTenant(i, v){ db.units[i].tenant = v.trim()||'—'; save(); }
+function startEditUnit(i){ editUnit = i; renderUnits(); }
+function cancelEditUnit(){ editUnit = -1; renderUnits(); }
+function saveEditUnit(i){
+  const u = db.units[i];
+  const name = document.getElementById('e_uName').value.trim();
+  const day = parseInt(document.getElementById('e_uDay').value);
+  if(!name || !day){ alert('Unidad y día requeridos'); return; }
+  u.name = name;
+  u.tenant = document.getElementById('e_uTenant').value.trim()||'—';
+  u.day = day;
+  u.amount = parseFloat(document.getElementById('e_uAmount').value)||0;
+  u.account = document.getElementById('e_uAcct').value;
+  editUnit = -1; save(); renderAll();
+}
+function delUnit(i){
+  if(!confirm('¿Quitar unidad?')) return;
+  db.units.splice(i,1); editUnit=-1; save(); renderAll();
+}
+function rentKey(u,i){ return u.name+'|'+u.tenant+'|'+i; }
+function isRentReceived(u,i,mk){ return !!(db.rentMap && db.rentMap[rentKey(u,i)+'|'+mk]); }
+function markRent(u,i,mk,recv){
+  if(!db.rentMap) db.rentMap = {};
+  const k = rentKey(u,i)+'|'+mk;
+  if(recv){
+    db.rentMap[k] = {ts:Date.now(), amount:u.amount};
+    db.entries.push({id:uid(), date:todayISO(), type:'ingreso', concept:'I '+u.tenant+' ('+u.name+')', category:'Ingreso', amount:+u.amount||0, account:u.account, note:'renta '+monthName(mk), scratch:false});
+  } else {
+    delete db.rentMap[k];
+    db.entries = db.entries.filter(e=>!(e.concept==='I '+u.tenant+' ('+u.name+')' && e.note==='renta '+monthName(mk) && e.date===todayISO()));
+  }
+  save(); renderAll();
+}
+function renderUnits(){
+  const mk = monthKey();
+  const today = +todayISO().slice(8,10);
+  const rows = db.units.map((u,i)=>{
+    if(i === editUnit){
+      return `<tr style="background:var(--accent-dim)">
+        <td><input id="e_uName" value="${esc(u.name)}" style="width:80px"></td>
+        <td><input id="e_uTenant" value="${esc(u.tenant==='—'?'':u.tenant)}" style="min-width:130px"></td>
+        <td><input id="e_uDay" type="number" min="1" max="31" value="${u.day}" style="width:60px"></td>
+        <td><select id="e_uAcct">${ACCOUNTS_ALL.map(a=>`<option ${a===u.account?'selected':''}>${a}</option>`).join('')}</select></td>
+        <td><input id="e_uAmount" type="number" step="0.01" min="0" value="${u.amount}" style="width:100px"></td>
+        <td colspan="2" style="white-space:nowrap">
+          <button class="btn sm" onclick="saveEditUnit(${i})">Guardar</button>
+          <button class="btn sm sec" onclick="cancelEditUnit()">Cancelar</button>
+        </td></tr>`;
+    }
+    const sinInq = !u.tenant || u.tenant==='—';
+    const rec = !sinInq && isRentReceived(u,i,mk);
+    const daysLeft = u.day - today;
+    let estado, cls;
+    if(sinInq){ estado='sin inquilino'; cls='info'; }
+    else if(rec){ estado='recibido'; cls='ok'; }
+    else if(daysLeft < 0){ estado='atrasado '+(-daysLeft)+'d'; cls='bad'; }
+    else if(daysLeft <= 2){ estado='esperado día '+u.day; cls='warn'; }
+    else { estado='día '+u.day; cls='info'; }
+    return `<tr>
+      <td><b>${esc(u.name)}</b></td>
+      <td><input value="${sinInq?'':esc(u.tenant)}" placeholder="nombre…" onchange="editUnitTenant(${i},this.value)" style="max-width:180px"></td>
+      <td>${u.day||'—'}</td><td>${u.account||'—'}</td>
+      <td class="num-r money" style="color:${COLOR.ingreso}">${fmtMXN(u.amount)}</td>
+      <td><span class="tag ${cls}">${estado}</span></td>
+      <td style="white-space:nowrap">
+        ${!sinInq&&!rec?`<button class="btn sm" onclick="markRent(db.units[${i}],${i},'${mk}',true)">Recibido</button>`:''}
+        ${rec?`<button class="btn sm sec" onclick="markRent(db.units[${i}],${i},'${mk}',false)">Deshacer</button>`:''}
+        <button class="btn sm sec" onclick="startEditUnit(${i})">Editar</button>
+        <button class="btn sm red" onclick="delUnit(${i})">✕</button>
+      </td></tr>`;
+  }).join('');
+  // Subtotales: recibido vs. pendiente (atrasado + esperado) — mismos criterios de la columna Estado
+  const rt = { rec:0, recN:0, atras:0, atrasN:0, esper:0, esperN:0, sin:0, sinN:0 };
+  db.units.forEach((u,i)=>{
+    const amt = +u.amount||0;
+    if(!u.tenant || u.tenant==='—'){ rt.sin+=amt; rt.sinN++; return; }
+    if(isRentReceived(u,i,mk)){ rt.rec+=amt; rt.recN++; }
+    else if(u.day - today < 0){ rt.atras+=amt; rt.atrasN++; }
+    else { rt.esper+=amt; rt.esperN++; }
+  });
+  const rpend = rt.atras + rt.esper, rpendN = rt.atrasN + rt.esperN;
+  $('unitsList').innerHTML = rows || '<tr><td colspan="7" class="muted">Sin unidades.</td></tr>';
+  $('unitsFoot').innerHTML = !rows ? '' : `
+    <tr style="border-top:2px solid var(--line)">
+      <td colspan="4" style="font-weight:700">Subtotal recibido</td>
+      <td class="num-r money" style="font-weight:700;color:${COLOR.ingreso}">${fmtMXN(rt.rec)}</td>
+      <td colspan="2" class="muted">${rt.recN} ${rt.recN===1?'unidad':'unidades'}</td>
+    </tr>
+    <tr>
+      <td colspan="4" style="font-weight:700">Resto — atrasado o esperado</td>
+      <td class="num-r money" style="font-weight:700;color:${COLOR.gasto}">${fmtMXN(rpend)}</td>
+      <td colspan="2" class="muted">${rpendN} ${rpendN===1?'unidad':'unidades'}${rt.atrasN?` · atrasado ${fmtMXN(rt.atras)} (${rt.atrasN}) · esperado ${fmtMXN(rt.esper)} (${rt.esperN})`:''}</td>
+    </tr>
+    <tr>
+      <td colspan="4" class="muted">Sin inquilino (no cuenta)</td>
+      <td class="num-r money muted">${fmtMXN(rt.sin)}</td>
+      <td colspan="2" class="muted">${rt.sinN} ${rt.sinN===1?'registro':'registros'}</td>
+    </tr>`;
+}
+
+// ============== RESUMEN / STATS ==============
+// Colores por tipo de movimiento: verde = ingresos, rojo = egresos, amarillo = servicios
+const COLOR = { ingreso: '#10b981', gasto: '#ef4444', servicio: '#f59e0b', transfer: '#2dd4bf' };
+function amountColor(e){
+  if(e.type==='ingreso') return COLOR.ingreso;
+  if(e.type==='transferencia') return COLOR.transfer;
+  if(e.category==='Servicios') return COLOR.servicio;
+  return COLOR.gasto;
+}
+let resMonth = null; // mes seleccionado en Resumen (default = mes en curso)
+function setResMonth(mk){ resMonth = mk; renderStats(); }
+function srvEntriesDelMes(mk){
+  // solo lo que quedó registrado como gasto con categoría "Servicios"
+  let t=0;
+  db.entries.forEach(e=>{
+    if(monthKey(e.date)!==mk || e.scratch) return;
+    if(e.type==='gasto' && e.category==='Servicios') t += +e.amount||0;
+  });
+  return t;
+}
+// Pagos marcados como "Pagado" en la pestaña Servicios cuyo gasto NO quedó en
+// entries. Sin esto, Resumen mostraba $0.00 y en gris mientras la pestaña
+// Servicios sí marcaba el mes como pagado (paidMap y entries se desincronizan).
+function pagosServiciosSinRegistro(mk){
+  if(!db.paidMap || !db.services) return 0;
+  const enEntries = new Set(db.entries.filter(e=>monthKey(e.date)===mk && !e.scratch && e.type==='gasto' && e.category==='Servicios').map(e=>e.concept));
+  let extra = 0;
+  db.services.forEach(s=>{
+    const p = db.paidMap[paidKey(s,mk)];
+    if(!p || enEntries.has(s.name)) return;
+    extra += +p.amount || +s.amount || 0;
+  });
+  return extra;
+}
+function monthAgg(mk){
+  let inc=0, exp=0, srv=0;
+  db.entries.forEach(e=>{
+    if(monthKey(e.date)!==mk || e.scratch) return;
+    if(e.type==='ingreso') inc+=e.amount;
+    else if(e.type==='gasto'){ exp+=e.amount; if(e.category==='Servicios') srv+=e.amount; }
+    // transferencias no cuentan en ingresos/gastos — solo en saldos por cuenta
+  });
+  const extra = pagosServiciosSinRegistro(mk);   // pagado sin gasto registrado
+  const gastoTotal = exp + extra;
+  return { inc, exp, srv: srv+extra, otros: exp-srv, sav: inc-gastoTotal, rate: inc>0 ? ((inc-gastoTotal)/inc*100) : null };
+}
+function monthsWithData(){
+  const set = new Set([monthKey()]);
+  db.entries.forEach(e=>set.add(monthKey(e.date)));
+  return Array.from(set).sort().reverse();
+}
+function renderStats(){
+  const months = monthsWithData();
+  if(!resMonth || !months.includes(resMonth)) resMonth = monthKey();
+  // selector de mes
+  const sel = $('resMonthSel');
+  sel.innerHTML = months.map(m=>`<option value="${m}" ${m===resMonth?'selected':''}>${monthName(m)}</option>`).join('');
+  const a = monthAgg(resMonth);
+  $('statsNow').innerHTML = `
+    <div class="stat"><div class="k" style="color:${COLOR.ingreso}">▲ Ingresos</div><div class="v" style="color:${COLOR.ingreso}">${fmtMXN(a.inc)}</div></div>
+    <div class="stat"><div class="k" style="color:${COLOR.servicio}">⚙ Servicios</div><div class="v" style="color:${COLOR.servicio}">${fmtMXN(a.srv)}</div></div>
+    <div class="stat"><div class="k" style="color:${COLOR.gasto}">▼ Otros gastos</div><div class="v" style="color:${COLOR.gasto}">${fmtMXN(a.otros)}</div></div>
+    <div class="stat"><div class="k">Ahorro</div><div class="v" style="color:${a.sav>=0?COLOR.ingreso:COLOR.gasto}">${fmtMXN(a.sav)}</div></div>
+    <div class="stat"><div class="k">Tasa de ahorro</div><div class="v" style="color:${a.rate!=null&&a.rate>=0?COLOR.ingreso:COLOR.gasto}">${a.rate!=null?a.rate.toFixed(1)+'%':'—'}</div></div>`;
+  // por categoría: TODAS (aunque en $0). Suma gastos + transferencias categorizadas
+  // (un retiro/transferencia etiquetado "Inversion" SÍ cuenta como movimiento de esa categoría;
+  // las transferencias "Otros" — como pagar la tarjeta — no).
+  const catSet = new Set(CATS.filter(c=>c!=='Ingreso'));
+  const byCat = {};
+  catSet.forEach(c=>byCat[c]={g:0,t:0});
+  db.entries.forEach(e=>{
+    if(monthKey(e.date)!==resMonth || e.scratch) return;
+    if(!catSet.has(e.category)){ catSet.add(e.category); byCat[e.category]={g:0,t:0}; }
+    if(e.type==='gasto') byCat[e.category].g += e.amount;
+    else if(e.type==='transferencia' && e.category && e.category!=='Otros') byCat[e.category].t += e.amount;
+  });
+  // pagos marcados en la pestaña Servicios sin gasto registrado → también cuentan aquí
+  const extraSrv = pagosServiciosSinRegistro(resMonth);
+  if(extraSrv>0 && byCat['Servicios']) byCat['Servicios'].g += extraSrv;
+  const cats = Array.from(catSet).map(c=>[c, byCat[c].g+byCat[c].t, byCat[c]]).sort((x,y)=>y[1]-x[1]);
+  const catGrand = cats.reduce((s,c)=>s+c[1],0);
+  $('catBreak').innerHTML = cats.length ? cats.map(([c,v,brk])=>{
+    const col = c==='Servicios' ? COLOR.servicio : COLOR.gasto;
+    const zero = v===0;
+    const sub = brk.t>0 ? `<div class="muted" style="font-size:.62rem;font-weight:400">gasto ${fmtMXN(brk.g)} · transferido ${fmtMXN(brk.t)}</div>` : '';
+    return `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;${zero?'opacity:.45':''}">
+      <div style="min-width:110px">
+        <span class="tag" style="display:inline-block;background:${zero?'rgba(100,116,139,0.15)':col+'22'};color:${zero?'var(--text3)':col}">${c}</span>
+        ${sub}
+      </div>
+      <div style="flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden">
+        <div style="height:100%;width:${catGrand>0?(v/catGrand*100):0}%;background:${col}"></div>
+      </div>
+      <span class="money" style="min-width:110px;text-align:right;color:${zero?'var(--text3)':col}">${fmtMXN(v)}</span>
+    </div>`;}).join('') : '<div class="muted">Sin categorías.</div>';
+  // por cuenta: saldo inicial + recibido (acumulado entrante) + neto del mes + saldo actual
+  if(!db.opening) db.opening = {};
+  const monthNet={}, allNet={}, received={};
+  db.entries.forEach(e=>{
+    if(e.scratch) return;
+    if(e.type==='transferencia'){
+      allNet[e.account]=(allNet[e.account]||0)-e.amount;
+      if(e.accountTo){ allNet[e.accountTo]=(allNet[e.accountTo]||0)+e.amount; received[e.accountTo]=(received[e.accountTo]||0)+e.amount; }
+      if(monthKey(e.date)===resMonth){
+        monthNet[e.account]=(monthNet[e.account]||0)-e.amount;
+        if(e.accountTo) monthNet[e.accountTo]=(monthNet[e.accountTo]||0)+e.amount;
+      }
+    } else if(e.type==='ingreso'){
+      allNet[e.account]=(allNet[e.account]||0)+e.amount;
+      received[e.account]=(received[e.account]||0)+e.amount;
+      if(monthKey(e.date)===resMonth) monthNet[e.account]=(monthNet[e.account]||0)+e.amount;
+    } else {
+      const v = -e.amount;
+      allNet[e.account]=(allNet[e.account]||0)+v;
+      if(monthKey(e.date)===resMonth) monthNet[e.account]=(monthNet[e.account]||0)+v;
+    }
+  });
+  const accts = [...new Set([...ACCOUNTS_ALL, ...Object.keys(db.opening||{}), ...Object.keys(monthNet), ...Object.keys(allNet)])].filter(Boolean);
+  $('acctBreak').innerHTML = '<table><thead><tr><th>Cuenta</th><th class="num-r">Inicial</th><th class="num-r">Recibido</th><th class="num-r">Neto del mes</th><th class="num-r">Saldo actual</th></tr></thead><tbody>' +
+    accts.map(a=>{
+      const ini = +db.opening[a]||0;
+      const mes = monthNet[a]||0;
+      const rec = received[a]||0;
+      const saldo = ini + (allNet[a]||0);
+      return `<tr${a==='Efectivo Casa'?' style="background:var(--accent-dim)"':''}><td><b>${a}</b></td>
+        <td class="num-r money muted">${fmtMXN(ini)}</td>
+        <td class="num-r money" style="color:${COLOR.ingreso};font-weight:700">+${fmtMXN(rec)}</td>
+        <td class="num-r money" style="color:${mes>=0?COLOR.ingreso:COLOR.gasto}">${fmtMXN(mes)}</td>
+        <td class="num-r money" style="font-weight:700;color:${saldo>=0?COLOR.ingreso:COLOR.gasto}">${fmtMXN(saldo)}</td></tr>`;
+    }).join('') + '</tbody></table>' +
+    '<div class="muted" style="margin-top:6px">Recibido = todo lo que ENTRÓ (ingresos + transferencias recibidas). Saldo actual = Inicial + entradas − salidas. Fila Efectivo Casa resaltada.</div>';
+  // histórico (filas clickeables)
+  const agg = {};
+  db.entries.forEach(e=>{ if(e.scratch) return; const mk=monthKey(e.date); agg[mk]=agg[mk]||{inc:0,srv:0,gas:0};
+    if(e.type==='ingreso') agg[mk].inc+=e.amount;
+    else if(e.type==='gasto'){ if(e.category==='Servicios') agg[mk].srv+=e.amount; else agg[mk].gas+=e.amount; } });
+  // meses con pagos de servicios aunque no tengan entries (si no, salían en $0)
+  Object.keys(db.paidMap||{}).forEach(k=>{ const m=k.split('|').pop(); if(m) agg[m]=agg[m]||{inc:0,srv:0,gas:0}; });
+  Object.keys(agg).forEach(m=>{ agg[m].srv += pagosServiciosSinRegistro(m); });
+  const mks = Object.keys(agg).sort().reverse().slice(0,24);
+  $('historyList').innerHTML = mks.map(m=>{ const x=agg[m]; const total=x.srv+x.gas; const r = x.inc>0?((x.inc-total)/x.inc*100):null;
+    const on = m===resMonth;
+    return `<tr onclick="setResMonth('${m}')" style="cursor:pointer;${on?'background:var(--accent-dim)':''}">
+      <td>${on?'▸ ':''}${monthName(m)}</td>
+      <td class="num-r money" style="color:${COLOR.ingreso}">${fmtMXN(x.inc)}</td>
+      <td class="num-r money" style="color:${COLOR.servicio}">${fmtMXN(x.srv)}</td>
+      <td class="num-r money" style="color:${COLOR.gasto}">${fmtMXN(x.gas)}</td>
+      <td class="num-r money" style="color:${x.inc-total>=0?COLOR.ingreso:COLOR.gasto}">${fmtMXN(x.inc-total)}</td>
+      <td class="num-r">${r!=null?r.toFixed(1)+'%':'—'}</td></tr>`; }).join('') || '<tr><td colspan="6" class="muted">Sin datos — ve registrando movimientos y aquí aparece mes por mes.</td></tr>';
+  // resumen del año (del mes seleccionado)
+  const year = resMonth.slice(0,4);
+  $('yearTitle').textContent = ' Resumen del año ' + year;
+  let yInc=0, ySrv=0, yGas=0, yMonths=0;
+  Object.keys(agg).filter(m=>m.slice(0,4)===year).forEach(m=>{ yInc+=agg[m].inc; ySrv+=agg[m].srv; yGas+=agg[m].gas; yMonths++; });
+  const yExp = ySrv+yGas, ySav = yInc-yExp;
+  $('yearStats').innerHTML = `
+    <div class="stat"><div class="k" style="color:${COLOR.ingreso}">Ingresos año</div><div class="v" style="color:${COLOR.ingreso}">${fmtMXN(yInc)}</div></div>
+    <div class="stat"><div class="k" style="color:${COLOR.servicio}">Servicios año</div><div class="v" style="color:${COLOR.servicio}">${fmtMXN(ySrv)}</div></div>
+    <div class="stat"><div class="k" style="color:${COLOR.gasto}">Otros gastos año</div><div class="v" style="color:${COLOR.gasto}">${fmtMXN(yGas)}</div></div>
+    <div class="stat"><div class="k">Ahorro año</div><div class="v" style="color:${ySav>=0?COLOR.ingreso:COLOR.gasto}">${fmtMXN(ySav)}</div></div>
+    <div class="stat"><div class="k">Promedio gasto/mes</div><div class="v">${fmtMXN(yMonths?yExp/yMonths:0)}</div></div>
+    <div class="stat"><div class="k">Meses registrados</div><div class="v">${yMonths}</div></div>`;
+  // proyección (promedio de TODOS los meses con datos)
+  $('pSaldo').value = db.saldo; $('pSaldo2').value = db.saldo;
+  const allMks = Object.keys(agg);
+  const avg = allMks.length ? allMks.reduce((s,m)=>s + (agg[m].srv+agg[m].gas - agg[m].inc), 0)/allMks.length : 0;
+  const proy = (db.saldo||0) + avg*12;
+  $('projection').innerHTML = `
+    <div class="stat"><div class="k">Saldo actual (base)</div><div class="v">${fmtMXN(db.saldo)}</div></div>
+    <div class="stat"><div class="k">Promedio gasto−ingreso/mes</div><div class="v" style="color:${avg>=0?COLOR.gasto:COLOR.ingreso}">${fmtMXN(avg)}</div></div>
+    <div class="stat"><div class="k">Proyección a 12 meses</div><div class="v" style="color:${proy>=0?COLOR.ingreso:COLOR.gasto}">${fmtMXN(proy)}</div></div>`;
+}
+function saveSaldo(){
+  const el = $('pSaldo').value !== '' ? $('pSaldo') : $('pSaldo2');
+  const v = parseFloat(el.value);
+  if(!isNaN(v)){ db.saldo = v; save(); renderStats(); }
+}
+
+// ============== ALERTAS ==============
+function renderAlerts(){
+  const mk = monthKey();
+  const today = +todayISO().slice(8,10);
+  const alerts = [];
+  db.services.forEach(s=>{
+    if(!serviceActiveThisMonth(s) || isPaid(s,mk)) return;
+    const dl = s.day - today;
+    if(dl < 0) alerts.push({cls:'bad', txt:'<b>'+esc(s.name)+'</b> venció el día '+s.day+' (hace '+(-dl)+'d) — '+fmtMXN(s.amount)+' vía '+s.account});
+    else if(dl <= 3) alerts.push({cls:'warn', txt:'<b>'+esc(s.name)+'</b> vence en '+dl+'d (día '+s.day+') — '+fmtMXN(s.amount)+' vía '+s.account});
+  });
+  db.units.forEach((u,i)=>{
+    if(!u.tenant || u.tenant==='—' || isRentReceived(u,i,mk)) return;
+    const dl = u.day - today;
+    if(dl < 0) alerts.push({cls:'bad', txt:'Renta de <b>'+esc(u.tenant)+'</b> ('+esc(u.name)+') atrasada '+(-dl)+'d — esperado día '+u.day+' — '+fmtMXN(u.amount)});
+    else if(dl <= 2) alerts.push({cls:'warn', txt:'Renta de <b>'+esc(u.tenant)+'</b> ('+esc(u.name)+') esperada el día '+u.day+' — '+fmtMXN(u.amount)});
+  });
+  const scratchN = db.entries.filter(e=>e.scratch).length;
+  if(scratchN) alerts.push({cls:'warn', txt:scratchN+' movimiento(s) en la bandeja <b>Por clasificar</b>'});
+  $('alertsBox').innerHTML = alerts.length
+    ? alerts.map(a=>`<div class="alert ${a.cls}">${a.txt}</div>`).join('')
+    : '<div class="alert ok">Todo al día — sin servicios por vencer ni rentas atrasadas. ✅</div>';
+  const badge = $('alertCount');
+  if(alerts.length){ badge.style.display='inline-block'; badge.textContent = alerts.length; } else badge.style.display='none';
+
+  // ===== Por saldar: lista con montos del mes + saldados + barra =====
+  const pend = [];
+  db.services.forEach((s,i)=>{
+    if(serviceActiveThisMonth(s) && !isPaid(s,mk))
+      pend.push({kind:'servicio', day:s.day, name:s.name, amount:+s.amount||0, account:s.account, idx:i, cls:'warn'});
+  });
+  db.units.forEach((u,i)=>{
+    if(u.tenant && u.tenant!=='—' && !isRentReceived(u,i,mk))
+      pend.push({kind:'renta', day:u.day, name:u.tenant+' ('+u.name+')', amount:+u.amount||0, account:u.account, idx:i, cls:'info'});
+  });
+  pend.sort((a,b)=>(a.day||31)-(b.day||31));
+  let saldoTotal = 0, pendTotal = 0;
+  db.services.forEach(s=>{ if(serviceActiveThisMonth(s) && isPaid(s,mk)) saldoTotal += +s.amount||0; });
+  db.units.forEach((u,i)=>{ if(u.tenant && u.tenant!=='—' && isRentReceived(u,i,mk)) saldoTotal += +u.amount||0; });
+  pend.forEach(p=>pendTotal += p.amount);
+  const grand = saldoTotal + pendTotal;
+  const pct = grand > 0 ? Math.round(saldoTotal/grand*100) : 100;
+  $('settleBar').innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:4px">
+      <span style="color:${COLOR.servicio}">✓ saldado ${fmtMXN(saldoTotal)}</span>
+      <span style="color:${COLOR.gasto}">⏳ por saldar ${fmtMXN(pendTotal)} (${pend.length})</span>
+    </div>
+    <div style="height:12px;background:var(--bg);border-radius:6px;overflow:hidden;border:1px solid var(--line)">
+      <div style="height:100%;width:${pct}%;background:${pct>=100?COLOR.ingreso:COLOR.servicio};transition:width .3s"></div>
+    </div>
+    <div style="text-align:center;font-size:.68rem;color:var(--text3);margin-top:3px">${pct}% del mes saldado${grand===0?' — sin montos cargados aún':''}</div>`;
+  $('settleList').innerHTML = pend.length ? `<div style="overflow-x:auto"><table>
+    <thead><tr><th></th><th>Día</th><th>Concepto</th><th>Cuenta</th><th class="num-r">Monto</th><th></th></tr></thead>
+    <tbody>${pend.map(p=>`<tr>
+      <td><span class="tag ${p.cls}">${p.kind==='servicio'?'⚙ servicio':'● renta'}</span></td>
+      <td>${p.day||'—'}</td>
+      <td>${esc(p.name)}</td><td>${p.account||'—'}</td>
+      <td class="num-r money" style="color:${p.kind==='servicio'?COLOR.servicio:COLOR.gasto}">${fmtMXN(p.amount)}</td>
+      <td><button class="btn sm" onclick="${p.kind==='servicio'?`markPaid(db.services[${p.idx}], '${mk}', true)`:`markRent(db.units[${p.idx}],${p.idx},'${mk}',true)`}">✓ Saldado</button></td>
+    </tr>`).join('')}</tbody></table></div>`
+    : '<div class="alert ok" style="margin:0">Todo saldado este mes ✅</div>';
+
+  // estado del mes (conteos)
+  const svcs = db.services.filter(s=>serviceActiveThisMonth(s));
+  const paidN = svcs.filter(s=>isPaid(s,mk)).length;
+  const units = db.units.filter(u=>u.tenant && u.tenant!=='—');
+  const recN = units.filter((u,i)=>isRentReceived(u,i,mk)).length;
+  $('monthStatus').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="k" style="color:${COLOR.servicio}">Servicios pagados</div><div class="v" style="color:${COLOR.servicio}">${paidN} / ${svcs.length}</div></div>
+      <div class="stat"><div class="k" style="color:${COLOR.ingreso}">Rentas recibidas</div><div class="v" style="color:${COLOR.ingreso}">${recN} / ${units.length}</div></div>
+      <div class="stat"><div class="k">Movimientos del mes</div><div class="v">${db.entries.filter(e=>monthKey(e.date)===mk).length}</div></div>
+    </div>`;
+}
+
+// ============== DATOS ==============
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'suitmisctas-'+todayISO()+'.json';
+  a.click();
+}
+function importJSON(input){
+  const f = input.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{ db = JSON.parse(rd.result); healPagosHuerfanos(); save(); renderAll(); alert('Datos importados ✔'); }
+    catch(e){ alert('JSON inválido: '+e.message); }
+  };
+  rd.readAsText(f);
+}
+function saveOpening(){
+  if(!db.opening) db.opening = {};
+  ACCOUNTS_ALL.forEach(a=>{
+    const el = document.getElementById('ob_'+a);
+    if(el){ const v = parseFloat(el.value); db.opening[a] = isNaN(v) ? 0 : v; }
+  });
+  save(); renderStats();
+}
+function renderOpeningGrid(){
+  if(!db.opening) db.opening = {};
+  $('openingGrid').innerHTML = ACCOUNTS_ALL.map(a=>`
+    <div><label>${a}</label><input id="ob_${a}" type="number" step="0.01" value="${+db.opening[a]||0}" style="font-family:'JetBrains Mono',Consolas,monospace"></div>`).join('');
+}
+function resetAll(){
+  if(!confirm('¿Borrar TODO y volver a los datos sembrados de la hoja?')) return;
+  localStorage.removeItem(LS_KEY); db = load(); save(); renderAll();
+}
+
+// ============== NAV / INIT ==============
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  $('v-'+b.dataset.v).classList.add('active');
+}));
+function renderAll(){
+  const mn = monthName(monthKey());
+  ['monthLabel','monthLabel2','monthLabel3'].forEach(id=>{ const el=$(id); if(el) el.textContent = mn; });
+  // Aviso si este navegador está vacío (tus datos viven en otro navegador)
+  const fh = $('freshHint');
+  if(fh){
+    if(!db.entries || db.entries.length===0){
+      fh.style.display='block';
+      fh.innerHTML = '<b>Ves datos de ejemplo — este navegador no tiene tus capturas.</b> ' +
+        'Cada navegador guarda sus datos por separado. Opciones: ' +
+        '(1) abre este archivo en el navegador donde lo venías usando, o ' +
+        '(2) pega tu respaldo: pestaña <b>Datos → ⬆ Importar JSON</b> (respaldo recomendado: <span style="color:var(--accent)">suitmisctas-2026-10-21.json</span> de tu carpeta Descargas).';
+    } else {
+      fh.style.display='none';
+    }
+  }
+  renderAlerts(); renderChips(); renderScratch(); renderRecent();
+  renderServices(); renderUnits(); renderStats(); renderOpeningGrid();
+  toggleTransferUI();
+}
+$('rDate').value = todayUI();
+$('seededAt').textContent = db.seededAt || '—';
+setInterval(()=>{ $('clock').textContent = new Date().toLocaleString('es-MX'); }, 1000);
+setupSuggest();
+const healados = healPagosHuerfanos();   // recupera pagos marcados sin movimiento
+renderAll();
+if(healados) console.info('[SuitMisCtas] '+healados+' pago(s) marcado(s) sin movimiento → recreados en Movimientos.');
+</script>
+</body>
+</html>
