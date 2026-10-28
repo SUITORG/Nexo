@@ -215,6 +215,37 @@ const sig = req.headers['stripe-signature'];
 const event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
 ```
 
+### 3.5 POST /api/bookings/:id/request-adjustment (req #44)
+
+**Re-cotización in-situ — el técnico propone un monto adicional durante `in_progress`**
+
+```bash
+curl -X POST http://localhost:3010/api/bookings/ORD-XXX/request-adjustment \
+  -H "Authorization: Bearer <supabase_jwt>" -H "Content-Type: application/json" \
+  -d '{"extra_amount_mxn": 300, "reason": "Refacción extra"}'
+```
+
+| Regla | Detalle |
+|---|---|
+| Auth | `requireAuth` (JWT Supabase) + debe ser el técnico asignado (match por email en `sh_technicians`) |
+| Estado | Solo `in_progress`; un solo ajuste `pending` por orden (409 si ya hay otro) |
+| Monto | Entero en **pesos**, mínimo $10 (`src/lib/adjustment.js`) |
+| Efecto | Inserta en `sh_price_negotiations` (`phase='IN_SITU'`, `initiated_by='technician'`) |
+
+### 3.6 POST /api/bookings/:id/respond-adjustment (req #44)
+
+**El cliente responde: `{"action": "ACCEPT" | "REJECT"}`**
+
+| Ruta | Comportamiento |
+|---|---|
+| `REJECT` | `status='rejected'` — el monto base se mantiene; sin movimiento en Stripe |
+| `ACCEPT` + `mock:true` (solo `IS_DEV`) | Acepta directo (modo prueba/e2e) |
+| `ACCEPT` (sin `paymentIntentId`) | Crea **2do PaymentIntent** por `extra_amount ×100` con `transfer_data.destination` al técnico + `application_fee_amount` (comisión configurable) → devuelve `clientSecret` |
+| `ACCEPT` + `paymentIntentId` | Verifica `pi.status === 'succeeded'` y `metadata.negotiationId` → `finalizeAdjustment`: `agreed_price_mxn`, `sh_orders.total_mxn += extra`, `total_usd` con la tasa de la orden |
+| Webhook (respaldo) | `payment_intent.succeeded` con `metadata.adjustment='true'` → misma finalización (idempotente) |
+
+**Protección:** el trigger `protect_in_situ_accept` rechaza updates a `accepted` en fase `IN_SITU` que no vengan de `service_role` (el cliente no puede saltarse el cobro).
+
 ---
 
 ## 4. BASE DE DATOS (Supabase)

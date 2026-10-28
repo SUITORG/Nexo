@@ -95,6 +95,7 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 | 41 | Opción negociar precio si cliente/técnico no acuerdan | ✅ | `PriceNegotiation.tsx`, `ChatScreen.tsx`, `BookingEscrowScreen.tsx`, `sh_price_negotiations` | — |
 | 42 | Políticas de privacidad + checkbox aceptación + blindaje legal mexicano | ✅ | `PrivacyPolicyScreen.tsx`, `LoginScreen.tsx`, `src/data/legal/privacy.ts` | — |
 | 43 | Términos/condiciones + cláusula responsabilidad + soberanía de costos | ✅ | `TermsScreen.tsx`, `LoginScreen.tsx`, `src/data/legal/terms.ts` | — |
+| 44 | Re-cotización / Ajuste de presupuesto in-situ (técnico propone extra durante IN_PROGRESS → cliente aprueba/rechaza → cobro real vía 2do PaymentIntent) | ✅ | `sh_price_negotiations` (ext. `phase`/`reason`/`extra_amount_mxn`), `server.js` (request/respond-adjustment), `TechnicianOrdersScreen.tsx`, `ClientOrdersScreen.tsx`, `src/lib/adjustment.js` | Opción A (reusa req #41; Change Order 2026-10-08). Verificado: lint · unit 36/36 · e2e 8/8 (2026-10-08) |
 
 ---
 
@@ -102,10 +103,10 @@ SuitServiHogar es un **micro-frontend aislado** — no se integra al SPA princip
 
 | Estado | Cantidad | % |
 |---|:---:|:---:|
-| ✅ Completo | 37 | 86% |
+| ✅ Completo | 38 | 86% |
 | ⚠️ Parcial | 6 | 14% |
 | ❌ No implementado | 0 | 0% |
-| **Total** | **43** | **100%** |
+| **Total** | **44** | **100%** |
 
 > Verificado 2026-09-25 contra código y DB en vivo. Los 6 ⚠️ son de endurecimiento/producción: #1/#13 (auditoría formal), #10/#32 (CFDI con PAC mock), #16 (IDs secuenciales manuales, no auto-increment), #35 (`sh-evidence` aún público). Ninguno bloquea el MVP.
 
@@ -355,6 +356,19 @@ Si se descubre un bloqueo imprevisto:
 | 10.4 | Blindaje legal mexicano (LFPDPPP, prevención demandas colectivas) | #42, #43 | cláusulas dentro de `privacy.ts` (LFPDPPP) y `terms.ts` (deslinde) | ✅ |
 | 10.5 | Soberanía de costos (arbitraje obligatorio, jurisdicción) | #43 | `src/data/legal/terms.ts` (sección 5) | ✅ |
 
+### Fase 12: Re-cotización / Ajuste in-situ ✅ COMPLETADA (2026-10-08)
+
+> Change Order: Opción A elegida — se **extiende** `sh_price_negotiations` (req #41) en vez de columnas nuevas en `sh_orders` (evita doble fuente de verdad de precio). Detalle técnico en ADR-058.
+
+| # | Tarea | Requisitos | Archivos | Estado |
+|---|---|:---:|---|:---:|
+| 12.1 | DDL: `phase` ('PRE_PAYMENT'\|'IN_SITU'), `reason`, `extra_amount_mxn`, `stripe_payment_intent_id` + trigger `protect_in_situ_accept` (el cliente no puede flippear 'accepted' sin cobro) | #44 | `supabase/migrations/20261008210000_adjustment_in_situ.sql` (aplicada) | ✅ |
+| 12.2 | Endpoint `POST /api/bookings/:id/request-adjustment` (técnico propone extra + motivo; valida rol, `in_progress`, un solo pendiente) | #44 | `server.js` | ✅ |
+| 12.3 | Endpoint `POST /api/bookings/:id/respond-adjustment` (ACCEPT → crea 2do PaymentIntent y tras `succeeded` suma el extra al total / REJECT → no-op; mock en IS_DEV) | #44 | `server.js` | ✅ |
+| 12.4 | Modal técnico "Re-cotizar Servicio" (desglose base/adicional/nuevo total, IN_PROGRESS) + chip de estado por orden | #44 | `TechnicianOrdersScreen.tsx` | ✅ |
+| 12.5 | Banner cliente "Aprobación de Ajuste" (Monto Base vs Adicional, Aprobar/Rechazar + card input cuando hay cobro real) | #44 | `ClientOrdersScreen.tsx` | ✅ |
+| 12.6 | Tests: unit `adjustment.test.ts` (4) + e2e `ajuste-insitu.spec.ts` (aprobar + rechazar) — lint · 36/36 · 8/8 | #44 | `tests/unit/`, `tests/e2e/` | ✅ |
+
 ---
 
 ## 12. ORDEN DE EJECUCIÓN
@@ -363,7 +377,8 @@ Si se descubre un bloqueo imprevisto:
 Fase 1 (Seguridad) → Fase 2 (Comunicación) → Fase 3 (Calificación) →
 Fase 4 (Incentivos) → Fase 5 (Backoffice) → Fase 6 (GPS) →
 Fase 7 (Pagos/Fiscal) → Fase 8 (PWA/Polish) → Fase 9 (Inteligencia de Precios) →
-Fase 10 (Privacidad/Legal) → Fase 11 (Modo Desarrollador/Test)
+Fase 10 (Privacidad/Legal) → Fase 11 (Modo Desarrollador/Test) →
+Fase 12 (Re-cotización / Ajuste in-situ — Change Order 2026-10-08)
 ```
 
 **Razón:** Seguridad es prerequisito para producción. Comunicación y calificación son el core del informe ejecutivo y de los requisitos #3, #4, #5, #17, #35, #37. **Privacidad/Legal es production-blocking** (requisitos #42, #43). Incentivos y backoffice son funcionalidades de crecimiento. GPS, pagos avanzados y PWA son polish. Inteligencia de Precios es SaaS aparte para técnicos (SuitMargin).

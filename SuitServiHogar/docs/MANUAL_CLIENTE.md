@@ -173,6 +173,21 @@ Tras el pago exitoso, verás:
 - **"Ver Desglose de Liquidación Escrow"** — ver el desglose financiero completo
 - **"Regresar al Inicio"** — volver a la pantalla principal
 
+### 7.1 Ajuste de Precio (material extra durante el servicio)
+
+Si el trabajo requiere material o trabajo no previsto, el técnico puede proponer un monto adicional. Verás un **banner flotante "Aprobación de Ajuste de Precio"** en *Mis Órdenes*:
+
+| Concepto | Qué es |
+|----------|--------|
+| **Monto base (ya en Escrow)** | Lo que ya pagaste y está protegido |
+| **Monto adicional** | Lo que el técnico propone agregar, con su motivo |
+| **Total nuevo** | Suma de ambos |
+
+- **Aprobar y pagar** — cobra el adicional con tu tarjeta y actualiza el total de la orden.
+- **Rechazar** — la orden se queda en el monto base; el técnico ve "Ajuste rechazado".
+
+> **Nota:** solo hay un ajuste pendiente a la vez; si rechazás, el técnico puede proponer otro si el servicio sigue en curso.
+
 ---
 
 ## 8. Liquidación y Comprobante

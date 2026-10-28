@@ -1,5 +1,5 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-12 | **Total archivos:** 1608 JS/GS
+**Generado:** 2026-10-28 | **Total archivos:** 1648 JS/GS
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -269,6 +269,96 @@
 | Línea | Función |
 |-------|---------|
 | 11 | `runUninstall` |
+
+## `.suit/cache/activos-p1.js`
+
+| Línea | Función |
+|-------|---------|
+| 3 | `log` |
+| 4 | `sleep` |
+| 5 | `gas` |
+| 39 | `row` |
+
+## `.suit/cache/activos-p2.js`
+
+| Línea | Función |
+|-------|---------|
+| 22 | `log` |
+| 27 | `sleep` |
+| 29 | `gas` |
+| 45 | `uploadToCte` |
+| 53 | `tmpUpload` |
+| 66 | `magicExt` |
+| 74 | `flowGen` |
+| 83 | `geminiGen` |
+| 111 | `loadState` |
+| 114 | `saveState` |
+| 234 | `row` |
+
+## `.suit/cache/activos-p3.js`
+
+| Línea | Función |
+|-------|---------|
+| 20 | `log` |
+| 25 | `sleep` |
+| 27 | `gas` |
+| 43 | `magicOk` |
+| 52 | `ensureBucket` |
+| 64 | `sbPut` |
+| 79 | `uploadToCte` |
+| 94 | `loadState` |
+| 97 | `saveState` |
+| 163 | `row` |
+
+## `.suit/cache/append-paginas-labaries.js`
+
+| Línea | Función |
+|-------|---------|
+| 15 | `svc` |
+| 166 | `sleep` |
+| 167 | `gas` |
+| 226 | `mine` |
+
+## `.suit/cache/append-seo-labaries.js`
+
+| Línea | Función |
+|-------|---------|
+| 10 | `wa` |
+| 87 | `sleep` |
+| 89 | `gas` |
+| 121 | `seo` |
+
+## `.suit/cache/brief-labaries.js`
+
+| Línea | Función |
+|-------|---------|
+| 46 | `sleep` |
+| 47 | `gas` |
+| 79 | `row` |
+
+## `.suit/cache/check-mascara.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `arr` |
+| 40 | `load` |
+| 55 | `parseModo` |
+| 74 | `rebuild` |
+
+## `.suit/cache/snapshot-labaries.js`
+
+| Línea | Función |
+|-------|---------|
+| 5 | `row` |
+| 10 | `seo` |
+| 11 | `pag` |
+
+## `.suit/cache/upload-cluster-imgs.js`
+
+| Línea | Función |
+|-------|---------|
+| 11 | `sleep` |
+| 13 | `post` |
 
 ## `.suit/skills/process/listado-capacidades/scripts/generate-list.js`
 
@@ -9960,10 +10050,11 @@
 
 | Línea | Función |
 |-------|---------|
-| 443 | `proxyCotizador` |
-| 570 | `yahooFetch` |
-| 588 | `fetchQuoteV8` |
-| 684 | `pollEventLog` |
+| 114 | `ping` |
+| 469 | `proxyCotizador` |
+| 596 | `yahooFetch` |
+| 614 | `fetchQuoteV8` |
+| 710 | `pollEventLog` |
 
 ## `SuitAI/handlers/api.js`
 
@@ -10126,6 +10217,17 @@
 |-------|---------|
 | 3 | `handleAdd` |
 | 15 | `handleDue` |
+| 24 | `handleList` |
+| 33 | `handleClose` |
+
+## `SuitContractRenew/index.js`
+
+| Línea | Función |
+|-------|---------|
+| 13 | `leerTaller` |
+| 53 | `auth` |
+| 96 | `backupDb` |
+| 110 | `alertar` |
 
 ## `SuitCotizador/public/js/admin.js`
 
@@ -10421,28 +10523,35 @@
 | 573 | `stripAnsi` |
 | 576 | `probeOpenCode` |
 | 594 | `probeClaude` |
-| 608 | `scanProject` |
-| 728 | `ajenas` |
-| 734 | `skillOrigen` |
-| 763 | `type` |
-| 764 | `domain` |
-| 765 | `version` |
+| 612 | `daysAgo` |
+| 617 | `buildGitMap` |
+| 619 | `norm` |
+| 624 | `top` |
+| 655 | `buildPendientes` |
+| 658 | `push` |
+| 663 | `clean` |
+| 703 | `scanProject` |
+| 836 | `ajenas` |
+| 842 | `skillOrigen` |
+| 871 | `type` |
+| 872 | `domain` |
+| 873 | `version` |
 
 ## `SuitIdeasSaaS/serve-panel.js`
 
 | Línea | Función |
 |-------|---------|
-| 11 | `git` |
-| 14 | `gitInfo` |
-| 49 | `amigable` |
-| 54 | `leerPorConfirmar` |
-| 67 | `resolverPorConfirmar` |
-| 92 | `parseCard` |
-| 108 | `leerRegistro` |
-| 116 | `leerPendientes` |
-| 135 | `leerBody` |
-| 145 | `json` |
-| 146 | `err` |
+| 13 | `git` |
+| 16 | `gitInfo` |
+| 51 | `amigable` |
+| 56 | `leerPorConfirmar` |
+| 69 | `resolverPorConfirmar` |
+| 94 | `parseCard` |
+| 111 | `leerRegistro` |
+| 119 | `leerPendientes` |
+| 138 | `leerBody` |
+| 148 | `json` |
+| 149 | `err` |
 
 ## `SuitOSCore/ai-router/circuitBreaker.js`
 
@@ -10809,14 +10918,16 @@
 
 | Línea | Función |
 |-------|---------|
-| 36 | `loadConfig` |
-| 87 | `requireAuth` |
-| 485 | `findAuthUserByEmail` |
-| 699 | `totalImpuestosTrasladados` |
-| 729 | `valorUnitario` |
-| 730 | `importe` |
-| 734 | `base` |
-| 738 | `importe` |
+| 37 | `loadConfig` |
+| 88 | `requireAuth` |
+| 311 | `loadAdjustmentOrder` |
+| 327 | `finalizeAdjustment` |
+| 657 | `findAuthUserByEmail` |
+| 871 | `totalImpuestosTrasladados` |
+| 901 | `valorUnitario` |
+| 902 | `importe` |
+| 906 | `base` |
+| 910 | `importe` |
 
 ## `SuitStableDiffusion/scripts/colab-sd.js`
 
@@ -11003,7 +11114,111 @@
 | 27 | `parseArgs` |
 | 45 | `main` |
 | 88 | `onImage` |
-| 162 | `onProgress` |
+| 166 | `onProgress` |
+
+## `SuitWhatsAppPub/index.js`
+
+| Línea | Función |
+|-------|---------|
+| 26 | `main` |
+
+## `SuitWhatsAppPub/src/calendario.js`
+
+| Línea | Función |
+|-------|---------|
+| 5 | `normalizar` |
+| 10 | `zonaLocal` |
+| 18 | `datosAhora` |
+| 28 | `horasDeIntervalo` |
+| 54 | `debePublicar` |
+| 95 | `proximaPublicacion` |
+
+## `SuitWhatsAppPub/src/conexion.js`
+
+| Línea | Función |
+|-------|---------|
+| 14 | `onQr` |
+| 15 | `onStatus` |
+| 17 | `emitQr` |
+| 18 | `emitStatus` |
+| 23 | `connect` |
+| 75 | `getSock` |
+| 80 | `isConectado` |
+
+## `SuitWhatsAppPub/src/config.js`
+
+| Línea | Función |
+|-------|---------|
+| 6 | `load` |
+| 21 | `save` |
+| 25 | `update` |
+
+## `SuitWhatsAppPub/src/enviados.js`
+
+| Línea | Función |
+|-------|---------|
+| 5 | `moverAEnviados` |
+
+## `SuitWhatsAppPub/src/grupos.js`
+
+| Línea | Función |
+|-------|---------|
+| 4 | `listarGrupos` |
+| 18 | `buscarGrupo` |
+| 31 | `resolverGrupo` |
+
+## `SuitWhatsAppPub/src/logger.js`
+
+| Línea | Función |
+|-------|---------|
+| 8 | `log` |
+| 14 | `err` |
+
+## `SuitWhatsAppPub/src/media.js`
+
+| Línea | Función |
+|-------|---------|
+| 9 | `listarPendientes` |
+| 42 | `elegirArchivo` |
+| 63 | `validarArchivo` |
+
+## `SuitWhatsAppPub/src/panel.js`
+
+| Línea | Función |
+|-------|---------|
+| 18 | `registrarHistorial` |
+| 26 | `ejecutarPublicacion` |
+| 73 | `crearPanel` |
+| 95 | `historial` |
+
+## `SuitWhatsAppPub/src/publicar.js`
+
+| Línea | Función |
+|-------|---------|
+| 6 | `enviarGrupo` |
+| 20 | `enviarHistorias` |
+| 37 | `publicar` |
+
+## `SuitWhatsAppPub/_respaldo-antes-recurrencia/index.js`
+
+| Línea | Función |
+|-------|---------|
+| 26 | `main` |
+
+## `SuitWhatsAppPub/_respaldo-antes-recurrencia/src/calendario.js`
+
+| Línea | Función |
+|-------|---------|
+| 5 | `debePublicar` |
+| 38 | `proximaPublicacion` |
+
+## `SuitWhatsAppPub/_respaldo-antes-recurrencia/src/config.js`
+
+| Línea | Función |
+|-------|---------|
+| 6 | `load` |
+| 21 | `save` |
+| 25 | `update` |
 
 ## `supabase.js`
 
@@ -11125,6 +11340,78 @@
 |-------|---------|
 | 1 | `print` |
 | 6 | `check` |
+
+## `xSuitWhatsappGp/index.js`
+
+| Línea | Función |
+|-------|---------|
+| 107 | `modoPublicarYa` |
+| 144 | `comprobarPuertoLibre` |
+| 159 | `modoServidor` |
+| 168 | `obtenerConfig` |
+| 173 | `alGuardarConfig` |
+| 178 | `ejecutar` |
+
+## `xSuitWhatsappGp/src/calendario.js`
+
+| Línea | Función |
+|-------|---------|
+| 20 | `partesEnZona` |
+| 37 | `offsetMinutos` |
+| 91 | `coincideEnFecha` |
+| 158 | `tick` |
+
+## `xSuitWhatsappGp/src/conexion.js`
+
+| Línea | Función |
+|-------|---------|
+| 26 | `programarReconexion` |
+| 34 | `crearSocket` |
+| 130 | `alAbrir` |
+
+## `xSuitWhatsappGp/src/contactos.js`
+
+| Línea | Función |
+|-------|---------|
+| 12 | `numeroDeLid` |
+| 52 | `cargarMapa` |
+| 66 | `programarGuardado` |
+| 83 | `numeroDeId` |
+| 89 | `fusionar` |
+| 100 | `enganchar` |
+| 138 | `sembrarSiHaceFalta` |
+| 152 | `revisar` |
+
+## `xSuitWhatsappGp/src/difusion.js`
+
+| Línea | Función |
+|-------|---------|
+| 6 | `aleatorioEntre` |
+| 61 | `pausar` |
+
+## `xSuitWhatsappGp/src/grupos.js`
+
+| Línea | Función |
+|-------|---------|
+| 8 | `levenshtein` |
+| 26 | `similitud` |
+
+## `xSuitWhatsappGp/src/logs.js`
+
+| Línea | Función |
+|-------|---------|
+| 10 | `sello` |
+| 14 | `escribir` |
+
+## `xSuitWhatsappGp/src/publicar.js`
+
+| Línea | Función |
+|-------|---------|
+| 24 | `numeroSeguro` |
+| 29 | `construirListaEstado` |
+| 157 | `resolver` |
+| 158 | `registrar` |
+| 223 | `difusionFallidos` |
 
 ## `backend/`
 
@@ -11571,6 +11858,8 @@
 |-------|---------|
 | 7 | `showAboutUs` |
 | 42 | `showPolicies` |
+| 46 | `txt` |
+| 50 | `sec` |
 | 69 | `showReviews` |
 | 95 | `showLocation` |
 | 134 | `closeInfoModal` |
@@ -11830,12 +12119,12 @@
 
 | Línea | Función |
 |-------|---------|
-| 24 | `titleCase` |
-| 35 | `skillsSet` |
-| 47 | `stepsFromBody` |
-| 73 | `filesFromBody` |
-| 87 | `parseMapa` |
-| 123 | `buildInfoBlock` |
+| 36 | `titleCase` |
+| 55 | `skillsSet` |
+| 67 | `stepsFromBody` |
+| 93 | `filesFromBody` |
+| 107 | `parseMapa` |
+| 143 | `buildInfoBlock` |
 
 ### `scripts/generate-adr-index.js`
 
@@ -11878,6 +12167,15 @@
 | 235 | `syncAll` |
 | 246 | `showOptimal` |
 | 275 | `showAllOptimal` |
+
+### `scripts/migrar-comportamiento.js`
+
+| Línea | Función |
+|-------|---------|
+| 26 | `parseTipo` |
+| 38 | `detectarComp` |
+| 44 | `main` |
+| 47 | `rows` |
 
 ### `scripts/migrate-supabase-to-neon.js`
 
@@ -11963,66 +12261,90 @@
 
 | Línea | Función |
 |-------|---------|
-| 18 | `extractHexColor` |
-| 39 | `buscarImagenPexels` |
-| 57 | `buscarImagenUnsplash` |
-| 78 | `buscarImagenWikimedia` |
-| 112 | `buscarIconoIconify` |
-| 149 | `generarImagenComfy` |
-| 265 | `splitFraseEnLineas` |
-| 305 | `traducirSfxQuery` |
-| 319 | `buscarSonidoFreesound` |
-| 345 | `generateSceneImagePNG` |
-| 474 | `OMNIROUTE_BASE` |
-| 488 | `findFFmpeg` |
-| 517 | `getAudioDurationSec` |
-| 529 | `makeSilenceClip` |
-| 533 | `ffmpeg` |
-| 555 | `escapeFfmpegPath` |
-| 563 | `getDefaultFontFile` |
-| 604 | `getFontForVisualStyle` |
-| 638 | `transicionParaCorte` |
-| 645 | `wrapWords` |
-| 667 | `fitOverlayText` |
-| 698 | `computeRealDuration` |
-| 708 | `parseGuionNarrativo` |
-| 795 | `parseGuionScenes` |
-| 905 | `limpiarVireJobsViejos` |
-| 918 | `serverLog` |
-| 925 | `normalizeDriveUrl` |
-| 955 | `parseBrief` |
-| 960 | `mergeExtras` |
-| 1032 | `fetchEmpresaRow` |
-| 1046 | `loadPromptById` |
-| 1069 | `describirImagenReferencia` |
-| 1108 | `extractJsonFromAiText` |
-| 1120 | `callAIJson` |
-| 1175 | `generateMediaPlan` |
-| 1198 | `empresa` |
-| 1215 | `resolverTaxonomia` |
-| 1243 | `sinos` |
-| 1262 | `sinos` |
-| 1307 | `buildBriefGeneratorPrompt` |
-| 1365 | `buildBriefGeneratorInput` |
-| 1413 | `assembleCompleteBrief` |
-| 1421 | `getVal` |
-| 1540 | `approveMediaPlan` |
-| 2689 | `callAI` |
-| 2795 | `callAI` |
-| 3043 | `fetchFollowingRedirects` |
-| 3302 | `resolveSfxFile` |
-| 3332 | `mixSfxFile` |
-| 3440 | `srtTime` |
-| 3751 | `toPublicRelative` |
-| 3777 | `generarSfx` |
-| 3835 | `image_prompt` |
-| 4435 | `image_prompt` |
-| 4593 | `subestilos` |
-| 4852 | `callOpenRouter` |
-| 4923 | `callOllama` |
-| 4960 | `generateAITrendFallback` |
-| 4986 | `callLocalLMS` |
-| 5027 | `fetchWithRedirects` |
+| 19 | `extractHexColor` |
+| 40 | `buscarImagenPexels` |
+| 58 | `buscarImagenUnsplash` |
+| 79 | `buscarImagenWikimedia` |
+| 113 | `buscarIconoIconify` |
+| 154 | `generarImagenGemini` |
+| 184 | `generarImagenComfy` |
+| 300 | `splitFraseEnLineas` |
+| 340 | `traducirSfxQuery` |
+| 354 | `buscarSonidoFreesound` |
+| 380 | `generateSceneImagePNG` |
+| 521 | `OMNIROUTE_BASE` |
+| 535 | `findFFmpeg` |
+| 564 | `getAudioDurationSec` |
+| 576 | `makeSilenceClip` |
+| 580 | `ffmpeg` |
+| 602 | `escapeFfmpegPath` |
+| 610 | `getDefaultFontFile` |
+| 651 | `getFontForVisualStyle` |
+| 685 | `transicionParaCorte` |
+| 692 | `wrapWords` |
+| 714 | `fitOverlayText` |
+| 745 | `computeRealDuration` |
+| 755 | `parseGuionNarrativo` |
+| 842 | `parseGuionScenes` |
+| 952 | `limpiarVireJobsViejos` |
+| 965 | `serverLog` |
+| 972 | `normalizeDriveUrl` |
+| 1001 | `parseBrief` |
+| 1006 | `mergeExtras` |
+| 1078 | `fetchEmpresaRow` |
+| 1096 | `brandColorsFromEmpresa` |
+| 1101 | `normalizeEstiloVisualRow` |
+| 1105 | `cat` |
+| 1106 | `catNombre` |
+| 1120 | `resolveEstiloVisualForEmpresa` |
+| 1160 | `propiosConTemplate` |
+| 1188 | `templates` |
+| 1215 | `loadPromptById` |
+| 1230 | `withCampaignQA` |
+| 1250 | `describirImagenReferencia` |
+| 1289 | `extractJsonFromAiText` |
+| 1301 | `callAIJson` |
+| 1356 | `generateMediaPlan` |
+| 1389 | `empresa` |
+| 1406 | `resolverTaxonomia` |
+| 1434 | `sinos` |
+| 1453 | `sinos` |
+| 1498 | `buildBriefGeneratorPrompt` |
+| 1556 | `buildBriefGeneratorInput` |
+| 1604 | `assembleCompleteBrief` |
+| 1612 | `getVal` |
+| 1731 | `approveMediaPlan` |
+| 1845 | `safeName` |
+| 1846 | `descargasDir` |
+| 1847 | `countPngs` |
+| 1848 | `pushLog` |
+| 1853 | `renderStaticPiece` |
+| 1870 | `runPiezaImgJob` |
+| 1882 | `aDataUrl` |
+| 1902 | `telefono` |
+| 1903 | `sitio_web` |
+| 1911 | `assetDataFor` |
+| 2008 | `visual_style` |
+| 2009 | `estilo_visual_keywords` |
+| 2541 | `total` |
+| 2604 | `san` |
+| 2639 | `scanLatest` |
+| 3272 | `callAI` |
+| 3378 | `callAI` |
+| 3626 | `fetchFollowingRedirects` |
+| 3886 | `resolveSfxFile` |
+| 3916 | `mixSfxFile` |
+| 4024 | `srtTime` |
+| 4335 | `toPublicRelative` |
+| 4361 | `generarSfx` |
+| 4419 | `image_prompt` |
+| 5019 | `image_prompt` |
+| 5245 | `subestilos` |
+| 5504 | `callOpenRouter` |
+| 5575 | `callOllama` |
+| 5612 | `generateAITrendFallback` |
+| 5638 | `callLocalLMS` |
+| 5679 | `fetchWithRedirects` |
 
 ### `SuitCampanas/lp-generator.js`
 
@@ -12106,60 +12428,60 @@
 | 2631 | `onApprove` |
 | 2666 | `onReject` |
 | 2695 | `renderPlanPiezas` |
-| 2780 | `listRecentPlans` |
-| 2820 | `resumeMediaPlan` |
-| 2840 | `matchText` |
-| 2846 | `norm` |
-| 2859 | `autoSelectIndustriaFromBrief` |
-| 2861 | `setIfEmpty` |
-| 2875 | `setWorkMode` |
-| 3194 | `loadRecetas` |
-| 3214 | `generateImaginationVideo` |
-| 3295 | `syncVideFieldsFromJson` |
-| 3328 | `fetchEstilosVisuales` |
-| 3342 | `flattenEstilos` |
-| 3364 | `estiloToSeleccion` |
-| 3370 | `showStyleSelector` |
-| 3399 | `renderEstiloPills` |
-| 3422 | `renderEstiloStage` |
-| 3449 | `estiloStep` |
-| 3467 | `autoPickStyleByTrend` |
-| 3489 | `fallbackEstiloKeywords` |
-| 3497 | `clampByte` |
-| 3498 | `rgbToHex` |
-| 3501 | `hexToRgb` |
-| 3505 | `rgbToHsl` |
-| 3523 | `hslToRgb` |
-| 3545 | `extractPaletteFromImage` |
-| 3580 | `extraerColoresDeLogo` |
-| 3603 | `renderBrandSwatches` |
-| 3772 | `formatPhoneForSpeech` |
-| 3782 | `fetchBriefCompleto` |
-| 3798 | `construirPromptGuion` |
-| 3924 | `aplicarSalvaguardasDeGuion` |
-| 3962 | `requiereItemsDeLista` |
-| 3970 | `generateVideJson` |
-| 4156 | `mostrarPanelRevisionEscenas` |
-| 4247 | `generarImagenEscena` |
-| 4301 | `generarSoloImagen` |
-| 4365 | `cleanup` |
-| 4409 | `generateVideVideo` |
-| 4528 | `updateProgress` |
-| 4683 | `generarGuionDesdeAsistente` |
-| 4789 | `generarGuionDesdePrompt` |
-| 4889 | `aplicarAjustesDetectados` |
-| 4934 | `generateViReVideo` |
-| 5098 | `pollVireJob` |
-| 5101 | `tick` |
-| 5163 | `ejecutarAgente` |
-| 5207 | `normalizeDriveUrl` |
-| 5226 | `resolveLogoUrl` |
-| 5238 | `renderCarouselFromJson` |
-| 5381 | `loadSlideImage` |
-| 5437 | `regenerateSlideImage` |
-| 5453 | `downloadAnimatedVideo` |
-| 5521 | `fetchLogs` |
-| 5533 | `toggleLogPanel` |
+| 2781 | `listRecentPlans` |
+| 2821 | `resumeMediaPlan` |
+| 2841 | `matchText` |
+| 2847 | `norm` |
+| 2860 | `autoSelectIndustriaFromBrief` |
+| 2862 | `setIfEmpty` |
+| 2876 | `setWorkMode` |
+| 3195 | `loadRecetas` |
+| 3215 | `generateImaginationVideo` |
+| 3296 | `syncVideFieldsFromJson` |
+| 3329 | `fetchEstilosVisuales` |
+| 3343 | `flattenEstilos` |
+| 3365 | `estiloToSeleccion` |
+| 3371 | `showStyleSelector` |
+| 3400 | `renderEstiloPills` |
+| 3423 | `renderEstiloStage` |
+| 3450 | `estiloStep` |
+| 3468 | `autoPickStyleByTrend` |
+| 3490 | `fallbackEstiloKeywords` |
+| 3498 | `clampByte` |
+| 3499 | `rgbToHex` |
+| 3502 | `hexToRgb` |
+| 3506 | `rgbToHsl` |
+| 3524 | `hslToRgb` |
+| 3546 | `extractPaletteFromImage` |
+| 3581 | `extraerColoresDeLogo` |
+| 3604 | `renderBrandSwatches` |
+| 3773 | `formatPhoneForSpeech` |
+| 3783 | `fetchBriefCompleto` |
+| 3799 | `construirPromptGuion` |
+| 3925 | `aplicarSalvaguardasDeGuion` |
+| 3963 | `requiereItemsDeLista` |
+| 3971 | `generateVideJson` |
+| 4157 | `mostrarPanelRevisionEscenas` |
+| 4248 | `generarImagenEscena` |
+| 4302 | `generarSoloImagen` |
+| 4366 | `cleanup` |
+| 4410 | `generateVideVideo` |
+| 4530 | `updateProgress` |
+| 4685 | `generarGuionDesdeAsistente` |
+| 4791 | `generarGuionDesdePrompt` |
+| 4891 | `aplicarAjustesDetectados` |
+| 4936 | `generateViReVideo` |
+| 5100 | `pollVireJob` |
+| 5103 | `tick` |
+| 5165 | `ejecutarAgente` |
+| 5209 | `normalizeDriveUrl` |
+| 5228 | `resolveLogoUrl` |
+| 5240 | `renderCarouselFromJson` |
+| 5383 | `loadSlideImage` |
+| 5439 | `regenerateSlideImage` |
+| 5455 | `downloadAnimatedVideo` |
+| 5523 | `fetchLogs` |
+| 5535 | `toggleLogPanel` |
 
 ### `SuitCampanas/test-system.js`
 

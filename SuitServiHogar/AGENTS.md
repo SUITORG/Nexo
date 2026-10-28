@@ -52,6 +52,19 @@ BookingEscrowScreen → createPaymentIntent(order, stripeAccountId)
 ```
 Test card: `4242 4242 4242 4242` | future date | CVC 123 | ZIP 88720
 
+## Adjustment Flow — Re-cotización in-situ (req #44, ADR-058)
+```
+Técnico (orden in_progress) → modal "Re-cotizar" → POST /api/bookings/:id/request-adjustment
+  → fila sh_price_negotiations (phase='IN_SITU', status='pending') + chip en su tarjeta
+Cliente → banner "Aprobación de Ajuste" (ClientOrdersScreen) → POST respond-adjustment
+  REJECT → status='rejected' (monto base se mantiene)
+  ACCEPT (IS_DEV+mock) → acepta directo
+  ACCEPT (prod) → 2do PaymentIntent por el extra → confirmCardPayment del cliente
+    → verify succeeded → acepta + suma extra a sh_orders.total_mxn (webhook = respaldo)
+```
+Unidades: montos en PESOS (total_mxn=850); Stripe recibe ×100 (`src/lib/adjustment.js`).
+Prohibido marcar `accepted` desde el cliente: trigger `protect_in_situ_accept`.
+
 ## Technician Flow (TechnicianOrdersScreen.tsx:24)
 ```
 Perfil → "Ver Mis Órdenes" → tabs Activas/Historial

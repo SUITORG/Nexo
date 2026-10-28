@@ -3,8 +3,8 @@
 > **Para qué sirve este manual:** explica el modo test/dev del proyecto: cómo correr el flujo completo E2E con mocks, sin depender de servicios reales (Stripe real, Google OAuth, Supabase prod).
 > **Audiencia:** desarrollador del proyecto que valida cambios antes de subirlos.
 
-> **Versión:** 1.2  
-> **Fecha:** 2026-09-15 (migrado a estándar Guía Total 2026-09-26 · actualizado 2026-10-07 con `qa.bat`, candado PROD y e2e `flujo-dev` · 2026-10-08 con login teléfono+contraseña y e2e `login-telefono`)  
+> **Versión:** 1.3  
+> **Fecha:** 2026-09-15 (migrado a estándar Guía Total 2026-09-26 · actualizado 2026-10-07 con `qa.bat`, candado PROD y e2e `flujo-dev` · 2026-10-08 con login teléfono+contraseña y e2e `login-telefono` · 2026-10-08 con re-cotización in-situ y e2e `ajuste-insitu`)  
 > **Propósito:** Probar flujo completo E2E sin dependencias externas (Stripe real, Google OAuth, Supabase prod)
 
 ---
@@ -405,11 +405,25 @@ El login teléfono+contraseña está automatizado en **`tests/e2e/login-telefono
 3. **Error genérico**: contraseña incorrecta → alerta "Teléfono o contraseña
    incorrectos" (no filtra si la cuenta existe).
 
+La re-cotización in-situ (req #44) está automatizada en
+**`tests/e2e/ajuste-insitu.spec.ts`** (2 rondas secuenciales — la identidad QA
+del cliente es única, por eso no son 2 tests en paralelo):
+
+1. **Aprobar**: cliente paga (mock) → técnico "Iniciar ruta" → "Re-cotizar"
+   (+$300, motivo) → chip "⏳ Ajuste enviado" → cliente ve banner con desglose
+   (Monto base $850 / Adicional +$300 / Total nuevo $1,150) → "Aprobar y pagar"
+   (mock acepta sin tarjeta) → banner de ESA orden desaparece, chip
+   "✅ Ajuste aprobado" en cliente y técnico, total = $1,150.
+2. **Rechazar**: 2da orden → técnico re-cotiza (+$250) → cliente "Rechazar" →
+   banner de ESA orden desaparece, chip "❌ Rechazaste el ajuste", total
+   intacto en $850, chip "❌ Ajuste rechazado" en técnico.
+
 ```bash
 # Levanta vite:3000 + backend:3010 automáticamente (playwright.config webServer)
-npm run test:e2e            # smoke (4) + flujo-dev (1) + login-telefono (2)
+npm run test:e2e            # smoke (4) + flujo-dev (1) + login-telefono (2) + ajuste-insitu (1)
 npm run test:e2e -- tests/e2e/flujo-dev.spec.ts   # solo el flujo completo
 npm run test:e2e -- tests/e2e/login-telefono.spec.ts   # solo login teléfono
+npm run test:e2e -- tests/e2e/ajuste-insitu.spec.ts    # solo re-cotización in-situ
 ```
 
 Notas:
