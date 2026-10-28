@@ -37,7 +37,7 @@ function note({ freq, at = 0, dur = 0.7, type = 'triangle', gain = 0.15, cutoff,
   env.gain.linearRampToValueAtTime(gain, t0 + 0.012);
   env.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
 
-  let last: AudioNode = env;
+  const last: AudioNode = env;
   if (cutoff) {
     const lp = ac.createBiquadFilter();
     lp.type = 'lowpass';

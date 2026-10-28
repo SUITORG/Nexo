@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { generateCFDIXML, escapeXML, generateUUID } from './server/cfdiGenerator.js';
 import { normalizePhoneMX, phoneToEmail, validPassword } from './src/lib/phone.js';
+import { validExtraAmountMxn, adjustTotals } from './src/lib/adjustment.js';
 
 // override: true — hay una OPENROUTER_API_KEY stale a nivel de Windows User que gana sobre .env
 dotenv.config({ override: true });
@@ -302,6 +303,164 @@ app.post('/api/validate-coupon', requireAuth, async (req, res) => {
   }
 });
 
+// ─── Re-cotización / Ajuste in-situ (req #44, Opción A sobre sh_price_negotiations) ───
+// Técnico propone extra durante in_progress → cliente acepta (cobra de verdad
+// con un 2do PaymentIntent) o rechaza. service_role escribe; el trigger
+// protect_in_situ_accept() bloquea que el cliente flippee 'accepted' directo.
+
+async function loadAdjustmentOrder(orderId, user) {
+  const { data: order } = await supabase
+    .from('sh_orders').select('*').eq('id', orderId).maybeSingle();
+  if (!order) return null;
+  const isClient = order.client_id === user.id;
+  let isTech = false, tech = null;
+  if (order.technician_id) {
+    const { data } = await supabase
+      .from('sh_technicians').select('email, stripe_account_id')
+      .eq('id', order.technician_id).maybeSingle();
+    tech = data;
+    isTech = !!data?.email && data.email === user.email;
+  }
+  return { order, isClient, isTech, tech };
+}
+
+async function finalizeAdjustment(order, neg) {
+  if (neg.status === 'accepted') return;
+  // Matemática compartida en src/lib/adjustment.js (pesos; unit-testeada)
+  const { agreedMxn, totalUsd } = adjustTotals(order, neg.extra_amount_mxn);
+  const { error: negErr } = await supabase
+    .from('sh_price_negotiations')
+    .update({ status: 'accepted', agreed_price_mxn: agreedMxn, updated_at: new Date().toISOString() })
+    .eq('id', neg.id);
+  if (negErr) throw new Error(negErr.message);
+  const { error: ordErr } = await supabase
+    .from('sh_orders')
+    .update({
+      total_mxn: agreedMxn,
+      total_usd: totalUsd,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', order.id);
+  if (ordErr) throw new Error(ordErr.message);
+  console.log(`[ADJUST] ${order.id} aceptado: +$${neg.extra_amount_mxn} MXN → total $${agreedMxn} MXN`);
+}
+
+// Técnico propone el monto adicional + motivo
+app.post('/api/bookings/:id/request-adjustment', requireAuth, async (req, res) => {
+  try {
+    const extra = Number(req.body?.extra_amount_mxn);
+    const reason = String(req.body?.reason || '').trim().slice(0, 500);
+    if (!validExtraAmountMxn(extra)) {
+      return res.status(400).json({ error: 'Monto adicional mínimo $10 MXN' });
+    }
+    if (!reason) return res.status(400).json({ error: 'Indica el motivo del ajuste' });
+
+    const ctx = await loadAdjustmentOrder(req.params.id, req.user);
+    if (!ctx) return res.status(404).json({ error: 'Orden no encontrada' });
+    if (!ctx.isTech) return res.status(403).json({ error: 'Solo el técnico asignado puede re-cotizar' });
+    if (ctx.order.status !== 'in_progress') {
+      return res.status(400).json({ error: 'El ajuste aplica solo durante el servicio (en curso)' });
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ctx.order.client_id || '')) {
+      return res.status(400).json({ error: 'Orden sin cliente válido para ajuste' });
+    }
+
+    const { data: open } = await supabase
+      .from('sh_price_negotiations').select('id')
+      .eq('order_id', ctx.order.id).eq('phase', 'IN_SITU').eq('status', 'pending')
+      .maybeSingle();
+    if (open) return res.status(409).json({ error: 'Ya hay un ajuste esperando respuesta del cliente' });
+
+    const { data, error } = await supabase
+      .from('sh_price_negotiations')
+      .insert({
+        order_id: ctx.order.id,
+        client_id: ctx.order.client_id,
+        technician_id: req.user.id,
+        original_price_mxn: Math.round(ctx.order.total_mxn),
+        extra_amount_mxn: extra,
+        technician_offer_mxn: extra,
+        reason,
+        phase: 'IN_SITU',
+        status: 'pending',
+        initiated_by: 'technician',
+      })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    res.json({ negotiation: data });
+  } catch (err) {
+    console.error('[ADJUST request]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Cliente responde: ACCEPT (cobra el extra) o REJECT (se queda el monto base)
+app.post('/api/bookings/:id/respond-adjustment', requireAuth, async (req, res) => {
+  try {
+    const action = req.body?.action;
+    if (action !== 'ACCEPT' && action !== 'REJECT') {
+      return res.status(400).json({ error: 'action debe ser ACCEPT o REJECT' });
+    }
+    const ctx = await loadAdjustmentOrder(req.params.id, req.user);
+    if (!ctx) return res.status(404).json({ error: 'Orden no encontrada' });
+    if (!ctx.isClient) return res.status(403).json({ error: 'Solo el cliente puede responder el ajuste' });
+
+    const { data: neg } = await supabase
+      .from('sh_price_negotiations').select('*')
+      .eq('order_id', ctx.order.id).eq('phase', 'IN_SITU').eq('status', 'pending')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (!neg) return res.status(404).json({ error: 'No hay ajuste pendiente en esta orden' });
+
+    if (action === 'REJECT') {
+      const { error } = await supabase
+        .from('sh_price_negotiations')
+        .update({ status: 'rejected', updated_at: new Date().toISOString() })
+        .eq('id', neg.id);
+      if (error) throw new Error(error.message);
+      return res.json({ status: 'rejected' });
+    }
+
+    // ACCEPT — cobro real del extra vía 2do PaymentIntent.
+    // ponytail: el atajo mock asume NODE_ENV=production en prod (mismo supuesto que registerLimiter).
+    if (IS_DEV && req.body?.mock === true) {
+      await finalizeAdjustment(ctx.order, neg);
+      return res.json({ status: 'accepted', dev: true });
+    }
+
+    const paymentIntentId = req.body?.paymentIntentId;
+    if (!paymentIntentId) {
+      const cfg = await loadConfig();
+      const extraCents = Math.round(neg.extra_amount_mxn * 100); // pesos → centavos Stripe
+      const params = {
+        amount: extraCents,
+        currency: 'mxn',
+        metadata: { orderId: ctx.order.id, negotiationId: neg.id, adjustment: 'true' },
+        automatic_payment_methods: { enabled: true },
+      };
+      if (ctx.tech?.stripe_account_id) {
+        params.transfer_data = { destination: ctx.tech.stripe_account_id };
+        params.application_fee_amount = Math.round(extraCents * (cfg.platform_fee_pct / 100));
+      }
+      const pi = await stripe.paymentIntents.create(params);
+      await supabase.from('sh_price_negotiations')
+        .update({ stripe_payment_intent_id: pi.id, updated_at: new Date().toISOString() })
+        .eq('id', neg.id);
+      return res.json({ clientSecret: pi.client_secret, paymentIntentId: pi.id, amountMxn: neg.extra_amount_mxn });
+    }
+
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (pi.status !== 'succeeded' || pi.metadata?.negotiationId !== neg.id) {
+      return res.status(402).json({ error: 'El cobro del ajuste aún no se confirma' });
+    }
+    await finalizeAdjustment(ctx.order, neg);
+    res.json({ status: 'accepted' });
+  } catch (err) {
+    console.error('[ADJUST respond]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Stripe Webhook (NO auth — Stripe calls this) ───
 app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
@@ -325,7 +484,20 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
     const orderId = pi.metadata?.orderId;
     console.log(`✅ Payment succeeded: ${pi.id} — $${(pi.amount / 100).toFixed(2)} MXN`);
 
-    if (orderId && orderId !== 'pending') {
+    if (pi.metadata?.adjustment === 'true' && pi.metadata?.negotiationId) {
+      // Ajuste in-situ cobrado (req #44): acepta + suma el extra (idempotente)
+      try {
+        const { data: neg } = await supabase.from('sh_price_negotiations')
+          .select('*').eq('id', pi.metadata.negotiationId).maybeSingle();
+        if (neg && neg.status !== 'accepted') {
+          const { data: order } = await supabase.from('sh_orders')
+            .select('*').eq('id', neg.order_id).maybeSingle();
+          if (order) await finalizeAdjustment(order, neg);
+        }
+      } catch (e) {
+        console.error('[ADJUST webhook] finalize error:', e.message);
+      }
+    } else if (orderId && orderId !== 'pending') {
       const { error } = await supabase
         .from('sh_orders')
         .update({ status: 'funded', updated_at: new Date().toISOString() })

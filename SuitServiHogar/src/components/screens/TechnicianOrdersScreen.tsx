@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { EscrowOrder, Technician } from '../../types';
 import { fetchOrdersByTechnician, updateOrderStatus, processSpecialistCancellation, uploadEvidencePhoto } from '../../services/bookingService';
+import { fetchInSituAdjustments, requestAdjustment, InSituAdjustment } from '../../services/adjustmentService';
 import { isDevMode } from '../../config/devMode';
 import { sfxLiberar, sfxCerrar } from '../../lib/sfx';
 
@@ -41,6 +42,13 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
+  // Re-cotización / Ajuste in-situ (req #44)
+  const [adjustments, setAdjustments] = useState<Record<string, InSituAdjustment>>({});
+  const [recotOrderId, setRecotOrderId] = useState<string | null>(null);
+  const [recotAmount, setRecotAmount] = useState('');
+  const [recotReason, setRecotReason] = useState('');
+  const [recotSending, setRecotSending] = useState(false);
+  const [recotError, setRecotError] = useState<string | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -51,10 +59,46 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
     try {
       const data = await fetchOrdersByTechnician(technician.id);
       setOrders(data);
+      const inProg = data.filter(o => o.status === 'in_progress');
+      if (inProg.length) {
+        try {
+          setAdjustments(await fetchInSituAdjustments(inProg.map(o => o.id)));
+        } catch {
+          // lectura de ajustes es best-effort; no bloquea la lista
+        }
+      } else {
+        setAdjustments({});
+      }
     } catch (err) {
       console.error('Error cargando órdenes:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendAdjustment = async () => {
+    if (!recotOrderId) return;
+    const extra = parseInt(recotAmount, 10);
+    if (!Number.isInteger(extra) || extra < 10) {
+      setRecotError('Monto adicional mínimo $10 MXN');
+      return;
+    }
+    if (!recotReason.trim()) {
+      setRecotError('Indica el motivo del ajuste');
+      return;
+    }
+    setRecotSending(true);
+    setRecotError(null);
+    try {
+      await requestAdjustment(recotOrderId, extra, recotReason.trim());
+      setRecotOrderId(null);
+      setRecotAmount('');
+      setRecotReason('');
+      await loadOrders();
+    } catch (err: any) {
+      setRecotError(err.message || 'No se pudo enviar la re-cotización');
+    } finally {
+      setRecotSending(false);
     }
   };
 
@@ -181,6 +225,7 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
           const statusInfo = STATUS_LABELS[order.status];
           const action = STATUS_ACTIONS[order.status];
           const isCompleted = order.status === 'completed';
+          const adj = adjustments[order.id];
 
           return (
             <div
@@ -227,6 +272,18 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
                   <div className="text-body-sm text-text-muted">~${order.totalUsd.toFixed(2)} USD</div>
                 </div>
               </div>
+
+              {adj && (
+                <div className={`text-label-sm font-semibold rounded-lg px-3 py-2 border ${
+                  adj.status === 'accepted' ? 'bg-emerald-safe-bg text-escrow-shield border-secondary-container' :
+                  adj.status === 'rejected' ? 'bg-error/10 text-error border-error/30' :
+                  'bg-amber-rating-bg text-tertiary-container border-tertiary-fixed-dim'
+                }`}>
+                  {adj.status === 'pending' && <>⏳ Ajuste enviado — esperando cliente (+${adj.extra_amount_mxn?.toLocaleString()} MXN)</>}
+                  {adj.status === 'accepted' && <>✅ Ajuste aprobado y cobrado: +${adj.extra_amount_mxn?.toLocaleString()} MXN (total ${adj.agreed_price_mxn?.toLocaleString()} MXN)</>}
+                  {adj.status === 'rejected' && <>❌ Ajuste rechazado — se mantiene el precio base</>}
+                </div>
+              )}
 
               {action && (
                 <div className="pt-2 border-t border-border-subtle flex gap-2">
@@ -292,6 +349,15 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
                     <span className="material-symbols-outlined text-[18px] mr-1">photo_camera</span>
                     {uploading && targetOrderId === order.id ? 'Subiendo...' : 'Subir Evidencia'}
                   </button>
+                  {(!adj || adj.status !== 'pending') && (
+                    <button
+                      onClick={() => { setRecotOrderId(order.id); setRecotAmount(''); setRecotReason(''); setRecotError(null); }}
+                      className="flex-1 bg-amber-rating-bg text-tertiary-container py-2 px-3 rounded-lg font-bold text-label-md border border-tertiary-fixed-dim active:scale-95 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-[18px] mr-1">request_quote</span>
+                      Re-cotizar
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -345,6 +411,84 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
           </div>
         </div>
       )}
+
+      {recotOrderId && (() => {
+        const order = orders.find(o => o.id === recotOrderId);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="bg-surface-card rounded-xl p-6 w-full max-w-sm border border-border-subtle space-y-4 animate-slide-up">
+              <div className="flex items-center justify-between">
+                <h3 className="text-headline-sm font-bold text-text-primary">Re-cotizar servicio</h3>
+                <button onClick={() => setRecotOrderId(null)} className="text-text-muted">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              {order && (
+                <div className="space-y-2 p-3 bg-surface-alt rounded-lg text-body-sm">
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Monto base (Escrow)</span>
+                    <span className="font-bold text-text-primary">${order.totalMxn.toLocaleString()} MXN</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Monto adicional</span>
+                    <span className="font-bold text-tertiary-container">
+                      {recotAmount && !isNaN(parseInt(recotAmount, 10)) && parseInt(recotAmount, 10) >= 10
+                        ? `+$${parseInt(recotAmount, 10).toLocaleString()} MXN`
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-border-subtle font-bold text-text-primary">
+                    <span>Nuevo total</span>
+                    <span>
+                      {recotAmount && !isNaN(parseInt(recotAmount, 10)) && parseInt(recotAmount, 10) >= 10
+                        ? `$${(order.totalMxn + parseInt(recotAmount, 10)).toLocaleString()} MXN`
+                        : '—'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div className="space-y-1">
+                <label className="text-label-sm font-medium text-text-primary">Monto adicional (MXN)</label>
+                <input
+                  type="number"
+                  min={10}
+                  step={1}
+                  value={recotAmount}
+                  onChange={(e) => setRecotAmount(e.target.value)}
+                  placeholder="Ej: 300"
+                  disabled={recotSending}
+                  className="w-full px-3 py-2 border border-border-subtle rounded-lg text-body-md bg-surface-alt text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-label-sm font-medium text-text-primary">Motivo del ajuste</label>
+                <textarea
+                  value={recotReason}
+                  onChange={(e) => setRecotReason(e.target.value)}
+                  placeholder="Ej: Se encontró tubería dañada adicional bajo el fregadero"
+                  rows={3}
+                  maxLength={500}
+                  disabled={recotSending}
+                  className="w-full px-3 py-2 border border-border-subtle rounded-lg text-body-md bg-surface-alt text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                />
+              </div>
+              {recotError && (
+                <p className="text-body-sm text-error bg-error/10 rounded-lg p-2">{recotError}</p>
+              )}
+              <p className="text-label-sm text-text-muted">
+                El cliente verá el desglose y deberá aprobar el cobro adicional para que se aplique.
+              </p>
+              <button
+                onClick={handleSendAdjustment}
+                disabled={recotSending || !recotAmount || !recotReason.trim()}
+                className="w-full bg-primary text-on-primary py-3 rounded-lg font-bold text-label-lg shadow-xs active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {recotSending ? 'Enviando...' : 'Enviar re-cotización'}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {cancelOrderId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
