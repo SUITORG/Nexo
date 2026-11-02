@@ -1,6 +1,6 @@
 ========================================================================
   LISTADO COMPLETO - SKILLS, MCP SERVERS Y AGENTES
-  Generado: 2026-10-16
+  Generado: 2026-11-02
   Auto-generado por: .suit/skills/process/listado-capacidades/
 ========================================================================
 
@@ -52,6 +52,7 @@
   guia-total                .suit/skills/process/guia-total.yaml
   ideas-saas                .suit/skills/process/ideas-saas.yaml
   iteration-loop            .suit/skills/process/iteration-loop.yaml
+  micro-app-saas            .suit/skills/process/micro-app-saas.yaml
   panel-juzgador            .suit/skills/process/panel-juzgador.yaml
   pantalla-limpia           .suit/skills/process/pantalla-limpia.yaml
   pdf-generation            .suit/skills/process/pdf-generation.yaml
@@ -82,7 +83,7 @@
   web-research              .suit/skills/tool/web-research.yaml
   web-search                .suit/skills/tool/web-search.yaml
 
-  TOTAL SUITOS: 49 skills
+  TOTAL SUITOS: 50 skills
 
 
 ========================================================================
@@ -197,6 +198,9 @@
                             Gate de pre-diseño que decide la FORMA del producto (micro-app · micro-saas · web-app · landing-leads · herramienta-interna · multi-tenant-gs) y su RU
   modo-prueba               .claude/skills/modo-prueba
                             -> .agents\skills\modo-prueba
+  mojibake                  .claude/skills/mojibake
+                            -> .agents\skills\mojibake
+                            Detecta y repara mojibake (UTF-8 doble-codificado como CP1252: â€¢, Ã­, vacÃ­a, acentos rotos) en archivos del repo. Úsala cuando el usuario diga 'moj
   motion-doctrine           .claude/skills/motion-doctrine
                             -> .agents\skills\motion-doctrine
                             GATEWAY — load FIRST before composing any HyperFrames animation or video. The high-level motion law that makes a multi-scene video feel like ONE conti
@@ -245,14 +249,20 @@
   talking-head-recut        .claude/skills/talking-head-recut
                             -> .agents\skills\talking-head-recut
                             Package an existing talking-head / interview / podcast video with timed, designed GRAPHIC OVERLAY cards — kinetic titles, lower-thirds, data callouts,
+  temas-conversacion        .claude/skills/temas-conversacion
+                            -> .agents\skills\temas-conversacion
+                            Lista los temas tocados en la conversación activa con % de uso estimado, descripción de una línea y porcentajes de decisión (contexto consumido, temas
   viabilidad-operativa      .claude/skills/viabilidad-operativa
                             -> .agents\skills\viabilidad-operativa
                             Gate de pre-diseño que cuestiona la OPERACIÓN de una idea/proceso ANTES de diseñar: ¿es ágil o se complica?, ¿el tiempo que toma vale la pena?, ¿cuánt
   video-shotcraft           .claude/skills/video-shotcraft
                             -> .agents\skills\video-shotcraft
                             Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera mo
+  wan2gp                    .claude/skills/wan2gp
+                            -> .agents\skills\wan2gp
+                            Drive Wan2GP (WanGP) — generador local de video/imagen/audio de GPU-poor (Wan 2.1/2.2, LTX-2, Hunyuan, Flux, Qwen) — desde opencode. Úsala cuando el u
 
-  TOTAL CLAUDE: 55 (4 locales + 51 symlinks)
+  TOTAL CLAUDE: 58 (4 locales + 54 symlinks)
 
 
 ========================================================================
@@ -294,6 +304,7 @@
   mejoras-proyecto          .opencode/skills/mejoras-proyecto
   micro-app-saas            .opencode/skills/micro-app-saas
   modo-prueba               .opencode/skills/modo-prueba
+  mojibake                  .opencode/skills/mojibake
   motion-doctrine           .opencode/skills/motion-doctrine
   motion-graphics           .opencode/skills/motion-graphics
   multi-tenant-saas         .opencode/skills/multi-tenant-saas
@@ -312,10 +323,12 @@
   skill-creator             .opencode/skills/skill-creator
   slideshow                 .opencode/skills/slideshow
   talking-head-recut        .opencode/skills/talking-head-recut
+  temas-conversacion        .opencode/skills/temas-conversacion
   viabilidad-operativa      .opencode/skills/viabilidad-operativa
   video-shotcraft           .opencode/skills/video-shotcraft
+  wan2gp                    .opencode/skills/wan2gp
 
-  TOTAL OPENCODE: 55
+  TOTAL OPENCODE: 58
 
 
 ========================================================================
@@ -363,6 +376,7 @@
   viabilidad-operativa                Gate de pre-diseño que cuestiona la operación de una idea/proceso ante
   calidad-minima                      Gate de pre-diseño anti-mediocre: juzga si el resultado de la app/proc
   durabilidad                         Gate de pre-diseño para futuro: juzga si la app/proceso durará — conec
+  micro-app-saas                      Gate de pre-diseño que decide la forma mínima del producto (micro-app,
   procesos-visual                     Genera mapas de proceso visuales en HTML (diagrama de flujo ligero en 
   empresa-registro                    Alta semiautomatica de empresas en Config_Empresas (maestro Google She
   clusters-seo                        Genera hasta 9 clústeres SEO diferenciados por empresa en Config_SEO (
@@ -373,7 +387,7 @@
   registry-query                      Consulta el registry declarativo (.suit/registry/*.yaml: agents, skill
   parametros                          Cambia comportamiento global o puntual del sistema SIN tocar código, e
 
-  TOTAL REGISTRY: 50 skills declaradas
+  TOTAL REGISTRY: 51 skills declaradas
 
 
 ========================================================================
@@ -456,14 +470,14 @@
 
   CAPACIDAD              TOTAL   SUITORG   PROYECTO
   =============================================
-  Skills SuitOS (.yaml)    49      49         0
-  Skills Claude Code       55        4        51
-  Skills OpenCode           55       55         0
-  Registry YAML           50      50         0
+  Skills SuitOS (.yaml)    50      50         0
+  Skills Claude Code       58        4        54
+  Skills OpenCode           58       58         0
+  Registry YAML           51      51         0
   MCP Servers              3       ?         ?
   Agentes                 14      14         0
   =============================================
-  TOTAL                   226
+  TOTAL                   234
 
   Para regenerar: node .suit/skills/process/listado-capacidades/scripts/generate-list.js
 ========================================================================

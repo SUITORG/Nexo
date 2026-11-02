@@ -1,0 +1,37 @@
+# SuitOS — skill de proceso: mojibake (encoding)
+# Definición de gobierno; la implementación vive en .agents/skills/mojibake/
+skill:
+  name: mojibake
+  type: process
+  domain: quality
+  version: 1.0.0
+  path: .agents/skills/mojibake/SKILL.md
+  tool: .agents/skills/mojibake/mojibake.js
+
+  # Cuándo se invoca (enganches)
+  triggers:
+    - "mojibake"
+    - "acentos rotos"
+    - "letras raras"
+    - "encoding"
+    - "Ã© â€ en textos"
+
+  # Enganches desde otras skills (llamada, no duplicación)
+  called_by:
+    - skill: auditoria
+      phase: "Fase 1 - Inventario"
+      action: "diagnóstico sobre archivos/directorios del alcance"
+    - skill: ciclo
+      phase: "Fase 3 - Validación"
+      action: "diagnóstico sobre archivos tocados antes del commit"
+
+  rules:
+    - id: mj-001
+      description: "Diagnóstico antes de --fix; --fix solo con moji>0 confirmado"
+      severity: warning
+    - id: mj-002
+      description: "Abortar si hay caracteres no reversibles CP1252 (capa >1) — no forzar"
+      severity: error
+    - id: mj-003
+      description: "Prevención: no usar Get-Content/Set-Content de PS5.1 en UTF-8 (usan ANSI)"
+      severity: error

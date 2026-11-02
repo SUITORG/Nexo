@@ -38,6 +38,7 @@ metadata:
 - **Estrategia de carga**: aplicar `.suit/loader/strategy.yaml` (`standard` por defecto, `deep` solo si el alcance lo justifica) — no inspeccionar todo el repo.
 - **ADRs**: los ADRs reales viven en `.suit/memory/decisions/` y se crean con el comando **`/suit-memory`** (nunca crear `docs/adrs/` paralelo). Se leen vía loader `deep` y el workflow `feature`.
 - **Validación de cambios**: `node --check <archivo>` tras cada edición JS · `node scripts/agents/probador.js --suite <suite>` · `node scripts/generate-index.js` si cambian funciones.
+- **Encoding (skill `mojibake`)**: en Fase 1, corre el diagnóstico `node .agents/skills/mojibake/mojibake.js <archivos o carpetas del alcance>` y reporta mojibake hallado (acento roto = `Ã©`, `â€"`, `vacÃ­a`). Si el reporte confirma una capa, repáralo con `--fix` y anótalo. Causa raíz típica: `Get-Content`/`Set-Content` de PowerShell 5.1 (usan ANSI sobre UTF-8).
 - **Commit**: por fases con formato SuitOS (`{emoji} {tipo}: {desc} (v{X.Y.Z})`) vía `ciclo` o `/suit-commit`.
 - **Reglas multi-tenant citables** (no redefinir): `mt-001..mt-005` en `.suit/skills/domain/multi-tenant.yaml` + reglas 1-7 de `AGENTS.md` (`id_empresa`, soft delete, IDs `PREFIJO-NNN`, `API_AUTH_TOKEN`, `no-cors`, `activo` minúsculas, vanilla JS).
 

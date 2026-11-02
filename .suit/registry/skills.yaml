@@ -448,6 +448,9 @@ skills:
   empresa-mascara:
     path: .suit/skills/domain/empresa-mascara.yaml
 
+  mojibake:
+    path: .suit/skills/process/mojibake.yaml
+
   # --- System (skills canónicas de contexto/decisión) ---
   context-loader:
     path: .suit/skills/system/context-loader.yaml
