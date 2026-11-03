@@ -1,0 +1,51 @@
+# GuiaTotal/registro/suitcompromisos.yaml
+proyecto: "SuitCompromisos"
+ruta: "SuitCompromisos/"
+etapa: "construccion"          # código completo y en uso; faltan condiciones del panel y CONTRATO
+creado: "2026-10-22"
+actualizado: "2026-11-03"
+
+validacion:
+  problema: "Los pendientes personales (viajes, reuniones, pagos) estaban dispersos y no llegaban como recordatorios al calendario; exportar .ics a mano era manual y propenso a olvidos."
+  hipotesis: "Si centralizamos los compromisos en un panel único con sync automático a Google Calendar, se reducen olvidos y el tiempo de gestión a mano."
+  metrica_exito: "Todos los compromisos futuros visibles en el panel Y como evento/recordatorio en el calendario compartido, sin exportación manual."
+  evidencia: "Código en uso con lastSync real (2026-11-03); panel-juzgador post-hoc en .suit/logs/panel-juzgador/ (veredicto + 4 evaluaciones)."
+  decision: "continuar"
+  motivo: "Funcional, costo $0, en uso diario; cerrar las 5 condiciones del panel lo deja sólido."
+
+evaluacion:
+  panel_juzgador: "APROBADO CONDICIONAL"
+  veredicto_fecha: "2026-11-03"
+  recomendaciones: "6.75/10 (Mercado 7 · Técnico 7 · Riesgo 6 · Financiero 7). 5 condiciones: (1) registro/puertos ✓ hecho, (2) token X-Suit-Token + quitar Origin:null + scope calendar.events, (3) backup automático de localStorage, (4) gitignorar server.log ✓ + smoke ✓, (5) path dedicado para la service account o aceptación documentada del SPOF. Detalle: .suit/logs/panel-juzgador/veredicto.md"
+
+integraciones:
+  convive_sheets: false         # herramienta personal; no toca Config_Empresas (supuesto: uso estrictamente personal)
+  id_empresa: null
+  db_engine: null
+  brief_en_logo_url: false
+
+producto:
+  formato: "herramienta-interna"
+  monetizacion: "ahorro-interno"
+  ruta_cobro: "usuario único (Roberto) · $0 · ahorro de tiempo estimado 2-4 h/mes vs alternativa manual"
+  gate_cobro: "APTO"
+
+taxonomia:
+  industria: null               # sin analista-proy: uso personal, fuera del catálogo de clientes
+  nicho: null
+  especializacion: null
+
+documentos:
+  analista_proy: false
+  taxonomia: false
+  contrato: false
+  identidad: false
+  manuales: false               # solo MANUAL_TECNICO creado (herramienta interna)
+  manual_tecnico: true          # <Proyecto>/docs/MANUAL_TECNICO.md (2026-11-03)
+  prompt_origen: false
+  checklist_lanzamiento: false
+  arquitectura_docs: false
+  proposal: true                # <Proyecto>/proposal.md (entrada del panel-juzgador)
+  evaluacion_panel: true        # .suit/logs/panel-juzgador/{veredicto,eval_*}.md
+
+proximo_paso: "Ejecutar condiciones 2, 3 y 5 del veredicto (token+scope <30 min, backup dump JSON, path de la SA) y revalidar con smoke crear→sync→borrar en Calendar."

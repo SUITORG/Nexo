@@ -487,9 +487,9 @@ projects:
         type: express
 
   suit-board:
-    name: "SuitBoard  Dashboard Crypto + US + FX Market"
+    name: "SuitBoard — Dashboard Crypto + US + FX Market"
     path: SuitBoard/
-    description: "Dashboard de mercado en un solo archivo HTML estático (sin build, sin servidor). 4 pestañas: Crypto (CoinGecko en vivo, watchlist con rotación), US Markets (Twelve Data con key del usuario  heatmap/fases/rangos 30d + hover real; sin key queda demo honesto), FX Markets (Frankfurter/BCE keyless, 8 pares vs USD, 1 llamada por refresh) y Combined (matriz BTC/SOL/SPX/GOLD en vivo cuando hay series). Rescatado desde Downloads el 31/08/2026."
+    description: "Dashboard de mercado en un solo archivo HTML estático (sin build, sin servidor). 4 pestañas: Crypto (CoinGecko en vivo, watchlist con rotación), US Markets (Twelve Data con key del usuario → heatmap/fases/rangos 30d + hover real; sin key queda demo honesto), FX Markets (Frankfurter/BCE keyless, 8 pares vs USD, 1 llamada por refresh) y Combined (matriz BTC/SOL/SPX/GOLD en vivo cuando hay series). Rescatado desde Downloads el 31/08/2026."
     type: static
     skills:
       - javascript
@@ -501,7 +501,69 @@ projects:
       staff: false
     environment:
       TYPE: static
-    notes: "No pasa por el pipeline de deploy de GitHub Pages del repo raíz (igual que SuitCampanas). No trackeado en git todavía  pendiente decisión del usuario. Twelve Data gratis: 800 créd/día, refresh US 1h con chunks de 6 y pausa 61s (8/min); key en localStorage suitboard_td_key."
+    notes: "No pasa por el pipeline de deploy de GitHub Pages del repo raíz (igual que SuitCampanas). No trackeado en git todavía — pendiente decisión del usuario. Twelve Data gratis: 800 créd/día, refresh US 1h con chunks de 6 y pausa 61s (8/min); key en localStorage suitboard_td_key. Panel Entradas (2026-10-26): endpoint /api/market/signals → detector de rotura de estructura diaria (fresco <=5d, filtro semanal, stop/objetivo/R:R) sobre watchlist de 15 via Yahoo (costo $0), cache 1h."
+
+  suit-market:
+    name: "SuitMarket — Dashboard de Mercado (dólar/bolsa/cripto)"
+    path: SuitMarket/
+    description: "Dashboard de mercado estático con sidecar Python stdlib (sin pip) en puerto 3020: sirve index.html + /api/market/{quotes,movers,news}. Híbrido gratis: Twelve Data free (key opcional, 750 créd/día con caché 15min) para índices/ETFs/BTC/USD-MXN + Yahoo server-side (caché 10min) para commodities, fallback y news. Card DXY reemplazado por USD/MXN (decisión del usuario 2026-10-17)."
+    type: static
+    skills:
+      - javascript
+    context:
+      - SuitMarket/index.html
+      - SuitMarket/api/server.py
+      - SuitMarket/config.json
+    frontend:
+      public: false
+      staff: false
+    environment:
+      TYPE: static
+      PORT: 3020
+    servers:
+      - name: api
+        path: SuitMarket/api/server.py
+        port: 3020
+        type: python-stdlib
+    notes: "Lanzador SuitMarket.bat (patrón bat-launcher). Independiente de server.js — reemplaza el proxy /api/market viejo de :3001 sin tocarlo. Uso interno (licencia Individual). Puerto 3020 agregado al registry 2026-10-17."
+  suit-misctas:
+    name: "SuitMisCtas — Finanzas personales (gastos/rentas/servicios)"
+    path: SuitMisCtas/
+    description: "Dashboard personal de finanzas en un solo HTML estático (sin servidor, localStorage + export/import JSON). Siembra del catálogo desde la hoja GS del usuario (pestaña GastosTarjetas, leída 2026-10-20): 17 servicios recurrentes (CFE, AyD, Tmex, gas bimestral par/impar), 12 unidades de renta con inquilinos editables, 5 cuentas (BBVA/STD/IVX/LU/FAL). Alertas de servicios por vencer/vencidos y rentas atrasadas, bandeja Por clasificar, stats (ingresos vs gastos, tasa de ahorro, por categoría/cuenta, histórico) y proyección 12 meses con la fórmula del usuario (Saldo + (gasto-ingreso)*12). Estilo RUCP oscuro. noindex. Uso estrictamente personal."
+    type: static
+    skills:
+      - javascript
+    context:
+      - SuitMisCtas/index.html
+    frontend:
+      public: false
+      staff: false
+    environment:
+      TYPE: static
+    notes: "Sin puerto (file://). Datos solo en el navegador del usuario — respaldo vía Exportar JSON. Pendiente: agregar pestaña a MASTER.html cuando el usuario lo pida. La hoja origen es privada; no re-leer sin permiso."
+  suit-compromisos:
+    name: "SuitCompromisos — Compromisos y pendientes personales"
+    path: SuitCompromisos/
+    description: "Pendientes personales (viajes, reuniones, entregas, pagos) en un solo HTML vanilla estilo RUCP oscuro + puente a Google Calendar: server local Node puro en 127.0.0.1:8138 (sin OAuth, service account ../google-credentials.json con permiso de calendario compartido). Artículos en localStorage, estados, export .ics y sync bidireccional emparejando extendedProperties.private.suitId."
+    type: service
+    servers:
+      - name: compromisos
+        path: SuitCompromisos/server.js
+        port: 8138
+        type: http
+    skills:
+      - javascript
+    context:
+      - SuitCompromisos/index.html
+      - SuitCompromisos/server.js
+      - SuitCompromisos/config.json
+    frontend:
+      public: false
+      staff: false
+    environment:
+      TYPE: service
+      PORT: 8138
+    notes: "Pestaña Compromisos en MASTER.html (iframe :8137; API :8138 con CORS restringido al origen :8137). Evaluado 2026-11-03 por panel-juzgador: APROBADO CONDICIONAL 6.75/10 con 5 condiciones (.suit/logs/panel-juzgador/veredicto.md). config.json y server.log gitignorados (PII). Puerto 8138 agregado a AGENTS.md."
 
   suit-landings:
     name: "SuitLandings — Plantilla de Landing Pages multi-tenant"
@@ -634,9 +696,9 @@ projects:
     servers: []
     notes: "Copia del pipeline desde SuitCVLO-open@7c612d3. NO se toca SuitCVLO-open (limite explicito del usuario 2026-10-02). Si la app local y Colab escriben el mismo idxfotos.xlsx a la vez, riesgo de pisarse: elegir uno por tanda."
   suit-review-pulse:
-    name: "SuitReviewPulse � Monitor de rese�as Google"
+    name: "SuitReviewPulse — Monitor de reseñas Google"
     path: SuitReviewPulse/
-    description: "Idea ganadora pipeline ideas-saas (juez 7.8, 2026-10-10): alerta de rese�as nuevas, ca�da de rating y borradores de respuesta. Wrapper Express 3016 sobre n�cleo Python asyncio + SQLite WAL. Ver ADR-047 (pipeline) y ADR-048 (promoci�n)."
+    description: "Idea ganadora pipeline ideas-saas (juez 7.8, 2026-10-10): alerta de reseñas nuevas, caída de rating y borradores de respuesta. Wrapper Express 3016 sobre núcleo Python asyncio + SQLite WAL. Ver ADR-047 (pipeline) y ADR-048 (promoción)."
     skills:
       - javascript
     context:
@@ -664,12 +726,12 @@ projects:
         path: SuitReviewPulse/index.js
         port: 3016
         type: express
-    notes: "N�cleo Python en python/ (spawn desde db/client.js, PYTHONIOENCODING=utf-8). MVP single-tenant SQLite; si se integra al ecosistema multi-tenant ? Supabase + id_empresa (regla #1)."
+    notes: "Núcleo Python en python/ (spawn desde db/client.js, PYTHONIOENCODING=utf-8). MVP single-tenant SQLite; si se integra al ecosistema multi-tenant → Supabase + id_empresa (regla #1)."
 
   suit-contract-renew:
-    name: "SuitContractRenew � Contratos de mantenimiento"
+    name: "SuitContractRenew — Contratos de mantenimiento"
     path: SuitContractRenew/
-    description: "Idea ganadora pipeline ideas-saas 2026-10-10b (juez 7.8): registro de contratos de mantenimiento (HVAC/gremios 1-5 t�cnicos) + alertas de renovaci�n 60 d�as. Wrapper Express 3017 sobre n�cleo Python stdlib + SQLite WAL. Ver ADR-047/048/049."
+    description: "Idea ganadora pipeline ideas-saas 2026-10-10b (juez 7.8): registro de contratos de mantenimiento (HVAC/gremios 1-5 técnicos) + alertas de renovación 60 días. Wrapper Express 3017 sobre núcleo Python stdlib + SQLite WAL. Ver ADR-047/048/049."
     skills:
       - javascript
     context:
@@ -697,7 +759,7 @@ projects:
         path: SuitContractRenew/index.js
         port: 3017
         type: express
-    notes: "N�cleo Python stdlib puro (sin pip) en python/, spawn desde db/client.js con PYTHONIOENCODING=utf-8. Soft-delete con activo=0. MVP single-tenant; integraci�n futura ? Supabase + id_empresa."
+    notes: "Núcleo Python stdlib puro (sin pip) en python/, spawn desde db/client.js con PYTHONIOENCODING=utf-8. Soft-delete con activo=0. MVP single-tenant; integración futura → Supabase + id_empresa."
 
   suit-pawbook:
     name: "SuitPawBook - Reservas con deposito para groomers"
@@ -767,3 +829,27 @@ projects:
         port: 3019
         type: express
     notes: "Baileys no-oficial (riesgo suspension). auth/ con credenciales. media/enviados/ auto-creada. Calendario America/Monterrey."
+
+  suit-prospectos:
+    name: "SuitProspectos - Prospector comercial"
+    path: SuitProspectos/
+    description: "CLI Node.js SIN servidor ni puerto: lee el catalogo Supabase industrias/nichos, busca establecimientos en Google Places, aplica heuristicas por keyword (presencia digital, puntos fuertes, publico objetivo) y escribe reporte Markdown + CSV en SuitProspectos/reportes/ (ignorado por git). Requiere GOOGLE_MAPS_API_KEY + SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY en .env."
+    skills:
+      - javascript
+    context:
+      - SuitProspectos/prospect.js
+      - SuitProspectos/package.json
+      - SuitProspectos/.env.example
+    frontend:
+      public: false
+      public_route: "none (CLI)"
+      public_gate: "none"
+      staff: false
+      staff_route: "none"
+      staff_gate: "none"
+      api_endpoints: []
+    environment:
+      TYPE: cli
+      DB: "SUPABASE (tablas industrias, nichos) + Google Places API"
+    servers: []
+    notes: "Carpeta untracked en git (renombrada desde Prospectos/ sin commitear). Fase 1 higiene hecha: reportes/ en .gitignore, comando corregido en AGENTS.md. Pendiente: GOOGLE_MAPS_API_KEY inexistente; endpoints Legacy -> Places API (New) (Legacy cerrado a proyectos GCP nuevos desde oct-2026); --radio inoperante (location=null); sin dedupe/paginacion; sin CSV. Ver docs/ y ADR en SuitProspectos/."

@@ -132,3 +132,12 @@ SuitCampanas/descargas/
 
 # SuitMisCtas — respaldos con datos financieros personales (no publicar)
 SuitMisCtas/respaldos/
+
+# SuitProspectos - reportes generados (datos de prospectos: tel/direcciones; el repo se publica entero en GH Pages)
+SuitProspectos/reportes/
+
+# Config local de SuitCompromisos (calendario elegido)
+SuitCompromisos/config.json
+
+# SuitCompromisos - log del server local (contiene PII de la service account)
+SuitCompromisos/server.log

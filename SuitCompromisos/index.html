@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SuitCompromisos · Mis pendientes</title>
+<link rel="icon" href="data:,">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e17;--bg2:#111827;--bg3:#1a2332;--bg4:#243044;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--accent:#2dd4bf;--accent-dim:rgba(45,212,191,.12);--red:#ef4444;--red-bg:rgba(239,68,68,.12);--yellow:#f59e0b;--yellow-bg:rgba(245,158,11,.12);--green:#10b981;--green-bg:rgba(16,185,129,.12);--line:#243044;--radius:12px}
+html,body{min-height:100%;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+body{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:1.3rem;letter-spacing:-.3px}
+h1 span{color:var(--accent)}
+.sub{color:var(--text2);font-size:.8rem}
+.header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.syncbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 14px;font-size:.72rem;color:var(--text2)}
+.syncbar .dot{width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block;flex:0 0 auto}
+.syncbar .dot.ok{background:var(--green)}
+.syncbar .dot.warn{background:var(--yellow)}
+.syncbar .dot.err{background:var(--red)}
+.btn{padding:8px 14px;border:0;border-radius:8px;background:var(--accent);color:#04211c;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit}
+.btn:hover{filter:brightness(1.1)}
+.btn.sec{background:var(--bg4);color:var(--text)}
+.btn.sm{padding:4px 10px;font-size:.72rem;border-radius:6px}
+.btn.red{background:var(--red);color:#fff}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{font-size:.95rem;color:var(--accent);margin-bottom:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat .k{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.stat .v{font-size:1.15rem;font-weight:700;margin-top:3px}
+.item{display:flex;gap:12px;align-items:flex-start;background:var(--bg2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.item.done{opacity:.55;border-left-color:var(--green)}
+.item.next{border-left-color:var(--yellow);background:linear-gradient(90deg,var(--yellow-bg),var(--bg2) 60%)}
+.item .when{min-width:92px;font-size:.72rem;color:var(--text2);line-height:1.4}
+.item .when b{display:block;color:var(--text);font-size:.8rem}
+.item .body{flex:1;min-width:0}
+.item .title{font-weight:700;font-size:.92rem}
+.item .meta{font-size:.73rem;color:var(--text2);margin-top:3px;line-height:1.5}
+.item .notes{font-size:.73rem;color:var(--text3);margin-top:4px;white-space:pre-wrap}
+.item .actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.65rem;font-weight:700;margin-left:6px;vertical-align:1px}
+.tag.warn{background:var(--yellow-bg);color:var(--yellow)}
+.tag.ok{background:var(--green-bg);color:var(--green)}
+.tag.info{background:var(--accent-dim);color:var(--accent)}
+.empty{text-align:center;color:var(--text3);padding:26px;font-size:.82rem}
+form .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+form .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+label{display:block;font-size:.72rem;color:var(--text2);font-weight:600;margin:8px 0 3px}
+input,select,textarea{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:.9rem;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:60px}
+.hint{font-size:.7rem;color:var(--text3);margin-top:8px;line-height:1.5}
+.footer{margin-top:20px;padding-top:10px;border-top:1px solid var(--line);font-size:.68rem;color:var(--text3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+@media(max-width:640px){form .row,form .row3{grid-template-columns:1fr}.item{flex-wrap:wrap}.item .actions{width:100%;justify-content:flex-start}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Suit<span>Compromisos</span></h1>
+    <div class="sub">Pendientes personales · viajes, reuniones, fechas límite</div>
+  </div>
+  <div class="sub" id="today"></div>
+</div>
+
+<div class="toolbar">
+  <button class="btn" onclick="openForm()">+ Nuevo compromiso</button>
+  <button class="btn sec" onclick="exportICS()">Exportar .ics (Google Calendar)</button>
+  <button class="btn sec" onclick="toggleDone()" id="doneBtn">Ver hechos</button>
+</div>
+
+<div class="syncbar" id="syncbar">
+  <span class="dot" id="syncDot"></span>
+  <span id="syncText">Google Calendar: revisando...</span>
+  <button class="btn sm sec" onclick="syncNow()" id="syncBtn">Sincronizar</button>
+  <button class="btn sm sec" onclick="toggleConfig()" id="cfgBtn">Configurar</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="k">Próximo</div><div class="v" id="sNext">—</div></div>
+  <div class="stat"><div class="k">Pendientes</div><div class="v" id="sOpen">0</div></div>
+  <div class="stat"><div class="k">Por confirmar</div><div class="v" id="sTbd">0</div></div>
+</div>
+
+<section class="card" id="formCard" style="display:none">
+  <h2 id="formTitle">Nuevo compromiso</h2>
+  <form onsubmit="saveForm(event)">
+    <input type="hidden" id="fId">
+    <label for="fTitle">Título</label>
+    <input id="fTitle" required placeholder="Ej: Vuelo OAK → MTY">
+    <div class="row3">
+      <div>
+        <label for="fDate">Fecha</label>
+        <input id="fDate" type="date" required>
+      </div>
+      <div>
+        <label for="fTime">Hora (opcional)</label>
+        <input id="fTime" type="time">
+      </div>
+      <div>
+        <label for="fType">Tipo</label>
+        <select id="fType">
+          <option value="viaje">Viaje</option>
+          <option value="reunion">Reunión</option>
+          <option value="entrega">Entrega</option>
+          <option value="pago">Pago</option>
+          <option value="personal">Personal</option>
+        </select>
+      </div>
+    </div>
+    <label for="fPlace">Lugar / dirección</label>
+    <input id="fPlace" placeholder="Por confirmar">
+    <label for="fNotes">Notas · qué falta confirmar</label>
+    <textarea id="fNotes" placeholder="Ej: falta hora y dirección exacta"></textarea>
+    <div class="toolbar" style="margin:12px 0 0">
+      <button class="btn" type="submit">Guardar</button>
+      <button class="btn sec" type="button" onclick="closeForm()">Cancelar</button>
+    </div>
+  </form>
+  <div class="hint">Los datos viven solo en este navegador (localStorage). Exporta el .ics para respaldarlos o pasarlos a Google Calendar.</div>
+</section>
+
+<section class="card" id="gcalCard" style="display:none">
+  <h2>Google Calendar</h2>
+  <div class="hint">Cuenta de servicio: <b id="saEmail">...</b></div>
+  <div class="hint" style="margin-top:10px"><b>Opcion 1 (recomendada):</b> crea un calendario <b>Compromisos</b> y compartelo con tu correo. Aparecera en Google Calendar como calendario adicional.</div>
+  <label for="gcalEmail">Tu correo de Google</label>
+  <input id="gcalEmail" type="email" placeholder="tucorreo@gmail.com">
+  <div class="toolbar" style="margin:10px 0 0">
+    <button class="btn" onclick="createGcal()">Crear calendario y compartir</button>
+  </div>
+  <div class="hint" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Opcion 2:</b> si ya compartiste un calendario con la cuenta de servicio, pega su ID o correo.</div>
+  <label for="gcalId">ID o correo del calendario</label>
+  <input id="gcalId" placeholder="tucorreo@gmail.com">
+  <div class="toolbar" style="margin:10px 0 0">
+    <button class="btn sec" onclick="saveGcal()">Guardar y probar</button>
+    <button class="btn sec" onclick="toggleConfig()">Cerrar</button>
+  </div>
+  <div class="hint" id="gcalMsg"></div>
+</section>
+
+<div id="list"></div>
+
+<div class="footer">
+  <span>Google Calendar es opcional: si el servidor local esta apagado, exporta .ics.</span>
+  <span>Local · noindex</span>
+</div>
+
+<script>
+const LS = 'suitcompromisos_v1';
+const LS_DEL = 'suitcompromisos_deleted_v1';
+const API = 'http://127.0.0.1:8138';
+const SEED = [
+  {
+    id: 'c-vuelo-oak-mty-2026',
+    titulo: 'Vuelo OAK → MTY',
+    fecha: '2026-11-27',
+    hora: '',
+    tipo: 'viaje',
+    lugar: 'Oakland (OAK) → Monterrey (MTY)',
+    notas: 'Por confirmar: horario del vuelo, aerolínea y equipaje.',
+    hecha: false
+  },
+  {
+    id: 'c-facultad-mty-2026',
+    titulo: 'Reunión con la facultad',
+    fecha: '2026-11-28',
+    hora: '',
+    tipo: 'reunion',
+    lugar: 'Monterrey, N.L. — dirección por confirmar',
+    notas: 'Por confirmar: hora y dirección exacta.',
+    hecha: false
+  }
+];
+
+let db = load();
+let pendingDeletes = loadDeletes();
+let showDone = false;
+let gcal = { ready: false, configured: false, busy: false, calendarId: '', timer: null };
+
+function load() {
+  try {
+    const raw = localStorage.getItem(LS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) { /* datos corruptos → re-sembrar */ }
+  return SEED.map(x => ({ ...x }));
+}
+
+function save() { localStorage.setItem(LS, JSON.stringify(db)); }
+
+function loadDeletes() {
+  try {
+    const raw = localStorage.getItem(LS_DEL);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+
+function saveDeletes() {
+  localStorage.setItem(LS_DEL, JSON.stringify(pendingDeletes));
+}
+
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function fmtDate(iso) {
+  if (!iso) return 'Sin fecha';
+  const p = iso.split('-').map(Number);
+  const d = new Date(p[0], p[1] - 1, p[2]);
+  return d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function isTbd(it) {
+  return !it.hora || /por confirmar|falta|pendiente/i.test((it.lugar || '') + ' ' + (it.notas || ''));
+}
+
+function sorted() {
+  return db.slice().sort((a, b) => {
+    if (a.hecha !== b.hecha) return a.hecha ? 1 : -1;
+    if (a.fecha !== b.fecha) return a.fecha < b.fecha ? -1 : 1;
+    return (a.hora || '99:99').localeCompare(b.hora || '99:99');
+  });
+}
+
+function render() {
+  const hoy = todayISO();
+  const open = db.filter(x => !x.hecha);
+  const next = open.filter(x => x.fecha >= hoy).sort((a, b) => a.fecha.localeCompare(b.fecha))[0];
+
+  document.getElementById('today').textContent = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('sNext').textContent = next ? fmtDate(next.fecha) : '—';
+  document.getElementById('sOpen').textContent = open.length;
+  document.getElementById('sTbd').textContent = open.filter(isTbd).length;
+  document.getElementById('doneBtn').textContent = showDone ? 'Ocultar hechos' : 'Ver hechos';
+
+  const rows = sorted().filter(x => showDone || !x.hecha);
+  const box = document.getElementById('list');
+  if (!rows.length) {
+    box.innerHTML = '<div class="empty">Nada por aquí. Crea un compromiso con «+ Nuevo compromiso».</div>';
+    return;
+  }
+
+  box.innerHTML = rows.map(it => {
+    const cls = it.hecha ? 'done' : (next && it.id === next.id ? 'next' : '');
+    const tbd = !it.hecha && isTbd(it) ? '<span class="tag warn">Falta confirmar</span>' : '';
+    const done = it.hecha ? '<span class="tag ok">Hecho</span>' : '';
+    return '<div class="item ' + cls + '">' +
+      '<div class="when"><b>' + esc(fmtDate(it.fecha)) + '</b>' + esc(it.hora || 'hora por confirmar') + '</div>' +
+      '<div class="body">' +
+        '<div class="title">' + esc(it.titulo) + tbd + done + '</div>' +
+        '<div class="meta">' + esc(it.lugar || 'Lugar por confirmar') + ' · ' + esc(labelTipo(it.tipo)) + '</div>' +
+        (it.notas ? '<div class="notes">' + esc(it.notas) + '</div>' : '') +
+      '</div>' +
+      '<div class="actions">' +
+        '<button class="btn sm sec" onclick="editItem(\'' + it.id + '\')">Editar</button>' +
+        '<button class="btn sm ' + (it.hecha ? 'sec' : '') + '" onclick="toggleItem(\'' + it.id + '\')">' + (it.hecha ? 'Reabrir' : 'Hecho') + '</button>' +
+        '<button class="btn sm red" onclick="delItem(\'' + it.id + '\')">Borrar</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function labelTipo(t) {
+  return ({ viaje: 'Viaje', reunion: 'Reunión', entrega: 'Entrega', pago: 'Pago', personal: 'Personal' })[t] || 'Personal';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function openForm(it) {
+  document.getElementById('formCard').style.display = 'block';
+  document.getElementById('formTitle').textContent = it ? 'Editar compromiso' : 'Nuevo compromiso';
+  document.getElementById('fId').value = it ? it.id : '';
+  document.getElementById('fTitle').value = it ? it.titulo : '';
+  document.getElementById('fDate').value = it ? it.fecha : '';
+  document.getElementById('fTime').value = it ? it.hora : '';
+  document.getElementById('fType').value = it ? it.tipo : 'personal';
+  document.getElementById('fPlace').value = it ? it.lugar : '';
+  document.getElementById('fNotes').value = it ? it.notas : '';
+  document.getElementById('fTitle').focus();
+}
+
+function closeForm() {
+  document.getElementById('formCard').style.display = 'none';
+  document.getElementById('fId').value = '';
+}
+
+function saveForm(e) {
+  e.preventDefault();
+  const id = document.getElementById('fId').value;
+  const data = {
+    titulo: document.getElementById('fTitle').value.trim(),
+    fecha: document.getElementById('fDate').value,
+    hora: document.getElementById('fTime').value,
+    tipo: document.getElementById('fType').value,
+    lugar: document.getElementById('fPlace').value.trim(),
+    notas: document.getElementById('fNotes').value.trim()
+  };
+  if (!data.titulo || !data.fecha) return;
+
+  if (id) {
+    const i = db.findIndex(x => x.id === id);
+    if (i >= 0) db[i] = { ...db[i], ...data };
+  } else {
+    db.push({ id: 'c-' + Date.now().toString(36), ...data, hecha: false });
+  }
+  save(); render(); closeForm(); scheduleSync();
+}
+
+function editItem(id) {
+  const it = db.find(x => x.id === id);
+  if (it) openForm(it);
+}
+
+function toggleItem(id) {
+  const it = db.find(x => x.id === id);
+  if (!it) return;
+  it.hecha = !it.hecha;
+  save(); render(); scheduleSync();
+}
+
+function delItem(id) {
+  const it = db.find(x => x.id === id);
+  if (!it) return;
+  if (!confirm('¿Borrar «' + it.titulo + '»?')) return;
+  if (it.googleEventId) { pendingDeletes.push(it.googleEventId); saveDeletes(); }
+  db = db.filter(x => x.id !== id);
+  save(); render(); scheduleSync();
+}
+
+function toggleDone() {
+  showDone = !showDone;
+  render();
+}
+
+function icsEscape(s) {
+  return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+
+function icsDate(iso) { return iso.replace(/-/g, ''); }
+function icsNextDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + 1);
+  const p = n => String(n).padStart(2, '0');
+  return '' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate());
+}
+function icsTime(iso, hora, addHours) {
+  const d = new Date(iso + 'T' + (hora || '09:00') + ':00');
+  d.setHours(d.getHours() + (addHours || 0));
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + 'T' + p(d.getHours()) + p(d.getMinutes()) + '00';
+}
+
+function exportICS() {
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SuitCompromisos//ES', 'CALSCALE:GREGORIAN'];
+
+  db.filter(x => !x.hecha).forEach(it => {
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + it.id + '@suitcompromisos');
+    lines.push('DTSTAMP:' + stamp);
+    if (it.hora) {
+      lines.push('DTSTART:' + icsTime(it.fecha, it.hora, 0));
+      lines.push('DTEND:' + icsTime(it.fecha, it.hora, 1));
+    } else {
+      lines.push('DTSTART;VALUE=DATE:' + icsDate(it.fecha));
+      lines.push('DTEND;VALUE=DATE:' + icsNextDate(it.fecha));
+    }
+    lines.push('SUMMARY:' + icsEscape(it.titulo));
+    if (it.lugar) lines.push('LOCATION:' + icsEscape(it.lugar));
+    const desc = [it.notas, isTbd(it) ? 'Pendiente: ' + (!it.hora ? 'hora ' : '') + (!it.lugar ? 'dirección' : '') : ''].filter(Boolean).join('\n');
+    if (desc) lines.push('DESCRIPTION:' + icsEscape(desc));
+    lines.push('END:VEVENT');
+  });
+
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'suitcompromisos.ics';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ===== Google Calendar (backend local :8138) ===== */
+function setSync(text, cls) {
+  const t = document.getElementById('syncText');
+  const d = document.getElementById('syncDot');
+  if (t) t.textContent = text;
+  if (d) d.className = 'dot ' + (cls || '');
+}
+
+async function api(path, options) {
+  const opts = Object.assign({ headers: { 'Content-Type': 'application/json' } }, options || {});
+  const res = await fetch(API + path, opts);
+  let data = {};
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
+}
+
+function toggleConfig() {
+  const card = document.getElementById('gcalCard');
+  const show = card.style.display === 'none' || !card.style.display;
+  card.style.display = show ? 'block' : 'none';
+  if (show) {
+    document.getElementById('gcalId').value = gcal.calendarId || '';
+    document.getElementById('gcalMsg').textContent = '';
+    document.getElementById('gcalEmail').focus();
+  }
+}
+
+async function createGcal() {
+  const email = document.getElementById('gcalEmail').value.trim();
+  const msg = document.getElementById('gcalMsg');
+  if (!email) { msg.textContent = 'Escribe tu correo de Google.'; return; }
+  msg.textContent = 'Creando calendario y compartiendolo...';
+  try {
+    const r = await api('/api/create-calendar', { method: 'POST', body: JSON.stringify({ email: email }) });
+    gcal.ready = true;
+    gcal.configured = true;
+    gcal.calendarId = r.calendarId;
+    document.getElementById('gcalCard').style.display = 'none';
+    setSync('Google Calendar: ' + (r.calendarSummary || 'Compromisos'), 'ok');
+    await syncNow();
+    alert('Calendario "Compromisos" creado y compartido con ' + r.sharedWith + '. Revisa Google Calendar en "Otros calendarios"; si no aparece, acepta la invitacion por correo.');
+  } catch (e) {
+    msg.textContent = e.message;
+    setSync('Google Calendar: error al crear', 'err');
+  }
+}
+
+async function saveGcal() {
+  const id = document.getElementById('gcalId').value.trim();
+  const msg = document.getElementById('gcalMsg');
+  if (!id) { msg.textContent = 'Pega el ID o correo del calendario.'; return; }
+  msg.textContent = 'Probando acceso...';
+  try {
+    const r = await api('/api/config', { method: 'POST', body: JSON.stringify({ calendarId: id }) });
+    gcal.ready = true;
+    gcal.configured = true;
+    gcal.calendarId = r.calendarId;
+    document.getElementById('gcalCard').style.display = 'none';
+    setSync('Google Calendar: ' + (r.calendarSummary || r.calendarId), 'ok');
+    await syncNow();
+  } catch (e) {
+    msg.textContent = e.message;
+    setSync('Google Calendar: error de conexion', 'err');
+  }
+}
+
+function scheduleSync() {
+  if (!gcal.configured) return;
+  clearTimeout(gcal.timer);
+  gcal.timer = setTimeout(function () { syncNow({ silent: true }); }, 800);
+}
+
+async function initGcal(retry) {
+  try {
+    const s = await api('/api/status');
+    gcal.ready = true;
+    gcal.calendarId = s.calendarId || '';
+    document.getElementById('saEmail').textContent = s.serviceAccountEmail || '(no encontrada)';
+    if (s.configured) {
+      gcal.configured = true;
+      setSync('Google Calendar: ' + (s.calendarSummary || s.calendarId), 'ok');
+      if (s.lastSync) syncNow({ silent: true });
+      else setSync('Google Calendar: listo para sincronizar', 'ok');
+    } else {
+      gcal.configured = false;
+      setSync('Google Calendar: falta configurar', 'warn');
+    }
+  } catch (e) {
+    if (!retry) {
+      setTimeout(function () { initGcal(true); }, 2500);
+      return;
+    }
+    gcal.ready = false;
+    setSync('Google Calendar: servidor local apagado', 'err');
+  }
+}
+
+async function syncNow(opts) {
+  opts = opts || {};
+  if (gcal.busy) return;
+  if (!gcal.ready) {
+    if (!opts.silent) setSync('Google Calendar: servidor local apagado', 'err');
+    return;
+  }
+  if (!gcal.configured) {
+    if (!opts.silent) toggleConfig();
+    return;
+  }
+  gcal.busy = true;
+  const btn = document.getElementById('syncBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando...'; }
+  setSync('Google Calendar: sincronizando...', 'warn');
+  try {
+    const r = await api('/api/sync', { method: 'POST', body: JSON.stringify({ items: db, deletedIds: pendingDeletes }) });
+    const map = {};
+    (r.results || []).forEach(function (x) { if (x.id) map[x.id] = x; });
+    db.forEach(function (it) {
+      if (map[it.id] && map[it.id].googleEventId !== undefined) it.googleEventId = map[it.id].googleEventId;
+    });
+    const done = new Set((r.results || []).filter(function (x) { return x.action === 'deleted' && x.googleEventId; }).map(function (x) { return x.googleEventId; }));
+    pendingDeletes = pendingDeletes.filter(function (id) { return !done.has(id); });
+    save(); saveDeletes(); render();
+    if (r.errors && r.errors.length) {
+      setSync('Google Calendar: ' + r.errors.length + ' error(es)', 'err');
+      if (!opts.silent) alert('Algunos compromisos no se pudieron sincronizar:\n' + r.errors.map(function (e) { return e.error; }).join('\n'));
+    } else {
+      const t = r.lastSync ? new Date(r.lastSync).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '';
+      setSync('Google Calendar: al dia' + (t ? ' (' + t + ')' : ''), 'ok');
+    }
+  } catch (e) {
+    setSync('Google Calendar: ' + e.message, 'err');
+    if (!opts.silent) alert('No se pudo sincronizar: ' + e.message);
+  } finally {
+    gcal.busy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Sincronizar'; }
+  }
+}
+
+render();
+initGcal();
+setInterval(function () { if (document.visibilityState === 'visible') syncNow({ silent: true }); }, 600000);
+</script>
+</body>
+</html>
