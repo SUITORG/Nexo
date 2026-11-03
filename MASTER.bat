@@ -59,11 +59,32 @@ if %SC_ESPERA% lss 10 goto sc_esperar
 echo *** Aviso: SuitCompromisos (:8138) no respondio ***
 :sc_listo
 
+rem SuitIdeasSaaS panel (node :8099) — solo si NO esta corriendo; nunca lo mata
+netstat -aon | findstr :8099 | findstr LISTENING >nul
+if not errorlevel 1 goto ideas_ya
+echo Iniciando SuitIdeasSaaS panel (:8099)...
+start "SuitIdeasSaaS-server" /min cmd /c "cd /d %~dp0 && node SuitIdeasSaaS\serve-panel.js"
+set /a ESP8099=0
+:ideas_esperar
+set /a ESP8099+=1
+timeout /t 1 /nobreak >nul
+netstat -aon | findstr :8099 | findstr LISTENING >nul
+if not errorlevel 1 goto ideas_ok
+if %ESP8099% lss 10 goto ideas_esperar
+echo *** Aviso: SuitIdeasSaaS (:8099) no respondio - la pestana Ideas SaaS estara caida ***
+goto ideas_fin
+:ideas_ya
+echo SuitIdeasSaaS ya corriendo en :8099
+goto ideas_fin
+:ideas_ok
+echo SuitIdeasSaaS listo en :8099
+:ideas_fin
+
 rem %RANDOM% rompe la caché del navegador: sin esto Chrome servía un MASTER.html
 rem guardado, y al no cargar el nuevo tampoco se aplicaba el cache-busting de los
 rem iframes → los módulos (p. ej. SuitMisCtas) se quedaban en una versión vieja.
 set STAMP=%RANDOM%%RANDOM%
 echo Master listo: http://127.0.0.1:%PORT%/MASTER.html?t=%STAMP%
 start "" "http://127.0.0.1:%PORT%/MASTER.html?t=%STAMP%"
-echo (Para detenerlos: cierra las ventanas minimizadas "SuitOS-Master-server", "SuitMarket-server" y "SuitCompromisos-server")
+echo (Para detenerlos: cierra las ventanas minimizadas "SuitOS-Master-server", "SuitMarket-server", "SuitCompromisos-server" y "SuitIdeasSaaS-server")
 timeout /t 3 >nul

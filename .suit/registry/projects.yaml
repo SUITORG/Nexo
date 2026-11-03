@@ -853,3 +853,32 @@ projects:
       DB: "SUPABASE (tablas industrias, nichos) + Google Places API"
     servers: []
     notes: "Carpeta untracked en git (renombrada desde Prospectos/ sin commitear). Fase 1 higiene hecha: reportes/ en .gitignore, comando corregido en AGENTS.md. Pendiente: GOOGLE_MAPS_API_KEY inexistente; endpoints Legacy -> Places API (New) (Legacy cerrado a proyectos GCP nuevos desde oct-2026); --radio inoperante (location=null); sin dedupe/paginacion; sin CSV. Ver docs/ y ADR en SuitProspectos/."
+
+  suit-ideassaas:
+    name: "SuitIdeasSaaS - Pipeline y panel de ideas SaaS"
+    path: SuitIdeasSaaS/
+    description: "Pipeline de ideas SaaS (ranchidas rapidas y verificadas: panel juzgador, analista-proy, go-to-market) + panel web local en 127.0.0.1:8099 (serve-panel.js, panel.html) con orden.json/solicitud.json para orquestar corridas. Sin DB: estado.json/historial.json locales."
+    type: service
+    skills:
+      - javascript
+    context:
+      - SuitIdeasSaaS/serve-panel.js
+      - SuitIdeasSaaS/panel.html
+    frontend:
+      public: false
+      public_route: "none (panel local :8099)"
+      public_gate: "none"
+      staff: true
+      staff_route: "http://localhost:8099/panel.html (panel)"
+      staff_gate: "dueno PC"
+      api_endpoints: []
+    environment:
+      PORT: 8099
+      TYPE: service
+      DB: none (estado.json/historial.json locales)
+    servers:
+      - name: panel
+        path: SuitIdeasSaaS/serve-panel.js
+        port: 8099
+        type: http
+    notes: "Entry server serve-panel.js no esta en la lista de entradas de SuitDashboard/scan.js; el puerto 8099 en registry hace que kind=INDEP. Skills de pipeline viven en .agents/skills/source-command-ideas y source-command-panel."

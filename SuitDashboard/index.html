@@ -42,6 +42,8 @@ select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);pa
 .b-LIB,.b-KIT{background:#242245;color:var(--purple)} .b-ASSETS{background:#222a44;color:var(--dim)}
 .b-SYNC{background:#123c2c;color:var(--ok)} .b-DESYNC{background:#3d2a12;color:var(--warn)}
 .b-CFG{background:#1a2f4d;color:var(--info)} .b-NA{background:#1c2440;color:var(--dim)}
+.pbar{height:8px;background:#1a2233;border-radius:6px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,#3b82f6,#22d3ee);border-radius:6px}
 .b-UP{background:#123c2c;color:var(--ok)} .b-DOWN{background:#3d1a24;color:var(--bad)}
 .b-PORT{background:#4a1520;color:#ff9aa8;animation:pulse 1.6s infinite}
 .b-CTR{background:#12304d;color:#8fd0ff} .b-NOCTR{background:#24282e;color:var(--dim)}
@@ -379,8 +381,11 @@ function render(){
   document.getElementById('count').textContent = list.length + ' / ' + base;
 }
 
+let currentDetail=null;
 function openDetail(name){
   const p = D.projects.find(x=>x.name===name); if(!p) return;
+  if(currentDetail===name && document.getElementById('drawer').classList.contains('open')){ closeDrawer(); return; }
+  currentDetail=name;
   const row=(k,v)=>`<div class="row"><span>${k}</span><span>${v}</span></div>`;
   document.getElementById('detail').innerHTML = `
     <h2>${esc(p.name)}</h2>
@@ -389,6 +394,12 @@ function openDetail(name){
       <span class="badge b-${p.sync}">${p.sync}</span>
       ${p.live?`<span class="badge b-${p.live==='up'?'UP':'DOWN'}">${p.live}</span>`:''}
     </div>
+    ${(()=>{ const desc=(p.tarjeta&&p.tarjeta.desc)||(p.registry&&p.registry.desc)||''; const av=p.tarjeta&&p.tarjeta.avance; const et=p.tarjeta&&p.tarjeta.etapa;
+      return `${desc?`<div class="sec"><h4>De qué trata</h4><p style="margin:0;color:var(--dim);font-size:.85rem;line-height:1.45">${esc(desc)}</p></div>`:''}
+    <div class="sec"><h4>Avance${av!=null?` <b style="color:var(--info)">${av}%</b>`:''}</h4>
+      ${av!=null?`<div class="pbar"><div class="pfill" style="width:${av}%"></div></div>`:''}
+      <div style="font-size:.78rem;color:var(--dim);margin-top:${av!=null?'5px':'0'}">${et?'Etapa: '+esc(et):(av==null?'sin tarjeta en GuiaTotal/registro':'')}</div>
+    </div>`; })()}
     <div class="sec"><h4>Identidad</h4>
       ${row('Ruta','<code>'+esc(p.dir)+'</code>')}
       ${row('package.json', p.pkg?esc(p.pkg.name)+' · '+p.pkg.deps+' deps':'no')}
@@ -421,7 +432,7 @@ function openDetail(name){
     </div>`;
   document.getElementById('drawer').classList.add('open');
 }
-function closeDrawer(){document.getElementById('drawer').classList.remove('open')}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');currentDetail=null;}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 
 document.querySelectorAll('.chipf[data-f]').forEach(c=>c.onclick=()=>{

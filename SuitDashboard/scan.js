@@ -61,6 +61,34 @@ function parseRegistry() {
   return { byDir, all: reg };
 }
 
+// --- GuiaTotal/registro tarjetas: descripcion ("de que trata") + etapa -> avance % ---
+function parseTarjetas() {
+  const dir = path.join(ROOT, 'GuiaTotal', 'registro');
+  const out = {};
+  if (!exists(dir)) return out;
+  const ETAPA = [
+    [/operativa|completada/i, 100],
+    [/mantenimiento/i, 90],
+    [/construccion/i, 60],
+    [/demo/i, 40],
+    [/registro/i, 20]
+  ];
+  for (const f of fs.readdirSync(dir)) {
+    if (!/\.ya?ml$/.test(f)) continue;
+    const txt = readText(path.join(dir, f));
+    const mRuta = /^ruta:\s*["']?([^"'\n]+)/m.exec(txt);
+    if (!mRuta) continue;
+    const d = mRuta[1].trim().replace(/\/$/, '');
+    if (!d || d.startsWith('(') || out[d]) continue; // tenants sin carpeta; primera tarjeta gana
+    const mEtapa = /^etapa:\s*["']?([^"'\n#]+)/m.exec(txt);
+    const mProb = /^\s+problema:\s*["']?(.+?)["']?\s*$/m.exec(txt);
+    const etapa = mEtapa ? mEtapa[1].trim() : null;
+    const hit = etapa ? ETAPA.find(([re]) => re.test(etapa)) : null;
+    out[d] = { etapa, avance: hit ? hit[1] : null, desc: mProb ? mProb[1].trim() : null };
+  }
+  return out;
+}
+
 // --- PROJECT_OPTIMAL desde scripts/mcp-manager.js (no require: ejecuta CLI) ---
 function parseOptimal() {
   const txt = readText(path.join(ROOT, 'scripts', 'mcp-manager.js'));
@@ -700,7 +728,7 @@ function buildPendientes(allDirs) {
   return { pend, ordered };
 }
 
-function scanProject(name, dir, isRoot, reg, optimal, ctx) {
+function scanProject(name, dir, isRoot, reg, optimal, ctx, tarj) {
   const pkg = readJson(path.join(dir, 'package.json'));
   const oc = readJson(path.join(dir, 'opencode.json'));
   const mcpJson = readJson(path.join(dir, '.mcp.json'));
@@ -787,6 +815,7 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
     entry,
     ports,
     registry: r ? { key: r.key, db: r.db || null, desc: r.desc || null } : null,
+    tarjeta: tarj[name] || null,
     contract: contractFor(dir),
     mcpActive, mcpOff, claudeMcp,
     mcps, skillsCli,
@@ -801,6 +830,7 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
 
 (async () => {
   const reg = parseRegistry();
+  const tarj = parseTarjetas();
   const optimal = parseOptimal();
   const ctx = claudeContext();
   // skills globales de OpenCode (~/.config/opencode/skills)
@@ -810,8 +840,8 @@ function scanProject(name, dir, isRoot, reg, optimal, ctx) {
     .filter(d => d.isDirectory() && !EXCLUDE.has(d.name))
     .map(d => d.name).sort();
 
-  const projects = [scanProject('root', ROOT, true, reg, optimal, ctx)];
-  for (const d of dirs) projects.push(scanProject(d, path.join(ROOT, d), false, reg, optimal, ctx));
+  const projects = [scanProject('root', ROOT, true, reg, optimal, ctx, tarj)];
+  for (const d of dirs) projects.push(scanProject(d, path.join(ROOT, d), false, reg, optimal, ctx, tarj));
 
   // --- Foco: ultimo commit + pendientes por proyecto (ronda 3) ---
   const gitMap = buildGitMap(['.', ...dirs]);
