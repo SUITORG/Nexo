@@ -194,7 +194,7 @@ function load() {
   return SEED.map(x => ({ ...x }));
 }
 
-function save() { localStorage.setItem(LS, JSON.stringify(db)); }
+function save() { localStorage.setItem(LS, JSON.stringify(db)); scheduleBackup(); }
 
 function loadDeletes() {
   try {
@@ -206,6 +206,7 @@ function loadDeletes() {
 
 function saveDeletes() {
   localStorage.setItem(LS_DEL, JSON.stringify(pendingDeletes));
+  scheduleBackup();
 }
 
 function todayISO() {
@@ -394,6 +395,8 @@ function exportICS() {
 }
 
 /* ===== Google Calendar (backend local :8138) ===== */
+let apiToken = ''; // se carga desde /api/status (condicion 2 del panel)
+
 function setSync(text, cls) {
   const t = document.getElementById('syncText');
   const d = document.getElementById('syncDot');
@@ -403,11 +406,27 @@ function setSync(text, cls) {
 
 async function api(path, options) {
   const opts = Object.assign({ headers: { 'Content-Type': 'application/json' } }, options || {});
+  if (apiToken) opts.headers['X-Suit-Token'] = apiToken;
   const res = await fetch(API + path, opts);
   let data = {};
   try { data = await res.json(); } catch (e) {}
   if (!res.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + res.status));
   return data;
+}
+
+/* ===== Backup automatico al server (condicion 3) ===== */
+let backupTimer = null;
+function scheduleBackup() {
+  if (!apiToken) return; // sin server/token todavia; initGcal hara el primero
+  clearTimeout(backupTimer);
+  backupTimer = setTimeout(runBackup, 5000);
+}
+async function runBackup() {
+  try {
+    await api('/api/backup', { method: 'POST', body: JSON.stringify({ db: db, pendingDeletes: pendingDeletes }) });
+  } catch (e) {
+    console.warn('[SuitCompromisos] backup fallo:', e.message);
+  }
 }
 
 function toggleConfig() {
@@ -469,8 +488,10 @@ function scheduleSync() {
 async function initGcal(retry) {
   try {
     const s = await api('/api/status');
+    apiToken = s.apiToken || '';
     gcal.ready = true;
     gcal.calendarId = s.calendarId || '';
+    runBackup(); // primer dump al conectar (condicion 3)
     document.getElementById('saEmail').textContent = s.serviceAccountEmail || '(no encontrada)';
     if (s.configured) {
       gcal.configured = true;

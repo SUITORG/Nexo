@@ -55,28 +55,31 @@ curl http://127.0.0.1:8138/api/status     # → calendario, lastSync, SA
 
 ## 4. Endpoints
 
-| Método | Ruta | Qué hace |
-|---|---|---|
-| GET | `/api/health` | liveness `{"ok":true}` |
-| GET | `/api/status` | calendario (id/resumen/tz), `sharedWith`, `lastSync`, email de la SA |
-| POST | `/api/config` | guarda `calendarId`/`sharedWith` en config.json (atómico) |
-| POST | `/api/create-calendar` | crea el calendario con la SA y guarda su id |
-| POST | `/api/sync` | sube/baja artículos ↔ eventos (cola serializada, idempotente por `suitId`) |
+| Método | Ruta | Auth | Qué hace |
+|---|---|---|---|
+| GET | `/api/health` | — | liveness `{"ok":true}` |
+| GET | `/api/status` | — | calendario, `lastSync`, SA y **`apiToken`** (bootstrap del panel) |
+| POST | `/api/config` | token | guarda `calendarId`/`sharedWith` (atómico) |
+| POST | `/api/create-calendar` | token | crea el calendario con la SA y guarda su id |
+| POST | `/api/sync` | token | sube/baja artículos ↔ eventos (cola serializada, idempotente por `suitId`) |
+| POST | `/api/backup` | token | recibe dump de `localStorage` → `backups/backup-<ts>.json` (conserva últimos 30) |
 
-CORS: solo `http://127.0.0.1:8137` (MASTER). Body máx 2 MB. **Sin token** (condición 2 del veredicto pendiente).
+- **Token (condición 2 ✓):** todo POST exige header `X-Suit-Token` = `apiToken` de `config.json` (se genera solo en el primer arranque; el panel lo lee de `/api/status`). Sin/malo → `401`.
+- **Origen:** solo `http://127.0.0.1:8137` (MASTER). `Origin: null` ya **no** se acepta → `403`. Body máx 2 MB.
 
-## 5. Seguridad (estado actual y deuda)
+## 5. Seguridad (estado)
 
-- SA con scope `auth/calendar` completo (condición 2: reducir a `calendar.events`).
-- `Origin: null` aceptado en `isAllowedOrigin` (condición 2: eliminar).
-- `config.json` y `server.log` **gitignorados** (PII: calendarId, email, eventos).
-- `google-credentials.json` en raíz, gitignorado (condición 5: mover a path dedicado o aceptar SPOF).
-- El repo completo se publica en GitHub Pages: **nunca** commitear config/log/credenciales.
+- **Scope reducido (condición 2 ✓):** el client de uso diario (sync) usa `calendar.events`; solo config/creación usan scope `calendar` completo (acciones manuales raras).
+- **Token en POST (condición 2 ✓)** + **`Origin: null` eliminado (condición 2 ✓)**.
+- `config.json`, `server.log` y `backups/` **gitignorados** (PII).
+- **SPOF aceptado por diseño (condición 5 ✓):** la SA vive en la raíz compartida con Citas/SuitReservaciones/gas-client — moverla rompería esos módulos; se documenta en el encabezado de `server.js` y aquí: laptop apagado = sin sync (datos siguen en `localStorage` + `backups/`).
+- El repo completo se publica en GitHub Pages: **nunca** commitear config/log/backups/credenciales.
 
-## 6. Backup de datos
+## 6. Backup de datos (condición 3 ✓ — automático)
 
-- Artículo viven en `localStorage` del navegador del panel → **Exportar** del panel (JSON/.ics) antes de limpiar navegador (condición 3: automatizar dump).
-- Calendar actúa como espejo parcial (lo sincronizado).
+- El panel POSTea el dump (`db` + `pendingDeletes`) a `/api/backup` **5 s después de cada guardado** y al conectar; el server escribe `SuitCompromisos/backups/backup-<timestamp>.json` y poda a los **últimos 30**.
+- Restaurar: copiar el contenido de `db` del backup al `localStorage` del panel (o pedir un endpoint de restore — pendiente menor).
+- Calendar sigue siendo espejo parcial de lo sincronizado.
 
 ## 7. Troubleshooting
 

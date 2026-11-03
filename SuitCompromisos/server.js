@@ -7,20 +7,28 @@
  *
  * Requisito: compartir el calendario destino con el correo de la cuenta de
  * servicio, con permiso "Hacer cambios en eventos".
+ *
+ * SPOF aceptado por diseno (condicion 5 del panel-juzgador 2026-11-03): la SA
+ * vive en la raiz compartida con Citas/SuitReservaciones/GAS-client; moverla
+ * romperia esos modulos. El laptop apagado = sin sync (los datos siguen en
+ * localStorage + backups/). Ver docs/MANUAL_TECNICO.md 5.
  */
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { URL } = require('url');
 
 const ROOT = __dirname;
 const CREDENTIALS = path.join(ROOT, '..', 'google-credentials.json');
 const CONFIG_PATH = path.join(ROOT, 'config.json');
+const BACKUP_DIR = path.join(ROOT, 'backups');
 const PORT = Number(process.env.SUIT_COMPROMISOS_PORT || 8138);
 const HOST = '127.0.0.1';
 const DEFAULT_TZ = 'America/Monterrey';
 const MAX_BODY = 2 * 1024 * 1024;
+const BACKUP_KEEP = 30;
 
 let google;
 try {
@@ -36,7 +44,8 @@ const DEFAULT_CONFIG = {
   calendarSummary: '',
   timeZone: DEFAULT_TZ,
   sharedWith: '',
-  lastSync: null
+  lastSync: null,
+  apiToken: ''
 };
 
 function readJson(file, fallback) {
@@ -60,8 +69,25 @@ function getConfig() {
     calendarSummary: typeof cfg.calendarSummary === 'string' ? cfg.calendarSummary : '',
     timeZone: typeof cfg.timeZone === 'string' && cfg.timeZone ? cfg.timeZone : DEFAULT_TZ,
     sharedWith: typeof cfg.sharedWith === 'string' ? cfg.sharedWith : '',
-    lastSync: typeof cfg.lastSync === 'string' ? cfg.lastSync : null
+    lastSync: typeof cfg.lastSync === 'string' ? cfg.lastSync : null,
+    apiToken: typeof cfg.apiToken === 'string' ? cfg.apiToken : ''
   };
+}
+
+// Token local (condicion 2): se genera una vez y vive en config.json (gitignorado).
+function ensureToken() {
+  const cfg = getConfig();
+  if (cfg.apiToken) return cfg.apiToken;
+  const token = crypto.randomBytes(24).toString('hex');
+  writeJson(CONFIG_PATH, Object.assign(cfg, { apiToken: token }));
+  console.log('[SuitCompromisos] apiToken nuevo generado en config.json');
+  return token;
+}
+
+function checkToken(req) {
+  const header = req.headers['x-suit-token'];
+  const expected = getConfig().apiToken;
+  return !!expected && typeof header === 'string' && header === expected;
 }
 
 function getServiceAccountEmail() {
@@ -70,17 +96,26 @@ function getServiceAccountEmail() {
 }
 
 let calendarClient = null;
-function getCalendar() {
-  if (calendarClient) return calendarClient;
+function makeCalendar(scope) {
   if (!fs.existsSync(CREDENTIALS)) {
     throw httpError(500, 'No existe google-credentials.json en la raiz de SuitOrg.');
   }
   const auth = new google.auth.GoogleAuth({
     keyFile: CREDENTIALS,
-    scopes: ['https://www.googleapis.com/auth/calendar']
+    scopes: [scope]
   });
-  calendarClient = google.calendar({ version: 'v3', auth });
+  return google.calendar({ version: 'v3', auth });
+}
+// Operaciones de eventos (uso diario) — scope reducido (condicion 2)
+function getCalendar() {
+  if (!calendarClient) calendarClient = makeCalendar('https://www.googleapis.com/auth/calendar.events');
   return calendarClient;
+}
+// Calendarios/ACL (config y creacion, acciones manuales raras) — scope completo
+let calendarFullClient = null;
+function getCalendarFull() {
+  if (!calendarFullClient) calendarFullClient = makeCalendar('https://www.googleapis.com/auth/calendar');
+  return calendarFullClient;
 }
 
 function httpError(statusCode, message) {
@@ -91,8 +126,8 @@ function httpError(statusCode, message) {
 
 function isAllowedOrigin(origin) {
   if (!origin) return true;
-  if (origin === 'null') return true;
   // El panel MASTER se sirve en :8137. Si cambias ese puerto, ajusta aqui.
+  // 'null' ya NO se acepta (condicion 2: origen null = file:// o sandbox).
   return /^http:\/\/(127\.0\.0\.1|localhost):8137$/.test(origin);
 }
 
@@ -264,7 +299,8 @@ async function handleStatus() {
     serviceAccountEmail: getServiceAccountEmail(),
     timeZone: cfg.timeZone,
     sharedWith: cfg.sharedWith,
-    lastSync: cfg.lastSync
+    lastSync: cfg.lastSync,
+    apiToken: ensureToken()
   };
 }
 
@@ -275,7 +311,7 @@ async function handleConfig(body) {
     throw httpError(400, 'Usa el correo de tu calendario, no "primary".');
   }
 
-  const cal = getCalendar();
+  const cal = getCalendarFull();
   let data;
   try {
     const r = await cal.calendars.get({ calendarId: calendarId });
@@ -309,7 +345,7 @@ async function handleCreateCalendar(body) {
     throw httpError(400, 'Escribe un correo de Google valido.');
   }
 
-  const cal = getCalendar();
+  const cal = getCalendarFull();
   let created;
   try {
     created = await cal.calendars.insert({
@@ -359,6 +395,29 @@ function enqueue(task) {
   const run = syncQueue.then(task, task);
   syncQueue = run.catch(() => {});
   return run;
+}
+
+// Backup automatico de localStorage (condicion 3): el panel POSTea el dump
+// tras cada guardado (debounce) y al iniciar. Se conservan los ultimos 30.
+async function handleBackup(body) {
+  const data = body && body.db;
+  if (!data || (typeof data !== 'object')) throw httpError(400, 'Falta db en el body.');
+  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const file = path.join(BACKUP_DIR, 'backup-' + stamp + '.json');
+  const payload = {
+    savedAt: new Date().toISOString(),
+    db: data,
+    pendingDeletes: Array.isArray(body.pendingDeletes) ? body.pendingDeletes : []
+  };
+  fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf8');
+  // poda: quedarse con los ultimos BACKUP_KEEP
+  const files = fs.readdirSync(BACKUP_DIR).filter(f => /^backup-.*\.json$/.test(f)).sort();
+  while (files.length > BACKUP_KEEP) {
+    const old = files.shift();
+    try { fs.unlinkSync(path.join(BACKUP_DIR, old)); } catch (e) { /* best effort */ }
+  }
+  return { ok: true, file: 'backups/' + path.basename(file), count: Array.isArray(data) ? data.length : Object.keys(data).length };
 }
 
 async function handleSync(body) {
@@ -424,17 +483,27 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/api/status') {
       return send(res, 200, await handleStatus(), origin);
     }
-    if (req.method === 'POST' && url.pathname === '/api/config') {
-      const body = await readBody(req);
-      return send(res, 200, await handleConfig(body), origin);
-    }
-    if (req.method === 'POST' && url.pathname === '/api/create-calendar') {
-      const body = await readBody(req);
-      return send(res, 200, await handleCreateCalendar(body), origin);
-    }
-    if (req.method === 'POST' && url.pathname === '/api/sync') {
-      const body = await readBody(req);
-      return send(res, 200, await handleSync(body), origin);
+    // Todos los POST exigen X-Suit-Token (condicion 2)
+    if (req.method === 'POST') {
+      if (!checkToken(req)) {
+        return send(res, 401, { ok: false, error: 'Token invalido: falta o no coincide X-Suit-Token.' }, origin);
+      }
+      if (url.pathname === '/api/config') {
+        const body = await readBody(req);
+        return send(res, 200, await handleConfig(body), origin);
+      }
+      if (url.pathname === '/api/create-calendar') {
+        const body = await readBody(req);
+        return send(res, 200, await handleCreateCalendar(body), origin);
+      }
+      if (url.pathname === '/api/sync') {
+        const body = await readBody(req);
+        return send(res, 200, await handleSync(body), origin);
+      }
+      if (url.pathname === '/api/backup') {
+        const body = await readBody(req);
+        return send(res, 200, await handleBackup(body), origin);
+      }
     }
     return send(res, 404, { ok: false, error: 'No encontrado' }, origin);
   } catch (err) {
@@ -451,6 +520,7 @@ server.on('error', (err) => {
 
 server.listen(PORT, HOST, () => {
   const cfg = getConfig();
+  ensureToken();
   console.log('[SuitCompromisos] http://' + HOST + ':' + PORT);
   console.log('[SuitCompromisos] Calendario: ' + (cfg.calendarId || 'sin configurar'));
   console.log('[SuitCompromisos] Cuenta de servicio: ' + (getServiceAccountEmail() || 'no encontrada'));

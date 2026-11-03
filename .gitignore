@@ -141,3 +141,6 @@ SuitCompromisos/config.json
 
 # SuitCompromisos - log del server local (contiene PII de la service account)
 SuitCompromisos/server.log
+
+# SuitCompromisos - dumps automaticos de localStorage (datos personales)
+SuitCompromisos/backups/

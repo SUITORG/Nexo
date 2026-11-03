@@ -16,7 +16,7 @@ validacion:
 evaluacion:
   panel_juzgador: "APROBADO CONDICIONAL"
   veredicto_fecha: "2026-11-03"
-  recomendaciones: "6.75/10 (Mercado 7 · Técnico 7 · Riesgo 6 · Financiero 7). 5 condiciones: (1) registro/puertos ✓ hecho, (2) token X-Suit-Token + quitar Origin:null + scope calendar.events, (3) backup automático de localStorage, (4) gitignorar server.log ✓ + smoke ✓, (5) path dedicado para la service account o aceptación documentada del SPOF. Detalle: .suit/logs/panel-juzgador/veredicto.md"
+  recomendaciones: "6.75/10 (Mercado 7 · Técnico 7 · Riesgo 6 · Financiero 7). 5 condiciones: (1) registro/puertos ✓, (2) token X-Suit-Token + Origin:null eliminado + scope calendar.events ✓, (3) backup automático /api/backup → backups/ (30 dumps) ✓, (4) gitignore server.log+backups ✓ + smoke 9/9 ✓, (5) SPOF SA aceptado y documentado ✓. Detalle: .suit/logs/panel-juzgador/veredicto.md"
 
 integraciones:
   convive_sheets: false         # herramienta personal; no toca Config_Empresas (supuesto: uso estrictamente personal)
@@ -48,4 +48,4 @@ documentos:
   proposal: true                # <Proyecto>/proposal.md (entrada del panel-juzgador)
   evaluacion_panel: true        # .suit/logs/panel-juzgador/{veredicto,eval_*}.md
 
-proximo_paso: "Ejecutar condiciones 2, 3 y 5 del veredicto (token+scope <30 min, backup dump JSON, path de la SA) y revalidar con smoke crear→sync→borrar en Calendar."
+proximo_paso: "Re-validar extremo a extremo (crear → sync → borrar → verificar en Calendar) con el panel en MASTER; condiciones del panel cerradas 2026-11-03."
