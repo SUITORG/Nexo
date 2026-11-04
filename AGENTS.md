@@ -295,8 +295,11 @@ Al crear un nuevo módulo independiente, seguir este procedimiento:
  | 3017 | SuitContractRenew (contratos de mantenimiento HVAC, idea-saas — ADR-049) |
  | 3018 | SuitPawBook (reservas con depósito groomers, idea-saas verificadas — ADR-051/053) |
  | 3019 | SuitWhatsAppPub (publicador WhatsApp personal, panel local — ADR-055) |
+ | 3020 | SuitMarket (sidecar cotizaciones USD/MXN + bolsa, híbrido gratis) |
+ | 3021 | SuitGmail (lector de correos banco/servicios, OAuth usuario, UI en SuitMisCtas) |
  | n/a | SuitCVLOGCPy (mismo pipeline en Google Colab con VLM en GPU, sin servidor — ADR-040) |
  | 8000 | CampanasAi |
+ | 8099 | SuitIdeasSaaS (pipeline + panel de ideas SaaS, panel.html) |
  | 8137 | SuitOS Master (hub MASTER.html — pestañas de todos los módulos) |
  | 8138 | SuitCompromisos (puente Google Calendar local, service account) |
 5. Registrar en `.suit/registry/projects.yaml` con frontend gates, puertos y tablas

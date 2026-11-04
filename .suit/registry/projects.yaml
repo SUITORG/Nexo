@@ -882,3 +882,35 @@ projects:
         port: 8099
         type: http
     notes: "Entry server serve-panel.js no esta en la lista de entradas de SuitDashboard/scan.js; el puerto 8099 en registry hace que kind=INDEP. Skills de pipeline viven en .agents/skills/source-command-ideas y source-command-panel."
+
+  suit-gmail:
+    name: "SuitGmail - Lector de correos banco/servicios"
+    path: SuitGmail/
+    description: "Lee correos de las ultimas 48h via Gmail API (OAuth de usuario, NO service_account) y devuelve semaforo rojo/amarillo/verde de banco, pagos, luz, agua y telefono. Endpoint /resumen consumido por la pestana Gmail de SuitMisCtas. Servidor node puro sin dependencias en 127.0.0.1:3021; reglas por remitente+palabras en reglas.json; credenciales en config.json (gitignored)."
+    type: service
+    skills:
+      - javascript
+    context:
+      - SuitGmail/server.js
+      - SuitGmail/reglas.json
+    frontend:
+      public: false
+      public_route: "none (UI embebida en SuitMisCtas v-gmail)"
+      public_gate: "none"
+      staff: true
+      staff_route: "SuitMisCtas index.html pestana Gmail"
+      staff_gate: "dueno PC"
+      api_endpoints:
+        - "GET /resumen"
+        - "GET /auth"
+        - "GET /auth/callback"
+    environment:
+      PORT: 3021
+      TYPE: service
+      DB: none (config.json + reglas.json locales)
+    servers:
+      - name: gmail
+        path: SuitGmail/server.js
+        port: 3021
+        type: http
+    notes: "Requiere cliente OAuth Desktop + Gmail API habilitada en la consola GCP del proyecto (el SA de calendario no sirve para Gmail personal). Setup: pegar client_id/secret en config.json y entrar una vez a /auth."

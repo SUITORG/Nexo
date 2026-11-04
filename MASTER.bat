@@ -80,6 +80,27 @@ goto ideas_fin
 echo SuitIdeasSaaS listo en :8099
 :ideas_fin
 
+rem SuitGmail (node :3021) — solo si NO esta corriendo; nunca lo mata
+netstat -aon | findstr :3021 | findstr LISTENING >nul
+if not errorlevel 1 goto gm_ya
+echo Iniciando SuitGmail (:3021)...
+start "SuitGmail-server" /min cmd /c "cd /d %~dp0 && node SuitGmail\server.js"
+set /a ESP3021=0
+:gm_esperar
+set /a ESP3021+=1
+timeout /t 1 /nobreak >nul
+netstat -aon | findstr :3021 | findstr LISTENING >nul
+if not errorlevel 1 goto gm_ok
+if %ESP3021% lss 10 goto gm_esperar
+echo *** Aviso: SuitGmail (:3021) no respondio - la pestana Gmail estara caida ***
+goto gm_fin
+:gm_ya
+echo SuitGmail ya corriendo en :3021
+goto gm_fin
+:gm_ok
+echo SuitGmail listo en :3021
+:gm_fin
+
 rem %RANDOM% rompe la caché del navegador: sin esto Chrome servía un MASTER.html
 rem guardado, y al no cargar el nuevo tampoco se aplicaba el cache-busting de los
 rem iframes → los módulos (p. ej. SuitMisCtas) se quedaban en una versión vieja.

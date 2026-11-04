@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (56 ADRs)
+## decisions/ (58 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -63,6 +63,8 @@
 | ADR-056 | [Skill micro-app-saas (gate de forma + ruta de cobro)](ADR-056-micro-app-saas-skill.md) | Accepted (2026-10-16) | 2026-10-16 | Faltaba una decisión explícita antes de diseñar un producto: **qué forma** debe tener (¿hace falta un SaaS entero, o basta una micro-app?)… | 048, 051, 054 |
 | ADR-057 | [Aviso de privacidad + cookies por empresa en Config_Empresas](ADR-057-aviso-privacidad-cookies-por-empresa.md) | Accepted (2026-10-23) | 2026-10-23 | El flujo de identidad corporativa (guia-total → empresa-registro) no generaba aviso de privacidad ni política de cookies. El frontend… | - |
 | ADR-058 | [Re-cotización in-situ sobre sh_price_negotiations (no columnas en…](ADR-058-ajuste-insitu-sobre-negotiations.md) | Accepted (2026-10-08) | 2026-10-08 | Req #44: flujo de Re-cotización / Ajuste de Presupuesto in-situ para el Escrow — el técnico propone un monto adicional durante… | 027 |
+| ADR-059 | [SuitProspectos — Places API (New) + geolocalización de radio sin coste](ADR-059-suitprospectos-places-new.md) | Accepted (2026-11-02) | 2026-11-02 | `SuitProspectos/prospect.js` era un CLI de prospección comercial que usaba la **Places API (Legacy)** (`/maps/api/place/textsearch/json` +… | - |
+| ADR-060 | [SuitGmail — OAuth de usuario (no service_account) + reglas por…](ADR-060-suitgmail-oauth-usuario.md) | Accepted (2026-11-03) | 2026-11-03 | SuitGmail debe leer el Gmail personal de Roberto y producir un semáforo (banco, pagos, luz, agua, teléfono). En el repo ya existe… | - |
 
 ## bugs/ (7)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…

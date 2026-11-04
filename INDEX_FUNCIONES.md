@@ -1,5 +1,12 @@
 # Índice de Funciones — SuitOrg
-**Generado:** 2026-10-28 | **Total archivos:** 1648 JS/GS
+**Generado:** 2026-11-04 | **Total archivos:** 1651 JS/GS
+
+## `.agents/skills/mojibake/mojibake.js`
+
+| Línea | Función |
+|-------|---------|
+| 17 | `walk` |
+| 32 | `count` |
 
 ## `.agents/skills/video-shotcraft/gallery/app.js`
 
@@ -10004,29 +10011,6 @@
 | 106 | `generatePresentation` |
 | 147 | `openPresentation` |
 
-## `Prospectos/prospect.js`
-
-| Línea | Función |
-|-------|---------|
-| 23 | `httpGet` |
-| 37 | `sleep` |
-| 41 | `slugify` |
-| 45 | `now` |
-| 50 | `getSupabase` |
-| 58 | `listIndustrias` |
-| 73 | `findNicho` |
-| 90 | `searchPlaces` |
-| 110 | `getPlaceDetails` |
-| 123 | `extractSocialFromWebsite` |
-| 149 | `analyzeDigitalPresence` |
-| 166 | `analyzeStrengths` |
-| 200 | `detectSocialFromPlace` |
-| 215 | `inferTargetAudience` |
-| 249 | `getWhatsapp` |
-| 256 | `formatCell` |
-| 262 | `main` |
-| 382 | `tipoNegocio` |
-
 ## `qwen-imagen-studio/app/app.js`
 
 | Línea | Función |
@@ -10202,6 +10186,38 @@
 | 10 | `run` |
 | 19 | `zoompanExpr` |
 | 30 | `renderVideo` |
+
+## `SuitCompromisos/server.js`
+
+| Línea | Función |
+|-------|---------|
+| 51 | `readJson` |
+| 59 | `writeJson` |
+| 65 | `getConfig` |
+| 78 | `ensureToken` |
+| 87 | `checkToken` |
+| 93 | `getServiceAccountEmail` |
+| 99 | `makeCalendar` |
+| 110 | `getCalendar` |
+| 116 | `getCalendarFull` |
+| 121 | `httpError` |
+| 127 | `isAllowedOrigin` |
+| 134 | `setCors` |
+| 144 | `send` |
+| 155 | `readBody` |
+| 180 | `pad` |
+| 184 | `fmtDate` |
+| 188 | `nextDate` |
+| 194 | `buildEventBody` |
+| 232 | `findEventBySuitId` |
+| 242 | `deleteEvent` |
+| 251 | `syncOne` |
+| 292 | `handleStatus` |
+| 307 | `handleConfig` |
+| 342 | `handleCreateCalendar` |
+| 394 | `enqueue` |
+| 402 | `handleBackup` |
+| 423 | `handleSync` |
 
 ## `SuitContractRenew/db/client.js`
 
@@ -10491,51 +10507,68 @@
 | 33 | `exists` |
 | 34 | `readText` |
 | 37 | `parseRegistry` |
-| 65 | `parseOptimal` |
-| 78 | `parseAgentsRegistry` |
-| 98 | `parseSkillsRegistry` |
-| 133 | `scanClaudeAgents` |
-| 154 | `scanParallelGroups` |
-| 239 | `buildTriggerSources` |
-| 241 | `add` |
-| 251 | `walk` |
-| 273 | `triggersFor` |
-| 274 | `esc` |
-| 298 | `scanScripts` |
-| 324 | `desc` |
-| 333 | `scanPlugins` |
-| 354 | `readSkillDesc` |
-| 389 | `yamlDesc` |
-| 406 | `contractFor` |
-| 409 | `pick` |
-| 434 | `collectSkills` |
-| 465 | `findPort` |
-| 472 | `checkPort` |
-| 475 | `done` |
-| 484 | `loadEnvKeys` |
-| 495 | `claudeCmdArr` |
-| 502 | `countSkillDirs` |
-| 510 | `claudeContext` |
-| 534 | `pathCheck` |
-| 541 | `test` |
-| 562 | `envRequired` |
-| 564 | `scan` |
-| 573 | `stripAnsi` |
-| 576 | `probeOpenCode` |
-| 594 | `probeClaude` |
-| 612 | `daysAgo` |
-| 617 | `buildGitMap` |
-| 619 | `norm` |
-| 624 | `top` |
-| 655 | `buildPendientes` |
-| 658 | `push` |
-| 663 | `clean` |
-| 703 | `scanProject` |
-| 836 | `ajenas` |
-| 842 | `skillOrigen` |
-| 871 | `type` |
-| 872 | `domain` |
-| 873 | `version` |
+| 65 | `parseTarjetas` |
+| 93 | `parseOptimal` |
+| 106 | `parseAgentsRegistry` |
+| 126 | `parseSkillsRegistry` |
+| 161 | `scanClaudeAgents` |
+| 182 | `scanParallelGroups` |
+| 267 | `buildTriggerSources` |
+| 269 | `add` |
+| 279 | `walk` |
+| 301 | `triggersFor` |
+| 302 | `esc` |
+| 326 | `scanScripts` |
+| 352 | `desc` |
+| 361 | `scanPlugins` |
+| 382 | `readSkillDesc` |
+| 417 | `yamlDesc` |
+| 434 | `contractFor` |
+| 437 | `pick` |
+| 462 | `collectSkills` |
+| 493 | `findPort` |
+| 500 | `checkPort` |
+| 503 | `done` |
+| 512 | `loadEnvKeys` |
+| 523 | `claudeCmdArr` |
+| 530 | `countSkillDirs` |
+| 538 | `claudeContext` |
+| 562 | `pathCheck` |
+| 569 | `test` |
+| 590 | `envRequired` |
+| 592 | `scan` |
+| 601 | `stripAnsi` |
+| 604 | `probeOpenCode` |
+| 622 | `probeClaude` |
+| 640 | `daysAgo` |
+| 645 | `buildGitMap` |
+| 647 | `norm` |
+| 652 | `top` |
+| 683 | `buildPendientes` |
+| 686 | `push` |
+| 691 | `clean` |
+| 731 | `scanProject` |
+| 866 | `ajenas` |
+| 872 | `skillOrigen` |
+| 901 | `type` |
+| 902 | `domain` |
+| 903 | `version` |
+
+## `SuitGmail/server.js`
+
+| Línea | Función |
+|-------|---------|
+| 19 | `load` |
+| 20 | `save` |
+| 25 | `accessToken` |
+| 44 | `clasificar` |
+| 54 | `rojo` |
+| 55 | `verde` |
+| 62 | `asunto` |
+| 65 | `snippet` |
+| 70 | `resumen` |
+| 104 | `cors` |
+| 105 | `json` |
 
 ## `SuitIdeasSaaS/serve-panel.js`
 
@@ -10831,6 +10864,42 @@
 | 71 | `json` |
 | 77 | `api` |
 | 148 | `streamSSE` |
+
+## `SuitProspectos/prospect.js`
+
+| Línea | Función |
+|-------|---------|
+| 24 | `httpGet` |
+| 50 | `sleep` |
+| 54 | `slugify` |
+| 58 | `now` |
+| 63 | `getSupabase` |
+| 71 | `listIndustrias` |
+| 89 | `findNicho` |
+| 139 | `httpPost` |
+| 173 | `fromNewPlace` |
+| 176 | `name` |
+| 184 | `primary_type` |
+| 193 | `reviews` |
+| 195 | `author_name` |
+| 200 | `searchText` |
+| 216 | `searchAll` |
+| 240 | `haversineKm` |
+| 242 | `rad` |
+| 250 | `median` |
+| 258 | `filterByRadius` |
+| 273 | `extractSocialFromWebsite` |
+| 299 | `analyzeDigitalPresence` |
+| 316 | `analyzeStrengths` |
+| 350 | `detectSocialFromPlace` |
+| 365 | `inferTargetAudience` |
+| 399 | `getWhatsapp` |
+| 406 | `formatCell` |
+| 416 | `csvCell` |
+| 422 | `csvRow` |
+| 429 | `runSelfTest` |
+| 510 | `main` |
+| 621 | `tipos` |
 
 ## `SuitReservaciones/handlers/actions.js`
 

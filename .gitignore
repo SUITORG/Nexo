@@ -144,3 +144,6 @@ SuitCompromisos/server.log
 
 # SuitCompromisos - dumps automaticos de localStorage (datos personales)
 SuitCompromisos/backups/
+
+# SuitGmail - credenciales OAuth de usuario (client_id/secret/refresh_token) — PII, el repo se publica entero en GH Pages
+SuitGmail/config.json

@@ -1,0 +1,32 @@
+{
+  "ventana_horas": 48,
+  "categorias": {
+    "banco": {
+      "remitentes": ["bbva", "banorte", "santander", "hsbc", "citibanamex", "banamex", "americanexpress", "scotiabank", "inbursa", "azteca"],
+      "palabras": ["estado de cuenta", "corte de tarjeta", "pago minimo", "saldo disponible", "movimiento no", "cargo en tu tarjeta"],
+      "nivel": "amarillo"
+    },
+    "luz": {
+      "remitentes": ["cfe.mx", "cfe.com", "luzyfuerza"],
+      "palabras": ["recibo cfe", "factura cfe", "tu luz", "energia electrica"],
+      "nivel": "amarillo"
+    },
+    "agua": {
+      "remitentes": ["scada", "idrovora", "tandeo", "jumapa", "agua"],
+      "palabras": ["recibo de agua", "tarifa de agua", "consumo de agua"],
+      "nivel": "amarillo"
+    },
+    "telefono": {
+      "remitentes": ["telcel", "att.com.mx", "movistar", "unefon", "porttel", "movil"],
+      "palabras": ["recarga", "tu plan", "consumo de datos", "corte de linea", "vencimiento de plan"],
+      "nivel": "amarillo"
+    },
+    "pago": {
+      "remitentes": ["paypal", "mercadopago", "stripe"],
+      "palabras": ["pago recibido", "pago exitoso"],
+      "nivel": "verde"
+    }
+  },
+  "rojo": ["no reconocido", "no reconocida", "no autorizado", "no autorizada", "fraude", "sospechos", "compra no autorizada", "vencido", "pago vencido", "saldo vencido"],
+  "verde": ["pago confirmado", "pago exitoso", "comprobante de pago", "gracias por su pago", "recibo pagado", "pago recibido", "pago aplicado"]
+}

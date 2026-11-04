@@ -74,6 +74,7 @@ h3{font-size:.85rem;margin:12px 0 6px;color:var(--text2)}
 
 <div class="nav">
   <button data-v="alertas" class="active"> Alertas <span id="alertCount" class="tag bad" style="display:none"></span></button>
+  <button data-v="gmail">📬 Gmail <span id="gmailCount" class="tag bad" style="display:none"></span></button>
   <button data-v="registro">Registro</button>
   <button data-v="servicios">Servicios</button>
   <button data-v="rentas">Rentas</button>
@@ -91,6 +92,18 @@ h3{font-size:.85rem;margin:12px 0 6px;color:var(--text2)}
     <div id="settleBar" style="margin-bottom:10px"></div>
     <div id="settleList"></div>
     <div id="monthStatus" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ============ GMAIL ============ -->
+<div id="v-gmail" class="view">
+  <div class="card">
+    <h2 style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <span>📬 SuitGmail</span>
+      <button onclick="loadGmail(true)" style="padding:5px 12px;border:1px solid var(--line);background:var(--bg2);color:var(--text2);border-radius:8px;cursor:pointer;font-size:.78rem">↻ Actualizar</button>
+    </h2>
+    <div id="gmailStatus" class="muted" style="margin-bottom:10px;font-size:.82rem">cargando…</div>
+    <div id="gmailList"></div>
   </div>
 </div>
 
@@ -171,6 +184,13 @@ h3{font-size:.85rem;margin:12px 0 6px;color:var(--text2)}
   <div class="card">
     <h2> Servicios del mes — <span id="monthLabel2"></span></h2>
     <div class="muted" style="margin-bottom:8px">Click en "Pagado" para registrarlo como gasto del mes con un click. Día = corte/vencimiento.</div>
+    <span id="svcSort" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="chip" data-sort="catalogo" onclick="setSvcSort('catalogo')">Catálogo</button>
+      <button class="chip" data-sort="nombre" onclick="setSvcSort('nombre')">A-Z</button>
+      <button class="chip" data-sort="dia" onclick="setSvcSort('dia')">Día</button>
+      <button class="chip" data-sort="estado" onclick="setSvcSort('estado')">Estado</button>
+      <button class="chip" data-sort="monto" onclick="setSvcSort('monto')">Monto</button>
+    </span>
     <div style="overflow-x:auto"><table>
       <thead><tr><th>Servicio</th><th>Día</th><th>Cuenta</th><th class="num-r">Monto típico</th><th>Estado</th><th></th></tr></thead>
       <tbody id="servicesList"></tbody>
@@ -291,7 +311,7 @@ const ACCOUNTS = ['STD','LU','M40 IMSS','Efectivo','Efectivo Casa'];
 // Cuentas archivadas: no aparecen para capturar, pero se conservan en editores y
 // transferencias para poder seguir moviendo el dinero que aún tenga ahí.
 const ACCOUNTS_ALL = ACCOUNTS.concat(['BBVA','IVX','FAL']);
-  const CATS = ['Servicios','Mtto Cr','Mtto Hu','Gasto Ax','Gasto Lz','Inversion','Seguro','Imprevistos','Viaje/Transporte','Alimentos','Medico','Ingreso','Otros'];
+  const CATS = ['Servicios','Mtto Cr','Mtto Hu','Gasto Ax','Gasto Lz','Inversion','Seguro','Imprevistos','Viaje/Transporte','Alimentos','Medico','Diversion','Ingreso','Otros'];
 
 // Siembra desde la hoja GastosTarjetas (lectura 2026-10-20) — montos típicos recientes, editable
 const SEED = {
@@ -368,10 +388,16 @@ const todayISO = () => { const d = new Date(); return d.getFullYear()+'-'+String
 const monthKey = (iso) => (iso||todayISO()).slice(0,7);
 const fmtMXN = v => (v==null||isNaN(v)) ? '—' : '$' + Number(v).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const monthName = mk => { const [y,m]=mk.split('-'); return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][+m-1]+' '+y; };
+// fecha dentro del mes visto (para pagos/rentas marcados en un mes que no es el actual)
+const fechaEnMes = (mk, day) => {
+  const y=+mk.slice(0,4), m=+mk.slice(5,7);
+  const dim = new Date(y, m, 0).getDate();
+  return mk + '-' + String(Math.min(Math.max(+day||1,1), dim)).padStart(2,'0');
+};
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 // ¿el servicio bimestral corre este mes? (meses pares — convención "par 10" de la hoja: feb abr jun ago oct dic)
-function serviceActiveThisMonth(svc){
-  const m = +todayISO().slice(5,7);
+function serviceActiveThisMonth(svc, mk){
+  const m = mk ? +mk.slice(5,7) : +todayISO().slice(5,7);
   if(svc.freq === 'bimestral' && m % 2 !== 0) return false;
   return svc.active !== false;
 }
@@ -381,12 +407,13 @@ function markPaid(svc, mk, paid){
   if(!db.paidMap) db.paidMap = {};
   if(paid){
     db.paidMap[paidKey(svc,mk)] = {ts:Date.now(), amount:svc.amount, account:svc.account};
-    // registrar el gasto automáticamente
-    db.entries.push({id:uid(), date: todayISO(), type:'gasto', concept:svc.name, category:'Servicios', amount:+svc.amount||0, account:svc.account, note:'pago mensual', scratch:false});
+    // registrar el gasto automáticamente — con fecha del MES VISTO si no es el actual
+    const fecha = (mk === monthKey()) ? todayISO() : fechaEnMes(mk, svc.day);
+    db.entries.push({id:uid(), date:fecha, type:'gasto', concept:svc.name, category:'Servicios', amount:+svc.amount||0, account:svc.account, note:'pago mensual', scratch:false});
   } else {
     delete db.paidMap[paidKey(svc,mk)];
-    // quitar el gasto auto-registrado de hoy con ese concepto
-    db.entries = db.entries.filter(e => !(e.concept === svc.name && e.note === 'pago mensual' && e.date === todayISO()));
+    // quitar el gasto auto-registrado de ese MES con ese concepto
+    db.entries = db.entries.filter(e => !(e.concept === svc.name && e.note === 'pago mensual' && monthKey(e.date) === mk));
   }
   save(); renderAll();
 }
@@ -675,10 +702,28 @@ function delService(i){
   if(!confirm('¿Quitar el servicio "'+db.services[i].name+'"?')) return;
   db.services.splice(i,1); editSvc=-1; save(); renderAll();
 }
+let svcSort = 'catalogo'; // orden de la tabla Servicios del mes
+function setSvcSort(m){ svcSort = m; renderServices(); }
 function renderServices(){
-  const mk = monthKey();
+  const mk = viewMonth();
   const today = +todayISO().slice(8,10);
-  const rows = db.services.map((s,i)=>{
+  const isPast = mk < monthKey();
+  // orden pedido (chips) — se ordenan índices; las filas conservan el índice original de db.services
+  const rankEstado = (i) => {
+    const s = db.services[i];
+    if(!serviceActiveThisMonth(s, mk)) return 3;      // no corre
+    if(isPaid(s, mk)) return 2;                        // pagado
+    if(isPast || s.day - today < 0) return 0;          // vencido
+    return 1;                                          // por vencer
+  };
+  let idxs = db.services.map((s,i)=>i);
+  if(svcSort==='nombre') idxs.sort((a,b)=>db.services[a].name.localeCompare(db.services[b].name,'es'));
+  else if(svcSort==='dia') idxs.sort((a,b)=>(db.services[a].day||99)-(db.services[b].day||99));
+  else if(svcSort==='estado') idxs.sort((a,b)=>rankEstado(a)-rankEstado(b) || (db.services[a].day||99)-(db.services[b].day||99));
+  else if(svcSort==='monto') idxs.sort((a,b)=>(+db.services[b].amount||0)-(+db.services[a].amount||0));
+  document.querySelectorAll('#svcSort .chip').forEach(c=>c.classList.toggle('on', c.dataset.sort===svcSort));
+  const rows = idxs.map(i=>{
+    const s = db.services[i];
     if(i === editSvc){
       return `<tr style="background:var(--accent-dim)">
         <td><input id="e_sName" value="${esc(s.name)}" style="min-width:140px"></td>
@@ -691,12 +736,13 @@ function renderServices(){
           <button class="btn sm sec" onclick="cancelEditSvc()">Cancelar</button>
         </td></tr>`;
     }
-    const active = serviceActiveThisMonth(s);
+    const active = serviceActiveThisMonth(s, mk);
     const paid = isPaid(s, mk);
     const daysLeft = s.day - today;
     let estado, estadoCls;
     if(!active){ estado='no corre este mes'; estadoCls='info'; }
     else if(paid){ estado='pagado'; estadoCls='ok'; }
+    else if(isPast){ estado='vencido (mes cerrado)'; estadoCls='bad'; }
     else if(daysLeft < 0){ estado='vencido hace '+(-daysLeft)+'d'; estadoCls='bad'; }
     else if(daysLeft <= 3){ estado='vence en '+daysLeft+'d (día '+s.day+')'; estadoCls='warn'; }
     else { estado='día '+s.day+' · falta '+daysLeft+'d'; estadoCls='info'; }
@@ -716,7 +762,7 @@ function renderServices(){
   const tot = { pagado:0, pagadoN:0, vencido:0, vencidoN:0, porVencer:0, porVencerN:0 };
   db.services.forEach(s=>{
     const amt = +s.amount||0;
-    if(!serviceActiveThisMonth(s)) return;         // bimestral que no corre: fuera del subtotal
+    if(!serviceActiveThisMonth(s, mk)) return;         // bimestral que no corre: fuera del subtotal
     if(isPaid(s, mk)){ tot.pagado+=amt; tot.pagadoN++; }
     else if(s.day - today < 0){ tot.vencido+=amt; tot.vencidoN++; }
     else { tot.porVencer+=amt; tot.porVencerN++; }
@@ -776,17 +822,19 @@ function markRent(u,i,mk,recv){
   if(!db.rentMap) db.rentMap = {};
   const k = rentKey(u,i)+'|'+mk;
   if(recv){
+    const fecha = (mk === monthKey()) ? todayISO() : fechaEnMes(mk, u.day);
     db.rentMap[k] = {ts:Date.now(), amount:u.amount};
-    db.entries.push({id:uid(), date:todayISO(), type:'ingreso', concept:'I '+u.tenant+' ('+u.name+')', category:'Ingreso', amount:+u.amount||0, account:u.account, note:'renta '+monthName(mk), scratch:false});
+    db.entries.push({id:uid(), date:fecha, type:'ingreso', concept:'I '+u.tenant+' ('+u.name+')', category:'Ingreso', amount:+u.amount||0, account:u.account, note:'renta '+monthName(mk), scratch:false});
   } else {
     delete db.rentMap[k];
-    db.entries = db.entries.filter(e=>!(e.concept==='I '+u.tenant+' ('+u.name+')' && e.note==='renta '+monthName(mk) && e.date===todayISO()));
+    db.entries = db.entries.filter(e=>!(e.concept==='I '+u.tenant+' ('+u.name+')' && e.note==='renta '+monthName(mk) && monthKey(e.date)===mk));
   }
   save(); renderAll();
 }
 function renderUnits(){
-  const mk = monthKey();
+  const mk = viewMonth();
   const today = +todayISO().slice(8,10);
+  const isPast = mk < monthKey();
   const rows = db.units.map((u,i)=>{
     if(i === editUnit){
       return `<tr style="background:var(--accent-dim)">
@@ -806,6 +854,7 @@ function renderUnits(){
     let estado, cls;
     if(sinInq){ estado='sin inquilino'; cls='info'; }
     else if(rec){ estado='recibido'; cls='ok'; }
+    else if(isPast){ estado='no recibido (mes cerrado)'; cls='bad'; }
     else if(daysLeft < 0){ estado='atrasado '+(-daysLeft)+'d'; cls='bad'; }
     else if(daysLeft <= 2){ estado='esperado día '+u.day; cls='warn'; }
     else { estado='día '+u.day; cls='info'; }
@@ -861,7 +910,8 @@ function amountColor(e){
   return COLOR.gasto;
 }
 let resMonth = null; // mes seleccionado en Resumen (default = mes en curso)
-function setResMonth(mk){ resMonth = mk; renderStats(); }
+const viewMonth = () => resMonth || monthKey(); // mes que ven todas las pestañas
+function setResMonth(mk){ resMonth = mk; renderAll(); } // re-render TODO: rentas/servicios/por saldar siguen el selector
 function srvEntriesDelMes(mk){
   // solo lo que quedó registrado como gasto con categoría "Servicios"
   let t=0;
@@ -947,6 +997,14 @@ function renderStats(){
       </div>
       <span class="money" style="min-width:110px;text-align:right;color:${zero?'var(--text3)':col}">${fmtMXN(v)}</span>
     </div>`;}).join('') : '<div class="muted">Sin categorías.</div>';
+  // Subtotal del mes: suma de todas las categorías de la sección (mismo catGrand
+  // que usa la barra de progreso de cada fila, así el % y el total cuadran).
+  if(cats.length) $('catBreak').innerHTML += `
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:9px;border-top:2px solid var(--line)">
+      <div style="min-width:110px;font-weight:700">Subtotal del mes</div>
+      <div style="flex:1"></div>
+      <span class="money" style="min-width:110px;text-align:right;font-weight:700">${fmtMXN(catGrand)}</span>
+    </div>`;
   // por cuenta: saldo inicial + recibido (acumulado entrante) + neto del mes + saldo actual
   if(!db.opening) db.opening = {};
   const monthNet={}, allNet={}, received={};
@@ -1032,18 +1090,19 @@ function saveSaldo(){
 
 // ============== ALERTAS ==============
 function renderAlerts(){
-  const mk = monthKey();
+  const mk = viewMonth();
   const today = +todayISO().slice(8,10);
+  const isPast = mk < monthKey();
   const alerts = [];
   db.services.forEach(s=>{
-    if(!serviceActiveThisMonth(s) || isPaid(s,mk)) return;
-    const dl = s.day - today;
+    if(!serviceActiveThisMonth(s, mk) || isPaid(s,mk)) return;
+    const dl = isPast ? -1 : s.day - today;
     if(dl < 0) alerts.push({cls:'bad', txt:'<b>'+esc(s.name)+'</b> venció el día '+s.day+' (hace '+(-dl)+'d) — '+fmtMXN(s.amount)+' vía '+s.account});
     else if(dl <= 3) alerts.push({cls:'warn', txt:'<b>'+esc(s.name)+'</b> vence en '+dl+'d (día '+s.day+') — '+fmtMXN(s.amount)+' vía '+s.account});
   });
   db.units.forEach((u,i)=>{
     if(!u.tenant || u.tenant==='—' || isRentReceived(u,i,mk)) return;
-    const dl = u.day - today;
+    const dl = isPast ? -1 : u.day - today;
     if(dl < 0) alerts.push({cls:'bad', txt:'Renta de <b>'+esc(u.tenant)+'</b> ('+esc(u.name)+') atrasada '+(-dl)+'d — esperado día '+u.day+' — '+fmtMXN(u.amount)});
     else if(dl <= 2) alerts.push({cls:'warn', txt:'Renta de <b>'+esc(u.tenant)+'</b> ('+esc(u.name)+') esperada el día '+u.day+' — '+fmtMXN(u.amount)});
   });
@@ -1058,7 +1117,7 @@ function renderAlerts(){
   // ===== Por saldar: lista con montos del mes + saldados + barra =====
   const pend = [];
   db.services.forEach((s,i)=>{
-    if(serviceActiveThisMonth(s) && !isPaid(s,mk))
+    if(serviceActiveThisMonth(s, mk) && !isPaid(s,mk))
       pend.push({kind:'servicio', day:s.day, name:s.name, amount:+s.amount||0, account:s.account, idx:i, cls:'warn'});
   });
   db.units.forEach((u,i)=>{
@@ -1067,7 +1126,7 @@ function renderAlerts(){
   });
   pend.sort((a,b)=>(a.day||31)-(b.day||31));
   let saldoTotal = 0, pendTotal = 0;
-  db.services.forEach(s=>{ if(serviceActiveThisMonth(s) && isPaid(s,mk)) saldoTotal += +s.amount||0; });
+  db.services.forEach(s=>{ if(serviceActiveThisMonth(s, mk) && isPaid(s,mk)) saldoTotal += +s.amount||0; });
   db.units.forEach((u,i)=>{ if(u.tenant && u.tenant!=='—' && isRentReceived(u,i,mk)) saldoTotal += +u.amount||0; });
   pend.forEach(p=>pendTotal += p.amount);
   const grand = saldoTotal + pendTotal;
@@ -1093,7 +1152,7 @@ function renderAlerts(){
     : '<div class="alert ok" style="margin:0">Todo saldado este mes ✅</div>';
 
   // estado del mes (conteos)
-  const svcs = db.services.filter(s=>serviceActiveThisMonth(s));
+  const svcs = db.services.filter(s=>serviceActiveThisMonth(s, mk));
   const paidN = svcs.filter(s=>isPaid(s,mk)).length;
   const units = db.units.filter(u=>u.tenant && u.tenant!=='—');
   const recN = units.filter((u,i)=>isRentReceived(u,i,mk)).length;
@@ -1140,15 +1199,54 @@ function resetAll(){
   localStorage.removeItem(LS_KEY); db = load(); save(); renderAll();
 }
 
+// ============== SUITGMAIL (semáforo de correos banco/servicios) ==============
+const GMAIL_URL = 'http://127.0.0.1:3021';
+async function loadGmail(){
+  const st=$('gmailStatus'), list=$('gmailList'), cnt=$('gmailCount');
+  st.textContent='cargando…';
+  try{
+    const r=await fetch(GMAIL_URL+'/resumen?t='+Date.now());
+    const d=await r.json();
+    if(!d.auth){
+      st.innerHTML='Gmail sin conectar — <a href="'+GMAIL_URL+'/auth" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">conectar Gmail ↗</a> (consentimiento una sola vez)';
+      list.innerHTML=''; if(cnt) cnt.style.display='none';
+      return;
+    }
+    if(!d.ok){ st.textContent='✗ '+(d.error||'error'); list.innerHTML=''; return; }
+    const rojos=d.alerts.filter(a=>a.nivel==='rojo').length;
+    const cs=(d.cuentas||[]).map(c=>c.cuenta.split('@')[0]).join(' + ')||'';
+    st.innerHTML=(d.revisados||0)+' correos de las últimas 48h · '+d.alerts.length+' en la mira · '+rojos+' rojos'
+      +(cs?' · 📥 '+esc(cs):'')
+      +' · '+new Date().toLocaleTimeString('es-MX')
+      +' · <a href="'+GMAIL_URL+'/auth" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">＋ otra cuenta</a>';
+    if(cnt){ if(rojos){ cnt.textContent=rojos; cnt.style.display='inline'; } else cnt.style.display='none'; }
+    const ico={rojo:'🔴',amarillo:'🟡',verde:'🟢'};
+    list.innerHTML = d.alerts.length ? d.alerts.map(a=>`
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)">
+        <span style="font-size:1rem">${ico[a.nivel]||'⚪'}</span>
+        <div style="min-width:0">
+          <div style="font-size:.85rem;font-weight:600">${esc(a.asunto)}</div>
+          <div style="font-size:.74rem;color:var(--text3);margin-top:1px">${esc(a.remitente)} · ${esc(a.fecha)} · ${esc(a.categoria)}${a.cuenta&&d.cuentas&&d.cuentas.length>1?' · <b>'+esc(a.cuenta.split('@')[0])+'</b>':''}${a.monto?' · '+esc(a.monto):''}</div>
+          <div style="font-size:.78rem;color:var(--text2);margin-top:2px">${esc(a.snippet)}</div>
+        </div>
+      </div>`).join('')
+      : '<div class="muted">Sin correos de banco/servicios en las últimas 48h ✓</div>';
+  }catch(e){
+    st.innerHTML='Servidor SuitGmail caído (:3021) — levántalo con <code>MASTER.bat</code> o <code>node SuitGmail/server.js</code>';
+    list.innerHTML=''; if(cnt) cnt.style.display='none';
+  }
+}
+
 // ============== NAV / INIT ==============
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   $('v-'+b.dataset.v).classList.add('active');
+  if(b.dataset.v==='gmail') loadGmail();
 }));
 function renderAll(){
-  const mn = monthName(monthKey());
+  const mn = monthName(viewMonth());
   ['monthLabel','monthLabel2','monthLabel3'].forEach(id=>{ const el=$(id); if(el) el.textContent = mn; });
   // Aviso si este navegador está vacío (tus datos viven en otro navegador)
   const fh = $('freshHint');
