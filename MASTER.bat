@@ -101,6 +101,9 @@ goto gm_fin
 echo SuitGmail listo en :3021
 :gm_fin
 
+rem Gastos de herramientas (opencode stats -> SuitMisCtas/gastos.json) — mejor esfuerzo
+node scripts\gastos-update.js >nul 2>&1
+
 rem %RANDOM% rompe la caché del navegador: sin esto Chrome servía un MASTER.html
 rem guardado, y al no cargar el nuevo tampoco se aplicaba el cache-busting de los
 rem iframes → los módulos (p. ej. SuitMisCtas) se quedaban en una versión vieja.

@@ -147,3 +147,6 @@ SuitCompromisos/backups/
 
 # SuitGmail - credenciales OAuth de usuario (client_id/secret/refresh_token) — PII, el repo se publica entero en GH Pages
 SuitGmail/config.json
+
+# SuitMisCtas - gasto de herramientas leido de opencode stats (dato personal)
+SuitMisCtas/gastos.json
