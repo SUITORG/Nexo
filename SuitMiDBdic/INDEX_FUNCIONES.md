@@ -13,7 +13,7 @@ Líneas de `dictionary.html` (4778 líneas). Si el archivo crece, los números s
 ## Navegación y estructura (3565–3627, 4372)
 | Línea | Símbolo | Qué hace |
 |---|---|---|
-| 3565 | `SECTIONS` | Lista `[id, título]` de las 50 secciones |
+| 3565 | `SECTIONS` | Lista `[id, título]` de las 53 secciones |
 | 3597 | `PARTS` | 6 Parts temáticas `{k,label,sections[]}`; el orden aquí es el orden de aprendizaje |
 | 3605 | `SECTION_TO_PART` | Mapa `sectionId → part.k` (derivado de `PARTS`) |
 | 3607 | `CURRENT_PART` | Part activa |
@@ -40,7 +40,7 @@ Líneas de `dictionary.html` (4778 líneas). Si el archivo crece, los números s
 ## Render principal
 | Línea | Símbolo | Qué hace |
 |---|---|---|
-| 3708–4266 | `build()` | Genera todo el HTML de las 50 secciones (un bloque comentado `/* N TÍTULO */` por sección) y lo inyecta en `#main`; llama `renderPartTabs()` |
+| 3708–4266 | `build()` | Genera todo el HTML de las 53 secciones (un bloque comentado `/* N TÍTULO */` por sección) y lo inyecta en `#main`; llama `renderPartTabs()` |
 
 ## Búsqueda, ruta de inicio y glosario (4268–4371)
 | Línea | Símbolo | Qué hace |
@@ -116,3 +116,27 @@ Una clave por tema; arrays de tuplas o de objetos. Agrupadas por sección:
 - **Registro y estilo:** `variations`, `brAm*`, `contractions`, `contrCats`, `contrExamples`, `contrPractice`, `popPhrases`, `popCats`, `esIdioms`, `esIdiomCats`, `idiomComp`, `frenchRules/Words`, `frameworks`
 - **Aplicado:** `citizenship`, `citizenshipCats`, `n400`, `newsCats`
 - **Transversales:** `ticks` (ticker), `exLvl` (nivel de ejemplos), `structCats`, `compRules`, `comparatives`, `compStructures`
+
+## Índice de estructuras gramaticales (2026-10-18)
+`buildSearchIndex()` ahora también indexa estructuras, no solo vocabulario: aparecen en la búsqueda y en el glosario A-Z. Líneas aproximadas (el archivo creció ~20 líneas tras `D.doubleContrNote`; regenerar el mapa si hace falta).
+
+| Estructura / etiqueta de búsqueda | Sección | Chip / fuente |
+|---|---|---|
+| `I had something` (past simple de HAVE) | contr | chip «have: had / would have» · `D.haveUses` |
+| `I'd had`, `I had had` (past perfect) | contr | idem |
+| `I would have`, `I'd have` (condicional) | contr | idem |
+| `I would have had` (3er condicional) | contr | idem |
+| `✗ I would had` (incorrecto) | contr | idem |
+| Tiempos verbales (`Past Perfect · S + had + V3`, etc.) | tenses | `showTense(i)` · `D.tenses` |
+| Condicionales (`2nd/3rd/Mixto · If + …, would have + V3`) | cond | `D.conditionals` |
+
+Datos nuevos: `D.haveUses`, `D.haveUsesNote` (junto a `D.doubleContrNote`). Render: rama `kind==="have"` en `showContrExtra`. Índice: 3 líneas nuevas al final de `buildSearchIndex()`.
+
+### such / so (2026-10-18)
+Sección **confuse** (Palabras que se confunden), `D.confusTrios`: tarjeta «such a / such / so» (+ `D.suchRule`) y nueva tarjeta «so / such en otros usos» (so…that, such…that, so much/many, So do I, so that, such as). Ambas se indexan en `buildSearchIndex()` (sección `confuse`).
+
+## Actualización 2026-11-05
+Los números de línea de arriba corresponden al 2026-10-18; tras añadir secciones y datos se desplazaron (regenerar con grep si se necesitan exactos).
+- **Secciones nuevas (Part III):** `verbpatterns` (chip 10, datos `D.vp*`, bloque `/* 28b · VERB PATTERNS */` en `build()`) y `relative` (chip 12, datos `D.rel*`, bloque `/* 35c · ORACIONES DE RELATIVO */`). Ambas con caso propio en `exSrc()`, nivel en `D.exLvl` y entradas en `buildSearchIndex()`.
+- **Helpers en `build()`:** `igHl(s)` / `igPlain(s)` — en los datos `D.vp*`, `*texto*` marca la forma resaltada.
+- **CSS:** clases `.ig-*` (tarjetas infográficas pastel: `inf, ger, both, warn, info, tip`) y bloque «Tarjetas pastel en TODAS las secciones» (selector `section.topic`).

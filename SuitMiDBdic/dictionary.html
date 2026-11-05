@@ -181,6 +181,44 @@ footer.note{max-width:1080px;margin:30px auto 0;padding:0 16px;font-size:11.5px;
   button,.chip{min-height:38px}
   #tickbody{min-height:44px}
 }
+/* ---------- tarjetas infográfico (verb patterns y futuros temas visuales) ---------- */
+.ig-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+.ig-card{border:2px solid var(--igb,#ccc);background:var(--igbg,#fff);border-radius:14px;padding:12px 14px}
+.ig-card h4{font-size:15.5px;margin-bottom:2px}
+.ig-card .sub{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.ig-card.inf{--igb:#8FD0A0;--igbg:#EAF7ED}
+.ig-card.ger{--igb:#B9A7E8;--igbg:#F0EBFB}
+.ig-card.both{--igb:#E8CF5E;--igbg:#FFF8D6}
+.ig-card.warn{--igb:#EFA3B2;--igbg:#FDEBEE}
+.ig-card.info{--igb:#93C4E6;--igbg:#E8F3FB}
+.ig-card.tip{--igb:#8FD0A0;--igbg:#EAF7ED}
+.ig-struct{display:inline-block;background:#fff;border:1px solid var(--igb);border-radius:99px;padding:3px 12px;font-weight:700;font-size:13px;margin:2px 0 8px}
+.ig-verbs{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 10px}
+.ig-verbs span{background:#fff;border:1px solid var(--igb);border-radius:99px;padding:2px 10px;font-size:12.5px;font-weight:600}
+.ig-verbs span small{font-weight:400;color:var(--muted);margin-left:3px}
+.ig-ex{font-size:13.5px;padding:4px 0;border-top:1px dashed var(--igb)}
+.ig-ex:first-of-type{border-top:none}
+.ig-hl{background:var(--igb);border-radius:4px;padding:0 4px;font-weight:700}
+.ig-ex.both-row{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.ig-ok{color:#1d7a3a;font-weight:700}
+.ig-no{color:#b3261e;font-weight:700}
+@media(max-width:700px){.ig-grid,.ig-ex.both-row{grid-template-columns:1fr}}
+/* Tarjetas pastel en TODAS las secciones (Parts I–VI; mismo estilo que Verb patterns); solo CSS, sin tocar contenido */
+section.topic .card{border:2px solid var(--igb,#ccc);background:var(--igbg,#fff);border-radius:14px}
+section.topic :is(.grid,.cardlist,div) > .card:nth-of-type(5n+1){--igb:#8FD0A0;--igbg:#EAF7ED}
+section.topic :is(.grid,.cardlist,div) > .card:nth-of-type(5n+2){--igb:#B9A7E8;--igbg:#F0EBFB}
+section.topic :is(.grid,.cardlist,div) > .card:nth-of-type(5n+3){--igb:#E8CF5E;--igbg:#FFF8D6}
+section.topic :is(.grid,.cardlist,div) > .card:nth-of-type(5n+4){--igb:#EFA3B2;--igbg:#FDEBEE}
+section.topic :is(.grid,.cardlist,div) > .card:nth-of-type(5n+5){--igb:#93C4E6;--igbg:#E8F3FB}
+section.topic .lesson{background:#E8F3FB;border:2px solid #93C4E6;border-left-width:2px;border-radius:14px}
+section.topic .rule{background:#FFF8D6;border:2px solid #E8CF5E;border-radius:14px}
+section.topic .tblwrap{border:2px solid var(--igb,#ccc);border-radius:14px;background:var(--igbg,#fff)}
+section.topic .tblwrap th{background:var(--igb,#eee);color:#1A1D29}
+section.topic .tblwrap:nth-of-type(5n+1){--igb:#8FD0A0;--igbg:#EAF7ED}
+section.topic .tblwrap:nth-of-type(5n+2){--igb:#B9A7E8;--igbg:#F0EBFB}
+section.topic .tblwrap:nth-of-type(5n+3){--igb:#E8CF5E;--igbg:#FFF8D6}
+section.topic .tblwrap:nth-of-type(5n+4){--igb:#EFA3B2;--igbg:#FDEBEE}
+section.topic .tblwrap:nth-of-type(5n+5){--igb:#93C4E6;--igbg:#E8F3FB}
 </style>
 </head>
 <body>
@@ -2193,6 +2231,16 @@ D.doubleContrEx=[
  ["doble contracción (hablado/informal)","I shouldn't've gone to that party.","(have también se funde: shouldn't've, se oye /ˈʃʊdəntəv/)"]
 ];
 D.doubleContrNote="Así se ve la MISMA oración en sus 3 niveles de contracción — de más formal a más hablada. La doble contracción ('shouldn't've') es válida al hablar y hasta en mensajes informales, pero rara vez se usa en escritura formal.";
+D.haveUses=[
+ ["I had something","Past simple de HAVE","tuve / comí / tomé algo (ya pasó)","I had a coffee this morning.","Tomé un café esta mañana.","Tras 'had' va el sustantivo directo: had + algo."],
+ ["I'd had something","Past perfect (I'd = I had)","había tenido / comido algo, antes de otro hecho pasado","I'd had lunch before he called.","Ya había almorzado antes de que llamara.","I'd + PARTICIPIO (had, eaten, gone) = HAD."],
+ ["I had had something","Past perfect (forma completa)","igual que arriba, sin contraer","I had had lunch before he called.","Ya había almorzado antes de que llamara.","'had had' no es error: auxiliar had + participio de have."],
+ ["I would have something","Condicional presente","tendría / tomaría / pediría algo (hipotético o al pedir)","I would have the soup, please.","Yo pediría la sopa, por favor.","Tras 'would' va el verbo BASE: have."],
+ ["I'd have something","Condicional (I'd = I would)","igual que arriba, en habla","I'd have a coffee if you're making one.","Yo tomaría un café si estás haciendo uno.","I'd + VERBO BASE (have, go, eat) = WOULD."],
+ ["I would have had something","Condicional perfecto (3er condicional)","habría tenido / comido algo (no pasó)","I would have had lunch, but I was busy.","Habría almorzado, pero estaba ocupado.","would + have + participio (had). Contraído: I would've had."],
+ ["✗ I would had something","INCORRECTO","—","I would have had lunch.","Se dice would have had; nunca would had.","Con 'would' nunca va 'had' solo: o 'have' (base) o 'have had' (perfecto)."]
+];
+D.haveUsesNote="<b>HAVE</b> también significa comer/tomar (I had breakfast = desayuné). La confusión viene de <b>I'd</b>, que es la contracción de DOS cosas: <b>I had</b> y <b>I would</b>. Truco: mira la palabra siguiente — si es un <b>participio</b> (had, eaten, gone) → <b>had</b> (pasado perfecto); si es un <b>verbo base</b> (have, eat, go) → <b>would</b> (condicional). Ver también Tiempos verbales (Past Perfect) y Condicionales (2º y 3º).";
 D.youFusionNote="Regla fonética: cuando 'you' /ju/ sigue a una palabra que termina en /d/ o /t/, el sonido se funde por <b>palatalización</b> — d+y → /dʒ/ (didja, couldja), t+y → /tʃ/ (cancha, doncha). Es 100% habla informal: se escucha en TODA conversación casual americana, pero NUNCA se escribe en textos formales — ahí siempre va la forma completa ('did you', 'can't you').";
 D.youFusionLevels=[
  ["forma escrita / formal","Did you eat?","/dɪd ju iːt/","¿Comiste? — así se escribe siempre, en cualquier registro."],
@@ -2599,6 +2647,14 @@ D.confusTrios=[
    ["such a + adj + sustantivo (contable singular)","/sʌtʃ ə/","tan + adjetivo — lleva 'a/an' porque el sustantivo es contable singular","It was such a beautiful day.","Fue un día tan hermoso."],
    ["such + adj + sustantivo (incontable o plural)","/sʌtʃ/","tan + adjetivo — sin 'a/an', porque el sustantivo es incontable o plural","They have such good ideas.","Tienen ideas tan buenas."],
    ["so + adj (sin sustantivo)","/soʊ/","tan + adjetivo, SIN sustantivo después — si aparece un sustantivo, 'so' ya no funciona, hay que cambiar a 'such'","The exam is so difficult.","El examen es tan difícil."]
+ ]},
+ {t:"so / such en otros usos",items:[
+   ["so + adj/adv + that","/soʊ … ðæt/","tan… que (resultado, sin sustantivo)","It was so cold that we stayed inside.","Hacía tanto frío que nos quedamos adentro."],
+   ["such (a) + sustantivo + that","/sʌtʃ … ðæt/","tan… que (resultado, con sustantivo)","It was such a cold day that we stayed inside.","Fue un día tan frío que nos quedamos adentro."],
+   ["so much + incontable / so many + plural","/soʊ mʌtʃ/ · /soʊ ˈmɛni/","tanto/a · tantos/as","There is so much noise. / There are so many people.","Hay tanto ruido. / Hay tanta gente."],
+   ["So do I / So + auxiliar + sujeto","/soʊ du aɪ/","yo también (coincidir con algo AFIRMATIVO; lo negativo es Neither/Nor — ver Negación)","\"I love it.\" \"So do I.\"","\"Me encanta.\" \"A mí también.\""],
+   ["so that","/soʊ ðæt/","para que (propósito; ver Conjunciones)","She whispered so that no one heard.","Susurró para que nadie oyera."],
+   ["such as","/sʌtʃ æz/","como, por ejemplo","I like fruits such as apples.","Me gustan frutas como las manzanas."]
  ]}
 ];
 D.usedToRule="¿Por qué 2 de los 3 llevan gerundio y el primero no? Porque el 'to' cambia de función: en 'used to + V(base)' es parte de un verbo modal-like (no es preposición). En 'be/get used to', <b>'to' SÍ es preposición</b> — y como ya viste en la sección de Gerundios, después de preposición SIEMPRE va gerundio, nunca infinitivo. Es la misma regla de oro, aplicada aquí.";
@@ -3614,7 +3670,7 @@ const SECTIONS=[
  ["anton","Antónimos"],["falsef","Falsos amigos"],
  ["comp","Comparativos y superlativos"],["passive","Voz pasiva"],
  ["brame","Británico vs. Americano"],["posneg","Adjetivos positivos vs negativos"],
- ["gerund","Gerundios (-ing)"],["popculture","Frases de cine, series y canciones"],
+ ["gerund","Gerundios (-ing)"],["verbpatterns","Verb patterns (patrones de verbos)"],["popculture","Frases de cine, series y canciones"],
  ["confuse","Palabras que se confunden"],
  ["vsplit","Verbos divididos"],
  ["variations","Variaciones para decir lo mismo"],
@@ -3635,7 +3691,7 @@ const SECTIONS=[
 const PARTS=[
  {k:"sonidos",label:"I · Sonidos",sections:["ipa","homoph","homon","silent","connected","stress","dialects"]},
  {k:"piezas",label:"II · Piezas del idioma",sections:["nouns","plural","adj","articles","pron","mentalmodels","prep","conj","adverbs","negation"]},
- {k:"oracion",label:"III · La oración",sections:["tenses","vtypes","multiuse","comp","adjorder","quest","cond","passive","gerund","structures","relative","reported"]},
+ {k:"oracion",label:"III · La oración",sections:["tenses","vtypes","multiuse","comp","adjorder","quest","cond","passive","gerund","verbpatterns","structures","relative","reported"]},
  {k:"vocab",label:"IV · Vocabulario",sections:["vocab","chunks","colloc","phrasal","vsplit","syn","anton","posneg","falsef","confuse","affixes","spelling"]},
  {k:"registro",label:"V · Registro y estilo",sections:["variations","brame","contr","contrpractice","popculture","esidioms","french","frameworks"]},
  {k:"aplicado",label:"VI · Aplicado",sections:["citizenship","news","ailab"]}
@@ -3684,11 +3740,23 @@ function speak(text){
 function spkBtn(text){return `<button class="spk" data-text="${escAttr(text)}" onclick="speak(this.dataset.text)" title="Escuchar pronunciación (inglés americano)">🔊</button>`;}
 
 const EXLVL={a:"A1 / A2",b:"B1 / B2",c:"C1 / C2",p:"+ Verbo frasal",n:"Nativo / coloquial"};
+/* Verb patterns — en los ejemplos, *texto* marca la forma resaltada (to + verbo / -ing) */
+D.vpNote="Cada verbo <b>elige</b> qué estructura puede acompañarlo: unos piden <b>to + infinitivo</b> (<i>I want <b>to study</b></i>), otros piden <b>gerundio -ing</b> (<i>I enjoy <b>studying</b></i>), y unos pocos aceptan ambas con significado casi igual. No hay una regla de sonido o lógica para predecirlo — se aprende por verbo, empezando por los más comunes. En español casi siempre decimos infinitivo (<i>quiero estudiar, disfruto estudiar</i>), por eso el error típico es poner 'to' donde no va o quitarlo donde sí.";
+D.vpInfVerbs=[["want","querer"],["need","necesitar"],["decide","decidir"],["hope","esperar (desear)"],["plan","planear"],["learn","aprender"],["agree","aceptar, acordar"],["choose","elegir"],["forget","olvidar"],["manage","lograr"]];
+D.vpInfEx=[["I want *to study*.","Quiero estudiar."],["She needs *to work*.","Ella necesita trabajar."],["They decided *to leave*.","Decidieron irse."],["We hope *to travel*.","Esperamos viajar."],["He plans *to learn* English.","Él planea aprender inglés."]];
+D.vpGerVerbs=[["enjoy","disfrutar"],["avoid","evitar"],["finish","terminar"],["consider","considerar"],["suggest","sugerir"],["mind","molestar, importar"],["practice","practicar"],["spend (time)","pasar (tiempo)"],["keep","seguir, continuar"],["imagine","imaginar"]];
+D.vpGerEx=[["I enjoy *studying*.","Disfruto estudiar."],["She avoids *eating* junk food.","Ella evita comer comida chatarra."],["They finished *reading*.","Terminaron de leer."],["We suggest *going* earlier.","Sugerimos ir más temprano."],["He minds *helping* others.","Le molesta ayudar a otros."]];
+D.vpBothVerbs=[["like","gustar"],["love","amar, encantar"],["start","empezar"],["begin","comenzar"],["continue","continuar"],["prefer","preferir"]];
+D.vpBothEx=[["I like *to read*.","I like *reading*.","Me gusta leer."],["She started *to work*.","She started *working*.","Ella empezó a trabajar."],["They love *to travel*.","They love *traveling*.","Les encanta viajar."],["We prefer *to stay*.","We prefer *staying*.","Preferimos quedarnos."],["He continues *to learn*.","He continues *learning*.","Él sigue aprendiendo."]];
+D.vpBothNote="Ojo: con <b>would like / would love / would prefer</b> (deseos concretos) se usa solo infinitivo: <i>I would like <b>to go</b></i> ✓ — <i>I would like going</i> ✗.";
+D.vpRemember=[["Enjoy + -ing","I enjoy playing.","I enjoy to play.","Disfruto jugar."],["Want + to + verbo","I want to play.","I want playing.","Quiero jugar."]];
+D.vpNames=[["To + verbo","Infinitive","infinitivo"],["Verbo + -ing","Gerund","gerundio"]];
+D.vpTip="No todos los verbos siguen la misma regla. Aprende primero los más comunes y practica con ejemplos — y revisa 'Verbos que cambian de significado' (stop, remember, try) en la sección de Gerundios: ahí el cambio de forma cambia el sentido.";
 D.exLvl={
  tense:"b",vtype:"a",phr:"p",syn:"b",nouns:"a",voc:"a",chunk:"b",q:"a",
  col:"b",contr:"b",conj:"a",prep:"a",silent:"a",stress:"b",cond:"c",
  anton:"a",false:"b",comp:"a",pass:"c",posneg:"b",gerund:"b",pop:"n",
- confuse:"b",var:"c",struct:"b",adjorder:"b",affix:"c",reported:"c",relative:"b",
+ confuse:"b",var:"c",struct:"b",adjorder:"b",affix:"c",reported:"c",relative:"b",verbpatterns:"b",
   idiom:"c",esid:"n",adv:"b",neg:"b",french:"c",frame:"c",cp:"b",citizen:"b",fin:"c"
 };
 function exSrc(id){
@@ -3714,6 +3782,7 @@ function exSrc(id){
   case "adjorder": return D.adjOrderEx.map(a=>({en:a[0],ipa:a[1],es:a[2]}));
   case "reported": return D.reportedBackshift.map(r=>({en:r[2],ipa:"",es:r[3],note:r[0]+" → "+r[1]}));
   case "relative": return D.relPronouns.map(r=>({en:r[3],ipa:"",es:r[4],note:r[0]})).concat(D.relTypes.flatMap(t=>t.ex.map(e=>({en:e[0],ipa:"",es:e[1],note:t.t}))));
+  case "verbpatterns": return D.vpInfEx.map(e=>({en:e[0].split("*").join(""),ipa:"",es:e[1],note:"verb + to + infinitivo"})).concat(D.vpGerEx.map(e=>({en:e[0].split("*").join(""),ipa:"",es:e[1],note:"verb + gerundio"})),D.vpBothEx.map(e=>({en:e[0].split("*").join("")+"  /  "+e[1].split("*").join(""),ipa:"",es:e[2],note:"ambas formas"})));
   case "idiom": return D.idiomComp.map(i=>({en:i[0],ipa:i[1],es:i[3],note:"literal: "+i[2]}));
   case "esid": return D.esIdioms.map(i=>({en:i.en,ipa:i.ipa,es:i.mean,note:i.es}));
   case "neg": return D.negation.map(n=>({en:n.ex,ipa:n.ipa,es:n.es,note:n.t})).concat(D.negModals.map(n=>({en:n[2],ipa:"",es:n[3],note:n[0]})),D.negAnyNo.map(n=>({en:n[2],ipa:"",es:n[3],note:n[0]})));
@@ -3948,7 +4017,7 @@ h+=`<section class="topic" id="vocab"><h2><span class="n"></span>Vocabulario por
  h+=`<section class="topic" id="contr"><h2><span class="n"></span>Contracciones</h2>
  <div class="lesson"><b>Mini-clase.</b> En habla real las contracciones son la norma, no la excepción; evitarlas suena robótico. En escritura formal se limitan. Las de la parte final (gonna, wanna, gotta) son SOLO habladas: no las escribas en un correo de trabajo.</div>
  <div class="rule">${D.contrCatNote}</div>
- <div class="newscat">${D.contrCats.map((cat,i)=>`<button class="chip${i===0?" active":""}" onclick="showContrCat('${cat}',this)">${cat}</button>`).join("")}<button class="chip" onclick="showContrExtra('ambig',this)">Ambiguas en contexto</button><button class="chip" onclick="showContrExtra('triple',this)">3 niveles en 1 oración</button></div>
+ <div class="newscat">${D.contrCats.map((cat,i)=>`<button class="chip${i===0?" active":""}" onclick="showContrCat('${cat}',this)">${cat}</button>`).join("")}<button class="chip" onclick="showContrExtra('ambig',this)">Ambiguas en contexto</button><button class="chip" onclick="showContrExtra('triple',this)">3 niveles en 1 oración</button><button class="chip" onclick="showContrExtra('have',this)">have: had / would have</button></div>
  <div id="contrbody"></div>
  ${exWidget("contr",D.contractions.map(c=>c.c),"contracción")}</section>`;
 
@@ -4070,6 +4139,34 @@ h+=`<section class="topic" id="vocab"><h2><span class="n"></span>Vocabulario por
  <div class="tblwrap"><table><tr><th>Forma</th><th>Significado</th><th>Ejemplo</th><th>Español</th></tr>
  ${D.gerundDouble.map(d=>`<tr><td><b>${d[0]}</b></td><td class="es">${d[1]}</td><td>${d[2]}</td><td class="es">${d[3]}</td></tr>`).join("")}</table></div>
  ${exWidget("gerund",["swimming (sujeto)","enjoy + gerundio","good at + gerundio","boring (adjetivo)"],"con gerundio, en el rol de")}</section>`;
+
+ /* 28b · VERB PATTERNS */
+ const igHl=s=>esc(s).replace(/\*(.+?)\*/g,'<span class="ig-hl">$1</span>'), igPlain=s=>s.replace(/\*/g,"");
+ h+=`<section class="topic" id="verbpatterns"><h2><span class="n"></span>Verb patterns (patrones de verbos)</h2>
+ <div class="lesson"><b>Mini-clase.</b> ${D.vpNote}</div>
+ <div class="ig-grid">
+  <div class="ig-card inf"><h4>Verbo + TO + INFINITIVE</h4><div class="sub">Infinitivo — algunos verbos se usan seguidos de <b>to + verbo</b>.</div>
+   <span class="ig-struct">verb + to + base verb</span>
+   <div class="ig-verbs">${D.vpInfVerbs.map(v=>`<span>${v[0]}<small>${v[1]}</small></span>`).join("")}</div>
+   ${D.vpInfEx.map(e=>`<div class="ig-ex">${igHl(e[0])} ${spkBtn(igPlain(e[0]))}<br><span class="es">${e[1]}</span></div>`).join("")}</div>
+  <div class="ig-card ger"><h4>Verbo + GERUND (-ING)</h4><div class="sub">Gerundio — algunos verbos se usan seguidos de un verbo en <b>-ing</b>.</div>
+   <span class="ig-struct">verb + verb -ing</span>
+   <div class="ig-verbs">${D.vpGerVerbs.map(v=>`<span>${v[0]}<small>${v[1]}</small></span>`).join("")}</div>
+   ${D.vpGerEx.map(e=>`<div class="ig-ex">${igHl(e[0])} ${spkBtn(igPlain(e[0]))}<br><span class="es">${e[1]}</span></div>`).join("")}</div>
+ </div>
+ <div class="ig-card both"><h4>Verbos que aceptan AMBAS formas</h4><div class="sub">Pueden ir seguidos de <b>to + infinitivo</b> o de <b>-ing</b>, con significado similar. <b>Both forms are correct!</b></div>
+  <div class="ig-verbs">${D.vpBothVerbs.map(v=>`<span>${v[0]}<small>${v[1]}</small></span>`).join("")}</div>
+  ${D.vpBothEx.map(e=>`<div class="ig-ex both-row"><div>${igHl(e[0])} ${spkBtn(igPlain(e[0]))}</div><div>${igHl(e[1])} ${spkBtn(igPlain(e[1]))}</div><div class="es" style="grid-column:1/-1">${e[2]}</div></div>`).join("")}
+  <div class="rule">${D.vpBothNote}</div></div>
+ <div class="ig-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="ig-card warn"><h4>⚠️ Recuerda…</h4>${D.vpRemember.map(r=>`<div class="ig-ex"><span class="ig-ok">✓</span> <b>${r[0]}</b> → ${r[1]} ${spkBtn(r[1])}<br><span class="ig-no">✗</span> ${r[2]} <span class="es">(incorrecto)</span></div>`).join("")}</div>
+  <div class="ig-card info"><h4>💡 Nombres de las estructuras</h4>${D.vpNames.map(n=>`<div class="ig-ex"><b>${n[0]}</b> → <b>${n[1]}</b> <span class="es">(${n[2]})</span></div>`).join("")}<div class="ig-ex">El tema completo se llama <b>Verb Patterns</b> <span class="es">(patrones de verbos)</span>.</div></div>
+  <div class="ig-card tip"><h4>⭐ Tip final</h4><div style="font-size:13px">${D.vpTip}</div></div>
+ </div>
+ <h3>Verbos que cambian de significado</h3>
+ <div class="tblwrap"><table><tr><th>Forma</th><th>Significado</th><th>Ejemplo</th><th>Español</th></tr>
+ ${D.gerundDouble.map(d=>`<tr><td><b>${d[0]}</b></td><td class="es">${d[1]}</td><td>${d[2]}</td><td class="es">${d[3]}</td></tr>`).join("")}</table></div>
+ ${exWidget("verbpatterns",["verb + to + infinitivo","verb + gerundio","ambas formas"],"con el patrón")}</section>`;
 
  /* 29 · FRASES DE CINE, SERIES Y CANCIONES */
  h+=`<section class="topic" id="popculture"><h2><span class="n"></span>Frases de cine, series y canciones</h2>
@@ -4349,6 +4446,13 @@ function buildSearchIndex(){
  Object.entries(D.nounsExamples).forEach(([cat,arr])=>arr.forEach(n=>add(n[0],n[2],"nouns",showNouns,cat,n[1])));
  Object.entries(D.adjExamples).forEach(([cat,arr])=>arr.forEach(e=>add(e[0],e[2],"adj",showAdj,cat,e[1])));
  D.relPronouns.forEach(r=>add(r[0],"relativo: "+r[1],"relative"));
+ D.haveUses.forEach(r=>add(r[0].replace("✗ ",""),r[1]+(r[2]==="—"?"":" — "+r[2]),"contr",showContrExtra,"have"));
+ D.tenses.forEach((t,i)=>add(t.t+" · "+t.f,t.use,"tenses",showTense,i));
+ D.conditionals.forEach(c=>add(c.t+" · "+c.f,c.use,"cond"));
+ D.confusTrios.filter(g=>/(^|[^a-z])(such|so)([^a-z]|$)/.test(g.t)).forEach(g=>g.items.forEach(i=>add(i[0],i[2],"confuse")));
+ D.vpInfVerbs.forEach(v=>add(v[0],"+ to + infinitivo · "+v[1],"verbpatterns"));
+ D.vpGerVerbs.forEach(v=>add(v[0],"+ gerundio (-ing) · "+v[1],"verbpatterns"));
+ D.vpBothVerbs.forEach(v=>add(v[0],"+ to + infinitivo o -ing · "+v[1],"verbpatterns"));
  SEARCH_INDEX=idx;
 }
 function searchWord(q){
@@ -4603,6 +4707,8 @@ function showContrExtra(kind,btn){
  if(btn){btn.parentElement.querySelectorAll(".chip").forEach(c=>c.classList.toggle("active",c===btn))}
  if(kind==="ambig"){
   $("contrbody").innerHTML=`<div class="rule">${D.contrExNote}</div><div class="tblwrap"><table><tr><th>Contracción</th><th>Significado aquí</th><th>Ejemplo</th><th>Español</th></tr>${D.contrExamples.map(c=>`<tr><td><b>${c[0]}</b></td><td class="es">${c[1]}</td><td>${c[2]} ${spkBtn(c[2])}</td><td class="es">${c[3]}</td></tr>`).join("")}</table></div><div class="rule">${D.aintNote}</div>`;
+ } else if(kind==="have"){
+  $("contrbody").innerHTML=`<div class="rule">${D.haveUsesNote}</div><div class="tblwrap"><table><tr><th>Estructura · Tiempo</th><th>Significa · Pista</th><th>Ejemplo · Español</th></tr>${D.haveUses.map(h=>`<tr><td><b>${h[0]}</b><br><span class="es">${h[1]}</span></td><td class="es">${h[2]}<br>${h[5]}</td><td>${h[3]} ${spkBtn(h[3])}<br><span class="es">${h[4]}</span></td></tr>`).join("")}</table></div>`;
  } else {
   $("contrbody").innerHTML=`<div class="rule">${D.doubleContrNote}</div><div class="tblwrap"><table><tr><th>Nivel</th><th>Oración · IPA</th><th>Nota</th></tr>${D.doubleContrEx.map(d=>`<tr><td><b>${d[0]}</b></td><td>${d[1]} ${spkBtn(d[1])}</td><td class="es">${d[2]}</td></tr>`).join("")}</table></div>`;
  }

@@ -47,3 +47,6 @@ Diccionario inglés↔español interactivo para aprender: IPA, gramática, vocab
 
 ## Cambios
 - 2026-10-18: contrato inicial (fase 0) + `INDEX_FUNCIONES.md` desde el código real.
+- 2026-10-18: chip «have: had / would have» (Contracciones) + índice de estructuras (tenses, cond, have) en SEARCH_INDEX.
+- 2026-10-18: tarjeta «so / such en otros usos» en Palabras que se confunden + indexado de such/so en SEARCH_INDEX.
+- 2026-11-05: secciones nuevas `relative` (Oraciones de relativo) y `verbpatterns` (Verb patterns) en la Part III; estilo pastel global (`section.topic`) + clases reutilizables `.ig-card` (infográficos). Total: 53 secciones.
