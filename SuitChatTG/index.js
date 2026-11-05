@@ -29,14 +29,14 @@ if (BOT_USERNAME) {
 console.log(`📡 Polling en puerto ${PORT}`);
 
 app.get('/api/health', (req, res) => {
-  const sessions = telegram.getSession();
-  res.json({ status: 'ok', empresa: ID_EMPRESA, bot_username: BOT_USERNAME, chats_activos: sessions.size });
+  // getSession() sin chatId devuelve una sesion basura, no el Map: usar telegram.sessions
+  res.json({ status: 'ok', empresa: ID_EMPRESA, bot_username: BOT_USERNAME, chats_activos: telegram.sessions.size });
 });
 
 app.get('/api/sessions', (req, res) => {
-  const sessions = telegram.getSession();
   const summary = {};
-  for (const [chatId, session] of sessions) {
+  for (const [chatId, session] of telegram.sessions) {
+    if (chatId == null || chatId === 'undefined') continue; // residuos de llamadas sin chatId
     summary[chatId] = {
       empresa: session.idEmpresa,
       mensajes: session.msgCount,
@@ -44,7 +44,7 @@ app.get('/api/sessions', (req, res) => {
       tiene_telefono: !!session.leadData.telefono
     };
   }
-  res.json({ chats_activos: sessions.size, sesiones: summary });
+  res.json({ chats_activos: Object.keys(summary).length, sesiones: summary });
 });
 
 app.get('/api/link', (req, res) => {

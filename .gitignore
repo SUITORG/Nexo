@@ -150,3 +150,6 @@ SuitGmail/config.json
 
 # SuitMisCtas - gasto de herramientas leido de opencode stats (dato personal)
 SuitMisCtas/gastos.json
+
+# SuitMarket - log de alertas Telegram (chat_id + actividad = personal)
+SuitMarket/api/senales.json

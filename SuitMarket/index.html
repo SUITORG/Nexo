@@ -267,6 +267,16 @@ body{display:flex;flex-direction:column}
         <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
       </div>
     </div>
+    <!-- Alertas enviadas (Telegram) -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon"> </span> Alertas enviadas</div>
+        <div class="panel-count" id="alertLogCnt">…</div>
+      </div>
+      <div class="panel-body" id="alertsLogPanel">
+        <div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -463,6 +473,33 @@ async function loadSignals(){
   if(sig) renderSignals(sig);
 }
 
+async function loadSenales(){
+  const d = await fetchJSON('/api/market/senales');
+  const el = document.getElementById('alertsLogPanel');
+  const cnt = document.getElementById('alertLogCnt');
+  if(!el) return;
+  if(!d || !d.items || !d.items.length){
+    cnt.textContent = d && d.chat_id ? 'sin alertas' : 'sin chat TG';
+    el.innerHTML = `<div style="padding:18px;text-align:center;color:var(--text3);font-size:12px;line-height:1.6">A&uacute;n no se ha enviado ninguna alerta.<br><span style="font-size:11px">${d && d.chat_id ? 'La pr&oacute;xima se&ntilde;al confirmada llegar&aacute; aqu&iacute; y a tu Telegram.' : 'Falta chat: manda <b>/start</b> a tu bot SuitChatTG y vuelve a cargar.'}</span></div>`;
+    return;
+  }
+  cnt.textContent = d.items.length + (d.items.length > 1 ? ' alertas' : ' alerta') + (d.chat_id ? ' · TG ok' : ' · local');
+  el.innerHTML = d.items.map(it => {
+    const m = it.meta || {};
+    const tg = it.tg
+      ? '<span style="color:#10b981;font-size:10px;font-weight:700">&#10003; Telegram</span>'
+      : '<span style="color:#f59e0b;font-size:10px;font-weight:700">&#9675; local</span>';
+    const sym = m.sym ? `<b style="font-family:'JetBrains Mono',monospace">${escAttr(m.sym)}</b>` : `<b style="font-size:11px">${escAttr((it.texto || '').split('\n')[0].slice(0, 42))}</b>`;
+    return `<div class="row-item" style="display:block;cursor:default">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span>${sym}</span>${tg}
+      </div>
+      <div style="font-size:11px;color:#cbd5e1;margin-top:3px;line-height:1.45">${escAttr((it.texto || '').split('\n').join(' · ').slice(0, 110))}</div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:2px">${escAttr(it.ts || '')} · ${escAttr(m.origen || '')}</div>
+    </div>`;
+  }).join('');
+}
+
 // ── MAIN REFRESH ──
 async function refresh(){
   try {
@@ -492,6 +529,7 @@ async function refresh(){
 
     // señales: separado y sin await — el primer scan tarda y no debe frenar el dashboard
     loadSignals().catch(()=>{});
+    loadSenales().catch(()=>{});
   } catch(e) {
     console.error('[REFRESH]', e);
   }

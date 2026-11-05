@@ -34,6 +34,8 @@ from zoneinfo import ZoneInfo
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(HERE, '..', 'config.json')
 INDEX_PATH = os.path.join(HERE, '..', 'index.html')
+SENALES_PATH = os.path.join(HERE, 'senales.json')          # log de alertas (gitignored: chat_id)
+TG_ENV_PATH = os.path.join(HERE, '..', '..', 'SuitChatTG', '.env')
 PORT = int(os.environ.get('PORT', '3020'))
 
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -371,6 +373,82 @@ def get_signals():
     return out
 
 
+# ===== TELEGRAM: alertas al bot de SuitChatTG (token en SuitChatTG/.env) =====
+def _tg_token():
+    env = (os.environ.get('TELEGRAM_BOT_TOKEN') or '').strip()
+    if env:
+        return env
+    try:
+        with open(TG_ENV_PATH, encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('TELEGRAM_BOT_TOKEN='):
+                    return line.split('=', 1)[1].strip().strip('"').strip("'")
+    except OSError:
+        pass
+    return ''
+
+
+def _senales_load():
+    try:
+        with open(SENALES_PATH, encoding='utf-8') as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {'chat_id': None, 'items': []}
+
+
+def _senales_save(db):
+    try:
+        with open(SENALES_PATH, 'w', encoding='utf-8') as f:
+            json.dump(db, f, ensure_ascii=False, indent=1)
+    except OSError as e:
+        print('[TG] no pude guardar senales.json: ' + str(e), file=sys.stderr)
+
+
+def _tg_chat_id(db):
+    """chat_id persistido en senales.json; si no, lo descubre via SuitChatTG (/api/sessions)."""
+    if db.get('chat_id'):
+        return str(db['chat_id'])
+    try:
+        s = http_json('http://127.0.0.1:3011/api/sessions', timeout=3)
+        ses = (s or {}).get('sesiones') or {}
+        if ses:
+            cid = str(next(iter(ses)))
+            db['chat_id'] = cid
+            _senales_save(db)
+            return cid
+    except Exception:
+        pass
+    return None
+
+
+def tg_alerta(texto, meta=None):
+    """Registra la alerta en senales.json (max 50) e intenta enviarla a Telegram.
+    Best-effort: sin token/chat_id solo queda registrada como 'local'."""
+    db = _senales_load()
+    item = {
+        'ts': datetime.now(ZoneInfo('America/New_York')).isoformat(timespec='minutes'),
+        'texto': texto,
+        'meta': meta or {},
+        'tg': False,
+    }
+    token = _tg_token()
+    cid = _tg_chat_id(db)
+    if token and cid:
+        try:
+            req = urllib.request.Request(
+                'https://api.telegram.org/bot' + token + '/sendMessage',
+                data=json.dumps({'chat_id': cid, 'text': texto}).encode('utf-8'),
+                headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                item['tg'] = bool(json.loads(r.read().decode('utf-8')).get('ok'))
+        except Exception as e:
+            print('[TG] envio fallo: ' + str(e), file=sys.stderr)
+    db['items'] = ([item] + list(db.get('items') or []))[:50]
+    _senales_save(db)
+    return item
+
+
 # ===== ALERTA 3: toast de Windows para senales nuevas confirmadas (vol >=1.5x) =====
 # Corre en hilo daemon: solo en ventana post-cierre NY (16:10 ET, lun-vie), cada 15 min.
 # ASCII puro en el texto (evita problemas de encoding en -Command de PowerShell).
@@ -434,10 +512,13 @@ def _alert_loop():
                     if len(_alert_notified) > ALERT_TTL_KEYS:
                         _alert_notified.clear()  # set chico; re-notificar tras corte es aceptable
                     if s.get('volOK'):
-                        _windows_alert(
-                            'SuitMarket - Entrada confirmada: ' + str(s.get('sym')),
-                            'rompio ' + str(s.get('rompe')) + ' | vol ' + str(s.get('volRatio')) + 'x'
-                            + ' | R:R ' + str(s.get('rrr')) + ' | diario | stop ' + str(s.get('stop')))
+                        titulo = 'SuitMarket - Entrada confirmada: ' + str(s.get('sym'))
+                        cuerpo = ('rompio ' + str(s.get('rompe')) + ' | vol ' + str(s.get('volRatio')) + 'x'
+                                  + ' | R:R ' + str(s.get('rrr')) + ' | diario | stop ' + str(s.get('stop')))
+                        _windows_alert(titulo, cuerpo)
+                        tg_alerta(titulo + '\n' + cuerpo,
+                                  {'sym': s.get('sym'), 'fecha': s.get('fecha'),
+                                   'vol': s.get('volRatio'), 'rrr': s.get('rrr'), 'origen': 'suitmarket'})
         except Exception as e:
             print(f'[ALERT] ciclo fallo: {e}', file=sys.stderr)
         time.sleep(ALERT_TICK)
@@ -537,10 +618,26 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(get_screener(scr, cnt))
             except Exception as e:
                 return self._send({'error': str(e)}, 500)
+        if path == '/api/market/senales':
+            try:
+                return self._send(_senales_load())
+            except Exception as e:
+                return self._send({'error': str(e)}, 500)
         if path == '/favicon.ico':
             self.send_response(204)
             self.end_headers()
             return
+        self._send({'error': 'not found'}, 404)
+
+    def do_POST(self):
+        path = urllib.parse.urlparse(self.path).path
+        if path == '/api/market/senales/test':
+            try:
+                item = tg_alerta('SuitMarket - prueba de alerta ' + time.strftime('%H:%M:%S'),
+                                 {'origen': 'test'})
+                return self._send({'ok': True, 'tg_enviado': bool(item.get('tg'))})
+            except Exception as e:
+                return self._send({'error': str(e)}, 500)
         self._send({'error': 'not found'}, 404)
 
 if __name__ == '__main__':
