@@ -36,3 +36,16 @@ try {
   console.error('fallo opencode stats:', String(e.message || e).slice(0, 300));
   process.exitCode = 1;
 }
+
+// Google (payments.google.com vía Playwright) — best-effort: si falla (perfil
+// bloqueado / reauth), gastos.json conserva el último valor de google.
+try {
+  execSync('node "' + path.join(__dirname, 'google-saldo.js') + '"', {
+    encoding: 'utf8',
+    timeout: 90000,
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  console.log('google-saldo OK');
+} catch (e) {
+  console.error('google-saldo omitido:', String(e.message || e).slice(0, 200));
+}

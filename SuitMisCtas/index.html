@@ -1218,27 +1218,39 @@ function resetAll(){
 }
 
 // ============== GASTOS HERRAMIENTAS ==============
+const gFresco = iso => !!iso && (Date.now() - Date.parse(iso)) < 48*3600*1000;
 async function loadGastos(){
+  let g = null;
   try{
     const r = await fetch('gastos.json?t='+Date.now(), {cache:'no-store'});
     if(!r.ok) throw new Error('no json');
-    const g = await r.json();
+    g = await r.json();
     $('gOc').textContent = '$' + (g.total||'?');
     $('gOcSub').textContent = 'mes $' + ((g.mes30&&g.mes30.costo)||'?') + ' · ' + (g.sesiones||'?') + ' sesiones · act. ' + String(g.actualizado||'').slice(0,10);
   }catch(e){
     $('gOc').textContent = 'sin datos';
     $('gOcSub').textContent = 'corre actualizar-gastos.bat (o MASTER.bat)';
   }
-  renderGoogle();
+  renderGoogle(g);
 }
-function renderGoogle(){
-  const gg = db.gastosGoogle;
-  if(gg && gg.monto !== '' && gg.monto != null){
-    $('gGo').textContent = '$' + gg.monto;
-    $('gGoSub').textContent = (gg.nota? gg.nota + ' · ' : '') + 'pagado ' + (gg.registrado||gg.mes||'—');
+function renderGoogle(g){
+  const auto = (g && g.google && gFresco(g.google.actualizado)) ? g.google : null;
+  const manual = (db.gastosGoogle && db.gastosGoogle.monto!=='' && db.gastosGoogle.monto!=null) ? db.gastosGoogle : null;
+  // gana lo más reciente: si anotaste a mano hoy y el automático es de antes, manda el manual
+  const manualVigente = manual && (!auto || (manual.registrado||'') >= String(auto.actualizado).slice(0,10));
+  if(auto && !manualVigente){
+    const mes = new Date().toLocaleString('es-MX',{month:'short'});
+    $('gGo').textContent = '$' + auto.monto + ' ' + (auto.moneda||'USD');
+    $('gGoSub').innerHTML = 'mes ' + esc(mes) + (auto.ultima?' · última: '+esc(auto.nota+' '+auto.ultima):'') + ' · ' + esc(auto.fuente||'') + ' · act. ' + esc(String(auto.actualizado).slice(0,10));
+  } else if(manual){
+    $('gGo').textContent = '$' + manual.monto;
+    $('gGoSub').textContent = (manual.nota? manual.nota + ' · ' : '') + 'pagado ' + (manual.registrado||manual.mes||'—') + ' (manual)';
+  } else if(g && g.google){
+    $('gGo').textContent = '$' + g.google.monto;
+    $('gGoSub').textContent = 'desactualizado (' + String(g.google.actualizado).slice(0,10) + ') — corro MASTER.bat';
   } else {
     $('gGo').textContent = '—';
-    $('gGoSub').textContent = 'sin registro — pulsa ✎ para anotar tu último pago';
+    $('gGoSub').textContent = 'sin datos — corro actualizar-gastos.bat';
   }
 }
 function editGoogle(){
@@ -1248,7 +1260,7 @@ function editGoogle(){
   const nota = prompt('¿Qué es? (Google One, Cloud, Gemini…):', cur.nota||'');
   if(nota===null) return;
   db.gastosGoogle = { monto: String(monto).trim(), nota: String(nota).trim(), mes: monthKey(), registrado: todayISO() };
-  save(); renderGoogle();
+  save(); renderGoogle(null);
 }
 
 // ============== SUITGMAIL (semáforo de correos banco/servicios) ==============
