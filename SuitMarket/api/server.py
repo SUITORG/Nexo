@@ -529,6 +529,7 @@ def _windows_alert(title, body):
 
 
 _alert_notified = set()
+_estado_sent = {}         # 'sym|fecha' -> ultimo estado notificado (objetivo/invalidada)
 ALERT_TICK = 900          # 15 min
 ALERT_TTL_KEYS = 200      # corte de memoria del set
 
@@ -545,6 +546,25 @@ def _alert_loop():
             if in_window:
                 for s in get_signals():
                     key = s.get('sym', '?') + '|' + s.get('fecha', '?')
+                    # salida: avisar cuando alcance objetivo o toque stop (solo si la
+                    # entrada se notifico = volOK). Un aviso por estado, no cada 15 min.
+                    if s.get('volOK') and s.get('estado') in ('objetivo', 'invalidada'):
+                        if _estado_sent.get(key) != s.get('estado'):
+                            _estado_sent[key] = s.get('estado')
+                            if len(_estado_sent) > ALERT_TTL_KEYS:
+                                _estado_sent.clear()
+                            if s['estado'] == 'objetivo':
+                                titulo = 'SuitMarket - OBJETIVO ALCANZADO: ' + str(s.get('sym'))
+                                cuerpo = ('vender en ' + str(s.get('target')) + ' | +' + str(s.get('pnl')) + '%'
+                                          + ' | entrada ' + str(s.get('entrada')) + ' | R:R ' + str(s.get('rrr')))
+                            else:
+                                titulo = 'SuitMarket - STOP TOCADO: ' + str(s.get('sym'))
+                                cuerpo = ('salir en ' + str(s.get('stop')) + ' | ' + str(s.get('pnl')) + '%'
+                                          + ' | entrada ' + str(s.get('entrada')))
+                            _windows_alert(titulo, cuerpo)
+                            tg_alerta(titulo + '\n' + cuerpo,
+                                      {'sym': s.get('sym'), 'fecha': s.get('fecha'),
+                                       'estado': s.get('estado'), 'origen': 'suitmarket'})
                     if key in _alert_notified:
                         continue
                     _alert_notified.add(key)
@@ -553,7 +573,10 @@ def _alert_loop():
                     if s.get('volOK'):
                         titulo = 'SuitMarket - Entrada confirmada: ' + str(s.get('sym'))
                         cuerpo = ('rompio ' + str(s.get('rompe')) + ' | vol ' + str(s.get('volRatio')) + 'x'
-                                  + ' | R:R ' + str(s.get('rrr')) + ' | diario | stop ' + str(s.get('stop')))
+                                  + ' | R:R ' + str(s.get('rrr')) + ' | diario'
+                                  + ' | entrada ' + str(s.get('entrada'))
+                                  + ' | objetivo ' + str(s.get('target')) + ' (vender)'
+                                  + ' | stop ' + str(s.get('stop')))
                         _windows_alert(titulo, cuerpo)
                         tg_alerta(titulo + '\n' + cuerpo,
                                   {'sym': s.get('sym'), 'fecha': s.get('fecha'),
