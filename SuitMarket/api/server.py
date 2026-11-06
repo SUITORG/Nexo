@@ -36,6 +36,7 @@ CONFIG_PATH = os.path.join(HERE, '..', 'config.json')
 INDEX_PATH = os.path.join(HERE, '..', 'index.html')
 SENALES_PATH = os.path.join(HERE, 'senales.json')          # log de alertas (gitignored: chat_id)
 TG_ENV_PATH = os.path.join(HERE, '..', '..', 'SuitChatTG', '.env')
+TUNEL_URL_PATH = os.path.join(HERE, 'tunel_url.txt')       # URL viva del tunnel (gitignored)
 PORT = int(os.environ.get('PORT', '3020'))
 
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -373,6 +374,44 @@ def get_signals():
     return out
 
 
+# ===== TUNNEL cloudflared: webhook publico para alertas de TradingView =====
+_tunel = {'url': None}
+
+
+def _tunel_loop():
+    """Quick tunnel cloudflared -> http://127.0.0.1:3020 (para TradingView webhooks).
+    URL viva en tunel_url.txt y /api/market/webhook-url; auto-heal si muere.
+    Sin cloudflared instalado solo loguea y reintenta (webhook local sigue funcionando)."""
+    import subprocess
+    import re
+    while True:
+        try:
+            proc = subprocess.Popen(
+                ['cloudflared', 'tunnel', '--url', 'http://127.0.0.1:' + str(PORT)],
+                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                text=True, encoding='utf-8', errors='replace')
+            url = None
+            for line in proc.stderr:
+                m = re.search(r'https://[a-z0-9-]+\.trycloudflare\.com', line)
+                if m:
+                    url = m.group(0)
+                    break
+            if url:
+                _tunel['url'] = url
+                try:
+                    with open(TUNEL_URL_PATH, 'w', encoding='utf-8') as f:
+                        f.write(url)
+                except OSError:
+                    pass
+                print('[TUNEL] webhook publico: ' + url + '/api/market/webhook', flush=True)
+            proc.wait()
+        except Exception as e:
+            print('[TUNEL] fallo: ' + str(e), file=sys.stderr)
+            time.sleep(30)
+        _tunel['url'] = None
+        time.sleep(5)
+
+
 # ===== TELEGRAM: alertas al bot de SuitChatTG (token en SuitChatTG/.env) =====
 def _tg_token():
     env = (os.environ.get('TELEGRAM_BOT_TOKEN') or '').strip()
@@ -623,6 +662,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(_senales_load())
             except Exception as e:
                 return self._send({'error': str(e)}, 500)
+        if path == '/api/market/webhook-url':
+            return self._send({'url': _tunel.get('url'),
+                               'local': 'http://127.0.0.1:' + str(PORT) + '/api/market/webhook'})
         if path == '/favicon.ico':
             self.send_response(204)
             self.end_headers()
@@ -638,6 +680,31 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send({'ok': True, 'tg_enviado': bool(item.get('tg'))})
             except Exception as e:
                 return self._send({'error': str(e)}, 500)
+        # Webhook de TradingView (JSON o texto plano en el body de la alerta)
+        if path in ('/api/market/webhook', '/webhook/tv'):
+            try:
+                n = int(self.headers.get('Content-Length') or 0)
+                txt = (self.rfile.read(n) if n else b'').decode('utf-8', 'replace')
+                meta = {'origen': 'tradingview'}
+                try:
+                    d = json.loads(txt)
+                    if isinstance(d, dict):
+                        partes = []
+                        for k in ('accion', 'action', 'sym', 'symbol', 'ticker',
+                                  'precio', 'price', 'mensaje', 'message', 'msg'):
+                            if d.get(k) is not None:
+                                partes.append(str(k) + '=' + str(d[k]))
+                        texto = 'TradingView - ' + (' | '.join(partes) if partes else txt[:200])
+                        meta['sym'] = str(d.get('sym') or d.get('symbol') or d.get('ticker') or '')
+                        meta['precio'] = d.get('precio') if d.get('precio') is not None else d.get('price')
+                    else:
+                        texto = 'TradingView - ' + str(d)[:200]
+                except ValueError:
+                    texto = 'TradingView - ' + (txt[:200] or '(vacio)')
+                item = tg_alerta(texto, meta)
+                return self._send({'ok': True, 'tg': bool(item.get('tg'))})
+            except Exception as e:
+                return self._send({'error': str(e)}, 500)
         self._send({'error': 'not found'}, 404)
 
 if __name__ == '__main__':
@@ -646,4 +713,5 @@ if __name__ == '__main__':
     print(f'Caché: TD {TTL_TD}s · Yahoo {TTL_YAHOO}s · movers {TTL_MOVERS}s · news {TTL_NEWS}s · signals {TTL_SIGNALS}s')
     print('Alerta: ON — ventana post-cierre NY (16:10 ET lun-vie), cada 15 min, solo senales confirmadas (vol)')
     start_alert_thread()
+    threading.Thread(target=_tunel_loop, daemon=True, name='tunel').start()
     ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()

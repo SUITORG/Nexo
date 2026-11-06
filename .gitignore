@@ -153,3 +153,5 @@ SuitMisCtas/gastos.json
 
 # SuitMarket - log de alertas Telegram (chat_id + actividad = personal)
 SuitMarket/api/senales.json
+# SuitMarket - URL viva del tunel cloudflared (efimera)
+SuitMarket/api/tunel_url.txt

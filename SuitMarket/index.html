@@ -273,7 +273,12 @@ body{display:flex;flex-direction:column}
         <div class="panel-title"><span class="icon"> </span> Alertas enviadas</div>
         <div class="panel-count" id="alertLogCnt">…</div>
       </div>
-      <div class="panel-body" id="alertsLogPanel">
+            <div id="webhookBox" style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;line-height:1.55">
+        <div style="color:#94a3b8;margin-bottom:4px"><b style="color:#e2e8f0">Webhook TradingView</b> &mdash; en tu alerta: Notificaciones &rarr; Webhook URL:</div>
+        <input id="whUrl" readonly onclick="this.select()" style="width:100%;background:#0d1322;border:1px solid #243044;color:#22d3ee;border-radius:6px;padding:5px 8px;font-family:monospace;font-size:10.5px" value="conectando tunel...">
+        <div style="color:#64748b;margin-top:4px;font-size:10.5px">Mensaje JSON de la alerta: <code style="color:#cbd5e1">{"acc":"compra","sym":"{{ticker}}","precio":"{{close}}"}</code></div>
+      </div>
+<div class="panel-body" id="alertsLogPanel">
         <div class="skeleton"></div><div class="skeleton"></div>
       </div>
     </div>
@@ -474,6 +479,11 @@ async function loadSignals(){
 }
 
 async function loadSenales(){
+  try{
+    const w = await fetchJSON('/api/market/webhook-url');
+    const inp = document.getElementById('whUrl');
+    if(inp && w) inp.value = w.url ? (w.url + '/api/market/webhook') : 'tunel iniciando... (recarga en unos seg)'
+  }catch(e){}
   const d = await fetchJSON('/api/market/senales');
   const el = document.getElementById('alertsLogPanel');
   const cnt = document.getElementById('alertLogCnt');
