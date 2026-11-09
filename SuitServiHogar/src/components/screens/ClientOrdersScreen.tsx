@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStripe, useElements } from '@stripe/react-stripe-js';
 import { EscrowOrder } from '../../types';
 import { fetchOrdersByClient } from '../../services/bookingService';
 import { fetchInSituAdjustments, respondAdjustment, InSituAdjustment } from '../../services/adjustmentService';
 import { StripeCardInput } from '../StripeCardInput';
 import { getDevConfig } from '../../config/devMode';
+import { sfxAjustePendiente } from '../../lib/sfx';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   draft: { label: 'Borrador', color: 'text-text-muted' },
@@ -27,6 +28,7 @@ export const ClientOrdersScreen: React.FC<ClientOrdersScreenProps> = ({ clientId
   const [busy, setBusy] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const adjustmentsReadyRef = useRef(false);
   const stripe = useStripe();
   const elements = useElements();
 
@@ -41,6 +43,33 @@ export const ClientOrdersScreen: React.FC<ClientOrdersScreenProps> = ({ clientId
       .catch((err) => console.error('Error cargando ordenes:', err))
       .finally(() => setLoading(false));
   }, [clientId]);
+
+  // Refresco del ajuste in-situ: el banner debe aparecer sin recargar.
+  useEffect(() => {
+    if (loading || orders.length === 0) return;
+    const orderIds = orders.map((o) => o.id);
+    const iv = setInterval(async () => {
+      try {
+        const next = await fetchInSituAdjustments(orderIds);
+        setAdjustments((prev) => {
+          const prevPending = Object.values(prev)
+            .filter((a) => a.status === 'pending')
+            .map((a) => a.id);
+          const nextPending = Object.values(next)
+            .filter((a) => a.status === 'pending')
+            .map((a) => a.id);
+          if (adjustmentsReadyRef.current && nextPending.some((id) => !prevPending.includes(id))) {
+            sfxAjustePendiente();
+          }
+          adjustmentsReadyRef.current = true;
+          return next;
+        });
+      } catch {
+        // best-effort: el siguiente ciclo reintenta
+      }
+    }, 5000);
+    return () => clearInterval(iv);
+  }, [loading, orders]);
 
   const handleReject = async (orderId: string) => {
     setBusy(true);

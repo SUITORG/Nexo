@@ -71,3 +71,28 @@ export function sfxCerrar() {
   note({ freq: 146.83, at: 0, dur: 0.32, type: 'sine', gain: 0.2, cutoff: 900 });
   note({ freq: 110, at: 0.16, dur: 0.9, type: 'sine', gain: 0.18, cutoff: 700 });
 }
+
+
+/** "Nuevo servicio" — tres notas ascendentes con brillo, timbre de taller.
+ *  Distinto de sfxLiberar/sfxCerrar: no suena a caja fuerte ni a sello. */
+export function sfxNuevoServicio() {
+  const NOTES = [392.0, 493.88, 587.33]; // G4 B4 D5
+  NOTES.forEach((f, i) => {
+    note({ freq: f, at: i * 0.12, dur: 0.55, type: 'triangle', gain: 0.16 });
+    note({ freq: f * 2, at: i * 0.12, dur: 0.3, type: 'sine', gain: 0.04, detune: 4 });
+  });
+}
+
+/** "Mensaje nuevo" — dos notas suaves y cortas. */
+export function sfxMensaje() {
+  note({ freq: 659.25, at: 0, dur: 0.22, type: 'sine', gain: 0.12 });
+  note({ freq: 880.0, at: 0.11, dur: 0.32, type: 'sine', gain: 0.1 });
+}
+
+/** "Ajuste pendiente" — cuatro notas ascendentes, para el cliente. */
+export function sfxAjustePendiente() {
+  const NOTES = [523.25, 659.25, 783.99, 1046.5];
+  NOTES.forEach((f, i) => {
+    note({ freq: f, at: i * 0.1, dur: 0.4, type: 'triangle', gain: 0.12 });
+  });
+}

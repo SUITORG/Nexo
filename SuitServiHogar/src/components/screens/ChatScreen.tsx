@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Message, fetchMessages, sendMessage, uploadChatPhoto, subscribeToMessages } from '../../services/messageService';
 import { PriceNegotiation } from '../PriceNegotiation';
+import { sfxMensaje } from '../../lib/sfx';
 
 interface ChatScreenProps {
   orderId: string;
@@ -31,7 +32,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   useEffect(() => {
     loadMessages();
     const unsub = subscribeToMessages(orderId, (msg) => {
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        if (msg.sender_role !== userRole) sfxMensaje();
+        return [...prev, msg];
+      });
     });
     return unsub;
   }, [orderId]);

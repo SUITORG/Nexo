@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { Currency, EscrowOrder, ScreenId, ServiceCategory, Technician } from './types';
 import { INITIAL_ORDER } from './data/mockData';
 import { fetchCategories } from './services/categoryService';
 import { fetchTechnicians } from './services/technicianService';
 import { getCurrentUser, signOut, getTechnicianByEmail } from './services/authService';
-import { updateOrderStatus } from './services/bookingService';
+import { fetchOrdersByClient, fetchOrdersByTechnician, updateOrderStatus } from './services/bookingService';
+import { fetchInSituAdjustments } from './services/adjustmentService';
+import { sfxNuevoServicio, sfxAjustePendiente } from './lib/sfx';
 import { stripePromise } from './lib/stripe';
 import { supabase } from './lib/supabase';
 import { Header } from './components/Header';
@@ -55,6 +57,8 @@ export default function App() {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const seenTechFundedRef = useRef<Set<string> | null>(null);
+  const seenClientAdjustmentsRef = useRef<Set<string> | null>(null);
 
   // Modals & Active Selections
   const [selectedTechnician, setSelectedTechnician] = useState<Technician | null>(null);
@@ -161,6 +165,64 @@ export default function App() {
     loadData();
   }, []);
 
+  // Aviso global para el técnico: servicio nuevo aunque no esté en "Mis Órdenes".
+  useEffect(() => {
+    if (!currentTechnician?.id || isAdmin || currentScreen === 'tecnico') return;
+    let alive = true;
+    const check = async () => {
+      try {
+        const data = await fetchOrdersByTechnician(currentTechnician.id);
+        if (!alive) return;
+        const funded = data.filter(o => o.status === 'funded').map(o => o.id);
+        if (seenTechFundedRef.current === null) {
+          seenTechFundedRef.current = new Set(funded);
+        } else {
+          if (funded.some(id => !seenTechFundedRef.current!.has(id))) sfxNuevoServicio();
+          seenTechFundedRef.current = new Set(funded);
+        }
+      } catch {
+        // best-effort: el siguiente ciclo reintenta
+      }
+    };
+    check();
+    const iv = setInterval(check, 10000);
+    return () => {
+      alive = false;
+      clearInterval(iv);
+    };
+  }, [currentTechnician?.id, isAdmin, currentScreen]);
+
+  // Aviso global para el cliente: ajuste pendiente aunque no esté en "Mis Órdenes".
+  useEffect(() => {
+    if (!user?.id || currentTechnician || currentScreen === 'mis-ordenes') return;
+    let alive = true;
+    const check = async () => {
+      try {
+        const orders = await fetchOrdersByClient(user.id);
+        if (!alive) return;
+        const adj = await fetchInSituAdjustments(orders.map(o => o.id));
+        if (!alive) return;
+        const pending = Object.values(adj)
+          .filter(a => a.status === 'pending')
+          .map(a => a.id);
+        if (seenClientAdjustmentsRef.current === null) {
+          seenClientAdjustmentsRef.current = new Set(pending);
+        } else {
+          if (pending.some(id => !seenClientAdjustmentsRef.current!.has(id))) sfxAjustePendiente();
+          seenClientAdjustmentsRef.current = new Set(pending);
+        }
+      } catch {
+        // best-effort: el siguiente ciclo reintenta
+      }
+    };
+    check();
+    const iv = setInterval(check, 10000);
+    return () => {
+      alive = false;
+      clearInterval(iv);
+    };
+  }, [user?.id, currentTechnician, currentScreen]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -202,6 +264,7 @@ export default function App() {
     setPendingBookingTech(null);
     setCurrentOrder((prev) => ({
       ...prev,
+      status: 'draft',
       technician: tech,
       serviceTitle: tech.tags[0] ? `${tech.tags[0]} - ${tech.title}` : prev.serviceTitle,
       basePriceMxn: tech.priceMxn,

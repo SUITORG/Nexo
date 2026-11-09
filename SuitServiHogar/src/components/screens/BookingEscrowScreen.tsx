@@ -151,7 +151,7 @@ export const BookingEscrowScreen: React.FC<BookingEscrowScreenProps> = ({
       <section className="bg-surface-card rounded-xl p-4 border border-border-subtle shadow-xs space-y-3">
         <div className="flex items-center justify-between border-b border-border-subtle pb-2">
           <span className="text-label-md font-bold text-text-muted">
-            ORDEN REF: <span className="text-primary font-mono">{order.id}</span>
+            ORDEN REF: <span className="text-primary font-mono">{order.status === 'draft' ? 'Se asigna al pagar' : order.id}</span>
           </span>
           <span className="text-label-sm font-bold bg-emerald-safe-bg text-escrow-shield px-2 py-0.5 rounded border border-secondary-container">
             PRECIO REGULADO

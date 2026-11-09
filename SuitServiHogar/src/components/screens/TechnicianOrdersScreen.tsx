@@ -3,7 +3,7 @@ import { EscrowOrder, Technician } from '../../types';
 import { fetchOrdersByTechnician, updateOrderStatus, processSpecialistCancellation, uploadEvidencePhoto } from '../../services/bookingService';
 import { fetchInSituAdjustments, requestAdjustment, InSituAdjustment } from '../../services/adjustmentService';
 import { isDevMode } from '../../config/devMode';
-import { sfxLiberar, sfxCerrar } from '../../lib/sfx';
+import { sfxLiberar, sfxCerrar, sfxNuevoServicio } from '../../lib/sfx';
 
 interface TechnicianOrdersScreenProps {
   technician: Technician;
@@ -49,16 +49,30 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
   const [recotReason, setRecotReason] = useState('');
   const [recotSending, setRecotSending] = useState(false);
   const [recotError, setRecotError] = useState<string | null>(null);
+  const seenFundedRef = useRef<Set<string> | null>(null);
 
   useEffect(() => {
     loadOrders();
+    const iv = setInterval(() => loadOrders(false), 8000);
+    return () => clearInterval(iv);
   }, [technician.id]);
 
-  const loadOrders = async () => {
-    setLoading(true);
+  const loadOrders = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const data = await fetchOrdersByTechnician(technician.id);
       setOrders(data);
+
+      // Sonido de servicio nuevo: solo para ordenes funded que no estaban antes.
+      const fundedIds = data.filter(o => o.status === 'funded').map(o => o.id);
+      if (seenFundedRef.current === null) {
+        seenFundedRef.current = new Set(fundedIds);
+      } else {
+        const hasNew = fundedIds.some(id => !seenFundedRef.current!.has(id));
+        if (hasNew) sfxNuevoServicio();
+        seenFundedRef.current = new Set(fundedIds);
+      }
+
       const inProg = data.filter(o => o.status === 'in_progress');
       if (inProg.length) {
         try {
@@ -72,7 +86,7 @@ export const TechnicianOrdersScreen: React.FC<TechnicianOrdersScreenProps> = ({
     } catch (err) {
       console.error('Error cargando órdenes:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
