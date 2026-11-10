@@ -47,8 +47,9 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 
 ### 🔴 Crítico / Alto (abiertos)
 
-- [ ] **TD-014** · *crítico* · APIs de subsistemas **sin autenticación** (SuitReservaciones, SuitPedidoExpress, SuitPos, SuitProductos, SuitInventarios, SuitBodega, SuitCotizador, citas) — cualquier endpoint accesible sin token vía `/api/*`. Propuesta: middleware JWT gateway central en `server.js` o aislamiento por puerto con reverse proxy. *2026-07-09*
-- [ ] **TD-015** · *alto* · `service_role` key en `db/client.js` de todos los módulos nuevos (PedidoExpress, Pos, Productos, Inventarios, Bodega) — bypass total de RLS. Extensión de TD-003. *2026-07-09*
+- [~] **TD-014** · *crítico→medio* · APIs de subsistemas sin autenticación — **Fase B aplicada 2026-11-09** (ADR-060): guardia `shared/suit-token.js` en 8 servidores (PedidoExpress, Pos, Productos, Inventarios, Bodega, Cotizador, citas, Reservaciones): mutaciones remotas requieren `X-Suit-Token` o same-origin, bypass localhost, `/webhook*` exento, rate-limit 15min/100. GET sigue abierto (rate-limiteado). **Falta**: auth de sesión real (JWT estándar SuitServiHogar) si algún módulo se expone a internet. *2026-07-09 · actualizado 2026-11-09*
+- [ ] **TD-015** · *alto→bajo* · `service_role` "en cliente" — **revisado 2026-11-09**: en realidad es **server-side** (`client.js`/libs de Node: PedidoExpress, Pos, Productos, Inventarios, Bodega, citas, SuitCampanas) → correcto. `SuitDashboard/data.js` = **falso positivo** (el string "service_role" es texto de descripciones de skills, no una key). Ver ADR-060. *2026-07-09 · actualizado 2026-11-09*
+- [x] **TD-001** · API keys hardcodeadas en `backend/core.js:13` → **obsoleto 2026-11-09**: lee de Script Properties (`setupOpenRouterKey`), grep `sk-|AIza|hf_` en `backend/` sin hallazgos. *2026-07-05 → cerrado 2026-11-09*
 - [ ] **TD-003** · *alto* · `service_role` en cliente (`SuitCampanas/lib/supabase.js`, `citas/db/client.js`). *2026-07-05*
 - [ ] **TD-001** · *alto* · API keys hardcodeadas en `backend/core.js:13`. *2026-07-05*
 - [ ] **TD-006** · *alto* · Modelo `gemini-1.5-flash` deprecado — migrar a OpenRouter free (`backend/ai_engine.js`). *2026-07-05*
@@ -59,7 +60,7 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 - [ ] **TD-005** · medio · GAS URL hardcodeada en `local-server-node.js`, `ssg-engine.mjs`, `orchestrator_client.js`. *2026-07-05*
 - [ ] **TD-007** · medio · No hay tests automatizados (raíz). *2026-07-05*
 - [ ] **TD-009** · medio · Sin sistema de logging centralizado. *2026-07-05*
-- [ ] **TD-010** · medio · Sin rate limiting en endpoints públicos (`server.js`, `local-server-node.js`). *2026-07-05*
+- [x] **TD-010** · rate limiting en endpoints públicos → **cerrado 2026-11-09**: `server.js` raíz (ya lo tenía) + SuitServiHogar + los 8 módulos vía `shared/suit-token.js` (ADR-060). *2026-07-05 → cerrado 2026-11-09*
 - [ ] **TD-012** · medio · SuitCotizador: migración Supabase pendiente de aplicar (`Documentacion/migrations/001_suit_cotizador.sql`). *2026-07-05*
 - [ ] **TD-013** · medio · SuitCotizador: procesos y reglas de precio base para estándares mexicanos pendientes. *2026-07-05*
 - [ ] **TD-016** · medio · Probar SuitAI en vivo (`/api/ai/models`, `/api/ai/chat`, circuit breaker, fallback Gemini) — requiere keys en `.env`. *2026-07-09*
@@ -95,7 +96,7 @@ No trackers fuera de esta lista. Documentos de plan (`plan-*.md`, ADRs, `docs/05
 - [ ] **SuitVideoAssembly**: unir imágenes + voz + música + subtítulos · exportar MP4 final
 - [ ] **SuitCampanas**: endpoint `/api/video-completo` · botón en UI para crear video desde guion
 - [ ] **grupoevasol.com — hosting** *(encontrado 2026-08-18)*: decidir dónde vive (hoy 2 copias: GitHub Pages + LiteSpeed/cPanel manual → cada fix se sube 2 veces) · si LiteSpeed: automatizar subida (FTP/rsync en CI) · si GH Pages: DNS + `CNAME` · detección de tenant por hostname (hoy sin `?co=EVASOL` cae en la demo genérica)
-- [ ] **Seguridad Supabase** *(2026-08-18)*: RLS con `qual: true` en UPDATE/DELETE de `Catalogo`, `Proyectos`, `Leads`, `Config_Empresas` etc. — cualquiera con la llave anon puede modificar datos de tenants · rotar token Hugging Face expuesto en `SuitCampanas/.env.test`
+- [ ] **Seguridad Supabase** *(2026-08-18)*: ~~RLS con `qual: true` en UPDATE/DELETE~~ **CERRADO 2026-11-09** (ADR-060): drop de50 policies en23 tablas, `sh_orders` conservada (la escribe el browser), verificado con llave anon + e2e 8/8, rollback en `scripts/backup/rls-rollback-20261109.sql`. **Queda (A4)**: policies `SELECT` (37) e `INSERT` (46) siguen permissivas — anon lee/inserta todo; inventario de lectores browser por tabla y restringir. Rotar token Hugging Face expuesto en `SuitCampanas/.env.test` (nunca estuvo en git, solo local). Si `syncToSupabase` de GAS da *permission denied*, su `SUPABASE_KEY` es anon → usar `SUPABASE_SERVICE_ROLE_KEY` del `.env` raíz. *2026-08-18 · actualizado 2026-11-09*
 - [ ] **Limpieza menor**: `open-design/` como gitlink roto (sin `.gitmodules`) · `.claude/skills/browser-act` symlink roto (`SUITORGSTORE01`) → warning en `git status`
 
 ## D. Roadmap general *(absorbido de `roadmap.md`)*

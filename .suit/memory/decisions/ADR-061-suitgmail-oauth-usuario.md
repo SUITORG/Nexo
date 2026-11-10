@@ -1,4 +1,4 @@
-# ADR-060: SuitGmail — OAuth de usuario (no service_account) + reglas por remitente/palabra
+# ADR-061: SuitGmail — OAuth de usuario (no service_account) + reglas por remitente/palabra
 
 ## Status
 Accepted (2026-11-03)
