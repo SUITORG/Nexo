@@ -29,12 +29,21 @@ Dato estructural clave: **solo SuitServiHogar escribe a Supabase desde el browse
 - GET siempre pasa (rate-limiteado).
 - Validado en vivo (SuitPos + citas + SuitReservaciones vía IP LAN `192.168.86.71`): sin token → 401 · con token → pasa · same-origin → pasa · webhook → 200 · GET → 200.
 
+### A3 — sh_* writes: solo sesión real (2026-11-09)
+Las políticas de escritura `sh_*` con check efectivo `true` fueron acotadas:
+- **`sh_orders`**: eliminadas `"Insert orders"` (INSERT `with_check true`) y `"Update orders"` (UPDATE `USING true`) — quedan las scoped ya existentes (`Clients insert/update own` = `auth.uid()=client_id`, `Technicians update` = email, `service_role ALL`).
+- **`sh_messages`**: `"Messages insert for participants"` → `WITH CHECK (auth.uid() is not null)` (el nombre prometía "participants" pero no chequeaba nada).
+- **`sh_feedback`**: `feedback_insert_own` → `WITH CHECK (auth.uid() = user_id)` (antes `true`).
+- **`sh_coupons`**: `"Coupons: system manages"` (ALL `true`) → `is_admin_by_email(auth.jwt()->>'email')` (mismo patrón que `config_admin_write` en `sh_config`).
+
+Verificación: **e2e SuitServiHogar 8/8** (devMode usa sesión real vía `/api/dev/qa-login` → `signInWithPassword`) + live con llave anon: UPDATE `sh_orders` → `[]` (fila no visible), INSERT → `42501 new row violates row-level security policy`, UPDATE `Config_Empresas` → `[]`. Rollback: `scripts/backup/rls-rollback-a3-20261109.sql`.
+
 ## Rationale
 - **Ponytail**: mecanismo de una sola pieza compartida (1 archivo,1 línea por server), sin tocar rutas individuales ni frontends.
 - Honestidad de límite: bypass same-origin/token son **speed-bump contra escaneos/bots**, no autenticación de sesión real — la autenticación real de sesión ya existe en SuitServiHogar (`requireAuth` JWT) y es el estándar si algún módulo se expone a internet.
 
 ## Consequences
-- Queda **A4 (pendiente)**: policies `SELECT` (37) e `INSERT` (46) siguen permissivas — anon aún *lee* todo (p.ej. `Config_Empresas`) y puede INSERTAR. Cierre futuro: inventario de lectores browser por tabla → restringir.
+- Queda **A4 (pendiente)**: policies `SELECT` (37) siguen permissivas — anon aún *lee* todo (p.ej. `Config_Empresas`, `sh_orders` con "Public read orders") — y los `INSERT` de tablas **no-`sh_*`** (46 en el recuento original, mayoria `with_check true`) siguen abiertos. Cierre futuro: inventario de lectores/escritores browser por tabla → restringir.
 - Si el próximo `syncToSupabase` de GAS falla con *permission denied*, su `SUPABASE_KEY` (Script Properties) es anon → reemplazarla por `SUPABASE_SERVICE_ROLE_KEY` (root `.env`) o correr el rollback.
 - `SuitCotizador` tiene CORS con `ALLOWED_ORIGIN` solo-localhost (pre-existente): su UI desde LAN ya era bloqueada por CORS antes de este cambio; agregar la IP LAN a `ALLOWED_ORIGIN` si se quiere usar su UI remota.
 - `SuitCampanas/local-server-node.js` omitido a propósito:0 rutas mutantes HTTP + ya tenía rate-limit.
