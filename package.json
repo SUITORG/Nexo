@@ -15,6 +15,7 @@
     "chrome-devtools-mcp": "^0.23.0",
     "dotenv": "^17.4.1",
     "express": "^4.22.1",
+    "express-rate-limit": "^8.7.4",
     "googleapis": "^173.0.0",
     "helmet": "^8.1.0",
     "pg": "^8.21.0",

@@ -4,6 +4,7 @@ const supabase = require('./db/client');
 
 const app = express();
 app.use(express.json());
+require('../shared/suit-token').mount(app);
 
 const WHATSAPP_CONFIG = {
   token: process.env.WHATSAPP_API_TOKEN || '',

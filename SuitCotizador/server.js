@@ -18,6 +18,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+require('../shared/suit-token').mount(app);
 
 function validarGiro(data) {
   if (!data) return false;

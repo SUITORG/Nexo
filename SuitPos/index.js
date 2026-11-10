@@ -3,6 +3,7 @@ const supabase = require('./db/client');
 
 const app = express();
 app.use(express.json());
+require('../shared/suit-token').mount(app);
 
 const PORT = process.env.PORT || 3006;
 
