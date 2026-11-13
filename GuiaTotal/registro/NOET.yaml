@@ -1,0 +1,52 @@
+# GuiaTotal/registro/NOET.yaml — tarjeta del proyecto (tenant NOET)
+proyecto: "NOET — Noe Thermomix"
+ruta: "(tenant de Config_Empresas — sin carpeta de código)"
+etapa: "operativa"                   # cadena máscara 8/8 en curso 2026-10-24 (orden "auto total")
+creado: "2026-11-13"
+actualizado: "2026-11-13"
+
+validacion:
+  problema: "Asesoría culinaria con Thermomix en Monterrey — audiencia sin tiempo/organización para cocinar"
+  hipotesis: "Con identidad + SEO + brief + activos, la tenant queda operativa en la plataforma"
+  metrica_exito: "Cadena máscara completa (alta → activos) + espejo Supabase reflejado"
+  evidencia: "orden del usuario 'máscara auto total NOET' (máscara Sección C, switches auto)"
+  decision: "continuar"
+  motivo: "usuario invocó la cadena completa en automático"
+
+evaluacion:
+  panel_juzgador: "no evaluado"     # tenant cliente, no proyecto de código
+  veredicto_fecha: null
+  recomendaciones: null
+
+integraciones:
+  convive_sheets: true              # Config_Empresas es maestra en GS (db_engine GSHEETS)
+  id_empresa: "NOET"
+  db_engine: "GSHEETS"
+  brief_en_logo_url: true           # vector 17/18 preexistente → brief-engine completa
+
+taxonomia:
+  industria: "Electrodomésticos y Bienes de Consumo Premium"
+  nicho: "Cocina saludable / asesoría Thermomix"
+  especializacion: "Asesoría Culinaria y Tecnología para Cocina Saludable"
+
+documentos:
+  analista_proy: false              # invocación directa de máscara
+  identidad: true                   # NOET/IDENTIDAD_CORPORATIVA.md (8 secciones + anexo legal)
+  confianza: false
+  contrato: false                   # tenant sin carpeta de código
+  manuales: false
+  prompt_origen: false
+  checklist_lanzamiento: false
+
+mascara:
+  switches: "auto total (alta, empresa_registro, clusters, paginas, brief, activos)"
+  bloque_A: "8/8 completo en GS"
+  fotoagente: "cteNOET/fotoagente.jpg (Pexels 5622171, share ANYONE)"
+  drive: "cteNOET existe (1J1EuuoiLIPYABMP9pICN_11A5f8VQfWd)"
+  espejo: "Supabase reflejado 2026-11-13 (upsert service_role — sync desplegado no actualiza filas nuevas)"
+  cadena_2026_11_13:
+    empresa_registro: "OK — identidad 8 secciones + anexo legal (politicas_privacidad 2632 / politicas_cookies 2491) + mensaje1/2 + mision/vision/valores/impacto"
+    clusters: "OK — 9 clústeres Config_SEO con fotos Pexels, GAS + espejo 9/9"
+    paginas: "OK — 9 páginas Config_Paginas (contrato real titulo/subtitulo/p_intro/texto/FAQ + schema Service), espejo 9/9"
+    brief: "OK — competidores completado (campo faltante), 18/18, LAPVTFU preservado byte-a-byte, espejo OK"
+    activos: "EN CURSO — fotos/videos via SuitComfy local (puente suit-activos → Drive), testimonios/contenido [PENDIENTE] por ser cliente real"

@@ -1,0 +1,36 @@
+# Máscara Config_Empresas — NOET (copia de plantilla, orden "auto total" 2026-11-13)
+mascara:
+  version: 1
+  plantilla_de: GuiaTotal/plantillas/MASCARA_CONFIG_EMPRESAS.yaml
+  id_empresa: "NOET"
+
+  A_datos_tuyos:
+    nomempresa: "Noe Thermomix"
+    tipo_negocio: "Electrodomésticos y Bienes de Consumo Premium,ALIMENTOS,no_galeria"
+    giro_especifico: "Asesoría Culinaria y Tecnología para Cocina Saludable"
+    color_tema: "#f4eb86"
+    direccion: "Monterrey N.L."
+    whatsapp_negocio: "8184656418"
+    correoempresarial: "rbtpdrn@gmail.com"
+
+  B_generados:
+    slogan: "Cocina inteligente. Vida saludable."
+    mensaje1: ""
+    mensaje2: ""
+    descripcion: ""
+    logo_url: ""
+    foto_agente: ""
+    mision: ""
+    vision: ""
+    valores: ""
+
+  C_cadena:
+    alta: "auto"
+    empresa_registro: "auto"
+    clusters: "auto"
+    paginas: "auto"
+    brief: "auto"
+    activos: "auto"
+
+  D_toggles:
+    modo_sitio: "NOHYBRID"        # ya existe en GS — se reescribe idempotente

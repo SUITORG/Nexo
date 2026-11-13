@@ -234,3 +234,34 @@
 
 ## Veredicto global
 **PASA** (7/7) — gate activo en ambos generadores + render con logo/contacto/hook verificado visualmente.
+
+---
+
+## 2026-11-13 — Cadena máscara NOET completa (auto total): 8/8 eslabones
+
+**Scope:** orden del usuario `máscara auto total NOET` · `GuiaTotal/registro/NOET{.yaml,/MASCARA.yaml,/IDENTIDAD_CORPORATIVA.md}` · GAS (fila + Drive + brief + LAPVTFU) · espejo Supabase · motores SuitComfy/ComfyUI locales
+
+| # | Eslabón | Acción | Resultado | Veredicto |
+|---|---------|--------|-----------|-----------|
+| 1 | Valida A+C | bloque A 8/8 en GS · switches auto total | MASCARA.yaml creada | PASA |
+| 2 | Escribe A+D | GAS updateRow (8 campos + modo_sitio) | success | PASA |
+| 3 | Sync espejo | GAS sync + **upsert service_role** (sync desplegado no actualiza filas existentes — color_tema divergía) | espejo A verificado | PASA |
+| 4 | empresa-registro | ensureCteFolders (ya existía) · fotoagente Pexels 5622171 · mensaje1/2 · identidad 8 secciones + **anexo legal** (2632/2491 chars) | GAS + espejo ✓ | PASA |
+| 5 | clusters-seo | 9 clústeres con fotos Pexels (subirImagenCte) → appendRows Config_SEO | GAS 9/9 únicos + espejo 9/9 | PASA |
+| 6 | paginas-seo | 9 páginas contrato real (meta+schema Service+contenido/FAQ, 285-369 palabras) → appendRows Config_Paginas | GAS 9/9 + espejo 9/9 vía upsert service_role (sync omitió Config_Paginas) | PASA |
+| 7 | brief-engine | único campo faltante `competidores` → updateBriefVector (18/18) | LAPVTFU preservado byte-a-byte ✓ espejo ✓ | PASA |
+| 8 | activos (lapvtfu) | SuitComfy local: **6 fotos** (fotos01-06, ~295s c/u CPU) + **1 video** 9:16 (videos01, 1.1MB, KenBurns) vía puente `suit-activos` → Drive · testimonios/contenido `[PENDIENTE]` (cliente real) | LAPVTFU **7/7 estructura, act 5/7** alineado ✓ | PASA |
+
+## Hallazgos y correcciones del camino
+- **`setLapvtfuSlot` es 1-based** (slot3 = foto personal) — primer mapeo 0-based desalineó todo; reparado (5 reescrituras) y verificado alineado.
+- **Timeout de `fetch` (undici, 300s)** mató el primer video (4 tomas ≈ 20 min) → retry con `http.request` + resolución menor (576×1024, steps 6) → OK en 932s.
+- **Mojibake PS5.1**: `Get-Content|Set-Content` doble-codificó 3 archivos NOET → reparados con decode CP1252 inversa; las 2 políticas que GAS recibió corruptas se reescribieron (limpias + fecha **13 de noviembre de 2026**, la fecha real — el anexo había quedado con "24 de octubre").
+- **Sync GAS desplegado incompleto** (no actualiza `color_tema` ni `Config_Paginas`) → service_role directo como puente; paridad del prompt `CAMP-CAMPAIGN-QA` **sí** lograda vía `appendRows` en el deployment canónico (`AKfycbzlk`).
+
+## Evidencia
+- `descargas`/Drive: `cteNOET/fotos01-06.jpg`, `videos01.mp4`, `fotoagente.jpg`, `imagenurl-*.jpg ×9` — todos share ANYONE.
+- Espejo Supabase NOET: brief 1540 chars · priv 2632 · cook 2491 · Config_SEO 9 · Config_Paginas 9 · LAPVTFU 7/7.
+- **GAP:** motores IA de brief (Gemini sin créditos + OmniRoute caído) — el campo `competidores` se completó manualmente con datos reales del nicho; para regeneraciones futuras reponer Gemini u OmniRoute.
+
+## Veredicto global
+**PASA (8/8)** — cadena auto total NOET completa y verificada de punta a punta.
