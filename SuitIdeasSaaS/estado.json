@@ -1,7 +1,7 @@
 {
-  "corrida": "2026-10-23-politicas-identidad",
+  "corrida": "2026-11-14-ciclo-suitmisctas",
   "modo": "ciclo",
-  "tema": "Config_Empresas: politicas_privacidad + politicas_cookies (identidad → modal showPolicies)",
+  "tema": "SuitMisCtas — cierre evaluación: analista-proy + síntesis + gate calidad-minima",
   "fase": "fin",
   "fases": [
     { "id": "f1", "label": "Encuadre" },
@@ -11,22 +11,22 @@
     { "id": "f5", "label": "Plan sync" },
     { "id": "f6", "label": "Visto bueno" },
     { "id": "f7", "label": "Cierre" },
-    { "id": "fin", "label": "✓ Completado" }
+    { "id": "fin", "label": "✔ Completado" }
   ],
   "ideas": [],
-  "pendientes": [],
-  "artefactos": [],
+  "pendientes": ["respaldo mensual JSON (PENDIENTES, decisión usuario)", "taxonomía Tecnología/Software pendiente de aprobación", "panel-juzgador solo si se comercializa"],
+  "artefactos": ["SuitMisCtas/Analista_Proy.md", "SuitMisCtas/docs/SINTESIS_PROYECTO.md", "SuitMisCtas/VALIDACION.md", "GuiaTotal/registro/suitmisctas.yaml"],
   "herramientas": [
-    { "nombre": "ciclo", "estado": "ok", "detalle": "COMPLETO F0-F7 (PASS 6/6 + espejo 2699/2409 + ADR-057 + leccion)" }
+    { "nombre": "analista-proy", "estado": "ok", "detalle": "viabilidad MEDIA, 11 fuentes, clasificación cambió a Tecnología/Software" },
+    { "nombre": "calidad-minima", "estado": "ok", "detalle": "PASA — 0 marcas de rechazo" },
+    { "nombre": "ciclo", "estado": "ok", "detalle": "COMPLETO — F0-F3 PASS 5/5, F4 sin iteración, F5-F6 saltadas (sin datos), F7 tarjeta+estado; push aplazado" }
   ],
   "log": [
-    { "ts": "2026-10-23T00:00:00Z", "fase": "f1", "msg": "20/80: prompt IDENTIDAD (anexo legal) + skills empresa-registro/guia-total + showPolicies + docs + prueba LABARIES + PLAN-SYNC espejo; descartados: form onboarding, rutas SSG /privacidad /cookies, regen INDEX_FUNCIONES" },
-    { "ts": "2026-10-23T00:01:00Z", "fase": "f2", "msg": "F2 en curso: 7 ediciones (prompt, 2 skills, public.js, 2 docs, estado)" },
-    { "ts": "2026-10-23T12:20:00Z", "fase": "f2", "msg": "F2 completo: 8 ediciones (prompt, 2 skills, showPolicies, 2 docs, index.html bump v261023-1200, estado); node --check public.js OK" },
-    { "ts": "2026-10-23T12:35:00Z", "fase": "f3", "msg": "F3 PASS 6/6 → VALIDACION.md 2026-10-23: V1 sintaxis · V2 updateRow LABARIES success · V3 relectura 2699/2409 chars · V4 render LABARIES 4 secciones · V4b fallback EVASOL 3 secciones · V5 ensure-campanas (8000 down→starting→up 8s)" },
-    { "ts": "2026-10-23T12:36:00Z", "fase": "f4", "msg": "F4 sin iteración (6/6 PASS, cero fallas)" },
-    { "ts": "2026-10-23T12:50:00Z", "fase": "f5", "msg": "PLAN-SYNC.md: +2 columnas en espejo Supabase (verificado ausentes) + sync LABARIES; causa raíz no-op = caché PostgREST tras ALTER; brecha cobertura 13 vs 21 anotada" },
-    { "ts": "2026-10-23T12:55:00Z", "fase": "f6", "msg": "F6 aprobado usuario → ALTER 2 col OK + sync GAS (1er no-op por caché) + upsert directo puebla 2699/2409 + re-sync GAS mantiene → espejo consistente PASS" },
-    { "ts": "2026-10-23T13:05:00Z", "fase": "f7", "msg": "Cierre: ADR-057 + leccion postgrest-schema-cache + indice ADRs regenerado (55). Sin MAPA (no skill nueva). Ciclo COMPLETO" }
+    { "ts": "2026-11-14T00:00:00Z", "fase": "f1", "msg": "Alcance SuitMisCtas, contrato docs/CONTRATO.md existente. 20/80: commit docs, validación, cierre tarjeta+estado. Descartados: respaldo mensual, .bak-stars, catch445, PENDIENTES/MAPA (fuera de alcance), panel-juzgador. Salto F5-F6 (localStorage, db_engine null)." },
+    { "ts": "2026-11-14T00:10:00Z", "fase": "f2", "msg": "commit 754bbfe: 11 MD (10 docs guia-total + Analista_Proy) — .bak-stars excluido a propósito" },
+    { "ts": "2026-11-14T00:20:00Z", "fase": "f3", "msg": "commit 0abd690: VALIDACION.md PASS 5/5 (mojibake 0, index.html intacto, síntesis trazable, sin secretos, alcance limpio)" },
+    { "ts": "2026-11-14T00:21:00Z", "fase": "f4", "msg": "sin iteración — cero fallas en F3" },
+    { "ts": "2026-11-14T00:22:00Z", "fase": "f5", "msg": "F5-F6 saltadas: el ciclo no toca datos (localStorage puro, sin esquema ni registros que sincronizar)" },
+    { "ts": "2026-11-14T00:30:00Z", "fase": "f7", "msg": "Tarjeta suitmisctas.yaml reescrita limpia (mojibake PS5.1 corregido) + analista_proy:true + calidad PASA + proximo_paso actualizado. Push aplazado (rama feat/campanas-visual-v2, decisión usuario). Ciclo COMPLETO" }
   ]
 }

@@ -1,0 +1,53 @@
+# GuiaTotal/registro/suitmisctas.yaml
+proyecto: "SuitMisCtas"
+ruta: "SuitMisCtas/"
+etapa: "construccion"
+creado: "2026-11-14"
+actualizado: "2026-11-14"
+
+validacion:
+  problema: "Las finanzas personales del dueño viven dispersas: gastos multi-cuenta, 17 servicios recurrentes, 12 unidades de renta y una hoja GS que nunca cuadra; sin alertas de vencimientos ni visión de ahorro/proyección."
+  hipotesis: "Un dashboard local (alertas + captura con catálogo + Pagado/Recibido en 1 clic + proyección 12m con su fórmula) reemplaza la hoja y evita recargos por atraso en servicios y rentas."
+  metrica_exito: "Uso interno diario: bandeja 'Por clasificar' a 0, alertas de vencimiento al día y cierre de mes con export de respaldo (funcionalidad probada en smoke 2026-10-20/21)."
+  evidencia: "Solicitud directa del usuario 2026-10-19/20 (herramienta personal); siembra real desde su hoja privada GastosTarjetas (17 servicios, 12 unidades, 5 cuentas)."
+  decision: "continuar"
+  motivo: "Herramienta personal en uso; fase construcción con producto vivo y en operación diaria."
+
+evaluacion:
+  analista_proy: "aplicado 2026-11-14 — viabilidad MEDIA (interna alta / comercial media-baja), 11 fuentes, riesgo #1 = retención por fricción de categorización; ver SuitMisCtas/Analista_Proy.md + docs/SINTESIS_PROYECTO.md"
+  panel_juzgador: "no evaluado"
+  veredicto_fecha: null
+  calidad_minima: "PASA 2026-11-14 — 0 marcas de rechazo (gate sobre el resultado existente)"
+  recomendaciones: "Si se decide comercializar → panel-juzgador + micro-app-saas completo (analista-proy ya cubierto). Clasificación sugerida por el analista: Industria Tecnología / Nicho Software — pendiente de aprobación del usuario para mover la taxonomía."
+
+integraciones:
+  convive_sheets: false
+  id_empresa: null
+  db_engine: null
+  brief_en_logo_url: false
+
+producto:
+  formato: "herramienta-interna"
+  monetizacion: "ahorro-interno"
+  ruta_cobro: "no aplica — uso propio; ahorro de tiempo y evitación de recargos por atraso"
+  gate_cobro: "APTO (interno)"
+
+taxonomia:
+  industria: "Despachos Contables"
+  nicho: "Finanzas Personales"
+  especializacion: "Control personal de gastos, rentas y servicios recurrentes (herramienta interna)"
+
+documentos:
+  analista_proy: true
+  taxonomia: true
+  contrato: true
+  identidad: false
+  manuales: true
+  brief_cliente: false
+  prompt_origen: true
+  checklist_lanzamiento: true
+  arquitectura_docs: false
+
+puerto: null
+
+proximo_paso: "Ciclo 2026-11-14 completo (docs + analista-proy + calidad PASA). Pendientes reales: (1) rutina de respaldo mensual JSON a SuitMisCtas/respaldos/ — decisión del usuario; (2) precios-ai.json.bak-stars sin rastrear (backup manual); (3) panel-juzgador + micro-app-saas solo si se comercializa; (4) taxonomía Tecnología/Software del analista pendiente de aprobación."
