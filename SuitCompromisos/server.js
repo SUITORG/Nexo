@@ -137,7 +137,7 @@ function setCors(res, origin) {
     res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Suit-Token');
   res.setHeader('Access-Control-Max-Age', '600');
 }
 
@@ -251,7 +251,7 @@ async function deleteEvent(cal, calendarId, eventId) {
 async function syncOne(cal, calendarId, item, timeZone) {
   if (!item || !item.id) return { id: null, action: 'skipped', error: 'sin id' };
 
-  if (item.hecha) {
+  if (item.hecha || item.noRealizada) {
     let eventId = item.googleEventId || null;
     if (!eventId) {
       const found = await findEventBySuitId(cal, calendarId, item.id);
