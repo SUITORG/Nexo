@@ -3,7 +3,7 @@
 > Auto-generado por `scripts/generate-adr-index.js`. **No editar a mano** (regenerar tras crear/modificar entradas).
 > Uso: leer esta tabla primero y abrir solo los archivos citados (ahorra ~48K tokens por tarea deep).
 
-## decisions/ (59 ADRs)
+## decisions/ (61 ADRs)
 
 | ID | Título | Status | Fecha | TL;DR | → refs |
 |---|---|---|---|---|---|
@@ -66,6 +66,8 @@
 | ADR-059 | [SuitProspectos — Places API (New) + geolocalización de radio sin coste](ADR-059-suitprospectos-places-new.md) | Accepted (2026-11-02) | 2026-11-02 | `SuitProspectos/prospect.js` era un CLI de prospección comercial que usaba la **Places API (Legacy)** (`/maps/api/place/textsearch/json` +… | - |
 | ADR-060 | [Hardening de seguridad — RLS UPDATE/DELETE + guardia de mutaciones…](ADR-060-hardening-rls-modulos.md) | Accepted (2026-11-09) | 2026-11-09 | La revisión de "temas delicados" del roadmap (TD-014, TD-015, TD-010, "Seguridad Supabase" de PENDIENTES.md) confirmó por inspección… | 058 |
 | ADR-061 | [SuitGmail — OAuth de usuario (no service_account) + reglas por…](ADR-061-suitgmail-oauth-usuario.md) | Accepted (2026-11-03) | 2026-11-03 | SuitGmail debe leer el Gmail personal de Roberto y producir un semáforo (banco, pagos, luz, agua, teléfono). En el repo ya existe… | - |
+| ADR-062 | [SuitOrgPViaje — planeador de viajes informativo estático](ADR-062-suitorgpviaje-estatico.md) | Accepted (2026-11-12) | 2026-11-12 | El usuario quiere un módulo «Proximo Viaje» en SuitOS Master: dado origen/destinos (multi-destino, sin obligación de regresar al origen),… | 029 |
+| ADR-063 | [SuitAddCrediPatro — buscador de créditos/patrocinios estático con…](ADR-063-suitaddcredipatro-catalogo.md) | Accepted (2026-11-12) | 2026-11-12 | El usuario quiere una herramienta personal: dado su tipo de negocio y zona, recomendar dónde acercarse a solicitar créditos y patrocinios… | 062 |
 
 ## bugs/ (7)
 - [contacto-ispaper-dbengine.md](bugs/contacto-ispaper-dbengine.md) — Bug: El formulario de Contacto muestra contenido de PAPER en cualquier inquilino con…
