@@ -82,9 +82,10 @@ function parseTarjetas() {
     if (!d || d.startsWith('(') || out[d]) continue; // tenants sin carpeta; primera tarjeta gana
     const mEtapa = /^etapa:\s*["']?([^"'\n#]+)/m.exec(txt);
     const mProb = /^\s+problema:\s*["']?(.+?)["']?\s*$/m.exec(txt);
+    const mAct = /^actualizado:\s*["']?([^"'\n#]+)/m.exec(txt);
     const etapa = mEtapa ? mEtapa[1].trim() : null;
     const hit = etapa ? ETAPA.find(([re]) => re.test(etapa)) : null;
-    out[d] = { etapa, avance: hit ? hit[1] : null, desc: mProb ? mProb[1].trim() : null };
+    out[d] = { etapa, avance: hit ? hit[1] : null, desc: mProb ? mProb[1].trim() : null, actualizado: mAct ? mAct[1].trim() : null };
   }
   return out;
 }

@@ -3,7 +3,7 @@ proyecto: "SuitAddCrediPatro"
 ruta: "SuitAddCrediPatro/"
 etapa: "construccion"
 creado: "2026-11-12"
-actualizado: "2026-11-12"
+actualizado: "2026-11-16"
 
 validacion:
   problema: "Un empresario PyME no sabe a dónde acercarse a buscar crédito o patrocinio (gobierno, banca, fundaciones), ni cómo presentarse en la entrevista; llega a la institución equivocada y lo rechazan."

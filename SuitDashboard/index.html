@@ -81,13 +81,25 @@ select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);pa
 .skill p.orphan{color:var(--warn)}
 .foot{padding:10px 22px 30px;color:var(--dim);font-size:.72rem;text-align:center}
 code{background:#0e1428;padding:1px 5px;border-radius:4px;font-size:.75rem}
-@media(max-width:640px){.grid{padding:14px}.kpis{padding:12px 14px}.bar{padding-left:14px;padding-right:14px}}
+@media(max-width:640px){.grid{padding:14px}.kpis{padding:12px 14px}.bar{padding-left:14px;padding-right:14px}.tabs{overflow-x:auto;padding-bottom:8px}.tab{flex:0 0 auto}}
 /* tabs */
 .tabs{display:flex;gap:6px;padding:12px 22px 0;background:#101832}
 .tab{padding:9px 18px;border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;background:#0e1428;color:var(--dim);cursor:pointer;font-size:.85rem;font-weight:600;user-select:none}
 .tab:hover{color:var(--txt)}
 .tab.on{background:var(--panel);color:var(--txt);border-color:#3b4c7d}
 /* tabla CLI */
+.cap-select{background:#0e1428;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 9px;font-size:.72rem;max-width:235px}
+.cap-select:disabled{opacity:.45}
+.p-cat-dev{background:#12304d;color:#8fd0ff}
+.p-cat-diseno{background:#2c1c3f;color:#d3a9ff}
+.p-cat-video{background:#123c2c;color:#4ade80}
+.p-cat-visual{background:#3a2f12;color:#fbbf24}
+.p-cat-admin{background:#3d1a24;color:#fca5a5}
+.p-cat-research{background:#173a3a;color:#67e8f9}
+.p-cat-biz{background:#3b2a4d;color:#e9d5ff}
+.p-cat-tool{background:#1c2440;color:#cbd5e1}
+.cat-group td{background:#0d1730;border-top:1px solid #2b3a66;border-bottom:1px solid #2b3a66;padding-top:9px;padding-bottom:9px}
+.subcat{color:var(--dim);font-size:.7rem}
 .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
 table.cli{width:100%;border-collapse:collapse;font-size:.78rem}
 table.cli th,table.cli td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
@@ -145,7 +157,7 @@ table.cli tbody tr:hover td{background:#141d38}
   <span class="chipf" data-f="assets">ver assets</span>
   <select id="sort">
     <option value="kind">Importancia</option>
-    <option value="name">A–Z</option>
+    <option value="name">Nombre A&#8211;Z</option>
     <option value="mcp">MCPs ↓</option>
     <option value="skills">Skills ↓</option>
   </select>
@@ -198,6 +210,15 @@ table.cli tbody tr:hover td{background:#141d38}
     <h3>Skills <span class="subcount" id="capCount"></span></h3>
     <div class="bar" style="position:static;padding:0 0 10px;border:none">
       <input type="search" id="capq" placeholder="Buscar skill, proyecto…">
+      <select class="cap-select" id="capCategory" aria-label="Filtrar por categoría"></select>
+      <select class="cap-select" id="capSubcategory" aria-label="Filtrar por subcategoría"></select>
+      <select class="cap-select" id="capSort" aria-label="Ordenar skills">
+        <option value="taxonomy">Categor&#237;a &#8594; subcategor&#237;a</option>
+        <option value="name">Nombre A–Z</option>
+        <option value="nameDesc">Nombre Z&#8211;A</option>
+        <option value="project">Proyecto A&#8211;Z</option>
+        <option value="subcategory">Subcategor&#237;a A&#8211;Z</option>
+      </select>
       <span class="chipf" data-cap="claude">claude</span>
       <span class="chipf" data-cap="opencode">opencode</span>
       <span class="chipf" data-cap="suitos">suitos (.suit/skills)</span>
@@ -206,7 +227,7 @@ table.cli tbody tr:hover td{background:#141d38}
     </div>
     <div class="tblwrap">
       <table class="cli">
-        <thead><tr><th>Nombre completo</th><th>Proyecto</th><th>CLI</th><th>Ubicación</th><th>Tipo</th><th>Origen</th><th>Descripción</th></tr></thead>
+        <thead><tr><th>Nombre completo</th><th>Proyecto</th><th>CLI</th><th>Ubicación</th><th>Categoría</th><th>Subcategoría</th><th>Origen</th><th>Descripción</th></tr></thead>
         <tbody id="tblCap"></tbody>
       </table>
     </div>
@@ -260,7 +281,7 @@ table.cli tbody tr:hover td{background:#141d38}
   </div>
 </section>
 
-<div class="foot">Generado por <code>SuitDashboard/scan.js</code> · fuente de verdad: <code>opencode.json</code> (MCP) · carpetas <code>*/skills</code> · <code>.suit/registry/projects.yaml</code> · <code>scripts/mcp-manager.js</code></div>
+<div class="foot"><b>SuitDashboard</b> · Generado por <code>SuitDashboard/scan.js</code> · fuente de verdad: <code>opencode.json</code> (MCP) · carpetas <code>*/skills</code> · <code>.suit/registry/projects.yaml</code> · <code>scripts/mcp-manager.js</code></div>
 
 <div class="drawer" id="drawer">
   <button class="close" onclick="closeDrawer()">×</button>
@@ -268,36 +289,15 @@ table.cli tbody tr:hover td{background:#141d38}
 </div>
 
 <script src="data.js"></script>
+<script src="skill_tipo.js"></script>
 <script>
 const D = window.SUIT || { projects: [], generatedAt: null, live: false };
 const grid = document.getElementById('grid');
 const filters = new Set();
 
 const KIND_LABEL = { ROOT:'raíz', INDEP:'INDEPENDIENTE', 'NO-CAT':'NO CATALOGADO', BUILD:'build-time', KIT:'kit/herramienta', ASSETS:'assets' };
-const SKILL_TIPO = {
-  'captions-overlay':'diseño','cut-the-curve':'diseño','motion-doctrine':'diseño','motion-graphics':'diseño',
-  'seam-craft':'diseño','oversized-cursor':'diseño','figma':'diseño','slideshow':'diseño',
-  'frontend-design':'diseño','frontend-slides':'diseño','hyperframes-creative':'diseño','hyperframes-animation':'diseño',
-  'hyperframes-keyframes':'diseño','design-system':'*diseño',
-  'hyperframes':'producción','hyperframes-audio':'producción','general-video':'producción','faceless-explainer':'producción',
-  'changelog-video':'producción','product-launch-video':'producción','music-to-video':'producción','pr-to-video':'producción',
-  'talking-head-recut':'producción','video-shotcraft':'producción','media-use':'producción','embedded-captions':'producción',
-  'remotion-best-practices':'producción','remotion-to-hyperframes':'producción',
-  'javascript':'*código','sql':'*código','multi-tenant':'*código','multi-tenant-saas':'*código',
-  'geo-exif':'*código','hybrid-db':'*código','panoramic-ocr':'*código','vision-yolo':'*código',
-  'yolo-training':'*código','hyperframes-core':'código','ponytail-ladder':'*código',
-  'ciclo':'*administración','mejoras-proyecto':'*administración','preparar-produccion':'*administración','analista-proy':'*administración',
-  'contrato-subproyecto':'*administración','code-review':'*administración','security-audit':'*administración','deployer':'*administración',
-  'iteration-loop':'*administración','panel-juzgador':'*administración','probador':'*administración','reportero':'*administración',
-  'prompt-reviewer':'*administración','skill-creator':'administración','descubrimiento':'*administración','pantalla-limpia':'*diseño',
-  'last30days':'investigación','web-research':'*investigación','web-research.skill':'*investigación','web-search':'*investigación',
-  'brief-engine':'*negocio','cotizaciones-engine':'*negocio','lapvtfu':'*negocio','manychat':'*negocio',
-  'pdf-generation':'*documentos','report-pdf':'*documentos',
-  'context-loader':'*herramienta','index-navigator':'*herramienta','mcp-manager':'*herramienta','bat-launcher':'*herramienta',
-  'google-sheets':'*herramienta','telegram-bot':'*herramienta','browser-act':'herramienta',
-  'data-sync':'*herramienta','data-cleanup':'*herramienta','hyperframes-cli':'herramienta','hyperframes-registry':'herramienta',
-  'parametros':'*herramienta'
-};
+const SKILL_TIPO = window.SKILL_TIPO || {};
+const SKILL_TAXONOMY = window.SKILL_TAXONOMY || { categories: [] };
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function haceD(fecha){ if(!fecha) return '—'; const d=Math.floor((Date.now()-new Date(fecha).getTime())/86400000); return d<0?0:d; }
@@ -398,7 +398,7 @@ function openDetail(name){
       return `${desc?`<div class="sec"><h4>De qué trata</h4><p style="margin:0;color:var(--dim);font-size:.85rem;line-height:1.45">${esc(desc)}</p></div>`:''}
     <div class="sec"><h4>Avance${av!=null?` <b style="color:var(--info)">${av}%</b>`:''}</h4>
       ${av!=null?`<div class="pbar"><div class="pfill" style="width:${av}%"></div></div>`:''}
-      <div style="font-size:.78rem;color:var(--dim);margin-top:${av!=null?'5px':'0'}">${et?'Etapa: '+esc(et):(av==null?'sin tarjeta en GuiaTotal/registro':'')}</div>
+      <div style="font-size:.78rem;color:var(--dim);margin-top:${av!=null?'5px':'0'}">${et?'Etapa: '+esc(et):(av==null?'sin tarjeta en GuiaTotal/registro':'')}${(p.tarjeta&&p.tarjeta.actualizado)?' · <b style="color:var(--info)">Tarjeta: '+esc(p.tarjeta.actualizado)+'</b>':''}</div>
     </div>`; })()}
     <div class="sec"><h4>Identidad</h4>
       ${row('Ruta','<code>'+esc(p.dir)+'</code>')}
@@ -517,7 +517,7 @@ function renderCli(){
       <td>${pathPill(m)}</td>
       <td>${envPill(m)}</td>
       <td class="wrap"><code>${esc(m.cmd)}</code></td>
-    </tr>`).join('') : '<tr><td colspan="7" style="color:var(--dim)">Sin resultados</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="8" style="color:var(--dim)">Sin resultados</td></tr>';
 
   // sondeo vivo
   const out = document.getElementById('probeOut');
@@ -564,15 +564,88 @@ document.getElementById('cq').oninput=renderCli;
 /* ================= Pestaña 3: Skills & Agentes ================= */
 const CAP = D.capabilities || { skills:[], agents:[], claudeAgents:[], parallelGroups:[] };
 const capFilters = new Set();
+let capCategory = '';
+let capSubcategory = '';
+let capSort = 'taxonomy';
+const CAT_PILL = {};
+CAT_PILL['Desarrollo']='p-cat-dev';
+CAT_PILL['Diseño']='p-cat-diseno';
+CAT_PILL['Video']='p-cat-video';
+CAT_PILL['Visual']='p-cat-visual';
+CAT_PILL['Administración']='p-cat-admin';
+CAT_PILL['Investigación']='p-cat-research';
+CAT_PILL['Negocio']='p-cat-biz';
+CAT_PILL['Herramientas']='p-cat-tool';
+CAT_PILL['Sin clasificar']='p-abs';
+
 const CLI_LABEL = { claude:'claude', opencode:'opencode', suitos:'suitos' };
 const CLI_PILL = { claude:'p-cla', opencode:'p-oc', suitos:'p-suit' };
 const ROLE_PILL = { paralelo:'p-pur', orquestador:'p-info', 'estándar':'p-abs' };
 
+function tipoDe(s){
+  const t = SKILL_TIPO[s.name];
+  if (t && t.category) return t;
+  return { category: 'Sin clasificar', subcategory: (s.registry && s.type) ? s.type : 'Revisar' };
+}
+function capCompare(a,b){
+  const ta = tipoDe(a), tb = tipoDe(b);
+  if (capSort === 'name') return a.name.localeCompare(b.name,'es');
+  if (capSort === 'nameDesc') return b.name.localeCompare(a.name,'es');
+  if (capSort === 'project') return String(a.project||'').localeCompare(String(b.project||''),'es') || a.name.localeCompare(b.name,'es');
+  if (capSort === 'subcategory') return ta.subcategory.localeCompare(tb.subcategory,'es') || a.name.localeCompare(b.name,'es');
+  const cats = SKILL_TAXONOMY.categories || [];
+  const catRank = new Map(cats.map((c,i)=>[c.name,i]));
+  const subRank = new Map();
+  cats.forEach(c => c.subcategories.forEach((x,i)=>subRank.set(c.name+'|'+x,i)));
+  const ca = catRank.has(ta.category) ? catRank.get(ta.category) : 999;
+  const cb = catRank.has(tb.category) ? catRank.get(tb.category) : 999;
+  if (ca !== cb) return ca-cb;
+  const sa = subRank.has(ta.category+'|'+ta.subcategory) ? subRank.get(ta.category+'|'+ta.subcategory) : 999;
+  const sb = subRank.has(tb.category+'|'+tb.subcategory) ? subRank.get(tb.category+'|'+tb.subcategory) : 999;
+  if (sa !== sb) return sa-sb;
+  return a.name.localeCompare(b.name,'es');
+}
 function capMatch(s){
   if (capFilters.size && ![...capFilters].some(f=>f.startsWith('o:') ? s.origen===f.slice(2) : s.cli.includes(f))) return false;
+  const t = tipoDe(s);
+  if (capCategory && t.category !== capCategory) return false;
+  if (capSubcategory && t.subcategory !== capSubcategory) return false;
   const q = document.getElementById('capq').value.trim().toLowerCase();
   if (!q) return true;
-  return (s.name+' '+s.project+' '+s.desc).toLowerCase().includes(q);
+  return (s.name+' '+s.project+' '+(s.desc||'')+' '+t.category+' '+t.subcategory).toLowerCase().includes(q);
+}
+function fillCapSubcategories(){
+  const catSel = document.getElementById('capCategory');
+  const subSel = document.getElementById('capSubcategory');
+  if (!catSel || !subSel) return;
+  const cats = SKILL_TAXONOMY.categories || [];
+  const active = cats.find(c => c.name === capCategory) || null;
+  let html = '<option value="">Todas las subcategorías</option>';
+  if (active) {
+    active.subcategories.forEach(x => { html += '<option value="'+esc(x)+'">'+esc(x)+'</option>'; });
+  } else {
+    cats.forEach(c => {
+      if (!c.subcategories.length) return;
+      html += '<optgroup label="'+esc(c.name)+'">';
+      c.subcategories.forEach(x => { html += '<option value="'+esc(x)+'">'+esc(x)+'</option>'; });
+      html += '</optgroup>';
+    });
+  }
+  subSel.innerHTML = html;
+  const valid = [...subSel.options].some(o => o.value === capSubcategory);
+  if (!valid) capSubcategory = '';
+  subSel.value = capSubcategory;
+}
+function initCapFilters(){
+  const catSel = document.getElementById('capCategory');
+  const subSel = document.getElementById('capSubcategory');
+  if (!catSel || !subSel) return;
+  const cats = SKILL_TAXONOMY.categories || [];
+  catSel.innerHTML = '<option value="">Todas las categorías</option>' + cats.map(c => '<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>').join('');
+  catSel.value = capCategory;
+  catSel.onchange = () => { capCategory = catSel.value; capSubcategory = ''; fillCapSubcategories(); renderCap(); };
+  subSel.onchange = () => { capSubcategory = subSel.value; renderCap(); };
+  fillCapSubcategories();
 }
 
 const ORIGEN_PILL = { suitos:'p-suit', proyecto:'p-info', externa:'p-pur' };
@@ -592,19 +665,29 @@ function renderCap(){
   ];
   document.getElementById('kpisCap').innerHTML = k.map(([l,v,c])=>`<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`).join('');
 
-  const shown = CAP.skills.filter(capMatch).sort((a,b)=>a.name.localeCompare(b.name));
+  const shown = CAP.skills.filter(capMatch).sort(capCompare);
   document.getElementById('capCount').textContent = shown.length + ' / ' + CAP.skills.length;
-  document.getElementById('tblCap').innerHTML = shown.length ? shown.map(s=>`
-    <tr>
-      <td><b>${esc(s.name)}</b></td>
-      <td>${esc(s.project)}</td>
-      <td>${s.cli.map(c=>`<span class="pill ${CLI_PILL[c]||'p-abs'}">${CLI_LABEL[c]||c}</span>`).join(' ')}</td>
-      <td class="wrap"><code>${esc(s.src)}</code></td>
-      <td>${esc(s.registry ? s.type + (s.version ? ' v'+s.version : '') : (SKILL_TIPO[s.name]||'—'))}</td>
-      <td><span class="pill ${ORIGEN_PILL[s.origen]||'p-abs'}">${ORIGEN_LABEL[s.origen]||'—'}</span></td>
-      <td class="wrap">${esc(s.desc||'—')}</td>
-    </tr>`).join('') : '<tr><td colspan="7" style="color:var(--dim)">Sin resultados</td></tr>';
-
+  let rowsHtml = '';
+  let lastCat = null;
+  for (const s of shown) {
+    const t = tipoDe(s);
+    if (capSort === 'taxonomy' && t.category !== lastCat) {
+      const count = shown.filter(x => tipoDe(x).category === t.category).length;
+      rowsHtml += '<tr class="cat-group"><td colspan="8"><span class="pill ' + (CAT_PILL[t.category]||'p-abs') + '">' + esc(t.category) + '</span><span class="subcount">' + count + ' skills</span></td></tr>';
+      lastCat = t.category;
+    }
+    rowsHtml += '<tr>' +
+      '<td><b>' + esc(s.name) + '</b></td>' +
+      '<td>' + esc(s.project) + '</td>' +
+      '<td>' + s.cli.map(c=>'<span class="pill ' + (CLI_PILL[c]||'p-abs') + '">' + (CLI_LABEL[c]||c) + '</span>').join(' ') + '</td>' +
+      '<td class="wrap"><code>' + esc(s.src) + '</code></td>' +
+      '<td><span class="pill ' + (CAT_PILL[t.category]||'p-abs') + '">' + esc(t.category) + '</span></td>' +
+      '<td class="subcat">' + esc(t.subcategory) + '</td>' +
+      '<td><span class="pill ' + (ORIGEN_PILL[s.origen]||'p-abs') + '">' + (ORIGEN_LABEL[s.origen]||'-') + '</span></td>' +
+      '<td class="wrap">' + esc(s.desc||'-') + '</td>' +
+    '</tr>';
+  }
+  document.getElementById('tblCap').innerHTML = shown.length ? rowsHtml : '<tr><td colspan="8" style="color:var(--dim)">Sin resultados</td></tr>';
   document.getElementById('tblAgents').innerHTML = CAP.agents.length ? [...CAP.agents].sort((a,b)=>a.name.localeCompare(b.name)).map(a=>`
     <tr>
       <td><b>${esc(a.name)}</b></td>
@@ -637,6 +720,9 @@ document.querySelectorAll('.chipf[data-cap]').forEach(c=>c.onclick=()=>{
   c.classList.toggle('on'); renderCap();
 });
 document.getElementById('capq').oninput=renderCap;
+initCapFilters();
+const capSortSel=document.getElementById('capSort');
+if(capSortSel){capSortSel.value=capSort;capSortSel.onchange=()=>{capSort=capSortSel.value;renderCap();};}
 
 /* ================= Pestaña 4: Scripts & Plugins ================= */
 const SP = { scripts: D.scripts || [], plugins: D.plugins || [] };
