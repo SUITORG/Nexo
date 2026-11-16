@@ -1,7 +1,7 @@
 {
-  "corrida": "2026-11-14-ciclo-suitmisctas",
+  "corrida": "2026-11-16-ciclo-suitcompromisos",
   "modo": "ciclo",
-  "tema": "SuitMisCtas — cierre evaluación: analista-proy + síntesis + gate calidad-minima",
+  "tema": "SuitCompromisos — cierre analista-proy + síntesis + calidad-minima + mantenimiento",
   "fase": "fin",
   "fases": [
     { "id": "f1", "label": "Encuadre" },
@@ -14,19 +14,20 @@
     { "id": "fin", "label": "✔ Completado" }
   ],
   "ideas": [],
-  "pendientes": ["respaldo mensual JSON (PENDIENTES, decisión usuario)", "taxonomía Tecnología/Software pendiente de aprobación", "panel-juzgador solo si se comercializa"],
-  "artefactos": ["SuitMisCtas/Analista_Proy.md", "SuitMisCtas/docs/SINTESIS_PROYECTO.md", "SuitMisCtas/VALIDACION.md", "GuiaTotal/registro/suitmisctas.yaml"],
+  "pendientes": ["reiniciar servidor 8138 (fix CORS F2 no activo en su instancia)", "refresh MANUAL_TECNICO.md (UI nueva)", "medir uso 30 días antes de nuevas features (prioridad #1 síntesis)", "push aplazado (decisión usuario)", "taxonomía Tecnología/Software pendiente de aprobación"],
+  "artefactos": ["SuitCompromisos/docs/CONTRATO.md", "SuitCompromisos/Analista_Proy.md", "SuitCompromisos/docs/SINTESIS_PROYECTO.md", "SuitCompromisos/VALIDACION.md", "GuiaTotal/registro/suitcompromisos.yaml"],
   "herramientas": [
-    { "nombre": "analista-proy", "estado": "ok", "detalle": "viabilidad MEDIA, 11 fuentes, clasificación cambió a Tecnología/Software" },
+    { "nombre": "analista-proy", "estado": "ok", "detalle": "viabilidad MEDIA, 12 fuentes, insumo del contrato" },
     { "nombre": "calidad-minima", "estado": "ok", "detalle": "PASA — 0 marcas de rechazo" },
-    { "nombre": "ciclo", "estado": "ok", "detalle": "COMPLETO — F0-F3 PASS 5/5, F4 sin iteración, F5-F6 saltadas (sin datos), F7 tarjeta+estado; push aplazado" }
+    { "nombre": "ciclo", "estado": "ok", "detalle": "COMPLETO — F0 759f894, F2 5d30c85, F3 ba12bce PASS 5/5, F4 sin iteración, F5-F6 saltadas (sin motor), F7 tarjeta+estado; push aplazado" }
   ],
   "log": [
-    { "ts": "2026-11-14T00:00:00Z", "fase": "f1", "msg": "Alcance SuitMisCtas, contrato docs/CONTRATO.md existente. 20/80: commit docs, validación, cierre tarjeta+estado. Descartados: respaldo mensual, .bak-stars, catch445, PENDIENTES/MAPA (fuera de alcance), panel-juzgador. Salto F5-F6 (localStorage, db_engine null)." },
-    { "ts": "2026-11-14T00:10:00Z", "fase": "f2", "msg": "commit 754bbfe: 11 MD (10 docs guia-total + Analista_Proy) — .bak-stars excluido a propósito" },
-    { "ts": "2026-11-14T00:20:00Z", "fase": "f3", "msg": "commit 0abd690: VALIDACION.md PASS 5/5 (mojibake 0, index.html intacto, síntesis trazable, sin secretos, alcance limpio)" },
-    { "ts": "2026-11-14T00:21:00Z", "fase": "f4", "msg": "sin iteración — cero fallas en F3" },
-    { "ts": "2026-11-14T00:22:00Z", "fase": "f5", "msg": "F5-F6 saltadas: el ciclo no toca datos (localStorage puro, sin esquema ni registros que sincronizar)" },
-    { "ts": "2026-11-14T00:30:00Z", "fase": "f7", "msg": "Tarjeta suitmisctas.yaml reescrita limpia (mojibake PS5.1 corregido) + analista_proy:true + calidad PASA + proximo_paso actualizado. Push aplazado (rama feat/campanas-visual-v2, decisión usuario). Ciclo COMPLETO" }
+    { "ts": "2026-11-16T00:00:00Z", "fase": "f0", "msg": "Contrato NUEVO docs/CONTRATO.md + Analista_Proy + SINTESIS (759f894). Alcance SuitCompromisos, db_engine n/a" },
+    { "ts": "2026-11-16T00:05:00Z", "fase": "f1", "msg": "20/80: validar+commitear diff pendiente (estado 'No realizada', vistas semana/mes, CORS X-Suit-Token). Descartados: catch vacío, refresh manual (a F7), F5-F6, fuera de alcance" },
+    { "ts": "2026-11-16T00:15:00Z", "fase": "f2", "msg": "commit 5d30c85 — diff (script commit_fase.sh se colgó con rutas Windows; commit manual con mismo formato; PS5.1 rompe comillas incrustadas en args de git)" },
+    { "ts": "2026-11-16T00:40:00Z", "fase": "f3", "msg": "commit ba12bce — VALIDACION.md PASS 5/5: health/status 200, token 401/400, CORS 204/403+ACAH, blob HEAD sintaxis+mojibake OK, smoke UI Chrome DevTools consola limpia (fetch redirigido a instancia nueva 8139, luego liberada). GAP: servidor usuario 8138 corre código pre-F2" },
+    { "ts": "2026-11-16T00:41:00Z", "fase": "f4", "msg": "sin iteración — 0 fallas en F3" },
+    { "ts": "2026-11-16T00:42:00Z", "fase": "f5", "msg": "F5-F6 saltadas: sin motor de datos (localStorage + config.json local, db_engine null); push pendiente de decisión del usuario" },
+    { "ts": "2026-11-16T00:50:00Z", "fase": "f7", "msg": "Tarjeta suitcompromisos.yaml: etapa mantenimiento, actualizado 2026-11-16, analista+calidad+taxonomía+contrato registrados, proximo_paso con 5 pendientes. Ciclo COMPLETO" }
   ]
 }

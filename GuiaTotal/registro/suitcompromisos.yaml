@@ -1,9 +1,9 @@
 # GuiaTotal/registro/suitcompromisos.yaml
 proyecto: "SuitCompromisos"
 ruta: "SuitCompromisos/"
-etapa: "construccion"          # código completo y en uso; faltan condiciones del panel y CONTRATO
+etapa: "mantenimiento"          # código completo y en uso; condiciones del panel cerradas 2026-11-03, CONTRATO + analista-proy + calidad 2026-11-16
 creado: "2026-10-22"
-actualizado: "2026-11-03"
+actualizado: "2026-11-16"
 
 validacion:
   problema: "Los pendientes personales (viajes, reuniones, pagos) estaban dispersos y no llegaban como recordatorios al calendario; exportar .ics a mano era manual y propenso a olvidos."
@@ -14,9 +14,11 @@ validacion:
   motivo: "Funcional, costo $0, en uso diario; cerrar las 5 condiciones del panel lo deja sólido."
 
 evaluacion:
+  analista_proy: "aplicado 2026-11-16 — viabilidad MEDIA (interna alta / comercial media-baja), 12 fuentes, riesgo #1 = retención 4.1% D30 del rubro; ver SuitCompromisos/Analista_Proy.md + docs/SINTESIS_PROYECTO.md"
   panel_juzgador: "APROBADO CONDICIONAL"
   veredicto_fecha: "2026-11-03"
-  recomendaciones: "6.75/10 (Mercado 7 · Técnico 7 · Riesgo 6 · Financiero 7). 5 condiciones: (1) registro/puertos ✓, (2) token X-Suit-Token + Origin:null eliminado + scope calendar.events ✓, (3) backup automático /api/backup → backups/ (30 dumps) ✓, (4) gitignore server.log+backups ✓ + smoke 9/9 ✓, (5) SPOF SA aceptado y documentado ✓. Detalle: .suit/logs/panel-juzgador/veredicto.md"
+  calidad_minima: "PASA 2026-11-16 — 0 marcas de rechazo (gate sobre el resultado existente)"
+  recomendaciones: "6.75/10 (Mercado 7 · Técnico 7 · Riesgo 6 · Financiero 7). 5 condiciones: (1) registro/puertos ✓, (2) token X-Suit-Token + Origin:null eliminado + scope calendar.events ✓, (3) backup automático /api/backup → backups/ (30 dumps) ✓, (4) gitignore server.log+backups ✓ + smoke 9/9 ✓, (5) SPOF SA aceptado y documentado ✓. Detalle: .suit/logs/panel-juzgador/veredicto.md. Ciclo 2026-11-16: VALIDACION 5/5. Clasificación sugerida por el analista: Industria Tecnología/Software · Nicho task management personal — pendiente de aprobación del usuario para la taxonomía."
 
 integraciones:
   convive_sheets: false         # herramienta personal; no toca Config_Empresas (supuesto: uso estrictamente personal)
@@ -31,14 +33,14 @@ producto:
   gate_cobro: "APTO"
 
 taxonomia:
-  industria: null               # sin analista-proy: uso personal, fuera del catálogo de clientes
-  nicho: null
-  especializacion: null
+  industria: "Tecnología / Software"     # propuesta por analista-proy 2026-11-16 — pendiente de aprobación
+  nicho: "Task management personal + calendario (life admin)"
+  especializacion: "Local-first y puente Google Calendar sin nube ni mensualidad (herramienta interna)"
 
 documentos:
-  analista_proy: false
-  taxonomia: false
-  contrato: false
+  analista_proy: true
+  taxonomia: true                # valores propuestos, aprobación pendiente
+  contrato: true                 # <Proyecto>/docs/CONTRATO.md (ciclo F0, 2026-11-16)
   identidad: false
   manuales: false               # solo MANUAL_TECNICO creado (herramienta interna)
   manual_tecnico: true          # <Proyecto>/docs/MANUAL_TECNICO.md (2026-11-03)
@@ -48,4 +50,4 @@ documentos:
   proposal: true                # <Proyecto>/proposal.md (entrada del panel-juzgador)
   evaluacion_panel: true        # .suit/logs/panel-juzgador/{veredicto,eval_*}.md
 
-proximo_paso: "Re-validar extremo a extremo (crear → sync → borrar → verificar en Calendar) con el panel en MASTER; condiciones del panel cerradas 2026-11-03."
+proximo_paso: "Ciclo 2026-11-16 completo (contrato F0 + diff 'No realizada'/vistas calendario commiteado + VALIDACION 5/5 PASS + analista-proy + síntesis + calidad PASA). Pendientes: (1) reiniciar el servidor 8138 para aplicar el fix CORS X-Suit-Token (F2) — su instancia corre código pre-F2; (2) refrescar MANUAL_TECNICO.md (UI nueva: estado No realizada + vistas semana/mes, 2026-11-16); (3) medir uso real 30 días (syncs/mes) antes de construir nada más — prioridad #1 de la síntesis; (4) push pendiente — decisión del usuario; (5) taxonomía Tecnología/Software pendiente de aprobación."
