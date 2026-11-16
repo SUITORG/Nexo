@@ -1,0 +1,51 @@
+# GuiaTotal/registro/suitaddcredipatro.yaml
+proyecto: "SuitAddCrediPatro"
+ruta: "SuitAddCrediPatro/"
+etapa: "construccion"
+creado: "2026-11-12"
+actualizado: "2026-11-12"
+
+validacion:
+  problema: "Un empresario PyME no sabe a dónde acercarse a buscar crédito o patrocinio (gobierno, banca, fundaciones), ni cómo presentarse en la entrevista; llega a la institución equivocada y lo rechazan."
+  hipotesis: "Un cuestionario que identifica el problema (capital de trabajo, equipo, expansión...) y recomienda dónde acercarse según zona y perfil, con un escrito de pros y contras para la entrevista, mejora la probabilidad de aprobación."
+  metrica_exito: "Uso interno: diagnóstico + top 3 puertas con contactos reales + argumentario copiable en <5 min (logrado en smoke 2026-11-12, 2 perfiles)."
+  evidencia: "Solicitud directa del usuario 2026-11-12 (sin analista-proy — herramienta personal). Catálogo fundamentado en investigación web 2026-11 (Impulso NL/FOCRECE, NAFIN, fundaciones reales)."
+  decision: "continuar"
+  motivo: "Herramienta personal solicitada explícitamente; construida, probada y documentada el mismo día."
+
+evaluacion:
+  panel_juzgador: "no evaluado"
+  veredicto_fecha: null
+  recomendaciones: "No aplica por ahora: herramienta personal sin venta. Si se decide comercializar → correr panel-juzgador + analista-proy + micro-app-saas completo."
+
+integraciones:
+  convive_sheets: false
+  id_empresa: null
+  db_engine: null
+  brief_en_logo_url: false
+
+producto:
+  formato: "herramienta-interna"
+  monetizacion: "ahorro-interno"
+  ruta_cobro: "no aplica — uso propio; ahorro de tiempo y rechazos en solicitudes de financiamiento"
+  gate_cobro: "APTO (interno)"
+
+taxonomia:
+  industria: "Despachos Contables"
+  nicho: "Consultoría Financiera"
+  especializacion: "Búsqueda y preparación de solicitudes de crédito y patrocinio para PyMEs (herramienta interna)"
+
+documentos:
+  analista_proy: false
+  taxonomia: true
+  contrato: true
+  identidad: false
+  manuales: true
+  brief_cliente: false
+  prompt_origen: true
+  checklist_lanzamiento: true
+  arquitectura_docs: false
+
+puerto: null
+
+proximo_paso: "Usar el módulo desde MASTER (pestaña Credito/Patrocinio). Mantenimiento: revisar vigencia del catálogo cada ~3 meses (GuiaTotal/PENDIENTES.md)."

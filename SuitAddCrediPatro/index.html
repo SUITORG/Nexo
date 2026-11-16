@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SuitAddCrediPatro</title>
+<link rel="icon" href="data:,">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e17;--bg2:#111827;--bg3:#1a2332;--text:#e2e8f0;--text2:#94a3b8;--accent:#6366f1;--accent2:#818cf8;--line:#243044;--ok:#34d399;--warn:#fbbf24;--bad:#f87171}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:13.5px;padding:14px 16px 40px}
+h1{font-size:19px;letter-spacing:.3px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--accent2);margin:18px 0 8px}
+h3{font-size:14px;margin-bottom:4px}
+.muted{color:var(--text2);font-size:11.5px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+header .sp{flex:1}
+input,select,textarea{background:var(--bg3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-family:inherit;font-size:13px}
+input:focus,select:focus{outline:1px solid var(--accent)}
+button{background:var(--accent);border:0;border-radius:8px;color:#fff;font-weight:600;font-family:inherit;font-size:12.5px;padding:8px 14px;cursor:pointer}
+button:hover{background:var(--accent2)}
+button.ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--line)}
+button.ghost:hover{color:var(--text)}
+button.mini{padding:3px 8px;font-size:11px;border-radius:6px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:12px 0}
+.field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:4px}
+.field select,.field input{width:100%}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{background:var(--bg3);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--text2)}
+.checks input{display:none}
+.checks label.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0}
+.card .tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:2px 8px;border-radius:10px;margin-right:6px}
+.tag.gob{background:#1e3a5f;color:#7dd3fc}
+.tag.banco{background:#3b2f5e;color:#c4b5fd}
+.tag.fund{background:#14432e;color:#6ee7b7}
+.tag.plat{background:#4a3417;color:#fcd34d}
+.match{color:var(--ok);font-size:11px}
+ul{margin:6px 0 0 18px}
+li{margin:3px 0;font-size:12.5px}
+.pro li::marker{color:var(--ok)}
+.con li::marker{color:var(--bad)}
+.kv{font-size:12px;color:var(--text2)}
+.kv b{color:var(--text)}
+.argumentario{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px;white-space:pre-wrap;font-size:12.5px;line-height:1.6}
+.badges{margin:6px 0}
+.badge{display:inline-block;font-size:10.5px;padding:3px 8px;border-radius:8px;margin:2px;background:var(--bg3);color:var(--text2);border:1px solid var(--line)}
+.badge.ok{color:var(--ok);border-color:#14532d}
+.badge.bad{color:var(--bad);border-color:#7f1d1d}
+</style>
+</head>
+<body>
+<header>
+  <h1>💼 SuitAddCrediPatro</h1>
+  <span class="muted">Créditos y patrocinios · informativo · personal</span>
+  <div class="sp"></div>
+  <button id="btn-analizar">Analizar mi caso</button>
+  <button id="btn-nuevo" class="ghost">Limpiar</button>
+</header>
+
+<section id="form">
+  <h2>Cuéntame de tu negocio</h2>
+  <div class="form-grid">
+    <div class="field"><label>Giro del negocio</label><select id="giro">
+      <option value="comercio">Comercio / tienda</option>
+      <option value="servicios">Servicios profesionales</option>
+      <option value="tecnologia">Tecnología / software</option>
+      <option value="alimentos">Alimentos / restaurantes</option>
+      <option value="manufactura">Manufactura / industria</option>
+      <option value="construccion">Construcción</option>
+      <option value="transporte">Transporte / logística</option>
+      <option value="agro">Agro / ganadería</option>
+      <option value="turismo">Turismo / hotelería</option>
+      <option value="otro">Otro</option>
+    </select></div>
+    <div class="field"><label>Estado / zona</label><select id="estado"></select></div>
+    <div class="field"><label>Antigüedad</label><select id="anios">
+      <option value="0.5">Menos de 1 año</option>
+      <option value="2" selected>1 a 3 años</option>
+      <option value="4">3 a 5 años</option>
+      <option value="7">Más de 5 años</option>
+    </select></div>
+    <div class="field"><label>Situación fiscal</label><select id="formalidad">
+      <option value="constituida">Empresa constituida (S.A./S. de R.L./etc.)</option>
+      <option value="resico" selected>RESICO / PF con actividad empresarial</option>
+      <option value="informal">Informal (sin constituir)</option>
+    </select></div>
+    <div class="field"><label>Empleados</label><select id="empleados">
+      <option value="0">Solo yo</option>
+      <option value="3" selected>1 a 5</option>
+      <option value="12">6 a 20</option>
+      <option value="35">21 a 50</option>
+      <option value="80">Más de 50</option>
+    </select></div>
+    <div class="field"><label>Ingreso anual aprox.</label><select id="ingresos">
+      <option value="0.3">Menos de $500 mil MXN</option>
+      <option value="1" selected>$500 mil a $2 MDP</option>
+      <option value="6">$2 a $10 MDP</option>
+      <option value="25">$10 a $50 MDP</option>
+      <option value="80">Más de $50 MDP</option>
+    </select></div>
+    <div class="field"><label>Monto que necesitas</label><select id="monto">
+      <option value="50000,100000">Menos de $100 mil</option>
+      <option value="100000,500000" selected>$100 mil a $500 mil</option>
+      <option value="500000,2000000">$500 mil a $2 MDP</option>
+      <option value="2000000,10000000">$2 a $10 MDP</option>
+      <option value="10000000,50000000">Más de $10 MDP</option>
+    </select></div>
+    <div class="field"><label>¿Para qué lo necesitas?</label>
+      <div class="checks" id="destinos">
+        <label data-v="capital" class="on"><input type="checkbox" checked>Capital de trabajo</label>
+        <label data-v="equipo"><input type="checkbox">Equipo / maquinaria</label>
+        <label data-v="expansion"><input type="checkbox">Expandir / local</label>
+        <label data-v="innovacion"><input type="checkbox">Innovación / tecnología</label>
+        <label data-v="marketing"><input type="checkbox">Marketing / publicidad</label>
+        <label data-v="inventario"><input type="checkbox">Inventario</label>
+        <label data-v="otro"><input type="checkbox">Otro</label>
+      </div>
+    </div>
+    <div class="field"><label>Urgencia</label><select id="urgencia">
+      <option value="alta">Necesito el recurso en menos de 1 mes</option>
+      <option value="media" selected>En 1 a 3 meses</option>
+      <option value="baja">Sin prisa, estoy comparando</option>
+    </select></div>
+  </div>
+</section>
+
+<section id="diagnostico"></section>
+<section id="recomendaciones"></section>
+<section id="argumentario"></section>
+
+<script src="app.js"></script>
+</body>
+</html>
