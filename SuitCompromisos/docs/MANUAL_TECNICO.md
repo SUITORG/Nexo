@@ -3,7 +3,7 @@
 **Para qué sirve este manual:** operar, mantener y depurar el puente local de SuitCompromisos con Google Calendar.
 **Audiencia:** técnico / el dueño del proyecto (uso personal, un solo usuario).
 
-**Última actualización:** 2026-11-03
+**Última actualización:** 2026-11-16
 
 ## Resumen en corto
 
@@ -27,6 +27,7 @@ index.html (vanilla, localStorage)  ──fetch──►  server.js :8138  ─�
 ```
 
 - **Fuente de verdad local:** `localStorage` (clave del panel). Calendar es espejo de sincronización.
+- **UI (2026-11-16):** estados del artículo incluyen **No realizada** (tarjeta naranja, contadora en el dashboard) y el panel tiene vistas **Semana** (barra weekbar) y **Mes** (month-grid) además de Lista.
 - **Emparejamiento:** cada evento lleva `extendedProperties.private.suitId` = id del artículo → upsert sin duplicados; si el artículo no existe, el evento se marca/ignora según `suitcompromisos=1`.
 - **Config atómica:** writes a `config.json.tmp` + rename (nunca queda archivo a medias).
 
@@ -66,6 +67,7 @@ curl http://127.0.0.1:8138/api/status     # → calendario, lastSync, SA
 
 - **Token (condición 2 ✓):** todo POST exige header `X-Suit-Token` = `apiToken` de `config.json` (se genera solo en el primer arranque; el panel lo lee de `/api/status`). Sin/malo → `401`.
 - **Origen:** solo `http://127.0.0.1:8137` (MASTER). `Origin: null` ya **no** se acepta → `403`. Body máx 2 MB.
+- **Preflight (fix 2026-11-16):** el server responde `Access-Control-Allow-Headers: Content-Type, X-Suit-Token` — sin ese header el navegador bloquea el POST del panel aunque el token sea válido.
 
 ## 5. Seguridad (estado)
 
@@ -88,6 +90,7 @@ curl http://127.0.0.1:8138/api/status     # → calendario, lastSync, SA
 | `Falta googleapis` | node_modules raíz incompleto | `npm install` en raíz de SuitOrg |
 | `No existe google-credentials.json` | SA ausente | restaurar el archivo en raíz (no está en git) |
 | Sync rechaza 403 | calendario no compartido con la SA | compartir con "Hacer cambios en eventos" |
+| POST del panel bloqueado en preflight (CORS) | servidor corriendo con código anterior al fix 2026-11-16 (`Allow-Headers` sin `X-Suit-Token`) | reiniciar `node SuitCompromisos/server.js` |
 | La pestaña MASTER no responde al sync | server :8138 apagado | levantar server; health debe dar200 |
 | Eventos duplicados | `suitId` perdido | no borrar eventos a mano desde Calendar; re-sync corrige |
 | Datos distintos al abrir "por fuera" | origen distinto (file:// ≠ :8137) | usar siempre la pestaña del MASTER |
